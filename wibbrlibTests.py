@@ -100,5 +100,11 @@ class ObjectEncodingDecodingTests(unittest.TestCase):
         self.failUnlessEqual(components[3], (0xcafebabe, "world"))
 
 
+class ObjectQueueTests(unittest.TestCase):
+
+    def testCreate(self):
+        self.failUnlessEqual(object_queue_create(), [])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -64,3 +64,9 @@ def object_decode(str, pos):
             (data, _) = varint_decode(data, 0)
         pairs.append((type, data))
     return pairs
+
+
+
+def object_queue_create():
+    """Create an empty object queue"""
+    return []
