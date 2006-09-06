@@ -5,6 +5,24 @@
 OBJID = 1
 OBJTYPE = 2
 BLKID = 3
+FILEDATA = 4
+
+
+_component_type_to_name = {
+    OBJID: "OBJID",
+    OBJTYPE: "OBJTYPE",
+    BLKID: "BLKID",
+    FILEDATA: "FILEDATA",
+}
+
+
+def component_type_name(type):
+    """Return a textual name for a numeric component type"""
+    return _component_type_to_name.get(type, "UNKNOWN")
+
+
+# Constants of object types
+FILECONT = 1
 
 
 def varint_encode(i):
@@ -64,7 +82,6 @@ def object_decode(str, pos):
             (data, _) = varint_decode(data, 0)
         pairs.append((type, data))
     return pairs
-
 
 
 def object_queue_create():
