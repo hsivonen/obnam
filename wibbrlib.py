@@ -6,6 +6,7 @@ OBJID = 1
 OBJTYPE = 2
 BLKID = 3
 FILEDATA = 4
+OBJPART = 5
 
 
 _component_type_to_name = {
@@ -13,6 +14,7 @@ _component_type_to_name = {
     OBJTYPE: "OBJTYPE",
     BLKID: "BLKID",
     FILEDATA: "FILEDATA",
+    OBJPART: "OBJPART",
 }
 
 
@@ -111,4 +113,5 @@ def object_queue_combined_size(oq):
 
 def block_create_from_object_queue(blkid, oq):
     """Create a block from an object queue"""
-    return component_encode(BLKID, blkid) + "".join(oq)
+    objects = [component_encode(OBJPART, x) for x in oq]
+    return component_encode(BLKID, blkid) + "".join(objects)

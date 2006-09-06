@@ -15,6 +15,7 @@ class ComponentTypeNameTests(unittest.TestCase):
         self.failUnlessEqual(component_type_name(OBJTYPE), "OBJTYPE")
         self.failUnlessEqual(component_type_name(BLKID), "BLKID")
         self.failUnlessEqual(component_type_name(FILEDATA), "FILEDATA")
+        self.failUnlessEqual(component_type_name(OBJPART), "OBJPART")
 
 
 class ObjectTypeNameTests(unittest.TestCase):
@@ -147,7 +148,7 @@ class BlockCreateTests(unittest.TestCase):
         oq = object_queue_create()
         object_queue_add(oq, "foo")
         block = block_create_from_object_queue("blkid", oq)
-        self.failUnlessEqual(block, "\5\3blkidfoo")
+        self.failUnlessEqual(block, "\5\3blkid\3\5foo")
 
 
 if __name__ == "__main__":
