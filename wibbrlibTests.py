@@ -10,6 +10,7 @@ from wibbrlib import *
 class ComponentTypeNameTests(unittest.TestCase):
 
     def test(self):
+        self.failUnlessEqual(component_type_name(-12765), "UNKNOWN")
         self.failUnlessEqual(component_type_name(OBJID), "OBJID")
         self.failUnlessEqual(component_type_name(OBJTYPE), "OBJTYPE")
         self.failUnlessEqual(component_type_name(BLKID), "BLKID")
@@ -19,6 +20,7 @@ class ComponentTypeNameTests(unittest.TestCase):
 class ObjectTypeNameTests(unittest.TestCase):
 
     def test(self):
+        self.failUnlessEqual(object_type_name(-12765), "UNKNOWN")
         self.failUnlessEqual(object_type_name(FILECONT), "FILECONT")
 
 
