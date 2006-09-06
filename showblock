@@ -1,0 +1,43 @@
+#!/usr/bin/python
+
+
+import sys
+
+import wibbrlib
+
+
+recursive_component_types = (
+    wibbrlib.OBJPART,
+)
+
+
+def show_component(type, data, indent=0):
+    x = " " * (indent * 2)
+    print x + "Component:", type, wibbrlib.component_type_name(type)
+    if type in recursive_component_types:
+        pos = 0
+        while pos < len(data):
+            (type2, data2, pos) = wibbrlib.component_decode(data, pos)
+            show_component(type2, data2, indent+1)
+    else:
+        print x + "  data:", repr(data)
+
+
+def show_block(filename):
+    f = file(filename, "r")
+    str = f.read()
+    f.close()
+    pos = 0
+    while pos < len(str):
+        (type, data, pos) = wibbrlib.component_decode(str, pos)
+        show_component(type, data)
+        print
+
+
+def main():
+    for filename in sys.argv[1:]:
+        show_block(filename)
+
+
+if __name__ == "__main__":
+    main()
