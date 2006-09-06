@@ -119,5 +119,13 @@ class ObjectQueueTests(unittest.TestCase):
         self.failUnlessEqual(object_queue_combined_size(oq), 6)
 
 
+class BlockCreateTests(unittest.TestCase):
+
+    def testEmptyObjectQueue(self):
+        oq = object_queue_create()
+        block = block_create_from_object_queue("blkid", oq)
+        self.failUnlessEqual(block, "\5\3blkid")
+
+
 if __name__ == "__main__":
     unittest.main()

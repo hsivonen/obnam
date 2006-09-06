@@ -80,3 +80,8 @@ def object_queue_add(oq, object):
 def object_queue_combined_size(oq):
     """Return the combined size of all objects in an object queue"""
     return sum([len(x) for x in oq])
+
+
+def block_create_from_object_queue(blkid, oq):
+    """Create a block from an object queue"""
+    return component_encode(BLKID, blkid) + "".join(oq)
