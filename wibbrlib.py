@@ -113,5 +113,6 @@ def object_queue_combined_size(oq):
 
 def block_create_from_object_queue(blkid, oq):
     """Create a block from an object queue"""
+    blkid = component_encode(BLKID, blkid)
     objects = [component_encode(OBJPART, x) for x in oq]
-    return component_encode(BLKID, blkid) + "".join(objects)
+    return blkid + "".join(objects)
