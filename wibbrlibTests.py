@@ -110,6 +110,14 @@ class ObjectQueueTests(unittest.TestCase):
         object_queue_add(oq, "abc")
         self.failUnlessEqual(oq, ["abc"])
 
+    def testSize(self):
+        oq = object_queue_create()
+        self.failUnlessEqual(object_queue_combined_size(oq), 0)
+        object_queue_add(oq, "abc")
+        self.failUnlessEqual(object_queue_combined_size(oq), 3)
+        object_queue_add(oq, "abc")
+        self.failUnlessEqual(object_queue_combined_size(oq), 6)
+
 
 if __name__ == "__main__":
     unittest.main()

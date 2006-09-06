@@ -75,3 +75,8 @@ def object_queue_create():
 def object_queue_add(oq, object):
     """Add an encoded object into an object queue"""
     oq.append(object)
+
+
+def object_queue_combined_size(oq):
+    """Return the combined size of all objects in an object queue"""
+    return sum([len(x) for x in oq])
