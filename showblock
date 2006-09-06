@@ -3,33 +3,41 @@
 
 import sys
 
-import wibbrlib
+from wibbrlib import *
 
 
 recursive_component_types = (
-    wibbrlib.OBJPART,
+    OBJPART,
 )
+
+
+component_data_formatters = {
+    OBJTYPE: lambda data: object_type_name(varint_decode(data, 0)[0]),
+    FILESIZE: lambda data: varint_decode(data, 0)[0],
+}
 
 
 def show_component(type, data, indent=0):
     x = " " * (indent * 2)
-    print x + "Component:", type, wibbrlib.component_type_name(type)
+    print x + "Component:", type, component_type_name(type)
     if type in recursive_component_types:
         pos = 0
         while pos < len(data):
-            (type2, data2, pos) = wibbrlib.component_decode(data, pos)
+            (type2, data2, pos) = component_decode(data, pos)
             show_component(type2, data2, indent+1)
     else:
-        print x + "  data:", repr(data)
+        fmt = component_data_formatters.get(type, repr)
+        print x + "  data:", fmt(data)
 
 
 def show_block(filename):
+    print "======== block:", filename, "==========="
     f = file(filename, "r")
     str = f.read()
     f.close()
     pos = 0
     while pos < len(str):
-        (type, data, pos) = wibbrlib.component_decode(str, pos)
+        (type, data, pos) = component_decode(str, pos)
         show_component(type, data)
         print
 
