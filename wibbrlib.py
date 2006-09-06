@@ -53,3 +53,14 @@ def object_encode(objid, objtype, encoded_components):
     objid = component_encode(OBJID, objid)
     objtype = component_encode(OBJTYPE, varint_encode(objtype))
     return objid + objtype + "".join(encoded_components)
+
+
+def object_decode(str, pos):
+    """Decode an object, return components as list of (type, data)"""
+    pairs = []
+    while pos < len(str):
+        (type, data, pos) = component_decode(str, pos)
+        if type == OBJTYPE:
+            (data, _) = varint_decode(data, 0)
+        pairs.append((type, data))
+    return pairs

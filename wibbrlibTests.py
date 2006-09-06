@@ -82,5 +82,23 @@ class ObjectEncodingTests(unittest.TestCase):
                              "\4\1uuid\1\2\41\1\77x")
 
 
+class ObjectEncodingDecodingTests(unittest.TestCase):
+
+    def test(self):
+        component1 = component_encode(0xdeadbeef, "hello")
+        component2 = component_encode(0xcafebabe, "world")
+        object = object_encode("uuid", 0xdada, [component1, component2])
+        self.failIfEqual(object, None)
+        self.failIfEqual(object, "")
+        
+        components = object_decode(object, 0)
+        self.failUnlessEqual(len(components), 4) # id, type, cmpnt1, cmpnt2
+        
+        self.failUnlessEqual(components[0], (OBJID, "uuid"))
+        self.failUnlessEqual(components[1], (OBJTYPE, 0xdada))
+        self.failUnlessEqual(components[2], (0xdeadbeef, "hello"))
+        self.failUnlessEqual(components[3], (0xcafebabe, "world"))
+
+
 if __name__ == "__main__":
     unittest.main()
