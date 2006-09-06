@@ -126,6 +126,12 @@ class BlockCreateTests(unittest.TestCase):
         block = block_create_from_object_queue("blkid", oq)
         self.failUnlessEqual(block, "\5\3blkid")
 
+    def testObjectQueue(self):
+        oq = object_queue_create()
+        object_queue_add(oq, "foo")
+        block = block_create_from_object_queue("blkid", oq)
+        self.failUnlessEqual(block, "\5\3blkidfoo")
+
 
 if __name__ == "__main__":
     unittest.main()
