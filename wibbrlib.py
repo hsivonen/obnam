@@ -8,6 +8,7 @@ BLKID = 3
 FILEDATA = 4
 OBJPART = 5
 FILESIZE = 6
+OBJMAP = 7
 
 
 _component_type_to_name = {
@@ -17,6 +18,7 @@ _component_type_to_name = {
     FILEDATA: "FILEDATA",
     OBJPART: "OBJPART",
     FILESIZE: "FILESIZE",
+    OBJMAP: "OBJMAP",
 }
 
 
@@ -32,7 +34,7 @@ INODE = 2
 
 _object_type_to_name = {
     FILECONT: "FILECONT",
-    INODE: "INDOE",
+    INODE: "INODE",
 }
 
 

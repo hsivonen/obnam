@@ -11,9 +11,18 @@ recursive_component_types = (
 )
 
 
+def format_objmap(data):
+    uuids = []
+    while data:
+        uuids.append(data[:36])
+        data = data[36:]
+    return "%s->%s" % (uuids[0], ",".join(uuids[1:]))
+
+
 component_data_formatters = {
     OBJTYPE: lambda data: object_type_name(varint_decode(data, 0)[0]),
     FILESIZE: lambda data: varint_decode(data, 0)[0],
+    OBJMAP: format_objmap,
 }
 
 

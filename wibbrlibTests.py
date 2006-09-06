@@ -17,6 +17,7 @@ class ComponentTypeNameTests(unittest.TestCase):
         self.failUnlessEqual(component_type_name(FILEDATA), "FILEDATA")
         self.failUnlessEqual(component_type_name(OBJPART), "OBJPART")
         self.failUnlessEqual(component_type_name(FILESIZE), "FILESIZE")
+        self.failUnlessEqual(component_type_name(OBJMAP), "OBJMAP")
 
 
 class ObjectTypeNameTests(unittest.TestCase):
