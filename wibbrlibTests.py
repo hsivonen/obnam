@@ -16,6 +16,7 @@ class ComponentTypeNameTests(unittest.TestCase):
         self.failUnlessEqual(component_type_name(BLKID), "BLKID")
         self.failUnlessEqual(component_type_name(FILEDATA), "FILEDATA")
         self.failUnlessEqual(component_type_name(OBJPART), "OBJPART")
+        self.failUnlessEqual(component_type_name(FILESIZE), "FILESIZE")
 
 
 class ObjectTypeNameTests(unittest.TestCase):
@@ -23,6 +24,7 @@ class ObjectTypeNameTests(unittest.TestCase):
     def test(self):
         self.failUnlessEqual(object_type_name(-12765), "UNKNOWN")
         self.failUnlessEqual(object_type_name(FILECONT), "FILECONT")
+        self.failUnlessEqual(object_type_name(INODE), "INODE")
 
 
 class VarintEncoding(unittest.TestCase):

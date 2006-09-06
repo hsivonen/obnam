@@ -7,6 +7,7 @@ OBJTYPE = 2
 BLKID = 3
 FILEDATA = 4
 OBJPART = 5
+FILESIZE = 6
 
 
 _component_type_to_name = {
@@ -15,6 +16,7 @@ _component_type_to_name = {
     BLKID: "BLKID",
     FILEDATA: "FILEDATA",
     OBJPART: "OBJPART",
+    FILESIZE: "FILESIZE",
 }
 
 
@@ -25,10 +27,12 @@ def component_type_name(type):
 
 # Constants of object types
 FILECONT = 1
+INODE = 2
 
 
 _object_type_to_name = {
     FILECONT: "FILECONT",
+    INODE: "INDOE",
 }
 
 
