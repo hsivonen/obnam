@@ -1,0 +1,5 @@
+Every new feature must have a unit test.
+
+Every bug fix must have a unit test.
+
+Do not commit unless all unit tests pass.
