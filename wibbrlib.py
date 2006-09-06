@@ -25,6 +25,16 @@ def component_type_name(type):
 FILECONT = 1
 
 
+_object_type_to_name = {
+    FILECONT: "FILECONT",
+}
+
+
+def object_type_name(type):
+    """Return a textual name for a numeric object type"""
+    return _object_type_to_name.get(type, "UNKNOWN")
+
+
 def varint_encode(i):
     """Encode an integer as a varint"""
     assert i >= 0

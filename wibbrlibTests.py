@@ -16,6 +16,12 @@ class ComponentTypeNameTests(unittest.TestCase):
         self.failUnlessEqual(component_type_name(FILEDATA), "FILEDATA")
 
 
+class ObjectTypeNameTests(unittest.TestCase):
+
+    def test(self):
+        self.failUnlessEqual(object_type_name(FILECONT), "FILECONT")
+
+
 class VarintEncoding(unittest.TestCase):
 
     def testZero(self):
