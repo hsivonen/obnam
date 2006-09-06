@@ -70,3 +70,8 @@ def object_decode(str, pos):
 def object_queue_create():
     """Create an empty object queue"""
     return []
+
+
+def object_queue_add(oq, object):
+    """Add an encoded object into an object queue"""
+    oq.append(object)

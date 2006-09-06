@@ -105,6 +105,11 @@ class ObjectQueueTests(unittest.TestCase):
     def testCreate(self):
         self.failUnlessEqual(object_queue_create(), [])
 
+    def testAdd(self):
+        oq = object_queue_create()
+        object_queue_add(oq, "abc")
+        self.failUnlessEqual(oq, ["abc"])
+
 
 if __name__ == "__main__":
     unittest.main()
