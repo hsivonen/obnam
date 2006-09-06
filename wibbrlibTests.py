@@ -71,5 +71,12 @@ class ComponentEncodingDecodingTests(unittest.TestCase):
         self.doit(2, "hello, world\0this is fun")
 
 
+class ObjectEncodingTests(unittest.TestCase):
+
+    def test(self):
+        self.failUnlessEqual(object_encode("uuid", 33, []),
+                             "\4\1uuid\1\2\41")
+
+
 if __name__ == "__main__":
     unittest.main()
