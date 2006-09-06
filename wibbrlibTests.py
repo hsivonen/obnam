@@ -73,9 +73,13 @@ class ComponentEncodingDecodingTests(unittest.TestCase):
 
 class ObjectEncodingTests(unittest.TestCase):
 
-    def test(self):
+    def testEmptyObject(self):
         self.failUnlessEqual(object_encode("uuid", 33, []),
                              "\4\1uuid\1\2\41")
+
+    def testNonEmptyObject(self):
+        self.failUnlessEqual(object_encode("uuid", 33, ["\1\77x"]),
+                             "\4\1uuid\1\2\41\1\77x")
 
 
 if __name__ == "__main__":
