@@ -1,0 +1,117 @@
+#!/usr/bin/python
+
+
+import os
+import sys
+
+from wibbrlib import *
+import uuid
+
+
+BLOCK_SIZE = 64 * 1024
+if "WIBBR_BLOCK_SIZE" in os.environ:
+    BLOCK_SIZE = int(os.environ["WIBBR_BLOCK_SIZE"])
+
+target_dir = None
+
+
+def new_id():
+    return str(uuid.uuid4())
+
+
+class Map:
+
+    def __init__(self):
+        self.new_block()
+        self.dict = {}
+        
+    def new_block(self):
+        self.next_block_id = new_id()
+        
+    def add(self, objid):
+        if objid in self.dict:
+            self.dict[objid].append(self.next_block_id)
+        else:
+            self.dict[objid] = [self.next_block_id]
+
+
+def write_block(id, oq):
+    block = block_create_from_object_queue(id, oq)
+    assert type(block) == type("")
+    dirname = os.path.join(target_dir, "blocks")
+    for c in id[:3]:
+        dirname = os.path.join(dirname, c)
+    if not os.path.isdir(dirname):
+        os.makedirs(dirname)
+    filename = os.path.join(dirname, id + ".block")
+    f = file(filename, "w")
+#    f.write(block)
+    f.close()
+
+
+def enqueue_object(map, oq, id, object):
+    if len(object) + object_queue_combined_size(oq) > BLOCK_SIZE:
+        write_block(map.next_block_id, oq)
+        map.new_block()
+        oq = object_queue_create()
+    object_queue_add(oq, object)
+    map.add(id)
+    return oq
+
+
+def create_file_contents_object(map, oq, filename):
+    id = new_id()
+    f = file(filename, "r")
+    while True:
+        data = f.read(BLOCK_SIZE)
+        if not data:
+            break
+        c = component_encode(FILEDATA, data)
+        o = object_encode(id, FILECONT, [c])
+        oq = enqueue_object(map, oq, id, o)
+    return oq
+
+
+def create_inode_object(map, oq, filename):
+    st = os.stat(filename)
+    size = component_encode(FILESIZE, varint_encode(st.st_size))
+    id = new_id()
+    o = object_encode(id, INODE, [size])
+    return enqueue_object(map, oq, id, o)
+
+
+def back_up_directory(map, oq, dirname):
+    for dirpath, dirnames, filenames in os.walk(dirname):
+        for filename in filenames:
+            filename = os.path.join(dirpath, filename)
+            if os.path.isfile(filename):
+                oq = create_file_contents_object(map, oq, filename)
+                oq = create_inode_object(map, oq, filename)
+    return oq
+
+
+def main():
+    map = Map()
+    oq = object_queue_create()
+
+    global target_dir
+    target_dir = sys.argv[1]
+    
+    for dirname in sys.argv[2:]:
+        oq = back_up_directory(map, oq, dirname)
+
+    if object_queue_combined_size(oq) > 0:
+        write_block(map.next_block_id, oq)
+        map.new_block()
+        del oq
+
+    mapq = object_queue_create()
+    for objid in map.dict:
+        data = objid + "".join(map.dict[objid])
+        c = component_encode(OBJMAP, data)
+        object_queue_add(mapq, c)
+    mapid = new_id()
+    write_block(mapid, mapq)
+
+if __name__ == "__main__":
+    main()
