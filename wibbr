@@ -39,13 +39,13 @@ def write_block(id, oq):
     block = block_create_from_object_queue(id, oq)
     assert type(block) == type("")
     dirname = os.path.join(target_dir, "blocks")
-    for c in id[:3]:
-        dirname = os.path.join(dirname, c)
+    for i in range(3):
+        dirname = os.path.join(dirname, id[i])
     if not os.path.isdir(dirname):
         os.makedirs(dirname)
     filename = os.path.join(dirname, id + ".block")
     f = file(filename, "w")
-#    f.write(block)
+    f.write(block)
     f.close()
 
 
