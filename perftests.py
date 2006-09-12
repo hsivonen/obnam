@@ -23,8 +23,8 @@ def wibbr_method(tempdir, rootdir, testcase):
 
 
 backup_methods = (
-#    ("tar", tar_method),
-#    ("targz", targz_method),
+    ("tar", tar_method),
+    ("targz", targz_method),
     ("wibbr", wibbr_method),
 )
 
@@ -106,6 +106,7 @@ def run_testcase(testcase):
     print "Testcase:", testcase
     print "-------------------------------------------------------"
     print 
+    sys.stdout.flush()
 
     if testcase.endswith(".tar.bz2"):
         flag = "-j"
@@ -115,6 +116,7 @@ def run_testcase(testcase):
                                         flag, "-xf", testcase])
     size = sizeof(rootdir)
     print format("Unpacking:", user, system, real, size)
+    sys.stdout.flush()
 
     for name, method in backup_methods:
         (result, argv) = method(tempdir, rootdir, testcase)
@@ -125,6 +127,7 @@ def run_testcase(testcase):
         print format(name + ":", user, system, real, size)
         report_diskstats_change(diskstats1, diskstats2)
         run_command(["rm", "-rf", result])
+        sys.stdout.flush()
 
     print
     
