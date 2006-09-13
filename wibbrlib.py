@@ -28,6 +28,9 @@ CMP_ST_BLOCKS = _get_component_id()
 CMP_ST_BLKSIZE = _get_component_id()
 CMP_ST_RDEV = _get_component_id()
 CMP_CONTREF = _get_component_id()
+CMP_NAMEIPAIR = _get_component_id()
+CMP_INODEREF = _get_component_id()
+CMP_FILENAME = _get_component_id()
 
 
 _component_type_to_name = {
@@ -51,6 +54,9 @@ _component_type_to_name = {
     CMP_ST_BLKSIZE: "CMP_ST_BLKSIZE",
     CMP_ST_RDEV: "CMP_ST_RDEV",
     CMP_CONTREF: "CMP_CONTREF",
+    CMP_NAMEIPAIR: "CMP_NAMEIPAIR",
+    CMP_INODEREF: "CMP_INODEREF",
+    CMP_FILENAME: "CMP_FILENAME",
 }
 
 
@@ -60,13 +66,21 @@ def component_type_name(type):
 
 
 # Constants of object types
-OBJ_FILECONT = 1
-OBJ_INODE = 2
+_next_object_id = 64
+def _get_object_id():
+    global _next_object_id
+    x = _next_object_id
+    _next_object_id += 1
+    return x
+OBJ_FILECONT = _get_object_id()
+OBJ_INODE = _get_object_id()
+OBJ_GEN = _get_object_id()
 
 
 _object_type_to_name = {
     OBJ_FILECONT: "OBJ_FILECONT",
     OBJ_INODE: "OBJ_INODE",
+    OBJ_GEN: "OBJ_GEN",
 }
 
 
@@ -262,3 +276,74 @@ def inode_object_decode(inode):
         else:
             raise UnknownInodeField(type)
     return objid, stat_results, contref
+
+
+def generation_object_encode(objid, pairs):
+    """Encode a generation object, from list of filename, inode_id pairs"""
+    components = []
+    for filename, inode_id in pairs:
+        cf = component_encode(CMP_FILENAME, filename)
+        ci = component_encode(CMP_INODEREF, inode_id)
+        c = component_encode(CMP_NAMEIPAIR, cf + ci)
+        components.append(c)
+    return object_encode(objid, OBJ_GEN, components)
+
+
+class UnknownGenerationComponent(WibbrException):
+
+    def __init__(self, type):
+        self._msg = "Unknown component in generation: %s (%d)" % \
+            (component_type_name(type), type)
+
+
+class NameInodePairHasTooManyComponents(WibbrException):
+
+    def __init__(self):
+        self._msg = "Name/inode pair has too many components"
+
+
+class InvalidNameInodePair(WibbrException):
+
+    def __init__(self):
+        self._msg = "Name/inode pair does not consist of name and inode"
+
+
+class WrongObjectType(WibbrException):
+
+    def __init__(self, actual, wanted):
+        self._msg = "Object is of type %s (%d), wanted %s (%d)" % \
+            (object_type_name(actual), actual, 
+             object_type_name(wanted), wanted)
+
+
+def generation_object_decode(gen):
+    """Decode a generation object into objid, list of name, inode_id pairs"""
+    pos = 0
+    objid = None
+    pairs = []
+    while pos < len(gen):
+        (type, data, pos) = component_decode(gen, pos)
+        if type == CMP_OBJID:
+            objid = data
+        elif type == CMP_OBJTYPE:
+            (objtype, _) = varint_decode(data, 0)
+            if objtype != OBJ_GEN:
+                raise WrongObjectType(objtype, OBJ_GEN)
+        elif type == CMP_NAMEIPAIR:
+            (nitype1, nidata1, nipos) = component_decode(data, 0)
+            (nitype2, nidata2, nipos) = component_decode(data, nipos)
+            if nipos != len(data):
+                raise NameInodePairHasTooManyComponents()
+            if nitype1 == CMP_INODEREF and nitype2 == CMP_FILENAME:
+                inode_id = nidata1
+                filename = nidata2
+            elif nitype2 == CMP_INODEREF and nitype1 == CMP_FILENAME:
+                inode_id = nidata2
+                filename = nidata1
+            else:
+                raise InvalidNameInodePair()
+            pairs.append((filename, inode_id))
+        else:
+            raise UnknownGenerationComponent(type)
+            
+    return objid, pairs

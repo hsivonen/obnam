@@ -33,6 +33,9 @@ class ComponentTypeNameTests(unittest.TestCase):
         self.failUnlessEqual(c(CMP_ST_BLKSIZE), "CMP_ST_BLKSIZE")
         self.failUnlessEqual(c(CMP_ST_RDEV), "CMP_ST_RDEV")
         self.failUnlessEqual(c(CMP_CONTREF), "CMP_CONTREF")
+        self.failUnlessEqual(c(CMP_NAMEIPAIR), "CMP_NAMEIPAIR")
+        self.failUnlessEqual(c(CMP_INODEREF), "CMP_INODEREF")
+        self.failUnlessEqual(c(CMP_FILENAME), "CMP_FILENAME")
 
 
 class ObjectTypeNameTests(unittest.TestCase):
@@ -41,6 +44,7 @@ class ObjectTypeNameTests(unittest.TestCase):
         self.failUnlessEqual(object_type_name(-12765), "OBJ_UNKNOWN")
         self.failUnlessEqual(object_type_name(OBJ_FILECONT), "OBJ_FILECONT")
         self.failUnlessEqual(object_type_name(OBJ_INODE), "OBJ_INODE")
+        self.failUnlessEqual(object_type_name(OBJ_GEN), "OBJ_GEN")
 
 
 class VarintEncoding(unittest.TestCase):
@@ -180,6 +184,17 @@ class InodeTests(unittest.TestCase):
         self.failUnlessEqual(id1, id2)
         self.failUnlessEqual(stats1, stats2)
         self.failUnlessEqual(contref1, contref2)
+
+
+class GenerationTests(unittest.TestCase):
+
+    def testEncodeDecode(self):
+        id1 = "xyzzy"
+        pairs1 = [("inode1", "cont1"), ("inode2", "cont2")]
+        gen = generation_object_encode(id1, pairs1)
+        (id2, pairs2) = generation_object_decode(gen)
+        self.failUnlessEqual(id1, id2)
+        self.failUnlessEqual(pairs1, pairs2)
 
 
 if __name__ == "__main__":
