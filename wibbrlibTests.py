@@ -18,7 +18,6 @@ class ComponentTypeNameTests(unittest.TestCase):
         self.failUnlessEqual(c(CMP_BLKID), "CMP_BLKID")
         self.failUnlessEqual(c(CMP_FILEDATA), "CMP_FILEDATA")
         self.failUnlessEqual(c(CMP_OBJPART), "CMP_OBJPART")
-        self.failUnlessEqual(c(CMP_FILESIZE), "CMP_FILESIZE")
         self.failUnlessEqual(c(CMP_OBJMAP), "CMP_OBJMAP")
         self.failUnlessEqual(c(CMP_ST_MODE), "CMP_ST_MODE")
         self.failUnlessEqual(c(CMP_ST_INO), "CMP_ST_INO")
@@ -33,6 +32,7 @@ class ComponentTypeNameTests(unittest.TestCase):
         self.failUnlessEqual(c(CMP_ST_BLOCKS), "CMP_ST_BLOCKS")
         self.failUnlessEqual(c(CMP_ST_BLKSIZE), "CMP_ST_BLKSIZE")
         self.failUnlessEqual(c(CMP_ST_RDEV), "CMP_ST_RDEV")
+        self.failUnlessEqual(c(CMP_CONTREF), "CMP_CONTREF")
 
 
 class ObjectTypeNameTests(unittest.TestCase):
@@ -174,10 +174,12 @@ class InodeTests(unittest.TestCase):
     def testEncodeDecode(self):
         stats1 = normalize_stat_result(os.stat("wibbrlibTests.py"))
         id1 = "xyzzy"
-        inode = inode_object_encode(id1, stats1)
-        (id2, stats2) = inode_object_decode(inode)
+        contref1 = "plugh"
+        inode = inode_object_encode(id1, stats1, contref1)
+        (id2, stats2, contref2) = inode_object_decode(inode)
         self.failUnlessEqual(id1, id2)
         self.failUnlessEqual(stats1, stats2)
+        self.failUnlessEqual(contref1, contref2)
 
 
 if __name__ == "__main__":

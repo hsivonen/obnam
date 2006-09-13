@@ -13,7 +13,6 @@ CMP_OBJTYPE = _get_component_id()
 CMP_BLKID = _get_component_id()
 CMP_FILEDATA = _get_component_id()
 CMP_OBJPART = _get_component_id()
-CMP_FILESIZE = _get_component_id()
 CMP_OBJMAP = _get_component_id()
 CMP_ST_MODE = _get_component_id()
 CMP_ST_INO = _get_component_id()
@@ -28,6 +27,7 @@ CMP_ST_CTIME = _get_component_id()
 CMP_ST_BLOCKS = _get_component_id()
 CMP_ST_BLKSIZE = _get_component_id()
 CMP_ST_RDEV = _get_component_id()
+CMP_CONTREF = _get_component_id()
 
 
 _component_type_to_name = {
@@ -36,7 +36,6 @@ _component_type_to_name = {
     CMP_BLKID: "CMP_BLKID",
     CMP_FILEDATA: "CMP_FILEDATA",
     CMP_OBJPART: "CMP_OBJPART",
-    CMP_FILESIZE: "CMP_FILESIZE",
     CMP_OBJMAP: "CMP_OBJMAP",
     CMP_ST_MODE: "CMP_ST_MODE",
     CMP_ST_INO: "CMP_ST_INO",
@@ -51,6 +50,7 @@ _component_type_to_name = {
     CMP_ST_BLOCKS: "CMP_ST_BLOCKS",
     CMP_ST_BLKSIZE: "CMP_ST_BLKSIZE",
     CMP_ST_RDEV: "CMP_ST_RDEV",
+    CMP_CONTREF: "CMP_CONTREF",
 }
 
 
@@ -178,7 +178,7 @@ def normalize_stat_result(stat_result):
     return o
 
 
-def inode_object_encode(objid, stat_result):
+def inode_object_encode(objid, stat_result, contents_id):
     """Create an inode object from the return value of os.stat"""
     fields = []
     st = stat_result
@@ -201,6 +201,7 @@ def inode_object_encode(objid, stat_result):
     if "st_rdev" in st:
         fields.append(component_encode(CMP_ST_RDEV, 
                                        varint_encode(st["st_rdev"])))
+    fields.append(component_encode(CMP_CONTREF, contents_id))
     return object_encode(objid, OBJ_INODE, fields)
     
     
@@ -221,6 +222,7 @@ def inode_object_decode(inode):
     pos = 0
     objid = None
     stat_results = {}
+    contref = None
     while pos < len(inode):
         (type, data, pos) = component_decode(inode, pos)
         if type == CMP_OBJID:
@@ -255,6 +257,8 @@ def inode_object_decode(inode):
             stat_results["st_blksize"] = varint_decode(data, 0)[0]
         elif type == CMP_ST_RDEV:
             stat_results["st_rdev"] = varint_decode(data, 0)[0]
+        elif type == CMP_CONTREF:
+            contref = data
         else:
             raise UnknownInodeField(type)
-    return objid, stat_results
+    return objid, stat_results, contref

@@ -2,6 +2,7 @@
 
 
 import os
+import stat
 import sys
 
 from wibbrlib import *
@@ -66,27 +67,31 @@ def create_file_contents_object(map, oq, filename):
         data = f.read(BLOCK_SIZE)
         if not data:
             break
-        c = component_encode(FILEDATA, data)
-        o = object_encode(id, FILECONT, [c])
+        c = component_encode(CMP_FILEDATA, data)
+        o = object_encode(id, OBJ_FILECONT, [c])
         oq = enqueue_object(map, oq, id, o)
-    return oq
+    return id, oq
 
 
-def create_inode_object(map, oq, filename):
+def create_inode_object(map, oq, filename, cont_id):
     st = os.stat(filename)
-    size = component_encode(FILESIZE, varint_encode(st.st_size))
+    nst = normalize_stat_result(st)
     id = new_id()
-    o = object_encode(id, INODE, [size])
-    return enqueue_object(map, oq, id, o)
+    o = inode_object_encode(id, nst, cont_id)
+    return id, enqueue_object(map, oq, id, o)
 
 
 def back_up_directory(map, oq, dirname):
+    pairs = []
     for dirpath, dirnames, filenames in os.walk(dirname):
         for filename in filenames:
             filename = os.path.join(dirpath, filename)
-            if os.path.isfile(filename):
-                oq = create_file_contents_object(map, oq, filename)
-                oq = create_inode_object(map, oq, filename)
+            st = os.lstat(filename)
+            if stat.S_ISREG(st.st_mode):
+                (cont_id, oq) = create_file_contents_object(map, oq, filename)
+                (inode_id, oq) = create_inode_object(map, oq, filename,
+                                                     cont_id)
+                pairs.append((filename, inode_id))
     return oq
 
 
@@ -108,7 +113,7 @@ def main():
     mapq = object_queue_create()
     for objid in map.dict:
         data = objid + "".join(map.dict[objid])
-        c = component_encode(OBJMAP, data)
+        c = component_encode(CMP_OBJMAP, data)
         object_queue_add(mapq, c)
     mapid = new_id()
     write_block(mapid, mapq)
