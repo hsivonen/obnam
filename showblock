@@ -1,6 +1,9 @@
 #!/usr/bin/python
 
 
+"""Show the contents of a Wibbr storage block."""
+
+
 import sys
 
 from wibbrlib import *
