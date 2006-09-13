@@ -92,6 +92,9 @@ def back_up_directory(map, oq, dirname):
                 (inode_id, oq) = create_inode_object(map, oq, filename,
                                                      cont_id)
                 pairs.append((filename, inode_id))
+    genid = new_id()
+    gen = generation_object_encode(genid, pairs)
+    oq = enqueue_object(map, oq, genid, gen)
     return oq
 
 
