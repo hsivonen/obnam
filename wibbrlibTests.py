@@ -1,6 +1,7 @@
 """Unit tests for wibbrlib."""
 
 
+import os
 import unittest
 
 
@@ -10,22 +11,36 @@ from wibbrlib import *
 class ComponentTypeNameTests(unittest.TestCase):
 
     def test(self):
-        self.failUnlessEqual(component_type_name(-12765), "UNKNOWN")
-        self.failUnlessEqual(component_type_name(OBJID), "OBJID")
-        self.failUnlessEqual(component_type_name(OBJTYPE), "OBJTYPE")
-        self.failUnlessEqual(component_type_name(BLKID), "BLKID")
-        self.failUnlessEqual(component_type_name(FILEDATA), "FILEDATA")
-        self.failUnlessEqual(component_type_name(OBJPART), "OBJPART")
-        self.failUnlessEqual(component_type_name(FILESIZE), "FILESIZE")
-        self.failUnlessEqual(component_type_name(OBJMAP), "OBJMAP")
+        c = component_type_name
+        self.failUnlessEqual(c(-12765), "CMP_UNKNOWN")
+        self.failUnlessEqual(c(CMP_OBJID), "CMP_OBJID")
+        self.failUnlessEqual(c(CMP_OBJTYPE), "CMP_OBJTYPE")
+        self.failUnlessEqual(c(CMP_BLKID), "CMP_BLKID")
+        self.failUnlessEqual(c(CMP_FILEDATA), "CMP_FILEDATA")
+        self.failUnlessEqual(c(CMP_OBJPART), "CMP_OBJPART")
+        self.failUnlessEqual(c(CMP_FILESIZE), "CMP_FILESIZE")
+        self.failUnlessEqual(c(CMP_OBJMAP), "CMP_OBJMAP")
+        self.failUnlessEqual(c(CMP_ST_MODE), "CMP_ST_MODE")
+        self.failUnlessEqual(c(CMP_ST_INO), "CMP_ST_INO")
+        self.failUnlessEqual(c(CMP_ST_DEV), "CMP_ST_DEV")
+        self.failUnlessEqual(c(CMP_ST_NLINK), "CMP_ST_NLINK")
+        self.failUnlessEqual(c(CMP_ST_UID), "CMP_ST_UID")
+        self.failUnlessEqual(c(CMP_ST_GID), "CMP_ST_GID")
+        self.failUnlessEqual(c(CMP_ST_SIZE), "CMP_ST_SIZE")
+        self.failUnlessEqual(c(CMP_ST_ATIME), "CMP_ST_ATIME")
+        self.failUnlessEqual(c(CMP_ST_MTIME), "CMP_ST_MTIME")
+        self.failUnlessEqual(c(CMP_ST_CTIME), "CMP_ST_CTIME")
+        self.failUnlessEqual(c(CMP_ST_BLOCKS), "CMP_ST_BLOCKS")
+        self.failUnlessEqual(c(CMP_ST_BLKSIZE), "CMP_ST_BLKSIZE")
+        self.failUnlessEqual(c(CMP_ST_RDEV), "CMP_ST_RDEV")
 
 
 class ObjectTypeNameTests(unittest.TestCase):
 
     def test(self):
-        self.failUnlessEqual(object_type_name(-12765), "UNKNOWN")
-        self.failUnlessEqual(object_type_name(FILECONT), "FILECONT")
-        self.failUnlessEqual(object_type_name(INODE), "INODE")
+        self.failUnlessEqual(object_type_name(-12765), "OBJ_UNKNOWN")
+        self.failUnlessEqual(object_type_name(OBJ_FILECONT), "OBJ_FILECONT")
+        self.failUnlessEqual(object_type_name(OBJ_INODE), "OBJ_INODE")
 
 
 class VarintEncoding(unittest.TestCase):
@@ -115,8 +130,8 @@ class ObjectEncodingDecodingTests(unittest.TestCase):
         components = object_decode(object, 0)
         self.failUnlessEqual(len(components), 4) # id, type, cmpnt1, cmpnt2
         
-        self.failUnlessEqual(components[0], (OBJID, "uuid"))
-        self.failUnlessEqual(components[1], (OBJTYPE, 0xdada))
+        self.failUnlessEqual(components[0], (CMP_OBJID, "uuid"))
+        self.failUnlessEqual(components[1], (CMP_OBJTYPE, 0xdada))
         self.failUnlessEqual(components[2], (0xdeadbeef, "hello"))
         self.failUnlessEqual(components[3], (0xcafebabe, "world"))
 
@@ -152,6 +167,17 @@ class BlockCreateTests(unittest.TestCase):
         object_queue_add(oq, "foo")
         block = block_create_from_object_queue("blkid", oq)
         self.failUnlessEqual(block, "\5\3blkid\3\5foo")
+
+
+class InodeTests(unittest.TestCase):
+
+    def testEncodeDecode(self):
+        stats1 = normalize_stat_result(os.stat("wibbrlibTests.py"))
+        id1 = "xyzzy"
+        inode = inode_object_encode(id1, stats1)
+        (id2, stats2) = inode_object_decode(inode)
+        self.failUnlessEqual(id1, id2)
+        self.failUnlessEqual(stats1, stats2)
 
 
 if __name__ == "__main__":
