@@ -36,7 +36,7 @@ def create_tempdir():
 import time
 _start_of_program = time.time()
 def time_offset():
-    return time.time() - _start_of_program
+    return "%.2f" % (time.time() - _start_of_program)
 
 
 def run_command(argv):
@@ -53,6 +53,7 @@ def run_command(argv):
     system = finish[3] - start[3]
     real = finish[4] - start[4]
     print "Command finished, time offset is now:", time_offset()
+    print
     return user, system, real
 
 
@@ -69,8 +70,13 @@ def sizeof(file_or_dir):
 
 
 def format(desc, user, system, real, size):
-    return "%-10s %7.2f s user, %7.2f s system, %7.2f s real, %d bytes" % \
-            (desc, user, system, real, size)
+    return """\
+Operation: %s
+User mode CPU: %.2f
+System mode CPU: %.2f
+Real time: %.2f
+Size: %d bytes
+""" % (desc, user, system, real, size)
 
 
 def get_diskstats():
@@ -83,8 +89,25 @@ def get_diskstats():
     return diskstats
 
 
+# Descriptions of fields in /proc/diskstats
+field_desc = (
+    "# of reads issued",
+    "# of reads merged",
+    "# of sectors read",
+    "# of milliseconds spent reading",
+    "# of writes completed",
+    "# of writes merged",
+    "# of sectors written",
+    "# of milliseconds spent writing",
+    "# of I/Os currently in progress",
+    "# of milliseconds spent doing I/Os",
+    "weighed # of milliseconds spent doing I/Os",
+)
+
+
 # Read Documentation/iostats.txt in the Linux kernel source tree.
 def report_diskstats_change(ds1, ds2):
+    list = []
     for key in ds2:
         if key in ds1:
             fields1 = ds1[key][3:]
@@ -92,10 +115,20 @@ def report_diskstats_change(ds1, ds2):
             if len(fields1) == 11 and len(fields2) == 11:
                 deltas = []
                 for i in range(11):
-                    deltas.append(int(fields2[i]) - int(fields1[i]))
-                if [x for x in deltas if x != 0]:
-                    print ">>", " ".join(ds2[key][:3]), \
-                          " ".join(["%d" % x for x in deltas])
+                    delta = int(fields2[i]) - int(fields1[i])
+                    if delta:
+                        deltas.append((i, delta))
+                if deltas:
+                    list.append((key, deltas))
+    if list:
+        print "Disk stats changes:"
+        for disk, deltas in list:
+            print "Disk:", disk
+            for i, delta in deltas:
+                print "  ", field_desc[i] + ":", delta
+    else:
+        print "No changes to disk stats"    
+    print
 
 
 def run_testcase(testcase):
@@ -115,7 +148,7 @@ def run_testcase(testcase):
     (user, system, real) = run_command(["tar", "-C", rootdir, 
                                         flag, "-xf", testcase])
     size = sizeof(rootdir)
-    print format("Unpacking:", user, system, real, size)
+    print format("Unpacking", user, system, real, size)
     sys.stdout.flush()
 
     for name, method in backup_methods:
@@ -124,21 +157,30 @@ def run_testcase(testcase):
         (user, system, real) = run_command(argv)
         diskstats2 = get_diskstats()
         size = sizeof(result)
-        print format(name + ":", user, system, real, size)
+        print format(name, user, system, real, size)
         report_diskstats_change(diskstats1, diskstats2)
         run_command(["rm", "-rf", result])
         sys.stdout.flush()
 
-    print
-    
     run_command(["rm", "-rf", tempdir])
 
+    print
+    
+
 def main():
+    print "Wibbr perftests starting."
+    print "========================="
+    print
+    print "Time at start:", time.strftime("%Y-%m-%d %H:%M:%S")
+    print
+    
     for dirname in sys.argv[1:]:
         for filename in os.listdir(dirname):
             if filename.endswith(".tar.bz2") or filename.endswith(".tar.gz"):
                 testcase = os.path.join(dirname, filename)
                 run_testcase(testcase)
+
+    print "Time at end:", time.strftime("%Y-%m-%d %H:%M:%S")
 
 
 if __name__ == "__main__":
