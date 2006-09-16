@@ -3,6 +3,7 @@
 
 import os
 import stat
+import subprocess
 import sys
 
 from wibbrlib import *
@@ -76,11 +77,10 @@ def create_file_contents_object(map, oq, filename):
 
 def create_signature_object(map, oq, filename):
     id = new_id()
-    (_, f) = os.popen2(["rdiff", "signature", "--", filename, "-"], "r")
-    data = f.read()
-    f.close()
-    _.close()
-    c = component_encode(CMP_SIGDATA, data)
+    p = subprocess.Popen(["rdiff", "signature", "--", filename],
+                         stdout=subprocess.PIPE)
+    (sigdata, _) = p.communicate()
+    c = component_encode(CMP_SIGDATA, sigdata)
     o = object_encode(id, OBJ_SIG, [c])
     oq = enqueue_object(map, oq, id, o)
     return id, oq
