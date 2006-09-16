@@ -10,7 +10,8 @@ from wibbrlib import *
 
 
 recursive_component_types = (
-    OBJPART,
+    CMP_OBJPART,
+    CMP_NAMEIPAIR,
 )
 
 
@@ -19,13 +20,33 @@ def format_objmap(data):
     while data:
         uuids.append(data[:36])
         data = data[36:]
-    return "%s->%s" % (uuids[0], ",".join(uuids[1:]))
+    return "%s -> %s" % (uuids[0], ",".join(uuids[1:]))
 
+
+def format_octal(data):
+    return "0%o" % varint_decode(data, 0)[0]
+
+
+def format_decimal(data):
+    return "%d" % varint_decode(data, 0)[0]
+    
 
 component_data_formatters = {
-    OBJTYPE: lambda data: object_type_name(varint_decode(data, 0)[0]),
-    FILESIZE: lambda data: varint_decode(data, 0)[0],
-    OBJMAP: format_objmap,
+    CMP_OBJTYPE: lambda data: object_type_name(varint_decode(data, 0)[0]),
+    CMP_ST_MODE: format_octal,
+    CMP_ST_INO: format_decimal,
+    CMP_ST_DEV: format_decimal,
+    CMP_ST_NLINK: format_decimal,
+    CMP_ST_UID: format_decimal,
+    CMP_ST_GID: format_decimal,
+    CMP_ST_SIZE: format_decimal,
+    CMP_ST_ATIME: format_decimal,
+    CMP_ST_CTIME: format_decimal,
+    CMP_ST_MTIME: format_decimal,
+    CMP_ST_BLOCKS: format_decimal,
+    CMP_ST_BLKSIZE: format_decimal,
+    CMP_ST_RDEV: format_decimal,
+    CMP_OBJMAP: format_objmap,
 }
 
 
