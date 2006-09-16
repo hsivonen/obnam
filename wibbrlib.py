@@ -31,6 +31,8 @@ CMP_CONTREF = _get_component_id()
 CMP_NAMEIPAIR = _get_component_id()
 CMP_INODEREF = _get_component_id()
 CMP_FILENAME = _get_component_id()
+CMP_SIGDATA = _get_component_id()
+CMP_SIGREF = _get_component_id()
 
 
 _component_type_to_name = {
@@ -57,6 +59,8 @@ _component_type_to_name = {
     CMP_NAMEIPAIR: "CMP_NAMEIPAIR",
     CMP_INODEREF: "CMP_INODEREF",
     CMP_FILENAME: "CMP_FILENAME",
+    CMP_SIGDATA: "CMP_SIGDATA",
+    CMP_SIGREF: "CMP_SIGREF",
 }
 
 
@@ -75,12 +79,14 @@ def _get_object_id():
 OBJ_FILECONT = _get_object_id()
 OBJ_INODE = _get_object_id()
 OBJ_GEN = _get_object_id()
+OBJ_SIG = _get_object_id()
 
 
 _object_type_to_name = {
     OBJ_FILECONT: "OBJ_FILECONT",
     OBJ_INODE: "OBJ_INODE",
     OBJ_GEN: "OBJ_GEN",
+    OBJ_SIG: "OBJ_SIG",
 }
 
 
@@ -192,7 +198,7 @@ def normalize_stat_result(stat_result):
     return o
 
 
-def inode_object_encode(objid, stat_result, contents_id):
+def inode_object_encode(objid, stat_result, sig_id, contents_id):
     """Create an inode object from the return value of os.stat"""
     fields = []
     st = stat_result
@@ -215,6 +221,7 @@ def inode_object_encode(objid, stat_result, contents_id):
     if "st_rdev" in st:
         fields.append(component_encode(CMP_ST_RDEV, 
                                        varint_encode(st["st_rdev"])))
+    fields.append(component_encode(CMP_SIGREF, sig_id))
     fields.append(component_encode(CMP_CONTREF, contents_id))
     return object_encode(objid, OBJ_INODE, fields)
     
@@ -236,6 +243,7 @@ def inode_object_decode(inode):
     pos = 0
     objid = None
     stat_results = {}
+    sigref = None
     contref = None
     while pos < len(inode):
         (type, data, pos) = component_decode(inode, pos)
@@ -271,11 +279,13 @@ def inode_object_decode(inode):
             stat_results["st_blksize"] = varint_decode(data, 0)[0]
         elif type == CMP_ST_RDEV:
             stat_results["st_rdev"] = varint_decode(data, 0)[0]
+        elif type == CMP_SIGREF:
+            sigref = data
         elif type == CMP_CONTREF:
             contref = data
         else:
             raise UnknownInodeField(type)
-    return objid, stat_results, contref
+    return objid, stat_results, sigref, contref
 
 
 def generation_object_encode(objid, pairs):

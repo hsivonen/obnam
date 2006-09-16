@@ -70,14 +70,27 @@ def create_file_contents_object(map, oq, filename):
         c = component_encode(CMP_FILEDATA, data)
         o = object_encode(id, OBJ_FILECONT, [c])
         oq = enqueue_object(map, oq, id, o)
+    f.close()
     return id, oq
 
 
-def create_inode_object(map, oq, filename, cont_id):
+def create_signature_object(map, oq, filename):
+    id = new_id()
+    (_, f) = os.popen2(["rdiff", "signature", "--", filename, "-"], "r")
+    data = f.read()
+    f.close()
+    _.close()
+    c = component_encode(CMP_SIGDATA, data)
+    o = object_encode(id, OBJ_SIG, [c])
+    oq = enqueue_object(map, oq, id, o)
+    return id, oq
+
+
+def create_inode_object(map, oq, filename, sig_id, cont_id):
     st = os.stat(filename)
     nst = normalize_stat_result(st)
     id = new_id()
-    o = inode_object_encode(id, nst, cont_id)
+    o = inode_object_encode(id, nst, sig_id, cont_id)
     return id, enqueue_object(map, oq, id, o)
 
 
@@ -89,8 +102,9 @@ def back_up_directory(map, oq, dirname):
             st = os.lstat(filename)
             if stat.S_ISREG(st.st_mode):
                 (cont_id, oq) = create_file_contents_object(map, oq, filename)
+                (sig_id, oq) = create_signature_object(map, oq, filename)
                 (inode_id, oq) = create_inode_object(map, oq, filename,
-                                                     cont_id)
+                                                     sig_id, cont_id)
                 pairs.append((filename, inode_id))
     genid = new_id()
     gen = generation_object_encode(genid, pairs)

@@ -36,6 +36,8 @@ class ComponentTypeNameTests(unittest.TestCase):
         self.failUnlessEqual(c(CMP_NAMEIPAIR), "CMP_NAMEIPAIR")
         self.failUnlessEqual(c(CMP_INODEREF), "CMP_INODEREF")
         self.failUnlessEqual(c(CMP_FILENAME), "CMP_FILENAME")
+        self.failUnlessEqual(c(CMP_SIGDATA), "CMP_SIGDATA")
+        self.failUnlessEqual(c(CMP_SIGREF), "CMP_SIGREF")
 
 
 class ObjectTypeNameTests(unittest.TestCase):
@@ -45,6 +47,7 @@ class ObjectTypeNameTests(unittest.TestCase):
         self.failUnlessEqual(object_type_name(OBJ_FILECONT), "OBJ_FILECONT")
         self.failUnlessEqual(object_type_name(OBJ_INODE), "OBJ_INODE")
         self.failUnlessEqual(object_type_name(OBJ_GEN), "OBJ_GEN")
+        self.failUnlessEqual(object_type_name(OBJ_SIG), "OBJ_SIG")
 
 
 class VarintEncoding(unittest.TestCase):
@@ -178,11 +181,13 @@ class InodeTests(unittest.TestCase):
     def testEncodeDecode(self):
         stats1 = normalize_stat_result(os.stat("wibbrlibTests.py"))
         id1 = "xyzzy"
+        sigref1 = "maze"
         contref1 = "plugh"
-        inode = inode_object_encode(id1, stats1, contref1)
-        (id2, stats2, contref2) = inode_object_decode(inode)
+        inode = inode_object_encode(id1, stats1, sigref1, contref1)
+        (id2, stats2, sigref2, contref2) = inode_object_decode(inode)
         self.failUnlessEqual(id1, id2)
         self.failUnlessEqual(stats1, stats2)
+        self.failUnlessEqual(sigref1, sigref2)
         self.failUnlessEqual(contref1, contref2)
 
 
