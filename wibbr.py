@@ -10,6 +10,7 @@ def default_config():
     items = (
         ("wibbr", "block-size", "%d" * (64 * 1024)),
         ("wibbr", "cache-dir", "cache-dir"),
+        ("wibbr", "local-store", "local-store"),
     )
     
     config = ConfigParser.RawConfigParser()
@@ -32,6 +33,10 @@ def parse_args(config, argv):
     parser.add_option("--cache-dir",
                       metavar="DIR",
                       help="Store cached blocks in DIR")
+    
+    parser.add_option("--local-store",
+                      metavar="DIR",
+                      help="Use DIR for local block storage (not caching)")
 
     (options, args) = parser.parse_args(argv)
     
@@ -39,3 +44,5 @@ def parse_args(config, argv):
         config.set("wibbr", "block-size", "%d" % options.block_size)
     if options.cache_dir:
         config.set("wibbr", "cache-dir", options.cache_dir)
+    if options.local_store:
+        config.set("wibbr", "local-store", options.local_store)
