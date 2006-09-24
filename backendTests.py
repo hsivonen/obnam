@@ -25,3 +25,15 @@ class InitTests(LocalBackendBase):
     def testInit(self):
         be = backend.init(self.config)
         self.failUnlessEqual(be.local_root, self.tempdir)
+
+
+class IdTests(LocalBackendBase):
+
+    def testGenerateBlockId(self):
+        be = backend.init(self.config)
+        self.failIfEqual(be.curdir, None)
+        id = backend.generate_block_id(be)
+        self.failUnless(id.startswith(be.curdir))
+        id2 = backend.generate_block_id(be)
+        self.failIfEqual(id, id2)
+
