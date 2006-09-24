@@ -2,13 +2,15 @@
 
 
 import ConfigParser
+import optparse
 import os
 import stat
 import subprocess
 import sys
 
-from wibbrlib import *
-import backend
+from wibbrlib.object import *
+import wibbrlib.backend
+import wibbrlib.cache
 import uuid
 
 
@@ -43,7 +45,7 @@ class Map:
         self.new_block()
         
     def new_block(self):
-        self.next_block_id = backend.generate_block_id(self.be)
+        self.next_block_id = wibbrlib.backend.generate_block_id(self.be)
         
     def add(self, objid):
         if objid in self.dict:
@@ -55,13 +57,13 @@ class Map:
 def write_block(be, id, oq):
     block = block_create_from_object_queue(id, oq)
     assert type(block) == type("")
-    backend.upload(be, id, block)
+    wibbrlib.backend.upload(be, id, block)
 
 
-def enqueue_object(config, map, oq, id, object):
+def enqueue_object(config, be, map, oq, id, object):
     block_size = config.getint("wibbr", "block-size")
     if len(object) + object_queue_combined_size(oq) > block_size:
-        write_block(map.next_block_id, oq)
+        write_block(be, map.next_block_id, oq)
         map.new_block()
         oq = object_queue_create()
     object_queue_add(oq, object)
@@ -69,7 +71,7 @@ def enqueue_object(config, map, oq, id, object):
     return oq
 
 
-def create_file_contents_object(config, map, oq, filename):
+def create_file_contents_object(config, be, map, oq, filename):
     id = new_object_id()
     block_size = config.getint("wibbr", "block-size")
     f = file(filename, "r")
@@ -79,28 +81,28 @@ def create_file_contents_object(config, map, oq, filename):
             break
         c = component_encode(CMP_FILEDATA, data)
         o = object_encode(id, OBJ_FILECONT, [c])
-        oq = enqueue_object(config, map, oq, id, o)
+        oq = enqueue_object(config, be, map, oq, id, o)
     f.close()
     return id, oq
 
 
-def create_signature_object(config, map, oq, filename):
+def create_signature_object(config, be, map, oq, filename):
     id = new_object_id()
     p = subprocess.Popen(["rdiff", "signature", "--", filename],
                          stdout=subprocess.PIPE)
     (sigdata, _) = p.communicate()
     c = component_encode(CMP_SIGDATA, sigdata)
     o = object_encode(id, OBJ_SIG, [c])
-    oq = enqueue_object(config, map, oq, id, o)
+    oq = enqueue_object(config, be, map, oq, id, o)
     return id, oq
 
 
-def create_inode_object(config, map, oq, filename, sig_id, cont_id):
+def create_inode_object(config, be, map, oq, filename, sig_id, cont_id):
     st = os.stat(filename)
     nst = normalize_stat_result(st)
     id = new_object_id()
     o = inode_object_encode(id, nst, sig_id, cont_id)
-    return id, enqueue_object(config, map, oq, id, o)
+    return id, enqueue_object(config, be, map, oq, id, o)
 
 
 def back_up_directory(config, be, map, oq, dirname):
@@ -111,22 +113,52 @@ def back_up_directory(config, be, map, oq, dirname):
             st = os.lstat(filename)
             if stat.S_ISREG(st.st_mode):
                 (cont_id, oq) = \
-                    create_file_contents_object(config, map, oq, filename)
+                    create_file_contents_object(config, be, map, oq, filename)
                 (sig_id, oq) = \
-                    create_signature_object(config, map, oq, filename)
+                    create_signature_object(config, be, map, oq, filename)
                 (inode_id, oq) = \
-                    create_inode_object(config, map, oq, filename, sig_id, 
+                    create_inode_object(config, be, map, oq, filename, sig_id, 
                                         cont_id)
                 pairs.append((filename, inode_id))
     genid = new_object_id()
     gen = generation_object_encode(genid, pairs)
-    oq = enqueue_object(config, map, oq, genid, gen)
+    oq = enqueue_object(config, be, map, oq, genid, gen)
     return oq
+
+
+def parse_options(config, argv):
+    parser = optparse.OptionParser()
+
+    parser.add_option("--cache-dir", 
+                      metavar="DIR",
+                      help="Use DIR as block cache directory")
+
+    parser.add_option("--block-size",
+                      type="int",
+                      metavar="SIZE",
+                      help="Block size (in kilobytes)")
+
+    parser.add_option("--block-store",
+                      metavar="DIR",
+                      help="Store blocks in DIR")
+
+    (options, args) = parser.parse_args(argv)
+    
+    if options.cache_dir:
+        config.set("wibbr", "block-cache", options.cache_dir)
+    if options.block_size:
+        config.set("wibbr", "block-size", options.block_size * 1024)
+    if options.block_store:
+        config.set("local-backend", "root", options.block_store)
 
 
 def main():
     config = default_config()
-    be = backend.init(config)
+    
+    parse_options(config, sys.argv[1:])
+    
+    cache = wibbrlib.cache.init(config)
+    be = wibbrlib.backend.init(config, cache)
 
     map = Map(be)
     oq = object_queue_create()
@@ -144,7 +176,7 @@ def main():
         data = objid + "".join(map.dict[objid])
         c = component_encode(CMP_OBJMAP, data)
         object_queue_add(mapq, c)
-    mapid = backend.generate_block_id(be)
+    mapid = wibbrlib.backend.generate_block_id(be)
     write_block(be, mapid, mapq)
 
 

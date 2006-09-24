@@ -19,7 +19,7 @@ def targz_method(tempdir, rootdir, testcase):
 
 def wibbr_method(tempdir, rootdir, testcase):
     result = os.path.join(tempdir, "wibbr-store")
-    return result, ["./wibbr", result, rootdir]
+    return result, ["./wibbr", "--block-store", result, rootdir]
 
 
 backup_methods = (
