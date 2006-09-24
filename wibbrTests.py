@@ -29,3 +29,8 @@ class CommandLineParsingTests(unittest.TestCase):
         self.failUnlessEqual(config.getint("wibbr", "block-size"), 12765)
         wibbr.parse_args(config, ["--block-size=42"])
         self.failUnlessEqual(config.getint("wibbr", "block-size"), 42)
+
+    def testCacheDir(self):
+        config = wibbr.default_config()
+        wibbr.parse_args(config, ["--cache-dir=/tmp/foo"])
+        self.failUnlessEqual(config.get("wibbr", "cache-dir"), "/tmp/foo")

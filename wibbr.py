@@ -28,8 +28,14 @@ def parse_args(config, argv):
                       type="int",
                       metavar="SIZE",
                       help="Make blocks that are about SIZE kilobytes")
+    
+    parser.add_option("--cache-dir",
+                      metavar="DIR",
+                      help="Store cached blocks in DIR")
 
     (options, args) = parser.parse_args(argv)
     
     if options.block_size:
         config.set("wibbr", "block-size", "%d" % options.block_size)
+    if options.cache_dir:
+        config.set("wibbr", "cache-dir", options.cache_dir)
