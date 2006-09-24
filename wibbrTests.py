@@ -27,3 +27,5 @@ class CommandLineParsingTests(unittest.TestCase):
         config = wibbr.default_config()
         wibbr.parse_args(config, ["--block-size=12765"])
         self.failUnlessEqual(config.getint("wibbr", "block-size"), 12765)
+        wibbr.parse_args(config, ["--block-size=42"])
+        self.failUnlessEqual(config.getint("wibbr", "block-size"), 42)
