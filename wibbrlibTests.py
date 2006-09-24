@@ -242,10 +242,27 @@ class ObjectMappingTests(unittest.TestCase):
         m = wibbrlib.mapping.mapping_create()
         self.failUnlessEqual(wibbrlib.mapping.mapping_count(m), 0)
 
-    def testAddMapping(self):
+    def testGetNonexisting(self):
+        m = wibbrlib.mapping.mapping_create()
+        blkids = wibbrlib.mapping.mapping_get(m, "pink")
+        self.failUnlessEqual(blkids, None)
+
+    def testAddOneMapping(self):
         m = wibbrlib.mapping.mapping_create()
         wibbrlib.mapping.mapping_add(m, "pink", "pretty")
         self.failUnlessEqual(wibbrlib.mapping.mapping_count(m), 1)
+        
+        blkids = wibbrlib.mapping.mapping_get(m, "pink")
+        self.failUnlessEqual(blkids, ["pretty"])
+
+    def testAddTwoMappings(self):
+        m = wibbrlib.mapping.mapping_create()
+        wibbrlib.mapping.mapping_add(m, "pink", "pretty")
+        wibbrlib.mapping.mapping_add(m, "pink", "beautiful")
+        self.failUnlessEqual(wibbrlib.mapping.mapping_count(m), 1)
+        
+        blkids = wibbrlib.mapping.mapping_get(m, "pink")
+        self.failUnlessEqual(blkids, ["pretty", "beautiful"])
 
 
 if __name__ == "__main__":

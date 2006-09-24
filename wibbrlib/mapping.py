@@ -14,3 +14,8 @@ def mapping_add(mapping, object_id, block_id):
         mapping[object_id].append(block_id)
     else:
         mapping[object_id] = [block_id]
+
+
+def mapping_get(mapping, object_id):
+    """Return the list of blocks, in order, that contain parts of an object"""
+    return mapping.get(object_id, None)
