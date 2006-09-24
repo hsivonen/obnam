@@ -8,6 +8,7 @@ import unittest
 from wibbrlib.component import *
 from wibbrlib.object import *
 from wibbrlib.varint import *
+import wibbrlib.mapping
 import wibbrlib.object
 import wibbrlib.rsync
 
@@ -233,6 +234,13 @@ class ObjectTests(unittest.TestCase):
         id = wibbrlib.object.object_id_new()
         self.failIfEqual(id, None)
         self.failUnlessEqual(type(id), type(""))
+
+
+class ObjectMappingTests(unittest.TestCase):
+
+    def testEmpty(self):
+        m = wibbrlib.mapping.mapping_create()
+        self.failUnlessEqual(wibbrlib.mapping.mapping_count(m), 0)
 
 
 if __name__ == "__main__":
