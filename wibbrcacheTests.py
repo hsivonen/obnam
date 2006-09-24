@@ -32,3 +32,18 @@ class InitTests(CacheBase):
     def testInit(self):
         cache = wibbrcache.init(self.config)
         self.failUnless(os.path.isdir(self.cachedir))
+
+
+class PutTests(CacheBase):
+
+    def testPut(self):
+        cache = wibbrcache.init(self.config)
+        id = "pink"
+        block = "pretty"
+        wibbrcache.put_block(cache, id, block)
+        
+        pathname = os.path.join(self.cachedir, id)
+        self.failUnless(os.path.isfile(pathname))
+        f = file(pathname, "r")
+        self.failUnlessEqual(f.read(), block)
+        f.close()
