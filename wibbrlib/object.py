@@ -3,29 +3,24 @@ from wibbrlib.component import *
 
 
 # Constants of object types
-_next_object_id = 64
-def _get_object_id():
-    global _next_object_id
-    x = _next_object_id
-    _next_object_id += 1
-    return x
-OBJ_FILECONT = _get_object_id()
-OBJ_INODE = _get_object_id()
-OBJ_GEN = _get_object_id()
-OBJ_SIG = _get_object_id()
 
+_object_types = {}
 
-_object_type_to_name = {
-    OBJ_FILECONT: "OBJ_FILECONT",
-    OBJ_INODE: "OBJ_INODE",
-    OBJ_GEN: "OBJ_GEN",
-    OBJ_SIG: "OBJ_SIG",
-}
+def _define_type(code, name):
+    assert code not in _object_types
+    assert name not in _object_types.values()
+    _object_types[code] = name
+    return code
+
+OBJ_FILECONT    = _define_type(1, "OBJ_FILECONT")
+OBJ_INODE       = _define_type(2, "OBJ_INODE")
+OBJ_GEN         = _define_type(3, "OBJ_GEN")
+OBJ_SIG         = _define_type(4, "OBJ_SIG")
 
 
 def object_type_name(type):
     """Return a textual name for a numeric object type"""
-    return _object_type_to_name.get(type, "OBJ_UNKNOWN")
+    return _object_types.get(type, "OBJ_UNKNOWN")
 
 
 def object_encode(objid, objtype, encoded_components):
