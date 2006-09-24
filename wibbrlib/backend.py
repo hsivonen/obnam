@@ -22,7 +22,7 @@ class LocalBackEnd:
 def init(config, cache):
     """Initialize the subsystem and return an opaque backend object"""
     be = LocalBackEnd()
-    be.local_root = config.get("local-backend", "root")
+    be.local_root = config.get("wibbr", "local-store")
     be.cache = cache
     be.curdir = str(uuid.uuid4())
     return be

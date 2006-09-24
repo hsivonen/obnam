@@ -9,10 +9,10 @@ import wibbrlib.cache
 class CacheBase(unittest.TestCase):
 
     def setUp(self):
-        self.cachedir = "cachedir"
+        self.cachedir = "tmp.cachedir"
         
         config_list = (
-            ("wibbr", "block-cache", self.cachedir),
+            ("wibbr", "cache-dir", self.cachedir),
         )
     
         self.config = ConfigParser.ConfigParser()

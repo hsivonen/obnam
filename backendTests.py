@@ -11,15 +11,15 @@ import wibbrlib.cache
 class LocalBackendBase(unittest.TestCase):
 
     def setUp(self):
-        self.cachedir = "cachedir"
-        self.rootdir = "rootdir"
+        self.cachedir = "tmp.cachedir"
+        self.rootdir = "tmp.rootdir"
         
         os.mkdir(self.cachedir)
         os.mkdir(self.rootdir)
         
         config_list = (
-            ("wibbr", "block-cache", self.cachedir),
-            ("local-backend", "root", self.rootdir)
+            ("wibbr", "cache-dir", self.cachedir),
+            ("wibbr", "local-store", self.rootdir)
         )
     
         self.config = ConfigParser.ConfigParser()
