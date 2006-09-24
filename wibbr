@@ -31,18 +31,19 @@ def default_config():
     return config
 
 
-def new_id():
+def new_object_id():
     return str(uuid.uuid4())
 
 
 class Map:
 
-    def __init__(self):
-        self.new_block()
+    def __init__(self, be):
         self.dict = {}
+        self.be = be
+        self.new_block()
         
     def new_block(self):
-        self.next_block_id = new_id()
+        self.next_block_id = backend.generate_block_id(self.be)
         
     def add(self, objid):
         if objid in self.dict:
@@ -68,8 +69,8 @@ def enqueue_object(config, map, oq, id, object):
     return oq
 
 
-def create_file_contents_object(map, oq, filename):
-    id = new_id()
+def create_file_contents_object(config, map, oq, filename):
+    id = new_object_id()
     block_size = config.getint("wibbr", "block-size")
     f = file(filename, "r")
     while True:
@@ -83,8 +84,8 @@ def create_file_contents_object(map, oq, filename):
     return id, oq
 
 
-def create_signature_object(map, oq, filename):
-    id = new_id()
+def create_signature_object(config, map, oq, filename):
+    id = new_object_id()
     p = subprocess.Popen(["rdiff", "signature", "--", filename],
                          stdout=subprocess.PIPE)
     (sigdata, _) = p.communicate()
@@ -94,10 +95,10 @@ def create_signature_object(map, oq, filename):
     return id, oq
 
 
-def create_inode_object(map, oq, filename, sig_id, cont_id):
+def create_inode_object(config, map, oq, filename, sig_id, cont_id):
     st = os.stat(filename)
     nst = normalize_stat_result(st)
-    id = new_id()
+    id = new_object_id()
     o = inode_object_encode(id, nst, sig_id, cont_id)
     return id, enqueue_object(config, map, oq, id, o)
 
@@ -109,12 +110,15 @@ def back_up_directory(config, be, map, oq, dirname):
             filename = os.path.join(dirpath, filename)
             st = os.lstat(filename)
             if stat.S_ISREG(st.st_mode):
-                (cont_id, oq) = create_file_contents_object(map, oq, filename)
-                (sig_id, oq) = create_signature_object(map, oq, filename)
-                (inode_id, oq) = create_inode_object(map, oq, filename,
-                                                     sig_id, cont_id)
+                (cont_id, oq) = \
+                    create_file_contents_object(config, map, oq, filename)
+                (sig_id, oq) = \
+                    create_signature_object(config, map, oq, filename)
+                (inode_id, oq) = \
+                    create_inode_object(config, map, oq, filename, sig_id, 
+                                        cont_id)
                 pairs.append((filename, inode_id))
-    genid = new_id()
+    genid = new_object_id()
     gen = generation_object_encode(genid, pairs)
     oq = enqueue_object(config, map, oq, genid, gen)
     return oq
@@ -124,7 +128,7 @@ def main():
     config = default_config()
     be = backend.init(config)
 
-    map = Map()
+    map = Map(be)
     oq = object_queue_create()
 
     for dirname in sys.argv[1:]:
@@ -140,8 +144,9 @@ def main():
         data = objid + "".join(map.dict[objid])
         c = component_encode(CMP_OBJMAP, data)
         object_queue_add(mapq, c)
-    mapid = new_id()
+    mapid = backend.generate_block_id(be)
     write_block(be, mapid, mapq)
+
 
 if __name__ == "__main__":
     main()
