@@ -10,14 +10,28 @@ import backend
 class LocalBackendBase(unittest.TestCase):
 
     def setUp(self):
-        self.tempdir = tempfile.mkdtemp()
+        self.cachedir = "cachedir"
+        self.rootdir = "rootdir"
+        
+        os.mkdir(self.cachedir)
+        os.mkdir(self.rootdir)
+        
+        config_list = (
+            ("wibbr", "block-cache", self.cachedir),
+            ("local-backend", "root", self.rootdir)
+        )
+    
         self.config = ConfigParser.ConfigParser()
-        self.config.add_section("local-backend")
-        self.config.set("local-backend", "root", self.tempdir)
+        for section, item, value in config_list:
+            if not self.config.has_section(section):
+                self.config.add_section(section)
+            self.config.set(section, item, value)
 
     def tearDown(self):
-        shutil.rmtree(self.tempdir)
-        del self.tempdir
+        shutil.rmtree(self.cachedir)
+        shutil.rmtree(self.rootdir)
+        del self.cachedir
+        del self.rootdir
         del self.config
 
 
@@ -25,7 +39,7 @@ class InitTests(LocalBackendBase):
 
     def testInit(self):
         be = backend.init(self.config)
-        self.failUnlessEqual(be.local_root, self.tempdir)
+        self.failUnlessEqual(be.local_root, self.rootdir)
 
 
 class IdTests(LocalBackendBase):
@@ -48,10 +62,28 @@ class UploadTests(LocalBackendBase):
         ret = backend.upload(be, id, block)
         self.failUnlessEqual(ret, None)
         
-        pathname = os.path.join(self.tempdir, id)
+        pathname = os.path.join(self.rootdir, id)
         self.failUnless(os.path.isfile(pathname))
         
         f = file(pathname, "r")
         data = f.read()
         f.close()
         self.failUnlessEqual(block, data)
+
+
+class DownloadTests(LocalBackendBase):
+
+    def testOK(self):
+        be = backend.init(self.config)
+        id = backend.generate_block_id(be)
+        block = "pink is still pretty"
+        backend.upload(be, id, block)
+        
+        success = backend.download(be, id)
+        self.failUnlessEqual(success, True)
+        
+    def testError(self):
+        be = backend.init(self.config)
+        id = backend.generate_block_id(be)
+        success = backend.download(be, id)
+        self.failIfEqual(success, True)
