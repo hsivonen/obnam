@@ -235,6 +235,15 @@ class ObjectTests(unittest.TestCase):
         self.failIfEqual(id, None)
         self.failUnlessEqual(type(id), type(""))
 
+    def testCreateSignatureObject(self):
+        id = "pink"
+        sig = wibbrlib.rsync.compute_signature("Makefile")
+        object = signature_object_encode(id, sig)
+        self.failUnlessEqual(object, "".join(["\4\1pink", # obj id
+                                              "\1\2\4",   # obj type
+                                              chr(len(sig)) + "\30" + sig,
+                                              ]))
+
 
 class ObjectMappingTests(unittest.TestCase):
 

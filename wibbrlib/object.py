@@ -70,6 +70,12 @@ def block_create_from_object_queue(blkid, oq):
     return blkid + "".join(objects)
 
 
+def signature_object_encode(objid, sigdata):
+    sigdata_component = component_encode(CMP_SIGDATA, sigdata)
+    object = object_encode(objid, OBJ_SIG, [sigdata_component])
+    return object
+
+
 def normalize_stat_result(stat_result):
     """Create a new, normalized object from the return value of os.stat
     
