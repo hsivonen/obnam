@@ -1,3 +1,4 @@
+import os
 import StringIO
 import unittest
 
@@ -40,3 +41,15 @@ class CommandLineParsingTests(unittest.TestCase):
         config = wibbr.default_config()
         wibbr.parse_args(config, ["--local-store=/tmp/foo"])
         self.failUnlessEqual(config.get("wibbr", "local-store"), "/tmp/foo")
+
+
+class RdiffTests(unittest.TestCase):
+
+    def testSignature(self):
+        sig = wibbr.compute_signature("Makefile")
+        os.system("rdiff signature Makefile Makefile.sig.temp")
+        f = file("Makefile.sig.temp")
+        data = f.read()
+        f.close()
+        self.failUnlessEqual(sig, data)
+        os.remove("Makefile.sig.temp")

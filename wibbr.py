@@ -3,6 +3,7 @@
 
 import ConfigParser
 import optparse
+import subprocess
 
 
 def default_config():
@@ -46,3 +47,15 @@ def parse_args(config, argv):
         config.set("wibbr", "cache-dir", options.cache_dir)
     if options.local_store:
         config.set("wibbr", "local-store", options.local_store)
+
+
+def compute_signature(filename):
+    """Compute an rsync signature for 'filename'"""
+    p = subprocess.Popen(["rdiff", "--", "signature", filename, "-"],
+                         stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE)
+    (stdout, stderr) = p.communicate(None)
+    if p.returncode == 0:
+        return stdout
+    else:
+        return False
