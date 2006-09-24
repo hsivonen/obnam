@@ -2,71 +2,46 @@ from wibbrlib.varint import *
 
 
 # Constants for component types
-_next_component_id = 1
-def _get_component_id():
-    global _next_component_id
-    x = _next_component_id
-    _next_component_id += 1
-    return x
-CMP_OBJID = _get_component_id()
-CMP_OBJTYPE = _get_component_id()
-CMP_BLKID = _get_component_id()
-CMP_FILEDATA = _get_component_id()
-CMP_OBJPART = _get_component_id()
-CMP_OBJMAP = _get_component_id()
-CMP_ST_MODE = _get_component_id()
-CMP_ST_INO = _get_component_id()
-CMP_ST_DEV = _get_component_id()
-CMP_ST_NLINK = _get_component_id()
-CMP_ST_UID = _get_component_id()
-CMP_ST_GID = _get_component_id()
-CMP_ST_SIZE = _get_component_id()
-CMP_ST_ATIME = _get_component_id()
-CMP_ST_MTIME = _get_component_id()
-CMP_ST_CTIME = _get_component_id()
-CMP_ST_BLOCKS = _get_component_id()
-CMP_ST_BLKSIZE = _get_component_id()
-CMP_ST_RDEV = _get_component_id()
-CMP_CONTREF = _get_component_id()
-CMP_NAMEIPAIR = _get_component_id()
-CMP_INODEREF = _get_component_id()
-CMP_FILENAME = _get_component_id()
-CMP_SIGDATA = _get_component_id()
-CMP_SIGREF = _get_component_id()
+
+_component_types = {}
+
+def _define_type(code, name):
+    assert code not in _component_types
+    assert name not in _component_types.values()
+    _component_types[code] = name
+    return code
 
 
-_component_type_to_name = {
-    CMP_OBJID: "CMP_OBJID",
-    CMP_OBJTYPE: "CMP_OBJTYPE",
-    CMP_BLKID: "CMP_BLKID",
-    CMP_FILEDATA: "CMP_FILEDATA",
-    CMP_OBJPART: "CMP_OBJPART",
-    CMP_OBJMAP: "CMP_OBJMAP",
-    CMP_ST_MODE: "CMP_ST_MODE",
-    CMP_ST_INO: "CMP_ST_INO",
-    CMP_ST_DEV: "CMP_ST_DEV",
-    CMP_ST_NLINK: "CMP_ST_NLINK",
-    CMP_ST_UID: "CMP_ST_UID",
-    CMP_ST_GID: "CMP_ST_GID",
-    CMP_ST_SIZE: "CMP_ST_SIZE",
-    CMP_ST_ATIME: "CMP_ST_ATIME",
-    CMP_ST_MTIME: "CMP_ST_MTIME",
-    CMP_ST_CTIME: "CMP_ST_CTIME",
-    CMP_ST_BLOCKS: "CMP_ST_BLOCKS",
-    CMP_ST_BLKSIZE: "CMP_ST_BLKSIZE",
-    CMP_ST_RDEV: "CMP_ST_RDEV",
-    CMP_CONTREF: "CMP_CONTREF",
-    CMP_NAMEIPAIR: "CMP_NAMEIPAIR",
-    CMP_INODEREF: "CMP_INODEREF",
-    CMP_FILENAME: "CMP_FILENAME",
-    CMP_SIGDATA: "CMP_SIGDATA",
-    CMP_SIGREF: "CMP_SIGREF",
-}
+CMP_OBJID       = _define_type( 1, "CMP_OBJID")
+CMP_OBJTYPE     = _define_type( 2, "CMP_OBJTYPE")
+CMP_BLKID       = _define_type( 3, "CMP_BLKID")
+CMP_FILEDATA    = _define_type( 4, "CMP_FILEDATA")
+CMP_OBJPART     = _define_type( 5, "CMP_OBJPART")
+CMP_OBJMAP      = _define_type( 6, "CMP_OBJMAP")
+CMP_ST_MODE     = _define_type( 7, "CMP_ST_MODE")
+CMP_ST_INO      = _define_type( 8, "CMP_ST_INO")
+CMP_ST_DEV      = _define_type( 9, "CMP_ST_DEV")
+CMP_ST_NLINK    = _define_type(10, "CMP_ST_NLINK")
+CMP_ST_UID      = _define_type(11, "CMP_ST_UID")
+CMP_ST_GID      = _define_type(12, "CMP_ST_GID")
+CMP_ST_SIZE     = _define_type(13, "CMP_ST_SIZE")
+CMP_ST_ATIME    = _define_type(14, "CMP_ST_ATIME")
+CMP_ST_MTIME    = _define_type(15, "CMP_ST_MTIME")
+CMP_ST_CTIME    = _define_type(16, "CMP_ST_CTIME")
+CMP_ST_BLOCKS   = _define_type(17, "CMP_ST_BLOCKS")
+CMP_ST_BLKSIZE  = _define_type(18, "CMP_ST_BLKSIZE")
+CMP_ST_RDEV     = _define_type(19, "CMP_ST_RDEV")
+CMP_CONTREF     = _define_type(20, "CMP_CONTREF")
+CMP_NAMEIPAIR   = _define_type(21, "CMP_NAMEIPAIR")
+CMP_INODEREF    = _define_type(22, "CMP_INODEREF")
+CMP_FILENAME    = _define_type(23, "CMP_FILENAME")
+CMP_SIGDATA     = _define_type(24, "CMP_SIGDATA")
+CMP_SIGREF      = _define_type(25, "CMP_SIGREF")
 
 
 def component_type_name(type):
     """Return a textual name for a numeric component type"""
-    return _component_type_to_name.get(type, "CMP_UNKNOWN")
+    return _component_types.get(type, "CMP_UNKNOWN")
 
 
 def component_encode(type, data):
