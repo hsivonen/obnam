@@ -11,6 +11,12 @@ class CommandLineParsingTests(unittest.TestCase):
         config.write(f)
         return f.getvalue()
 
+    def testDefaultConfig(self):
+        config = wibbr.default_config()
+        self.failUnless(config.has_section("wibbr"))
+        self.failUnless(config.has_option("wibbr", "block-size"))
+        self.failUnless(config.has_option("wibbr", "cache-dir"))
+
     def testEmpty(self):
         config = wibbr.default_config()
         wibbr.parse_args(config, [])
