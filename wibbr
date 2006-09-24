@@ -1,20 +1,34 @@
 #!/usr/bin/python
 
 
+import ConfigParser
 import os
 import stat
 import subprocess
 import sys
 
 from wibbrlib import *
+import backend
 import uuid
 
 
-BLOCK_SIZE = 64 * 1024
-if "WIBBR_BLOCK_SIZE" in os.environ:
-    BLOCK_SIZE = int(os.environ["WIBBR_BLOCK_SIZE"])
+def default_config():
+    items = (
+        ("wibbr", "block-cache", "block-cache"),
+        ("wibbr", "block-size", "%d" % (64 * 1024)),
+        ("local-backend", "root", "block-store"),
+    )
+    
+    config = ConfigParser.ConfigParser()
+    for section, item, value in items:
+        if not config.has_section(section):
+            config.add_section(section)
+        config.set(section, item, value)
 
-target_dir = None
+    if "WIBBR_BLOCK_SIZE" in os.environ:
+        config.set("wibbr", "block-size", os.environ["WIBBR_BLOCK_SIZE"])
+    
+    return config
 
 
 def new_id():
@@ -37,22 +51,15 @@ class Map:
             self.dict[objid] = [self.next_block_id]
 
 
-def write_block(id, oq):
+def write_block(be, id, oq):
     block = block_create_from_object_queue(id, oq)
     assert type(block) == type("")
-    dirname = os.path.join(target_dir, "blocks")
-    for i in range(3):
-        dirname = os.path.join(dirname, id[i])
-    if not os.path.isdir(dirname):
-        os.makedirs(dirname)
-    filename = os.path.join(dirname, id + ".block")
-    f = file(filename, "w")
-    f.write(block)
-    f.close()
+    backend.upload(be, id, block)
 
 
-def enqueue_object(map, oq, id, object):
-    if len(object) + object_queue_combined_size(oq) > BLOCK_SIZE:
+def enqueue_object(config, map, oq, id, object):
+    block_size = config.getint("wibbr", "block-size")
+    if len(object) + object_queue_combined_size(oq) > block_size:
         write_block(map.next_block_id, oq)
         map.new_block()
         oq = object_queue_create()
@@ -63,14 +70,15 @@ def enqueue_object(map, oq, id, object):
 
 def create_file_contents_object(map, oq, filename):
     id = new_id()
+    block_size = config.getint("wibbr", "block-size")
     f = file(filename, "r")
     while True:
-        data = f.read(BLOCK_SIZE)
+        data = f.read(block_size)
         if not data:
             break
         c = component_encode(CMP_FILEDATA, data)
         o = object_encode(id, OBJ_FILECONT, [c])
-        oq = enqueue_object(map, oq, id, o)
+        oq = enqueue_object(config, map, oq, id, o)
     f.close()
     return id, oq
 
@@ -82,7 +90,7 @@ def create_signature_object(map, oq, filename):
     (sigdata, _) = p.communicate()
     c = component_encode(CMP_SIGDATA, sigdata)
     o = object_encode(id, OBJ_SIG, [c])
-    oq = enqueue_object(map, oq, id, o)
+    oq = enqueue_object(config, map, oq, id, o)
     return id, oq
 
 
@@ -91,10 +99,10 @@ def create_inode_object(map, oq, filename, sig_id, cont_id):
     nst = normalize_stat_result(st)
     id = new_id()
     o = inode_object_encode(id, nst, sig_id, cont_id)
-    return id, enqueue_object(map, oq, id, o)
+    return id, enqueue_object(config, map, oq, id, o)
 
 
-def back_up_directory(map, oq, dirname):
+def back_up_directory(config, be, map, oq, dirname):
     pairs = []
     for dirpath, dirnames, filenames in os.walk(dirname):
         for filename in filenames:
@@ -108,22 +116,22 @@ def back_up_directory(map, oq, dirname):
                 pairs.append((filename, inode_id))
     genid = new_id()
     gen = generation_object_encode(genid, pairs)
-    oq = enqueue_object(map, oq, genid, gen)
+    oq = enqueue_object(config, map, oq, genid, gen)
     return oq
 
 
 def main():
+    config = default_config()
+    be = backend.init(config)
+
     map = Map()
     oq = object_queue_create()
 
-    global target_dir
-    target_dir = sys.argv[1]
-    
-    for dirname in sys.argv[2:]:
-        oq = back_up_directory(map, oq, dirname)
+    for dirname in sys.argv[1:]:
+        oq = back_up_directory(config, be, map, oq, dirname)
 
     if object_queue_combined_size(oq) > 0:
-        write_block(map.next_block_id, oq)
+        write_block(be, map.next_block_id, oq)
         map.new_block()
         del oq
 
@@ -133,7 +141,7 @@ def main():
         c = component_encode(CMP_OBJMAP, data)
         object_queue_add(mapq, c)
     mapid = new_id()
-    write_block(mapid, mapq)
+    write_block(be, mapid, mapq)
 
 if __name__ == "__main__":
     main()
