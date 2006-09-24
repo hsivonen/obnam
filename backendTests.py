@@ -5,6 +5,7 @@ import tempfile
 import unittest
 
 import backend
+import wibbrcache
 
 
 class LocalBackendBase(unittest.TestCase):
@@ -27,6 +28,8 @@ class LocalBackendBase(unittest.TestCase):
                 self.config.add_section(section)
             self.config.set(section, item, value)
 
+        self.cache = wibbrcache.init(self.config)
+
     def tearDown(self):
         shutil.rmtree(self.cachedir)
         shutil.rmtree(self.rootdir)
@@ -38,14 +41,14 @@ class LocalBackendBase(unittest.TestCase):
 class InitTests(LocalBackendBase):
 
     def testInit(self):
-        be = backend.init(self.config)
+        be = backend.init(self.config, self.cache)
         self.failUnlessEqual(be.local_root, self.rootdir)
 
 
 class IdTests(LocalBackendBase):
 
     def testGenerateBlockId(self):
-        be = backend.init(self.config)
+        be = backend.init(self.config, self.cache)
         self.failIfEqual(be.curdir, None)
         id = backend.generate_block_id(be)
         self.failUnless(id.startswith(be.curdir))
@@ -56,7 +59,7 @@ class IdTests(LocalBackendBase):
 class UploadTests(LocalBackendBase):
 
     def testUpload(self):
-        be = backend.init(self.config)
+        be = backend.init(self.config, self.cache)
         id = backend.generate_block_id(be)
         block = "pink is pretty"
         ret = backend.upload(be, id, block)
@@ -74,7 +77,7 @@ class UploadTests(LocalBackendBase):
 class DownloadTests(LocalBackendBase):
 
     def testOK(self):
-        be = backend.init(self.config)
+        be = backend.init(self.config, self.cache)
         id = backend.generate_block_id(be)
         block = "pink is still pretty"
         backend.upload(be, id, block)
@@ -83,7 +86,7 @@ class DownloadTests(LocalBackendBase):
         self.failUnlessEqual(success, True)
         
     def testError(self):
-        be = backend.init(self.config)
+        be = backend.init(self.config, self.cache)
         id = backend.generate_block_id(be)
         success = backend.download(be, id)
         self.failIfEqual(success, True)
