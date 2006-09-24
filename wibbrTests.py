@@ -23,3 +23,7 @@ class CommandLineParsingTests(unittest.TestCase):
         self.failUnlessEqual(self.config_as_string(config), 
                              self.config_as_string(wibbr.default_config()))
 
+    def testBlockSize(self):
+        config = wibbr.default_config()
+        wibbr.parse_args(config, ["--block-size=12765"])
+        self.failUnlessEqual(config.getint("wibbr", "block-size"), 12765)

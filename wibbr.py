@@ -2,6 +2,7 @@
 
 
 import ConfigParser
+import optparse
 
 
 def default_config():
@@ -21,4 +22,14 @@ def default_config():
 
 
 def parse_args(config, argv):
-    pass
+    parser = optparse.OptionParser()
+    
+    parser.add_option("--block-size",
+                      type="int",
+                      metavar="SIZE",
+                      help="Make blocks that are about SIZE kilobytes")
+
+    (options, args) = parser.parse_args(argv)
+    
+    if options.block_size:
+        config.set("wibbr", "block-size", "%d" % options.block_size)
