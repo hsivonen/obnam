@@ -2,7 +2,7 @@ all:
 
 
 check:
-	python wibbrlibTests.py
+	python testrun.py
 
 
 clean:
