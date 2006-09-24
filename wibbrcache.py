@@ -45,3 +45,14 @@ def put_block(cache, block_id, block):
     f = _create_new_cache_file(cache, block_id)
     f.write(block)
     _close_new_cache_file(cache, block_id, f)
+
+
+def get_block(cache, block_id):
+    """Return the contents of a block in the block cache, None if not there"""
+    try:
+        f = file(cache_pathname(cache, block_id), "r")
+        block = f.read()
+        f.close()
+    except IOError, e:
+        return None
+    return block

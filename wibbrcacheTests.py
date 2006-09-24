@@ -47,3 +47,15 @@ class PutTests(CacheBase):
         f = file(pathname, "r")
         self.failUnlessEqual(f.read(), block)
         f.close()
+
+
+class GetTests(CacheBase):
+
+    def testGet(self):
+        cache = wibbrcache.init(self.config)
+        id = "pink"
+        block = "pretty"
+        self.failUnlessEqual(wibbrcache.get_block(cache, id), None)
+
+        wibbrcache.put_block(cache, id, block)
+        self.failUnlessEqual(wibbrcache.get_block(cache, id), block)
