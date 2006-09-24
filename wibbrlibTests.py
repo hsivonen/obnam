@@ -5,7 +5,7 @@ import os
 import unittest
 
 
-from wibbrlib import *
+from wibbrlib.object import *
 
 
 class ComponentTypeNameTests(unittest.TestCase):

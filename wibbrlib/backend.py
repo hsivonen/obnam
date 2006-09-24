@@ -8,7 +8,7 @@ This implementation only stores the stuff locally, however.
 import os
 
 import uuid
-import wibbrcache
+import wibbrlib.cache
 
 
 class LocalBackEnd:
@@ -55,7 +55,7 @@ def download(be, block_id):
         f = file(_block_remote_pathname(be, block_id), "r")
         block = f.read()
         f.close()
-        wibbrcache.put_block(be.cache, block_id, block)
+        wibbrlib.cache.put_block(be.cache, block_id, block)
     except IOError, e:
         return e
     return True
