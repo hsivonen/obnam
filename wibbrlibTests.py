@@ -8,6 +8,7 @@ import unittest
 from wibbrlib.component import *
 from wibbrlib.object import *
 from wibbrlib.varint import *
+import wibbrlib.object
 import wibbrlib.rsync
 
 
@@ -224,6 +225,14 @@ class RsyncTests(unittest.TestCase):
         # in different situations. Eventually we'll move away from rdiff,
         # and then this should become clearer. --liw, 2006-09-24
         self.failUnlessEqual(delta, "\x72\x73\x02\x36\x45\x00\x5b\x00")
+
+
+class ObjectTests(unittest.TestCase):
+
+    def testId(self):
+        id = wibbrlib.object.object_id_new()
+        self.failIfEqual(id, None)
+        self.failUnlessEqual(type(id), type(""))
 
 
 if __name__ == "__main__":

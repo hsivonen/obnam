@@ -1,3 +1,5 @@
+import uuid
+
 from wibbrlib.exception import WibbrException
 from wibbrlib.component import *
 
@@ -21,6 +23,11 @@ OBJ_SIG         = _define_type(4, "OBJ_SIG")
 def object_type_name(type):
     """Return a textual name for a numeric object type"""
     return _object_types.get(type, "OBJ_UNKNOWN")
+
+
+def object_id_new():
+    """Return a string that is a universally unique ID for an object"""
+    return str(uuid.uuid4())
 
 
 def object_encode(objid, objtype, encoded_components):
