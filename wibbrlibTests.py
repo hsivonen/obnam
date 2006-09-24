@@ -228,6 +228,23 @@ class RsyncTests(unittest.TestCase):
         self.failUnlessEqual(delta, "\x72\x73\x02\x36\x45\x00\x5b\x00")
 
 
+class NormalizedInodeTests(unittest.TestCase):
+
+    def testNormalization(self):
+        st1 = os.stat("Makefile")
+        st2 = os.stat(".")
+        st3 = os.stat("..")
+        nst1 = normalize_stat_result(st1)
+        nst2 = normalize_stat_result(st2)
+        nst3 = normalize_stat_result(st3)
+        self.failUnlessEqual(nst1, normalize_stat_result(st1))
+        self.failUnlessEqual(nst2, normalize_stat_result(st2))
+        self.failUnlessEqual(nst3, normalize_stat_result(st3))
+        self.failIfEqual(nst1, nst2)
+        self.failIfEqual(nst2, nst3)
+        self.failIfEqual(nst3, nst1)
+
+
 class ObjectTests(unittest.TestCase):
 
     def testId(self):
