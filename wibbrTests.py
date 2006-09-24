@@ -41,24 +41,3 @@ class CommandLineParsingTests(unittest.TestCase):
         config = wibbr.default_config()
         wibbr.parse_args(config, ["--local-store=/tmp/foo"])
         self.failUnlessEqual(config.get("wibbr", "local-store"), "/tmp/foo")
-
-
-class RdiffTests(unittest.TestCase):
-
-    def testSignature(self):
-        sig = wibbr.compute_signature("Makefile")
-        os.system("rdiff signature Makefile Makefile.sig.temp")
-        f = file("Makefile.sig.temp")
-        data = f.read()
-        f.close()
-        self.failUnlessEqual(sig, data)
-        os.remove("Makefile.sig.temp")
-
-    def testEmptyDelta(self):
-        sig = wibbr.compute_signature("Makefile")
-        delta = wibbr.compute_delta(sig, "Makefile")
-        # The hex string below is what rdiff outputs. I've no idea what
-        # the format is, and the empty delta is expressed differently
-        # in different situations. Eventually we'll move away from rdiff,
-        # and then this should become clearer. --liw, 2006-09-24
-        self.failUnlessEqual(delta, "\x72\x73\x02\x36\x45\x00\x5b\x00")

@@ -8,6 +8,7 @@ import unittest
 from wibbrlib.component import *
 from wibbrlib.object import *
 from wibbrlib.varint import *
+import wibbrlib.rsync
 
 
 class ComponentTypeNameTests(unittest.TestCase):
@@ -202,6 +203,27 @@ class GenerationTests(unittest.TestCase):
         (id2, pairs2) = generation_object_decode(gen)
         self.failUnlessEqual(id1, id2)
         self.failUnlessEqual(pairs1, pairs2)
+        
+
+class RsyncTests(unittest.TestCase):
+
+    def testSignature(self):
+        sig = wibbrlib.rsync.compute_signature("Makefile")
+        os.system("rdiff signature Makefile Makefile.sig.temp")
+        f = file("Makefile.sig.temp")
+        data = f.read()
+        f.close()
+        self.failUnlessEqual(sig, data)
+        os.remove("Makefile.sig.temp")
+
+    def testEmptyDelta(self):
+        sig = wibbrlib.rsync.compute_signature("Makefile")
+        delta = wibbrlib.rsync.compute_delta(sig, "Makefile")
+        # The hex string below is what rdiff outputs. I've no idea what
+        # the format is, and the empty delta is expressed differently
+        # in different situations. Eventually we'll move away from rdiff,
+        # and then this should become clearer. --liw, 2006-09-24
+        self.failUnlessEqual(delta, "\x72\x73\x02\x36\x45\x00\x5b\x00")
 
 
 if __name__ == "__main__":
