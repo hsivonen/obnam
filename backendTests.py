@@ -1,4 +1,5 @@
 import ConfigParser
+import os
 import shutil
 import tempfile
 import unittest
@@ -37,3 +38,20 @@ class IdTests(LocalBackendBase):
         id2 = backend.generate_block_id(be)
         self.failIfEqual(id, id2)
 
+
+class UploadTests(LocalBackendBase):
+
+    def testUpload(self):
+        be = backend.init(self.config)
+        id = backend.generate_block_id(be)
+        block = "pink is pretty"
+        ret = backend.upload(be, id, block)
+        self.failUnlessEqual(ret, None)
+        
+        pathname = os.path.join(self.tempdir, id)
+        self.failUnless(os.path.isfile(pathname))
+        
+        f = file(pathname, "r")
+        data = f.read()
+        f.close()
+        self.failUnlessEqual(block, data)

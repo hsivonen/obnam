@@ -28,3 +28,15 @@ def init(config):
 def generate_block_id(be):
     """Generate a new identifier for the block, when stored remotely"""
     return os.path.join(be.curdir, str(uuid.uuid4()))
+
+
+def upload(be, block_id, block):
+    """Start the upload of a block to the remote server"""
+    curdir_full = os.path.join(be.local_root, be.curdir)
+    if not os.path.isdir(curdir_full):
+        os.makedirs(curdir_full, 0700)
+    block_pathname = os.path.join(be.local_root, block_id)
+    f = file(block_pathname, "w")
+    f.write(block)
+    f.close()
+    return None
