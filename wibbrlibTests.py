@@ -155,15 +155,15 @@ class ObjectQueueTests(unittest.TestCase):
 
     def testAdd(self):
         oq = object_queue_create()
-        object_queue_add(oq, "abc")
-        self.failUnlessEqual(oq, ["abc"])
+        object_queue_add(oq, "xx", "abc")
+        self.failUnlessEqual(oq, [("xx", "abc")])
 
     def testSize(self):
         oq = object_queue_create()
         self.failUnlessEqual(object_queue_combined_size(oq), 0)
-        object_queue_add(oq, "abc")
+        object_queue_add(oq, "xx", "abc")
         self.failUnlessEqual(object_queue_combined_size(oq), 3)
-        object_queue_add(oq, "abc")
+        object_queue_add(oq, "yy", "abc")
         self.failUnlessEqual(object_queue_combined_size(oq), 6)
 
 
@@ -173,12 +173,14 @@ class BlockCreateTests(unittest.TestCase):
         oq = object_queue_create()
         block = block_create_from_object_queue("blkid", oq)
         self.failUnlessEqual(block, "\5\3blkid")
+        self.failUnlessEqual(object_queue_ids(oq), [])
 
     def testObjectQueue(self):
         oq = object_queue_create()
-        object_queue_add(oq, "foo")
+        object_queue_add(oq, "xx", "foo")
         block = block_create_from_object_queue("blkid", oq)
         self.failUnlessEqual(block, "\5\3blkid\3\5foo")
+        self.failUnlessEqual(object_queue_ids(oq), ["xx"])
 
 
 class InodeTests(unittest.TestCase):

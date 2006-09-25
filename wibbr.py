@@ -61,6 +61,6 @@ def enqueue_object(config, be, map, oq, block_id, object_id, object):
         wibbrlib.backend.upload(be, block_id, block)
         oq = wibbrlib.object.object_queue_create()
         block_id = wibbrlib.backend.generate_block_id(be)
-    wibbrlib.object.object_queue_add(oq, object)
+    wibbrlib.object.object_queue_add(oq, object_id, object)
     wibbrlib.mapping.mapping_add(map, object_id, block_id)
     return oq, block_id

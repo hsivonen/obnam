@@ -53,20 +53,25 @@ def object_queue_create():
     return []
 
 
-def object_queue_add(oq, object):
+def object_queue_add(oq, object_id, object):
     """Add an encoded object into an object queue"""
-    oq.append(object)
+    oq.append((object_id, object))
 
 
 def object_queue_combined_size(oq):
     """Return the combined size of all objects in an object queue"""
-    return sum([len(x) for x in oq])
+    return sum([len(x[1]) for x in oq])
+
+
+def object_queue_ids(oq):
+    """Return identifiers for all the objects in the object queue"""
+    return [x[0] for x in oq]
 
 
 def block_create_from_object_queue(blkid, oq):
     """Create a block from an object queue"""
     blkid = component_encode(CMP_BLKID, blkid)
-    objects = [component_encode(CMP_OBJPART, x) for x in oq]
+    objects = [component_encode(CMP_OBJPART, x[1]) for x in oq]
     return blkid + "".join(objects)
 
 
