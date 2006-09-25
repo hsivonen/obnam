@@ -62,6 +62,7 @@ class ObjectQueuingTests(unittest.TestCase):
         object = "pretty"
         map = wibbrlib.mapping.mapping_create()
         config = wibbr.default_config()
+        config.set("wibbr", "block-size", "%d" % 128)
         cache = wibbrlib.cache.init(config)
         be = wibbrlib.backend.init(config, cache)
 
@@ -72,5 +73,20 @@ class ObjectQueuingTests(unittest.TestCase):
         
         self.failUnlessEqual(self.find_block_files(config), [])
         self.failUnlessEqual(block_id, new_block_id)
+        self.failUnlessEqual(wibbrlib.object.object_queue_combined_size(oq),
+                             len(object))
+        
+        object_id2 = "pink2"
+        object2 = "x" * 1024
+
+        (oq, new_block_id) = wibbr.enqueue_object(config, be, map, oq,
+                                                  block_id, object_id2, 
+                                                  object2)
+        
+        self.failUnlessEqual(len(self.find_block_files(config)), 1)
+        self.failIfEqual(block_id, new_block_id)
+        self.failUnlessEqual(wibbrlib.object.object_queue_combined_size(oq),
+                             len(object2))
 
         shutil.rmtree(config.get("wibbr", "cache-dir"))
+        shutil.rmtree(config.get("wibbr", "local-store"))

@@ -227,7 +227,7 @@ class RsyncTests(unittest.TestCase):
         # the format is, and the empty delta is expressed differently
         # in different situations. Eventually we'll move away from rdiff,
         # and then this should become clearer. --liw, 2006-09-24
-        self.failUnlessEqual(delta, "\x72\x73\x02\x36\x45\x00\x5b\x00")
+        self.failUnlessEqual(delta, "rs\x026E\x00b\x00")
 
 
 class NormalizedInodeTests(unittest.TestCase):
