@@ -90,3 +90,41 @@ class ObjectQueuingTests(unittest.TestCase):
 
         shutil.rmtree(config.get("wibbr", "cache-dir"))
         shutil.rmtree(config.get("wibbr", "local-store"))
+
+
+class FileContentsTests(unittest.TestCase):
+
+    def setUp(self):
+        self.config = wibbr.default_config()
+        self.cache = wibbrlib.cache.init(self.config)
+        self.be = wibbrlib.backend.init(self.config, self.cache)
+
+    def tearDown(self):
+        for x in ["cache-dir", "local-store"]:
+            if os.path.exists(self.config.get("wibbr", x)):
+                shutil.rmtree(self.config.get("wibbr", x))
+
+    def testEmptyFile(self):
+        map = wibbrlib.mapping.mapping_create()
+        oq = wibbrlib.object.object_queue_create()
+        filename = "/dev/null"
+        
+        (id, oq) = wibbr.create_file_contents_object(self.config, self.be, 
+                                                     map, oq, filename)
+
+        self.failIfEqual(id, None)
+        self.failUnlessEqual(wibbrlib.object.object_queue_ids(oq), [])
+        self.failUnlessEqual(wibbrlib.mapping.mapping_count(map), 0)
+
+    def testNonEmptyFile(self):
+        self.config.set("wibbr", "block-size", "16")
+        map = wibbrlib.mapping.mapping_create()
+        oq = wibbrlib.object.object_queue_create()
+        filename = "Makefile"
+        
+        (id, oq) = wibbr.create_file_contents_object(self.config, self.be, 
+                                                     map, oq, filename)
+
+        self.failIfEqual(id, None)
+        self.failUnlessEqual(wibbrlib.object.object_queue_ids(oq), [id])
+        self.failUnlessEqual(wibbrlib.mapping.mapping_count(map), 1)

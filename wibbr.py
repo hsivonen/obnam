@@ -65,3 +65,22 @@ def enqueue_object(config, be, map, oq, block_id, object_id, object):
         block_id = wibbrlib.backend.generate_block_id(be)
     wibbrlib.object.object_queue_add(oq, object_id, object)
     return oq, block_id
+
+
+def create_file_contents_object(config, be, map, oq, filename):
+    object_id = wibbrlib.object.object_id_new()
+    block_id = wibbrlib.backend.generate_block_id(be)
+    block_size = config.getint("wibbr", "block-size")
+    f = file(filename, "r")
+    while True:
+        data = f.read(block_size)
+        if not data:
+            break
+        c = wibbrlib.component.component_encode(
+                wibbrlib.component.CMP_FILEDATA, data)
+        o = wibbrlib.object.object_encode(object_id, 
+                wibbrlib.object.OBJ_FILECONT, [c])
+        (oq, block_id) = enqueue_object(config, be, map, oq, 
+                                        block_id, object_id, o)
+    f.close()
+    return object_id, oq
