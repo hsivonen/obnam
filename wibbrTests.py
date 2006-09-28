@@ -57,7 +57,6 @@ class ObjectQueuingTests(unittest.TestCase):
 
     def testEnqueue(self):
         oq = wibbrlib.object.object_queue_create()
-        block_id = "box"
         object_id = "pink"
         object = "pretty"
         map = wibbrlib.mapping.mapping_create()
@@ -68,23 +67,18 @@ class ObjectQueuingTests(unittest.TestCase):
 
         self.failUnlessEqual(self.find_block_files(config), [])
         
-        (oq, new_block_id) = wibbr.enqueue_object(config, be, map, oq,
-                                                  block_id, object_id, object)
+        oq = wibbr.enqueue_object(config, be, map, oq, object_id, object)
         
         self.failUnlessEqual(self.find_block_files(config), [])
-        self.failUnlessEqual(block_id, new_block_id)
         self.failUnlessEqual(wibbrlib.object.object_queue_combined_size(oq),
                              len(object))
         
         object_id2 = "pink2"
         object2 = "x" * 1024
 
-        (oq, new_block_id) = wibbr.enqueue_object(config, be, map, oq,
-                                                  block_id, object_id2, 
-                                                  object2)
+        oq = wibbr.enqueue_object(config, be, map, oq, object_id2, object2)
         
         self.failUnlessEqual(len(self.find_block_files(config)), 1)
-        self.failIfEqual(block_id, new_block_id)
         self.failUnlessEqual(wibbrlib.object.object_queue_combined_size(oq),
                              len(object2))
 

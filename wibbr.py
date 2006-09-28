@@ -53,23 +53,22 @@ def parse_args(config, argv):
         config.set("wibbr", "local-store", options.local_store)
 
 
-def enqueue_object(config, be, map, oq, block_id, object_id, object):
+def enqueue_object(config, be, map, oq, object_id, object):
     block_size = config.getint("wibbr", "block-size")
     cur_size = wibbrlib.object.object_queue_combined_size(oq)
     if len(object) + cur_size > block_size:
+        block_id = wibbrlib.backend.generate_block_id(be)
         block = wibbrlib.object.block_create_from_object_queue(block_id, oq)
+        wibbrlib.backend.upload(be, block_id, block)
         for id in wibbrlib.object.object_queue_ids(oq):
             wibbrlib.mapping.mapping_add(map, id, block_id)
-        wibbrlib.backend.upload(be, block_id, block)
         oq = wibbrlib.object.object_queue_create()
-        block_id = wibbrlib.backend.generate_block_id(be)
     wibbrlib.object.object_queue_add(oq, object_id, object)
-    return oq, block_id
+    return oq
 
 
 def create_file_contents_object(config, be, map, oq, filename):
     object_id = wibbrlib.object.object_id_new()
-    block_id = wibbrlib.backend.generate_block_id(be)
     block_size = config.getint("wibbr", "block-size")
     f = file(filename, "r")
     while True:
@@ -80,7 +79,6 @@ def create_file_contents_object(config, be, map, oq, filename):
                 wibbrlib.component.CMP_FILEDATA, data)
         o = wibbrlib.object.object_encode(object_id, 
                 wibbrlib.object.OBJ_FILECONT, [c])
-        (oq, block_id) = enqueue_object(config, be, map, oq, 
-                                        block_id, object_id, o)
+        oq = enqueue_object(config, be, map, oq, object_id, o)
     f.close()
     return object_id, oq
