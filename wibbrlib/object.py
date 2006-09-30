@@ -41,8 +41,7 @@ def object_encode(objid, objtype, encoded_components):
 def object_decode(str, pos):
     """Decode an object, return components as list of (type, data)"""
     pairs = []
-    while pos < len(str):
-        (type, data, pos) = component_decode(str, pos)
+    for type, data in component_decode_all(str, pos):
         if type == CMP_OBJTYPE:
             (data, _) = varint_decode(data, 0)
         pairs.append((type, data))
