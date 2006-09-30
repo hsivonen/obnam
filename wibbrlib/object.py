@@ -120,8 +120,10 @@ def inode_object_encode(objid, stat_result, sig_id, contents_id):
     if "st_rdev" in st:
         fields.append(component_encode(CMP_ST_RDEV, 
                                        varint_encode(st["st_rdev"])))
-    fields.append(component_encode(CMP_SIGREF, sig_id))
-    fields.append(component_encode(CMP_CONTREF, contents_id))
+    if sig_id:
+        fields.append(component_encode(CMP_SIGREF, sig_id))
+    if contents_id:
+        fields.append(component_encode(CMP_CONTREF, contents_id))
     return object_encode(objid, OBJ_INODE, fields)
     
     
