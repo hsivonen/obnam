@@ -3,7 +3,7 @@ import os
 import shutil
 import unittest
 
-import wibbrlib.cache
+import wibbrlib
 
 
 class CacheBase(unittest.TestCase):

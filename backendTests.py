@@ -4,8 +4,7 @@ import shutil
 import tempfile
 import unittest
 
-import wibbrlib.backend
-import wibbrlib.cache
+import wibbrlib
 
 
 class LocalBackendBase(unittest.TestCase):

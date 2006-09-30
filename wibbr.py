@@ -7,9 +7,7 @@ import os
 import stat
 import sys
 
-import wibbrlib.backend
-import wibbrlib.mapping
-import wibbrlib.object
+import wibbrlib
 
 
 def default_config():

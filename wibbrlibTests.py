@@ -8,9 +8,7 @@ import unittest
 from wibbrlib.component import *
 from wibbrlib.object import *
 from wibbrlib.varint import *
-import wibbrlib.mapping
-import wibbrlib.object
-import wibbrlib.rsync
+import wibbrlib
 
 
 class ComponentTypeNameTests(unittest.TestCase):
