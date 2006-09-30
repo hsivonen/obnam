@@ -23,25 +23,25 @@ class CommandLineParsingTests(unittest.TestCase):
 
     def testEmpty(self):
         config = wibbr.default_config()
-        wibbr.parse_args(config, [])
+        wibbr.parse_options(config, [])
         self.failUnlessEqual(self.config_as_string(config), 
                              self.config_as_string(wibbr.default_config()))
 
     def testBlockSize(self):
         config = wibbr.default_config()
-        wibbr.parse_args(config, ["--block-size=12765"])
+        wibbr.parse_options(config, ["--block-size=12765"])
         self.failUnlessEqual(config.getint("wibbr", "block-size"), 12765)
-        wibbr.parse_args(config, ["--block-size=42"])
+        wibbr.parse_options(config, ["--block-size=42"])
         self.failUnlessEqual(config.getint("wibbr", "block-size"), 42)
 
     def testCacheDir(self):
         config = wibbr.default_config()
-        wibbr.parse_args(config, ["--cache-dir=/tmp/foo"])
+        wibbr.parse_options(config, ["--cache-dir=/tmp/foo"])
         self.failUnlessEqual(config.get("wibbr", "cache-dir"), "/tmp/foo")
 
     def testLocalStore(self):
         config = wibbr.default_config()
-        wibbr.parse_args(config, ["--local-store=/tmp/foo"])
+        wibbr.parse_options(config, ["--local-store=/tmp/foo"])
         self.failUnlessEqual(config.get("wibbr", "local-store"), "/tmp/foo")
 
 
