@@ -316,8 +316,7 @@ class UnknownGenlistComponentType(WibbrException):
 def genlist_decode(genlist):
     gen_ids = []
     pos = 0
-    while pos < len(genlist):
-        (type, data, pos) = component_decode(genlist, pos)
+    for type, data in component_decode_all(genlist, pos):
         if type == CMP_GENREF:
             gen_ids.append(data)
         else:
