@@ -227,10 +227,9 @@ class WrongObjectType(WibbrException):
 
 def generation_object_decode(gen):
     """Decode a generation object into objid, list of name, inode_id pairs"""
-    pos = 0
     objid = None
     pairs = []
-    for type, data in component_decode_all(gen, pos):
+    for type, data in component_decode_all(gen, 0):
         if type == CMP_OBJID:
             objid = data
         elif type == CMP_OBJTYPE:
@@ -314,8 +313,7 @@ class UnknownGenlistComponentType(WibbrException):
 
 def genlist_decode(genlist):
     gen_ids = []
-    pos = 0
-    for type, data in component_decode_all(genlist, pos):
+    for type, data in component_decode_all(genlist, 0):
         if type == CMP_GENREF:
             gen_ids.append(data)
         else:
@@ -329,7 +327,6 @@ def host_block_decode(block):
     host_id = None
     gen_ids = []
     
-    pos = 0
     for type, data in component_decode_all(block, 0):
         if type == CMP_BLKID:
             if host_id is None:
