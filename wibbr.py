@@ -82,7 +82,3 @@ def create_file_contents_object(config, be, map, oq, filename):
         oq = enqueue_object(config, be, map, oq, object_id, o)
     f.close()
     return object_id, oq
-
-
-def parse_command_line(config, args):
-    pass
