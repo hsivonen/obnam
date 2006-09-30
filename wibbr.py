@@ -15,6 +15,7 @@ import wibbrlib.object
 def default_config():
     """Return a ConfigParser object with the default builtin configuration"""
     items = (
+        ("wibbr", "host-id", "testhost"),
         ("wibbr", "block-size", "%d" % (64 * 1024)),
         ("wibbr", "cache-dir", "tmp.cachedir"),
         ("wibbr", "local-store", "tmp.local-store"),
@@ -108,7 +109,6 @@ class UnknownFileType(wibbrlib.exception.WibbrException):
 
 
 def backup_single_item(config, be, map, oq, pathname):
-    print "pathname:", pathname
     st = os.stat(pathname)
     
     list = (
@@ -138,6 +138,17 @@ def backup_directory(config, be, map, oq, dirname):
             (inode_id, oq) = backup_single_item(config, be, map, oq, 
                                                 pathname)
     return oq
+
+
+def generations(config, cache, be):
+    host_id = config.get("wibbr", "host-id")
+    e = wibbrlib.backend.download(be, host_id)
+    if e:
+        raise e
+    block = wibbrlib.cache.get_block(cache, host_id)
+    (_, gen_ids) = wibbrlib.object.host_block_decode(block)
+    for id in gen_ids:
+        print id
 
 
 class MissingCommandWord(wibbrlib.exception.WibbrException):
@@ -172,8 +183,12 @@ def main():
                 oq = backup_directory(config, be, map, oq, name)
             else:
                 raise Exception("Not a directory: %s" + name)
+        host_id = config.get("wibbr", "host-id")
+        gen_ids = []
+        block = wibbrlib.object.host_block_encode(host_id, gen_ids)
+        wibbrlib.backend.upload(be, host_id, block)
     elif command == "generations":
-        pass
+        generations(config, cache, be)
     elif command == "restore":
         pass
     else:
