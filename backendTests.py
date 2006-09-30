@@ -83,7 +83,7 @@ class DownloadTests(LocalBackendBase):
         wibbrlib.backend.upload(be, id, block)
         
         success = wibbrlib.backend.download(be, id)
-        self.failUnlessEqual(success, True)
+        self.failUnlessEqual(success, None)
         
     def testError(self):
         be = wibbrlib.backend.init(self.config, self.cache)

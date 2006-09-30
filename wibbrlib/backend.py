@@ -50,7 +50,12 @@ def upload(be, block_id, block):
 
 
 def download(be, block_id):
-    """Download a block from the remote server, return success/failure"""
+    """Download a block from the remote server
+    
+    Return exception for error, or None for OK.
+    
+    """
+
     try:
         f = file(_block_remote_pathname(be, block_id), "r")
         block = f.read()
@@ -58,4 +63,4 @@ def download(be, block_id):
         wibbrlib.cache.put_block(be.cache, block_id, block)
     except IOError, e:
         return e
-    return True
+    return None
