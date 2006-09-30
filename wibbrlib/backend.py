@@ -140,6 +140,11 @@ def get_object(be, map, object_id):
     return object_components
 
 
+def upload_host_block(be, host_block):
+    """Upload a host block"""
+    return upload(be, be.config.get("wibbr", "host-id"), host_block)
+
+
 def get_host_block(be):
     """Return (and fetch, if needed) the host block, or None if not found"""
     host_id = be.config.get("wibbr", "host-id")
