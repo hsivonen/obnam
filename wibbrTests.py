@@ -59,7 +59,7 @@ class ObjectQueuingTests(unittest.TestCase):
         oq = wibbrlib.object.object_queue_create()
         object_id = "pink"
         object = "pretty"
-        map = wibbrlib.mapping.mapping_create()
+        map = wibbrlib.mapping.create()
         config = wibbr.default_config()
         config.set("wibbr", "block-size", "%d" % 128)
         cache = wibbrlib.cache.init(config)
@@ -99,7 +99,7 @@ class FileContentsTests(unittest.TestCase):
                 shutil.rmtree(self.config.get("wibbr", x))
 
     def testEmptyFile(self):
-        map = wibbrlib.mapping.mapping_create()
+        map = wibbrlib.mapping.create()
         oq = wibbrlib.object.object_queue_create()
         filename = "/dev/null"
         
@@ -108,11 +108,11 @@ class FileContentsTests(unittest.TestCase):
 
         self.failIfEqual(id, None)
         self.failUnlessEqual(wibbrlib.object.object_queue_ids(oq), [])
-        self.failUnlessEqual(wibbrlib.mapping.mapping_count(map), 0)
+        self.failUnlessEqual(wibbrlib.mapping.count(map), 0)
 
     def testNonEmptyFile(self):
         self.config.set("wibbr", "block-size", "16")
-        map = wibbrlib.mapping.mapping_create()
+        map = wibbrlib.mapping.create()
         oq = wibbrlib.object.object_queue_create()
         filename = "Makefile"
         
@@ -121,4 +121,4 @@ class FileContentsTests(unittest.TestCase):
 
         self.failIfEqual(id, None)
         self.failUnlessEqual(wibbrlib.object.object_queue_ids(oq), [id])
-        self.failUnlessEqual(wibbrlib.mapping.mapping_count(map), 1)
+        self.failUnlessEqual(wibbrlib.mapping.count(map), 1)

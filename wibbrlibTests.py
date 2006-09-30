@@ -268,40 +268,40 @@ class ObjectTests(unittest.TestCase):
 class ObjectMappingTests(unittest.TestCase):
 
     def testEmpty(self):
-        m = wibbrlib.mapping.mapping_create()
-        self.failUnlessEqual(wibbrlib.mapping.mapping_count(m), 0)
+        m = wibbrlib.mapping.create()
+        self.failUnlessEqual(wibbrlib.mapping.count(m), 0)
 
     def testGetNonexisting(self):
-        m = wibbrlib.mapping.mapping_create()
-        blkids = wibbrlib.mapping.mapping_get(m, "pink")
+        m = wibbrlib.mapping.create()
+        blkids = wibbrlib.mapping.get(m, "pink")
         self.failUnlessEqual(blkids, None)
 
     def testAddOneMapping(self):
-        m = wibbrlib.mapping.mapping_create()
-        wibbrlib.mapping.mapping_add(m, "pink", "pretty")
-        self.failUnlessEqual(wibbrlib.mapping.mapping_count(m), 1)
+        m = wibbrlib.mapping.create()
+        wibbrlib.mapping.add(m, "pink", "pretty")
+        self.failUnlessEqual(wibbrlib.mapping.count(m), 1)
         
-        blkids = wibbrlib.mapping.mapping_get(m, "pink")
+        blkids = wibbrlib.mapping.get(m, "pink")
         self.failUnlessEqual(blkids, ["pretty"])
 
     def testAddTwoMappings(self):
-        m = wibbrlib.mapping.mapping_create()
-        wibbrlib.mapping.mapping_add(m, "pink", "pretty")
-        wibbrlib.mapping.mapping_add(m, "pink", "beautiful")
-        self.failUnlessEqual(wibbrlib.mapping.mapping_count(m), 1)
+        m = wibbrlib.mapping.create()
+        wibbrlib.mapping.add(m, "pink", "pretty")
+        wibbrlib.mapping.add(m, "pink", "beautiful")
+        self.failUnlessEqual(wibbrlib.mapping.count(m), 1)
         
-        blkids = wibbrlib.mapping.mapping_get(m, "pink")
+        blkids = wibbrlib.mapping.get(m, "pink")
         self.failUnlessEqual(blkids, ["pretty", "beautiful"])
 
     def testGetNewMappings(self):
-        m = wibbrlib.mapping.mapping_create()
-        self.failUnlessEqual(wibbrlib.mapping.mapping_get_new(m), [])
-        wibbrlib.mapping.mapping_add(m, "pink", "pretty")
-        self.failUnlessEqual(wibbrlib.mapping.mapping_get_new(m), ["pink"])
-        wibbrlib.mapping.mapping_reset_new(m)
-        self.failUnlessEqual(wibbrlib.mapping.mapping_get_new(m), [])
-        wibbrlib.mapping.mapping_add(m, "black", "beautiful")
-        self.failUnlessEqual(wibbrlib.mapping.mapping_get_new(m), ["black"])
+        m = wibbrlib.mapping.create()
+        self.failUnlessEqual(wibbrlib.mapping.get_new(m), [])
+        wibbrlib.mapping.add(m, "pink", "pretty")
+        self.failUnlessEqual(wibbrlib.mapping.get_new(m), ["pink"])
+        wibbrlib.mapping.reset_new(m)
+        self.failUnlessEqual(wibbrlib.mapping.get_new(m), [])
+        wibbrlib.mapping.add(m, "black", "beautiful")
+        self.failUnlessEqual(wibbrlib.mapping.get_new(m), ["black"])
 
 
 class HostBlockTests(unittest.TestCase):

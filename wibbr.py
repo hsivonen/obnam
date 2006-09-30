@@ -61,7 +61,7 @@ def flush_object_queue(be, map, oq):
     block = wibbrlib.object.block_create_from_object_queue(block_id, oq)
     wibbrlib.backend.upload(be, block_id, block)
     for id in wibbrlib.object.object_queue_ids(oq):
-        wibbrlib.mapping.mapping_add(map, id, block_id)
+        wibbrlib.mapping.add(map, id, block_id)
 
 
 def enqueue_object(config, be, map, oq, object_id, object):
@@ -166,7 +166,7 @@ def main():
     args = parse_options(config, sys.argv[1:])
     cache = wibbrlib.cache.init(config)
     be = wibbrlib.backend.init(config, cache)
-    map = wibbrlib.mapping.mapping_create()
+    map = wibbrlib.mapping.create()
     oq = wibbrlib.object.object_queue_create()
 
     if not args:
