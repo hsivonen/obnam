@@ -338,9 +338,7 @@ def host_block_decode(block):
             elif host_id != data:
                 raise ConfusedHostId(host_id, data)
         elif type == CMP_OBJPART:
-            pos2 = 0
-            while pos2 < len(data):
-                (type2, data2, pos2) = component_decode(data, pos2)
+            for type2, data2 in component_decode_all(data, 0):
                 if type2 == CMP_OBJID:
                     if host_id is None:
                         host_id = data2
