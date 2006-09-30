@@ -89,3 +89,22 @@ class DownloadTests(LocalBackendBase):
         id = wibbrlib.backend.generate_block_id(be)
         success = wibbrlib.backend.download(be, id)
         self.failIfEqual(success, True)
+
+
+class FileListTests(LocalBackendBase):
+
+    def testFileList(self):
+        be = wibbrlib.backend.init(self.config, self.cache)
+        self.failUnlessEqual(wibbrlib.backend.list(be), [])
+        
+        id = "pink"
+        block = "pretty"
+        wibbrlib.backend.upload(be, id, block)
+        list = wibbrlib.backend.list(be)
+        filename = os.path.join(self.rootdir, id)
+        self.failUnlessEqual(list, [filename])
+
+        f = file(filename, "r")
+        block2 = f.read()
+        f.close()
+        self.failUnlessEqual(block, block2)

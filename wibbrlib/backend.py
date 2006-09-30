@@ -64,3 +64,11 @@ def download(be, block_id):
     except IOError, e:
         return e
     return None
+
+
+def list(be):
+    """Return list of all files on the remote server"""
+    list = []
+    for dirpath, _, filenames in os.walk(be.local_root):
+        list += [os.path.join(dirpath, x) for x in filenames]
+    return list
