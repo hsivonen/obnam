@@ -331,8 +331,7 @@ def host_block_decode(block):
     gen_ids = []
     
     pos = 0
-    while pos < len(block):
-        (type, data, pos) = component_decode(block, pos)
+    for type, data in component_decode_all(block, 0):
         if type == CMP_BLKID:
             if host_id is None:
                 host_id = data
