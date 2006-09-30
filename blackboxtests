@@ -1,0 +1,77 @@
+#!/bin/sh
+#
+# blackboxtests -- run black box tests for wibbr
+#
+# This script runs some automatic black box tests for wibbr. The tests
+# are structured as follows: first the initial tree to be backed up is
+# created, and backed up. Then the tree is updated for the next
+# generation, which gets backed up. This is repeated for each
+# generation. In addition, a manifest file is created for each
+# generation.
+#
+# After all generations have been created and backed up, they are
+# restored one by one. A manifest file is created for the restored tree,
+# and compared to the one that was created when the original generation
+# was backed up. If there are any problems, the testing aborts.
+#
+# The generations are created either by tarballs or shell scripts. The
+# former are unpacked into a temporary directory (each generation is
+# unpacked on top of the previous one), and the scripts are run to
+# modify the temporary directory for the next generation.
+#
+# Each test case is put into its own directory, and the directory should
+# contain files named "gen??.tar.gz" (for the tarballs) or "gen??.sh"
+# (for the shell scripts), where "??" is a two-digit number identifying
+# the generation.
+#
+# This script outputs nothing if everything went well, and errors if
+# something went badly.
+
+set -e
+
+tmp="tmp"; rm -rf "$tmp"; mkdir "$tmp"
+
+#cat > "$tmp/config" << EOF
+#[wibbr]
+#block-cache = $tmp/cache
+#local-store = $tmp/store
+#EOF
+
+CONFIG="--cache-dir=$tmp/cache --local-store=$tmp/store"
+
+for dir in "$@"
+do
+    rm -rf "$tmp/root"
+    mkdir "$tmp/root"
+    
+    find "$dir" -maxdepth 1 -name 'gen[0-9][0-9].*' -type f |
+    sort |
+    nl |
+    while read i gen
+    do
+        case "$gen" in
+        *.tar.gz)
+            tar -C "$tmp/root" -xzf "$gen"
+            ;;
+        *.sh)
+            sh "$gen" "$tmp/root"
+            ;;
+        esac
+        
+        python manifest.py "$tmp/root" > "$tmp/manifest-$i"
+        
+        python wibbr.py $CONFIG backup "$tmp/root"
+    done
+    
+    python wibbr.py $CONFIG generations |
+    nl |
+    while read i genid
+    do
+        rm -rf "$tmp/root"
+        mkdir "$tmp/root"
+        python wibbr.py $CONFIG --to "$tmp/root" restore "$genid"
+        python manifest.py "$tmp/root" | diff "$tmp/manifest-$i"
+    done
+done
+
+#rm -rf "$tmp"
