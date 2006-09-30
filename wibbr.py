@@ -156,7 +156,7 @@ def main():
         host_id = config.get("wibbr", "host-id")
         gen_ids = [gen_id]
         block = wibbrlib.object.host_block_encode(host_id, gen_ids)
-        wibbrlib.backend.upload(be, host_id, block)
+        wibbrlib.backend.upload_host_block(be, block)
     elif command == "generations":
         generations(config, cache, be)
     elif command == "restore":
