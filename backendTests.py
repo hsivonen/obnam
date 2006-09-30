@@ -21,7 +21,7 @@ class LocalBackendBase(unittest.TestCase):
             ("wibbr", "local-store", self.rootdir)
         )
     
-        self.config = ConfigParser.ConfigParser()
+        self.config = wibbrlib.config.default_config()
         for section, item, value in config_list:
             if not self.config.has_section(section):
                 self.config.add_section(section)
@@ -149,3 +149,16 @@ class GetObjectTests(LocalBackendBase):
         self.failUnlessEqual(object, [(wibbrlib.component.CMP_OBJID, id),
                                       (wibbrlib.component.CMP_OBJTYPE, 0),
                                       (42, "pretty")])
+
+
+class HostBlock(LocalBackendBase):
+
+    def testFetchHostBlock(self):
+        host_id = self.config.get("wibbr", "host-id")
+        host = wibbrlib.object.host_block_encode(host_id, ["gen1", "gen2"])
+        
+        be = wibbrlib.backend.init(self.config, self.cache)
+        wibbrlib.backend.upload(be, host_id, host)
+
+        host2 = wibbrlib.backend.get_host_block(be)
+        self.failUnlessEqual(host, host2)

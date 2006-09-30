@@ -16,6 +16,7 @@ import wibbrlib.object
 class LocalBackEnd:
 
     def __init__(self):
+        self.config = None
         self.local_root = None
         self.cache = None
         self.curdir = None
@@ -24,6 +25,7 @@ class LocalBackEnd:
 def init(config, cache):
     """Initialize the subsystem and return an opaque backend object"""
     be = LocalBackEnd()
+    be.config = config
     be.local_root = config.get("wibbr", "local-store")
     be.cache = cache
     be.curdir = str(uuid.uuid4())
@@ -136,3 +138,12 @@ def get_object(be, map, object_id):
                         components[i] = (type, data)
                 object_components += components
     return object_components
+
+
+def get_host_block(be):
+    """Return (and fetch, if needed) the host block, or None if not found"""
+    host_id = be.config.get("wibbr", "host-id")
+    e = download(be, host_id)
+    if e:
+        raise e
+    return wibbrlib.cache.get_block(be.cache, host_id)
