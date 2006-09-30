@@ -43,6 +43,8 @@ class ComponentTypeNameTests(unittest.TestCase):
         self.failUnlessEqual(c(CMP_FILENAME), "CMP_FILENAME")
         self.failUnlessEqual(c(CMP_SIGDATA), "CMP_SIGDATA")
         self.failUnlessEqual(c(CMP_SIGREF), "CMP_SIGREF")
+        self.failUnlessEqual(c(CMP_GENREF), "CMP_GENREF")
+        self.failUnlessEqual(c(CMP_GENLIST), "CMP_GENLIST")
 
 
 class ObjectTypeNameTests(unittest.TestCase):
@@ -308,9 +310,11 @@ class HostBlockTests(unittest.TestCase):
 
     def testEncodeDecode(self):
         host_id = "pink"
-        host = wibbrlib.object.host_block_encode(host_id)
-        host_id2 = wibbrlib.object.host_block_decode(host)
+        gen_ids = ["pretty", "beautiful"]
+        host = wibbrlib.object.host_block_encode(host_id, gen_ids)
+        (host_id2, gen_ids2) = wibbrlib.object.host_block_decode(host)
         self.failUnlessEqual(host_id, host_id2)
+        self.failUnlessEqual(gen_ids, gen_ids2)
 
 
 if __name__ == "__main__":

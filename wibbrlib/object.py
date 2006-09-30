@@ -261,9 +261,14 @@ def generation_object_decode(gen):
     return objid, pairs
 
 
-def host_block_encode(host_id):
+def host_block_encode(host_id, gen_ids):
     """Encode a new block with a host object"""
-    object = object_encode(host_id, OBJ_HOST, [])
+    list = []
+
+    gen_ids = [component_encode(CMP_GENREF, x) for x in gen_ids]    
+    list.append(component_encode(CMP_GENLIST, "".join(gen_ids)))
+
+    object = object_encode(host_id, OBJ_HOST, list)
     oq = object_queue_create()
     object_queue_add(oq, host_id, object)
     block = block_create_from_object_queue(host_id, oq)
@@ -301,10 +306,32 @@ class UnknownHostBlockComponentType(WibbrException):
                 (component_type_name(type), type)
 
 
+class UnknownGenlistComponentType(WibbrException):
+
+    def __init__(self, type):
+        self._msg = \
+            "Host block's generation list contains component of " + \
+            "unexpectedtype %s (%d)" % \
+                (component_type_name(type), type)
+
+
+def genlist_decode(genlist):
+    gen_ids = []
+    pos = 0
+    while pos < len(genlist):
+        (type, data, pos) = component_decode(genlist, pos)
+        if type == CMP_GENREF:
+            gen_ids.append(data)
+        else:
+            raise UnknownGenlistComponentType(type)
+    return gen_ids
+
+
 def host_block_decode(block):
     """Decode a host block"""
     
     host_id = None
+    gen_ids = []
     
     pos = 0
     while pos < len(block):
@@ -327,9 +354,11 @@ def host_block_decode(block):
                     (objtype, _) = varint_decode(data2, 0)
                     if objtype != OBJ_HOST:
                         raise HostBlockHasWrongObjectType(objtype)
+                elif type2 == CMP_GENLIST:
+                    gen_ids = genlist_decode(data2)
                 else:
                     raise UnknownHostObjectComponentType(type2)
         else:
             raise UnknownHostBlockComponentType(type)
 
-    return host_id
+    return host_id, gen_ids
