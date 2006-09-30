@@ -120,6 +120,16 @@ class ComponentEncodingDecodingTests(unittest.TestCase):
         self.doit(2, "hello, world\0this is fun")
 
 
+class ComponentDecodeAllTests(unittest.TestCase):
+
+    def testDecodeAll(self):
+        c1 = component_encode(1, "pink")
+        c2 = component_encode(2, "pretty")
+        c = c1 + c2
+        list = component_decode_all(c, 0)
+        self.failUnlessEqual(list, [(1, "pink"), (2, "pretty")])
+
+
 class ObjectEncodingTests(unittest.TestCase):
 
     def testEmptyObject(self):
