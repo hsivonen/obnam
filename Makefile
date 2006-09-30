@@ -6,4 +6,4 @@ check:
 
 
 clean:
-	rm -rf *.pyc *.pyo wibbrlib/*.pyc wibbrlib/*.pyo tmp.*
+	rm -rf *~ *.pyc *.pyo wibbrlib/*.pyc wibbrlib/*.pyo tmp.*
