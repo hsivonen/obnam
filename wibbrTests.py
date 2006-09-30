@@ -15,32 +15,32 @@ class CommandLineParsingTests(unittest.TestCase):
         return f.getvalue()
 
     def testDefaultConfig(self):
-        config = wibbr.default_config()
+        config = wibbrlib.config.default_config()
         self.failUnless(config.has_section("wibbr"))
         self.failUnless(config.has_option("wibbr", "block-size"))
         self.failUnless(config.has_option("wibbr", "cache-dir"))
         self.failUnless(config.has_option("wibbr", "local-store"))
 
     def testEmpty(self):
-        config = wibbr.default_config()
+        config = wibbrlib.config.default_config()
         wibbr.parse_options(config, [])
         self.failUnlessEqual(self.config_as_string(config), 
-                             self.config_as_string(wibbr.default_config()))
+                     self.config_as_string(wibbrlib.config.default_config()))
 
     def testBlockSize(self):
-        config = wibbr.default_config()
+        config = wibbrlib.config.default_config()
         wibbr.parse_options(config, ["--block-size=12765"])
         self.failUnlessEqual(config.getint("wibbr", "block-size"), 12765)
         wibbr.parse_options(config, ["--block-size=42"])
         self.failUnlessEqual(config.getint("wibbr", "block-size"), 42)
 
     def testCacheDir(self):
-        config = wibbr.default_config()
+        config = wibbrlib.config.default_config()
         wibbr.parse_options(config, ["--cache-dir=/tmp/foo"])
         self.failUnlessEqual(config.get("wibbr", "cache-dir"), "/tmp/foo")
 
     def testLocalStore(self):
-        config = wibbr.default_config()
+        config = wibbrlib.config.default_config()
         wibbr.parse_options(config, ["--local-store=/tmp/foo"])
         self.failUnlessEqual(config.get("wibbr", "local-store"), "/tmp/foo")
 
@@ -60,7 +60,7 @@ class ObjectQueuingTests(unittest.TestCase):
         object_id = "pink"
         object = "pretty"
         map = wibbrlib.mapping.create()
-        config = wibbr.default_config()
+        config = wibbrlib.config.default_config()
         config.set("wibbr", "block-size", "%d" % 128)
         cache = wibbrlib.cache.init(config)
         be = wibbrlib.backend.init(config, cache)
@@ -89,7 +89,7 @@ class ObjectQueuingTests(unittest.TestCase):
 class FileContentsTests(unittest.TestCase):
 
     def setUp(self):
-        self.config = wibbr.default_config()
+        self.config = wibbrlib.config.default_config()
         self.cache = wibbrlib.cache.init(self.config)
         self.be = wibbrlib.backend.init(self.config, self.cache)
 

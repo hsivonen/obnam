@@ -1,6 +1,7 @@
 import backend
 import cache
 import component
+import config
 import exception
 import mapping
 import object

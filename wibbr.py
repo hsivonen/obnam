@@ -1,31 +1,12 @@
 """Wibbr - a backup program"""
 
 
-import ConfigParser
 import optparse
 import os
 import stat
 import sys
 
 import wibbrlib
-
-
-def default_config():
-    """Return a ConfigParser object with the default builtin configuration"""
-    items = (
-        ("wibbr", "host-id", "testhost"),
-        ("wibbr", "block-size", "%d" % (64 * 1024)),
-        ("wibbr", "cache-dir", "tmp.cachedir"),
-        ("wibbr", "local-store", "tmp.local-store"),
-    )
-    
-    config = ConfigParser.RawConfigParser()
-    for section, item, value in items:
-        if not config.has_section(section):
-            config.add_section(section)
-        config.set(section, item, value)
-    
-    return config
 
 
 def parse_options(config, argv):
@@ -162,7 +143,7 @@ class UnknownCommandWord(wibbrlib.exception.WibbrException):
 
 
 def main():
-    config = default_config()
+    config = wibbrlib.config.default_config()
     args = parse_options(config, sys.argv[1:])
     cache = wibbrlib.cache.init(config)
     be = wibbrlib.backend.init(config, cache)
