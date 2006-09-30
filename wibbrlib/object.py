@@ -239,10 +239,11 @@ def generation_object_decode(gen):
             if objtype != OBJ_GEN:
                 raise WrongObjectType(objtype, OBJ_GEN)
         elif type == CMP_NAMEIPAIR:
-            (nitype1, nidata1, nipos) = component_decode(data, 0)
-            (nitype2, nidata2, nipos) = component_decode(data, nipos)
-            if nipos != len(data):
+            components = component_decode_all(data, 0)
+            if len(components) != 2:
                 raise NameInodePairHasTooManyComponents()
+            (nitype1, nidata1) = components[0]
+            (nitype2, nidata2) = components[1]
             if nitype1 == CMP_INODEREF and nitype2 == CMP_FILENAME:
                 inode_id = nidata1
                 filename = nidata2
