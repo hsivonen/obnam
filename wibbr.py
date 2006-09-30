@@ -112,11 +112,7 @@ def backup_directory(config, be, map, oq, dirname):
 
 
 def generations(config, cache, be):
-    host_id = config.get("wibbr", "host-id")
-    e = wibbrlib.backend.download(be, host_id)
-    if e:
-        raise e
-    block = wibbrlib.cache.get_block(cache, host_id)
+    block = wibbrlib.backend.get_host_block(be)
     (_, gen_ids) = wibbrlib.object.host_block_decode(block)
     for id in gen_ids:
         print id
