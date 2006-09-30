@@ -128,3 +128,24 @@ class ObjectQueueFlushing(LocalBackendBase):
         b1 = [os.path.basename(x) for x in wibbrlib.mapping.get(map, "pink")]
         b2 = [os.path.basename(x) for x in list]
         self.failUnlessEqual(b1, b2)
+
+
+class GetObjectTests(LocalBackendBase):
+
+    def upload_object(self, object_id, object):
+        oq = wibbrlib.object.object_queue_create()
+        wibbrlib.object.object_queue_add(oq, object_id, object)
+        wibbrlib.backend.flush_object_queue(self.be, self.map, oq)
+
+    def testGetObject(self):
+        self.be = wibbrlib.backend.init(self.config, self.cache)
+        self.map = wibbrlib.mapping.create()
+        
+        id = "pink"
+        component = wibbrlib.component.component_encode(42, "pretty")
+        object = wibbrlib.object.object_encode(id, 0, [component])
+        self.upload_object(id, object)
+        object = wibbrlib.backend.get_object(self.be, self.map, id)
+        self.failUnlessEqual(object, [(wibbrlib.component.CMP_OBJID, id),
+                                      (wibbrlib.component.CMP_OBJTYPE, 0),
+                                      (42, "pretty")])
