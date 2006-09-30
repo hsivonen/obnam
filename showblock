@@ -6,7 +6,7 @@
 
 import sys
 
-from wibbrlib import *
+from wibbrlib.component import *
 
 
 recursive_component_types = (
