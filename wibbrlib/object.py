@@ -231,8 +231,7 @@ def generation_object_decode(gen):
     pos = 0
     objid = None
     pairs = []
-    while pos < len(gen):
-        (type, data, pos) = component_decode(gen, pos)
+    for type, data in component_decode_all(gen, pos):
         if type == CMP_OBJID:
             objid = data
         elif type == CMP_OBJTYPE:
