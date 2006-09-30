@@ -141,12 +141,11 @@ class NotAnInode(WibbrException):
 
 def inode_object_decode(inode):
     """Decode an inode object, return objid and what os.stat returns"""
-    pos = 0
     objid = None
     stat_results = {}
     sigref = None
     contref = None
-    for type, data in component_decode_all(inode, pos):
+    for type, data in component_decode_all(inode, 0):
         if type == CMP_OBJID:
             objid = data
         elif type == CMP_OBJTYPE:
