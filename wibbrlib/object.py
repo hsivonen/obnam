@@ -146,8 +146,7 @@ def inode_object_decode(inode):
     stat_results = {}
     sigref = None
     contref = None
-    while pos < len(inode):
-        (type, data, pos) = component_decode(inode, pos)
+    for type, data in component_decode_all(inode, pos):
         if type == CMP_OBJID:
             objid = data
         elif type == CMP_OBJTYPE:
