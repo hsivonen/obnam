@@ -9,6 +9,8 @@ import os
 
 import uuid
 import wibbrlib.cache
+import wibbrlib.mapping
+import wibbrlib.object
 
 
 class LocalBackEnd:
@@ -72,3 +74,17 @@ def list(be):
     for dirpath, _, filenames in os.walk(be.local_root):
         list += [os.path.join(dirpath, x) for x in filenames]
     return list
+
+
+def flush_object_queue(be, map, oq):
+    """Put all objects in an object queue into a block and upload it
+    
+    Also put mappings into map.
+    
+    """
+    
+    block_id = generate_block_id(be)
+    block = wibbrlib.object.block_create_from_object_queue(block_id, oq)
+    upload(be, block_id, block)
+    for id in wibbrlib.object.object_queue_ids(oq):
+        wibbrlib.mapping.add(map, id, block_id)

@@ -108,3 +108,23 @@ class FileListTests(LocalBackendBase):
         block2 = f.read()
         f.close()
         self.failUnlessEqual(block, block2)
+
+
+class ObjectQueueFlushing(LocalBackendBase):
+
+    def testFlushing(self):
+        be = wibbrlib.backend.init(self.config, self.cache)
+        map = wibbrlib.mapping.create()
+        oq = wibbrlib.object.object_queue_create()
+        wibbrlib.object.object_queue_add(oq, "pink", "pretty")
+        
+        self.failUnlessEqual(wibbrlib.backend.list(be), [])
+        
+        wibbrlib.backend.flush_object_queue(be, map, oq)
+
+        list = wibbrlib.backend.list(be)
+        self.failUnlessEqual(len(list), 1)
+        
+        b1 = [os.path.basename(x) for x in wibbrlib.mapping.get(map, "pink")]
+        b2 = [os.path.basename(x) for x in list]
+        self.failUnlessEqual(b1, b2)

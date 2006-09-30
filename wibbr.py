@@ -37,19 +37,11 @@ def parse_options(config, argv):
     return args
 
 
-def flush_object_queue(be, map, oq):
-    block_id = wibbrlib.backend.generate_block_id(be)
-    block = wibbrlib.object.block_create_from_object_queue(block_id, oq)
-    wibbrlib.backend.upload(be, block_id, block)
-    for id in wibbrlib.object.object_queue_ids(oq):
-        wibbrlib.mapping.add(map, id, block_id)
-
-
 def enqueue_object(config, be, map, oq, object_id, object):
     block_size = config.getint("wibbr", "block-size")
     cur_size = wibbrlib.object.object_queue_combined_size(oq)
     if len(object) + cur_size > block_size:
-        flush_object_queue(be, map, oq)
+        wibbrlib.backend.flush_object_queue(be, map, oq)
         oq = wibbrlib.object.object_queue_create()
     wibbrlib.object.object_queue_add(oq, object_id, object)
     return oq
@@ -177,7 +169,7 @@ def main():
         raise UnknownCommandWord(command)
 
     if wibbrlib.object.object_queue_combined_size(oq) > 0:
-        flush_object_queue(be, map, oq)
+        wibbrlib.backend.flush_object_queue(be, map, oq)
  #   write_mappings(map)
 
 
