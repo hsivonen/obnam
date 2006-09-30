@@ -178,13 +178,16 @@ def main():
     args = args[1:]
     
     if command == "backup":
+        pairs = []
         for name in args:
             if os.path.isdir(name):
                 oq = backup_directory(config, be, map, oq, name)
             else:
                 raise Exception("Not a directory: %s" + name)
+        gen_id = wibbrlib.object.object_id_new()
+        gen = wibbrlib.object.generation_object_encode(gen_id, pairs)
         host_id = config.get("wibbr", "host-id")
-        gen_ids = []
+        gen_ids = [gen_id]
         block = wibbrlib.object.host_block_encode(host_id, gen_ids)
         wibbrlib.backend.upload(be, host_id, block)
     elif command == "generations":
