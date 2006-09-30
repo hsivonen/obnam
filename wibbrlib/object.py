@@ -18,6 +18,7 @@ OBJ_FILECONT    = _define_type(1, "OBJ_FILECONT")
 OBJ_INODE       = _define_type(2, "OBJ_INODE")
 OBJ_GEN         = _define_type(3, "OBJ_GEN")
 OBJ_SIG         = _define_type(4, "OBJ_SIG")
+OBJ_HOST        = _define_type(5, "OBJ_HOST")
 
 
 def object_type_name(type):
@@ -258,3 +259,77 @@ def generation_object_decode(gen):
             raise UnknownGenerationComponent(type)
             
     return objid, pairs
+
+
+def host_block_encode(host_id):
+    """Encode a new block with a host object"""
+    object = object_encode(host_id, OBJ_HOST, [])
+    oq = object_queue_create()
+    object_queue_add(oq, host_id, object)
+    block = block_create_from_object_queue(host_id, oq)
+    return block
+
+
+class ConfusedHostId(WibbrException):
+
+    def __init__(self, id1, id2):
+        self._msg = \
+            "Host block contains contradictory host IDs: '%s' and '%s'" \
+            % (id1, id2)
+
+
+class HostBlockHasWrongObjectType(WibbrException):
+
+    def __init__(self, objtype):
+        self._msg = "Host block contains object of type %s (%d)" % \
+            (object_type_name(objtype), objtype)
+
+
+class UnknownHostObjectComponentType(WibbrException):
+
+    def __init__(self, type):
+        self._msg = \
+            "Host object contains component of unexpected type %s (%d)" % \
+                (component_type_name(type), type)
+
+
+class UnknownHostBlockComponentType(WibbrException):
+
+    def __init__(self, type):
+        self._msg = \
+            "Host block contains component of unexpected type %s (%d)" % \
+                (component_type_name(type), type)
+
+
+def host_block_decode(block):
+    """Decode a host block"""
+    
+    host_id = None
+    
+    pos = 0
+    while pos < len(block):
+        (type, data, pos) = component_decode(block, pos)
+        if type == CMP_BLKID:
+            if host_id is None:
+                host_id = data
+            elif host_id != data:
+                raise ConfusedHostId(host_id, data)
+        elif type == CMP_OBJPART:
+            pos2 = 0
+            while pos2 < len(data):
+                (type2, data2, pos2) = component_decode(data, pos2)
+                if type2 == CMP_OBJID:
+                    if host_id is None:
+                        host_id = data2
+                    elif host_id != data2:
+                        raise ConfusedHostId(host_id, data2)
+                elif type2 == CMP_OBJTYPE:
+                    (objtype, _) = varint_decode(data2, 0)
+                    if objtype != OBJ_HOST:
+                        raise HostBlockHasWrongObjectType(objtype)
+                else:
+                    raise UnknownHostObjectComponentType(type2)
+        else:
+            raise UnknownHostBlockComponentType(type)
+
+    return host_id

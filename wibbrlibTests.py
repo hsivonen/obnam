@@ -53,6 +53,7 @@ class ObjectTypeNameTests(unittest.TestCase):
         self.failUnlessEqual(object_type_name(OBJ_INODE), "OBJ_INODE")
         self.failUnlessEqual(object_type_name(OBJ_GEN), "OBJ_GEN")
         self.failUnlessEqual(object_type_name(OBJ_SIG), "OBJ_SIG")
+        self.failUnlessEqual(object_type_name(OBJ_HOST), "OBJ_HOST")
 
 
 class VarintEncoding(unittest.TestCase):
@@ -301,6 +302,15 @@ class ObjectMappingTests(unittest.TestCase):
         self.failUnlessEqual(wibbrlib.mapping.mapping_get_new(m), [])
         wibbrlib.mapping.mapping_add(m, "black", "beautiful")
         self.failUnlessEqual(wibbrlib.mapping.mapping_get_new(m), ["black"])
+
+
+class HostBlockTests(unittest.TestCase):
+
+    def testEncodeDecode(self):
+        host_id = "pink"
+        host = wibbrlib.object.host_block_encode(host_id)
+        host_id2 = wibbrlib.object.host_block_decode(host)
+        self.failUnlessEqual(host_id, host_id2)
 
 
 if __name__ == "__main__":
