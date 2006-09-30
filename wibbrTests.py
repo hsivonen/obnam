@@ -122,3 +122,22 @@ class FileContentsTests(unittest.TestCase):
         self.failIfEqual(id, None)
         self.failUnlessEqual(wibbrlib.object.object_queue_ids(oq), [id])
         self.failUnlessEqual(wibbrlib.mapping.mapping_count(map), 1)
+
+
+class CommandLineParsingTests(unittest.TestCase):
+
+    def setUp(self):
+        self.config = wibbr.default_config()
+        
+    def tearDown(self):
+        del self.config
+        
+    def str(self, config):
+        f = StringIO.StringIO()
+        config.write(f)
+        return f.getvalue()
+
+    def testNoArgs(self):
+        wibbr.parse_command_line(self.config, [])
+        self.failUnlessEqual(self.str(self.config), 
+                             self.str(wibbr.default_config()))
