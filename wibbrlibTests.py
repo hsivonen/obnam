@@ -43,6 +43,8 @@ class ComponentTypeNameTests(unittest.TestCase):
         self.failUnlessEqual(c(CMP_SIGREF), "CMP_SIGREF")
         self.failUnlessEqual(c(CMP_GENREF), "CMP_GENREF")
         self.failUnlessEqual(c(CMP_GENLIST), "CMP_GENLIST")
+        self.failUnlessEqual(c(CMP_OBJREF), "CMP_OBJREF")
+        self.failUnlessEqual(c(CMP_BLOCKREF), "CMP_BLOCKREF")
 
 
 class ObjectTypeNameTests(unittest.TestCase):
@@ -312,6 +314,40 @@ class ObjectMappingTests(unittest.TestCase):
         self.failUnlessEqual(wibbrlib.mapping.get_new(m), [])
         wibbrlib.mapping.add(m, "black", "beautiful")
         self.failUnlessEqual(wibbrlib.mapping.get_new(m), ["black"])
+
+    def testMappingEncodings(self):
+        # Set up a mapping
+        m = wibbrlib.mapping.create()
+        
+        # It's empty; make sure encoding new ones returns an empty list
+        list = wibbrlib.mapping.encode_new(m)
+        self.failUnlessEqual(list, [])
+
+        # Add a mapping
+        wibbrlib.mapping.add(m, "pink", "pretty")
+
+        # Encode the new mapping, make sure that goes well
+        list = wibbrlib.mapping.encode_new(m)
+        self.failUnlessEqual(len(list), 1)
+        
+        # Make sure the encoding is correct
+        list2 = wibbrlib.component.component_decode_all(list[0], 0)
+        self.failUnlessEqual(len(list2), 1)
+        self.failUnlessEqual(list2[0][0], wibbrlib.component.CMP_OBJMAP)
+        
+        list3 = wibbrlib.component.component_decode_all(list2[0][1], 0)
+        self.failUnlessEqual(len(list3), 2)
+        self.failUnlessEqual(list3[0], 
+                             (wibbrlib.component.CMP_OBJREF, "pink"))
+        self.failUnlessEqual(list3[1], 
+                             (wibbrlib.component.CMP_BLOCKREF, "pretty"))
+
+        # Now try decoding with the official function
+        block = wibbrlib.mapping.encode_new_to_block(m, "black")
+        m2 = wibbrlib.mapping.create()
+        wibbrlib.mapping.decode_block(m2, block)
+        self.failUnlessEqual(wibbrlib.mapping.count(m2), 1)
+        self.failUnlessEqual(wibbrlib.mapping.get(m2, "pink"), ["pretty"])
 
 
 class HostBlockTests(unittest.TestCase):

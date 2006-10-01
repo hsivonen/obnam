@@ -39,6 +39,8 @@ CMP_SIGDATA     = _define_type(24, "CMP_SIGDATA")
 CMP_SIGREF      = _define_type(25, "CMP_SIGREF")
 CMP_GENREF      = _define_type(26, "CMP_GENREF")
 CMP_GENLIST     = _define_type(27, "CMP_GENLIST")
+CMP_OBJREF      = _define_type(28, "CMP_OBJREF")
+CMP_BLOCKREF    = _define_type(29, "CMP_BLOCKREF")
 
 
 def component_type_name(type):

@@ -1,3 +1,6 @@
+from wibbrlib.component import *
+
+
 class Mappings:
 
     def __init__(self):
@@ -38,3 +41,41 @@ def get_new(mapping):
 def reset_new(mapping):
     """Reset list of new mappings"""
     mapping.new_keys = []
+
+
+def encode_new(mapping):
+    """Return a list of encoded components for the new mappings"""
+    list = []
+    for key in get_new(mapping):
+        objref = component_encode(CMP_OBJREF, key)
+        blockrefs = mapping.dict[key]
+        blockrefs = [component_encode(CMP_BLOCKREF, x) for x in blockrefs]
+        blockrefs = "".join(blockrefs)
+        component = component_encode(CMP_OBJMAP, objref + blockrefs)
+        list.append(component)
+    return list
+
+
+def encode_new_to_block(mapping, block_id):
+    """Encode new mappings into a block"""
+    list = []
+    list.append(component_encode(CMP_BLKID, block_id))
+    list += encode_new(mapping)
+    block = "".join(list)
+    return block
+
+
+def decode_block(mapping, mapping_block):
+    """Decode a block with mappings, add them to mapping object"""
+    for type, data in component_decode_all(mapping_block, 0):
+        if type == CMP_OBJMAP:
+            object_id = None
+            block_ids = []
+            for type2, data2 in component_decode_all(data, 0):
+                if type2 == CMP_OBJREF:
+                    object_id = data2
+                elif type2 == CMP_BLOCKREF:
+                    block_ids.append(data2)
+            if object_id and block_ids:
+                for block_id in block_ids:
+                    add(mapping, object_id, block_id)
