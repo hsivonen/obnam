@@ -13,6 +13,8 @@ from wibbrlib.object import *
 recursive_component_types = (
     CMP_OBJPART,
     CMP_NAMEIPAIR,
+    CMP_GENLIST,
+    CMP_OBJMAP,
 )
 
 
