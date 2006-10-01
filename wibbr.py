@@ -101,19 +101,21 @@ def backup_single_item(config, be, map, oq, pathname):
     raise UnknownFileType(pathname, st)
 
 
-def backup_directory(config, be, map, oq, dirname):
+def backup_directory(config, be, map, oq, pairs, dirname):
     (inode_id, oq) = backup_single_item(config, be, map, oq, dirname)
+    pairs.append((dirname, inode_id))
     for dirpath, dirnames, filenames in os.walk(dirname):
         for filename in dirnames + filenames:
             pathname = os.path.join(dirpath, filename)
             (inode_id, oq) = backup_single_item(config, be, map, oq, 
                                                 pathname)
+            pairs.append((pathname, inode_id))
     return oq
 
 
 def generations(config, cache, be):
     block = wibbrlib.backend.get_host_block(be)
-    (_, gen_ids) = wibbrlib.object.host_block_decode(block)
+    (_, gen_ids, _) = wibbrlib.object.host_block_decode(block)
     for id in gen_ids:
         print id
 
@@ -148,14 +150,24 @@ def main():
         pairs = []
         for name in args:
             if os.path.isdir(name):
-                oq = backup_directory(config, be, map, oq, name)
+                oq = backup_directory(config, be, map, oq, pairs, name)
             else:
                 raise Exception("Not a directory: %s" + name)
+
         gen_id = wibbrlib.object.object_id_new()
         gen = wibbrlib.object.generation_object_encode(gen_id, pairs)
-        host_id = config.get("wibbr", "host-id")
         gen_ids = [gen_id]
-        block = wibbrlib.object.host_block_encode(host_id, gen_ids)
+        oq = enqueue_object(config, be, map, oq, gen_id, gen)
+        if wibbrlib.object.object_queue_combined_size(oq) > 0:
+            wibbrlib.backend.flush_object_queue(be, map, oq)
+
+        map_block_id = wibbrlib.backend.generate_block_id(be)
+        map_block = wibbrlib.mapping.encode_new_to_block(map, map_block_id)
+        wibbrlib.backend.upload(be, map_block_id, map_block)
+
+        host_id = config.get("wibbr", "host-id")
+        block = wibbrlib.object.host_block_encode(host_id, gen_ids, 
+                    [map_block_id])
         wibbrlib.backend.upload_host_block(be, block)
     elif command == "generations":
         generations(config, cache, be)
@@ -163,10 +175,6 @@ def main():
         pass
     else:
         raise UnknownCommandWord(command)
-
-    if wibbrlib.object.object_queue_combined_size(oq) > 0:
-        wibbrlib.backend.flush_object_queue(be, map, oq)
- #   write_mappings(map)
 
 
 if __name__ == "__main__":
