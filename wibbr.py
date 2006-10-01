@@ -5,6 +5,7 @@ import optparse
 import os
 import stat
 import sys
+import time
 
 import wibbrlib
 
@@ -120,6 +121,106 @@ def generations(config, cache, be):
         print id
 
 
+def format_perms(perms):
+    ru = wu = xu = rg = wg = xg = ro = wo = xo = "-"
+
+    if perms & stat.S_IRUSR:
+        ru = "r"
+    if perms & stat.S_IWUSR:
+        wu = "w"
+    if perms & stat.S_IXUSR:
+        xu = "x"
+    if perms & stat.S_ISUID:
+        xu = "s"
+
+    if perms & stat.S_IRGRP:
+        rg = "r"
+    if perms & stat.S_IWGRP:
+        wg = "w"
+    if perms & stat.S_IXGRP:
+        xg = "x"
+    if perms & stat.S_ISGID:
+        xg = "s"
+
+    if perms & stat.S_IROTH:
+        ro = "r"
+    if perms & stat.S_IWOTH:
+        wo = "w"
+    if perms & stat.S_IXOTH:
+        xo = "x"
+    if perms & stat.S_ISVTX:
+        xo = "t"
+    
+    return ru + wu + xu + rg + wg + xg + ro + wo + xo
+
+
+def format_filetype(mode):
+    if stat.S_ISDIR(mode):
+        return "d"
+    elif stat.S_ISREG(mode):
+        return "-"
+    else:
+        return "?"
+
+
+def format_st_mode(mode):
+    (mode, _) = wibbrlib.varint.varint_decode(mode, 0)
+    return format_filetype(mode) + format_perms(mode)
+
+
+def format_integer(data, width):
+    (nlink, _) = wibbrlib.varint.varint_decode(data, 0)
+    return "%*d" % (width, nlink)
+
+
+def format_time(data):
+    (secs, _) = wibbrlib.varint.varint_decode(data, 0)
+    t = time.gmtime(secs)
+    return time.strftime("%Y-%m-%d %H:%M:%S", t)
+
+
+def format_inode(inode):
+    fields = (
+        (wibbrlib.component.CMP_ST_MODE, format_st_mode),
+        (wibbrlib.component.CMP_ST_NLINK, lambda x: format_integer(x, 2)),
+        (wibbrlib.component.CMP_ST_UID, lambda x: format_integer(x, 4)),
+        (wibbrlib.component.CMP_ST_GID, lambda x: format_integer(x, 4)),
+        (wibbrlib.component.CMP_ST_SIZE, lambda x: format_integer(x, 8)),
+        (wibbrlib.component.CMP_ST_MTIME, format_time),
+    )
+
+    list = []
+    for type, func in fields:
+        for data in [x[1] for x in inode if x[0] == type]:
+            list.append(func(data))
+    return " ".join(list)
+
+
+def show_generations(be, map, gen_ids):
+    host_block = wibbrlib.backend.get_host_block(be)
+    (host_id, _, map_block_ids) = \
+        wibbrlib.object.host_block_decode(host_block)
+
+    for map_block_id in map_block_ids:
+        block = wibbrlib.backend.get_block(be, map_block_id)
+        wibbrlib.mapping.decode_block(map, block)
+
+    for gen_id in gen_ids:
+        print "Generation:", gen_id
+        gen = wibbrlib.backend.get_object(be, map, gen_id)
+        for type, data in gen:
+            if type == wibbrlib.component.CMP_NAMEIPAIR:
+                pair = wibbrlib.component.component_decode_all(data, 0)
+                (x1, y1) = pair[0]
+                (x2, y2) = pair[1]
+                if x1 == wibbrlib.component.CMP_INODEREF:
+                    (inode_id, filename) = (y1, y2)
+                else:
+                    (inode_id, filename) = (y2, y1)
+                inode = wibbrlib.backend.get_object(be, map, inode_id)
+                print "  ", format_inode(inode), filename
+
+
 class MissingCommandWord(wibbrlib.exception.WibbrException):
 
     def __init__(self):
@@ -171,6 +272,8 @@ def main():
         wibbrlib.backend.upload_host_block(be, block)
     elif command == "generations":
         generations(config, cache, be)
+    elif command == "show-generations":
+        show_generations(be, map, args)
     elif command == "restore":
         pass
     else:
