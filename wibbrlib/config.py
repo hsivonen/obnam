@@ -8,6 +8,7 @@ def default_config():
         ("wibbr", "block-size", "%d" % (64 * 1024)),
         ("wibbr", "cache-dir", "tmp.cachedir"),
         ("wibbr", "local-store", "tmp.local-store"),
+        ("wibbr", "restore-target", "tmp.restore"),
     )
     
     config = ConfigParser.RawConfigParser()

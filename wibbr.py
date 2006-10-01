@@ -221,6 +221,73 @@ def show_generations(be, map, gen_ids):
                 print "  ", format_inode(inode), filename
 
 
+class InodeMissingMode(wibbrlib.exception.WibbrException):
+
+    def __init__(self, inode):
+        self._msg = "Inode is missing CMP_ST_MODE field: %s" % repr(inode)
+
+
+def create_filesystem_object(target, pathname, inode):
+    mode = [x[1] for x in inode if x[0] == wibbrlib.component.CMP_ST_MODE]
+    if not mode:
+        raise InvalidInodeData(inode)
+    (mode, _) = wibbrlib.varint.varint_decode(mode[0], 0)
+    
+    if pathname.startswith(os.sep):
+        pathname = "." + pathname
+    full_pathname = os.path.join(target, pathname)
+    
+    if stat.S_ISDIR(mode):
+        os.makedirs(full_pathname)
+        os.chmod(full_pathname, stat.S_IMODE(mode))
+    elif stat.S_ISREG(mode):
+        fd = os.open(full_pathname, os.O_WRONLY | os.O_CREAT, 0)
+        os.close(fd)
+        os.chmod(full_pathname, stat.S_IMODE(mode))
+
+
+class UnknownGeneration(wibbrlib.exception.WibbrException):
+
+    def __init__(self, gen_id):
+        self._msg = "Can't find generation %s" % gen_id
+
+
+def restore(config, be, map, gen_id):
+    host_block = wibbrlib.backend.get_host_block(be)
+    (host_id, _, map_block_ids) = \
+        wibbrlib.object.host_block_decode(host_block)
+
+    for map_block_id in map_block_ids:
+        block = wibbrlib.backend.get_block(be, map_block_id)
+        wibbrlib.mapping.decode_block(map, block)
+    
+    gen = wibbrlib.backend.get_object(be, map, gen_id)
+    if gen is None:
+        raise UnknownGeneration(gen_id)
+    
+    target = config.get("wibbr", "restore-target")
+    
+    for type, data in gen:
+        if type == wibbrlib.component.CMP_NAMEIPAIR:
+            parts = wibbrlib.component.component_decode_all(data, 0)
+            if parts[0][0] == wibbrlib.component.CMP_INODEREF:
+                inode_id = parts[0][1]
+                pathname = parts[1][1]
+            else:
+                inode_id = parts[1][1]
+                pathname = parts[0][1]
+
+            inode = wibbrlib.backend.get_object(be, map, inode_id)
+            create_filesystem_object(target, pathname, inode)
+
+#    for inode_id, pathname in gen:
+#        inode = wibbrlib.backend.get_object(be, map, inode_id)
+#        print inode_id, inode
+#        ... create filesystem object, with write perms if regular file
+#        ... if regular file, restore contents
+#        ... fix perms
+
+
 class MissingCommandWord(wibbrlib.exception.WibbrException):
 
     def __init__(self):
@@ -275,7 +342,7 @@ def main():
     elif command == "show-generations":
         show_generations(be, map, args)
     elif command == "restore":
-        pass
+        restore(config, be, map, args[0])
     else:
         raise UnknownCommandWord(command)
 
