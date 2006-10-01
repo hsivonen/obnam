@@ -257,12 +257,15 @@ def generation_object_decode(gen):
     return objid, pairs
 
 
-def host_block_encode(host_id, gen_ids):
+def host_block_encode(host_id, gen_ids, map_block_ids):
     """Encode a new block with a host object"""
     list = []
 
     gen_ids = [component_encode(CMP_GENREF, x) for x in gen_ids]    
     list.append(component_encode(CMP_GENLIST, "".join(gen_ids)))
+    
+    for map_block_id in map_block_ids:
+        list.append(component_encode(CMP_MAPREF, map_block_id))
 
     object = object_encode(host_id, OBJ_HOST, list)
     oq = object_queue_create()
@@ -326,6 +329,7 @@ def host_block_decode(block):
     
     host_id = None
     gen_ids = []
+    map_ids = []
     
     for type, data in component_decode_all(block, 0):
         if type == CMP_BLKID:
@@ -346,9 +350,11 @@ def host_block_decode(block):
                         raise HostBlockHasWrongObjectType(objtype)
                 elif type2 == CMP_GENLIST:
                     gen_ids = genlist_decode(data2)
+                elif type2 == CMP_MAPREF:
+                    map_ids.append(data2)
                 else:
                     raise UnknownHostObjectComponentType(type2)
         else:
             raise UnknownHostBlockComponentType(type)
 
-    return host_id, gen_ids
+    return host_id, gen_ids, map_ids

@@ -45,6 +45,7 @@ class ComponentTypeNameTests(unittest.TestCase):
         self.failUnlessEqual(c(CMP_GENLIST), "CMP_GENLIST")
         self.failUnlessEqual(c(CMP_OBJREF), "CMP_OBJREF")
         self.failUnlessEqual(c(CMP_BLOCKREF), "CMP_BLOCKREF")
+        self.failUnlessEqual(c(CMP_MAPREF), "CMP_MAPREF")
 
 
 class ObjectTypeNameTests(unittest.TestCase):
@@ -355,10 +356,13 @@ class HostBlockTests(unittest.TestCase):
     def testEncodeDecode(self):
         host_id = "pink"
         gen_ids = ["pretty", "beautiful"]
-        host = wibbrlib.object.host_block_encode(host_id, gen_ids)
-        (host_id2, gen_ids2) = wibbrlib.object.host_block_decode(host)
+        map_ids = ["black", "box"]
+        host = wibbrlib.object.host_block_encode(host_id, gen_ids, map_ids)
+        (host_id2, gen_ids2, map_ids2) = \
+            wibbrlib.object.host_block_decode(host)
         self.failUnlessEqual(host_id, host_id2)
         self.failUnlessEqual(gen_ids, gen_ids2)
+        self.failUnlessEqual(map_ids, map_ids2)
 
 
 if __name__ == "__main__":

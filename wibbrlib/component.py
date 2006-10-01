@@ -41,6 +41,7 @@ CMP_GENREF      = _define_type(26, "CMP_GENREF")
 CMP_GENLIST     = _define_type(27, "CMP_GENLIST")
 CMP_OBJREF      = _define_type(28, "CMP_OBJREF")
 CMP_BLOCKREF    = _define_type(29, "CMP_BLOCKREF")
+CMP_MAPREF      = _define_type(30, "CMP_MAPREF")
 
 
 def component_type_name(type):

@@ -155,7 +155,8 @@ class HostBlock(LocalBackendBase):
 
     def testFetchHostBlock(self):
         host_id = self.config.get("wibbr", "host-id")
-        host = wibbrlib.object.host_block_encode(host_id, ["gen1", "gen2"])
+        host = wibbrlib.object.host_block_encode(host_id, ["gen1", "gen2"],
+                                                 ["map1", "map2"])
         be = wibbrlib.backend.init(self.config, self.cache)
         
         wibbrlib.backend.upload_host_block(be, host)
