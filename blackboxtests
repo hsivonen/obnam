@@ -39,6 +39,8 @@ tmp="tmp"; rm -rf "$tmp"; mkdir "$tmp"
 
 CONFIG="--cache-dir=$tmp/cache --local-store=$tmp/store"
 
+MANIFESTOPTS="-i Inode -i Ctime"
+
 for dir in "$@"
 do
     rm -rf "$tmp/root"
@@ -58,7 +60,7 @@ do
             ;;
         esac
         
-        python manifest.py "$tmp/root" > "$tmp/manifest-$i"
+        python manifest.py $MANIFESTOPTS "$tmp/root" > "$tmp/manifest-$i"
         
         python wibbr.py $CONFIG backup "$tmp/root"
     done
@@ -70,7 +72,9 @@ do
         rm -rf "$tmp/root"
         mkdir "$tmp/root"
         python wibbr.py $CONFIG --to "$tmp/root" restore "$genid"
-        python manifest.py "$tmp/root" | diff "$tmp/manifest-$i"
+        python manifest.py $MANIFESTOPTS "$tmp/root/$tmp/root" \
+            > "$tmp/manifest2-$i"
+        diff -u "$tmp/manifest-$i" "$tmp/manifest2-$i"
     done
 done
 
