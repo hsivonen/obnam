@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 """Wibbr - a backup program"""
 
 
@@ -25,6 +27,10 @@ def parse_options(config, argv):
     parser.add_option("--local-store",
                       metavar="DIR",
                       help="Use DIR for local block storage (not caching)")
+    
+    parser.add_option("--restore-to", "--to",
+                      metavar="DIR",
+                      help="Put restored files into DIR")
 
     (options, args) = parser.parse_args(argv)
     
@@ -34,6 +40,8 @@ def parse_options(config, argv):
         config.set("wibbr", "cache-dir", options.cache_dir)
     if options.local_store:
         config.set("wibbr", "local-store", options.local_store)
+    if options.restore_to:
+        config.set("wibbr", "restore-target", options.restore_to)
 
     return args
 
@@ -294,6 +302,18 @@ class MissingCommandWord(wibbrlib.exception.WibbrException):
         self._msg = "No command word given on command line"
 
 
+class RestoreNeedsGenerationId(wibbrlib.exception.WibbrException):
+
+    def __init__(self):
+        self._msg = "The 'restore' operation needs id of generation to restore"
+
+
+class RestoreOnlyNeedsGenerationId(wibbrlib.exception.WibbrException):
+
+    def __init__(self):
+        self._msg = "The 'restore' operation only needs generation id"
+
+
 class UnknownCommandWord(wibbrlib.exception.WibbrException):
 
     def __init__(self, command):
@@ -342,6 +362,10 @@ def main():
     elif command == "show-generations":
         show_generations(be, map, args)
     elif command == "restore":
+        if not args:
+            raise RestoreNeedsGenerationId()
+        elif len(args) > 1:
+            raise RestoreOnlyNeedsGenerationId()
         restore(config, be, map, args[0])
     else:
         raise UnknownCommandWord(command)
