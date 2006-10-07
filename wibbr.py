@@ -235,23 +235,48 @@ class InodeMissingMode(wibbrlib.exception.WibbrException):
         self._msg = "Inode is missing CMP_ST_MODE field: %s" % repr(inode)
 
 
-def create_filesystem_object(target, pathname, inode):
-    mode = [x[1] for x in inode if x[0] == wibbrlib.component.CMP_ST_MODE]
-    if not mode:
-        raise InvalidInodeData(inode)
-    (mode, _) = wibbrlib.varint.varint_decode(mode[0], 0)
-    
-    if pathname.startswith(os.sep):
-        pathname = "." + pathname
-    full_pathname = os.path.join(target, pathname)
-    
+class MissingField(wibbrlib.exception.WibbrException):
+
+    def __init__(self, obj, type):
+        self._msg = "Object is missing field of type %s (%d)" % \
+            (wibbrlib.component.component_type_name(type), type)
+
+
+class TooManyFields(wibbrlib.exception.WibbrException):
+
+    def __init__(self, obj, type):
+        self._msg = "Object has too many fields of type %s (%d)" % \
+            (wibbrlib.component.component_type_name(type), type)
+
+
+def get_field(obj, type):
+    fields = [x[1] for x in obj if x[0] == type]
+    if not fields:
+        raise MissingField(obj, type)
+    if len(fields) > 1:
+        raise TooManyFields(obj, type)
+    return fields[0]
+
+
+def get_integer(obj, type):
+    return wibbrlib.varint.varint_decode(get_field(obj, type), 0)[0]
+
+
+def create_filesystem_object(full_pathname, inode):
+    mode = get_integer(inode, wibbrlib.component.CMP_ST_MODE)
     if stat.S_ISDIR(mode):
-        os.makedirs(full_pathname)
-        os.chmod(full_pathname, stat.S_IMODE(mode))
+        os.makedirs(full_pathname, 0700)
     elif stat.S_ISREG(mode):
         fd = os.open(full_pathname, os.O_WRONLY | os.O_CREAT, 0)
         os.close(fd)
-        os.chmod(full_pathname, stat.S_IMODE(mode))
+
+
+def set_meta_data(full_pathname, inode):
+    mode = get_integer(inode, wibbrlib.component.CMP_ST_MODE)
+    atime = get_integer(inode, wibbrlib.component.CMP_ST_ATIME)
+    mtime = get_integer(inode, wibbrlib.component.CMP_ST_MTIME)
+    os.utime(full_pathname, (atime, mtime))
+    os.chmod(full_pathname, stat.S_IMODE(mode))
 
 
 class UnknownGeneration(wibbrlib.exception.WibbrException):
@@ -275,6 +300,7 @@ def restore(config, be, map, gen_id):
     
     target = config.get("wibbr", "restore-target")
     
+    list = []
     for type, data in gen:
         if type == wibbrlib.component.CMP_NAMEIPAIR:
             parts = wibbrlib.component.component_decode_all(data, 0)
@@ -285,15 +311,17 @@ def restore(config, be, map, gen_id):
                 inode_id = parts[1][1]
                 pathname = parts[0][1]
 
-            inode = wibbrlib.backend.get_object(be, map, inode_id)
-            create_filesystem_object(target, pathname, inode)
+            if pathname.startswith(os.sep):
+                pathname = "." + pathname
+            full_pathname = os.path.join(target, pathname)
 
-#    for inode_id, pathname in gen:
-#        inode = wibbrlib.backend.get_object(be, map, inode_id)
-#        print inode_id, inode
-#        ... create filesystem object, with write perms if regular file
-#        ... if regular file, restore contents
-#        ... fix perms
+            inode = wibbrlib.backend.get_object(be, map, inode_id)
+            create_filesystem_object(full_pathname, inode)
+            list.append((full_pathname, inode))
+
+    list.sort()
+    for full_pathname, inode in list:
+        set_meta_data(full_pathname, inode)
 
 
 class MissingCommandWord(wibbrlib.exception.WibbrException):
