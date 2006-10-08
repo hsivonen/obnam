@@ -73,12 +73,13 @@ def create_file_contents_object(config, be, map, oq, filename):
     return object_id, oq
     
     
-def backup_single_directory(config, be, amp, oq, pathname, st):
-    return None, None
+def backup_single_directory(config, be, map, oq, pathname, st):
+    return None, None, oq
 
 
-def backup_single_file(config, be, amp, oq, pathname, st):
-    return None, None
+def backup_single_file(config, be, map, oq, pathname, st):
+    (id, oq) = create_file_contents_object(config, be, map, oq, pathname)
+    return None, id, oq
 
 
 class UnknownFileType(wibbrlib.exception.WibbrException):
@@ -97,7 +98,8 @@ def backup_single_item(config, be, map, oq, pathname):
     )
     for test, action in list:
         if test(st.st_mode):
-            (sig_id, content_id) = action(config, be, map, oq, pathname, st)
+            (sig_id, content_id, oq) = \
+                action(config, be, map, oq, pathname, st)
 
             inode_id = wibbrlib.object.object_id_new()
             nst = wibbrlib.object.normalize_stat_result(st)
@@ -260,14 +262,23 @@ def get_field(obj, type):
 
 def get_integer(obj, type):
     return wibbrlib.varint.varint_decode(get_field(obj, type), 0)[0]
+    
+    
+def restore_file_content(be, map, fd, inode):
+    cont_id = get_field(inode, wibbrlib.component.CMP_CONTREF)
+    cont = wibbrlib.backend.get_object(be, map, cont_id)
+    if cont:
+        filedata = get_field(cont, wibbrlib.component.CMP_FILEDATA)
+        os.write(fd, filedata)
 
 
-def create_filesystem_object(full_pathname, inode):
+def create_filesystem_object(be, map, full_pathname, inode):
     mode = get_integer(inode, wibbrlib.component.CMP_ST_MODE)
     if stat.S_ISDIR(mode):
         os.makedirs(full_pathname, 0700)
     elif stat.S_ISREG(mode):
         fd = os.open(full_pathname, os.O_WRONLY | os.O_CREAT, 0)
+        restore_file_content(be, map, fd, inode)
         os.close(fd)
 
 
@@ -316,7 +327,7 @@ def restore(config, be, map, gen_id):
             full_pathname = os.path.join(target, pathname)
 
             inode = wibbrlib.backend.get_object(be, map, inode_id)
-            create_filesystem_object(full_pathname, inode)
+            create_filesystem_object(be, map, full_pathname, inode)
             list.append((full_pathname, inode))
 
     list.sort()

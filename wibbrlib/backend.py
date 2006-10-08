@@ -119,7 +119,7 @@ def get_object(be, map, object_id):
     """Fetch an entire object, decoded into components"""
     object_components = []
     block_ids = wibbrlib.mapping.get(map, object_id)
-    for block_id in block_ids:
+    for block_id in block_ids or []:
         block = get_block(be, block_id)
         if not block:
             raise MissingBlock(block_id, object_id)
