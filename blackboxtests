@@ -29,13 +29,8 @@
 
 set -e
 
-tmp="tmp"; rm -rf "$tmp"; mkdir "$tmp"
-
-#cat > "$tmp/config" << EOF
-#[wibbr]
-#block-cache = $tmp/cache
-#local-store = $tmp/store
-#EOF
+# tmp="tmp"; rm -rf "$tmp"; mkdir "$tmp"
+tmp=$(mktemp -d)
 
 CONFIG="--cache-dir=$tmp/cache --local-store=$tmp/store"
 
@@ -78,4 +73,4 @@ do
     done
 done
 
-#rm -rf "$tmp"
+rm -rf "$tmp"
