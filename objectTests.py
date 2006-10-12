@@ -38,6 +38,20 @@ class ObjectCreateTests(unittest.TestCase):
 class ObjectEncodingTests(unittest.TestCase):
 
     def testEmptyObject(self):
+        o = wibbrlib.object.create("pink", 33)
+        self.failUnlessEqual(wibbrlib.object.encode(o), "\4\1pink\1\2\41")
+
+    def testNonEmptyObject(self):
+        o = wibbrlib.object.create("pink", 33)
+        c = wibbrlib.component.create(1, "pretty")
+        wibbrlib.object.add(o, c)
+        self.failUnlessEqual(wibbrlib.object.encode(o),
+                             "\4\1pink\1\2\41\6\1pretty")
+
+
+class OldObjectEncodingTests(unittest.TestCase):
+
+    def testEmptyObject(self):
         self.failUnlessEqual(object_encode("uuid", 33, []),
                              "\4\1uuid\1\2\41")
 

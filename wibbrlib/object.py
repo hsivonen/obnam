@@ -68,6 +68,16 @@ def get_components(o):
     return o.components
 
 
+def encode(o):
+    """Encode an object as a string"""
+    id = wibbrlib.component.create(wibbrlib.component.CMP_OBJID, o.id)
+    type = wibbrlib.component.create(wibbrlib.component.CMP_OBJTYPE, 
+                                     wibbrlib.varint.varint_encode(o.type))
+    list = [id, type] + get_components(o)
+    list = [wibbrlib.component.encode(c) for c in list]
+    return "".join(list)
+
+
 def object_encode(objid, objtype, encoded_components):
     """Encode an object, given id, type, and list of encoded components"""
     objid = wibbrlib.component.create(wibbrlib.component.CMP_OBJID, objid)
