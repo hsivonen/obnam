@@ -142,8 +142,10 @@ class GetObjectTests(LocalBackendBase):
         self.map = wibbrlib.mapping.create()
         
         id = "pink"
-        component = wibbrlib.component.component_encode(42, "pretty")
-        object = wibbrlib.object.object_encode(id, 0, [component])
+        component = wibbrlib.component.create(42, "pretty")
+        object = wibbrlib.object.create(id, 0)
+        wibbrlib.object.add(object, component)
+        object = wibbrlib.object.encode(object)
         self.upload_object(id, object)
         object = wibbrlib.backend.get_object(self.be, self.map, id)
         self.failUnlessEqual(object, [(wibbrlib.component.CMP_OBJID, id),
