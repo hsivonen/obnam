@@ -118,6 +118,26 @@ class OldComponentEncodingDecodingTests(unittest.TestCase):
 
 class ComponentDecodeAllTests(unittest.TestCase):
 
+    def remove_component(self, list, type, value):
+        self.failUnlessEqual(wibbrlib.component.get_type(list[0]), type)
+        self.failUnlessEqual(wibbrlib.component.get_string_value(list[0]), 
+                             value)
+        del list[0]
+
+    def testDecodeAll(self):
+        c1 = wibbrlib.component.create(1, "pink")
+        c2 = wibbrlib.component.create(2, "pretty")
+        e1 = wibbrlib.component.encode(c1)
+        e2 = wibbrlib.component.encode(c2)
+        e = e1 + e2
+        list = wibbrlib.component.decode_all(e, 0)
+        self.remove_component(list, 1, "pink")
+        self.remove_component(list, 2, "pretty")
+        self.failUnlessEqual(list, [])
+
+
+class OldComponentDecodeAllTests(unittest.TestCase):
+
     def testDecodeAll(self):
         c1 = wibbrlib.component.component_encode(1, "pink")
         c2 = wibbrlib.component.component_encode(2, "pretty")

@@ -140,6 +140,15 @@ def decode(encoded, pos):
     return create(type, value), pos + size
 
 
+def decode_all(encoded, pos):
+    """Return list of all components in a string"""
+    list = []
+    while pos < len(encoded):
+        (c, pos) = decode(encoded, pos)
+        list.append(c)
+    return list
+
+
 def component_encode(type, data):
     """Encode a component as a string"""
     return encode(create(type, data))
