@@ -33,6 +33,22 @@ def object_id_new():
     return str(uuid.uuid4())
 
 
+class Object:
+
+    def __init__(self):
+        self.id = None
+        self.type = None
+        self.components = []
+        
+        
+def create(id, type):
+    """Create a new backup object"""
+    o = Object()
+    o.id = id
+    o.type = type
+    return o
+
+
 def object_encode(objid, objtype, encoded_components):
     """Encode an object, given id, type, and list of encoded components"""
     objid = wibbrlib.component.create(CMP_OBJID, objid)

@@ -20,6 +20,15 @@ class ObjectTypeNameTests(unittest.TestCase):
         self.failUnlessEqual(object_type_name(OBJ_HOST), "OBJ_HOST")
 
 
+class ObjectCreateTests(unittest.TestCase):
+
+    def testCreate(self):
+        o = wibbrlib.object.create("pink", 1)
+        self.failUnlessEqual(o.id, "pink")
+        self.failUnlessEqual(o.type, 1)
+        self.failUnlessEqual(o.components, [])
+
+
 class ObjectEncodingTests(unittest.TestCase):
 
     def testEmptyObject(self):
