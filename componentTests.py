@@ -11,7 +11,7 @@ import wibbrlib
 class ComponentTypeNameTests(unittest.TestCase):
 
     def test(self):
-        t = wibbrlib.component.component_type_name
+        t = wibbrlib.component.type_name
         c = wibbrlib.component
         self.failUnlessEqual(t(-12765), "CMP_UNKNOWN")
         self.failUnlessEqual(t(c.CMP_OBJID), "CMP_OBJID")

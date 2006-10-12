@@ -46,7 +46,7 @@ CMP_MAPREF      = _define_type(30, False, "CMP_MAPREF")
 CMP_FILEPARTREF = _define_type(31, False, "CMP_FILEPARTREF")
 
 
-def component_type_name(type):
+def type_name(type):
     """Return a textual name for a numeric component type"""
     if type in _component_types:
         return _component_types[type][1]

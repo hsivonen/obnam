@@ -253,14 +253,14 @@ class MissingField(wibbrlib.exception.WibbrException):
 
     def __init__(self, obj, type):
         self._msg = "Object is missing field of type %s (%d)" % \
-            (wibbrlib.component.component_type_name(type), type)
+            (wibbrlib.component.type_name(type), type)
 
 
 class TooManyFields(wibbrlib.exception.WibbrException):
 
     def __init__(self, obj, type):
         self._msg = "Object has too many fields of type %s (%d)" % \
-            (wibbrlib.component.component_type_name(type), type)
+            (wibbrlib.component.type_name(type), type)
 
 
 def get_field(obj, type):

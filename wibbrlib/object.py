@@ -270,7 +270,7 @@ class UnknownGenerationComponent(WibbrException):
 
     def __init__(self, type):
         self._msg = "Unknown component in generation: %s (%d)" % \
-            (wibbrlib.component.component_type_name(type), type)
+            (wibbrlib.component.type_name(type), type)
 
 
 class NameInodePairHasTooManyComponents(WibbrException):
@@ -362,7 +362,7 @@ class UnknownHostObjectComponentType(WibbrException):
     def __init__(self, type):
         self._msg = \
             "Host object contains component of unexpected type %s (%d)" % \
-                (wibbrlib.component.component_type_name(type), type)
+                (wibbrlib.component.type_name(type), type)
 
 
 class UnknownHostBlockComponentType(WibbrException):
@@ -370,7 +370,7 @@ class UnknownHostBlockComponentType(WibbrException):
     def __init__(self, type):
         self._msg = \
             "Host block contains component of unexpected type %s (%d)" % \
-                (wibbrlib.component.component_type_name(type), type)
+                (wibbrlib.component.type_name(type), type)
 
 
 class UnknownGenlistComponentType(WibbrException):
@@ -379,7 +379,7 @@ class UnknownGenlistComponentType(WibbrException):
         self._msg = \
             "Host block's generation list contains component of " + \
             "unexpectedtype %s (%d)" % \
-                (wibbrlib.component.component_type_name(type), type)
+                (wibbrlib.component.type_name(type), type)
 
 
 def genlist_decode(genlist):
