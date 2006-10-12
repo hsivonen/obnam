@@ -50,11 +50,19 @@ class ComponentTypeNameTests(unittest.TestCase):
 class CreateComponentTests(unittest.TestCase):
 
     def testCreateLeaf(self):
-        c = wibbrlib.component.create_leaf(1, "pink")
+        c = wibbrlib.component.create(1, "pink")
         self.failIfEqual(c, None)
         self.failUnlessEqual(c.type, 1)
         self.failUnlessEqual(c.str, "pink")
         self.failUnlessEqual(c.subcomponents, [])
+
+    def testCreateComposite(self):
+        leaf1 = wibbrlib.component.create(1, "pink")
+        leaf2 = wibbrlib.component.create(2, "pretty")
+        c = wibbrlib.component.create(3, [leaf1, leaf2])
+        self.failUnlessEqual(c.type, 3)
+        self.failUnlessEqual(c.str, None)
+        self.failUnlessEqual(c.subcomponents, [leaf1, leaf2])
 
 
 class ComponentEncodingDecodingTests(unittest.TestCase):

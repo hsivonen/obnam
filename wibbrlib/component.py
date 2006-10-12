@@ -58,12 +58,15 @@ class Component:
         self.subcomponents = []
 
 
-def create_leaf(component_type, str):
+def create(component_type, value):
     assert component_type in _component_types
-    assert type(str) == type("")
+    assert type(value) in [type(""), type([])]
     c = Component()
     c.type = component_type
-    c.str = str
+    if type(value) == type(""):
+        c.str = value
+    else:
+        c.subcomponents = value[:]
     return c
 
 
