@@ -70,11 +70,18 @@ class ComponentEncodingDecodingTests(unittest.TestCase):
 
     def doit(self, type, data):
         c = wibbrlib.component.create(type, data)
-        str = wibbrlib.component.encode(c)
-        (type2, data2, pos) = wibbrlib.component.component_decode(str, 0)
-        self.failUnlessEqual(type, type2)
-        self.failUnlessEqual(data, data2)
-        self.failUnlessEqual(pos, len(str))
+        encoded = wibbrlib.component.encode(c)
+        (c2, pos) = wibbrlib.component.decode(encoded, 0)
+        encoded2 = wibbrlib.component.encode(c2)
+        self.failUnlessEqual(encoded, encoded2)
+        self.failUnlessEqual(wibbrlib.component.get_type(c), 
+                             wibbrlib.component.get_type(c2))
+        self.failUnlessEqual(wibbrlib.component.is_composite(c), 
+                             wibbrlib.component.is_composite(c2))
+        if wibbrlib.component.is_composite(c):
+            self.failUnlessEqual(wibbrlib.component.get_string_value(c),
+                                 wibbrlib.component.get_string_value(c2))            
+        self.failUnlessEqual(pos, len(encoded))
 
     def testEmpty(self):
         self.doit(1, "")

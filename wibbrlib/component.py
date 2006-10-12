@@ -50,6 +50,12 @@ def component_type_name(type):
     return _component_types.get(type, "CMP_UNKNOWN")
 
 
+def type_is_composite(type):
+    """Is a type supposed to be composite?"""
+    # FIXME: This is a stub for now
+    return False
+
+
 class Component:
 
     def __init__(self):
@@ -110,6 +116,22 @@ def encode(c):
     else:
         encoded = c.str
     return varint_encode(len(encoded)) + varint_encode(c.type) + encoded
+
+
+def decode(encoded, pos):
+    """Decode a component in a string, return component and pos after it"""
+    (size, pos) = varint_decode(encoded, pos)
+    (type, pos) = varint_decode(encoded, pos)
+    if type_is_composite(type):
+        value = []
+        pos2 = pos
+        while pos2 < pos + size:
+            (sub, pos2) = decode(encoded, pos2)
+            assert pos2 <= pos + size
+            value.append(sub)
+    else:
+        value = encoded[pos:pos+size]
+    return create(type, value), pos + size
 
 
 def component_encode(type, data):
