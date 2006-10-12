@@ -331,17 +331,20 @@ def generation_object_decode(gen):
 
 def host_block_encode(host_id, gen_ids, map_block_ids):
     """Encode a new block with a host object"""
-    list = []
+    o = create(host_id, OBJ_HOST)
 
-    gen_ids = [wibbrlib.component.component_encode(wibbrlib.component.CMP_GENREF, x) for x in gen_ids]    
-    list.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_GENLIST, "".join(gen_ids)))
+    gen_ids = [wibbrlib.component.create(wibbrlib.component.CMP_GENREF, x) 
+               for x in gen_ids]
+    c = wibbrlib.component.create(wibbrlib.component.CMP_GENLIST, gen_ids)
+    add(o, c)
     
     for map_block_id in map_block_ids:
-        list.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_MAPREF, map_block_id))
+        c = wibbrlib.component.create(wibbrlib.component.CMP_MAPREF, 
+                                      map_block_id)
+        add(o, c)
 
-    object = object_encode(host_id, OBJ_HOST, list)
     oq = object_queue_create()
-    object_queue_add(oq, host_id, object)
+    object_queue_add(oq, host_id, encode(o))
     block = block_create_from_object_queue(host_id, oq)
     return block
 
