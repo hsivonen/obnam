@@ -65,11 +65,11 @@ def create_file_contents_object(config, be, map, oq, filename):
         data = f.read(block_size)
         if not data:
             break
-        c = wibbrlib.component.component_encode(
-                wibbrlib.component.CMP_FILECHUNK, data)
+        c = wibbrlib.component.create(wibbrlib.component.CMP_FILECHUNK, data)
         part_id = wibbrlib.object.object_id_new()
-        o = wibbrlib.object.object_encode(part_id, 
-                wibbrlib.object.OBJ_FILEPART, [c])
+        o = wibbrlib.object.create(part_id, wibbrlib.object.OBJ_FILEPART)
+        wibbrlib.object.add(o, c)
+        o = wibbrlib.object.encode(o)
         oq = enqueue_object(config, be, map, oq, part_id, o)
         part_ids.append(part_id)
     f.close()
