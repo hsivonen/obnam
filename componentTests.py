@@ -54,14 +54,14 @@ class CreateComponentTests(unittest.TestCase):
         self.failIfEqual(c, None)
         self.failUnlessEqual(wibbrlib.component.get_type(c), 1)
         self.failUnlessEqual(wibbrlib.component.get_string_value(c), "pink")
-        self.failUnlessEqual(c.subcomponents, [])
+        self.failUnlessEqual(wibbrlib.component.is_composite(c), False)
 
     def testCreateComposite(self):
         leaf1 = wibbrlib.component.create(1, "pink")
         leaf2 = wibbrlib.component.create(2, "pretty")
         c = wibbrlib.component.create(3, [leaf1, leaf2])
         self.failUnlessEqual(wibbrlib.component.get_type(c), 3)
-        self.failUnlessEqual(c.str, None)
+        self.failUnlessEqual(wibbrlib.component.is_composite(c), True)
         self.failUnlessEqual(wibbrlib.component.get_subcomponents(c), 
                              [leaf1, leaf2])
 

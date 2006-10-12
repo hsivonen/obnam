@@ -90,9 +90,14 @@ def get_string_value(c):
 
 
 def get_subcomponents(c):
-    """Return list of subcomponents of non-leaf component"""
+    """Return list of subcomponents of composite component"""
     assert c.str is None
     return c.subcomponents
+
+
+def is_composite(c):
+    """Is a component a leaf component or a composite one?"""
+    return c.str is None
 
 
 def component_encode(type, data):
