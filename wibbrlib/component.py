@@ -83,6 +83,12 @@ def get_type(c):
     return c.type
 
 
+def get_string_value(c):
+    """Return string value of leaf component"""
+    assert c.str is not None
+    return c.str
+
+
 def component_encode(type, data):
     """Encode a component as a string"""
     return varint_encode(len(data)) + varint_encode(type) + data
