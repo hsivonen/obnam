@@ -52,7 +52,7 @@ class CreateComponentTests(unittest.TestCase):
     def testCreateLeaf(self):
         c = wibbrlib.component.create(1, "pink")
         self.failIfEqual(c, None)
-        self.failUnlessEqual(c.type, 1)
+        self.failUnlessEqual(wibbrlib.component.get_type(c), 1)
         self.failUnlessEqual(c.str, "pink")
         self.failUnlessEqual(c.subcomponents, [])
 

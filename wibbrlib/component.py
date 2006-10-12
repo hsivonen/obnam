@@ -59,6 +59,12 @@ class Component:
 
 
 def create(component_type, value):
+    """Create a new component
+    
+    'value' must be either a string (for a leaf component) or a list
+    of component values.
+    
+    """
     assert component_type in _component_types
     assert type(value) in [type(""), type([])]
     c = Component()
@@ -66,8 +72,15 @@ def create(component_type, value):
     if type(value) == type(""):
         c.str = value
     else:
+        for x in value:
+            assert type(x) == type(c)
         c.subcomponents = value[:]
     return c
+
+
+def get_type(c):
+    """Return type type of a component"""
+    return c.type
 
 
 def component_encode(type, data):
