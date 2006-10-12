@@ -2,6 +2,7 @@ import uuid
 
 from wibbrlib.exception import WibbrException
 from wibbrlib.component import *
+import wibbrlib.component
 
 
 # Constants of object types
@@ -34,8 +35,10 @@ def object_id_new():
 
 def object_encode(objid, objtype, encoded_components):
     """Encode an object, given id, type, and list of encoded components"""
-    objid = component_encode(CMP_OBJID, objid)
-    objtype = component_encode(CMP_OBJTYPE, varint_encode(objtype))
+    objid = wibbrlib.component.create(CMP_OBJID, objid)
+    objid = wibbrlib.component.encode(objid)
+    objtype = wibbrlib.component.create(CMP_OBJTYPE, varint_encode(objtype))
+    objtype = wibbrlib.component.encode(objtype)
     return objid + objtype + "".join(encoded_components)
 
 
