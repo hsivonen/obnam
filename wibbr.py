@@ -74,12 +74,12 @@ def create_file_contents_object(config, be, map, oq, filename):
         part_ids.append(part_id)
     f.close()
 
-    part_ids = [wibbrlib.component.component_encode(
-                    wibbrlib.component.CMP_FILEPARTREF, x)
-                for x in part_ids]
-    o = wibbrlib.object.object_encode(object_id, 
-                                      wibbrlib.object.OBJ_FILECONTENTS,
-                                      part_ids)
+    o = wibbrlib.object.create(object_id, wibbrlib.object.OBJ_FILECONTENTS)
+    for part_id in part_ids:
+        c = wibbrlib.component.create(wibbrlib.component.CMP_FILEPARTREF,
+                                      part_id)
+        wibbrlib.object.add(o, c)
+    o = wibbrlib.object.encode(o)
     oq = enqueue_object(config, be, map, oq, object_id, o)
 
     return object_id, oq
