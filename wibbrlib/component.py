@@ -50,6 +50,23 @@ def component_type_name(type):
     return _component_types.get(type, "CMP_UNKNOWN")
 
 
+class Component:
+
+    def __init__(self):
+        self.type = None
+        self.str = None
+        self.subcomponents = []
+
+
+def create_leaf(component_type, str):
+    assert component_type in _component_types
+    assert type(str) == type("")
+    c = Component()
+    c.type = component_type
+    c.str = str
+    return c
+
+
 def component_encode(type, data):
     """Encode a component as a string"""
     return varint_encode(len(data)) + varint_encode(type) + data

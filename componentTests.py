@@ -6,6 +6,7 @@ import unittest
 
 
 from wibbrlib.component import *
+import wibbrlib
 
 
 class ComponentTypeNameTests(unittest.TestCase):
@@ -44,6 +45,13 @@ class ComponentTypeNameTests(unittest.TestCase):
         self.failUnlessEqual(c(CMP_BLOCKREF), "CMP_BLOCKREF")
         self.failUnlessEqual(c(CMP_MAPREF), "CMP_MAPREF")
         self.failUnlessEqual(c(CMP_FILEPARTREF), "CMP_FILEPARTREF")
+
+
+class CreateComponentTests(unittest.TestCase):
+
+    def testCreateLeaf(self):
+        c = wibbrlib.component.create_leaf(1, "pink")
+        self.failIfEqual(c, None)
 
 
 class ComponentEncodingDecodingTests(unittest.TestCase):
