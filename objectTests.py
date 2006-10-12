@@ -67,8 +67,10 @@ class ObjectEncodingDecodingTests(unittest.TestCase):
         
         self.failUnlessEqual(len(components), 4) # id, type, cmpnt1, cmpnt2
         
-        self.failUnlessEqual(components[0], (wibbrlib.component.CMP_OBJID, "uuid"))
-        self.failUnlessEqual(components[1], (wibbrlib.component.CMP_OBJTYPE, 0xdada))
+        self.failUnlessEqual(components[0], 
+                             (wibbrlib.component.CMP_OBJID, "uuid"))
+        self.failUnlessEqual(components[1], 
+                             (wibbrlib.component.CMP_OBJTYPE, 0xdada))
         self.failUnlessEqual(components[2], (0xdeadbeef, "hello"))
         self.failUnlessEqual(components[3], (0xcafebabe, "world"))
 
@@ -96,8 +98,10 @@ class OldObjectEncodingDecodingTests(unittest.TestCase):
         components = object_decode(object, 0)
         self.failUnlessEqual(len(components), 4) # id, type, cmpnt1, cmpnt2
         
-        self.failUnlessEqual(components[0], (wibbrlib.component.CMP_OBJID, "uuid"))
-        self.failUnlessEqual(components[1], (wibbrlib.component.CMP_OBJTYPE, 0xdada))
+        self.failUnlessEqual(components[0], 
+                             (wibbrlib.component.CMP_OBJID, "uuid"))
+        self.failUnlessEqual(components[1], 
+                             (wibbrlib.component.CMP_OBJTYPE, 0xdada))
         self.failUnlessEqual(components[2], (0xdeadbeef, "hello"))
         self.failUnlessEqual(components[3], (0xcafebabe, "world"))
 
