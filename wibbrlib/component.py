@@ -100,6 +100,18 @@ def is_composite(c):
     return c.str is None
 
 
+def encode(c):
+    """Encode a component as a string"""
+    if is_composite(c):
+        snippets = []
+        for sub in get_subcomponents(c):
+            snippets.append(encode(sub))
+        encoded = "".join(snippets)
+    else:
+        encoded = c.str
+    return varint_encode(len(encoded)) + varint_encode(c.type) + encoded
+
+
 def component_encode(type, data):
     """Encode a component as a string"""
     return varint_encode(len(data)) + varint_encode(type) + data
