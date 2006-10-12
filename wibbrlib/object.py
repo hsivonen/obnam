@@ -53,6 +53,21 @@ def add(o, c):
     o.components.append(c)
 
 
+def get_type(o):
+    """Return the type of an object"""
+    return o.type
+    
+    
+def get_id(o):
+    """Return the identifier for an object"""
+    return o.id
+    
+    
+def get_components(o):
+    """Return list of all components in an object"""
+    return o.components
+
+
 def object_encode(objid, objtype, encoded_components):
     """Encode an object, given id, type, and list of encoded components"""
     objid = wibbrlib.component.create(wibbrlib.component.CMP_OBJID, objid)

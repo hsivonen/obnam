@@ -24,15 +24,15 @@ class ObjectCreateTests(unittest.TestCase):
 
     def testCreate(self):
         o = wibbrlib.object.create("pink", 1)
-        self.failUnlessEqual(o.id, "pink")
-        self.failUnlessEqual(o.type, 1)
-        self.failUnlessEqual(o.components, [])
+        self.failUnlessEqual(wibbrlib.object.get_id(o), "pink")
+        self.failUnlessEqual(wibbrlib.object.get_type(o), 1)
+        self.failUnlessEqual(wibbrlib.object.get_components(o), [])
 
     def testAdd(self):
         o = wibbrlib.object.create("pink", 1)
         c = wibbrlib.component.create(2, "pretty")
         wibbrlib.object.add(o, c)
-        self.failUnlessEqual(o.components, [c])
+        self.failUnlessEqual(wibbrlib.object.get_components(o), [c])
 
 
 class ObjectEncodingTests(unittest.TestCase):
