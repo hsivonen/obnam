@@ -62,7 +62,8 @@ class CreateComponentTests(unittest.TestCase):
         c = wibbrlib.component.create(3, [leaf1, leaf2])
         self.failUnlessEqual(wibbrlib.component.get_type(c), 3)
         self.failUnlessEqual(c.str, None)
-        self.failUnlessEqual(c.subcomponents, [leaf1, leaf2])
+        self.failUnlessEqual(wibbrlib.component.get_subcomponents(c), 
+                             [leaf1, leaf2])
 
 
 class ComponentEncodingDecodingTests(unittest.TestCase):

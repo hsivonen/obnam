@@ -89,6 +89,12 @@ def get_string_value(c):
     return c.str
 
 
+def get_subcomponents(c):
+    """Return list of subcomponents of non-leaf component"""
+    assert c.str is None
+    return c.subcomponents
+
+
 def component_encode(type, data):
     """Encode a component as a string"""
     return varint_encode(len(data)) + varint_encode(type) + data
