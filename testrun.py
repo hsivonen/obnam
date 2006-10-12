@@ -8,8 +8,9 @@ for py in [py for py in os.listdir(".") if py.endswith("Tests.py")]:
 
 runner = unittest.TextTestRunner()
 result = runner.run(suite)
-if result.errors == 0:
-    sys.exit(0)
-else:
+print result
+if result.errors:
     sys.exit(1)
+else:
+    sys.exit(0)
 
