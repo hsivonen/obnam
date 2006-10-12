@@ -1,4 +1,4 @@
-from wibbrlib.varint import *
+import wibbrlib.varint
 
 
 # Constants for component types
@@ -121,13 +121,13 @@ def encode(c):
         encoded = "".join(snippets)
     else:
         encoded = c.str
-    return varint_encode(len(encoded)) + varint_encode(c.type) + encoded
+    return wibbrlib.varint.encode(len(encoded)) + wibbrlib.varint.encode(c.type) + encoded
 
 
 def decode(encoded, pos):
     """Decode a component in a string, return component and pos after it"""
-    (size, pos) = varint_decode(encoded, pos)
-    (type, pos) = varint_decode(encoded, pos)
+    (size, pos) = wibbrlib.varint.decode(encoded, pos)
+    (type, pos) = wibbrlib.varint.decode(encoded, pos)
     if type_is_composite(type):
         value = []
         pos2 = pos
@@ -156,8 +156,8 @@ def component_encode(type, data):
 
 def component_decode(str, pos):
     """Decode an encoded component, return type, data, and pos after it"""
-    (size, pos) = varint_decode(str, pos)
-    (type, pos) = varint_decode(str, pos)
+    (size, pos) = wibbrlib.varint.decode(str, pos)
+    (type, pos) = wibbrlib.varint.decode(str, pos)
     data = str[pos:pos+size]
     return type, data, pos + size
 

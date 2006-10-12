@@ -186,17 +186,17 @@ def format_filetype(mode):
 
 
 def format_st_mode(mode):
-    (mode, _) = wibbrlib.varint.varint_decode(mode, 0)
+    (mode, _) = wibbrlib.varint.decode(mode, 0)
     return format_filetype(mode) + format_perms(mode)
 
 
 def format_integer(data, width):
-    (nlink, _) = wibbrlib.varint.varint_decode(data, 0)
+    (nlink, _) = wibbrlib.varint.decode(data, 0)
     return "%*d" % (width, nlink)
 
 
 def format_time(data):
-    (secs, _) = wibbrlib.varint.varint_decode(data, 0)
+    (secs, _) = wibbrlib.varint.decode(data, 0)
     t = time.gmtime(secs)
     return time.strftime("%Y-%m-%d %H:%M:%S", t)
 
@@ -273,7 +273,7 @@ def get_field(obj, type):
 
 
 def get_integer(obj, type):
-    return wibbrlib.varint.varint_decode(get_field(obj, type), 0)[0]
+    return wibbrlib.varint.decode(get_field(obj, type), 0)[0]
     
     
 def restore_file_content(be, map, fd, inode):

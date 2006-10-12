@@ -2,6 +2,7 @@ import uuid
 
 from wibbrlib.exception import WibbrException
 import wibbrlib.component
+import wibbrlib.varint
 
 
 # Constants of object types
@@ -72,7 +73,7 @@ def encode(o):
     """Encode an object as a string"""
     id = wibbrlib.component.create(wibbrlib.component.CMP_OBJID, o.id)
     type = wibbrlib.component.create(wibbrlib.component.CMP_OBJTYPE, 
-                                     wibbrlib.varint.varint_encode(o.type))
+                                     wibbrlib.varint.encode(o.type))
     list = [id, type] + get_components(o)
     list = [wibbrlib.component.encode(c) for c in list]
     return "".join(list)
@@ -90,7 +91,7 @@ def decode(encoded, pos):
             o.id = wibbrlib.component.get_string_value(c)
         elif c.type == wibbrlib.component.CMP_OBJTYPE:
             o.type = wibbrlib.component.get_string_value(c)
-            (o.type, _) = wibbrlib.varint.varint_decode(o.type, 0)
+            (o.type, _) = wibbrlib.varint.decode(o.type, 0)
         else:
             add(o, c)
     return o
@@ -100,7 +101,7 @@ def object_encode(objid, objtype, encoded_components):
     """Encode an object, given id, type, and list of encoded components"""
     objid = wibbrlib.component.create(wibbrlib.component.CMP_OBJID, objid)
     objid = wibbrlib.component.encode(objid)
-    objtype = wibbrlib.component.create(wibbrlib.component.CMP_OBJTYPE, wibbrlib.varint.varint_encode(objtype))
+    objtype = wibbrlib.component.create(wibbrlib.component.CMP_OBJTYPE, wibbrlib.varint.encode(objtype))
     objtype = wibbrlib.component.encode(objtype)
     return objid + objtype + "".join(encoded_components)
 
@@ -110,7 +111,7 @@ def object_decode(str, pos):
     pairs = []
     for type, data in wibbrlib.component.component_decode_all(str, pos):
         if type == wibbrlib.component.CMP_OBJTYPE:
-            (data, _) = wibbrlib.varint.varint_decode(data, 0)
+            (data, _) = wibbrlib.varint.decode(data, 0)
         pairs.append((type, data))
     return pairs
 
@@ -168,25 +169,25 @@ def inode_object_encode(objid, stat_result, sig_id, contents_id):
     """Create an inode object from the return value of os.stat"""
     fields = []
     st = stat_result
-    fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_MODE, wibbrlib.varint.varint_encode(st["st_mode"])))
-    fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_INO, wibbrlib.varint.varint_encode(st["st_ino"])))
-    fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_DEV, wibbrlib.varint.varint_encode(st["st_dev"])))
-    fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_NLINK, wibbrlib.varint.varint_encode(st["st_nlink"])))
-    fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_UID, wibbrlib.varint.varint_encode(st["st_uid"])))
-    fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_GID, wibbrlib.varint.varint_encode(st["st_gid"])))
-    fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_SIZE, wibbrlib.varint.varint_encode(st["st_size"])))
-    fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_ATIME, wibbrlib.varint.varint_encode(st["st_atime"])))
-    fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_MTIME, wibbrlib.varint.varint_encode(st["st_mtime"])))
-    fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_CTIME, wibbrlib.varint.varint_encode(st["st_ctime"])))
+    fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_MODE, wibbrlib.varint.encode(st["st_mode"])))
+    fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_INO, wibbrlib.varint.encode(st["st_ino"])))
+    fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_DEV, wibbrlib.varint.encode(st["st_dev"])))
+    fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_NLINK, wibbrlib.varint.encode(st["st_nlink"])))
+    fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_UID, wibbrlib.varint.encode(st["st_uid"])))
+    fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_GID, wibbrlib.varint.encode(st["st_gid"])))
+    fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_SIZE, wibbrlib.varint.encode(st["st_size"])))
+    fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_ATIME, wibbrlib.varint.encode(st["st_atime"])))
+    fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_MTIME, wibbrlib.varint.encode(st["st_mtime"])))
+    fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_CTIME, wibbrlib.varint.encode(st["st_ctime"])))
     if "st_blocks" in st:
         fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_BLOCKS, 
-                                       wibbrlib.varint.varint_encode(st["st_blocks"])))
+                                       wibbrlib.varint.encode(st["st_blocks"])))
     if "st_blksize" in st:
         fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_BLKSIZE, 
-                                       wibbrlib.varint.varint_encode(st["st_blksize"])))
+                                       wibbrlib.varint.encode(st["st_blksize"])))
     if "st_rdev" in st:
         fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_RDEV, 
-                                       wibbrlib.varint.varint_encode(st["st_rdev"])))
+                                       wibbrlib.varint.encode(st["st_rdev"])))
     if sig_id:
         fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_SIGREF, sig_id))
     if contents_id:
@@ -216,35 +217,35 @@ def inode_object_decode(inode):
         if type == wibbrlib.component.CMP_OBJID:
             objid = data
         elif type == wibbrlib.component.CMP_OBJTYPE:
-            (otype, _) = wibbrlib.varint.varint_decode(data, 0)
+            (otype, _) = wibbrlib.varint.decode(data, 0)
             if otype != OBJ_INODE:
                 raise NotAnInode(otype)
         elif type == wibbrlib.component.CMP_ST_MODE:
-            stat_results["st_mode"] = wibbrlib.varint.varint_decode(data, 0)[0]
+            stat_results["st_mode"] = wibbrlib.varint.decode(data, 0)[0]
         elif type == wibbrlib.component.CMP_ST_INO:
-            stat_results["st_ino"] = wibbrlib.varint.varint_decode(data, 0)[0]
+            stat_results["st_ino"] = wibbrlib.varint.decode(data, 0)[0]
         elif type == wibbrlib.component.CMP_ST_DEV:
-            stat_results["st_dev"] = wibbrlib.varint.varint_decode(data, 0)[0]
+            stat_results["st_dev"] = wibbrlib.varint.decode(data, 0)[0]
         elif type == wibbrlib.component.CMP_ST_NLINK:
-            stat_results["st_nlink"] = wibbrlib.varint.varint_decode(data, 0)[0]
+            stat_results["st_nlink"] = wibbrlib.varint.decode(data, 0)[0]
         elif type == wibbrlib.component.CMP_ST_UID:
-            stat_results["st_uid"] = wibbrlib.varint.varint_decode(data, 0)[0]
+            stat_results["st_uid"] = wibbrlib.varint.decode(data, 0)[0]
         elif type == wibbrlib.component.CMP_ST_GID:
-            stat_results["st_gid"] = wibbrlib.varint.varint_decode(data, 0)[0]
+            stat_results["st_gid"] = wibbrlib.varint.decode(data, 0)[0]
         elif type == wibbrlib.component.CMP_ST_SIZE:
-            stat_results["st_size"] = wibbrlib.varint.varint_decode(data, 0)[0]
+            stat_results["st_size"] = wibbrlib.varint.decode(data, 0)[0]
         elif type == wibbrlib.component.CMP_ST_ATIME:
-            stat_results["st_atime"] = wibbrlib.varint.varint_decode(data, 0)[0]
+            stat_results["st_atime"] = wibbrlib.varint.decode(data, 0)[0]
         elif type == wibbrlib.component.CMP_ST_MTIME:
-            stat_results["st_mtime"] = wibbrlib.varint.varint_decode(data, 0)[0]
+            stat_results["st_mtime"] = wibbrlib.varint.decode(data, 0)[0]
         elif type == wibbrlib.component.CMP_ST_CTIME:
-            stat_results["st_ctime"] = wibbrlib.varint.varint_decode(data, 0)[0]
+            stat_results["st_ctime"] = wibbrlib.varint.decode(data, 0)[0]
         elif type == wibbrlib.component.CMP_ST_BLOCKS:
-            stat_results["st_blocks"] = wibbrlib.varint.varint_decode(data, 0)[0]
+            stat_results["st_blocks"] = wibbrlib.varint.decode(data, 0)[0]
         elif type == wibbrlib.component.CMP_ST_BLKSIZE:
-            stat_results["st_blksize"] = wibbrlib.varint.varint_decode(data, 0)[0]
+            stat_results["st_blksize"] = wibbrlib.varint.decode(data, 0)[0]
         elif type == wibbrlib.component.CMP_ST_RDEV:
-            stat_results["st_rdev"] = wibbrlib.varint.varint_decode(data, 0)[0]
+            stat_results["st_rdev"] = wibbrlib.varint.decode(data, 0)[0]
         elif type == wibbrlib.component.CMP_SIGREF:
             sigref = data
         elif type == wibbrlib.component.CMP_CONTREF:
@@ -300,7 +301,7 @@ def generation_object_decode(gen):
         if type == wibbrlib.component.CMP_OBJID:
             objid = data
         elif type == wibbrlib.component.CMP_OBJTYPE:
-            (objtype, _) = wibbrlib.varint.varint_decode(data, 0)
+            (objtype, _) = wibbrlib.varint.decode(data, 0)
             if objtype != OBJ_GEN:
                 raise WrongObjectType(objtype, OBJ_GEN)
         elif type == wibbrlib.component.CMP_NAMEIPAIR:
@@ -412,7 +413,7 @@ def host_block_decode(block):
                     elif host_id != data2:
                         raise ConfusedHostId(host_id, data2)
                 elif type2 == wibbrlib.component.CMP_OBJTYPE:
-                    (objtype, _) = wibbrlib.varint.varint_decode(data2, 0)
+                    (objtype, _) = wibbrlib.varint.decode(data2, 0)
                     if objtype != OBJ_HOST:
                         raise HostBlockHasWrongObjectType(objtype)
                 elif type2 == wibbrlib.component.CMP_GENLIST:

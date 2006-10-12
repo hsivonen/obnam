@@ -134,7 +134,7 @@ def get_object(be, map, object_id):
                 for i in range(len(components)):
                     if components[i][0] == wibbrlib.component.CMP_OBJTYPE:
                         type, data = components[i]
-                        (data, _) = wibbrlib.varint.varint_decode(data, 0)
+                        (data, _) = wibbrlib.varint.decode(data, 0)
                         components[i] = (type, data)
                 object_components += components
     return object_components

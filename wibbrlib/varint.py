@@ -1,4 +1,4 @@
-def varint_encode(i):
+def encode(i):
     """Encode an integer as a varint"""
     assert i >= 0
     if i == 0:
@@ -14,7 +14,7 @@ def varint_encode(i):
         return "".join(septets)
 
 
-def varint_decode(str, pos):
+def decode(str, pos):
     """Decode a varint from a string, return value and pos after it"""
     value = 0
     while pos < len(str):
