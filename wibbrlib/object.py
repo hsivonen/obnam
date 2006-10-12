@@ -23,7 +23,7 @@ OBJ_HOST         = _define_type(5, "OBJ_HOST")
 OBJ_FILECONTENTS = _define_type(6, "OBJ_FILECONTENTS")
 
 
-def object_type_name(type):
+def type_name(type):
     """Return a textual name for a numeric object type"""
     return _object_types.get(type, "OBJ_UNKNOWN")
 
@@ -289,8 +289,8 @@ class WrongObjectType(WibbrException):
 
     def __init__(self, actual, wanted):
         self._msg = "Object is of type %s (%d), wanted %s (%d)" % \
-            (object_type_name(actual), actual, 
-             object_type_name(wanted), wanted)
+            (type_name(actual), actual, 
+             type_name(wanted), wanted)
 
 
 def generation_object_decode(gen):
@@ -354,7 +354,7 @@ class HostBlockHasWrongObjectType(WibbrException):
 
     def __init__(self, objtype):
         self._msg = "Host block contains object of type %s (%d)" % \
-            (object_type_name(objtype), objtype)
+            (type_name(objtype), objtype)
 
 
 class UnknownHostObjectComponentType(WibbrException):

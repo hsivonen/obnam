@@ -12,12 +12,12 @@ import wibbrlib
 class ObjectTypeNameTests(unittest.TestCase):
 
     def test(self):
-        self.failUnlessEqual(object_type_name(-12765), "OBJ_UNKNOWN")
-        self.failUnlessEqual(object_type_name(OBJ_FILEPART), "OBJ_FILEPART")
-        self.failUnlessEqual(object_type_name(OBJ_INODE), "OBJ_INODE")
-        self.failUnlessEqual(object_type_name(OBJ_GEN), "OBJ_GEN")
-        self.failUnlessEqual(object_type_name(OBJ_SIG), "OBJ_SIG")
-        self.failUnlessEqual(object_type_name(OBJ_HOST), "OBJ_HOST")
+        self.failUnlessEqual(type_name(-12765), "OBJ_UNKNOWN")
+        self.failUnlessEqual(type_name(OBJ_FILEPART), "OBJ_FILEPART")
+        self.failUnlessEqual(type_name(OBJ_INODE), "OBJ_INODE")
+        self.failUnlessEqual(type_name(OBJ_GEN), "OBJ_GEN")
+        self.failUnlessEqual(type_name(OBJ_SIG), "OBJ_SIG")
+        self.failUnlessEqual(type_name(OBJ_HOST), "OBJ_HOST")
 
 
 class ObjectCreateTests(unittest.TestCase):
