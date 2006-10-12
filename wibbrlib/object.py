@@ -119,9 +119,10 @@ def object_queue_ids(oq):
 
 def block_create_from_object_queue(blkid, oq):
     """Create a block from an object queue"""
-    blkid = wibbrlib.component.component_encode(wibbrlib.component.CMP_BLKID, blkid)
-    objects = [wibbrlib.component.component_encode(wibbrlib.component.CMP_OBJPART, x[1]) for x in oq]
-    return blkid + "".join(objects)
+    blkid = wibbrlib.component.create(wibbrlib.component.CMP_BLKID, blkid)
+    objects = [wibbrlib.component.create(wibbrlib.component.CMP_OBJPART, x[1])
+                for x in oq]
+    return "".join([wibbrlib.component.encode(c) for c in [blkid] + objects])
 
 
 def signature_object_encode(objid, sigdata):
