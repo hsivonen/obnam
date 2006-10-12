@@ -144,9 +144,10 @@ def block_create_from_object_queue(blkid, oq):
 
 
 def signature_object_encode(objid, sigdata):
-    sigdata_component = wibbrlib.component.component_encode(wibbrlib.component.CMP_SIGDATA, sigdata)
-    object = object_encode(objid, OBJ_SIG, [sigdata_component])
-    return object
+    c = wibbrlib.component.create(wibbrlib.component.CMP_SIGDATA, sigdata)
+    o = create(objid, OBJ_SIG)
+    add(o, c)
+    return encode(o)
 
 
 def normalize_stat_result(stat_result):
