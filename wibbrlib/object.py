@@ -78,6 +78,24 @@ def encode(o):
     return "".join(list)
 
 
+def decode(encoded, pos):
+    """Decode an object from a string"""
+    list = []
+    while pos < len(encoded):
+        (c, pos) = wibbrlib.component.decode(encoded, pos)
+        list.append(c)
+    o = create("", 0)
+    for c in list:
+        if c.type == wibbrlib.component.CMP_OBJID:
+            o.id = wibbrlib.component.get_string_value(c)
+        elif c.type == wibbrlib.component.CMP_OBJTYPE:
+            o.type = wibbrlib.component.get_string_value(c)
+            (o.type, _) = wibbrlib.varint.varint_decode(o.type, 0)
+        else:
+            add(o, c)
+    return o
+
+
 def object_encode(objid, objtype, encoded_components):
     """Encode an object, given id, type, and list of encoded components"""
     objid = wibbrlib.component.create(wibbrlib.component.CMP_OBJID, objid)
