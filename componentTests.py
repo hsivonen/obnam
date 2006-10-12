@@ -68,8 +68,8 @@ class CreateComponentTests(unittest.TestCase):
 
 class ComponentEncodingDecodingTests(unittest.TestCase):
 
-    def doit(self, type, data):
-        c = wibbrlib.component.create(type, data)
+    def doit(self, c_type, data):
+        c = wibbrlib.component.create(c_type, data)
         encoded = wibbrlib.component.encode(c)
         (c2, pos) = wibbrlib.component.decode(encoded, 0)
         encoded2 = wibbrlib.component.encode(c2)
@@ -78,7 +78,9 @@ class ComponentEncodingDecodingTests(unittest.TestCase):
                              wibbrlib.component.get_type(c2))
         self.failUnlessEqual(wibbrlib.component.is_composite(c), 
                              wibbrlib.component.is_composite(c2))
-        if wibbrlib.component.is_composite(c):
+        self.failUnlessEqual(wibbrlib.component.is_composite(c),
+                             type(data) == type([]))
+        if not wibbrlib.component.is_composite(c):
             self.failUnlessEqual(wibbrlib.component.get_string_value(c),
                                  wibbrlib.component.get_string_value(c2))            
         self.failUnlessEqual(pos, len(encoded))
@@ -88,6 +90,9 @@ class ComponentEncodingDecodingTests(unittest.TestCase):
 
     def testNonempty(self):
         self.doit(2, "hello, world\0this is fun")
+
+    def testEmptyComposite(self):
+        self.doit(wibbrlib.component.CMP_OBJPART, [])
 
 
 class OldComponentEncodingDecodingTests(unittest.TestCase):
