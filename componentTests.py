@@ -94,6 +94,11 @@ class ComponentEncodingDecodingTests(unittest.TestCase):
     def testEmptyComposite(self):
         self.doit(wibbrlib.component.CMP_OBJPART, [])
 
+    def testNonemptyComposite(self):
+        c1 = wibbrlib.component.create(1, "pink")
+        c2 = wibbrlib.component.create(2, "pretty")
+        self.doit(wibbrlib.component.CMP_OBJPART, [c1, c2])
+
 
 class OldComponentEncodingDecodingTests(unittest.TestCase):
 
