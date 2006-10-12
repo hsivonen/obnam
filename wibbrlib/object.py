@@ -48,6 +48,11 @@ def create(id, type):
     return o
 
 
+def add(o, c):
+    """Add a component to an object"""
+    o.components.append(c)
+
+
 def object_encode(objid, objtype, encoded_components):
     """Encode an object, given id, type, and list of encoded components"""
     objid = wibbrlib.component.create(wibbrlib.component.CMP_OBJID, objid)

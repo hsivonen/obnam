@@ -28,6 +28,12 @@ class ObjectCreateTests(unittest.TestCase):
         self.failUnlessEqual(o.type, 1)
         self.failUnlessEqual(o.components, [])
 
+    def testAdd(self):
+        o = wibbrlib.object.create("pink", 1)
+        c = wibbrlib.component.create(2, "pretty")
+        wibbrlib.object.add(o, c)
+        self.failUnlessEqual(o.components, [c])
+
 
 class ObjectEncodingTests(unittest.TestCase):
 
