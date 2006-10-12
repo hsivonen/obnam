@@ -61,10 +61,9 @@ def encode_new(mapping):
 
 def encode_new_to_block(mapping, block_id):
     """Encode new mappings into a block"""
-    list = []
-    list.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_BLKID, block_id))
-    list += encode_new(mapping)
-    block = "".join(list)
+    c = wibbrlib.component.create(wibbrlib.component.CMP_BLKID, block_id)
+    list = encode_new(mapping)
+    block = "".join([wibbrlib.component.encode(c)] + list)
     return block
 
 
