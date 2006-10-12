@@ -103,7 +103,8 @@ class ComponentEncodingDecodingTests(unittest.TestCase):
 class OldComponentEncodingDecodingTests(unittest.TestCase):
 
     def doit(self, type, data):
-        str = wibbrlib.component.component_encode(type, data)
+        c = wibbrlib.component.create(type, data)
+        str = wibbrlib.component.encode(c)
         (type2, data2, pos) = wibbrlib.component.component_decode(str, 0)
         self.failUnlessEqual(type, type2)
         self.failUnlessEqual(data, data2)
@@ -139,8 +140,10 @@ class ComponentDecodeAllTests(unittest.TestCase):
 class OldComponentDecodeAllTests(unittest.TestCase):
 
     def testDecodeAll(self):
-        c1 = wibbrlib.component.component_encode(1, "pink")
-        c2 = wibbrlib.component.component_encode(2, "pretty")
-        c = c1 + c2
-        list = wibbrlib.component.component_decode_all(c, 0)
+        c1 = wibbrlib.component.create(1, "pink")
+        c2 = wibbrlib.component.create(2, "pretty")
+        e1 = wibbrlib.component.encode(c1)
+        e2 = wibbrlib.component.encode(c2)
+        e = e1 + e2
+        list = wibbrlib.component.component_decode_all(e, 0)
         self.failUnlessEqual(list, [(1, "pink"), (2, "pretty")])
