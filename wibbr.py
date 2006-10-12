@@ -58,6 +58,7 @@ def enqueue_object(config, be, map, oq, object_id, object):
 
 def create_file_contents_object(config, be, map, oq, filename):
     object_id = wibbrlib.object.object_id_new()
+    part_ids = []
     block_size = config.getint("wibbr", "block-size")
     f = file(filename, "r")
     while True:
@@ -65,11 +66,22 @@ def create_file_contents_object(config, be, map, oq, filename):
         if not data:
             break
         c = wibbrlib.component.component_encode(
-                wibbrlib.component.CMP_FILEDATA, data)
-        o = wibbrlib.object.object_encode(object_id, 
-                wibbrlib.object.OBJ_FILECONT, [c])
-        oq = enqueue_object(config, be, map, oq, object_id, o)
+                wibbrlib.component.CMP_FILECHUNK, data)
+        part_id = wibbrlib.object.object_id_new()
+        o = wibbrlib.object.object_encode(part_id, 
+                wibbrlib.object.OBJ_FILEPART, [c])
+        oq = enqueue_object(config, be, map, oq, part_id, o)
+        part_ids.append(part_id)
     f.close()
+
+    part_ids = [wibbrlib.component.component_encode(
+                    wibbrlib.component.CMP_FILEPARTREF, x)
+                for x in part_ids]
+    o = wibbrlib.object.object_encode(object_id, 
+                                      wibbrlib.object.OBJ_FILECONTENTS,
+                                      part_ids)
+    oq = enqueue_object(config, be, map, oq, object_id, o)
+
     return object_id, oq
     
     
@@ -267,9 +279,14 @@ def get_integer(obj, type):
 def restore_file_content(be, map, fd, inode):
     cont_id = get_field(inode, wibbrlib.component.CMP_CONTREF)
     cont = wibbrlib.backend.get_object(be, map, cont_id)
-    if cont:
-        filedata = get_field(cont, wibbrlib.component.CMP_FILEDATA)
-        os.write(fd, filedata)
+    if not cont:
+        return
+    part_ids = [x[1] for x in cont 
+                    if x[0] == wibbrlib.component.CMP_FILEPARTREF]
+    for part_id in part_ids:
+        part = wibbrlib.backend.get_object(be, map, part_id)
+        chunk = get_field(part, wibbrlib.component.CMP_FILECHUNK)
+        os.write(fd, chunk)
 
 
 def create_filesystem_object(be, map, full_pathname, inode):

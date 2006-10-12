@@ -107,11 +107,14 @@ class FileContentsTests(unittest.TestCase):
                                                      map, oq, filename)
 
         self.failIfEqual(id, None)
-        self.failUnlessEqual(wibbrlib.object.object_queue_ids(oq), [])
+        self.failUnlessEqual(wibbrlib.object.object_queue_ids(oq), [id])
         self.failUnlessEqual(wibbrlib.mapping.count(map), 0)
+            # there's no mapping yet, because the queue is small enough
+            # that there has been no need to flush it
 
     def testNonEmptyFile(self):
-        self.config.set("wibbr", "block-size", "16")
+        block_size = 16
+        self.config.set("wibbr", "block-size", "%d" % block_size)
         map = wibbrlib.mapping.create()
         oq = wibbrlib.object.object_queue_create()
         filename = "Makefile"
@@ -121,4 +124,9 @@ class FileContentsTests(unittest.TestCase):
 
         self.failIfEqual(id, None)
         self.failUnlessEqual(wibbrlib.object.object_queue_ids(oq), [id])
-        self.failUnlessEqual(wibbrlib.mapping.count(map), 1)
+
+        size = os.path.getsize(filename)
+        blocks = size / block_size
+        if size % block_size:
+            blocks += 1
+        self.failUnlessEqual(wibbrlib.mapping.count(map), blocks)

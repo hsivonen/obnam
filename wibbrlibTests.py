@@ -19,7 +19,7 @@ class ComponentTypeNameTests(unittest.TestCase):
         self.failUnlessEqual(c(CMP_OBJID), "CMP_OBJID")
         self.failUnlessEqual(c(CMP_OBJTYPE), "CMP_OBJTYPE")
         self.failUnlessEqual(c(CMP_BLKID), "CMP_BLKID")
-        self.failUnlessEqual(c(CMP_FILEDATA), "CMP_FILEDATA")
+        self.failUnlessEqual(c(CMP_FILECHUNK), "CMP_FILECHUNK")
         self.failUnlessEqual(c(CMP_OBJPART), "CMP_OBJPART")
         self.failUnlessEqual(c(CMP_OBJMAP), "CMP_OBJMAP")
         self.failUnlessEqual(c(CMP_ST_MODE), "CMP_ST_MODE")
@@ -46,13 +46,14 @@ class ComponentTypeNameTests(unittest.TestCase):
         self.failUnlessEqual(c(CMP_OBJREF), "CMP_OBJREF")
         self.failUnlessEqual(c(CMP_BLOCKREF), "CMP_BLOCKREF")
         self.failUnlessEqual(c(CMP_MAPREF), "CMP_MAPREF")
+        self.failUnlessEqual(c(CMP_FILEPARTREF), "CMP_FILEPARTREF")
 
 
 class ObjectTypeNameTests(unittest.TestCase):
 
     def test(self):
         self.failUnlessEqual(object_type_name(-12765), "OBJ_UNKNOWN")
-        self.failUnlessEqual(object_type_name(OBJ_FILECONT), "OBJ_FILECONT")
+        self.failUnlessEqual(object_type_name(OBJ_FILEPART), "OBJ_FILEPART")
         self.failUnlessEqual(object_type_name(OBJ_INODE), "OBJ_INODE")
         self.failUnlessEqual(object_type_name(OBJ_GEN), "OBJ_GEN")
         self.failUnlessEqual(object_type_name(OBJ_SIG), "OBJ_SIG")

@@ -14,11 +14,12 @@ def _define_type(code, name):
     _object_types[code] = name
     return code
 
-OBJ_FILECONT    = _define_type(1, "OBJ_FILECONT")
-OBJ_INODE       = _define_type(2, "OBJ_INODE")
-OBJ_GEN         = _define_type(3, "OBJ_GEN")
-OBJ_SIG         = _define_type(4, "OBJ_SIG")
-OBJ_HOST        = _define_type(5, "OBJ_HOST")
+OBJ_FILEPART     = _define_type(1, "OBJ_FILEPART")
+OBJ_INODE        = _define_type(2, "OBJ_INODE")
+OBJ_GEN          = _define_type(3, "OBJ_GEN")
+OBJ_SIG          = _define_type(4, "OBJ_SIG")
+OBJ_HOST         = _define_type(5, "OBJ_HOST")
+OBJ_FILECONTENTS = _define_type(6, "OBJ_FILECONTENTS")
 
 
 def object_type_name(type):

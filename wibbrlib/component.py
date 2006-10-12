@@ -15,7 +15,7 @@ def _define_type(code, name):
 CMP_OBJID       = _define_type( 1, "CMP_OBJID")
 CMP_OBJTYPE     = _define_type( 2, "CMP_OBJTYPE")
 CMP_BLKID       = _define_type( 3, "CMP_BLKID")
-CMP_FILEDATA    = _define_type( 4, "CMP_FILEDATA")
+CMP_FILECHUNK   = _define_type( 4, "CMP_FILECHUNK")
 CMP_OBJPART     = _define_type( 5, "CMP_OBJPART")
 CMP_OBJMAP      = _define_type( 6, "CMP_OBJMAP")
 CMP_ST_MODE     = _define_type( 7, "CMP_ST_MODE")
@@ -42,6 +42,7 @@ CMP_GENLIST     = _define_type(27, "CMP_GENLIST")
 CMP_OBJREF      = _define_type(28, "CMP_OBJREF")
 CMP_BLOCKREF    = _define_type(29, "CMP_BLOCKREF")
 CMP_MAPREF      = _define_type(30, "CMP_MAPREF")
+CMP_FILEPARTREF = _define_type(31, "CMP_FILEPARTREF")
 
 
 def component_type_name(type):
