@@ -146,6 +146,7 @@ def component_decode(str, pos):
     data = str[pos:pos+size]
     return type, data, pos + size
 
+
 def component_decode_all(str, pos):
     """Return list of all components as (type, data) pairs in a string"""
     list = []
