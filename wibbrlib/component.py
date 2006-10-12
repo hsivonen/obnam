@@ -65,7 +65,7 @@ def create(component_type, value):
     of component values.
     
     """
-    assert component_type in _component_types
+
     assert type(value) in [type(""), type([])]
     c = Component()
     c.type = component_type
@@ -114,7 +114,7 @@ def encode(c):
 
 def component_encode(type, data):
     """Encode a component as a string"""
-    return varint_encode(len(data)) + varint_encode(type) + data
+    return encode(create(type, data))
 
 
 def component_decode(str, pos):
