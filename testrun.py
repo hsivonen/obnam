@@ -7,7 +7,7 @@ for py in [py for py in os.listdir(".") if py.endswith("Tests.py")]:
     suite.addTest(unittest.defaultTestLoader.loadTestsFromName(py[:-3]))
 
 runner = unittest.TextTestRunner()
-print result
+result = runner.run(suite)
 if result.errors:
     sys.exit(1)
 else:
