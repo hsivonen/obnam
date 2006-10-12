@@ -258,13 +258,16 @@ def inode_object_decode(inode):
 
 def generation_object_encode(objid, pairs):
     """Encode a generation object, from list of filename, inode_id pairs"""
-    components = []
+    o = create(objid, OBJ_GEN)
     for filename, inode_id in pairs:
-        cf = wibbrlib.component.component_encode(wibbrlib.component.CMP_FILENAME, filename)
-        ci = wibbrlib.component.component_encode(wibbrlib.component.CMP_INODEREF, inode_id)
-        c = wibbrlib.component.component_encode(wibbrlib.component.CMP_NAMEIPAIR, cf + ci)
-        components.append(c)
-    return object_encode(objid, OBJ_GEN, components)
+        cf = wibbrlib.component.create(wibbrlib.component.CMP_FILENAME, 
+                                       filename)
+        ci = wibbrlib.component.create(wibbrlib.component.CMP_INODEREF, 
+                                       inode_id)
+        c = wibbrlib.component.create(wibbrlib.component.CMP_NAMEIPAIR, 
+                                      [cf, ci])
+        add(o, c)
+    return encode(o)
 
 
 class UnknownGenerationComponent(WibbrException):
