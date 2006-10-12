@@ -75,37 +75,6 @@ class ObjectEncodingDecodingTests(unittest.TestCase):
         self.failUnlessEqual(components[3], (0xcafebabe, "world"))
 
 
-class OldObjectEncodingTests(unittest.TestCase):
-
-    def testEmptyObject(self):
-        self.failUnlessEqual(object_encode("uuid", 33, []),
-                             "\4\1uuid\1\2\41")
-
-    def testNonEmptyObject(self):
-        self.failUnlessEqual(object_encode("uuid", 33, ["\1\77x"]),
-                             "\4\1uuid\1\2\41\1\77x")
-
-
-class OldObjectEncodingDecodingTests(unittest.TestCase):
-
-    def test(self):
-        component1 = wibbrlib.component.component_encode(0xdeadbeef, "hello")
-        component2 = wibbrlib.component.component_encode(0xcafebabe, "world")
-        object = object_encode("uuid", 0xdada, [component1, component2])
-        self.failIfEqual(object, None)
-        self.failIfEqual(object, "")
-        
-        components = object_decode(object, 0)
-        self.failUnlessEqual(len(components), 4) # id, type, cmpnt1, cmpnt2
-        
-        self.failUnlessEqual(components[0], 
-                             (wibbrlib.component.CMP_OBJID, "uuid"))
-        self.failUnlessEqual(components[1], 
-                             (wibbrlib.component.CMP_OBJTYPE, 0xdada))
-        self.failUnlessEqual(components[2], (0xdeadbeef, "hello"))
-        self.failUnlessEqual(components[3], (0xcafebabe, "world"))
-
-
 class ObjectQueueTests(unittest.TestCase):
 
     def testCreate(self):

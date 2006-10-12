@@ -97,25 +97,6 @@ def decode(encoded, pos):
     return o
 
 
-def object_encode(objid, objtype, encoded_components):
-    """Encode an object, given id, type, and list of encoded components"""
-    objid = wibbrlib.component.create(wibbrlib.component.CMP_OBJID, objid)
-    objid = wibbrlib.component.encode(objid)
-    objtype = wibbrlib.component.create(wibbrlib.component.CMP_OBJTYPE, wibbrlib.varint.encode(objtype))
-    objtype = wibbrlib.component.encode(objtype)
-    return objid + objtype + "".join(encoded_components)
-
-
-def object_decode(str, pos):
-    """Decode an object, return components as list of (type, data)"""
-    pairs = []
-    for type, data in wibbrlib.component.component_decode_all(str, pos):
-        if type == wibbrlib.component.CMP_OBJTYPE:
-            (data, _) = wibbrlib.varint.decode(data, 0)
-        pairs.append((type, data))
-    return pairs
-
-
 def object_queue_create():
     """Create an empty object queue"""
     return []
