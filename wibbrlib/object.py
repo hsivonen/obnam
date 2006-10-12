@@ -168,32 +168,34 @@ def normalize_stat_result(stat_result):
 
 def inode_object_encode(objid, stat_result, sig_id, contents_id):
     """Create an inode object from the return value of os.stat"""
-    fields = []
+    o = create(objid, OBJ_INODE)
+
     st = stat_result
-    fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_MODE, wibbrlib.varint.encode(st["st_mode"])))
-    fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_INO, wibbrlib.varint.encode(st["st_ino"])))
-    fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_DEV, wibbrlib.varint.encode(st["st_dev"])))
-    fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_NLINK, wibbrlib.varint.encode(st["st_nlink"])))
-    fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_UID, wibbrlib.varint.encode(st["st_uid"])))
-    fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_GID, wibbrlib.varint.encode(st["st_gid"])))
-    fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_SIZE, wibbrlib.varint.encode(st["st_size"])))
-    fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_ATIME, wibbrlib.varint.encode(st["st_atime"])))
-    fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_MTIME, wibbrlib.varint.encode(st["st_mtime"])))
-    fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_CTIME, wibbrlib.varint.encode(st["st_ctime"])))
+    add(o, wibbrlib.component.create(wibbrlib.component.CMP_ST_MODE, wibbrlib.varint.encode(st["st_mode"])))
+    add(o, wibbrlib.component.create(wibbrlib.component.CMP_ST_INO, wibbrlib.varint.encode(st["st_ino"])))
+    add(o, wibbrlib.component.create(wibbrlib.component.CMP_ST_DEV, wibbrlib.varint.encode(st["st_dev"])))
+    add(o, wibbrlib.component.create(wibbrlib.component.CMP_ST_NLINK, wibbrlib.varint.encode(st["st_nlink"])))
+    add(o, wibbrlib.component.create(wibbrlib.component.CMP_ST_UID, wibbrlib.varint.encode(st["st_uid"])))
+    add(o, wibbrlib.component.create(wibbrlib.component.CMP_ST_GID, wibbrlib.varint.encode(st["st_gid"])))
+    add(o, wibbrlib.component.create(wibbrlib.component.CMP_ST_SIZE, wibbrlib.varint.encode(st["st_size"])))
+    add(o, wibbrlib.component.create(wibbrlib.component.CMP_ST_ATIME, wibbrlib.varint.encode(st["st_atime"])))
+    add(o, wibbrlib.component.create(wibbrlib.component.CMP_ST_MTIME, wibbrlib.varint.encode(st["st_mtime"])))
+    add(o, wibbrlib.component.create(wibbrlib.component.CMP_ST_CTIME, wibbrlib.varint.encode(st["st_ctime"])))
     if "st_blocks" in st:
-        fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_BLOCKS, 
+        add(o, wibbrlib.component.create(wibbrlib.component.CMP_ST_BLOCKS, 
                                        wibbrlib.varint.encode(st["st_blocks"])))
     if "st_blksize" in st:
-        fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_BLKSIZE, 
+        add(o, wibbrlib.component.create(wibbrlib.component.CMP_ST_BLKSIZE, 
                                        wibbrlib.varint.encode(st["st_blksize"])))
     if "st_rdev" in st:
-        fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_ST_RDEV, 
+        add(o, wibbrlib.component.create(wibbrlib.component.CMP_ST_RDEV, 
                                        wibbrlib.varint.encode(st["st_rdev"])))
     if sig_id:
-        fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_SIGREF, sig_id))
+        add(o, wibbrlib.component.create(wibbrlib.component.CMP_SIGREF, sig_id))
     if contents_id:
-        fields.append(wibbrlib.component.component_encode(wibbrlib.component.CMP_CONTREF, contents_id))
-    return object_encode(objid, OBJ_INODE, fields)
+        add(o, wibbrlib.component.create(wibbrlib.component.CMP_CONTREF, contents_id))
+
+    return encode(o)
     
     
 class UnknownInodeField(WibbrException):
