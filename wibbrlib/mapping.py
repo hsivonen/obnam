@@ -47,11 +47,14 @@ def encode_new(mapping):
     """Return a list of encoded components for the new mappings"""
     list = []
     for key in get_new(mapping):
-        objref = wibbrlib.component.component_encode(wibbrlib.component.CMP_OBJREF, key)
+        objref = wibbrlib.component.create(wibbrlib.component.CMP_OBJREF, key)
         blockrefs = mapping.dict[key]
-        blockrefs = [wibbrlib.component.component_encode(wibbrlib.component.CMP_BLOCKREF, x) for x in blockrefs]
-        blockrefs = "".join(blockrefs)
-        component = wibbrlib.component.component_encode(wibbrlib.component.CMP_OBJMAP, objref + blockrefs)
+        blockrefs = [wibbrlib.component.create(
+                        wibbrlib.component.CMP_BLOCKREF, x) 
+                     for x in blockrefs]
+        component = wibbrlib.component.create(wibbrlib.component.CMP_OBJMAP, 
+                        [objref] + blockrefs)
+        component = wibbrlib.component.encode(component)
         list.append(component)
     return list
 
