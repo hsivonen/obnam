@@ -43,8 +43,8 @@ class ObjectEncodingTests(unittest.TestCase):
 class ObjectEncodingDecodingTests(unittest.TestCase):
 
     def test(self):
-        component1 = component_encode(0xdeadbeef, "hello")
-        component2 = component_encode(0xcafebabe, "world")
+        component1 = wibbrlib.component.component_encode(0xdeadbeef, "hello")
+        component2 = wibbrlib.component.component_encode(0xcafebabe, "world")
         object = object_encode("uuid", 0xdada, [component1, component2])
         self.failIfEqual(object, None)
         self.failIfEqual(object, "")
@@ -52,8 +52,8 @@ class ObjectEncodingDecodingTests(unittest.TestCase):
         components = object_decode(object, 0)
         self.failUnlessEqual(len(components), 4) # id, type, cmpnt1, cmpnt2
         
-        self.failUnlessEqual(components[0], (CMP_OBJID, "uuid"))
-        self.failUnlessEqual(components[1], (CMP_OBJTYPE, 0xdada))
+        self.failUnlessEqual(components[0], (wibbrlib.component.CMP_OBJID, "uuid"))
+        self.failUnlessEqual(components[1], (wibbrlib.component.CMP_OBJTYPE, 0xdada))
         self.failUnlessEqual(components[2], (0xdeadbeef, "hello"))
         self.failUnlessEqual(components[3], (0xcafebabe, "world"))
 
