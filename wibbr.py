@@ -85,12 +85,12 @@ def create_file_contents_object(config, be, map, oq, filename):
     
     
 def backup_single_directory(config, be, map, oq, pathname, st):
-    return None, None, oq
+    return None, None
 
 
 def backup_single_file(config, be, map, oq, pathname, st):
     id = create_file_contents_object(config, be, map, oq, pathname)
-    return None, id, oq
+    return None, id
 
 
 class UnknownFileType(wibbrlib.exception.WibbrException):
@@ -109,7 +109,7 @@ def backup_single_item(config, be, map, oq, pathname):
     )
     for test, action in list:
         if test(st.st_mode):
-            (sig_id, content_id, oq) = \
+            (sig_id, content_id) = \
                 action(config, be, map, oq, pathname, st)
 
             inode_id = wibbrlib.obj.object_id_new()
