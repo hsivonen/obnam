@@ -16,7 +16,10 @@ def permissions(mode):
     if mode & stat.S_IXUSR:
         xu = "x"
     if mode & stat.S_ISUID:
-        xu = "s"
+        if mode & stat.S_IXUSR:
+            xu = "s"
+        else:
+            xu = "S"
 
     if mode & stat.S_IRGRP:
         rg = "r"
@@ -25,7 +28,10 @@ def permissions(mode):
     if mode & stat.S_IXGRP:
         xg = "x"
     if mode & stat.S_ISGID:
-        xg = "s"
+        if mode & stat.S_IXGRP:
+            xg = "s"
+        else:
+            xg = "S"
 
     if mode & stat.S_IROTH:
         ro = "r"
@@ -34,6 +40,9 @@ def permissions(mode):
     if mode & stat.S_IXOTH:
         xo = "x"
     if mode & stat.S_ISVTX:
-        xo = "t"
+        if mode & stat.S_IXOTH:
+            xo = "t"
+        else:
+            xo = "T"
     
     return ru + wu + xu + rg + wg + xg + ro + wo + xo
