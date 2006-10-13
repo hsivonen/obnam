@@ -81,7 +81,7 @@ def create_file_contents_object(config, be, map, oq, filename):
     o = wibbrlib.obj.encode(o)
     enqueue_object(config, be, map, oq, object_id, o)
 
-    return object_id, oq
+    return object_id
     
     
 def backup_single_directory(config, be, map, oq, pathname, st):
@@ -89,7 +89,7 @@ def backup_single_directory(config, be, map, oq, pathname, st):
 
 
 def backup_single_file(config, be, map, oq, pathname, st):
-    (id, oq) = create_file_contents_object(config, be, map, oq, pathname)
+    id = create_file_contents_object(config, be, map, oq, pathname)
     return None, id, oq
 
 

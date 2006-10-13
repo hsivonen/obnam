@@ -103,8 +103,8 @@ class FileContentsTests(unittest.TestCase):
         oq = wibbrlib.obj.object_queue_create()
         filename = "/dev/null"
         
-        (id, oq) = wibbr.create_file_contents_object(self.config, self.be, 
-                                                     map, oq, filename)
+        id = wibbr.create_file_contents_object(self.config, self.be, 
+                                               map, oq, filename)
 
         self.failIfEqual(id, None)
         self.failUnlessEqual(wibbrlib.obj.object_queue_ids(oq), [id])
@@ -119,8 +119,8 @@ class FileContentsTests(unittest.TestCase):
         oq = wibbrlib.obj.object_queue_create()
         filename = "Makefile"
         
-        (id, oq) = wibbr.create_file_contents_object(self.config, self.be, 
-                                                     map, oq, filename)
+        id = wibbr.create_file_contents_object(self.config, self.be, 
+                                               map, oq, filename)
 
         self.failIfEqual(id, None)
         self.failUnlessEqual(wibbrlib.obj.object_queue_ids(oq), [id])
