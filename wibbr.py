@@ -140,18 +140,9 @@ def generations(config, cache, be):
         print id
 
 
-def format_filetype(mode):
-    if stat.S_ISDIR(mode):
-        return "d"
-    elif stat.S_ISREG(mode):
-        return "-"
-    else:
-        return "?"
-
-
 def format_st_mode(mode):
     (mode, _) = wibbrlib.varint.decode(mode, 0)
-    return format_filetype(mode) + wibbrlib.format.permissions(mode)
+    return wibbrlib.format.filetype(mode) + wibbrlib.format.permissions(mode)
 
 
 def format_integer(data, width):
