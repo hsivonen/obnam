@@ -140,39 +140,6 @@ def generations(config, cache, be):
         print id
 
 
-def format_perms(perms):
-    ru = wu = xu = rg = wg = xg = ro = wo = xo = "-"
-
-    if perms & stat.S_IRUSR:
-        ru = "r"
-    if perms & stat.S_IWUSR:
-        wu = "w"
-    if perms & stat.S_IXUSR:
-        xu = "x"
-    if perms & stat.S_ISUID:
-        xu = "s"
-
-    if perms & stat.S_IRGRP:
-        rg = "r"
-    if perms & stat.S_IWGRP:
-        wg = "w"
-    if perms & stat.S_IXGRP:
-        xg = "x"
-    if perms & stat.S_ISGID:
-        xg = "s"
-
-    if perms & stat.S_IROTH:
-        ro = "r"
-    if perms & stat.S_IWOTH:
-        wo = "w"
-    if perms & stat.S_IXOTH:
-        xo = "x"
-    if perms & stat.S_ISVTX:
-        xo = "t"
-    
-    return ru + wu + xu + rg + wg + xg + ro + wo + xo
-
-
 def format_filetype(mode):
     if stat.S_ISDIR(mode):
         return "d"
@@ -184,7 +151,7 @@ def format_filetype(mode):
 
 def format_st_mode(mode):
     (mode, _) = wibbrlib.varint.decode(mode, 0)
-    return format_filetype(mode) + format_perms(mode)
+    return format_filetype(mode) + wibbrlib.format.permissions(mode)
 
 
 def format_integer(data, width):
