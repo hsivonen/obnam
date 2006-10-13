@@ -102,6 +102,11 @@ def object_queue_create():
     return []
 
 
+def object_queue_clear(oq):
+    """Remove all objects from an object queue"""
+    del oq[:]
+
+
 def object_queue_add(oq, object_id, object):
     """Add an encoded object into an object queue"""
     oq.append((object_id, object))
