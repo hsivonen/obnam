@@ -118,3 +118,16 @@ class ComponentDecodeAllTests(unittest.TestCase):
         self.remove_component(list, 1, "pink")
         self.remove_component(list, 2, "pretty")
         self.failUnlessEqual(list, [])
+
+
+class FindTests(unittest.TestCase):
+
+    def testFindByType(self):
+        list = [(1, "pink"), (2, "pretty")]
+        list = [wibbrlib.component.create(a, b) for a, b in list]
+        
+        result = wibbrlib.component.find_by_type(list, 1)
+        self.failUnlessEqual(len(result), 1)
+        c = result[0]
+        self.failUnlessEqual(wibbrlib.component.get_type(c), 1)
+        self.failUnlessEqual(wibbrlib.component.get_string_value(c), "pink")

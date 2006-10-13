@@ -147,3 +147,8 @@ def decode_all(encoded, pos):
         (c, pos) = decode(encoded, pos)
         list.append(c)
     return list
+
+
+def find_by_type(components, wanted_type):
+    """Find components of a desired type in a list of components"""
+    return [c for c in components if get_type(c) == wanted_type]
