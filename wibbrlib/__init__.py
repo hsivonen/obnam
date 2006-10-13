@@ -4,6 +4,6 @@ import cmp
 import config
 import exception
 import mapping
-import object
+import obj
 import rsync
 import varint

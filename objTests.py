@@ -1,11 +1,11 @@
-"""Unit tests for wibbrlib.object."""
+"""Unit tests for wibbrlib.obj."""
 
 
 import os
 import unittest
 
 
-from wibbrlib.object import *
+from wibbrlib.obj import *
 import wibbrlib
 
 
@@ -23,29 +23,29 @@ class ObjectTypeNameTests(unittest.TestCase):
 class ObjectCreateTests(unittest.TestCase):
 
     def testCreate(self):
-        o = wibbrlib.object.create("pink", 1)
-        self.failUnlessEqual(wibbrlib.object.get_id(o), "pink")
-        self.failUnlessEqual(wibbrlib.object.get_type(o), 1)
-        self.failUnlessEqual(wibbrlib.object.get_components(o), [])
+        o = wibbrlib.obj.create("pink", 1)
+        self.failUnlessEqual(wibbrlib.obj.get_id(o), "pink")
+        self.failUnlessEqual(wibbrlib.obj.get_type(o), 1)
+        self.failUnlessEqual(wibbrlib.obj.get_components(o), [])
 
     def testAdd(self):
-        o = wibbrlib.object.create("pink", 1)
+        o = wibbrlib.obj.create("pink", 1)
         c = wibbrlib.cmp.create(2, "pretty")
-        wibbrlib.object.add(o, c)
-        self.failUnlessEqual(wibbrlib.object.get_components(o), [c])
+        wibbrlib.obj.add(o, c)
+        self.failUnlessEqual(wibbrlib.obj.get_components(o), [c])
 
 
 class ObjectEncodingTests(unittest.TestCase):
 
     def testEmptyObject(self):
-        o = wibbrlib.object.create("pink", 33)
-        self.failUnlessEqual(wibbrlib.object.encode(o), "\4\1pink\1\2\41")
+        o = wibbrlib.obj.create("pink", 33)
+        self.failUnlessEqual(wibbrlib.obj.encode(o), "\4\1pink\1\2\41")
 
     def testNonEmptyObject(self):
-        o = wibbrlib.object.create("pink", 33)
+        o = wibbrlib.obj.create("pink", 33)
         c = wibbrlib.cmp.create(1, "pretty")
-        wibbrlib.object.add(o, c)
-        self.failUnlessEqual(wibbrlib.object.encode(o),
+        wibbrlib.obj.add(o, c)
+        self.failUnlessEqual(wibbrlib.obj.encode(o),
                              "\4\1pink\1\2\41\6\1pretty")
 
 
@@ -54,13 +54,13 @@ class ObjectEncodingDecodingTests(unittest.TestCase):
     def test(self):
         c1 = wibbrlib.cmp.create(0xdeadbeef, "hello")
         c2 = wibbrlib.cmp.create(0xcafebabe, "world")
-        o = wibbrlib.object.create("uuid", 0xdada)
-        wibbrlib.object.add(o, c1)
-        wibbrlib.object.add(o, c2)
+        o = wibbrlib.obj.create("uuid", 0xdada)
+        wibbrlib.obj.add(o, c1)
+        wibbrlib.obj.add(o, c2)
         
-        encoded = wibbrlib.object.encode(o)
-        o2 = wibbrlib.object.decode(encoded, 0)
-        encoded2 = wibbrlib.object.encode(o2)
+        encoded = wibbrlib.obj.encode(o)
+        o2 = wibbrlib.obj.decode(encoded, 0)
+        encoded2 = wibbrlib.obj.encode(o2)
         
         self.failUnlessEqual(encoded, encoded2)
         return
@@ -156,7 +156,7 @@ class NormalizedInodeTests(unittest.TestCase):
 class ObjectTests(unittest.TestCase):
 
     def testId(self):
-        id = wibbrlib.object.object_id_new()
+        id = wibbrlib.obj.object_id_new()
         self.failIfEqual(id, None)
         self.failUnlessEqual(type(id), type(""))
 
@@ -176,9 +176,9 @@ class HostBlockTests(unittest.TestCase):
         host_id = "pink"
         gen_ids = ["pretty", "beautiful"]
         map_ids = ["black", "box"]
-        host = wibbrlib.object.host_block_encode(host_id, gen_ids, map_ids)
+        host = wibbrlib.obj.host_block_encode(host_id, gen_ids, map_ids)
         (host_id2, gen_ids2, map_ids2) = \
-            wibbrlib.object.host_block_decode(host)
+            wibbrlib.obj.host_block_decode(host)
         self.failUnlessEqual(host_id, host_id2)
         self.failUnlessEqual(gen_ids, gen_ids2)
         self.failUnlessEqual(map_ids, map_ids2)

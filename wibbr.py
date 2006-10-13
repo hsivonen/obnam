@@ -48,16 +48,16 @@ def parse_options(config, argv):
 
 def enqueue_object(config, be, map, oq, object_id, object):
     block_size = config.getint("wibbr", "block-size")
-    cur_size = wibbrlib.object.object_queue_combined_size(oq)
+    cur_size = wibbrlib.obj.object_queue_combined_size(oq)
     if len(object) + cur_size > block_size:
         wibbrlib.backend.flush_object_queue(be, map, oq)
-        oq = wibbrlib.object.object_queue_create()
-    wibbrlib.object.object_queue_add(oq, object_id, object)
+        oq = wibbrlib.obj.object_queue_create()
+    wibbrlib.obj.object_queue_add(oq, object_id, object)
     return oq
 
 
 def create_file_contents_object(config, be, map, oq, filename):
-    object_id = wibbrlib.object.object_id_new()
+    object_id = wibbrlib.obj.object_id_new()
     part_ids = []
     block_size = config.getint("wibbr", "block-size")
     f = file(filename, "r")
@@ -66,20 +66,20 @@ def create_file_contents_object(config, be, map, oq, filename):
         if not data:
             break
         c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_FILECHUNK, data)
-        part_id = wibbrlib.object.object_id_new()
-        o = wibbrlib.object.create(part_id, wibbrlib.object.OBJ_FILEPART)
-        wibbrlib.object.add(o, c)
-        o = wibbrlib.object.encode(o)
+        part_id = wibbrlib.obj.object_id_new()
+        o = wibbrlib.obj.create(part_id, wibbrlib.obj.OBJ_FILEPART)
+        wibbrlib.obj.add(o, c)
+        o = wibbrlib.obj.encode(o)
         oq = enqueue_object(config, be, map, oq, part_id, o)
         part_ids.append(part_id)
     f.close()
 
-    o = wibbrlib.object.create(object_id, wibbrlib.object.OBJ_FILECONTENTS)
+    o = wibbrlib.obj.create(object_id, wibbrlib.obj.OBJ_FILECONTENTS)
     for part_id in part_ids:
         c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_FILEPARTREF,
                                       part_id)
-        wibbrlib.object.add(o, c)
-    o = wibbrlib.object.encode(o)
+        wibbrlib.obj.add(o, c)
+    o = wibbrlib.obj.encode(o)
     oq = enqueue_object(config, be, map, oq, object_id, o)
 
     return object_id, oq
@@ -113,9 +113,9 @@ def backup_single_item(config, be, map, oq, pathname):
             (sig_id, content_id, oq) = \
                 action(config, be, map, oq, pathname, st)
 
-            inode_id = wibbrlib.object.object_id_new()
-            nst = wibbrlib.object.normalize_stat_result(st)
-            inode = wibbrlib.object.inode_object_encode(inode_id, nst,
+            inode_id = wibbrlib.obj.object_id_new()
+            nst = wibbrlib.obj.normalize_stat_result(st)
+            inode = wibbrlib.obj.inode_object_encode(inode_id, nst,
                                                         sig_id, content_id)
             oq = enqueue_object(config, be, map, oq, inode_id, inode)
 
@@ -138,7 +138,7 @@ def backup_directory(config, be, map, oq, pairs, dirname):
 
 def generations(config, cache, be):
     block = wibbrlib.backend.get_host_block(be)
-    (_, gen_ids, _) = wibbrlib.object.host_block_decode(block)
+    (_, gen_ids, _) = wibbrlib.obj.host_block_decode(block)
     for id in gen_ids:
         print id
 
@@ -221,7 +221,7 @@ def format_inode(inode):
 def show_generations(be, map, gen_ids):
     host_block = wibbrlib.backend.get_host_block(be)
     (host_id, _, map_block_ids) = \
-        wibbrlib.object.host_block_decode(host_block)
+        wibbrlib.obj.host_block_decode(host_block)
 
     for map_block_id in map_block_ids:
         block = wibbrlib.backend.get_block(be, map_block_id)
@@ -230,7 +230,7 @@ def show_generations(be, map, gen_ids):
     for gen_id in gen_ids:
         print "Generation:", gen_id
         gen = wibbrlib.backend.get_object(be, map, gen_id)
-        for c in wibbrlib.object.get_components(gen):
+        for c in wibbrlib.obj.get_components(gen):
             type = wibbrlib.cmp.get_type(c)
             if type == wibbrlib.cmp.CMP_NAMEIPAIR:
                 pair = wibbrlib.cmp.get_subcomponents(c)
@@ -266,7 +266,7 @@ class TooManyFields(wibbrlib.exception.WibbrException):
 
 
 def get_field(obj, type):
-    list = wibbrlib.object.get_components(obj)
+    list = wibbrlib.obj.get_components(obj)
     list = [x for x in list if wibbrlib.cmp.get_type(x) == type]
     if not list:
         raise MissingField(obj, type)
@@ -284,7 +284,7 @@ def restore_file_content(be, map, fd, inode):
     cont = wibbrlib.backend.get_object(be, map, cont_id)
     if not cont:
         return
-    list = wibbrlib.object.get_components(cont)
+    list = wibbrlib.obj.get_components(cont)
     part_ids = [wibbrlib.cmp.get_string_value(x) for x in list
                     if wibbrlib.cmp.get_type(x) == 
                             wibbrlib.cmp.CMP_FILEPARTREF]
@@ -321,7 +321,7 @@ class UnknownGeneration(wibbrlib.exception.WibbrException):
 def restore(config, be, map, gen_id):
     host_block = wibbrlib.backend.get_host_block(be)
     (host_id, _, map_block_ids) = \
-        wibbrlib.object.host_block_decode(host_block)
+        wibbrlib.obj.host_block_decode(host_block)
 
     for map_block_id in map_block_ids:
         block = wibbrlib.backend.get_block(be, map_block_id)
@@ -334,7 +334,7 @@ def restore(config, be, map, gen_id):
     target = config.get("wibbr", "restore-target")
     
     list = []
-    for sub in wibbrlib.object.get_components(gen):
+    for sub in wibbrlib.obj.get_components(gen):
         type = wibbrlib.cmp.get_type(sub)
         if type == wibbrlib.cmp.CMP_NAMEIPAIR:
             parts = wibbrlib.cmp.get_subcomponents(sub)
@@ -389,7 +389,7 @@ def main():
     cache = wibbrlib.cache.init(config)
     be = wibbrlib.backend.init(config, cache)
     map = wibbrlib.mapping.create()
-    oq = wibbrlib.object.object_queue_create()
+    oq = wibbrlib.obj.object_queue_create()
 
     if not args:
         raise MissingCommandWord()
@@ -405,11 +405,11 @@ def main():
             else:
                 raise Exception("Not a directory: %s" + name)
 
-        gen_id = wibbrlib.object.object_id_new()
-        gen = wibbrlib.object.generation_object_encode(gen_id, pairs)
+        gen_id = wibbrlib.obj.object_id_new()
+        gen = wibbrlib.obj.generation_object_encode(gen_id, pairs)
         gen_ids = [gen_id]
         oq = enqueue_object(config, be, map, oq, gen_id, gen)
-        if wibbrlib.object.object_queue_combined_size(oq) > 0:
+        if wibbrlib.obj.object_queue_combined_size(oq) > 0:
             wibbrlib.backend.flush_object_queue(be, map, oq)
 
         map_block_id = wibbrlib.backend.generate_block_id(be)
@@ -417,7 +417,7 @@ def main():
         wibbrlib.backend.upload(be, map_block_id, map_block)
 
         host_id = config.get("wibbr", "host-id")
-        block = wibbrlib.object.host_block_encode(host_id, gen_ids, 
+        block = wibbrlib.obj.host_block_encode(host_id, gen_ids, 
                     [map_block_id])
         wibbrlib.backend.upload_host_block(be, block)
     elif command == "generations":

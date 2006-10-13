@@ -115,8 +115,8 @@ class ObjectQueueFlushing(LocalBackendBase):
     def testFlushing(self):
         be = wibbrlib.backend.init(self.config, self.cache)
         map = wibbrlib.mapping.create()
-        oq = wibbrlib.object.object_queue_create()
-        wibbrlib.object.object_queue_add(oq, "pink", "pretty")
+        oq = wibbrlib.obj.object_queue_create()
+        wibbrlib.obj.object_queue_add(oq, "pink", "pretty")
         
         self.failUnlessEqual(wibbrlib.backend.list(be), [])
         
@@ -133,8 +133,8 @@ class ObjectQueueFlushing(LocalBackendBase):
 class GetObjectTests(LocalBackendBase):
 
     def upload_object(self, object_id, object):
-        oq = wibbrlib.object.object_queue_create()
-        wibbrlib.object.object_queue_add(oq, object_id, object)
+        oq = wibbrlib.obj.object_queue_create()
+        wibbrlib.obj.object_queue_add(oq, object_id, object)
         wibbrlib.backend.flush_object_queue(self.be, self.map, oq)
 
     def testGetObject(self):
@@ -143,15 +143,15 @@ class GetObjectTests(LocalBackendBase):
         
         id = "pink"
         component = wibbrlib.cmp.create(42, "pretty")
-        object = wibbrlib.object.create(id, 0)
-        wibbrlib.object.add(object, component)
-        object = wibbrlib.object.encode(object)
+        object = wibbrlib.obj.create(id, 0)
+        wibbrlib.obj.add(object, component)
+        object = wibbrlib.obj.encode(object)
         self.upload_object(id, object)
         o = wibbrlib.backend.get_object(self.be, self.map, id)
 
-        self.failUnlessEqual(wibbrlib.object.get_id(o), id)
-        self.failUnlessEqual(wibbrlib.object.get_type(o), 0)
-        list = wibbrlib.object.get_components(o)
+        self.failUnlessEqual(wibbrlib.obj.get_id(o), id)
+        self.failUnlessEqual(wibbrlib.obj.get_type(o), 0)
+        list = wibbrlib.obj.get_components(o)
         self.failUnlessEqual(len(list), 1)
         self.failUnlessEqual(wibbrlib.cmp.get_type(list[0]), 42)
         self.failUnlessEqual(wibbrlib.cmp.get_string_value(list[0]), 
@@ -162,7 +162,7 @@ class HostBlock(LocalBackendBase):
 
     def testFetchHostBlock(self):
         host_id = self.config.get("wibbr", "host-id")
-        host = wibbrlib.object.host_block_encode(host_id, ["gen1", "gen2"],
+        host = wibbrlib.obj.host_block_encode(host_id, ["gen1", "gen2"],
                                                  ["map1", "map2"])
         be = wibbrlib.backend.init(self.config, self.cache)
         

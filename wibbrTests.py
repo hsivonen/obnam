@@ -4,7 +4,7 @@ import StringIO
 import unittest
 
 import wibbr
-import wibbrlib.object
+import wibbrlib.obj
 
 
 class CommandLineParsingTests(unittest.TestCase):
@@ -56,7 +56,7 @@ class ObjectQueuingTests(unittest.TestCase):
         return files
 
     def testEnqueue(self):
-        oq = wibbrlib.object.object_queue_create()
+        oq = wibbrlib.obj.object_queue_create()
         object_id = "pink"
         object = "pretty"
         map = wibbrlib.mapping.create()
@@ -70,7 +70,7 @@ class ObjectQueuingTests(unittest.TestCase):
         oq = wibbr.enqueue_object(config, be, map, oq, object_id, object)
         
         self.failUnlessEqual(self.find_block_files(config), [])
-        self.failUnlessEqual(wibbrlib.object.object_queue_combined_size(oq),
+        self.failUnlessEqual(wibbrlib.obj.object_queue_combined_size(oq),
                              len(object))
         
         object_id2 = "pink2"
@@ -79,7 +79,7 @@ class ObjectQueuingTests(unittest.TestCase):
         oq = wibbr.enqueue_object(config, be, map, oq, object_id2, object2)
         
         self.failUnlessEqual(len(self.find_block_files(config)), 1)
-        self.failUnlessEqual(wibbrlib.object.object_queue_combined_size(oq),
+        self.failUnlessEqual(wibbrlib.obj.object_queue_combined_size(oq),
                              len(object2))
 
         shutil.rmtree(config.get("wibbr", "cache-dir"))
@@ -100,14 +100,14 @@ class FileContentsTests(unittest.TestCase):
 
     def testEmptyFile(self):
         map = wibbrlib.mapping.create()
-        oq = wibbrlib.object.object_queue_create()
+        oq = wibbrlib.obj.object_queue_create()
         filename = "/dev/null"
         
         (id, oq) = wibbr.create_file_contents_object(self.config, self.be, 
                                                      map, oq, filename)
 
         self.failIfEqual(id, None)
-        self.failUnlessEqual(wibbrlib.object.object_queue_ids(oq), [id])
+        self.failUnlessEqual(wibbrlib.obj.object_queue_ids(oq), [id])
         self.failUnlessEqual(wibbrlib.mapping.count(map), 0)
             # there's no mapping yet, because the queue is small enough
             # that there has been no need to flush it
@@ -116,14 +116,14 @@ class FileContentsTests(unittest.TestCase):
         block_size = 16
         self.config.set("wibbr", "block-size", "%d" % block_size)
         map = wibbrlib.mapping.create()
-        oq = wibbrlib.object.object_queue_create()
+        oq = wibbrlib.obj.object_queue_create()
         filename = "Makefile"
         
         (id, oq) = wibbr.create_file_contents_object(self.config, self.be, 
                                                      map, oq, filename)
 
         self.failIfEqual(id, None)
-        self.failUnlessEqual(wibbrlib.object.object_queue_ids(oq), [id])
+        self.failUnlessEqual(wibbrlib.obj.object_queue_ids(oq), [id])
 
         size = os.path.getsize(filename)
         blocks = size / block_size

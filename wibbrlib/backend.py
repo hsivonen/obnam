@@ -11,7 +11,7 @@ import uuid
 import wibbrlib.cache
 import wibbrlib.cmp
 import wibbrlib.mapping
-import wibbrlib.object
+import wibbrlib.obj
 
 
 class LocalBackEnd:
@@ -87,9 +87,9 @@ def flush_object_queue(be, map, oq):
     """
     
     block_id = generate_block_id(be)
-    block = wibbrlib.object.block_create_from_object_queue(block_id, oq)
+    block = wibbrlib.obj.block_create_from_object_queue(block_id, oq)
     upload(be, block_id, block)
-    for id in wibbrlib.object.object_queue_ids(oq):
+    for id in wibbrlib.obj.object_queue_ids(oq):
         wibbrlib.mapping.add(map, id, block_id)
 
 
@@ -128,12 +128,12 @@ def create_object_from_component_list(components):
     type = wibbrlib.cmp.get_string_value(list[0])
     (type, _) = wibbrlib.varint.decode(type, 0)
 
-    o = wibbrlib.object.create(id, type)
+    o = wibbrlib.obj.create(id, type)
     bad = (wibbrlib.cmp.CMP_OBJID,
            wibbrlib.cmp.CMP_OBJTYPE)
     for c in components:
         if wibbrlib.cmp.get_type(c) not in bad:
-            wibbrlib.object.add(o, c)
+            wibbrlib.obj.add(o, c)
     return o
 
 
