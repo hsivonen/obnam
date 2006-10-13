@@ -122,12 +122,23 @@ class ComponentDecodeAllTests(unittest.TestCase):
 
 class FindTests(unittest.TestCase):
 
-    def testFindByType(self):
-        list = [(1, "pink"), (2, "pretty")]
-        list = [wibbrlib.component.create(a, b) for a, b in list]
-        
-        result = wibbrlib.component.find_by_type(list, 1)
+    def setUp(self):
+        self.list = [(1, "pink"), (2, "pretty"), (3, "black"), (3, "box")]
+        self.list = [wibbrlib.component.create(a, b) for a, b in self.list]
+
+    def tearDown(self):
+        del self.list
+
+    def testFindFirst(self):
+        result = wibbrlib.component.find_by_type(self.list, 1)
         self.failUnlessEqual(len(result), 1)
         c = result[0]
         self.failUnlessEqual(wibbrlib.component.get_type(c), 1)
         self.failUnlessEqual(wibbrlib.component.get_string_value(c), "pink")
+
+    def testFindSecond(self):
+        result = wibbrlib.component.find_by_type(self.list, 2)
+        self.failUnlessEqual(len(result), 1)
+        c = result[0]
+        self.failUnlessEqual(wibbrlib.component.get_type(c), 2)
+        self.failUnlessEqual(wibbrlib.component.get_string_value(c), "pretty")
