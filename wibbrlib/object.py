@@ -204,7 +204,12 @@ def inode_object_decode(inode):
     stat_results = {}
     sigref = None
     contref = None
-    for type, data in wibbrlib.component.component_decode_all(inode, 0):
+    for c in wibbrlib.component.decode_all(inode, 0):
+        type = wibbrlib.component.get_type(c)
+        if wibbrlib.component.is_composite(c):
+            data = None
+        else:
+            data = wibbrlib.component.get_string_value(c)
         if type == wibbrlib.component.CMP_OBJID:
             objid = data
         elif type == wibbrlib.component.CMP_OBJTYPE:
