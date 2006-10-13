@@ -230,15 +230,17 @@ def show_generations(be, map, gen_ids):
     for gen_id in gen_ids:
         print "Generation:", gen_id
         gen = wibbrlib.backend.get_object(be, map, gen_id)
-        for type, data in gen:
+        for c in wibbrlib.object.get_components(gen):
+            type = wibbrlib.component.get_type(c)
             if type == wibbrlib.component.CMP_NAMEIPAIR:
-                pair = wibbrlib.component.component_decode_all(data, 0)
-                (x1, y1) = pair[0]
-                (x2, y2) = pair[1]
-                if x1 == wibbrlib.component.CMP_INODEREF:
-                    (inode_id, filename) = (y1, y2)
+                pair = wibbrlib.component.get_subcomponents(c)
+                type2 = wibbrlib.component.get_type(pair[0])
+                if type2 == wibbrlib.component.CMP_INODEREF:
+                    inode_id = wibbrlib.component.get_string_value(pair[0])
+                    filename = wibbrlib.component.get_string_value(pair[1])
                 else:
-                    (inode_id, filename) = (y2, y1)
+                    inode_id = wibbrlib.component.get_string_value(pair[1])
+                    filename = wibbrlib.component.get_string_value(pair[0])
                 inode = wibbrlib.backend.get_object(be, map, inode_id)
                 print "  ", format_inode(inode), filename
 
