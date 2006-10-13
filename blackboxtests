@@ -34,7 +34,7 @@ tmp=$(mktemp -d)
 
 CONFIG="--cache-dir=$tmp/cache --local-store=$tmp/store"
 
-MANIFESTOPTS="-i Inode -i Ctime"
+MANIFESTOPTS="-i Inode -i Ctime -i Atime"
 
 for dir in "$@"
 do
@@ -69,7 +69,7 @@ do
         python wibbr.py $CONFIG --to "$tmp/root" restore "$genid"
         python manifest.py $MANIFESTOPTS "$tmp/root/$tmp/root" \
             > "$tmp/manifest2-$i"
-        diff -u "$tmp/manifest-$i" "$tmp/manifest2-$i"
+        diff -u -U 15 "$tmp/manifest-$i" "$tmp/manifest2-$i"
     done
 done
 
