@@ -264,12 +264,13 @@ class TooManyFields(wibbrlib.exception.WibbrException):
 
 
 def get_field(obj, type):
-    fields = [x[1] for x in obj if x[0] == type]
-    if not fields:
+    list = wibbrlib.object.get_components(obj)
+    list = [x for x in list if wibbrlib.component.get_type(x) == type]
+    if not list:
         raise MissingField(obj, type)
-    if len(fields) > 1:
+    if len(list) > 1:
         raise TooManyFields(obj, type)
-    return fields[0]
+    return wibbrlib.component.get_string_value(list[0])
 
 
 def get_integer(obj, type):
@@ -281,8 +282,10 @@ def restore_file_content(be, map, fd, inode):
     cont = wibbrlib.backend.get_object(be, map, cont_id)
     if not cont:
         return
-    part_ids = [x[1] for x in cont 
-                    if x[0] == wibbrlib.component.CMP_FILEPARTREF]
+    list = wibbrlib.object.get_components(cont)
+    part_ids = [wibbrlib.component.get_string_value(x) for x in list
+                    if wibbrlib.component.get_type(x) == 
+                            wibbrlib.component.CMP_FILEPARTREF]
     for part_id in part_ids:
         part = wibbrlib.backend.get_object(be, map, part_id)
         chunk = get_field(part, wibbrlib.component.CMP_FILECHUNK)
@@ -329,15 +332,17 @@ def restore(config, be, map, gen_id):
     target = config.get("wibbr", "restore-target")
     
     list = []
-    for type, data in gen:
+    for sub in wibbrlib.object.get_components(gen):
+        type = wibbrlib.component.get_type(sub)
         if type == wibbrlib.component.CMP_NAMEIPAIR:
-            parts = wibbrlib.component.component_decode_all(data, 0)
-            if parts[0][0] == wibbrlib.component.CMP_INODEREF:
-                inode_id = parts[0][1]
-                pathname = parts[1][1]
+            parts = wibbrlib.component.get_subcomponents(sub)
+            type2 = wibbrlib.component.get_type(parts[0])
+            if type2 == wibbrlib.component.CMP_INODEREF:
+                inode_id = wibbrlib.component.get_string_value(parts[0])
+                pathname = wibbrlib.component.get_string_value(parts[1])
             else:
-                inode_id = parts[1][1]
-                pathname = parts[0][1]
+                inode_id = wibbrlib.component.get_string_value(parts[1])
+                pathname = wibbrlib.component.get_string_value(parts[0])
 
             if pathname.startswith(os.sep):
                 pathname = "." + pathname

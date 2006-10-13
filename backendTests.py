@@ -147,10 +147,15 @@ class GetObjectTests(LocalBackendBase):
         wibbrlib.object.add(object, component)
         object = wibbrlib.object.encode(object)
         self.upload_object(id, object)
-        object = wibbrlib.backend.get_object(self.be, self.map, id)
-        self.failUnlessEqual(object, [(wibbrlib.component.CMP_OBJID, id),
-                                      (wibbrlib.component.CMP_OBJTYPE, 0),
-                                      (42, "pretty")])
+        o = wibbrlib.backend.get_object(self.be, self.map, id)
+
+        self.failUnlessEqual(wibbrlib.object.get_id(o), id)
+        self.failUnlessEqual(wibbrlib.object.get_type(o), 0)
+        list = wibbrlib.object.get_components(o)
+        self.failUnlessEqual(len(list), 1)
+        self.failUnlessEqual(wibbrlib.component.get_type(list[0]), 42)
+        self.failUnlessEqual(wibbrlib.component.get_string_value(list[0]), 
+                             "pretty")
 
 
 class HostBlock(LocalBackendBase):
