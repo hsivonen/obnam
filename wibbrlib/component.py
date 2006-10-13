@@ -160,3 +160,18 @@ def first_by_type(components, wanted_type):
         if get_type(c) == wanted_type:
             return c
     return None
+
+
+def find_strings_by_type(components, wanted_type):
+    """Find components by type, return their string values"""
+    return [get_string_value(c) 
+            for c in find_by_type(components, wanted_type)]
+
+
+def first_string_by_type(components, wanted_type):
+    """Find first component by type, return its string value"""
+    c = first_by_type(components, wanted_type)
+    if c:
+        return get_string_value(c)
+    else:
+        return None
