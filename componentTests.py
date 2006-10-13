@@ -100,23 +100,6 @@ class ComponentEncodingDecodingTests(unittest.TestCase):
         self.doit(wibbrlib.component.CMP_OBJPART, [c1, c2])
 
 
-class OldComponentEncodingDecodingTests(unittest.TestCase):
-
-    def doit(self, type, data):
-        c = wibbrlib.component.create(type, data)
-        str = wibbrlib.component.encode(c)
-        (type2, data2, pos) = wibbrlib.component.component_decode(str, 0)
-        self.failUnlessEqual(type, type2)
-        self.failUnlessEqual(data, data2)
-        self.failUnlessEqual(pos, len(str))
-
-    def testEmpty(self):
-        self.doit(1, "")
-
-    def testNonempty(self):
-        self.doit(2, "hello, world\0this is fun")
-
-
 class ComponentDecodeAllTests(unittest.TestCase):
 
     def remove_component(self, list, type, value):

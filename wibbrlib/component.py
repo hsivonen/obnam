@@ -147,11 +147,3 @@ def decode_all(encoded, pos):
         (c, pos) = decode(encoded, pos)
         list.append(c)
     return list
-
-
-def component_decode(str, pos):
-    """Decode an encoded component, return type, data, and pos after it"""
-    (size, pos) = wibbrlib.varint.decode(str, pos)
-    (type, pos) = wibbrlib.varint.decode(str, pos)
-    data = str[pos:pos+size]
-    return type, data, pos + size
