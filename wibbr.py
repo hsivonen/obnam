@@ -51,9 +51,8 @@ def enqueue_object(config, be, map, oq, object_id, object):
     cur_size = wibbrlib.obj.object_queue_combined_size(oq)
     if len(object) + cur_size > block_size:
         wibbrlib.backend.flush_object_queue(be, map, oq)
-        oq = wibbrlib.obj.object_queue_create()
+        wibbrlib.obj.object_queue_clear(oq)
     wibbrlib.obj.object_queue_add(oq, object_id, object)
-    return oq
 
 
 def create_file_contents_object(config, be, map, oq, filename):
@@ -70,7 +69,7 @@ def create_file_contents_object(config, be, map, oq, filename):
         o = wibbrlib.obj.create(part_id, wibbrlib.obj.OBJ_FILEPART)
         wibbrlib.obj.add(o, c)
         o = wibbrlib.obj.encode(o)
-        oq = enqueue_object(config, be, map, oq, part_id, o)
+        enqueue_object(config, be, map, oq, part_id, o)
         part_ids.append(part_id)
     f.close()
 
@@ -80,7 +79,7 @@ def create_file_contents_object(config, be, map, oq, filename):
                                       part_id)
         wibbrlib.obj.add(o, c)
     o = wibbrlib.obj.encode(o)
-    oq = enqueue_object(config, be, map, oq, object_id, o)
+    enqueue_object(config, be, map, oq, object_id, o)
 
     return object_id, oq
     
@@ -117,7 +116,7 @@ def backup_single_item(config, be, map, oq, pathname):
             nst = wibbrlib.obj.normalize_stat_result(st)
             inode = wibbrlib.obj.inode_object_encode(inode_id, nst,
                                                         sig_id, content_id)
-            oq = enqueue_object(config, be, map, oq, inode_id, inode)
+            enqueue_object(config, be, map, oq, inode_id, inode)
 
             return inode_id, oq
 
@@ -408,7 +407,7 @@ def main():
         gen_id = wibbrlib.obj.object_id_new()
         gen = wibbrlib.obj.generation_object_encode(gen_id, pairs)
         gen_ids = [gen_id]
-        oq = enqueue_object(config, be, map, oq, gen_id, gen)
+        enqueue_object(config, be, map, oq, gen_id, gen)
         if wibbrlib.obj.object_queue_combined_size(oq) > 0:
             wibbrlib.backend.flush_object_queue(be, map, oq)
 
