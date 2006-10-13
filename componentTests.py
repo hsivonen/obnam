@@ -129,30 +129,29 @@ class FindTests(unittest.TestCase):
     def tearDown(self):
         del self.list
 
+    def match(self, result, type, value):
+        self.failUnless(len(result) > 0)
+        c = result[0]
+        self.failUnlessEqual(wibbrlib.component.get_type(c), type)
+        self.failUnlessEqual(wibbrlib.component.get_string_value(c), value)
+        del result[0]
+
     def testFindFirst(self):
         result = wibbrlib.component.find_by_type(self.list, 1)
-        self.failUnlessEqual(len(result), 1)
-        c = result[0]
-        self.failUnlessEqual(wibbrlib.component.get_type(c), 1)
-        self.failUnlessEqual(wibbrlib.component.get_string_value(c), "pink")
+        self.match(result, 1, "pink")
+        self.failUnlessEqual(result, [])
 
     def testFindSecond(self):
         result = wibbrlib.component.find_by_type(self.list, 2)
-        self.failUnlessEqual(len(result), 1)
-        c = result[0]
-        self.failUnlessEqual(wibbrlib.component.get_type(c), 2)
-        self.failUnlessEqual(wibbrlib.component.get_string_value(c), "pretty")
+        self.match(result, 2, "pretty")
+        self.failUnlessEqual(result, [])
 
     def testFindMultiple(self):
         result = wibbrlib.component.find_by_type(self.list, 3)
-        self.failUnlessEqual(len(result), 2)
-        c = result[0]
-        self.failUnlessEqual(wibbrlib.component.get_type(c), 3)
-        self.failUnlessEqual(wibbrlib.component.get_string_value(c), "black")
-        c = result[1]
-        self.failUnlessEqual(wibbrlib.component.get_type(c), 3)
-        self.failUnlessEqual(wibbrlib.component.get_string_value(c), "box")
+        self.match(result, 3, "black")
+        self.match(result, 3, "box")
+        self.failUnlessEqual(result, [])
 
     def testFindNone(self):
         result = wibbrlib.component.find_by_type(self.list, 0)
-        self.failUnlessEqual(len(result), 0)
+        self.failUnlessEqual(result, [])
