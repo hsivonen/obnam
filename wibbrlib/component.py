@@ -152,3 +152,11 @@ def decode_all(encoded, pos):
 def find_by_type(components, wanted_type):
     """Find components of a desired type in a list of components"""
     return [c for c in components if get_type(c) == wanted_type]
+
+
+def first_by_type(components, wanted_type):
+    """Find first component of a desired type in a list of components"""
+    for c in components:
+        if get_type(c) == wanted_type:
+            return c
+    return None

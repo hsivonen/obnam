@@ -136,22 +136,41 @@ class FindTests(unittest.TestCase):
         self.failUnlessEqual(wibbrlib.component.get_string_value(c), value)
         del result[0]
 
-    def testFindFirst(self):
+    def testFindAllOnes(self):
         result = wibbrlib.component.find_by_type(self.list, 1)
         self.match(result, 1, "pink")
         self.failUnlessEqual(result, [])
 
-    def testFindSecond(self):
+    def testFindAllTwos(self):
         result = wibbrlib.component.find_by_type(self.list, 2)
         self.match(result, 2, "pretty")
         self.failUnlessEqual(result, [])
 
-    def testFindMultiple(self):
+    def testFindAllThrees(self):
         result = wibbrlib.component.find_by_type(self.list, 3)
         self.match(result, 3, "black")
         self.match(result, 3, "box")
         self.failUnlessEqual(result, [])
 
-    def testFindNone(self):
+    def testFindAllNones(self):
         result = wibbrlib.component.find_by_type(self.list, 0)
         self.failUnlessEqual(result, [])
+
+    def testFindFirstOne(self):
+        result = [wibbrlib.component.first_by_type(self.list, 1)]
+        self.match(result, 1, "pink")
+        self.failUnlessEqual(result, [])
+
+    def testFindFirstTwo(self):
+        result = [wibbrlib.component.first_by_type(self.list, 2)]
+        self.match(result, 2, "pretty")
+        self.failUnlessEqual(result, [])
+
+    def testFindFirstThree(self):
+        result = [wibbrlib.component.first_by_type(self.list, 3)]
+        self.match(result, 3, "black")
+        self.failUnlessEqual(result, [])
+
+    def testFindFirstNone(self):
+        result = wibbrlib.component.first_by_type(self.list, 0)
+        self.failUnlessEqual(result, None)
