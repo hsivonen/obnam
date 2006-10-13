@@ -57,6 +57,8 @@ printable_fields = [
     "MD5",
 ]
 
+ignore_for_dir = []
+
 
 class FilesystemObject:
 
@@ -75,6 +77,7 @@ class FilesystemObject:
             f.close()
         else:
             self.checksum = None
+        self.st = os.lstat(pathname)
 
     def typename(self):
         list = (
@@ -96,6 +99,8 @@ class FilesystemObject:
         return time.strftime("%Y-%m-%dT%H:%M:%S UTC", t)
 
     def write_field(self, f, name, value):
+        if stat.S_ISDIR(self.st.st_mode) and name in ignore_for_dir:
+            return
         if name in printable_fields:
             f.write("%s: %s\n" % (name, value))
         
@@ -147,6 +152,7 @@ def parse_command_line():
     parser = optparse.OptionParser()
     
     parser.add_option("-i", "--ignore", action="append")
+    parser.add_option("-I", "--ignore-for-dir", action="append")
     
     (options, roots) = parser.parse_args()
     
@@ -154,6 +160,10 @@ def parse_command_line():
         for x in options.ignore:
             if x in printable_fields:
                 printable_fields.remove(x)
+
+    if options.ignore_for_dir:
+        for x in options.ignore_for_dir:
+            ignore_for_dir.append(x)
 
     return roots
 
