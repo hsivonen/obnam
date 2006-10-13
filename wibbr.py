@@ -222,7 +222,7 @@ class TooManyFields(wibbrlib.exception.WibbrException):
 
 def get_field(obj, type):
     list = wibbrlib.obj.get_components(obj)
-    list = [x for x in list if wibbrlib.cmp.get_type(x) == type]
+    list = wibbrlib.cmp.find_by_type(list, type)
     if not list:
         raise MissingField(obj, type)
     if len(list) > 1:
