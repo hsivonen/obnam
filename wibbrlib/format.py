@@ -63,3 +63,8 @@ def filetype(mode):
         if func(mode):
             return result
     return "?"
+
+
+def filemode(mode):
+    """Format the entire file mode like 'ls -l'"""
+    return filetype(mode) + permissions(mode)

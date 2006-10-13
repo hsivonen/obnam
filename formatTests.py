@@ -45,3 +45,9 @@ class FormatFileTypeTests(unittest.TestCase):
         )
         for mode, correct in facit:
             self.failUnlessEqual(wibbrlib.format.filetype(mode), correct)
+
+
+class FormatFileMode(unittest.TestCase):
+
+    def test(self):
+        self.failUnlessEqual(wibbrlib.format.filemode(0100777), "-rwxrwxrwx")
