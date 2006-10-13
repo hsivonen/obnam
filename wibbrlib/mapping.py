@@ -69,15 +69,17 @@ def encode_new_to_block(mapping, block_id):
 
 def decode_block(mapping, mapping_block):
     """Decode a block with mappings, add them to mapping object"""
-    for type, data in wibbrlib.component.component_decode_all(mapping_block, 0):
+    for component in wibbrlib.component.decode_all(mapping_block, 0):
+        type = wibbrlib.component.get_type(component)
         if type == wibbrlib.component.CMP_OBJMAP:
             object_id = None
             block_ids = []
-            for type2, data2 in wibbrlib.component.component_decode_all(data, 0):
+            for sub in wibbrlib.component.get_subcomponents(component):
+                type2 = wibbrlib.component.get_type(sub)
                 if type2 == wibbrlib.component.CMP_OBJREF:
-                    object_id = data2
+                    object_id = wibbrlib.component.get_string_value(sub)
                 elif type2 == wibbrlib.component.CMP_BLOCKREF:
-                    block_ids.append(data2)
+                    block_ids.append(wibbrlib.component.get_string_value(sub))
             if object_id and block_ids:
                 for block_id in block_ids:
                     add(mapping, object_id, block_id)
