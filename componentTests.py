@@ -142,3 +142,13 @@ class FindTests(unittest.TestCase):
         c = result[0]
         self.failUnlessEqual(wibbrlib.component.get_type(c), 2)
         self.failUnlessEqual(wibbrlib.component.get_string_value(c), "pretty")
+
+    def testFindMultiple(self):
+        result = wibbrlib.component.find_by_type(self.list, 3)
+        self.failUnlessEqual(len(result), 2)
+        c = result[0]
+        self.failUnlessEqual(wibbrlib.component.get_type(c), 3)
+        self.failUnlessEqual(wibbrlib.component.get_string_value(c), "black")
+        c = result[1]
+        self.failUnlessEqual(wibbrlib.component.get_type(c), 3)
+        self.failUnlessEqual(wibbrlib.component.get_string_value(c), "box")
