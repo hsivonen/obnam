@@ -61,20 +61,20 @@ class ObjectMappingTests(unittest.TestCase):
         self.failUnlessEqual(len(list), 1)
         
         # Make sure the encoding is correct
-        list2 = wibbrlib.component.decode_all(list[0], 0)
+        list2 = wibbrlib.cmp.decode_all(list[0], 0)
         self.failUnlessEqual(len(list2), 1)
-        self.failUnlessEqual(wibbrlib.component.get_type(list2[0]), 
-                             wibbrlib.component.CMP_OBJMAP)
+        self.failUnlessEqual(wibbrlib.cmp.get_type(list2[0]), 
+                             wibbrlib.cmp.CMP_OBJMAP)
         
-        list3 = wibbrlib.component.get_subcomponents(list2[0])
+        list3 = wibbrlib.cmp.get_subcomponents(list2[0])
         self.failUnlessEqual(len(list3), 2)
-        self.failUnlessEqual(wibbrlib.component.get_type(list3[0]),
-                             wibbrlib.component.CMP_OBJREF)
-        self.failUnlessEqual(wibbrlib.component.get_string_value(list3[0]),
+        self.failUnlessEqual(wibbrlib.cmp.get_type(list3[0]),
+                             wibbrlib.cmp.CMP_OBJREF)
+        self.failUnlessEqual(wibbrlib.cmp.get_string_value(list3[0]),
                              "pink")
-        self.failUnlessEqual(wibbrlib.component.get_type(list3[1]),
-                             wibbrlib.component.CMP_BLOCKREF)
-        self.failUnlessEqual(wibbrlib.component.get_string_value(list3[1]),
+        self.failUnlessEqual(wibbrlib.cmp.get_type(list3[1]),
+                             wibbrlib.cmp.CMP_BLOCKREF)
+        self.failUnlessEqual(wibbrlib.cmp.get_string_value(list3[1]),
                              "pretty")
 
         # Now try decoding with the official function

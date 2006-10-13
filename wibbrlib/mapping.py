@@ -1,4 +1,4 @@
-import wibbrlib.component
+import wibbrlib.cmp
 
 
 class Mappings:
@@ -47,37 +47,37 @@ def encode_new(mapping):
     """Return a list of encoded components for the new mappings"""
     list = []
     for key in get_new(mapping):
-        objref = wibbrlib.component.create(wibbrlib.component.CMP_OBJREF, key)
+        objref = wibbrlib.cmp.create(wibbrlib.cmp.CMP_OBJREF, key)
         blockrefs = mapping.dict[key]
-        blockrefs = [wibbrlib.component.create(
-                        wibbrlib.component.CMP_BLOCKREF, x) 
+        blockrefs = [wibbrlib.cmp.create(
+                        wibbrlib.cmp.CMP_BLOCKREF, x) 
                      for x in blockrefs]
-        component = wibbrlib.component.create(wibbrlib.component.CMP_OBJMAP, 
+        component = wibbrlib.cmp.create(wibbrlib.cmp.CMP_OBJMAP, 
                         [objref] + blockrefs)
-        component = wibbrlib.component.encode(component)
+        component = wibbrlib.cmp.encode(component)
         list.append(component)
     return list
 
 
 def encode_new_to_block(mapping, block_id):
     """Encode new mappings into a block"""
-    c = wibbrlib.component.create(wibbrlib.component.CMP_BLKID, block_id)
+    c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_BLKID, block_id)
     list = encode_new(mapping)
-    block = "".join([wibbrlib.component.encode(c)] + list)
+    block = "".join([wibbrlib.cmp.encode(c)] + list)
     return block
 
 
 def decode_block(mapping, mapping_block):
     """Decode a block with mappings, add them to mapping object"""
-    list = wibbrlib.component.decode_all(mapping_block, 0)
-    maps = wibbrlib.component.find_by_type(list, 
-                                           wibbrlib.component.CMP_OBJMAP)
+    list = wibbrlib.cmp.decode_all(mapping_block, 0)
+    maps = wibbrlib.cmp.find_by_type(list, 
+                                           wibbrlib.cmp.CMP_OBJMAP)
     for map in maps:
-        subs = wibbrlib.component.get_subcomponents(map)
-        object_id = wibbrlib.component.first_string_by_type(subs, 
-                                               wibbrlib.component.CMP_OBJREF)
-        block_ids = wibbrlib.component.find_strings_by_type(subs, 
-                                           wibbrlib.component.CMP_BLOCKREF)
+        subs = wibbrlib.cmp.get_subcomponents(map)
+        object_id = wibbrlib.cmp.first_string_by_type(subs, 
+                                               wibbrlib.cmp.CMP_OBJREF)
+        block_ids = wibbrlib.cmp.find_strings_by_type(subs, 
+                                           wibbrlib.cmp.CMP_BLOCKREF)
         if object_id and block_ids:
             for block_id in block_ids:
                 add(mapping, object_id, block_id)

@@ -30,7 +30,7 @@ class ObjectCreateTests(unittest.TestCase):
 
     def testAdd(self):
         o = wibbrlib.object.create("pink", 1)
-        c = wibbrlib.component.create(2, "pretty")
+        c = wibbrlib.cmp.create(2, "pretty")
         wibbrlib.object.add(o, c)
         self.failUnlessEqual(wibbrlib.object.get_components(o), [c])
 
@@ -43,7 +43,7 @@ class ObjectEncodingTests(unittest.TestCase):
 
     def testNonEmptyObject(self):
         o = wibbrlib.object.create("pink", 33)
-        c = wibbrlib.component.create(1, "pretty")
+        c = wibbrlib.cmp.create(1, "pretty")
         wibbrlib.object.add(o, c)
         self.failUnlessEqual(wibbrlib.object.encode(o),
                              "\4\1pink\1\2\41\6\1pretty")
@@ -52,8 +52,8 @@ class ObjectEncodingTests(unittest.TestCase):
 class ObjectEncodingDecodingTests(unittest.TestCase):
 
     def test(self):
-        c1 = wibbrlib.component.create(0xdeadbeef, "hello")
-        c2 = wibbrlib.component.create(0xcafebabe, "world")
+        c1 = wibbrlib.cmp.create(0xdeadbeef, "hello")
+        c2 = wibbrlib.cmp.create(0xcafebabe, "world")
         o = wibbrlib.object.create("uuid", 0xdada)
         wibbrlib.object.add(o, c1)
         wibbrlib.object.add(o, c2)
@@ -68,9 +68,9 @@ class ObjectEncodingDecodingTests(unittest.TestCase):
         self.failUnlessEqual(len(components), 4) # id, type, cmpnt1, cmpnt2
         
         self.failUnlessEqual(components[0], 
-                             (wibbrlib.component.CMP_OBJID, "uuid"))
+                             (wibbrlib.cmp.CMP_OBJID, "uuid"))
         self.failUnlessEqual(components[1], 
-                             (wibbrlib.component.CMP_OBJTYPE, 0xdada))
+                             (wibbrlib.cmp.CMP_OBJTYPE, 0xdada))
         self.failUnlessEqual(components[2], (0xdeadbeef, "hello"))
         self.failUnlessEqual(components[3], (0xcafebabe, "world"))
 

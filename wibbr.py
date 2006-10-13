@@ -65,7 +65,7 @@ def create_file_contents_object(config, be, map, oq, filename):
         data = f.read(block_size)
         if not data:
             break
-        c = wibbrlib.component.create(wibbrlib.component.CMP_FILECHUNK, data)
+        c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_FILECHUNK, data)
         part_id = wibbrlib.object.object_id_new()
         o = wibbrlib.object.create(part_id, wibbrlib.object.OBJ_FILEPART)
         wibbrlib.object.add(o, c)
@@ -76,7 +76,7 @@ def create_file_contents_object(config, be, map, oq, filename):
 
     o = wibbrlib.object.create(object_id, wibbrlib.object.OBJ_FILECONTENTS)
     for part_id in part_ids:
-        c = wibbrlib.component.create(wibbrlib.component.CMP_FILEPARTREF,
+        c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_FILEPARTREF,
                                       part_id)
         wibbrlib.object.add(o, c)
     o = wibbrlib.object.encode(o)
@@ -203,12 +203,12 @@ def format_time(data):
 
 def format_inode(inode):
     fields = (
-        (wibbrlib.component.CMP_ST_MODE, format_st_mode),
-        (wibbrlib.component.CMP_ST_NLINK, lambda x: format_integer(x, 2)),
-        (wibbrlib.component.CMP_ST_UID, lambda x: format_integer(x, 4)),
-        (wibbrlib.component.CMP_ST_GID, lambda x: format_integer(x, 4)),
-        (wibbrlib.component.CMP_ST_SIZE, lambda x: format_integer(x, 8)),
-        (wibbrlib.component.CMP_ST_MTIME, format_time),
+        (wibbrlib.cmp.CMP_ST_MODE, format_st_mode),
+        (wibbrlib.cmp.CMP_ST_NLINK, lambda x: format_integer(x, 2)),
+        (wibbrlib.cmp.CMP_ST_UID, lambda x: format_integer(x, 4)),
+        (wibbrlib.cmp.CMP_ST_GID, lambda x: format_integer(x, 4)),
+        (wibbrlib.cmp.CMP_ST_SIZE, lambda x: format_integer(x, 8)),
+        (wibbrlib.cmp.CMP_ST_MTIME, format_time),
     )
 
     list = []
@@ -231,16 +231,16 @@ def show_generations(be, map, gen_ids):
         print "Generation:", gen_id
         gen = wibbrlib.backend.get_object(be, map, gen_id)
         for c in wibbrlib.object.get_components(gen):
-            type = wibbrlib.component.get_type(c)
-            if type == wibbrlib.component.CMP_NAMEIPAIR:
-                pair = wibbrlib.component.get_subcomponents(c)
-                type2 = wibbrlib.component.get_type(pair[0])
-                if type2 == wibbrlib.component.CMP_INODEREF:
-                    inode_id = wibbrlib.component.get_string_value(pair[0])
-                    filename = wibbrlib.component.get_string_value(pair[1])
+            type = wibbrlib.cmp.get_type(c)
+            if type == wibbrlib.cmp.CMP_NAMEIPAIR:
+                pair = wibbrlib.cmp.get_subcomponents(c)
+                type2 = wibbrlib.cmp.get_type(pair[0])
+                if type2 == wibbrlib.cmp.CMP_INODEREF:
+                    inode_id = wibbrlib.cmp.get_string_value(pair[0])
+                    filename = wibbrlib.cmp.get_string_value(pair[1])
                 else:
-                    inode_id = wibbrlib.component.get_string_value(pair[1])
-                    filename = wibbrlib.component.get_string_value(pair[0])
+                    inode_id = wibbrlib.cmp.get_string_value(pair[1])
+                    filename = wibbrlib.cmp.get_string_value(pair[0])
                 inode = wibbrlib.backend.get_object(be, map, inode_id)
                 print "  ", format_inode(inode), filename
 
@@ -255,24 +255,24 @@ class MissingField(wibbrlib.exception.WibbrException):
 
     def __init__(self, obj, type):
         self._msg = "Object is missing field of type %s (%d)" % \
-            (wibbrlib.component.type_name(type), type)
+            (wibbrlib.cmp.type_name(type), type)
 
 
 class TooManyFields(wibbrlib.exception.WibbrException):
 
     def __init__(self, obj, type):
         self._msg = "Object has too many fields of type %s (%d)" % \
-            (wibbrlib.component.type_name(type), type)
+            (wibbrlib.cmp.type_name(type), type)
 
 
 def get_field(obj, type):
     list = wibbrlib.object.get_components(obj)
-    list = [x for x in list if wibbrlib.component.get_type(x) == type]
+    list = [x for x in list if wibbrlib.cmp.get_type(x) == type]
     if not list:
         raise MissingField(obj, type)
     if len(list) > 1:
         raise TooManyFields(obj, type)
-    return wibbrlib.component.get_string_value(list[0])
+    return wibbrlib.cmp.get_string_value(list[0])
 
 
 def get_integer(obj, type):
@@ -280,22 +280,22 @@ def get_integer(obj, type):
     
     
 def restore_file_content(be, map, fd, inode):
-    cont_id = get_field(inode, wibbrlib.component.CMP_CONTREF)
+    cont_id = get_field(inode, wibbrlib.cmp.CMP_CONTREF)
     cont = wibbrlib.backend.get_object(be, map, cont_id)
     if not cont:
         return
     list = wibbrlib.object.get_components(cont)
-    part_ids = [wibbrlib.component.get_string_value(x) for x in list
-                    if wibbrlib.component.get_type(x) == 
-                            wibbrlib.component.CMP_FILEPARTREF]
+    part_ids = [wibbrlib.cmp.get_string_value(x) for x in list
+                    if wibbrlib.cmp.get_type(x) == 
+                            wibbrlib.cmp.CMP_FILEPARTREF]
     for part_id in part_ids:
         part = wibbrlib.backend.get_object(be, map, part_id)
-        chunk = get_field(part, wibbrlib.component.CMP_FILECHUNK)
+        chunk = get_field(part, wibbrlib.cmp.CMP_FILECHUNK)
         os.write(fd, chunk)
 
 
 def create_filesystem_object(be, map, full_pathname, inode):
-    mode = get_integer(inode, wibbrlib.component.CMP_ST_MODE)
+    mode = get_integer(inode, wibbrlib.cmp.CMP_ST_MODE)
     if stat.S_ISDIR(mode):
         os.makedirs(full_pathname, 0700)
     elif stat.S_ISREG(mode):
@@ -305,9 +305,9 @@ def create_filesystem_object(be, map, full_pathname, inode):
 
 
 def set_meta_data(full_pathname, inode):
-    mode = get_integer(inode, wibbrlib.component.CMP_ST_MODE)
-    atime = get_integer(inode, wibbrlib.component.CMP_ST_ATIME)
-    mtime = get_integer(inode, wibbrlib.component.CMP_ST_MTIME)
+    mode = get_integer(inode, wibbrlib.cmp.CMP_ST_MODE)
+    atime = get_integer(inode, wibbrlib.cmp.CMP_ST_ATIME)
+    mtime = get_integer(inode, wibbrlib.cmp.CMP_ST_MTIME)
     os.utime(full_pathname, (atime, mtime))
     os.chmod(full_pathname, stat.S_IMODE(mode))
 
@@ -335,16 +335,16 @@ def restore(config, be, map, gen_id):
     
     list = []
     for sub in wibbrlib.object.get_components(gen):
-        type = wibbrlib.component.get_type(sub)
-        if type == wibbrlib.component.CMP_NAMEIPAIR:
-            parts = wibbrlib.component.get_subcomponents(sub)
-            type2 = wibbrlib.component.get_type(parts[0])
-            if type2 == wibbrlib.component.CMP_INODEREF:
-                inode_id = wibbrlib.component.get_string_value(parts[0])
-                pathname = wibbrlib.component.get_string_value(parts[1])
+        type = wibbrlib.cmp.get_type(sub)
+        if type == wibbrlib.cmp.CMP_NAMEIPAIR:
+            parts = wibbrlib.cmp.get_subcomponents(sub)
+            type2 = wibbrlib.cmp.get_type(parts[0])
+            if type2 == wibbrlib.cmp.CMP_INODEREF:
+                inode_id = wibbrlib.cmp.get_string_value(parts[0])
+                pathname = wibbrlib.cmp.get_string_value(parts[1])
             else:
-                inode_id = wibbrlib.component.get_string_value(parts[1])
-                pathname = wibbrlib.component.get_string_value(parts[0])
+                inode_id = wibbrlib.cmp.get_string_value(parts[1])
+                pathname = wibbrlib.cmp.get_string_value(parts[0])
 
             if pathname.startswith(os.sep):
                 pathname = "." + pathname

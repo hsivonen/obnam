@@ -142,7 +142,7 @@ class GetObjectTests(LocalBackendBase):
         self.map = wibbrlib.mapping.create()
         
         id = "pink"
-        component = wibbrlib.component.create(42, "pretty")
+        component = wibbrlib.cmp.create(42, "pretty")
         object = wibbrlib.object.create(id, 0)
         wibbrlib.object.add(object, component)
         object = wibbrlib.object.encode(object)
@@ -153,8 +153,8 @@ class GetObjectTests(LocalBackendBase):
         self.failUnlessEqual(wibbrlib.object.get_type(o), 0)
         list = wibbrlib.object.get_components(o)
         self.failUnlessEqual(len(list), 1)
-        self.failUnlessEqual(wibbrlib.component.get_type(list[0]), 42)
-        self.failUnlessEqual(wibbrlib.component.get_string_value(list[0]), 
+        self.failUnlessEqual(wibbrlib.cmp.get_type(list[0]), 42)
+        self.failUnlessEqual(wibbrlib.cmp.get_string_value(list[0]), 
                              "pretty")
 
 

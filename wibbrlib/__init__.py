@@ -1,6 +1,6 @@
 import backend
 import cache
-import component
+import cmp
 import config
 import exception
 import mapping

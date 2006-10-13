@@ -9,7 +9,7 @@ import os
 
 import uuid
 import wibbrlib.cache
-import wibbrlib.component
+import wibbrlib.cmp
 import wibbrlib.mapping
 import wibbrlib.object
 
@@ -114,25 +114,25 @@ class MissingBlock(wibbrlib.exception.WibbrException):
 def find_components_by_type(components, wanted_type):
     """Find all components of a given type"""
     return [x for x in components 
-                if wibbrlib.component.get_type(x) == wanted_type]
+                if wibbrlib.cmp.get_type(x) == wanted_type]
 
 
 def create_object_from_component_list(components):
     """Create a new object from a list of components"""
-    list = find_components_by_type(components, wibbrlib.component.CMP_OBJID)
+    list = find_components_by_type(components, wibbrlib.cmp.CMP_OBJID)
     assert len(list) == 1
-    id = wibbrlib.component.get_string_value(list[0])
+    id = wibbrlib.cmp.get_string_value(list[0])
     
-    list = find_components_by_type(components, wibbrlib.component.CMP_OBJTYPE)
+    list = find_components_by_type(components, wibbrlib.cmp.CMP_OBJTYPE)
     assert len(list) == 1
-    type = wibbrlib.component.get_string_value(list[0])
+    type = wibbrlib.cmp.get_string_value(list[0])
     (type, _) = wibbrlib.varint.decode(type, 0)
 
     o = wibbrlib.object.create(id, type)
-    bad = (wibbrlib.component.CMP_OBJID,
-           wibbrlib.component.CMP_OBJTYPE)
+    bad = (wibbrlib.cmp.CMP_OBJID,
+           wibbrlib.cmp.CMP_OBJTYPE)
     for c in components:
-        if wibbrlib.component.get_type(c) not in bad:
+        if wibbrlib.cmp.get_type(c) not in bad:
             wibbrlib.object.add(o, c)
     return o
 
@@ -147,13 +147,13 @@ def get_object(be, map, object_id):
     block = get_block(be, block_id)
     if not block:
         raise MissingBlock(block_id, object_id)
-    list = wibbrlib.component.decode_all(block, 0)
-    list = find_components_by_type(list, wibbrlib.component.CMP_OBJPART)
+    list = wibbrlib.cmp.decode_all(block, 0)
+    list = find_components_by_type(list, wibbrlib.cmp.CMP_OBJPART)
     for component in list:
-        subs = wibbrlib.component.get_subcomponents(component)
+        subs = wibbrlib.cmp.get_subcomponents(component)
         objids = find_components_by_type(subs,
-                                         wibbrlib.component.CMP_OBJID)
-        objids = [wibbrlib.component.get_string_value(x) for x in objids]
+                                         wibbrlib.cmp.CMP_OBJID)
+        objids = [wibbrlib.cmp.get_string_value(x) for x in objids]
         objids = [x for x in objids if x == object_id]
         if objids:
             return create_object_from_component_list(subs)

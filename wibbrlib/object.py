@@ -1,7 +1,7 @@
 import uuid
 
 from wibbrlib.exception import WibbrException
-import wibbrlib.component
+import wibbrlib.cmp
 import wibbrlib.varint
 
 
@@ -71,11 +71,11 @@ def get_components(o):
 
 def encode(o):
     """Encode an object as a string"""
-    id = wibbrlib.component.create(wibbrlib.component.CMP_OBJID, o.id)
-    type = wibbrlib.component.create(wibbrlib.component.CMP_OBJTYPE, 
+    id = wibbrlib.cmp.create(wibbrlib.cmp.CMP_OBJID, o.id)
+    type = wibbrlib.cmp.create(wibbrlib.cmp.CMP_OBJTYPE, 
                                      wibbrlib.varint.encode(o.type))
     list = [id, type] + get_components(o)
-    list = [wibbrlib.component.encode(c) for c in list]
+    list = [wibbrlib.cmp.encode(c) for c in list]
     return "".join(list)
 
 
@@ -83,14 +83,14 @@ def decode(encoded, pos):
     """Decode an object from a string"""
     list = []
     while pos < len(encoded):
-        (c, pos) = wibbrlib.component.decode(encoded, pos)
+        (c, pos) = wibbrlib.cmp.decode(encoded, pos)
         list.append(c)
     o = create("", 0)
     for c in list:
-        if c.type == wibbrlib.component.CMP_OBJID:
-            o.id = wibbrlib.component.get_string_value(c)
-        elif c.type == wibbrlib.component.CMP_OBJTYPE:
-            o.type = wibbrlib.component.get_string_value(c)
+        if c.type == wibbrlib.cmp.CMP_OBJID:
+            o.id = wibbrlib.cmp.get_string_value(c)
+        elif c.type == wibbrlib.cmp.CMP_OBJTYPE:
+            o.type = wibbrlib.cmp.get_string_value(c)
             (o.type, _) = wibbrlib.varint.decode(o.type, 0)
         else:
             add(o, c)
@@ -119,14 +119,14 @@ def object_queue_ids(oq):
 
 def block_create_from_object_queue(blkid, oq):
     """Create a block from an object queue"""
-    blkid = wibbrlib.component.create(wibbrlib.component.CMP_BLKID, blkid)
-    objects = [wibbrlib.component.create(wibbrlib.component.CMP_OBJPART, x[1])
+    blkid = wibbrlib.cmp.create(wibbrlib.cmp.CMP_BLKID, blkid)
+    objects = [wibbrlib.cmp.create(wibbrlib.cmp.CMP_OBJPART, x[1])
                 for x in oq]
-    return "".join([wibbrlib.component.encode(c) for c in [blkid] + objects])
+    return "".join([wibbrlib.cmp.encode(c) for c in [blkid] + objects])
 
 
 def signature_object_encode(objid, sigdata):
-    c = wibbrlib.component.create(wibbrlib.component.CMP_SIGDATA, sigdata)
+    c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_SIGDATA, sigdata)
     o = create(objid, OBJ_SIG)
     add(o, c)
     return encode(o)
@@ -155,31 +155,31 @@ def inode_object_encode(objid, stat_result, sig_id, contents_id):
     st = stat_result
 
     items = (
-        (wibbrlib.component.CMP_ST_MODE, "st_mode"),
-        (wibbrlib.component.CMP_ST_INO, "st_ino"),
-        (wibbrlib.component.CMP_ST_DEV, "st_dev"),
-        (wibbrlib.component.CMP_ST_NLINK, "st_nlink"),
-        (wibbrlib.component.CMP_ST_UID, "st_uid"),
-        (wibbrlib.component.CMP_ST_GID, "st_gid"),
-        (wibbrlib.component.CMP_ST_SIZE, "st_size"),
-        (wibbrlib.component.CMP_ST_ATIME, "st_atime"),
-        (wibbrlib.component.CMP_ST_MTIME, "st_mtime"),
-        (wibbrlib.component.CMP_ST_CTIME, "st_ctime"),
-        (wibbrlib.component.CMP_ST_BLOCKS, "st_blocks"),
-        (wibbrlib.component.CMP_ST_BLKSIZE, "st_blksize"),
-        (wibbrlib.component.CMP_ST_RDEV, "st_rdev"),
+        (wibbrlib.cmp.CMP_ST_MODE, "st_mode"),
+        (wibbrlib.cmp.CMP_ST_INO, "st_ino"),
+        (wibbrlib.cmp.CMP_ST_DEV, "st_dev"),
+        (wibbrlib.cmp.CMP_ST_NLINK, "st_nlink"),
+        (wibbrlib.cmp.CMP_ST_UID, "st_uid"),
+        (wibbrlib.cmp.CMP_ST_GID, "st_gid"),
+        (wibbrlib.cmp.CMP_ST_SIZE, "st_size"),
+        (wibbrlib.cmp.CMP_ST_ATIME, "st_atime"),
+        (wibbrlib.cmp.CMP_ST_MTIME, "st_mtime"),
+        (wibbrlib.cmp.CMP_ST_CTIME, "st_ctime"),
+        (wibbrlib.cmp.CMP_ST_BLOCKS, "st_blocks"),
+        (wibbrlib.cmp.CMP_ST_BLKSIZE, "st_blksize"),
+        (wibbrlib.cmp.CMP_ST_RDEV, "st_rdev"),
     )
     for type, key in items:
         if key in st:
             n = wibbrlib.varint.encode(st[key])
-            c = wibbrlib.component.create(type, n)
+            c = wibbrlib.cmp.create(type, n)
             add(o, c)
 
     if sig_id:
-        c = wibbrlib.component.create(wibbrlib.component.CMP_SIGREF, sig_id)
+        c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_SIGREF, sig_id)
         add(o, c)
     if contents_id:
-        c = wibbrlib.component.create(wibbrlib.component.CMP_CONTREF, 
+        c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_CONTREF, 
                                       contents_id)
         add(o, c)
 
@@ -204,47 +204,47 @@ def inode_object_decode(inode):
     stat_results = {}
     sigref = None
     contref = None
-    for c in wibbrlib.component.decode_all(inode, 0):
-        type = wibbrlib.component.get_type(c)
-        if wibbrlib.component.is_composite(c):
+    for c in wibbrlib.cmp.decode_all(inode, 0):
+        type = wibbrlib.cmp.get_type(c)
+        if wibbrlib.cmp.is_composite(c):
             data = None
         else:
-            data = wibbrlib.component.get_string_value(c)
-        if type == wibbrlib.component.CMP_OBJID:
+            data = wibbrlib.cmp.get_string_value(c)
+        if type == wibbrlib.cmp.CMP_OBJID:
             objid = data
-        elif type == wibbrlib.component.CMP_OBJTYPE:
+        elif type == wibbrlib.cmp.CMP_OBJTYPE:
             (otype, _) = wibbrlib.varint.decode(data, 0)
             if otype != OBJ_INODE:
                 raise NotAnInode(otype)
-        elif type == wibbrlib.component.CMP_ST_MODE:
+        elif type == wibbrlib.cmp.CMP_ST_MODE:
             stat_results["st_mode"] = wibbrlib.varint.decode(data, 0)[0]
-        elif type == wibbrlib.component.CMP_ST_INO:
+        elif type == wibbrlib.cmp.CMP_ST_INO:
             stat_results["st_ino"] = wibbrlib.varint.decode(data, 0)[0]
-        elif type == wibbrlib.component.CMP_ST_DEV:
+        elif type == wibbrlib.cmp.CMP_ST_DEV:
             stat_results["st_dev"] = wibbrlib.varint.decode(data, 0)[0]
-        elif type == wibbrlib.component.CMP_ST_NLINK:
+        elif type == wibbrlib.cmp.CMP_ST_NLINK:
             stat_results["st_nlink"] = wibbrlib.varint.decode(data, 0)[0]
-        elif type == wibbrlib.component.CMP_ST_UID:
+        elif type == wibbrlib.cmp.CMP_ST_UID:
             stat_results["st_uid"] = wibbrlib.varint.decode(data, 0)[0]
-        elif type == wibbrlib.component.CMP_ST_GID:
+        elif type == wibbrlib.cmp.CMP_ST_GID:
             stat_results["st_gid"] = wibbrlib.varint.decode(data, 0)[0]
-        elif type == wibbrlib.component.CMP_ST_SIZE:
+        elif type == wibbrlib.cmp.CMP_ST_SIZE:
             stat_results["st_size"] = wibbrlib.varint.decode(data, 0)[0]
-        elif type == wibbrlib.component.CMP_ST_ATIME:
+        elif type == wibbrlib.cmp.CMP_ST_ATIME:
             stat_results["st_atime"] = wibbrlib.varint.decode(data, 0)[0]
-        elif type == wibbrlib.component.CMP_ST_MTIME:
+        elif type == wibbrlib.cmp.CMP_ST_MTIME:
             stat_results["st_mtime"] = wibbrlib.varint.decode(data, 0)[0]
-        elif type == wibbrlib.component.CMP_ST_CTIME:
+        elif type == wibbrlib.cmp.CMP_ST_CTIME:
             stat_results["st_ctime"] = wibbrlib.varint.decode(data, 0)[0]
-        elif type == wibbrlib.component.CMP_ST_BLOCKS:
+        elif type == wibbrlib.cmp.CMP_ST_BLOCKS:
             stat_results["st_blocks"] = wibbrlib.varint.decode(data, 0)[0]
-        elif type == wibbrlib.component.CMP_ST_BLKSIZE:
+        elif type == wibbrlib.cmp.CMP_ST_BLKSIZE:
             stat_results["st_blksize"] = wibbrlib.varint.decode(data, 0)[0]
-        elif type == wibbrlib.component.CMP_ST_RDEV:
+        elif type == wibbrlib.cmp.CMP_ST_RDEV:
             stat_results["st_rdev"] = wibbrlib.varint.decode(data, 0)[0]
-        elif type == wibbrlib.component.CMP_SIGREF:
+        elif type == wibbrlib.cmp.CMP_SIGREF:
             sigref = data
-        elif type == wibbrlib.component.CMP_CONTREF:
+        elif type == wibbrlib.cmp.CMP_CONTREF:
             contref = data
         else:
             raise UnknownInodeField(type)
@@ -255,11 +255,11 @@ def generation_object_encode(objid, pairs):
     """Encode a generation object, from list of filename, inode_id pairs"""
     o = create(objid, OBJ_GEN)
     for filename, inode_id in pairs:
-        cf = wibbrlib.component.create(wibbrlib.component.CMP_FILENAME, 
+        cf = wibbrlib.cmp.create(wibbrlib.cmp.CMP_FILENAME, 
                                        filename)
-        ci = wibbrlib.component.create(wibbrlib.component.CMP_INODEREF, 
+        ci = wibbrlib.cmp.create(wibbrlib.cmp.CMP_INODEREF, 
                                        inode_id)
-        c = wibbrlib.component.create(wibbrlib.component.CMP_NAMEIPAIR, 
+        c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_NAMEIPAIR, 
                                       [cf, ci])
         add(o, c)
     return encode(o)
@@ -269,7 +269,7 @@ class UnknownGenerationComponent(WibbrException):
 
     def __init__(self, type):
         self._msg = "Unknown component in generation: %s (%d)" % \
-            (wibbrlib.component.type_name(type), type)
+            (wibbrlib.cmp.type_name(type), type)
 
 
 class NameInodePairHasTooManyComponents(WibbrException):
@@ -296,30 +296,30 @@ def generation_object_decode(gen):
     """Decode a generation object into objid, list of name, inode_id pairs"""
     objid = None
     pairs = []
-    for c in wibbrlib.component.decode_all(gen, 0):
-        type = wibbrlib.component.get_type(c)
-        if wibbrlib.component.is_composite(c):
+    for c in wibbrlib.cmp.decode_all(gen, 0):
+        type = wibbrlib.cmp.get_type(c)
+        if wibbrlib.cmp.is_composite(c):
             data = None
         else:
-            data = wibbrlib.component.get_string_value(c)
-        if type == wibbrlib.component.CMP_OBJID:
+            data = wibbrlib.cmp.get_string_value(c)
+        if type == wibbrlib.cmp.CMP_OBJID:
             objid = data
-        elif type == wibbrlib.component.CMP_OBJTYPE:
+        elif type == wibbrlib.cmp.CMP_OBJTYPE:
             (objtype, _) = wibbrlib.varint.decode(data, 0)
             if objtype != OBJ_GEN:
                 raise WrongObjectType(objtype, OBJ_GEN)
-        elif type == wibbrlib.component.CMP_NAMEIPAIR:
-            components = wibbrlib.component.get_subcomponents(c)
+        elif type == wibbrlib.cmp.CMP_NAMEIPAIR:
+            components = wibbrlib.cmp.get_subcomponents(c)
             if len(components) != 2:
                 raise NameInodePairHasTooManyComponents()
-            t1 = wibbrlib.component.get_type(components[0])
-            t2 = wibbrlib.component.get_type(components[1])
-            if t1 == wibbrlib.component.CMP_INODEREF and t2 == wibbrlib.component.CMP_FILENAME:
-                inode_id = wibbrlib.component.get_string_value(components[0])
-                filename = wibbrlib.component.get_string_value(components[1])
-            elif t2 == wibbrlib.component.CMP_INODEREF and t1 == wibbrlib.component.CMP_FILENAME:
-                inode_id = wibbrlib.component.get_string_value(components[1])
-                filename = wibbrlib.component.get_string_value(components[0])
+            t1 = wibbrlib.cmp.get_type(components[0])
+            t2 = wibbrlib.cmp.get_type(components[1])
+            if t1 == wibbrlib.cmp.CMP_INODEREF and t2 == wibbrlib.cmp.CMP_FILENAME:
+                inode_id = wibbrlib.cmp.get_string_value(components[0])
+                filename = wibbrlib.cmp.get_string_value(components[1])
+            elif t2 == wibbrlib.cmp.CMP_INODEREF and t1 == wibbrlib.cmp.CMP_FILENAME:
+                inode_id = wibbrlib.cmp.get_string_value(components[1])
+                filename = wibbrlib.cmp.get_string_value(components[0])
             else:
                 raise InvalidNameInodePair()
             pairs.append((filename, inode_id))
@@ -333,13 +333,13 @@ def host_block_encode(host_id, gen_ids, map_block_ids):
     """Encode a new block with a host object"""
     o = create(host_id, OBJ_HOST)
 
-    gen_ids = [wibbrlib.component.create(wibbrlib.component.CMP_GENREF, x) 
+    gen_ids = [wibbrlib.cmp.create(wibbrlib.cmp.CMP_GENREF, x) 
                for x in gen_ids]
-    c = wibbrlib.component.create(wibbrlib.component.CMP_GENLIST, gen_ids)
+    c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_GENLIST, gen_ids)
     add(o, c)
     
     for map_block_id in map_block_ids:
-        c = wibbrlib.component.create(wibbrlib.component.CMP_MAPREF, 
+        c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_MAPREF, 
                                       map_block_id)
         add(o, c)
 
@@ -369,7 +369,7 @@ class UnknownHostObjectComponentType(WibbrException):
     def __init__(self, type):
         self._msg = \
             "Host object contains component of unexpected type %s (%d)" % \
-                (wibbrlib.component.type_name(type), type)
+                (wibbrlib.cmp.type_name(type), type)
 
 
 class UnknownHostBlockComponentType(WibbrException):
@@ -377,7 +377,7 @@ class UnknownHostBlockComponentType(WibbrException):
     def __init__(self, type):
         self._msg = \
             "Host block contains component of unexpected type %s (%d)" % \
-                (wibbrlib.component.type_name(type), type)
+                (wibbrlib.cmp.type_name(type), type)
 
 
 class UnknownGenlistComponentType(WibbrException):
@@ -386,15 +386,15 @@ class UnknownGenlistComponentType(WibbrException):
         self._msg = \
             "Host block's generation list contains component of " + \
             "unexpectedtype %s (%d)" % \
-                (wibbrlib.component.type_name(type), type)
+                (wibbrlib.cmp.type_name(type), type)
 
 
 def genlist_decode(genlist):
     gen_ids = []
-    for c in wibbrlib.component.decode_all(genlist, 0):
-        type = wibbrlib.component.get_type(c)
-        if type == wibbrlib.component.CMP_GENREF:
-            gen_ids.append(wibbrlib.component.get_string_value(c))
+    for c in wibbrlib.cmp.decode_all(genlist, 0):
+        type = wibbrlib.cmp.get_type(c)
+        if type == wibbrlib.cmp.CMP_GENREF:
+            gen_ids.append(wibbrlib.cmp.get_string_value(c))
         else:
             raise UnknownGenlistComponentType(type)
     return gen_ids
@@ -407,36 +407,36 @@ def host_block_decode(block):
     gen_ids = []
     map_ids = []
     
-    for c in wibbrlib.component.decode_all(block, 0):
-        type = wibbrlib.component.get_type(c)
-        if wibbrlib.component.is_composite(c):
+    for c in wibbrlib.cmp.decode_all(block, 0):
+        type = wibbrlib.cmp.get_type(c)
+        if wibbrlib.cmp.is_composite(c):
             data = None
         else:
-            data = wibbrlib.component.get_string_value(c)
-        if type == wibbrlib.component.CMP_BLKID:
+            data = wibbrlib.cmp.get_string_value(c)
+        if type == wibbrlib.cmp.CMP_BLKID:
             if host_id is None:
                 host_id = data
             elif host_id != data:
                 raise ConfusedHostId(host_id, data)
-        elif type == wibbrlib.component.CMP_OBJPART:
-            for c2 in wibbrlib.component.get_subcomponents(c):
-                type2 = wibbrlib.component.get_type(c2)
-                if wibbrlib.component.is_composite(c2):
+        elif type == wibbrlib.cmp.CMP_OBJPART:
+            for c2 in wibbrlib.cmp.get_subcomponents(c):
+                type2 = wibbrlib.cmp.get_type(c2)
+                if wibbrlib.cmp.is_composite(c2):
                     data2 = None
                 else:
-                    data2 = wibbrlib.component.get_string_value(c2)
-                if type2 == wibbrlib.component.CMP_OBJID:
+                    data2 = wibbrlib.cmp.get_string_value(c2)
+                if type2 == wibbrlib.cmp.CMP_OBJID:
                     if host_id is None:
                         host_id = data2
                     elif host_id != data2:
                         raise ConfusedHostId(host_id, data2)
-                elif type2 == wibbrlib.component.CMP_OBJTYPE:
+                elif type2 == wibbrlib.cmp.CMP_OBJTYPE:
                     (objtype, _) = wibbrlib.varint.decode(data2, 0)
                     if objtype != OBJ_HOST:
                         raise HostBlockHasWrongObjectType(objtype)
-                elif type2 == wibbrlib.component.CMP_GENLIST:
+                elif type2 == wibbrlib.cmp.CMP_GENLIST:
                     gen_ids = genlist_decode(data2)
-                elif type2 == wibbrlib.component.CMP_MAPREF:
+                elif type2 == wibbrlib.cmp.CMP_MAPREF:
                     map_ids.append(data2)
                 else:
                     raise UnknownHostObjectComponentType(type2)
