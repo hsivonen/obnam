@@ -50,9 +50,16 @@ def permissions(mode):
 
 def filetype(mode):
     """Return character to show the type of a file, like 'ls -l'"""
-    if stat.S_ISDIR(mode):
-        return "d"
-    elif stat.S_ISREG(mode):
-        return "-"
-    else:
-        return "?"
+    tests = (
+        (stat.S_ISDIR, "d"),
+        (stat.S_ISCHR, "c"),
+        (stat.S_ISBLK, "b"),
+        (stat.S_ISREG, "-"),
+        (stat.S_ISFIFO, "p"),
+        (stat.S_ISLNK, "l"),
+        (stat.S_ISSOCK, "s"),
+    )
+    for func, result in tests:
+        if func(mode):
+            return result
+    return "?"

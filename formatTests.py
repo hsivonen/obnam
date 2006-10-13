@@ -35,6 +35,13 @@ class FormatFileTypeTests(unittest.TestCase):
     def test(self):
         facit = (
             (0, "?"), # Unknown
+            (stat.S_IFSOCK, "s"),   # socket
+            (stat.S_IFLNK, "l"),    # symbolic link
+            (stat.S_IFREG, "-"),    # regular file
+            (stat.S_IFBLK, "b"),    # block device
+            (stat.S_IFDIR, "d"),    # directory
+            (stat.S_IFCHR, "c"),    # character device
+            (stat.S_IFIFO, "p"),    # FIFO
         )
         for mode, correct in facit:
             self.failUnlessEqual(wibbrlib.format.filetype(mode), correct)
