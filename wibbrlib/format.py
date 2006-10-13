@@ -46,3 +46,13 @@ def permissions(mode):
             xo = "T"
     
     return ru + wu + xu + rg + wg + xg + ro + wo + xo
+
+
+def filetype(mode):
+    """Return character to show the type of a file, like 'ls -l'"""
+    if stat.S_ISDIR(mode):
+        return "d"
+    elif stat.S_ISREG(mode):
+        return "-"
+    else:
+        return "?"

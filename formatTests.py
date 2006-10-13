@@ -1,3 +1,4 @@
+import stat
 import unittest
 
 
@@ -27,3 +28,13 @@ class FormatPermissionsTests(unittest.TestCase):
         )
         for mode, correct in facit:
             self.failUnlessEqual(wibbrlib.format.permissions(mode), correct)
+
+
+class FormatFileTypeTests(unittest.TestCase):
+
+    def test(self):
+        facit = (
+            (0, "?"), # Unknown
+        )
+        for mode, correct in facit:
+            self.failUnlessEqual(wibbrlib.format.filetype(mode), correct)
