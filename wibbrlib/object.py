@@ -407,14 +407,24 @@ def host_block_decode(block):
     gen_ids = []
     map_ids = []
     
-    for type, data in wibbrlib.component.component_decode_all(block, 0):
+    for c in wibbrlib.component.decode_all(block, 0):
+        type = wibbrlib.component.get_type(c)
+        if wibbrlib.component.is_composite(c):
+            data = None
+        else:
+            data = wibbrlib.component.get_string_value(c)
         if type == wibbrlib.component.CMP_BLKID:
             if host_id is None:
                 host_id = data
             elif host_id != data:
                 raise ConfusedHostId(host_id, data)
         elif type == wibbrlib.component.CMP_OBJPART:
-            for type2, data2 in wibbrlib.component.component_decode_all(data, 0):
+            for c2 in wibbrlib.component.get_subcomponents(c):
+                type2 = wibbrlib.component.get_type(c2)
+                if wibbrlib.component.is_composite(c2):
+                    data2 = None
+                else:
+                    data2 = wibbrlib.component.get_string_value(c2)
                 if type2 == wibbrlib.component.CMP_OBJID:
                     if host_id is None:
                         host_id = data2
