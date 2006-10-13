@@ -142,7 +142,7 @@ def generations(config, cache, be):
 
 def format_st_mode(mode):
     (mode, _) = wibbrlib.varint.decode(mode, 0)
-    return wibbrlib.format.filetype(mode) + wibbrlib.format.permissions(mode)
+    return wibbrlib.format.filemode(mode)
 
 
 def format_integer(data, width):
