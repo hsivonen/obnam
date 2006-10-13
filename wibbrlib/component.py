@@ -155,12 +155,3 @@ def component_decode(str, pos):
     (type, pos) = wibbrlib.varint.decode(str, pos)
     data = str[pos:pos+size]
     return type, data, pos + size
-
-
-def component_decode_all(str, pos):
-    """Return list of all components as (type, data) pairs in a string"""
-    list = []
-    while pos < len(str):
-        (type, data, pos) = component_decode(str, pos)
-        list.append((type, data))
-    return list
