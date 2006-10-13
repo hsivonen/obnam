@@ -152,3 +152,7 @@ class FindTests(unittest.TestCase):
         c = result[1]
         self.failUnlessEqual(wibbrlib.component.get_type(c), 3)
         self.failUnlessEqual(wibbrlib.component.get_string_value(c), "box")
+
+    def testFindNone(self):
+        result = wibbrlib.component.find_by_type(self.list, 0)
+        self.failUnlessEqual(len(result), 0)
