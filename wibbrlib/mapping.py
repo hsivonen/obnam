@@ -74,13 +74,10 @@ def decode_block(mapping, mapping_block):
                                            wibbrlib.component.CMP_OBJMAP)
     for map in maps:
         subs = wibbrlib.component.get_subcomponents(map)
-        object_id = wibbrlib.component.first_by_type(subs, 
+        object_id = wibbrlib.component.first_string_by_type(subs, 
                                                wibbrlib.component.CMP_OBJREF)
-        block_ids = wibbrlib.component.find_by_type(subs, 
+        block_ids = wibbrlib.component.find_strings_by_type(subs, 
                                            wibbrlib.component.CMP_BLOCKREF)
         if object_id and block_ids:
-            object_id = wibbrlib.component.get_string_value(object_id)
-            block_ids = [wibbrlib.component.get_string_value(c) 
-                            for c in block_ids]
             for block_id in block_ids:
                 add(mapping, object_id, block_id)
