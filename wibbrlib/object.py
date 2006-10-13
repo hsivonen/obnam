@@ -391,9 +391,10 @@ class UnknownGenlistComponentType(WibbrException):
 
 def genlist_decode(genlist):
     gen_ids = []
-    for type, data in wibbrlib.component.component_decode_all(genlist, 0):
+    for c in wibbrlib.component.decode_all(genlist, 0):
+        type = wibbrlib.component.get_type(c)
         if type == wibbrlib.component.CMP_GENREF:
-            gen_ids.append(data)
+            gen_ids.append(wibbrlib.component.get_string_value(c))
         else:
             raise UnknownGenlistComponentType(type)
     return gen_ids
