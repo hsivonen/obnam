@@ -296,7 +296,12 @@ def generation_object_decode(gen):
     """Decode a generation object into objid, list of name, inode_id pairs"""
     objid = None
     pairs = []
-    for type, data in wibbrlib.component.component_decode_all(gen, 0):
+    for c in wibbrlib.component.decode_all(gen, 0):
+        type = wibbrlib.component.get_type(c)
+        if wibbrlib.component.is_composite(c):
+            data = None
+        else:
+            data = wibbrlib.component.get_string_value(c)
         if type == wibbrlib.component.CMP_OBJID:
             objid = data
         elif type == wibbrlib.component.CMP_OBJTYPE:
@@ -304,17 +309,17 @@ def generation_object_decode(gen):
             if objtype != OBJ_GEN:
                 raise WrongObjectType(objtype, OBJ_GEN)
         elif type == wibbrlib.component.CMP_NAMEIPAIR:
-            components = wibbrlib.component.component_decode_all(data, 0)
+            components = wibbrlib.component.get_subcomponents(c)
             if len(components) != 2:
                 raise NameInodePairHasTooManyComponents()
-            (nitype1, nidata1) = components[0]
-            (nitype2, nidata2) = components[1]
-            if nitype1 == wibbrlib.component.CMP_INODEREF and nitype2 == wibbrlib.component.CMP_FILENAME:
-                inode_id = nidata1
-                filename = nidata2
-            elif nitype2 == wibbrlib.component.CMP_INODEREF and nitype1 == wibbrlib.component.CMP_FILENAME:
-                inode_id = nidata2
-                filename = nidata1
+            t1 = wibbrlib.component.get_type(components[0])
+            t2 = wibbrlib.component.get_type(components[1])
+            if t1 == wibbrlib.component.CMP_INODEREF and t2 == wibbrlib.component.CMP_FILENAME:
+                inode_id = wibbrlib.component.get_string_value(components[0])
+                filename = wibbrlib.component.get_string_value(components[1])
+            elif t2 == wibbrlib.component.CMP_INODEREF and t1 == wibbrlib.component.CMP_FILENAME:
+                inode_id = wibbrlib.component.get_string_value(components[1])
+                filename = wibbrlib.component.get_string_value(components[0])
             else:
                 raise InvalidNameInodePair()
             pairs.append((filename, inode_id))
