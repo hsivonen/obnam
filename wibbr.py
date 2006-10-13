@@ -131,7 +131,6 @@ def backup_directory(config, be, map, oq, pairs, dirname):
             pathname = os.path.join(dirpath, filename)
             inode_id = backup_single_item(config, be, map, oq, pathname)
             pairs.append((pathname, inode_id))
-    return oq
 
 
 def generations(config, cache, be):
@@ -399,7 +398,7 @@ def main():
         pairs = []
         for name in args:
             if os.path.isdir(name):
-                oq = backup_directory(config, be, map, oq, pairs, name)
+                backup_directory(config, be, map, oq, pairs, name)
             else:
                 raise Exception("Not a directory: %s" + name)
 
