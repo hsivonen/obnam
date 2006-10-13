@@ -118,19 +118,18 @@ def backup_single_item(config, be, map, oq, pathname):
                                                         sig_id, content_id)
             enqueue_object(config, be, map, oq, inode_id, inode)
 
-            return inode_id, oq
+            return inode_id
 
     raise UnknownFileType(pathname, st)
 
 
 def backup_directory(config, be, map, oq, pairs, dirname):
-    (inode_id, oq) = backup_single_item(config, be, map, oq, dirname)
+    inode_id = backup_single_item(config, be, map, oq, dirname)
     pairs.append((dirname, inode_id))
     for dirpath, dirnames, filenames in os.walk(dirname):
         for filename in dirnames + filenames:
             pathname = os.path.join(dirpath, filename)
-            (inode_id, oq) = backup_single_item(config, be, map, oq, 
-                                                pathname)
+            inode_id = backup_single_item(config, be, map, oq, pathname)
             pairs.append((pathname, inode_id))
     return oq
 
