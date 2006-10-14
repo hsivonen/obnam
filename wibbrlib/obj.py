@@ -344,8 +344,7 @@ def host_block_encode(host_id, gen_ids, map_block_ids):
     add(o, c)
     
     for map_block_id in map_block_ids:
-        c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_MAPREF, 
-                                      map_block_id)
+        c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_MAPREF, map_block_id)
         add(o, c)
 
     oq = object_queue_create()
