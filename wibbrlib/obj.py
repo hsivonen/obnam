@@ -288,12 +288,9 @@ def generation_object_encode(objid, pairs):
     """Encode a generation object, from list of filename, inode_id pairs"""
     o = create(objid, OBJ_GEN)
     for filename, inode_id in pairs:
-        cf = wibbrlib.cmp.create(wibbrlib.cmp.CMP_FILENAME, 
-                                       filename)
-        ci = wibbrlib.cmp.create(wibbrlib.cmp.CMP_INODEREF, 
-                                       inode_id)
-        c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_NAMEIPAIR, 
-                                      [cf, ci])
+        cf = wibbrlib.cmp.create(wibbrlib.cmp.CMP_FILENAME, filename)
+        ci = wibbrlib.cmp.create(wibbrlib.cmp.CMP_INODEREF, inode_id)
+        c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_NAMEIPAIR, [cf, ci])
         add(o, c)
     return encode(o)
 
