@@ -324,39 +324,14 @@ class WrongObjectType(WibbrException):
 
 def generation_object_decode(gen):
     """Decode a generation object into objid, list of name, inode_id pairs"""
-    objid = None
-    pairs = []
-    for c in wibbrlib.cmp.decode_all(gen, 0):
-        type = wibbrlib.cmp.get_type(c)
-        if wibbrlib.cmp.is_composite(c):
-            data = None
-        else:
-            data = wibbrlib.cmp.get_string_value(c)
-        if type == wibbrlib.cmp.CMP_OBJID:
-            objid = data
-        elif type == wibbrlib.cmp.CMP_OBJTYPE:
-            (objtype, _) = wibbrlib.varint.decode(data, 0)
-            if objtype != OBJ_GEN:
-                raise WrongObjectType(objtype, OBJ_GEN)
-        elif type == wibbrlib.cmp.CMP_NAMEIPAIR:
-            components = wibbrlib.cmp.get_subcomponents(c)
-            if len(components) != 2:
-                raise NameInodePairHasTooManyComponents()
-            t1 = wibbrlib.cmp.get_type(components[0])
-            t2 = wibbrlib.cmp.get_type(components[1])
-            if t1 == wibbrlib.cmp.CMP_INODEREF and t2 == wibbrlib.cmp.CMP_FILENAME:
-                inode_id = wibbrlib.cmp.get_string_value(components[0])
-                filename = wibbrlib.cmp.get_string_value(components[1])
-            elif t2 == wibbrlib.cmp.CMP_INODEREF and t1 == wibbrlib.cmp.CMP_FILENAME:
-                inode_id = wibbrlib.cmp.get_string_value(components[1])
-                filename = wibbrlib.cmp.get_string_value(components[0])
-            else:
-                raise InvalidNameInodePair()
-            pairs.append((filename, inode_id))
-        else:
-            raise UnknownGenerationComponent(type)
-            
-    return objid, pairs
+
+    o = decode(gen, 0)
+    list = find_by_type(o, wibbrlib.cmp.CMP_NAMEIPAIR)
+    makepair = lambda subs: \
+        (wibbrlib.cmp.first_string_by_type(subs, wibbrlib.cmp.CMP_FILENAME),
+         wibbrlib.cmp.first_string_by_type(subs, wibbrlib.cmp.CMP_INODEREF))
+    list = [makepair(wibbrlib.cmp.get_subcomponents(c)) for c in list]
+    return o.id, list
 
 
 def host_block_encode(host_id, gen_ids, map_block_ids):
