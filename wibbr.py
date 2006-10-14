@@ -3,47 +3,12 @@
 """Wibbr - a backup program"""
 
 
-import optparse
 import os
 import stat
 import sys
 import time
 
 import wibbrlib
-
-
-def parse_options(config, argv):
-    parser = optparse.OptionParser()
-    
-    parser.add_option("--block-size",
-                      type="int",
-                      metavar="SIZE",
-                      help="Make blocks that are about SIZE kilobytes")
-    
-    parser.add_option("--cache-dir",
-                      metavar="DIR",
-                      help="Store cached blocks in DIR")
-    
-    parser.add_option("--local-store",
-                      metavar="DIR",
-                      help="Use DIR for local block storage (not caching)")
-    
-    parser.add_option("--restore-to", "--to",
-                      metavar="DIR",
-                      help="Put restored files into DIR")
-
-    (options, args) = parser.parse_args(argv)
-    
-    if options.block_size:
-        config.set("wibbr", "block-size", "%d" % options.block_size)
-    if options.cache_dir:
-        config.set("wibbr", "cache-dir", options.cache_dir)
-    if options.local_store:
-        config.set("wibbr", "local-store", options.local_store)
-    if options.restore_to:
-        config.set("wibbr", "restore-target", options.restore_to)
-
-    return args
     
     
 def backup_single_directory(context, pathname, st):
@@ -258,7 +223,7 @@ class UnknownCommandWord(wibbrlib.exception.WibbrException):
 
 def main():
     context = wibbrlib.context.create()
-    args = parse_options(context.config, sys.argv[1:])
+    args = wibbrlib.config.parse_options(context.config, sys.argv[1:])
     context.cache = wibbrlib.cache.init(context.config)
     context.be = wibbrlib.backend.init(context.config, context.cache)
 
