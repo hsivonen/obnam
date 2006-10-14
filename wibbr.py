@@ -50,8 +50,7 @@ def enqueue_object(context, object_id, object):
     block_size = context.config.getint("wibbr", "block-size")
     cur_size = wibbrlib.obj.object_queue_combined_size(context.oq)
     if len(object) + cur_size > block_size:
-        wibbrlib.backend.flush_object_queue(context.be, context.map, 
-                                            context.oq)
+        wibbrlib.io.flush_object_queue(context.be, context.map, context.oq)
         wibbrlib.obj.object_queue_clear(context.oq)
     wibbrlib.obj.object_queue_add(context.oq, object_id, object)
 
@@ -133,7 +132,7 @@ def backup_directory(context, pairs, dirname):
 
 
 def generations(context):
-    block = wibbrlib.backend.get_host_block(context.be)
+    block = wibbrlib.io.get_host_block(context.be)
     (_, gen_ids, _) = wibbrlib.obj.host_block_decode(block)
     for id in gen_ids:
         print id
@@ -202,7 +201,7 @@ def show_generations(context, gen_ids):
 def restore_file_content(context, fd, inode):
     cont_id = wibbrlib.obj.first_string_by_type(inode, 
                                                 wibbrlib.cmp.CMP_CONTREF)
-    cont = wibbrlib.backend.get_object(context.be, context.map, cont_id)
+    cont = wibbrlib.io.get_object(context.be, context.map, cont_id)
     if not cont:
         return
     list = wibbrlib.obj.get_components(cont)
@@ -210,7 +209,7 @@ def restore_file_content(context, fd, inode):
                     if wibbrlib.cmp.get_type(x) == 
                             wibbrlib.cmp.CMP_FILEPARTREF]
     for part_id in part_ids:
-        part = wibbrlib.backend.get_object(context.be, context.map, part_id)
+        part = wibbrlib.io.get_object(context.be, context.map, part_id)
         chunk = wibbrlib.obj.first_string_by_type(part, 
                                                   wibbrlib.cmp.CMP_FILECHUNK)
         os.write(fd, chunk)
@@ -241,15 +240,15 @@ class UnknownGeneration(wibbrlib.exception.WibbrException):
 
 
 def restore(context, gen_id):
-    host_block = wibbrlib.backend.get_host_block(context.be)
+    host_block = wibbrlib.io.get_host_block(context.be)
     (host_id, _, map_block_ids) = \
         wibbrlib.obj.host_block_decode(host_block)
 
     for map_block_id in map_block_ids:
-        block = wibbrlib.backend.get_block(context.be, map_block_id)
+        block = wibbrlib.io.get_block(context.be, map_block_id)
         wibbrlib.mapping.decode_block(context.map, block)
     
-    gen = wibbrlib.backend.get_object(context.be, context.map, gen_id)
+    gen = wibbrlib.io.get_object(context.be, context.map, gen_id)
     if gen is None:
         raise UnknownGeneration(gen_id)
     
@@ -272,8 +271,7 @@ def restore(context, gen_id):
                 pathname = "." + pathname
             full_pathname = os.path.join(target, pathname)
 
-            inode = wibbrlib.backend.get_object(context.be, context.map, 
-                                                inode_id)
+            inode = wibbrlib.io.get_object(context.be, context.map, inode_id)
             create_filesystem_object(context, full_pathname, inode)
             list.append((full_pathname, inode))
 
@@ -331,8 +329,8 @@ def main():
         gen_ids = [gen_id]
         enqueue_object(context, gen_id, gen)
         if wibbrlib.obj.object_queue_combined_size(context.oq) > 0:
-            wibbrlib.backend.flush_object_queue(context.be, context.map,
-                                                context.oq)
+            wibbrlib.io.flush_object_queue(context.be, context.map,
+                                           context.oq)
 
         map_block_id = wibbrlib.backend.generate_block_id(context.be)
         map_block = wibbrlib.mapping.encode_new_to_block(context.map, 
@@ -342,7 +340,7 @@ def main():
         host_id = context.config.get("wibbr", "host-id")
         block = wibbrlib.obj.host_block_encode(host_id, gen_ids, 
                                                [map_block_id])
-        wibbrlib.backend.upload_host_block(context.be, block)
+        wibbrlib.io.upload_host_block(context.be, block)
     elif command == "generations":
         generations(context)
     elif command == "show-generations":

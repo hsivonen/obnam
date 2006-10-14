@@ -4,6 +4,7 @@ import cmp
 import config
 import context
 import exception
+import io
 import mapping
 import obj
 import rsync
