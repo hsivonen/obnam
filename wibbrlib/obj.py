@@ -81,6 +81,12 @@ def find_strings_by_type(o, wanted_type):
                 for c in find_by_type(o, wanted_type)]
 
 
+def find_varints_by_type(o, wanted_type):
+    """Find all components of a desired type, return their varint values"""
+    return [wibbrlib.cmp.get_varint_value(c) 
+                for c in find_by_type(o, wanted_type)]
+
+
 def first_by_type(o, wanted_type):
     """Find first component of a desired type"""
     for c in get_components(o):
