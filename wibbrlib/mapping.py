@@ -5,7 +5,7 @@ class Mappings:
 
     def __init__(self):
         self.dict = {}
-        self.new_keys = []
+        self.new_keys = {}
 
 
 def create():
@@ -20,12 +20,17 @@ def count(mapping):
 
 def add(mapping, object_id, block_id):
     """Add a mapping from object_id to block_id"""
+    _add_old(mapping, object_id, block_id)
+    if object_id not in mapping.new_keys:
+        mapping.new_keys[object_id] = 1
+
+
+def _add_old(mapping, object_id, block_id):
+    """Add a mapping from object_id to block_id"""
     if object_id in mapping.dict:
         mapping.dict[object_id].append(block_id)
     else:
         mapping.dict[object_id] = [block_id]
-        if object_id not in mapping.new_keys:
-            mapping.new_keys.append(object_id)
 
 
 def get(mapping, object_id):
@@ -35,12 +40,12 @@ def get(mapping, object_id):
 
 def get_new(mapping):
     """Return list of new mappings"""
-    return mapping.new_keys
+    return mapping.new_keys.keys()
 
 
 def reset_new(mapping):
     """Reset list of new mappings"""
-    mapping.new_keys = []
+    mapping.new_keys = {}
 
 
 def encode_new(mapping):
@@ -73,10 +78,11 @@ def decode_block(mapping, mapping_block):
     maps = wibbrlib.cmp.find_by_type(list, wibbrlib.cmp.CMP_OBJMAP)
     for map in maps:
         subs = wibbrlib.cmp.get_subcomponents(map)
+        assert len(subs) == 2
         object_id = wibbrlib.cmp.first_string_by_type(subs, 
                                                wibbrlib.cmp.CMP_OBJREF)
         block_ids = wibbrlib.cmp.find_strings_by_type(subs, 
                                            wibbrlib.cmp.CMP_BLOCKREF)
         if object_id and block_ids:
             for block_id in block_ids:
-                add(mapping, object_id, block_id)
+                _add_old(mapping, object_id, block_id)
