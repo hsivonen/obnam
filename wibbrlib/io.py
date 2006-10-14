@@ -36,19 +36,13 @@ class MissingBlock(wibbrlib.exception.WibbrException):
                         (block_id, object_id)
 
 
-def find_components_by_type(components, wanted_type):
-    """Find all components of a given type"""
-    return [x for x in components 
-                if wibbrlib.cmp.get_type(x) == wanted_type]
-
-
 def create_object_from_component_list(components):
     """Create a new object from a list of components"""
-    list = find_components_by_type(components, wibbrlib.cmp.CMP_OBJID)
+    list = wibbrlib.cmp.find_by_type(components, wibbrlib.cmp.CMP_OBJID)
     assert len(list) == 1
     id = wibbrlib.cmp.get_string_value(list[0])
     
-    list = find_components_by_type(components, wibbrlib.cmp.CMP_OBJTYPE)
+    list = wibbrlib.cmp.find_by_type(components, wibbrlib.cmp.CMP_OBJTYPE)
     assert len(list) == 1
     type = wibbrlib.cmp.get_string_value(list[0])
     (type, _) = wibbrlib.varint.decode(type, 0)
@@ -73,11 +67,10 @@ def get_object(be, map, object_id):
     if not block:
         raise MissingBlock(block_id, object_id)
     list = wibbrlib.cmp.decode_all(block, 0)
-    list = find_components_by_type(list, wibbrlib.cmp.CMP_OBJPART)
+    list = wibbrlib.cmp.find_by_type(list, wibbrlib.cmp.CMP_OBJPART)
     for component in list:
         subs = wibbrlib.cmp.get_subcomponents(component)
-        objids = find_components_by_type(subs,
-                                         wibbrlib.cmp.CMP_OBJID)
+        objids = wibbrlib.cmp.find_by_type(subs, wibbrlib.cmp.CMP_OBJID)
         objids = [wibbrlib.cmp.get_string_value(x) for x in objids]
         objids = [x for x in objids if x == object_id]
         if objids:
