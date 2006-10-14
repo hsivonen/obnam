@@ -248,55 +248,40 @@ class NotAnInode(WibbrException):
 
 def inode_object_decode(inode):
     """Decode an inode object, return objid and what os.stat returns"""
-    objid = None
     stat_results = {}
-    sigref = None
-    contref = None
-    for c in wibbrlib.cmp.decode_all(inode, 0):
-        type = wibbrlib.cmp.get_type(c)
-        if wibbrlib.cmp.is_composite(c):
-            data = None
-        else:
-            data = wibbrlib.cmp.get_string_value(c)
-        if type == wibbrlib.cmp.CMP_OBJID:
-            objid = data
-        elif type == wibbrlib.cmp.CMP_OBJTYPE:
-            (otype, _) = wibbrlib.varint.decode(data, 0)
-            if otype != OBJ_INODE:
-                raise NotAnInode(otype)
-        elif type == wibbrlib.cmp.CMP_ST_MODE:
-            stat_results["st_mode"] = wibbrlib.varint.decode(data, 0)[0]
-        elif type == wibbrlib.cmp.CMP_ST_INO:
-            stat_results["st_ino"] = wibbrlib.varint.decode(data, 0)[0]
-        elif type == wibbrlib.cmp.CMP_ST_DEV:
-            stat_results["st_dev"] = wibbrlib.varint.decode(data, 0)[0]
-        elif type == wibbrlib.cmp.CMP_ST_NLINK:
-            stat_results["st_nlink"] = wibbrlib.varint.decode(data, 0)[0]
-        elif type == wibbrlib.cmp.CMP_ST_UID:
-            stat_results["st_uid"] = wibbrlib.varint.decode(data, 0)[0]
-        elif type == wibbrlib.cmp.CMP_ST_GID:
-            stat_results["st_gid"] = wibbrlib.varint.decode(data, 0)[0]
-        elif type == wibbrlib.cmp.CMP_ST_SIZE:
-            stat_results["st_size"] = wibbrlib.varint.decode(data, 0)[0]
-        elif type == wibbrlib.cmp.CMP_ST_ATIME:
-            stat_results["st_atime"] = wibbrlib.varint.decode(data, 0)[0]
-        elif type == wibbrlib.cmp.CMP_ST_MTIME:
-            stat_results["st_mtime"] = wibbrlib.varint.decode(data, 0)[0]
-        elif type == wibbrlib.cmp.CMP_ST_CTIME:
-            stat_results["st_ctime"] = wibbrlib.varint.decode(data, 0)[0]
-        elif type == wibbrlib.cmp.CMP_ST_BLOCKS:
-            stat_results["st_blocks"] = wibbrlib.varint.decode(data, 0)[0]
-        elif type == wibbrlib.cmp.CMP_ST_BLKSIZE:
-            stat_results["st_blksize"] = wibbrlib.varint.decode(data, 0)[0]
-        elif type == wibbrlib.cmp.CMP_ST_RDEV:
-            stat_results["st_rdev"] = wibbrlib.varint.decode(data, 0)[0]
-        elif type == wibbrlib.cmp.CMP_SIGREF:
-            sigref = data
-        elif type == wibbrlib.cmp.CMP_CONTREF:
-            contref = data
-        else:
-            raise UnknownInodeField(type)
-    return objid, stat_results, sigref, contref
+    list = wibbrlib.cmp.decode_all(inode, 0)
+
+    id = wibbrlib.cmp.first_string_by_type(list, wibbrlib.cmp.CMP_OBJID)
+    type = wibbrlib.cmp.first_varint_by_type(list, wibbrlib.cmp.CMP_OBJTYPE)
+    sigref = wibbrlib.cmp.first_string_by_type(list, wibbrlib.cmp.CMP_SIGREF)
+    contref = wibbrlib.cmp.first_string_by_type(list, 
+                                                wibbrlib.cmp.CMP_CONTREF)
+
+    if type != OBJ_INODE:
+        raise NotAnInode(type)
+    o = create(id, type)
+
+    varint_items = {
+        wibbrlib.cmp.CMP_ST_MODE: "st_mode",
+        wibbrlib.cmp.CMP_ST_INO: "st_ino",
+        wibbrlib.cmp.CMP_ST_DEV: "st_dev",
+        wibbrlib.cmp.CMP_ST_NLINK: "st_nlink",
+        wibbrlib.cmp.CMP_ST_UID: "st_uid",
+        wibbrlib.cmp.CMP_ST_GID: "st_gid",
+        wibbrlib.cmp.CMP_ST_SIZE: "st_size",
+        wibbrlib.cmp.CMP_ST_ATIME: "st_atime",
+        wibbrlib.cmp.CMP_ST_MTIME: "st_mtime",
+        wibbrlib.cmp.CMP_ST_CTIME: "st_ctime",
+        wibbrlib.cmp.CMP_ST_BLOCKS: "st_blocks",
+        wibbrlib.cmp.CMP_ST_BLKSIZE: "st_blksize",
+        wibbrlib.cmp.CMP_ST_RDEV: "st_rdev",
+    }
+    for type in varint_items:
+        n = wibbrlib.cmp.first_varint_by_type(list, type)
+        if n is not None:
+            stat_results[varint_items[type]] = n
+
+    return id, stat_results, sigref, contref
 
 
 def generation_object_encode(objid, pairs):
