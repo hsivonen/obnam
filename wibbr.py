@@ -11,42 +11,21 @@ import time
 import wibbrlib
     
     
-def backup_single_directory(context, pathname, st):
-    return None, None
-
-
-def backup_single_file(context, pathname, st):
-    id = wibbrlib.io.create_file_contents_object(context, pathname)
-    return None, id
-
-
-class UnknownFileType(wibbrlib.exception.WibbrException):
-
-    def __init__(self, pathname, st):
-        self._msg = "Unknown file type 0%o for %s" % \
-            (stat.ST_ISFMT(st.st_mode), pathname)
-
-
 def backup_single_item(context, pathname):
     st = os.stat(pathname)
     
-    list = (
-        (stat.S_ISDIR, backup_single_directory),
-        (stat.S_ISREG, backup_single_file),
-    )
-    for test, action in list:
-        if test(st.st_mode):
-            (sig_id, content_id) = action(context, pathname, st)
+    if stat.S_ISREG(st.st_mode):
+        sig_id = None
+        cont_id = wibbrlib.io.create_file_contents_object(context, pathname)
+    else:
+        (sig_id, cont_id) = (None, None)
 
-            inode_id = wibbrlib.obj.object_id_new()
-            nst = wibbrlib.obj.normalize_stat_result(st)
-            inode = wibbrlib.obj.inode_object_encode(inode_id, nst,
-                                                        sig_id, content_id)
-            wibbrlib.io.enqueue_object(context, inode_id, inode)
+    inode_id = wibbrlib.obj.object_id_new()
+    nst = wibbrlib.obj.normalize_stat_result(st)
+    inode = wibbrlib.obj.inode_object_encode(inode_id, nst, sig_id, cont_id)
+    wibbrlib.io.enqueue_object(context, inode_id, inode)
 
-            return inode_id
-
-    raise UnknownFileType(pathname, st)
+    return inode_id
 
 
 def backup_directory(context, pairs, dirname):
