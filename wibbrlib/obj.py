@@ -69,6 +69,12 @@ def get_components(o):
     return o.components
 
 
+def find_by_type(o, wanted_type):
+    """Find all components of a desired type inside this object"""
+    return [c for c in get_components(o) 
+                if wibbrlib.cmp.get_type(c) == wanted_type]
+
+
 def encode(o):
     """Encode an object as a string"""
     id = wibbrlib.cmp.create(wibbrlib.cmp.CMP_OBJID, o.id)

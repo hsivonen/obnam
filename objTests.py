@@ -194,3 +194,21 @@ class HostBlockTests(unittest.TestCase):
         self.failUnlessEqual(host_id, host_id2)
         self.failUnlessEqual(gen_ids, gen_ids2)
         self.failUnlessEqual(map_ids, map_ids2)
+
+
+class GetComponentTests(unittest.TestCase):
+
+    def find(self, o, wanted_type):
+        list = wibbrlib.obj.find_by_type(o, wanted_type)
+        return [wibbrlib.cmp.get_string_value(c) for c in list]
+
+    def testGetByType(self):
+        o = wibbrlib.obj.create("uuid", 0)
+        wibbrlib.obj.add(o, wibbrlib.cmp.create(1, "pink"))
+        wibbrlib.obj.add(o, wibbrlib.cmp.create(2, "pretty"))
+        wibbrlib.obj.add(o, wibbrlib.cmp.create(3, "red"))
+        wibbrlib.obj.add(o, wibbrlib.cmp.create(3, "too"))
+        self.failUnlessEqual(self.find(o, 1), ["pink"])
+        self.failUnlessEqual(self.find(o, 2), ["pretty"])
+        self.failUnlessEqual(self.find(o, 3), ["red", "too"])
+        self.failUnlessEqual(self.find(o, 0), [])
