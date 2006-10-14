@@ -6,16 +6,7 @@
 
 import sys
 
-from wibbrlib.component import *
-from wibbrlib.object import *
-
-
-recursive_component_types = (
-    CMP_OBJPART,
-    CMP_NAMEIPAIR,
-    CMP_GENLIST,
-    CMP_OBJMAP,
-)
+import wibbrlib
 
 
 def format_objmap(data):
@@ -27,43 +18,44 @@ def format_objmap(data):
 
 
 def format_octal(data):
-    return "0%o" % varint_decode(data, 0)[0]
+    return "0%o" % wibbrlib.varint.decode(data, 0)[0]
 
 
 def format_decimal(data):
-    return "%d" % varint_decode(data, 0)[0]
+    return "%d" % wibbrlib.varint.decode(data, 0)[0]
     
 
 component_data_formatters = {
-    CMP_OBJTYPE: lambda data: object_type_name(varint_decode(data, 0)[0]),
-    CMP_ST_MODE: format_octal,
-    CMP_ST_INO: format_decimal,
-    CMP_ST_DEV: format_decimal,
-    CMP_ST_NLINK: format_decimal,
-    CMP_ST_UID: format_decimal,
-    CMP_ST_GID: format_decimal,
-    CMP_ST_SIZE: format_decimal,
-    CMP_ST_ATIME: format_decimal,
-    CMP_ST_CTIME: format_decimal,
-    CMP_ST_MTIME: format_decimal,
-    CMP_ST_BLOCKS: format_decimal,
-    CMP_ST_BLKSIZE: format_decimal,
-    CMP_ST_RDEV: format_decimal,
-    CMP_OBJMAP: format_objmap,
+    wibbrlib.cmp.CMP_OBJTYPE: 
+        lambda data: \
+            wibbrlib.obj.type_name(wibbrlib.varint.decode(data, 0)[0]),
+    wibbrlib.cmp.CMP_ST_MODE: format_octal,
+    wibbrlib.cmp.CMP_ST_INO: format_decimal,
+    wibbrlib.cmp.CMP_ST_DEV: format_decimal,
+    wibbrlib.cmp.CMP_ST_NLINK: format_decimal,
+    wibbrlib.cmp.CMP_ST_UID: format_decimal,
+    wibbrlib.cmp.CMP_ST_GID: format_decimal,
+    wibbrlib.cmp.CMP_ST_SIZE: format_decimal,
+    wibbrlib.cmp.CMP_ST_ATIME: format_decimal,
+    wibbrlib.cmp.CMP_ST_CTIME: format_decimal,
+    wibbrlib.cmp.CMP_ST_MTIME: format_decimal,
+    wibbrlib.cmp.CMP_ST_BLOCKS: format_decimal,
+    wibbrlib.cmp.CMP_ST_BLKSIZE: format_decimal,
+    wibbrlib.cmp.CMP_ST_RDEV: format_decimal,
+    wibbrlib.cmp.CMP_OBJMAP: format_objmap,
 }
 
 
-def show_component(type, data, indent=0):
+def show_component(component, indent=0):
     x = " " * (indent * 2)
-    print x + "Component:", type, component_type_name(type)
-    if type in recursive_component_types:
-        pos = 0
-        while pos < len(data):
-            (type2, data2, pos) = component_decode(data, pos)
-            show_component(type2, data2, indent+1)
+    type = wibbrlib.cmp.get_type(component)
+    print x + "Component:", type, wibbrlib.cmp.type_name(type)
+    if wibbrlib.cmp.is_composite(component):
+        for c in wibbrlib.cmp.get_subcomponents(component):
+            show_component(c, indent+1)
     else:
         fmt = component_data_formatters.get(type, repr)
-        print x + "  data:", fmt(data)
+        print x + "  data:", fmt(wibbrlib.cmp.get_string_value(component))
 
 
 def show_block(filename):
@@ -72,9 +64,8 @@ def show_block(filename):
     str = f.read()
     f.close()
     pos = 0
-    while pos < len(str):
-        (type, data, pos) = component_decode(str, pos)
-        show_component(type, data)
+    for c in wibbrlib.cmp.decode_all(str, 0):
+        show_component(c)
         print
 
 
