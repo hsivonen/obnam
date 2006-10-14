@@ -249,7 +249,7 @@ def restore_file_content(context, fd, inode):
 
 
 def create_filesystem_object(context, full_pathname, inode):
-    mode = get_integer(inode, wibbrlib.cmp.CMP_ST_MODE)
+    mode = wibbrlib.obj.first_varint_by_type(inode, wibbrlib.cmp.CMP_ST_MODE)
     if stat.S_ISDIR(mode):
         os.makedirs(full_pathname, 0700)
     elif stat.S_ISREG(mode):
