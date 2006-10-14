@@ -66,7 +66,7 @@ do
     do
         rm -rf "$tmp/root"
         mkdir "$tmp/root"
-        python wibbr.py $CONFIG --to "$tmp/root" restore "$genid"
+        python wibbr.py $CONFIG -C "$tmp/root" restore "$genid"
         python manifest.py $MANIFESTOPTS "$tmp/root/$tmp/root" \
             > "$tmp/manifest2-$i"
         diff -u -U 15 "$tmp/manifest-$i" "$tmp/manifest2-$i"

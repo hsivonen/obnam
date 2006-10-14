@@ -9,7 +9,7 @@ def default_config():
         ("wibbr", "block-size", "%d" % (64 * 1024)),
         ("wibbr", "cache-dir", "tmp.cachedir"),
         ("wibbr", "local-store", "tmp.local-store"),
-        ("wibbr", "restore-target", "tmp.restore"),
+        ("wibbr", "target-dir", "."),
     )
     
     config = ConfigParser.RawConfigParser()
@@ -38,9 +38,9 @@ def parse_options(config, argv):
                       metavar="DIR",
                       help="Use DIR for local block storage (not caching)")
     
-    parser.add_option("--restore-to", "--to",
+    parser.add_option("--target-dir", "-C",
                       metavar="DIR",
-                      help="Put restored files into DIR")
+                      help="Resolve filenames relative to DIR")
 
     (options, args) = parser.parse_args(argv)
     
@@ -50,7 +50,7 @@ def parse_options(config, argv):
         config.set("wibbr", "cache-dir", options.cache_dir)
     if options.local_store:
         config.set("wibbr", "local-store", options.local_store)
-    if options.restore_to:
-        config.set("wibbr", "restore-target", options.restore_to)
+    if options.target_dir:
+        config.set("wibbr", "target-dir", options.target_dir)
 
     return args

@@ -142,7 +142,7 @@ def restore(context, gen_id):
     if gen is None:
         raise UnknownGeneration(gen_id)
     
-    target = context.config.get("wibbr", "restore-target")
+    target = context.config.get("wibbr", "target-dir")
     
     list = []
     for sub in wibbrlib.obj.find_by_type(gen, wibbrlib.cmp.CMP_NAMEIPAIR):

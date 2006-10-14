@@ -20,6 +20,8 @@ class CommandLineParsingTests(unittest.TestCase):
         self.failUnless(config.has_option("wibbr", "block-size"))
         self.failUnless(config.has_option("wibbr", "cache-dir"))
         self.failUnless(config.has_option("wibbr", "local-store"))
+        self.failUnless(config.has_option("wibbr", "target-dir"))
+        self.failUnless(config.has_option("wibbr", "host-id"))
 
     def testEmpty(self):
         config = wibbrlib.config.default_config()
@@ -43,3 +45,8 @@ class CommandLineParsingTests(unittest.TestCase):
         config = wibbrlib.config.default_config()
         wibbrlib.config.parse_options(config, ["--local-store=/tmp/foo"])
         self.failUnlessEqual(config.get("wibbr", "local-store"), "/tmp/foo")
+
+    def testTargetDir(self):
+        config = wibbrlib.config.default_config()
+        wibbrlib.config.parse_options(config, ["--target-dir=/tmp/foo"])
+        self.failUnlessEqual(config.get("wibbr", "target-dir"), "/tmp/foo")
