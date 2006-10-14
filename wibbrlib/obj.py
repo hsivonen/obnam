@@ -311,10 +311,9 @@ def host_block_encode(host_id, gen_ids, map_block_ids):
     """Encode a new block with a host object"""
     o = create(host_id, OBJ_HOST)
 
-    gen_ids = [wibbrlib.cmp.create(wibbrlib.cmp.CMP_GENREF, x) 
-               for x in gen_ids]
-    c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_GENLIST, gen_ids)
-    add(o, c)
+    for gen_id in gen_ids:
+        c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_GENREF, gen_id)
+        add(o, c)
     
     for map_block_id in map_block_ids:
         c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_MAPREF, map_block_id)
@@ -341,11 +340,7 @@ def host_block_decode(block):
         subs = wibbrlib.cmp.get_subcomponents(objpart)
         map_ids += wibbrlib.cmp.find_strings_by_type(subs, 
                                                     wibbrlib.cmp.CMP_MAPREF)
-
-        genlists = wibbrlib.cmp.find_by_type(subs, wibbrlib.cmp.CMP_GENLIST)
-        for genlist in genlists:
-            subs2 = wibbrlib.cmp.get_subcomponents(genlist)
-            gen_ids += wibbrlib.cmp.find_strings_by_type(subs2,
+        gen_ids += wibbrlib.cmp.find_strings_by_type(subs, 
                                                     wibbrlib.cmp.CMP_GENREF)
 
     return host_id, gen_ids, map_ids

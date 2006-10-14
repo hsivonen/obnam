@@ -40,7 +40,6 @@ class ComponentTypeNameTests(unittest.TestCase):
         self.failUnlessEqual(t(c.CMP_SIGDATA), "CMP_SIGDATA")
         self.failUnlessEqual(t(c.CMP_SIGREF), "CMP_SIGREF")
         self.failUnlessEqual(t(c.CMP_GENREF), "CMP_GENREF")
-        self.failUnlessEqual(t(c.CMP_GENLIST), "CMP_GENLIST")
         self.failUnlessEqual(t(c.CMP_OBJREF), "CMP_OBJREF")
         self.failUnlessEqual(t(c.CMP_BLOCKREF), "CMP_BLOCKREF")
         self.failUnlessEqual(t(c.CMP_MAPREF), "CMP_MAPREF")
