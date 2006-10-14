@@ -1,6 +1,9 @@
 """Module for doing local file I/O and higher level remote operations"""
 
 
+import os
+
+
 import wibbrlib
 
 
@@ -131,3 +134,23 @@ def create_file_contents_object(context, filename):
     enqueue_object(context, object_id, o)
 
     return object_id
+
+
+class FileContentsObjectMissing(wibbrlib.exception.WibbrException):
+
+    def __init__(self, id):
+        self._msg = "Missing file contents object: %s" % id
+
+
+def get_file_contents(context, fd, cont_id):
+    """Write contents of a file in backup to a file descriptor"""
+    cont = wibbrlib.io.get_object(context, cont_id)
+    if not cont:
+        raise FileContentsObjectMissing(cont_id)
+    part_ids = wibbrlib.obj.find_strings_by_type(cont, 
+                                              wibbrlib.cmp.CMP_FILEPARTREF)
+    for part_id in part_ids:
+        part = wibbrlib.io.get_object(context, part_id)
+        chunk = wibbrlib.obj.first_string_by_type(part, 
+                                                  wibbrlib.cmp.CMP_FILECHUNK)
+        os.write(fd, chunk)

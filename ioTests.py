@@ -1,5 +1,6 @@
 import os
 import shutil
+import tempfile
 import unittest
 
 
@@ -176,3 +177,26 @@ class FileContentsTests(unittest.TestCase):
         if size % block_size:
             blocks += 1
         self.failUnlessEqual(wibbrlib.mapping.count(self.context.map), blocks)
+
+    def testRestore(self):
+        block_size = 16
+        self.context.config.set("wibbr", "block-size", "%d" % block_size)
+        filename = "Makefile"
+        
+        id = wibbrlib.io.create_file_contents_object(self.context, filename)
+        wibbrlib.io.flush_object_queue(self.context)
+        
+        (fd, name) = tempfile.mkstemp()
+        wibbrlib.io.get_file_contents(self.context, fd, id)
+        os.close(fd)
+        
+        f = file(name, "r")
+        data1 = f.read()
+        f.close()
+        os.remove(name)
+        
+        f = file(filename, "r")
+        data2 = f.read()
+        f.close()
+        
+        self.failUnlessEqual(data1, data2)
