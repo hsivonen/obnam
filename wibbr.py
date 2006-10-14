@@ -119,25 +119,20 @@ def restore(context, gen_id):
     target = context.config.get("wibbr", "restore-target")
     
     list = []
-    for sub in wibbrlib.obj.get_components(gen):
-        type = wibbrlib.cmp.get_type(sub)
-        if type == wibbrlib.cmp.CMP_NAMEIPAIR:
-            parts = wibbrlib.cmp.get_subcomponents(sub)
-            type2 = wibbrlib.cmp.get_type(parts[0])
-            if type2 == wibbrlib.cmp.CMP_INODEREF:
-                inode_id = wibbrlib.cmp.get_string_value(parts[0])
-                pathname = wibbrlib.cmp.get_string_value(parts[1])
-            else:
-                inode_id = wibbrlib.cmp.get_string_value(parts[1])
-                pathname = wibbrlib.cmp.get_string_value(parts[0])
+    for sub in wibbrlib.obj.find_by_type(gen, wibbrlib.cmp.CMP_NAMEIPAIR):
+        subs = wibbrlib.cmp.get_subcomponents(sub)
+        inode_id = wibbrlib.cmp.first_string_by_type(subs,
+                                                 wibbrlib.cmp.CMP_INODEREF)
+        pathname = wibbrlib.cmp.first_string_by_type(subs,
+                                                 wibbrlib.cmp.CMP_FILENAME)
 
-            if pathname.startswith(os.sep):
-                pathname = "." + pathname
-            full_pathname = os.path.join(target, pathname)
+        if pathname.startswith(os.sep):
+            pathname = "." + pathname
+        full_pathname = os.path.join(target, pathname)
 
-            inode = wibbrlib.io.get_object(context, inode_id)
-            create_filesystem_object(context, full_pathname, inode)
-            list.append((full_pathname, inode))
+        inode = wibbrlib.io.get_object(context, inode_id)
+        create_filesystem_object(context, full_pathname, inode)
+        list.append((full_pathname, inode))
 
     list.sort()
     for full_pathname, inode in list:
