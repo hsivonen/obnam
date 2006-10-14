@@ -18,14 +18,14 @@ def flush_object_queue(context):
         wibbrlib.mapping.add(context.map, id, block_id)
 
 
-def get_block(be, block_id):
+def get_block(context, block_id):
     """Get a block from cache or by downloading it"""
-    block = wibbrlib.cache.get_block(be.cache, block_id)
+    block = wibbrlib.cache.get_block(context.cache, block_id)
     if not block:
-        e = wibbrlib.backend.download(be, block_id)
+        e = wibbrlib.backend.download(context.be, block_id)
         if e:
             raise e
-        block = wibbrlib.cache.get_block(be.cache, block_id)
+        block = wibbrlib.cache.get_block(context.cache, block_id)
     return block
 
 
@@ -63,7 +63,7 @@ def get_object(context, object_id):
         return None
     assert len(block_ids) == 1
     block_id = block_ids[0]
-    block = get_block(context.be, block_id)
+    block = get_block(context, block_id)
     if not block:
         raise MissingBlock(block_id, object_id)
     list = wibbrlib.cmp.decode_all(block, 0)

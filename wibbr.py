@@ -177,7 +177,7 @@ def show_generations(context, gen_ids):
         wibbrlib.obj.host_block_decode(host_block)
 
     for map_block_id in map_block_ids:
-        block = wibbrlib.backend.get_block(context.be, map_block_id)
+        block = wibbrlib.backend.get_block(context, map_block_id)
         wibbrlib.mapping.decode_block(context.map, block)
 
     for gen_id in gen_ids:
@@ -245,7 +245,7 @@ def restore(context, gen_id):
         wibbrlib.obj.host_block_decode(host_block)
 
     for map_block_id in map_block_ids:
-        block = wibbrlib.io.get_block(context.be, map_block_id)
+        block = wibbrlib.io.get_block(context, map_block_id)
         wibbrlib.mapping.decode_block(context.map, block)
     
     gen = wibbrlib.io.get_object(context, gen_id)
