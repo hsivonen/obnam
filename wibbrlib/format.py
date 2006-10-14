@@ -2,6 +2,10 @@
 
 
 import stat
+import time
+
+
+import wibbrlib
 
 
 def permissions(mode):
@@ -68,3 +72,23 @@ def filetype(mode):
 def filemode(mode):
     """Format the entire file mode like 'ls -l'"""
     return filetype(mode) + permissions(mode)
+
+
+def inode_fields(inode):
+    format_integer = lambda x: "%d" % x
+    format_time = lambda x: time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(x))
+
+    fields = (
+        (wibbrlib.cmp.CMP_ST_MODE, filemode),
+        (wibbrlib.cmp.CMP_ST_NLINK, format_integer),
+        (wibbrlib.cmp.CMP_ST_UID, format_integer),
+        (wibbrlib.cmp.CMP_ST_GID, format_integer),
+        (wibbrlib.cmp.CMP_ST_SIZE, format_integer),
+        (wibbrlib.cmp.CMP_ST_MTIME, format_time),
+    )
+
+    list = []
+    for type, func in fields:
+        for value in wibbrlib.obj.find_varints_by_type(inode, type):
+            list.append(func(value))
+    return list

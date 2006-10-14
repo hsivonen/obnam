@@ -2,7 +2,7 @@ import stat
 import unittest
 
 
-import wibbrlib.format
+import wibbrlib
 
 
 class FormatPermissionsTests(unittest.TestCase):
@@ -47,7 +47,33 @@ class FormatFileTypeTests(unittest.TestCase):
             self.failUnlessEqual(wibbrlib.format.filetype(mode), correct)
 
 
-class FormatFileMode(unittest.TestCase):
+class FormatFileModeTest(unittest.TestCase):
 
     def test(self):
         self.failUnlessEqual(wibbrlib.format.filemode(0100777), "-rwxrwxrwx")
+
+
+class FormatInodeFieldsTest(unittest.TestCase):
+
+    def test(self):
+        o = wibbrlib.obj.create("pink", wibbrlib.obj.OBJ_INODE)
+        int_fields = (wibbrlib.cmp.CMP_ST_MODE,
+                      wibbrlib.cmp.CMP_ST_INO,
+                      wibbrlib.cmp.CMP_ST_DEV,
+                      wibbrlib.cmp.CMP_ST_NLINK,
+                      wibbrlib.cmp.CMP_ST_UID,
+                      wibbrlib.cmp.CMP_ST_GID,
+                      wibbrlib.cmp.CMP_ST_SIZE,
+                      wibbrlib.cmp.CMP_ST_ATIME,
+                      wibbrlib.cmp.CMP_ST_MTIME,
+                      wibbrlib.cmp.CMP_ST_CTIME,
+                      wibbrlib.cmp.CMP_ST_BLOCKS,
+                      wibbrlib.cmp.CMP_ST_BLKSIZE,
+                      wibbrlib.cmp.CMP_ST_RDEV)
+        for x in int_fields:
+            c = wibbrlib.cmp.create(x, wibbrlib.varint.encode(12765))
+            wibbrlib.obj.add(o, c)
+
+        list = wibbrlib.format.inode_fields(o)
+        
+        self.failIfEqual(list, [])
