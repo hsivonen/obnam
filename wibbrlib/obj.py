@@ -295,33 +295,6 @@ def generation_object_encode(objid, pairs):
     return encode(o)
 
 
-class UnknownGenerationComponent(WibbrException):
-
-    def __init__(self, type):
-        self._msg = "Unknown component in generation: %s (%d)" % \
-            (wibbrlib.cmp.type_name(type), type)
-
-
-class NameInodePairHasTooManyComponents(WibbrException):
-
-    def __init__(self):
-        self._msg = "Name/inode pair has too many components"
-
-
-class InvalidNameInodePair(WibbrException):
-
-    def __init__(self):
-        self._msg = "Name/inode pair does not consist of name and inode"
-
-
-class WrongObjectType(WibbrException):
-
-    def __init__(self, actual, wanted):
-        self._msg = "Object is of type %s (%d), wanted %s (%d)" % \
-            (type_name(actual), actual, 
-             type_name(wanted), wanted)
-
-
 def generation_object_decode(gen):
     """Decode a generation object into objid, list of name, inode_id pairs"""
 
