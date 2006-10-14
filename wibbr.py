@@ -205,32 +205,9 @@ class InodeMissingMode(wibbrlib.exception.WibbrException):
         self._msg = "Inode is missing CMP_ST_MODE field: %s" % repr(inode)
 
 
-class MissingField(wibbrlib.exception.WibbrException):
-
-    def __init__(self, obj, type):
-        self._msg = "Object is missing field of type %s (%d)" % \
-            (wibbrlib.cmp.type_name(type), type)
-
-
-class TooManyFields(wibbrlib.exception.WibbrException):
-
-    def __init__(self, obj, type):
-        self._msg = "Object has too many fields of type %s (%d)" % \
-            (wibbrlib.cmp.type_name(type), type)
-
-
-def get_field(obj, type):
-    list = wibbrlib.obj.get_components(obj)
-    list = wibbrlib.cmp.find_by_type(list, type)
-    if not list:
-        raise MissingField(obj, type)
-    if len(list) > 1:
-        raise TooManyFields(obj, type)
-    return wibbrlib.cmp.get_string_value(list[0])
-
-
 def restore_file_content(context, fd, inode):
-    cont_id = get_field(inode, wibbrlib.cmp.CMP_CONTREF)
+    cont_id = wibbrlib.obj.first_string_by_type(inode, 
+                                                wibbrlib.cmp.CMP_CONTREF)
     cont = wibbrlib.backend.get_object(context.be, context.map, cont_id)
     if not cont:
         return
@@ -240,7 +217,8 @@ def restore_file_content(context, fd, inode):
                             wibbrlib.cmp.CMP_FILEPARTREF]
     for part_id in part_ids:
         part = wibbrlib.backend.get_object(context.be, context.map, part_id)
-        chunk = get_field(part, wibbrlib.cmp.CMP_FILECHUNK)
+        chunk = wibbrlib.obj.first_string_by_type(part, 
+                                                  wibbrlib.cmp.CMP_FILECHUNK)
         os.write(fd, chunk)
 
 
