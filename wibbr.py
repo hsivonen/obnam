@@ -259,9 +259,9 @@ def create_filesystem_object(context, full_pathname, inode):
 
 
 def set_meta_data(full_pathname, inode):
-    mode = get_integer(inode, wibbrlib.cmp.CMP_ST_MODE)
-    atime = get_integer(inode, wibbrlib.cmp.CMP_ST_ATIME)
-    mtime = get_integer(inode, wibbrlib.cmp.CMP_ST_MTIME)
+    mode = wibbrlib.obj.first_varint_by_type(inode, wibbrlib.cmp.CMP_ST_MODE)
+    atime = wibbrlib.obj.first_varint_by_type(inode, wibbrlib.cmp.CMP_ST_ATIME)
+    mtime = wibbrlib.obj.first_varint_by_type(inode, wibbrlib.cmp.CMP_ST_MTIME)
     os.utime(full_pathname, (atime, mtime))
     os.chmod(full_pathname, stat.S_IMODE(mode))
 
