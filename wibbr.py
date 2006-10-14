@@ -164,18 +164,7 @@ def show_generations(context, gen_ids):
 def restore_file_content(context, fd, inode):
     cont_id = wibbrlib.obj.first_string_by_type(inode, 
                                                 wibbrlib.cmp.CMP_CONTREF)
-    cont = wibbrlib.io.get_object(context, cont_id)
-    if not cont:
-        return
-    list = wibbrlib.obj.get_components(cont)
-    part_ids = [wibbrlib.cmp.get_string_value(x) for x in list
-                    if wibbrlib.cmp.get_type(x) == 
-                            wibbrlib.cmp.CMP_FILEPARTREF]
-    for part_id in part_ids:
-        part = wibbrlib.io.get_object(context, part_id)
-        chunk = wibbrlib.obj.first_string_by_type(part, 
-                                                  wibbrlib.cmp.CMP_FILECHUNK)
-        os.write(fd, chunk)
+    wibbrlib.io.get_file_contents(context, fd, cont_id)
 
 
 def create_filesystem_object(context, full_pathname, inode):
