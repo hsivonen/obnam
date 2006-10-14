@@ -9,8 +9,8 @@ import sys
 import time
 
 import wibbrlib
-    
-    
+
+
 def backup_single_item(context, pathname):
     st = os.stat(pathname)
     
@@ -58,19 +58,14 @@ def show_generations(context, gen_ids):
         print "Generation:", gen_id
         gen = wibbrlib.io.get_object(context, gen_id)
         list = []
-        for c in wibbrlib.obj.get_components(gen):
-            type = wibbrlib.cmp.get_type(c)
-            if type == wibbrlib.cmp.CMP_NAMEIPAIR:
-                pair = wibbrlib.cmp.get_subcomponents(c)
-                type2 = wibbrlib.cmp.get_type(pair[0])
-                if type2 == wibbrlib.cmp.CMP_INODEREF:
-                    inode_id = wibbrlib.cmp.get_string_value(pair[0])
-                    filename = wibbrlib.cmp.get_string_value(pair[1])
-                else:
-                    inode_id = wibbrlib.cmp.get_string_value(pair[1])
-                    filename = wibbrlib.cmp.get_string_value(pair[0])
-                inode = wibbrlib.io.get_object(context, inode_id)
-                list.append((wibbrlib.format.inode_fields(inode), filename))
+        for c in wibbrlib.obj.find_by_type(gen, wibbrlib.cmp.CMP_NAMEIPAIR):
+            subs = wibbrlib.cmp.get_subcomponents(c)
+            inode_id = wibbrlib.cmp.first_string_by_type(subs, 
+                                                 wibbrlib.cmp.CMP_INODEREF)
+            filename = wibbrlib.cmp.first_string_by_type(subs, 
+                                                 wibbrlib.cmp.CMP_FILENAME)
+            inode = wibbrlib.io.get_object(context, inode_id)
+            list.append((wibbrlib.format.inode_fields(inode), filename))
 
         widths = []
         for fields, _ in list:
