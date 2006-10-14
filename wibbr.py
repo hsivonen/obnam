@@ -38,6 +38,32 @@ def backup_directory(context, pairs, dirname):
             pairs.append((pathname, inode_id))
 
 
+def backup(context, args):
+    pairs = []
+    for name in args:
+        if os.path.isdir(name):
+            backup_directory(context, pairs, name)
+        else:
+            raise Exception("Not a directory: %s" + name)
+
+    gen_id = wibbrlib.obj.object_id_new()
+    gen = wibbrlib.obj.generation_object_encode(gen_id, pairs)
+    gen_ids = [gen_id]
+    wibbrlib.io.enqueue_object(context, gen_id, gen)
+    if wibbrlib.obj.object_queue_combined_size(context.oq) > 0:
+        wibbrlib.io.flush_object_queue(context)
+
+    map_block_id = wibbrlib.backend.generate_block_id(context.be)
+    map_block = wibbrlib.mapping.encode_new_to_block(context.map, 
+                                                     map_block_id)
+    wibbrlib.backend.upload(context.be, map_block_id, map_block)
+
+    host_id = context.config.get("wibbr", "host-id")
+    block = wibbrlib.obj.host_block_encode(host_id, gen_ids, 
+                                           [map_block_id])
+    wibbrlib.io.upload_host_block(context, block)
+
+
 def generations(context):
     block = wibbrlib.io.get_host_block(context)
     (_, gen_ids, _) = wibbrlib.obj.host_block_decode(block)
@@ -176,29 +202,7 @@ def main():
     args = args[1:]
     
     if command == "backup":
-        pairs = []
-        for name in args:
-            if os.path.isdir(name):
-                backup_directory(context, pairs, name)
-            else:
-                raise Exception("Not a directory: %s" + name)
-
-        gen_id = wibbrlib.obj.object_id_new()
-        gen = wibbrlib.obj.generation_object_encode(gen_id, pairs)
-        gen_ids = [gen_id]
-        wibbrlib.io.enqueue_object(context, gen_id, gen)
-        if wibbrlib.obj.object_queue_combined_size(context.oq) > 0:
-            wibbrlib.io.flush_object_queue(context)
-
-        map_block_id = wibbrlib.backend.generate_block_id(context.be)
-        map_block = wibbrlib.mapping.encode_new_to_block(context.map, 
-                                                         map_block_id)
-        wibbrlib.backend.upload(context.be, map_block_id, map_block)
-
-        host_id = context.config.get("wibbr", "host-id")
-        block = wibbrlib.obj.host_block_encode(host_id, gen_ids, 
-                                               [map_block_id])
-        wibbrlib.io.upload_host_block(context, block)
+        backup(context, args)
     elif command == "generations":
         generations(context)
     elif command == "show-generations":
