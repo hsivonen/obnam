@@ -56,12 +56,9 @@ class ObjectQueuingTests(unittest.TestCase):
         return files
 
     def testEnqueue(self):
-        context = wibbr.Context()
-        context.oq = wibbrlib.obj.object_queue_create()
+        context = wibbrlib.context.create()
         object_id = "pink"
         object = "pretty"
-        context.map = wibbrlib.mapping.create()
-        context.config = wibbrlib.config.default_config()
         context.config.set("wibbr", "block-size", "%d" % 128)
         context.cache = wibbrlib.cache.init(context.config)
         context.be = wibbrlib.backend.init(context.config, context.cache)
@@ -92,13 +89,10 @@ class ObjectQueuingTests(unittest.TestCase):
 class FileContentsTests(unittest.TestCase):
 
     def setUp(self):
-        self.context = wibbr.Context()
-        self.context.config = wibbrlib.config.default_config()
+        self.context = wibbrlib.context.create()
         self.context.cache = wibbrlib.cache.init(self.context.config)
         self.context.be = wibbrlib.backend.init(self.context.config, 
                                                 self.context.cache)
-        self.context.map = wibbrlib.mapping.create()
-        self.context.oq = wibbrlib.obj.object_queue_create()
 
     def tearDown(self):
         for x in ["cache-dir", "local-store"]:

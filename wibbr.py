@@ -338,25 +338,11 @@ class UnknownCommandWord(wibbrlib.exception.WibbrException):
         self._msg = "Unknown command '%s'" % command
 
 
-class Context:
-
-    def __init__(self):
-        self.config = None
-        self.args = None
-        self.cache = None
-        self.be = None
-        self.map = None
-        self.oq = None
-
-
 def main():
-    context = Context()
-    context.config = wibbrlib.config.default_config()
+    context = wibbrlib.context.create()
     args = parse_options(context.config, sys.argv[1:])
     context.cache = wibbrlib.cache.init(context.config)
     context.be = wibbrlib.backend.init(context.config, context.cache)
-    context.map = wibbrlib.mapping.create()
-    context.oq = wibbrlib.obj.object_queue_create()
 
     if not args:
         raise MissingCommandWord()
