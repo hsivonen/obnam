@@ -101,6 +101,12 @@ def get_string_value(c):
     return c.str
 
 
+def get_varint_value(c):
+    """Return integer value of leaf component"""
+    assert c.str is not None
+    return wibbrlib.varint.decode(c.str, 0)[0]
+
+
 def get_subcomponents(c):
     """Return list of subcomponents of composite component"""
     assert c.str is None
@@ -173,5 +179,14 @@ def first_string_by_type(components, wanted_type):
     c = first_by_type(components, wanted_type)
     if c:
         return get_string_value(c)
+    else:
+        return None
+
+
+def first_varint_by_type(components, wanted_type):
+    """Find first component by type, return its integer value"""
+    c = first_by_type(components, wanted_type)
+    if c:
+        return get_varint_value(c)
     else:
         return None

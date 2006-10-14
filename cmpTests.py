@@ -206,3 +206,24 @@ class FindTests(unittest.TestCase):
     def testFindFirstStringNone(self):
         result = wibbrlib.cmp.first_string_by_type(self.list, 0)
         self.failUnlessEqual(result, None)
+
+
+class GetVarintVAlueTest(unittest.TestCase):
+
+    def test(self):
+        c = wibbrlib.cmp.create(1, wibbrlib.varint.encode(12765))
+        self.failUnlessEqual(wibbrlib.cmp.get_varint_value(c), 12765)
+
+
+class FindVarintTests(unittest.TestCase):
+
+    def test(self):
+        list = []
+        for i in range(1024):
+            encoded = wibbrlib.varint.encode(i)
+            c = wibbrlib.cmp.create(i, encoded)
+            list.append(c)
+
+        for i in range(1024):
+            self.failUnlessEqual(wibbrlib.cmp.first_varint_by_type(list, i), 
+                                 i)
