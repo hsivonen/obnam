@@ -199,12 +199,6 @@ def show_generations(context, gen_ids):
                 print "  ", format_inode(inode), filename
 
 
-class InodeMissingMode(wibbrlib.exception.WibbrException):
-
-    def __init__(self, inode):
-        self._msg = "Inode is missing CMP_ST_MODE field: %s" % repr(inode)
-
-
 def restore_file_content(context, fd, inode):
     cont_id = wibbrlib.obj.first_string_by_type(inode, 
                                                 wibbrlib.cmp.CMP_CONTREF)
