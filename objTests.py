@@ -233,3 +233,10 @@ class GetComponentTests(unittest.TestCase):
         self.failUnlessEqual(self.helper(2), "pretty")
         self.failUnlessEqual(self.helper(3), "red")
         self.failUnlessEqual(self.helper(0), None)
+
+    def testGetFirstStringByType(self):
+        find = lambda t: wibbrlib.obj.first_string_by_type(self.o, t)
+        self.failUnlessEqual(find(1), "pink")
+        self.failUnlessEqual(find(2), "pretty")
+        self.failUnlessEqual(find(3), "red")
+        self.failUnlessEqual(find(0), None)
