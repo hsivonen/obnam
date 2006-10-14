@@ -67,17 +67,17 @@ def generations(context):
 
 
 def format_st_mode(mode):
-    (mode, _) = wibbrlib.varint.decode(mode, 0)
+    mode = wibbrlib.cmp.get_varint_value(mode)
     return wibbrlib.format.filemode(mode)
 
 
 def format_integer(data, width):
-    (nlink, _) = wibbrlib.varint.decode(data, 0)
+    nlink = wibbrlib.cmp.get_varint_value(data)
     return "%*d" % (width, nlink)
 
 
 def format_time(data):
-    (secs, _) = wibbrlib.varint.decode(data, 0)
+    secs = wibbrlib.cmp.get_varint_value(data)
     t = time.gmtime(secs)
     return time.strftime("%Y-%m-%d %H:%M:%S", t)
 
@@ -94,23 +94,23 @@ def format_inode(inode):
 
     list = []
     for type, func in fields:
-        for data in [x[1] for x in inode if x[0] == type]:
+        for data in wibbrlib.obj.find_by_type(inode, type):
             list.append(func(data))
     return " ".join(list)
 
 
 def show_generations(context, gen_ids):
-    host_block = wibbrlib.backend.get_host_block(context)
+    host_block = wibbrlib.io.get_host_block(context)
     (host_id, _, map_block_ids) = \
         wibbrlib.obj.host_block_decode(host_block)
 
     for map_block_id in map_block_ids:
-        block = wibbrlib.backend.get_block(context, map_block_id)
+        block = wibbrlib.io.get_block(context, map_block_id)
         wibbrlib.mapping.decode_block(context.map, block)
 
     for gen_id in gen_ids:
         print "Generation:", gen_id
-        gen = wibbrlib.backend.get_object(context.be, context.map, gen_id)
+        gen = wibbrlib.io.get_object(context, gen_id)
         for c in wibbrlib.obj.get_components(gen):
             type = wibbrlib.cmp.get_type(c)
             if type == wibbrlib.cmp.CMP_NAMEIPAIR:
@@ -122,7 +122,7 @@ def show_generations(context, gen_ids):
                 else:
                     inode_id = wibbrlib.cmp.get_string_value(pair[1])
                     filename = wibbrlib.cmp.get_string_value(pair[0])
-                inode = wibbrlib.backend.get_object(be, map, inode_id)
+                inode = wibbrlib.io.get_object(context, inode_id)
                 print "  ", format_inode(inode), filename
 
 
