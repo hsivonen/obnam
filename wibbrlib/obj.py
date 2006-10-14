@@ -228,8 +228,7 @@ def inode_object_encode(objid, stat_result, sig_id, contents_id):
         c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_SIGREF, sig_id)
         add(o, c)
     if contents_id:
-        c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_CONTREF, 
-                                      contents_id)
+        c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_CONTREF, contents_id)
         add(o, c)
 
     return encode(o)
