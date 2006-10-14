@@ -70,8 +70,7 @@ def encode_new_to_block(mapping, block_id):
 def decode_block(mapping, mapping_block):
     """Decode a block with mappings, add them to mapping object"""
     list = wibbrlib.cmp.decode_all(mapping_block, 0)
-    maps = wibbrlib.cmp.find_by_type(list, 
-                                           wibbrlib.cmp.CMP_OBJMAP)
+    maps = wibbrlib.cmp.find_by_type(list, wibbrlib.cmp.CMP_OBJMAP)
     for map in maps:
         subs = wibbrlib.cmp.get_subcomponents(map)
         object_id = wibbrlib.cmp.first_string_by_type(subs, 
