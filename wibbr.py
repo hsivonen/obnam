@@ -123,14 +123,6 @@ def create_filesystem_object(context, full_pathname, inode):
         os.close(fd)
 
 
-def set_meta_data(full_pathname, inode):
-    mode = wibbrlib.obj.first_varint_by_type(inode, wibbrlib.cmp.CMP_ST_MODE)
-    atime = wibbrlib.obj.first_varint_by_type(inode, wibbrlib.cmp.CMP_ST_ATIME)
-    mtime = wibbrlib.obj.first_varint_by_type(inode, wibbrlib.cmp.CMP_ST_MTIME)
-    os.utime(full_pathname, (atime, mtime))
-    os.chmod(full_pathname, stat.S_IMODE(mode))
-
-
 class UnknownGeneration(wibbrlib.exception.WibbrException):
 
     def __init__(self, gen_id):
@@ -175,7 +167,7 @@ def restore(context, gen_id):
 
     list.sort()
     for full_pathname, inode in list:
-        set_meta_data(full_pathname, inode)
+        wibbrlib.io.set_inode(full_pathname, inode)
 
 
 class MissingCommandWord(wibbrlib.exception.WibbrException):

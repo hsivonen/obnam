@@ -200,3 +200,30 @@ class FileContentsTests(unittest.TestCase):
         f.close()
         
         self.failUnlessEqual(data1, data2)
+
+
+class MetaDataTests(unittest.TestCase):
+
+    def testSet(self):
+        o = wibbrlib.obj.create("pink", wibbrlib.obj.OBJ_INODE)
+        fields = (
+            (wibbrlib.cmp.CMP_ST_MODE, 0100664),
+            (wibbrlib.cmp.CMP_ST_ATIME, 12765),
+            (wibbrlib.cmp.CMP_ST_MTIME, 42),
+        )
+        for type, value in fields:
+            c = wibbrlib.cmp.create(type, wibbrlib.varint.encode(value))
+            wibbrlib.obj.add(o, c)
+
+        (fd, name) = tempfile.mkstemp()
+        os.close(fd)
+        
+        os.chmod(name, 0)
+        
+        wibbrlib.io.set_inode(name, o)
+        
+        st = os.stat(name)
+        
+        self.failUnlessEqual(st.st_mode, fields[0][1])
+        self.failUnlessEqual(st.st_atime, fields[1][1])
+        self.failUnlessEqual(st.st_mtime, fields[2][1])

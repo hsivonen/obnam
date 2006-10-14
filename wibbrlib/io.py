@@ -2,6 +2,7 @@
 
 
 import os
+import stat
 
 
 import wibbrlib
@@ -154,3 +155,11 @@ def get_file_contents(context, fd, cont_id):
         chunk = wibbrlib.obj.first_string_by_type(part, 
                                                   wibbrlib.cmp.CMP_FILECHUNK)
         os.write(fd, chunk)
+
+
+def set_inode(full_pathname, inode):
+    mode = wibbrlib.obj.first_varint_by_type(inode, wibbrlib.cmp.CMP_ST_MODE)
+    atime = wibbrlib.obj.first_varint_by_type(inode, wibbrlib.cmp.CMP_ST_ATIME)
+    mtime = wibbrlib.obj.first_varint_by_type(inode, wibbrlib.cmp.CMP_ST_MTIME)
+    os.utime(full_pathname, (atime, mtime))
+    os.chmod(full_pathname, stat.S_IMODE(mode))
