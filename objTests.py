@@ -198,17 +198,25 @@ class HostBlockTests(unittest.TestCase):
 
 class GetComponentTests(unittest.TestCase):
 
-    def find(self, o, wanted_type):
-        list = wibbrlib.obj.find_by_type(o, wanted_type)
-        return [wibbrlib.cmp.get_string_value(c) for c in list]
+    def setUp(self):
+        self.o = wibbrlib.obj.create("uuid", 0)
+        wibbrlib.obj.add(self.o, wibbrlib.cmp.create(1, "pink"))
+        wibbrlib.obj.add(self.o, wibbrlib.cmp.create(2, "pretty"))
+        wibbrlib.obj.add(self.o, wibbrlib.cmp.create(3, "red"))
+        wibbrlib.obj.add(self.o, wibbrlib.cmp.create(3, "too"))
 
     def testGetByType(self):
-        o = wibbrlib.obj.create("uuid", 0)
-        wibbrlib.obj.add(o, wibbrlib.cmp.create(1, "pink"))
-        wibbrlib.obj.add(o, wibbrlib.cmp.create(2, "pretty"))
-        wibbrlib.obj.add(o, wibbrlib.cmp.create(3, "red"))
-        wibbrlib.obj.add(o, wibbrlib.cmp.create(3, "too"))
-        self.failUnlessEqual(self.find(o, 1), ["pink"])
-        self.failUnlessEqual(self.find(o, 2), ["pretty"])
-        self.failUnlessEqual(self.find(o, 3), ["red", "too"])
-        self.failUnlessEqual(self.find(o, 0), [])
+        find = lambda t: \
+            [wibbrlib.cmp.get_string_value(c) 
+                for c in wibbrlib.obj.find_by_type(self.o, t)]
+        self.failUnlessEqual(find(1), ["pink"])
+        self.failUnlessEqual(find(2), ["pretty"])
+        self.failUnlessEqual(find(3), ["red", "too"])
+        self.failUnlessEqual(find(0), [])
+
+    def testGetStringByType(self):
+        find = lambda t: wibbrlib.obj.find_strings_by_type(self.o, t)
+        self.failUnlessEqual(find(1), ["pink"])
+        self.failUnlessEqual(find(2), ["pretty"])
+        self.failUnlessEqual(find(3), ["red", "too"])
+        self.failUnlessEqual(find(0), [])

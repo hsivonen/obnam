@@ -75,6 +75,12 @@ def find_by_type(o, wanted_type):
                 if wibbrlib.cmp.get_type(c) == wanted_type]
 
 
+def find_strings_by_type(o, wanted_type):
+    """Find all components of a desired type, return their string values"""
+    return [wibbrlib.cmp.get_string_value(c) 
+                for c in find_by_type(o, wanted_type)]
+
+
 def encode(o):
     """Encode an object as a string"""
     id = wibbrlib.cmp.create(wibbrlib.cmp.CMP_OBJID, o.id)
