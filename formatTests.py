@@ -71,9 +71,10 @@ class FormatInodeFieldsTest(unittest.TestCase):
                       wibbrlib.cmp.CMP_ST_BLKSIZE,
                       wibbrlib.cmp.CMP_ST_RDEV)
         for x in int_fields:
-            c = wibbrlib.cmp.create(x, wibbrlib.varint.encode(12765))
+            c = wibbrlib.cmp.create(x, wibbrlib.varint.encode(1))
             wibbrlib.obj.add(o, c)
 
         list = wibbrlib.format.inode_fields(o)
         
-        self.failIfEqual(list, [])
+        self.failUnlessEqual(list, ["?--------x"] + ["1"] * 4 +
+                                   ["1970-01-01 00:00:01"])
