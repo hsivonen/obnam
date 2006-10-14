@@ -4,18 +4,18 @@
 import wibbrlib
 
 
-def flush_object_queue(be, map, oq):
+def flush_object_queue(context):
     """Put all objects in an object queue into a block and upload it
     
     Also put mappings into map.
     
     """
     
-    block_id = wibbrlib.backend.generate_block_id(be)
-    block = wibbrlib.obj.block_create_from_object_queue(block_id, oq)
-    wibbrlib.backend.upload(be, block_id, block)
-    for id in wibbrlib.obj.object_queue_ids(oq):
-        wibbrlib.mapping.add(map, id, block_id)
+    block_id = wibbrlib.backend.generate_block_id(context.be)
+    block = wibbrlib.obj.block_create_from_object_queue(block_id, context.oq)
+    wibbrlib.backend.upload(context.be, block_id, block)
+    for id in wibbrlib.obj.object_queue_ids(context.oq):
+        wibbrlib.mapping.add(context.map, id, block_id)
 
 
 def get_block(be, block_id):

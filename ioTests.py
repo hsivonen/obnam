@@ -20,38 +20,39 @@ class IoBase(unittest.TestCase):
             ("wibbr", "local-store", self.rootdir)
         )
     
-        self.config = wibbrlib.config.default_config()
+        self.context = wibbrlib.context.create()
+    
         for section, item, value in config_list:
-            if not self.config.has_section(section):
-                self.config.add_section(section)
-            self.config.set(section, item, value)
+            if not self.context.config.has_section(section):
+                self.context.config.add_section(section)
+            self.context.config.set(section, item, value)
 
-        self.cache = wibbrlib.cache.init(self.config)
+        self.context.cache = wibbrlib.cache.init(self.context.config)
+        self.context.be = wibbrlib.backend.init(self.context.config, 
+                                                self.context.cache)
 
     def tearDown(self):
         shutil.rmtree(self.cachedir)
         shutil.rmtree(self.rootdir)
         del self.cachedir
         del self.rootdir
-        del self.config
+        del self.context
 
 
 class ObjectQueueFlushing(IoBase):
 
     def testFlushing(self):
-        be = wibbrlib.backend.init(self.config, self.cache)
-        map = wibbrlib.mapping.create()
-        oq = wibbrlib.obj.object_queue_create()
-        wibbrlib.obj.object_queue_add(oq, "pink", "pretty")
+        wibbrlib.obj.object_queue_add(self.context.oq, "pink", "pretty")
         
-        self.failUnlessEqual(wibbrlib.backend.list(be), [])
+        self.failUnlessEqual(wibbrlib.backend.list(self.context.be), [])
         
-        wibbrlib.io.flush_object_queue(be, map, oq)
+        wibbrlib.io.flush_object_queue(self.context)
 
-        list = wibbrlib.backend.list(be)
+        list = wibbrlib.backend.list(self.context.be)
         self.failUnlessEqual(len(list), 1)
         
-        b1 = [os.path.basename(x) for x in wibbrlib.mapping.get(map, "pink")]
+        b1 = [os.path.basename(x) 
+                for x in wibbrlib.mapping.get(self.context.map, "pink")]
         b2 = [os.path.basename(x) for x in list]
         self.failUnlessEqual(b1, b2)
 
@@ -59,21 +60,17 @@ class ObjectQueueFlushing(IoBase):
 class GetObjectTests(IoBase):
 
     def upload_object(self, object_id, object):
-        oq = wibbrlib.obj.object_queue_create()
-        wibbrlib.obj.object_queue_add(oq, object_id, object)
-        wibbrlib.io.flush_object_queue(self.be, self.map, oq)
+        wibbrlib.obj.object_queue_add(self.context.oq, object_id, object)
+        wibbrlib.io.flush_object_queue(self.context)
 
     def testGetObject(self):
-        self.be = wibbrlib.backend.init(self.config, self.cache)
-        self.map = wibbrlib.mapping.create()
-        
         id = "pink"
         component = wibbrlib.cmp.create(42, "pretty")
         object = wibbrlib.obj.create(id, 0)
         wibbrlib.obj.add(object, component)
         object = wibbrlib.obj.encode(object)
         self.upload_object(id, object)
-        o = wibbrlib.io.get_object(self.be, self.map, id)
+        o = wibbrlib.io.get_object(self.context.be, self.context.map, id)
 
         self.failUnlessEqual(wibbrlib.obj.get_id(o), id)
         self.failUnlessEqual(wibbrlib.obj.get_type(o), 0)
@@ -87,11 +84,11 @@ class GetObjectTests(IoBase):
 class HostBlock(IoBase):
 
     def testFetchHostBlock(self):
-        host_id = self.config.get("wibbr", "host-id")
+        host_id = self.context.config.get("wibbr", "host-id")
         host = wibbrlib.obj.host_block_encode(host_id, ["gen1", "gen2"],
                                                  ["map1", "map2"])
-        be = wibbrlib.backend.init(self.config, self.cache)
+        be = wibbrlib.backend.init(self.context.config, self.context.cache)
         
-        wibbrlib.io.upload_host_block(be, host)
-        host2 = wibbrlib.io.get_host_block(be)
+        wibbrlib.io.upload_host_block(self.context.be, host)
+        host2 = wibbrlib.io.get_host_block(self.context.be)
         self.failUnlessEqual(host, host2)
