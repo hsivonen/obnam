@@ -229,10 +229,6 @@ def get_field(obj, type):
     return wibbrlib.cmp.get_string_value(list[0])
 
 
-def get_integer(obj, type):
-    return wibbrlib.varint.decode(get_field(obj, type), 0)[0]
-    
-    
 def restore_file_content(context, fd, inode):
     cont_id = get_field(inode, wibbrlib.cmp.CMP_CONTREF)
     cont = wibbrlib.backend.get_object(context.be, context.map, cont_id)
