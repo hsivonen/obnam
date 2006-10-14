@@ -57,7 +57,7 @@ do
         
         python manifest.py $MANIFESTOPTS "$tmp/root" > "$tmp/manifest-$i"
         
-        python wibbr.py $CONFIG backup "$tmp/root"
+        python wibbr.py $CONFIG -C "$tmp/root" backup .
     done
     
     python wibbr.py $CONFIG generations |
@@ -67,8 +67,7 @@ do
         rm -rf "$tmp/root"
         mkdir "$tmp/root"
         python wibbr.py $CONFIG -C "$tmp/root" restore "$genid"
-        python manifest.py $MANIFESTOPTS "$tmp/root/$tmp/root" \
-            > "$tmp/manifest2-$i"
+        python manifest.py $MANIFESTOPTS "$tmp/root" > "$tmp/manifest2-$i"
         diff -u -U 15 "$tmp/manifest-$i" "$tmp/manifest2-$i"
     done
 done

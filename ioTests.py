@@ -7,6 +7,34 @@ import unittest
 import wibbrlib
 
 
+class ResolveTests(unittest.TestCase):
+
+    def test(self):
+        context = wibbrlib.context.create()
+        # We don't need the fields that are usually initialized manually.
+
+        facit = (
+            (".", "/", "/"),
+            (".", "/pink", "/pink"),
+            (".", "pink", "./pink"),
+            ("pink", "/", "/"),
+            ("pink", "/pretty", "/pretty"),
+            ("pink", "pretty", "pink/pretty"),
+            ("/pink", "/", "/"),
+            ("/pink", "/pretty", "/pretty"),
+            ("/pink", "pretty", "/pink/pretty"),
+            ("/", "/", "/"),
+        )
+
+        for target, pathname, resolved in facit:
+            context.config.set("wibbr", "target-dir", target)
+            x = wibbrlib.io.resolve(context, pathname)
+            self.failUnlessEqual(x, resolved)
+            self.failUnlessEqual(wibbrlib.io.unsolve(context, x), pathname)
+
+        self.failUnlessEqual(wibbrlib.io.unsolve(context, "/pink"), "pink")
+
+
 class IoBase(unittest.TestCase):
 
     def setUp(self):

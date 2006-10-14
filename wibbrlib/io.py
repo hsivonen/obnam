@@ -8,6 +8,24 @@ import stat
 import wibbrlib
 
 
+def resolve(context, pathname):
+    """Resolve a pathname relative to the user's desired target directory"""
+    return os.path.join(context.config.get("wibbr", "target-dir"), pathname)
+
+
+def unsolve(context, pathname):
+    """Undo resolve(context, pathname)"""
+    if pathname == os.sep:
+        return pathname
+    target = context.config.get("wibbr", "target-dir")
+    if not target.endswith(os.sep):
+        target += os.sep
+    if pathname.startswith(target):
+        return pathname[len(target):]
+    else:
+        return pathname
+
+
 def flush_object_queue(context):
     """Put all objects in an object queue into a block and upload it
     
@@ -113,7 +131,7 @@ def create_file_contents_object(context, filename):
     object_id = wibbrlib.obj.object_id_new()
     part_ids = []
     block_size = context.config.getint("wibbr", "block-size")
-    f = file(filename, "r")
+    f = file(resolve(context, filename), "r")
     while True:
         data = f.read(block_size)
         if not data:

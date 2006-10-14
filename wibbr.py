@@ -12,7 +12,7 @@ import wibbrlib
 
 
 def backup_single_item(context, pathname):
-    st = os.stat(pathname)
+    st = os.stat(wibbrlib.io.resolve(context, pathname))
     
     if stat.S_ISREG(st.st_mode):
         sig_id = None
@@ -31,7 +31,9 @@ def backup_single_item(context, pathname):
 def backup_directory(context, pairs, dirname):
     inode_id = backup_single_item(context, dirname)
     pairs.append((dirname, inode_id))
+    dirname = wibbrlib.io.resolve(context, dirname)
     for dirpath, dirnames, filenames in os.walk(dirname):
+        dirpath = wibbrlib.io.unsolve(context, dirpath)
         for filename in dirnames + filenames:
             pathname = os.path.join(dirpath, filename)
             inode_id = backup_single_item(context, pathname)
@@ -41,7 +43,11 @@ def backup_directory(context, pairs, dirname):
 def backup(context, args):
     pairs = []
     for name in args:
-        if os.path.isdir(name):
+        if name == "/":
+            name = "."
+        elif name and name[0] == "/":
+            name = name[1:]
+        if os.path.isdir(wibbrlib.io.resolve(context, name)):
             backup_directory(context, pairs, name)
         else:
             raise Exception("Not a directory: %s" + name)
@@ -59,8 +65,7 @@ def backup(context, args):
     wibbrlib.backend.upload(context.be, map_block_id, map_block)
 
     host_id = context.config.get("wibbr", "host-id")
-    block = wibbrlib.obj.host_block_encode(host_id, gen_ids, 
-                                           [map_block_id])
+    block = wibbrlib.obj.host_block_encode(host_id, gen_ids, [map_block_id])
     wibbrlib.io.upload_host_block(context, block)
 
 
@@ -114,7 +119,8 @@ def show_generations(context, gen_ids):
 def create_filesystem_object(context, full_pathname, inode):
     mode = wibbrlib.obj.first_varint_by_type(inode, wibbrlib.cmp.CMP_ST_MODE)
     if stat.S_ISDIR(mode):
-        os.makedirs(full_pathname, 0700)
+        if not os.path.exists(full_pathname):
+            os.makedirs(full_pathname, 0700)
     elif stat.S_ISREG(mode):
         fd = os.open(full_pathname, os.O_WRONLY | os.O_CREAT, 0)
         cont_id = wibbrlib.obj.first_string_by_type(inode, 
