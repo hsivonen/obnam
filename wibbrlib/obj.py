@@ -81,6 +81,14 @@ def find_strings_by_type(o, wanted_type):
                 for c in find_by_type(o, wanted_type)]
 
 
+def first_by_type(o, wanted_type):
+    """Find first component of a desired type"""
+    for c in get_components(o):
+        if wibbrlib.cmp.get_type(c) == wanted_type:
+            return c
+    return None
+
+
 def encode(o):
     """Encode an object as a string"""
     id = wibbrlib.cmp.create(wibbrlib.cmp.CMP_OBJID, o.id)
