@@ -4,6 +4,7 @@ import cmp
 import config
 import context
 import exception
+import format
 import io
 import mapping
 import obj
