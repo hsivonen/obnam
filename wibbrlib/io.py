@@ -85,10 +85,10 @@ def upload_host_block(context, host_block):
                                    host_block)
 
 
-def get_host_block(be):
+def get_host_block(context):
     """Return (and fetch, if needed) the host block, or None if not found"""
-    host_id = be.config.get("wibbr", "host-id")
-    e = wibbrlib.backend.download(be, host_id)
+    host_id = context.config.get("wibbr", "host-id")
+    e = wibbrlib.backend.download(context.be, host_id)
     if e:
         raise e
-    return wibbrlib.cache.get_block(be.cache, host_id)
+    return wibbrlib.cache.get_block(context.cache, host_id)

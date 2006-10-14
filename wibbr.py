@@ -132,7 +132,7 @@ def backup_directory(context, pairs, dirname):
 
 
 def generations(context):
-    block = wibbrlib.io.get_host_block(context.be)
+    block = wibbrlib.io.get_host_block(context)
     (_, gen_ids, _) = wibbrlib.obj.host_block_decode(block)
     for id in gen_ids:
         print id
@@ -172,7 +172,7 @@ def format_inode(inode):
 
 
 def show_generations(context, gen_ids):
-    host_block = wibbrlib.backend.get_host_block(context.be)
+    host_block = wibbrlib.backend.get_host_block(context)
     (host_id, _, map_block_ids) = \
         wibbrlib.obj.host_block_decode(host_block)
 
@@ -240,7 +240,7 @@ class UnknownGeneration(wibbrlib.exception.WibbrException):
 
 
 def restore(context, gen_id):
-    host_block = wibbrlib.io.get_host_block(context.be)
+    host_block = wibbrlib.io.get_host_block(context)
     (host_id, _, map_block_ids) = \
         wibbrlib.obj.host_block_decode(host_block)
 

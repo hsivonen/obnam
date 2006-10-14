@@ -90,5 +90,5 @@ class HostBlock(IoBase):
         be = wibbrlib.backend.init(self.context.config, self.context.cache)
         
         wibbrlib.io.upload_host_block(self.context, host)
-        host2 = wibbrlib.io.get_host_block(self.context.be)
+        host2 = wibbrlib.io.get_host_block(self.context)
         self.failUnlessEqual(host, host2)
