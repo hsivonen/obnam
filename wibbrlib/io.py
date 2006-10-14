@@ -102,3 +102,32 @@ def enqueue_object(context, object_id, object):
         wibbrlib.io.flush_object_queue(context)
         wibbrlib.obj.object_queue_clear(context.oq)
     wibbrlib.obj.object_queue_add(context.oq, object_id, object)
+
+
+def create_file_contents_object(context, filename):
+    """Create and queue objects to hold a file's contents"""
+    object_id = wibbrlib.obj.object_id_new()
+    part_ids = []
+    block_size = context.config.getint("wibbr", "block-size")
+    f = file(filename, "r")
+    while True:
+        data = f.read(block_size)
+        if not data:
+            break
+        c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_FILECHUNK, data)
+        part_id = wibbrlib.obj.object_id_new()
+        o = wibbrlib.obj.create(part_id, wibbrlib.obj.OBJ_FILEPART)
+        wibbrlib.obj.add(o, c)
+        o = wibbrlib.obj.encode(o)
+        enqueue_object(context, part_id, o)
+        part_ids.append(part_id)
+    f.close()
+
+    o = wibbrlib.obj.create(object_id, wibbrlib.obj.OBJ_FILECONTENTS)
+    for part_id in part_ids:
+        c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_FILEPARTREF, part_id)
+        wibbrlib.obj.add(o, c)
+    o = wibbrlib.obj.encode(o)
+    enqueue_object(context, object_id, o)
+
+    return object_id

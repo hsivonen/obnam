@@ -44,34 +44,6 @@ def parse_options(config, argv):
         config.set("wibbr", "restore-target", options.restore_to)
 
     return args
-
-
-def create_file_contents_object(context, filename):
-    object_id = wibbrlib.obj.object_id_new()
-    part_ids = []
-    block_size = context.config.getint("wibbr", "block-size")
-    f = file(filename, "r")
-    while True:
-        data = f.read(block_size)
-        if not data:
-            break
-        c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_FILECHUNK, data)
-        part_id = wibbrlib.obj.object_id_new()
-        o = wibbrlib.obj.create(part_id, wibbrlib.obj.OBJ_FILEPART)
-        wibbrlib.obj.add(o, c)
-        o = wibbrlib.obj.encode(o)
-        wibbrlib.io.enqueue_object(context, part_id, o)
-        part_ids.append(part_id)
-    f.close()
-
-    o = wibbrlib.obj.create(object_id, wibbrlib.obj.OBJ_FILECONTENTS)
-    for part_id in part_ids:
-        c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_FILEPARTREF, part_id)
-        wibbrlib.obj.add(o, c)
-    o = wibbrlib.obj.encode(o)
-    wibbrlib.io.enqueue_object(context, object_id, o)
-
-    return object_id
     
     
 def backup_single_directory(context, pathname, st):
@@ -79,7 +51,7 @@ def backup_single_directory(context, pathname, st):
 
 
 def backup_single_file(context, pathname, st):
-    id = create_file_contents_object(context, pathname)
+    id = wibbrlib.io.create_file_contents_object(context, pathname)
     return None, id
 
 

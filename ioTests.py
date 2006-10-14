@@ -133,3 +133,46 @@ class ObjectQueuingTests(unittest.TestCase):
 
         shutil.rmtree(context.config.get("wibbr", "cache-dir"))
         shutil.rmtree(context.config.get("wibbr", "local-store"))
+
+
+class FileContentsTests(unittest.TestCase):
+
+    def setUp(self):
+        self.context = wibbrlib.context.create()
+        self.context.cache = wibbrlib.cache.init(self.context.config)
+        self.context.be = wibbrlib.backend.init(self.context.config, 
+                                                self.context.cache)
+
+    def tearDown(self):
+        for x in ["cache-dir", "local-store"]:
+            if os.path.exists(self.context.config.get("wibbr", x)):
+                shutil.rmtree(self.context.config.get("wibbr", x))
+
+    def testEmptyFile(self):
+        filename = "/dev/null"
+        
+        id = wibbrlib.io.create_file_contents_object(self.context, filename)
+
+        self.failIfEqual(id, None)
+        self.failUnlessEqual(wibbrlib.obj.object_queue_ids(self.context.oq), 
+                             [id])
+        self.failUnlessEqual(wibbrlib.mapping.count(self.context.map), 0)
+            # there's no mapping yet, because the queue is small enough
+            # that there has been no need to flush it
+
+    def testNonEmptyFile(self):
+        block_size = 16
+        self.context.config.set("wibbr", "block-size", "%d" % block_size)
+        filename = "Makefile"
+        
+        id = wibbrlib.io.create_file_contents_object(self.context, filename)
+
+        self.failIfEqual(id, None)
+        self.failUnlessEqual(wibbrlib.obj.object_queue_ids(self.context.oq),
+                                                           [id])
+
+        size = os.path.getsize(filename)
+        blocks = size / block_size
+        if size % block_size:
+            blocks += 1
+        self.failUnlessEqual(wibbrlib.mapping.count(self.context.map), blocks)
