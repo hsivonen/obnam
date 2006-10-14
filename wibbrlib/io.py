@@ -92,3 +92,13 @@ def get_host_block(context):
     if e:
         raise e
     return wibbrlib.cache.get_block(context.cache, host_id)
+
+
+def enqueue_object(context, object_id, object):
+    """Put an object into the object queue, and flush queue if too big"""
+    block_size = context.config.getint("wibbr", "block-size")
+    cur_size = wibbrlib.obj.object_queue_combined_size(context.oq)
+    if len(object) + cur_size > block_size:
+        wibbrlib.io.flush_object_queue(context)
+        wibbrlib.obj.object_queue_clear(context.oq)
+    wibbrlib.obj.object_queue_add(context.oq, object_id, object)

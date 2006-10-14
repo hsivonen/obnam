@@ -45,47 +45,6 @@ class CommandLineParsingTests(unittest.TestCase):
         self.failUnlessEqual(config.get("wibbr", "local-store"), "/tmp/foo")
 
 
-class ObjectQueuingTests(unittest.TestCase):
-
-    def find_block_files(self, config):
-        files = []
-        root = config.get("wibbr", "local-store")
-        for dirpath, _, filenames in os.walk(root):
-            files += [os.path.join(dirpath, x) for x in filenames]
-        files.sort()
-        return files
-
-    def testEnqueue(self):
-        context = wibbrlib.context.create()
-        object_id = "pink"
-        object = "pretty"
-        context.config.set("wibbr", "block-size", "%d" % 128)
-        context.cache = wibbrlib.cache.init(context.config)
-        context.be = wibbrlib.backend.init(context.config, context.cache)
-
-        self.failUnlessEqual(self.find_block_files(context.config), [])
-        
-        wibbr.enqueue_object(context, object_id, object)
-        
-        self.failUnlessEqual(self.find_block_files(context.config), [])
-        self.failUnlessEqual(
-            wibbrlib.obj.object_queue_combined_size(context.oq),
-            len(object))
-        
-        object_id2 = "pink2"
-        object2 = "x" * 1024
-
-        wibbr.enqueue_object(context, object_id2, object2)
-        
-        self.failUnlessEqual(len(self.find_block_files(context.config)), 1)
-        self.failUnlessEqual(
-            wibbrlib.obj.object_queue_combined_size(context.oq),
-            len(object2))
-
-        shutil.rmtree(context.config.get("wibbr", "cache-dir"))
-        shutil.rmtree(context.config.get("wibbr", "local-store"))
-
-
 class FileContentsTests(unittest.TestCase):
 
     def setUp(self):

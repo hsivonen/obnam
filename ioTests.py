@@ -92,3 +92,44 @@ class HostBlock(IoBase):
         wibbrlib.io.upload_host_block(self.context, host)
         host2 = wibbrlib.io.get_host_block(self.context)
         self.failUnlessEqual(host, host2)
+
+
+class ObjectQueuingTests(unittest.TestCase):
+
+    def find_block_files(self, config):
+        files = []
+        root = config.get("wibbr", "local-store")
+        for dirpath, _, filenames in os.walk(root):
+            files += [os.path.join(dirpath, x) for x in filenames]
+        files.sort()
+        return files
+
+    def testEnqueue(self):
+        context = wibbrlib.context.create()
+        object_id = "pink"
+        object = "pretty"
+        context.config.set("wibbr", "block-size", "%d" % 128)
+        context.cache = wibbrlib.cache.init(context.config)
+        context.be = wibbrlib.backend.init(context.config, context.cache)
+
+        self.failUnlessEqual(self.find_block_files(context.config), [])
+        
+        wibbrlib.io.enqueue_object(context, object_id, object)
+        
+        self.failUnlessEqual(self.find_block_files(context.config), [])
+        self.failUnlessEqual(
+            wibbrlib.obj.object_queue_combined_size(context.oq),
+            len(object))
+        
+        object_id2 = "pink2"
+        object2 = "x" * 1024
+
+        wibbrlib.io.enqueue_object(context, object_id2, object2)
+        
+        self.failUnlessEqual(len(self.find_block_files(context.config)), 1)
+        self.failUnlessEqual(
+            wibbrlib.obj.object_queue_combined_size(context.oq),
+            len(object2))
+
+        shutil.rmtree(context.config.get("wibbr", "cache-dir"))
+        shutil.rmtree(context.config.get("wibbr", "local-store"))

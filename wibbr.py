@@ -46,15 +46,6 @@ def parse_options(config, argv):
     return args
 
 
-def enqueue_object(context, object_id, object):
-    block_size = context.config.getint("wibbr", "block-size")
-    cur_size = wibbrlib.obj.object_queue_combined_size(context.oq)
-    if len(object) + cur_size > block_size:
-        wibbrlib.io.flush_object_queue(context)
-        wibbrlib.obj.object_queue_clear(context.oq)
-    wibbrlib.obj.object_queue_add(context.oq, object_id, object)
-
-
 def create_file_contents_object(context, filename):
     object_id = wibbrlib.obj.object_id_new()
     part_ids = []
@@ -69,7 +60,7 @@ def create_file_contents_object(context, filename):
         o = wibbrlib.obj.create(part_id, wibbrlib.obj.OBJ_FILEPART)
         wibbrlib.obj.add(o, c)
         o = wibbrlib.obj.encode(o)
-        enqueue_object(context, part_id, o)
+        wibbrlib.io.enqueue_object(context, part_id, o)
         part_ids.append(part_id)
     f.close()
 
@@ -78,7 +69,7 @@ def create_file_contents_object(context, filename):
         c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_FILEPARTREF, part_id)
         wibbrlib.obj.add(o, c)
     o = wibbrlib.obj.encode(o)
-    enqueue_object(context, object_id, o)
+    wibbrlib.io.enqueue_object(context, object_id, o)
 
     return object_id
     
@@ -114,7 +105,7 @@ def backup_single_item(context, pathname):
             nst = wibbrlib.obj.normalize_stat_result(st)
             inode = wibbrlib.obj.inode_object_encode(inode_id, nst,
                                                         sig_id, content_id)
-            enqueue_object(context, inode_id, inode)
+            wibbrlib.io.enqueue_object(context, inode_id, inode)
 
             return inode_id
 
@@ -327,7 +318,7 @@ def main():
         gen_id = wibbrlib.obj.object_id_new()
         gen = wibbrlib.obj.generation_object_encode(gen_id, pairs)
         gen_ids = [gen_id]
-        enqueue_object(context, gen_id, gen)
+        wibbrlib.io.enqueue_object(context, gen_id, gen)
         if wibbrlib.obj.object_queue_combined_size(context.oq) > 0:
             wibbrlib.io.flush_object_queue(context)
 
