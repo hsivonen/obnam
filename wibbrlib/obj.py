@@ -98,6 +98,15 @@ def first_string_by_type(o, wanted_type):
         return None
 
 
+def first_varint_by_type(o, wanted_type):
+    """Find string value of first component of a desired type"""
+    c = first_by_type(o, wanted_type)
+    if c:
+        return wibbrlib.cmp.get_varint_value(c)
+    else:
+        return None
+
+
 def encode(o):
     """Encode an object as a string"""
     id = wibbrlib.cmp.create(wibbrlib.cmp.CMP_OBJID, o.id)

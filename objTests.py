@@ -240,3 +240,12 @@ class GetComponentTests(unittest.TestCase):
         self.failUnlessEqual(find(2), "pretty")
         self.failUnlessEqual(find(3), "red")
         self.failUnlessEqual(find(0), None)
+
+    def testGetFirstSVarintByType(self):
+        o = wibbrlib.obj.create("uuid", 0)
+        for i in range(1024):
+            c = wibbrlib.cmp.create(i, wibbrlib.varint.encode(i))
+            wibbrlib.obj.add(o, c)
+
+        for i in range(1024):
+            self.failUnlessEqual(wibbrlib.obj.first_varint_by_type(o, i), i)
