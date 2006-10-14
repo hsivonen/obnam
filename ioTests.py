@@ -89,6 +89,6 @@ class HostBlock(IoBase):
                                                  ["map1", "map2"])
         be = wibbrlib.backend.init(self.context.config, self.context.cache)
         
-        wibbrlib.io.upload_host_block(self.context.be, host)
+        wibbrlib.io.upload_host_block(self.context, host)
         host2 = wibbrlib.io.get_host_block(self.context.be)
         self.failUnlessEqual(host, host2)

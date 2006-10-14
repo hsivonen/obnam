@@ -78,9 +78,10 @@ def get_object(context, object_id):
     return None
 
 
-def upload_host_block(be, host_block):
+def upload_host_block(context, host_block):
     """Upload a host block"""
-    return wibbrlib.backend.upload(be, be.config.get("wibbr", "host-id"), 
+    return wibbrlib.backend.upload(context.be, 
+                                   context.config.get("wibbr", "host-id"), 
                                    host_block)
 
 

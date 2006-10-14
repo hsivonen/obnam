@@ -339,7 +339,7 @@ def main():
         host_id = context.config.get("wibbr", "host-id")
         block = wibbrlib.obj.host_block_encode(host_id, gen_ids, 
                                                [map_block_id])
-        wibbrlib.io.upload_host_block(context.be, block)
+        wibbrlib.io.upload_host_block(context, block)
     elif command == "generations":
         generations(context)
     elif command == "show-generations":
