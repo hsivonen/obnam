@@ -201,7 +201,7 @@ def show_generations(context, gen_ids):
 def restore_file_content(context, fd, inode):
     cont_id = wibbrlib.obj.first_string_by_type(inode, 
                                                 wibbrlib.cmp.CMP_CONTREF)
-    cont = wibbrlib.io.get_object(context.be, context.map, cont_id)
+    cont = wibbrlib.io.get_object(context, cont_id)
     if not cont:
         return
     list = wibbrlib.obj.get_components(cont)
@@ -209,7 +209,7 @@ def restore_file_content(context, fd, inode):
                     if wibbrlib.cmp.get_type(x) == 
                             wibbrlib.cmp.CMP_FILEPARTREF]
     for part_id in part_ids:
-        part = wibbrlib.io.get_object(context.be, context.map, part_id)
+        part = wibbrlib.io.get_object(context, part_id)
         chunk = wibbrlib.obj.first_string_by_type(part, 
                                                   wibbrlib.cmp.CMP_FILECHUNK)
         os.write(fd, chunk)
@@ -248,7 +248,7 @@ def restore(context, gen_id):
         block = wibbrlib.io.get_block(context.be, map_block_id)
         wibbrlib.mapping.decode_block(context.map, block)
     
-    gen = wibbrlib.io.get_object(context.be, context.map, gen_id)
+    gen = wibbrlib.io.get_object(context, gen_id)
     if gen is None:
         raise UnknownGeneration(gen_id)
     
@@ -271,7 +271,7 @@ def restore(context, gen_id):
                 pathname = "." + pathname
             full_pathname = os.path.join(target, pathname)
 
-            inode = wibbrlib.io.get_object(context.be, context.map, inode_id)
+            inode = wibbrlib.io.get_object(context, inode_id)
             create_filesystem_object(context, full_pathname, inode)
             list.append((full_pathname, inode))
 

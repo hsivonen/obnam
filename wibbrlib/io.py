@@ -56,14 +56,14 @@ def create_object_from_component_list(components):
     return o
 
 
-def get_object(be, map, object_id):
+def get_object(context, object_id):
     """Fetch an object"""
-    block_ids = wibbrlib.mapping.get(map, object_id)
+    block_ids = wibbrlib.mapping.get(context.map, object_id)
     if not block_ids:
         return None
     assert len(block_ids) == 1
     block_id = block_ids[0]
-    block = get_block(be, block_id)
+    block = get_block(context.be, block_id)
     if not block:
         raise MissingBlock(block_id, object_id)
     list = wibbrlib.cmp.decode_all(block, 0)

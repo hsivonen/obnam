@@ -70,7 +70,7 @@ class GetObjectTests(IoBase):
         wibbrlib.obj.add(object, component)
         object = wibbrlib.obj.encode(object)
         self.upload_object(id, object)
-        o = wibbrlib.io.get_object(self.context.be, self.context.map, id)
+        o = wibbrlib.io.get_object(self.context, id)
 
         self.failUnlessEqual(wibbrlib.obj.get_id(o), id)
         self.failUnlessEqual(wibbrlib.obj.get_type(o), 0)
