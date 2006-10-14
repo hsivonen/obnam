@@ -326,92 +326,26 @@ def host_block_encode(host_id, gen_ids, map_block_ids):
     return block
 
 
-class ConfusedHostId(WibbrException):
-
-    def __init__(self, id1, id2):
-        self._msg = \
-            "Host block contains contradictory host IDs: '%s' and '%s'" \
-            % (id1, id2)
-
-
-class HostBlockHasWrongObjectType(WibbrException):
-
-    def __init__(self, objtype):
-        self._msg = "Host block contains object of type %s (%d)" % \
-            (type_name(objtype), objtype)
-
-
-class UnknownHostObjectComponentType(WibbrException):
-
-    def __init__(self, type):
-        self._msg = \
-            "Host object contains component of unexpected type %s (%d)" % \
-                (wibbrlib.cmp.type_name(type), type)
-
-
-class UnknownHostBlockComponentType(WibbrException):
-
-    def __init__(self, type):
-        self._msg = \
-            "Host block contains component of unexpected type %s (%d)" % \
-                (wibbrlib.cmp.type_name(type), type)
-
-
-class UnknownGenlistComponentType(WibbrException):
-
-    def __init__(self, type):
-        self._msg = \
-            "Host block's generation list contains component of " + \
-            "unexpectedtype %s (%d)" % \
-                (wibbrlib.cmp.type_name(type), type)
-
-
-def genlist_decode(genlist):
-    list = wibbrlib.cmp.decode_all(genlist, 0)
-    return wibbrlib.cmp.find_strings_by_type(list, wibbrlib.cmp.CMP_GENREF)
-
-
 def host_block_decode(block):
     """Decode a host block"""
     
-    host_id = None
-    gen_ids = []
-    map_ids = []
+    list = wibbrlib.cmp.decode_all(block, 0)
     
-    for c in wibbrlib.cmp.decode_all(block, 0):
-        type = wibbrlib.cmp.get_type(c)
-        if wibbrlib.cmp.is_composite(c):
-            data = None
-        else:
-            data = wibbrlib.cmp.get_string_value(c)
-        if type == wibbrlib.cmp.CMP_BLKID:
-            if host_id is None:
-                host_id = data
-            elif host_id != data:
-                raise ConfusedHostId(host_id, data)
-        elif type == wibbrlib.cmp.CMP_OBJPART:
-            for c2 in wibbrlib.cmp.get_subcomponents(c):
-                type2 = wibbrlib.cmp.get_type(c2)
-                if wibbrlib.cmp.is_composite(c2):
-                    data2 = None
-                else:
-                    data2 = wibbrlib.cmp.get_string_value(c2)
-                if type2 == wibbrlib.cmp.CMP_OBJID:
-                    if host_id is None:
-                        host_id = data2
-                    elif host_id != data2:
-                        raise ConfusedHostId(host_id, data2)
-                elif type2 == wibbrlib.cmp.CMP_OBJTYPE:
-                    (objtype, _) = wibbrlib.varint.decode(data2, 0)
-                    if objtype != OBJ_HOST:
-                        raise HostBlockHasWrongObjectType(objtype)
-                elif type2 == wibbrlib.cmp.CMP_GENLIST:
-                    gen_ids = genlist_decode(data2)
-                elif type2 == wibbrlib.cmp.CMP_MAPREF:
-                    map_ids.append(data2)
-                else:
-                    raise UnknownHostObjectComponentType(type2)
-        else:
-            raise UnknownHostBlockComponentType(type)
+    host_id = wibbrlib.cmp.first_string_by_type(list, wibbrlib.cmp.CMP_BLKID)
+    
+    map_ids = []
+    gen_ids = []
+
+    objparts = wibbrlib.cmp.find_by_type(list, wibbrlib.cmp.CMP_OBJPART)
+    for objpart in objparts:
+        subs = wibbrlib.cmp.get_subcomponents(objpart)
+        map_ids += wibbrlib.cmp.find_strings_by_type(subs, 
+                                                    wibbrlib.cmp.CMP_MAPREF)
+
+        genlists = wibbrlib.cmp.find_by_type(subs, wibbrlib.cmp.CMP_GENLIST)
+        for genlist in genlists:
+            subs2 = wibbrlib.cmp.get_subcomponents(genlist)
+            gen_ids += wibbrlib.cmp.find_strings_by_type(subs2,
+                                                    wibbrlib.cmp.CMP_GENREF)
 
     return host_id, gen_ids, map_ids
