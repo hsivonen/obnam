@@ -138,7 +138,6 @@ def decode(encoded, pos):
         pos2 = pos
         while pos2 < pos + size:
             (sub, pos2) = decode(encoded, pos2)
-            assert pos2 <= pos + size
             value.append(sub)
     else:
         value = encoded[pos:pos+size]
@@ -148,7 +147,8 @@ def decode(encoded, pos):
 def decode_all(encoded, pos):
     """Return list of all components in a string"""
     list = []
-    while pos < len(encoded):
+    len_encoded = len(encoded)
+    while pos < len_encoded:
         (c, pos) = decode(encoded, pos)
         list.append(c)
     return list
