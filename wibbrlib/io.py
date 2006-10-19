@@ -61,43 +61,94 @@ class MissingBlock(wibbrlib.exception.WibbrException):
 def create_object_from_component_list(components):
     """Create a new object from a list of components"""
     list = wibbrlib.cmp.find_by_type(components, wibbrlib.cmp.CMP_OBJID)
-    assert len(list) == 1
     id = wibbrlib.cmp.get_string_value(list[0])
     
     list = wibbrlib.cmp.find_by_type(components, wibbrlib.cmp.CMP_OBJTYPE)
-    assert len(list) == 1
     type = wibbrlib.cmp.get_string_value(list[0])
     (type, _) = wibbrlib.varint.decode(type, 0)
 
     o = wibbrlib.obj.create(id, type)
-    bad = (wibbrlib.cmp.CMP_OBJID,
-           wibbrlib.cmp.CMP_OBJTYPE)
+    bad = (wibbrlib.cmp.CMP_OBJID, wibbrlib.cmp.CMP_OBJTYPE)
     for c in components:
         if wibbrlib.cmp.get_type(c) not in bad:
             wibbrlib.obj.add(o, c)
     return o
 
+import os
+
+class ObjectCache:
+
+    def __init__(self):
+        self.objects = {}
+        self.mru = []
+        if "WIBBR_OC_MAX" in os.environ:
+            self.MAX = int(os.environ["WIBBR_OC_MAX"])
+        else:
+            self.MAX = 2000
+        
+    def get(self, object_id):
+        if object_id in self.objects:
+            self.mru.remove(object_id)
+            self.mru.insert(0, object_id)
+            return self.objects[object_id]
+        else:
+            return None
+        
+    def forget(self, object_id):
+        if object_id in self.objects:
+            del self.objects[object_id]
+            self.mru.remove(object_id)
+        
+    def put(self, object):
+        object_id = wibbrlib.obj.get_id(object)
+        self.objects[object_id] = object
+        self.mru.insert(0, object_id)
+        while len(self.mru) >= self.MAX:
+            self.forget(self.mru[-1])
+
+
+object_cache = ObjectCache()
+
 
 def get_object(context, object_id):
     """Fetch an object"""
+    o = object_cache.get(object_id)
+    if o:
+        return o
+        
     block_ids = wibbrlib.mapping.get(context.map, object_id)
     if not block_ids:
         return None
-    assert len(block_ids) == 1
+
     block_id = block_ids[0]
     block = get_block(context, block_id)
     if not block:
         raise MissingBlock(block_id, object_id)
+
     list = wibbrlib.cmp.decode_all(block, 0)
     list = wibbrlib.cmp.find_by_type(list, wibbrlib.cmp.CMP_OBJPART)
+
+    the_one = None
     for component in list:
         subs = wibbrlib.cmp.get_subcomponents(component)
-        objids = wibbrlib.cmp.find_by_type(subs, wibbrlib.cmp.CMP_OBJID)
-        objids = [wibbrlib.cmp.get_string_value(x) for x in objids]
-        objids = [x for x in objids if x == object_id]
-        if objids:
-            return create_object_from_component_list(subs)
-    return None
+        o = create_object_from_component_list(subs)
+        if wibbrlib.obj.get_type(o) != wibbrlib.obj.OBJ_FILEPART:
+            object_cache.put(o)
+        if wibbrlib.obj.get_id(o) == object_id:
+            the_one = o
+    
+#    for component in list:
+#        subs = wibbrlib.cmp.get_subcomponents(component)
+#        objids = wibbrlib.cmp.find_by_type(subs, wibbrlib.cmp.CMP_OBJID)
+#        objids = [wibbrlib.cmp.get_string_value(x) for x in objids]
+#        objids = [x for x in objids if x == object_id]
+#        if objids:
+#            o = create_object_from_component_list(subs)
+#            if wibbrlib.obj.get_type(o) != wibbrlib.obj.OBJ_FILEPART:
+#                object_cache.put(object_id, o)
+#            return o
+                
+    return the_one
 
 
 def upload_host_block(context, host_block):
