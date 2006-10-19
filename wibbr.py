@@ -12,7 +12,7 @@ import wibbrlib
 
 
 def backup_single_item(context, pathname):
-    st = os.stat(wibbrlib.io.resolve(context, pathname))
+    st = os.lstat(wibbrlib.io.resolve(context, pathname))
     
     if stat.S_ISREG(st.st_mode):
         sig_id = None
@@ -85,6 +85,7 @@ def show_generations(context, gen_ids):
         block = wibbrlib.io.get_block(context, map_block_id)
         wibbrlib.mapping.decode_block(context.map, block)
 
+    pretty = False
     for gen_id in gen_ids:
         print "Generation:", gen_id
         gen = wibbrlib.io.get_object(context, gen_id)
@@ -96,24 +97,28 @@ def show_generations(context, gen_ids):
             filename = wibbrlib.cmp.first_string_by_type(subs, 
                                                  wibbrlib.cmp.CMP_FILENAME)
             inode = wibbrlib.io.get_object(context, inode_id)
-            list.append((wibbrlib.format.inode_fields(inode), filename))
+            if pretty:
+                list.append((wibbrlib.format.inode_fields(inode), filename))
+            else:
+                print " ".join(wibbrlib.format.inode_fields(inode)), filename
 
-        widths = []
-        for fields, _ in list:
-            for i in range(len(fields)):
-                if i >= len(widths):
-                    widths.append(0)
-                widths[i] = max(widths[i], len(fields[i]))
-
-        for fields, filename in list:
-            cols = []
-            for i in range(len(widths)):
-                if i < len(fields):
-                    x = fields[i]
-                else:
-                    x = ""
-                cols.append("%*s" % (widths[i], x))
-            print "  ", " ".join(cols), filename
+        if pretty:
+            widths = []
+            for fields, _ in list:
+                for i in range(len(fields)):
+                    if i >= len(widths):
+                        widths.append(0)
+                    widths[i] = max(widths[i], len(fields[i]))
+    
+            for fields, filename in list:
+                cols = []
+                for i in range(len(widths)):
+                    if i < len(fields):
+                        x = fields[i]
+                    else:
+                        x = ""
+                    cols.append("%*s" % (widths[i], x))
+                print "  ", " ".join(cols), filename
 
 
 def create_filesystem_object(context, full_pathname, inode):
