@@ -14,7 +14,7 @@ import wibbrlib.mapping
 import wibbrlib.obj
 
 
-MAX_BLOCKS_IN_CURDIR = 512
+MAX_BLOCKS_IN_CURDIR = 256
 
 
 class LocalBackEnd:
