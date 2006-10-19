@@ -75,7 +75,7 @@ class ObjectQueueFlushing(IoBase):
         
         self.failUnlessEqual(wibbrlib.backend.list(self.context.be), [])
         
-        wibbrlib.io.flush_object_queue(self.context)
+        wibbrlib.io.flush_object_queue(self.context, self.context.oq)
 
         list = wibbrlib.backend.list(self.context.be)
         self.failUnlessEqual(len(list), 1)
@@ -90,7 +90,7 @@ class GetObjectTests(IoBase):
 
     def upload_object(self, object_id, object):
         wibbrlib.obj.object_queue_add(self.context.oq, object_id, object)
-        wibbrlib.io.flush_object_queue(self.context)
+        wibbrlib.io.flush_object_queue(self.context, self.context.oq)
 
     def testGetObject(self):
         id = "pink"
@@ -212,7 +212,7 @@ class FileContentsTests(unittest.TestCase):
         filename = "Makefile"
         
         id = wibbrlib.io.create_file_contents_object(self.context, filename)
-        wibbrlib.io.flush_object_queue(self.context)
+        wibbrlib.io.flush_object_queue(self.context, self.context.oq)
         
         (fd, name) = tempfile.mkstemp()
         wibbrlib.io.get_file_contents(self.context, fd, id)

@@ -11,6 +11,7 @@ class Context:
         self.be = None
         self.map = wibbrlib.mapping.create()
         self.oq = wibbrlib.obj.object_queue_create()
+        self.content_oq = wibbrlib.obj.object_queue_create()
 
 
 def create():

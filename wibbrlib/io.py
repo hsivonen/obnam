@@ -26,7 +26,7 @@ def unsolve(context, pathname):
         return pathname
 
 
-def flush_object_queue(context):
+def flush_object_queue(context, oq):
     """Put all objects in an object queue into a block and upload it
     
     Also put mappings into map.
@@ -34,9 +34,9 @@ def flush_object_queue(context):
     """
     
     block_id = wibbrlib.backend.generate_block_id(context.be)
-    block = wibbrlib.obj.block_create_from_object_queue(block_id, context.oq)
+    block = wibbrlib.obj.block_create_from_object_queue(block_id, oq)
     wibbrlib.backend.upload(context.be, block_id, block)
-    for id in wibbrlib.obj.object_queue_ids(context.oq):
+    for id in wibbrlib.obj.object_queue_ids(oq):
         wibbrlib.mapping.add(context.map, id, block_id)
 
 
@@ -169,12 +169,13 @@ def get_host_block(context):
 
 def enqueue_object(context, object_id, object):
     """Put an object into the object queue, and flush queue if too big"""
+    oq = context.oq
     block_size = context.config.getint("wibbr", "block-size")
-    cur_size = wibbrlib.obj.object_queue_combined_size(context.oq)
+    cur_size = wibbrlib.obj.object_queue_combined_size(oq)
     if len(object) + cur_size > block_size:
-        wibbrlib.io.flush_object_queue(context)
-        wibbrlib.obj.object_queue_clear(context.oq)
-    wibbrlib.obj.object_queue_add(context.oq, object_id, object)
+        wibbrlib.io.flush_object_queue(context, oq)
+        wibbrlib.obj.object_queue_clear(oq)
+    wibbrlib.obj.object_queue_add(oq, object_id, object)
 
 
 def create_file_contents_object(context, filename):
