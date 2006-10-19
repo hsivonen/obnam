@@ -35,20 +35,6 @@ class ObjectCreateTests(unittest.TestCase):
         self.failUnlessEqual(wibbrlib.obj.get_components(o), [c])
 
 
-class ObjectEncodingTests(unittest.TestCase):
-
-    def testEmptyObject(self):
-        o = wibbrlib.obj.create("pink", 33)
-        self.failUnlessEqual(wibbrlib.obj.encode(o), "\4\1pink\1\2\41")
-
-    def testNonEmptyObject(self):
-        o = wibbrlib.obj.create("pink", 33)
-        c = wibbrlib.cmp.create(1, "pretty")
-        wibbrlib.obj.add(o, c)
-        self.failUnlessEqual(wibbrlib.obj.encode(o),
-                             "\4\1pink\1\2\41\6\1pretty")
-
-
 class ObjectEncodingDecodingTests(unittest.TestCase):
 
     def test(self):
@@ -111,15 +97,29 @@ class BlockCreateTests(unittest.TestCase):
     def testEmptyObjectQueue(self):
         oq = object_queue_create()
         block = block_create_from_object_queue("blkid", oq)
-        self.failUnlessEqual(block, "\5\3blkid")
+        list = wibbrlib.cmp.decode_all(block, 0)
+        self.failUnlessEqual(
+            wibbrlib.cmp.first_string_by_type(list, wibbrlib.cmp.CMP_BLKID),
+            "blkid")
+        self.failUnlessEqual(len(list), 1)
         self.failUnlessEqual(object_queue_ids(oq), [])
 
     def testObjectQueue(self):
+        o = wibbrlib.obj.create("pink", 1)
+        wibbrlib.obj.add(o, wibbrlib.cmp.create(2, "pretty"))
         oq = object_queue_create()
-        object_queue_add(oq, "xx", "foo")
+        object_queue_add(oq, "pink", wibbrlib.obj.encode(o))
         block = block_create_from_object_queue("blkid", oq)
-        self.failUnlessEqual(block, "\5\3blkid\3\5foo")
-        self.failUnlessEqual(object_queue_ids(oq), ["xx"])
+
+        list = wibbrlib.cmp.decode_all(block, 0)
+        self.failUnlessEqual(
+            wibbrlib.cmp.first_string_by_type(list, wibbrlib.cmp.CMP_BLKID),
+            "blkid")
+        self.failUnlessEqual(len(list), 2)
+        o2 = wibbrlib.cmp.first_by_type(list, wibbrlib.cmp.CMP_OBJPART)
+        self.failUnlessEqual(wibbrlib.obj.first_string_by_type(o, 2), 
+                             "pretty")
+        self.failUnlessEqual(object_queue_ids(oq), ["pink"])
 
 
 class InodeTests(unittest.TestCase):
@@ -175,11 +175,14 @@ class ObjectTests(unittest.TestCase):
     def testCreateSignatureObject(self):
         id = "pink"
         sig = wibbrlib.rsync.compute_signature("Makefile")
-        object = signature_object_encode(id, sig)
-        self.failUnlessEqual(object, "".join(["\4\1pink", # obj id
-                                              "\1\2\4",   # obj type
-                                              chr(len(sig)) + "\30" + sig,
-                                              ]))
+        encoded = signature_object_encode(id, sig)
+        o = wibbrlib.obj.decode(encoded, 0)
+        self.failUnlessEqual(wibbrlib.obj.get_id(o), "pink")
+        self.failUnlessEqual(wibbrlib.obj.get_type(o), wibbrlib.obj.OBJ_SIG)
+        self.failUnlessEqual(len(wibbrlib.obj.get_components(o)), 1)
+        self.failUnlessEqual(
+            wibbrlib.obj.first_string_by_type(o, wibbrlib.cmp.CMP_SIGDATA),
+            sig)
 
 
 class HostBlockTests(unittest.TestCase):
