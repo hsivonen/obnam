@@ -14,6 +14,9 @@ import wibbrlib.mapping
 import wibbrlib.obj
 
 
+MAX_BLOCKS_IN_CURDIR = 512
+
+
 class LocalBackEnd:
 
     def __init__(self):
@@ -21,6 +24,7 @@ class LocalBackEnd:
         self.local_root = None
         self.cache = None
         self.curdir = None
+        self.blocks_in_curdir = 0
 
 
 def init(config, cache):
@@ -35,6 +39,11 @@ def init(config, cache):
 
 def generate_block_id(be):
     """Generate a new identifier for the block, when stored remotely"""
+    if be.blocks_in_curdir >= MAX_BLOCKS_IN_CURDIR:
+        be.curdir = str(uuid.uuid4())
+        be.blocks_in_curdir = 1
+    else:   
+        be.blocks_in_curdir += 1
     return os.path.join(be.curdir, str(uuid.uuid4()))
 
 
