@@ -78,7 +78,6 @@ def decode_block(mapping, mapping_block):
     maps = wibbrlib.cmp.find_by_type(list, wibbrlib.cmp.CMP_OBJMAP)
     for map in maps:
         subs = wibbrlib.cmp.get_subcomponents(map)
-        assert len(subs) == 2
         object_id = wibbrlib.cmp.first_string_by_type(subs, 
                                                wibbrlib.cmp.CMP_OBJREF)
         block_ids = wibbrlib.cmp.find_strings_by_type(subs, 
