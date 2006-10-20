@@ -193,7 +193,7 @@ def normalize_stat_result(stat_result):
     fields = [x for x in dir(stat_result) if x.startswith("st_")]
     o = {}
     for x in fields:
-        o[x] = stat_result.__getattribute__(x)
+        o[x] = int(stat_result.__getattribute__(x))
     return o
 
 

@@ -11,9 +11,40 @@ import time
 import wibbrlib
 
 
-def backup_single_item(context, pathname):
+def find_existing_inode(pathname, nst, prevgen_inodes):
+    prev = prevgen_inodes.get(pathname, None)
+    if prev:
+        fields = (
+            ("st_dev", wibbrlib.cmp.CMP_ST_DEV),
+            ("st_ino", wibbrlib.cmp.CMP_ST_INO),
+            ("st_mode", wibbrlib.cmp.CMP_ST_MODE),
+            ("st_nlink", wibbrlib.cmp.CMP_ST_NLINK),
+            ("st_uid", wibbrlib.cmp.CMP_ST_UID),
+            ("st_gid", wibbrlib.cmp.CMP_ST_GID),
+            ("st_rdev", wibbrlib.cmp.CMP_ST_RDEV),
+            ("st_size", wibbrlib.cmp.CMP_ST_SIZE),
+            ("st_blksize", wibbrlib.cmp.CMP_ST_BLKSIZE),
+            ("st_blocks", wibbrlib.cmp.CMP_ST_BLOCKS),
+            ("st_mtime", wibbrlib.cmp.CMP_ST_MTIME),
+            # No atime or ctime, on purpose. They can be changed without
+            # requiring a new backup.
+        )
+        for a, b in fields:
+            b_value = wibbrlib.obj.first_varint_by_type(prev, b)
+            if nst[a] != b_value:
+                return None
+        return prev
+    else:
+        return None
+
+
+def backup_single_item(context, pathname, prevgen_inodes):
     st = os.lstat(wibbrlib.io.resolve(context, pathname))
-    
+    nst = wibbrlib.obj.normalize_stat_result(st)
+    inode = find_existing_inode(pathname, nst, prevgen_inodes)
+    if inode:
+        return wibbrlib.obj.get_id(inode)
+
     if stat.S_ISREG(st.st_mode):
         sig_id = None
         cont_id = wibbrlib.io.create_file_contents_object(context, pathname)
@@ -21,23 +52,39 @@ def backup_single_item(context, pathname):
         (sig_id, cont_id) = (None, None)
 
     inode_id = wibbrlib.obj.object_id_new()
-    nst = wibbrlib.obj.normalize_stat_result(st)
     inode = wibbrlib.obj.inode_object_encode(inode_id, nst, sig_id, cont_id)
     wibbrlib.io.enqueue_object(context, context.oq, inode_id, inode)
 
     return inode_id
 
 
-def backup_directory(context, pairs, dirname):
-    inode_id = backup_single_item(context, dirname)
+def backup_directory(context, pairs, dirname, prevgen_inodes):
+    inode_id = backup_single_item(context, dirname, prevgen_inodes)
     pairs.append((dirname, inode_id))
     dirname = wibbrlib.io.resolve(context, dirname)
     for dirpath, dirnames, filenames in os.walk(dirname):
         dirpath = wibbrlib.io.unsolve(context, dirpath)
         for filename in dirnames + filenames:
             pathname = os.path.join(dirpath, filename)
-            inode_id = backup_single_item(context, pathname)
+            inode_id = backup_single_item(context, pathname, prevgen_inodes)
             pairs.append((pathname, inode_id))
+
+
+def get_files_in_gen(context, gen_id):
+    """Return all inodes in a generation, in a dict indexed by filename"""
+    gen = wibbrlib.io.get_object(context, gen_id)
+    if not gen:
+        raise Exception("wtf")
+    dict = {}
+    for np in wibbrlib.obj.find_by_type(gen, wibbrlib.cmp.CMP_NAMEIPAIR):
+        subs = wibbrlib.cmp.get_subcomponents(np)
+        filename = wibbrlib.cmp.first_string_by_type(subs,
+                                     wibbrlib.cmp.CMP_FILENAME)
+        inode_id = wibbrlib.cmp.first_string_by_type(subs,
+                                     wibbrlib.cmp.CMP_INODEREF)
+        inode = wibbrlib.io.get_object(context, inode_id)
+        dict[filename] = inode
+    return dict
 
 
 def backup(context, args):
@@ -53,6 +100,11 @@ def backup(context, args):
         gen_ids = []
         map_block_ids = []
 
+    if gen_ids:
+        prevgen_inodes = get_files_in_gen(context, gen_ids[-1])
+    else:
+        prevgen_inodes = {}
+
     pairs = []
     for name in args:
         if name == "/":
@@ -60,7 +112,7 @@ def backup(context, args):
         elif name and name[0] == "/":
             name = name[1:]
         if os.path.isdir(wibbrlib.io.resolve(context, name)):
-            backup_directory(context, pairs, name)
+            backup_directory(context, pairs, name, prevgen_inodes)
         else:
             raise Exception("Not a directory: %s" % wibbrlib.io.resolve(context, name))
     
