@@ -47,6 +47,15 @@ do
     nl |
     while read i gen
     do
+        pre=$(echo "$gen" | sed 's,/gen\([0-9][0-9]\)[^/]*$,/pre\1,').sh
+        post=$(echo "$gen" | sed 's,/gen\([0-9][0-9]\)[^/]*$,/post\1,').sh
+
+        if [ -e "$pre" ] && ! sh "$pre"
+        then
+            echo "Pre-check $pre failed, aborting" 1>&2
+            exit 1
+        fi
+
         case "$gen" in
         *.tar.gz)
             tar -C "$tmp/root" -xzf "$gen"
@@ -55,6 +64,12 @@ do
             sh "$gen" "$tmp/root"
             ;;
         esac
+
+        if [ -e "$post" ] && ! sh "$post"
+        then
+            echo "Post-check $post failed, aborting" 1>&2
+            exit 1
+        fi
         
         python manifest.py $MANIFESTOPTS "$tmp/root" > "$tmp/manifest-$i"
         
