@@ -47,14 +47,8 @@ do
     nl |
     while read i gen
     do
-        pre=$(echo "$gen" | sed 's,/gen\([0-9][0-9]\)[^/]*$,/pre\1,').sh
+        pre=$(echo  "$gen" | sed 's,/gen\([0-9][0-9]\)[^/]*$,/pre\1,').sh
         post=$(echo "$gen" | sed 's,/gen\([0-9][0-9]\)[^/]*$,/post\1,').sh
-
-        if [ -e "$pre" ] && ! sh "$pre"
-        then
-            echo "Pre-check $pre failed, aborting" 1>&2
-            exit 1
-        fi
 
         case "$gen" in
         *.tar.gz)
@@ -64,16 +58,22 @@ do
             sh "$gen" "$tmp/root"
             ;;
         esac
+        
+        python manifest.py $MANIFESTOPTS "$tmp/root" > "$tmp/manifest-$i"
+        
+        if [ -e "$pre" ] && ! sh "$pre" "$tmp"
+        then
+            echo "Pre-check $pre failed, aborting" 1>&2
+            exit 1
+        fi
 
-        if [ -e "$post" ] && ! sh "$post"
+        python wibbr.py $CONFIG -C "$tmp/root" backup .
+
+        if [ -e "$post" ] && ! sh "$post" "$tmp"
         then
             echo "Post-check $post failed, aborting" 1>&2
             exit 1
         fi
-        
-        python manifest.py $MANIFESTOPTS "$tmp/root" > "$tmp/manifest-$i"
-        
-        python wibbr.py $CONFIG -C "$tmp/root" backup .
     done
     
     python wibbr.py $CONFIG generations |
