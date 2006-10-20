@@ -167,9 +167,8 @@ def get_host_block(context):
     return wibbrlib.cache.get_block(context.cache, host_id)
 
 
-def enqueue_object(context, object_id, object):
+def enqueue_object(context, oq, object_id, object):
     """Put an object into the object queue, and flush queue if too big"""
-    oq = context.oq
     block_size = context.config.getint("wibbr", "block-size")
     cur_size = wibbrlib.obj.object_queue_combined_size(oq)
     if len(object) + cur_size > block_size:
@@ -193,7 +192,7 @@ def create_file_contents_object(context, filename):
         o = wibbrlib.obj.create(part_id, wibbrlib.obj.OBJ_FILEPART)
         wibbrlib.obj.add(o, c)
         o = wibbrlib.obj.encode(o)
-        enqueue_object(context, part_id, o)
+        enqueue_object(context, context.content_oq, part_id, o)
         part_ids.append(part_id)
     f.close()
 
@@ -202,7 +201,7 @@ def create_file_contents_object(context, filename):
         c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_FILEPARTREF, part_id)
         wibbrlib.obj.add(o, c)
     o = wibbrlib.obj.encode(o)
-    enqueue_object(context, object_id, o)
+    enqueue_object(context, context.oq, object_id, o)
 
     return object_id
 

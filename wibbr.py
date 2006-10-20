@@ -23,7 +23,7 @@ def backup_single_item(context, pathname):
     inode_id = wibbrlib.obj.object_id_new()
     nst = wibbrlib.obj.normalize_stat_result(st)
     inode = wibbrlib.obj.inode_object_encode(inode_id, nst, sig_id, cont_id)
-    wibbrlib.io.enqueue_object(context, inode_id, inode)
+    wibbrlib.io.enqueue_object(context, context.oq, inode_id, inode)
 
     return inode_id
 
@@ -55,9 +55,11 @@ def backup(context, args):
     gen_id = wibbrlib.obj.object_id_new()
     gen = wibbrlib.obj.generation_object_encode(gen_id, pairs)
     gen_ids = [gen_id]
-    wibbrlib.io.enqueue_object(context, gen_id, gen)
+    wibbrlib.io.enqueue_object(context, context.oq, gen_id, gen)
     if wibbrlib.obj.object_queue_combined_size(context.oq) > 0:
         wibbrlib.io.flush_object_queue(context, context.oq)
+    if wibbrlib.obj.object_queue_combined_size(context.content_oq) > 0:
+        wibbrlib.io.flush_object_queue(context, context.content_oq)
 
     map_block_id = wibbrlib.backend.generate_block_id(context.be)
     map_block = wibbrlib.mapping.encode_new_to_block(context.map, 

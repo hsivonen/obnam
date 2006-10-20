@@ -143,7 +143,7 @@ class ObjectQueuingTests(unittest.TestCase):
 
         self.failUnlessEqual(self.find_block_files(context.config), [])
         
-        wibbrlib.io.enqueue_object(context, object_id, object)
+        wibbrlib.io.enqueue_object(context, context.oq, object_id, object)
         
         self.failUnlessEqual(self.find_block_files(context.config), [])
         self.failUnlessEqual(
@@ -153,7 +153,7 @@ class ObjectQueuingTests(unittest.TestCase):
         object_id2 = "pink2"
         object2 = "x" * 1024
 
-        wibbrlib.io.enqueue_object(context, object_id2, object2)
+        wibbrlib.io.enqueue_object(context, context.oq, object_id2, object2)
         
         self.failUnlessEqual(len(self.find_block_files(context.config)), 1)
         self.failUnlessEqual(
@@ -200,12 +200,6 @@ class FileContentsTests(unittest.TestCase):
         self.failUnlessEqual(wibbrlib.obj.object_queue_ids(self.context.oq),
                                                            [id])
 
-        size = os.path.getsize(filename)
-        blocks = size / block_size
-        if size % block_size:
-            blocks += 1
-        self.failUnlessEqual(wibbrlib.mapping.count(self.context.map), blocks)
-
     def testRestore(self):
         block_size = 16
         self.context.config.set("wibbr", "block-size", "%d" % block_size)
@@ -213,6 +207,7 @@ class FileContentsTests(unittest.TestCase):
         
         id = wibbrlib.io.create_file_contents_object(self.context, filename)
         wibbrlib.io.flush_object_queue(self.context, self.context.oq)
+        wibbrlib.io.flush_object_queue(self.context, self.context.content_oq)
         
         (fd, name) = tempfile.mkstemp()
         wibbrlib.io.get_file_contents(self.context, fd, id)
