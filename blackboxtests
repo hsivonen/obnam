@@ -38,7 +38,8 @@ MANIFESTOPTS="-i Inode -i Ctime -i Atime"
 
 for dir in "$@"
 do
-    rm -rf "$tmp/root"
+    echo "Testing $dir..."
+    rm -rf "$tmp"/*
     mkdir "$tmp/root"
     
     find "$dir" -maxdepth 1 -name 'gen[0-9][0-9].*' -type f |

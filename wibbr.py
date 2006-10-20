@@ -41,6 +41,18 @@ def backup_directory(context, pairs, dirname):
 
 
 def backup(context, args):
+    host_block = wibbrlib.io.get_host_block(context)
+    if host_block:
+        (host_id, gen_ids, map_block_ids) = \
+            wibbrlib.obj.host_block_decode(host_block)
+    
+        for map_block_id in map_block_ids:
+            block = wibbrlib.io.get_block(context, map_block_id)
+            wibbrlib.mapping.decode_block(context.map, block)
+    else:
+        gen_ids = []
+        map_block_ids = []
+
     pairs = []
     for name in args:
         if name == "/":
@@ -51,10 +63,10 @@ def backup(context, args):
             backup_directory(context, pairs, name)
         else:
             raise Exception("Not a directory: %s" % wibbrlib.io.resolve(context, name))
-
+    
     gen_id = wibbrlib.obj.object_id_new()
     gen = wibbrlib.obj.generation_object_encode(gen_id, pairs)
-    gen_ids = [gen_id]
+    gen_ids.append(gen_id)
     wibbrlib.io.enqueue_object(context, context.oq, gen_id, gen)
     if wibbrlib.obj.object_queue_combined_size(context.oq) > 0:
         wibbrlib.io.flush_object_queue(context, context.oq)
@@ -65,9 +77,10 @@ def backup(context, args):
     map_block = wibbrlib.mapping.encode_new_to_block(context.map, 
                                                      map_block_id)
     wibbrlib.backend.upload(context.be, map_block_id, map_block)
+    map_block_ids.append(map_block_id)
 
     host_id = context.config.get("wibbr", "host-id")
-    block = wibbrlib.obj.host_block_encode(host_id, gen_ids, [map_block_id])
+    block = wibbrlib.obj.host_block_encode(host_id, gen_ids, map_block_ids)
     wibbrlib.io.upload_host_block(context, block)
 
 

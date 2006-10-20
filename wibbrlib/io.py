@@ -163,8 +163,9 @@ def get_host_block(context):
     host_id = context.config.get("wibbr", "host-id")
     e = wibbrlib.backend.download(context.be, host_id)
     if e:
-        raise e
-    return wibbrlib.cache.get_block(context.cache, host_id)
+        return None
+    else:
+        return wibbrlib.cache.get_block(context.cache, host_id)
 
 
 def enqueue_object(context, oq, object_id, object):
