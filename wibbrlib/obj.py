@@ -5,6 +5,11 @@ import wibbrlib.cmp
 import wibbrlib.varint
 
 
+# Magic cookie at the beginning of every block
+
+BLOCK_COOKIE = "blockhead\n"
+
+
 # Constants of object types
 
 _object_types = {}
@@ -170,8 +175,17 @@ def block_create_from_object_queue(blkid, oq):
     """Create a block from an object queue"""
     blkid = wibbrlib.cmp.create(wibbrlib.cmp.CMP_BLKID, blkid)
     objects = [wibbrlib.cmp.create(wibbrlib.cmp.CMP_OBJPART, x[1])
-                for x in oq]
-    return "".join([wibbrlib.cmp.encode(c) for c in [blkid] + objects])
+               for x in oq]
+    return "".join([BLOCK_COOKIE] + 
+                   [wibbrlib.cmp.encode(c) for c in [blkid] + objects])
+
+
+def block_decode(block):
+    """Return list of decoded components in block, or None on error"""
+    if block.startswith(BLOCK_COOKIE):
+        return wibbrlib.cmp.decode_all(block, len(BLOCK_COOKIE))
+    else:
+        return None
 
 
 def signature_object_encode(objid, sigdata):
@@ -328,7 +342,7 @@ def host_block_encode(host_id, gen_ids, map_block_ids):
 def host_block_decode(block):
     """Decode a host block"""
     
-    list = wibbrlib.cmp.decode_all(block, 0)
+    list = block_decode(block)
     
     host_id = wibbrlib.cmp.first_string_by_type(list, wibbrlib.cmp.CMP_BLKID)
     

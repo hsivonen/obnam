@@ -64,13 +64,13 @@ def encode_new_to_block(mapping, block_id):
     """Encode new mappings into a block"""
     c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_BLKID, block_id)
     list = encode_new(mapping)
-    block = "".join([wibbrlib.cmp.encode(c)] + list)
+    block = "".join([wibbrlib.obj.BLOCK_COOKIE, wibbrlib.cmp.encode(c)] + list)
     return block
 
 
 def decode_block(mapping, mapping_block):
     """Decode a block with mappings, add them to mapping object"""
-    list = wibbrlib.cmp.decode_all(mapping_block, 0)
+    list = wibbrlib.obj.block_decode(mapping_block)
     maps = wibbrlib.cmp.find_by_type(list, wibbrlib.cmp.CMP_OBJMAP)
     for map in maps:
         subs = wibbrlib.cmp.get_subcomponents(map)

@@ -64,7 +64,7 @@ def show_block(filename):
     str = f.read()
     f.close()
     pos = 0
-    for c in wibbrlib.cmp.decode_all(str, 0):
+    for c in wibbrlib.obj.block_decode(str):
         show_component(c)
         print
 

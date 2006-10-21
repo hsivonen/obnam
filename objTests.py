@@ -97,7 +97,7 @@ class BlockCreateTests(unittest.TestCase):
     def testEmptyObjectQueue(self):
         oq = object_queue_create()
         block = block_create_from_object_queue("blkid", oq)
-        list = wibbrlib.cmp.decode_all(block, 0)
+        list = wibbrlib.obj.block_decode(block)
         self.failUnlessEqual(
             wibbrlib.cmp.first_string_by_type(list, wibbrlib.cmp.CMP_BLKID),
             "blkid")
@@ -111,7 +111,7 @@ class BlockCreateTests(unittest.TestCase):
         object_queue_add(oq, "pink", wibbrlib.obj.encode(o))
         block = block_create_from_object_queue("blkid", oq)
 
-        list = wibbrlib.cmp.decode_all(block, 0)
+        list = wibbrlib.obj.block_decode(block)
         self.failUnlessEqual(
             wibbrlib.cmp.first_string_by_type(list, wibbrlib.cmp.CMP_BLKID),
             "blkid")
@@ -192,8 +192,8 @@ class HostBlockTests(unittest.TestCase):
         gen_ids = ["pretty", "beautiful"]
         map_ids = ["black", "box"]
         host = wibbrlib.obj.host_block_encode(host_id, gen_ids, map_ids)
-        (host_id2, gen_ids2, map_ids2) = \
-            wibbrlib.obj.host_block_decode(host)
+        self.failUnless(host.startswith(wibbrlib.obj.BLOCK_COOKIE))
+        (host_id2, gen_ids2, map_ids2) = wibbrlib.obj.host_block_decode(host)
         self.failUnlessEqual(host_id, host_id2)
         self.failUnlessEqual(gen_ids, gen_ids2)
         self.failUnlessEqual(map_ids, map_ids2)

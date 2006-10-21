@@ -133,7 +133,7 @@ def get_object(context, object_id):
     if not block:
         raise MissingBlock(block_id, object_id)
 
-    list = wibbrlib.cmp.decode_all(block, 0)
+    list = wibbrlib.obj.block_decode(block)
     list = wibbrlib.cmp.find_by_type(list, wibbrlib.cmp.CMP_OBJPART)
 
     the_one = None
