@@ -264,3 +264,49 @@ class MetaDataTests(unittest.TestCase):
         self.failUnlessEqual(st.st_mode, fields[0][1])
         self.failUnlessEqual(st.st_atime, fields[1][1])
         self.failUnlessEqual(st.st_mtime, fields[2][1])
+
+
+class ObjectCacheTests(unittest.TestCase):
+
+    def setUp(self):
+        self.object = wibbrlib.obj.create("pink", 1)
+        self.object2 = wibbrlib.obj.create("pretty", 1)
+        self.object3 = wibbrlib.obj.create("beautiful", 1)
+
+    def testCreate(self):
+        oc = wibbrlib.io.ObjectCache()
+        self.failUnlessEqual(oc.size(), 0)
+        
+    def testPut(self):
+        oc = wibbrlib.io.ObjectCache()
+        self.failUnlessEqual(oc.get("pink"), None)
+        oc.put(self.object)
+        self.failUnlessEqual(oc.get("pink"), self.object)
+
+    def testPutWithOverflow(self):
+        oc = wibbrlib.io.ObjectCache()
+        oc.MAX = 1
+        oc.put(self.object)
+        self.failUnlessEqual(oc.size(), 1)
+        self.failUnlessEqual(oc.get("pink"), self.object)
+        oc.put(self.object2)
+        self.failUnlessEqual(oc.size(), 1)
+        self.failUnlessEqual(oc.get("pink"), None)
+        self.failUnlessEqual(oc.get("pretty"), self.object2)
+
+    def testPutWithOverflowPart2(self):
+        oc = wibbrlib.io.ObjectCache()
+        oc.MAX = 2
+
+        oc.put(self.object)
+        oc.put(self.object2)
+        self.failUnlessEqual(oc.size(), 2)
+        self.failUnlessEqual(oc.get("pink"), self.object)
+        self.failUnlessEqual(oc.get("pretty"), self.object2)
+
+        oc.get("pink")
+        oc.put(self.object3)
+        self.failUnlessEqual(oc.size(), 2)
+        self.failUnlessEqual(oc.get("pink"), self.object)
+        self.failUnlessEqual(oc.get("pretty"), None)
+        self.failUnlessEqual(oc.get("beautiful"), self.object3)
