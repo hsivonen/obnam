@@ -114,7 +114,8 @@ def backup(context, args):
         if os.path.isdir(wibbrlib.io.resolve(context, name)):
             backup_directory(context, pairs, name, prevgen_inodes)
         else:
-            raise Exception("Not a directory: %s" % wibbrlib.io.resolve(context, name))
+            raise Exception("Not a directory: %s" % 
+                wibbrlib.io.resolve(context, name))
     
     gen_id = wibbrlib.obj.object_id_new()
     gen = wibbrlib.obj.generation_object_encode(gen_id, pairs)

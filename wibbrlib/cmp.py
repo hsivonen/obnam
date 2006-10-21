@@ -126,7 +126,8 @@ def encode(c):
         encoded = "".join(snippets)
     else:
         encoded = c.str
-    return wibbrlib.varint.encode(len(encoded)) + wibbrlib.varint.encode(c.type) + encoded
+    return wibbrlib.varint.encode(len(encoded)) + \
+           wibbrlib.varint.encode(c.type) + encoded
 
 
 def decode(encoded, pos):
