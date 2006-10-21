@@ -5,4 +5,4 @@ check:
 	sh blackboxtests tests/*
 
 clean:
-	rm -rf *~ wibbrlib/*~ *.pyc *.pyo wibbrlib/*.pyc wibbrlib/*.pyo tmp.*
+	rm -rf *~ */*~ *.pyc *.pyo */*.pyc */*.pyo tmp.*
