@@ -49,14 +49,21 @@ def reset_new(mapping):
 def encode_new(mapping):
     """Return a list of encoded components for the new mappings"""
     list = []
-    for key in get_new(mapping):
-        objref = wibbrlib.cmp.create(wibbrlib.cmp.CMP_OBJREF, key)
-        blockref = wibbrlib.cmp.create(wibbrlib.cmp.CMP_BLOCKREF,
-                                       mapping.dict[key])
-        component = wibbrlib.cmp.create(wibbrlib.cmp.CMP_OBJMAP, 
-                                        [objref, blockref])
-        component = wibbrlib.cmp.encode(component)
-        list.append(component)
+    dict = {}
+    for object_id in get_new(mapping):
+        block_id = get(mapping, object_id)
+        if block_id in dict:
+            dict[block_id].append(object_id)
+        else:
+            dict[block_id] = [object_id]
+    for block_id in dict:
+        object_ids = dict[block_id]
+        object_ids = [wibbrlib.cmp.create(wibbrlib.cmp.CMP_OBJREF, x)
+                      for x in object_ids]
+        block_id = wibbrlib.cmp.create(wibbrlib.cmp.CMP_BLOCKREF, block_id)
+        c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_OBJMAP, 
+                                [block_id] + object_ids)
+        list.append(wibbrlib.cmp.encode(c))
     return list
 
 
@@ -74,9 +81,10 @@ def decode_block(mapping, mapping_block):
     maps = wibbrlib.cmp.find_by_type(list, wibbrlib.cmp.CMP_OBJMAP)
     for map in maps:
         subs = wibbrlib.cmp.get_subcomponents(map)
-        object_id = wibbrlib.cmp.first_string_by_type(subs, 
-                                               wibbrlib.cmp.CMP_OBJREF)
         block_id = wibbrlib.cmp.first_string_by_type(subs, 
                                                wibbrlib.cmp.CMP_BLOCKREF)
-        if object_id and block_id:
-            _add_old(mapping, object_id, block_id)
+        object_ids = wibbrlib.cmp.find_strings_by_type(subs, 
+                                               wibbrlib.cmp.CMP_OBJREF)
+        if object_ids and block_id:
+            for object_id in object_ids:
+                _add_old(mapping, object_id, block_id)

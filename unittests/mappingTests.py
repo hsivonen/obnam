@@ -64,13 +64,13 @@ class ObjectMappingTests(unittest.TestCase):
         list3 = wibbrlib.cmp.get_subcomponents(list2[0])
         self.failUnlessEqual(len(list3), 2)
         self.failUnlessEqual(wibbrlib.cmp.get_type(list3[0]),
-                             wibbrlib.cmp.CMP_OBJREF)
-        self.failUnlessEqual(wibbrlib.cmp.get_string_value(list3[0]),
-                             "pink")
-        self.failUnlessEqual(wibbrlib.cmp.get_type(list3[1]),
                              wibbrlib.cmp.CMP_BLOCKREF)
-        self.failUnlessEqual(wibbrlib.cmp.get_string_value(list3[1]),
+        self.failUnlessEqual(wibbrlib.cmp.get_string_value(list3[0]),
                              "pretty")
+        self.failUnlessEqual(wibbrlib.cmp.get_type(list3[1]),
+                             wibbrlib.cmp.CMP_OBJREF)
+        self.failUnlessEqual(wibbrlib.cmp.get_string_value(list3[1]),
+                             "pink")
 
         # Now try decoding with the official function
         block = wibbrlib.mapping.encode_new_to_block(m, "black")
