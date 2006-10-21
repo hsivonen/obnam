@@ -63,6 +63,8 @@ ignore_for_dir = []
 class FilesystemObject:
 
     def __init__(self, pathname, key):
+        # pathname is the name via which we access the file on the filesystem
+        # key is the name we show the user
         self.pathname = pathname
         self.key = key
         self.st = os.lstat(pathname)
@@ -81,12 +83,12 @@ class FilesystemObject:
 
     def typename(self):
         list = (
-            (stat.S_ISDIR, "dir"),
-            (stat.S_ISCHR, "char"),
-            (stat.S_ISBLK, "block"),
-            (stat.S_ISREG, "file"),
+            (stat.S_ISDIR,  "dir"),
+            (stat.S_ISCHR,  "char"),
+            (stat.S_ISBLK,  "block"),
+            (stat.S_ISREG,  "file"),
             (stat.S_ISFIFO, "fifo"),
-            (stat.S_ISLNK, "symlink"),
+            (stat.S_ISLNK,  "symlink"),
             (stat.S_ISSOCK, "socket"),
         )
         for func, result in list:
@@ -138,7 +140,7 @@ class Manifest:
                     key = pathname[len(root + os.sep):]
                     self.fsys_objects[key] = FilesystemObject(pathname, key)
         else:
-            self.fsys_objects[root] = FilesystemObject(root)
+            self.fsys_objects[root] = FilesystemObject(root, root)
 
     def write(self, f):
         pathnames = self.fsys_objects.keys()
