@@ -120,10 +120,7 @@ def backup(context, args):
     gen = wibbrlib.obj.generation_object_encode(gen_id, pairs)
     gen_ids.append(gen_id)
     wibbrlib.io.enqueue_object(context, context.oq, gen_id, gen)
-    if wibbrlib.obj.object_queue_combined_size(context.oq) > 0:
-        wibbrlib.io.flush_object_queue(context, context.oq)
-    if wibbrlib.obj.object_queue_combined_size(context.content_oq) > 0:
-        wibbrlib.io.flush_object_queue(context, context.content_oq)
+    wibbrlib.io.flush_all_object_queues(context)
 
     map_block_id = wibbrlib.backend.generate_block_id(context.be)
     map_block = wibbrlib.mapping.encode_new_to_block(context.map, 
