@@ -90,6 +90,16 @@ class ObjectQueueFlushing(IoBase):
         b2 = [os.path.basename(x) for x in list]
         self.failUnlessEqual(b1, b2)
 
+    def testFlushAll(self):
+        wibbrlib.obj.object_queue_add(self.context.oq, "pink", "pretty")
+        wibbrlib.obj.object_queue_add(self.context.content_oq, "x", "y")
+        wibbrlib.io.flush_all_object_queues(self.context)
+        self.failUnlessEqual(len(wibbrlib.backend.list(self.context.be)), 2)
+        self.failUnlessEqual(
+          wibbrlib.obj.object_queue_combined_size(self.context.oq), 0)
+        self.failUnlessEqual(
+          wibbrlib.obj.object_queue_combined_size(self.context.content_oq), 0)
+
 
 class GetObjectTests(IoBase):
 

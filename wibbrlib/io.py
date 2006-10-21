@@ -41,6 +41,14 @@ def flush_object_queue(context, oq):
             wibbrlib.mapping.add(context.map, id, block_id)
 
 
+def flush_all_object_queues(context):
+    """Flush and clear all object queues in a given context"""
+    flush_object_queue(context, context.oq)
+    wibbrlib.obj.object_queue_clear(context.oq)
+    flush_object_queue(context, context.content_oq)
+    wibbrlib.obj.object_queue_clear(context.content_oq)
+
+
 def get_block(context, block_id):
     """Get a block from cache or by downloading it"""
     block = wibbrlib.cache.get_block(context.cache, block_id)
