@@ -33,11 +33,12 @@ def flush_object_queue(context, oq):
     
     """
     
-    block_id = wibbrlib.backend.generate_block_id(context.be)
-    block = wibbrlib.obj.block_create_from_object_queue(block_id, oq)
-    wibbrlib.backend.upload(context.be, block_id, block)
-    for id in wibbrlib.obj.object_queue_ids(oq):
-        wibbrlib.mapping.add(context.map, id, block_id)
+    if wibbrlib.obj.object_queue_combined_size(oq) > 0:
+        block_id = wibbrlib.backend.generate_block_id(context.be)
+        block = wibbrlib.obj.block_create_from_object_queue(block_id, oq)
+        wibbrlib.backend.upload(context.be, block_id, block)
+        for id in wibbrlib.obj.object_queue_ids(oq):
+            wibbrlib.mapping.add(context.map, id, block_id)
 
 
 def get_block(context, block_id):

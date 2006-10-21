@@ -70,6 +70,11 @@ class IoBase(unittest.TestCase):
 
 class ObjectQueueFlushing(IoBase):
 
+    def testEmptyQueue(self):
+        wibbrlib.io.flush_object_queue(self.context, self.context.oq)
+        list = wibbrlib.backend.list(self.context.be)
+        self.failUnlessEqual(list, [])
+
     def testFlushing(self):
         wibbrlib.obj.object_queue_add(self.context.oq, "pink", "pretty")
         
