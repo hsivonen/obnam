@@ -1,7 +1,11 @@
-Every new feature must have a unit test.
+Every new feature must have a unit test. Unit tests go into *Tests.py,
+and are run by testrun.py (which is invoked by "make check").
 
-Every bug fix must have a unit test.
+Black box tests are run by the "blackboxtests" script. It, too, is run
+by "make check".
 
-Do not commit unless all unit tests pass.
+Every bug fix must have a unit test or black box regression test.
+
+Do not commit to trunk unless "make check" passes.
 
 Every function, class, method, and file must have a comment or doc string.
