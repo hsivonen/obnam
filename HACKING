@@ -1,5 +1,6 @@
-Every new feature must have a unit test. Unit tests go into *Tests.py,
-and are run by testrun.py (which is invoked by "make check").
+Every new feature must have a unit test. Unit tests go into
+unittests/*Tests.py, and are run by testrun.py (which is invoked by
+"make check").
 
 Black box tests are run by the "blackboxtests" script. It, too, is run
 by "make check".
