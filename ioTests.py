@@ -85,9 +85,8 @@ class ObjectQueueFlushing(IoBase):
         list = wibbrlib.backend.list(self.context.be)
         self.failUnlessEqual(len(list), 1)
         
-        b1 = [os.path.basename(x) 
-                for x in wibbrlib.mapping.get(self.context.map, "pink")]
-        b2 = [os.path.basename(x) for x in list]
+        b1 = os.path.basename(wibbrlib.mapping.get(self.context.map, "pink"))
+        b2 = os.path.basename(list[0])
         self.failUnlessEqual(b1, b2)
 
     def testFlushAll(self):

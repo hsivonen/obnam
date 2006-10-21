@@ -27,10 +27,8 @@ def add(mapping, object_id, block_id):
 
 def _add_old(mapping, object_id, block_id):
     """Add a mapping from object_id to block_id"""
-    if object_id in mapping.dict:
-        mapping.dict[object_id].append(block_id)
-    else:
-        mapping.dict[object_id] = [block_id]
+    assert object_id not in mapping.dict
+    mapping.dict[object_id] = block_id
 
 
 def get(mapping, object_id):
@@ -53,12 +51,10 @@ def encode_new(mapping):
     list = []
     for key in get_new(mapping):
         objref = wibbrlib.cmp.create(wibbrlib.cmp.CMP_OBJREF, key)
-        blockrefs = mapping.dict[key]
-        blockrefs = [wibbrlib.cmp.create(
-                        wibbrlib.cmp.CMP_BLOCKREF, x) 
-                     for x in blockrefs]
+        blockref = wibbrlib.cmp.create(wibbrlib.cmp.CMP_BLOCKREF,
+                                       mapping.dict[key])
         component = wibbrlib.cmp.create(wibbrlib.cmp.CMP_OBJMAP, 
-                        [objref] + blockrefs)
+                                        [objref, blockref])
         component = wibbrlib.cmp.encode(component)
         list.append(component)
     return list
@@ -80,8 +76,7 @@ def decode_block(mapping, mapping_block):
         subs = wibbrlib.cmp.get_subcomponents(map)
         object_id = wibbrlib.cmp.first_string_by_type(subs, 
                                                wibbrlib.cmp.CMP_OBJREF)
-        block_ids = wibbrlib.cmp.find_strings_by_type(subs, 
-                                           wibbrlib.cmp.CMP_BLOCKREF)
-        if object_id and block_ids:
-            for block_id in block_ids:
-                _add_old(mapping, object_id, block_id)
+        block_id = wibbrlib.cmp.first_string_by_type(subs, 
+                                               wibbrlib.cmp.CMP_BLOCKREF)
+        if object_id and block_id:
+            _add_old(mapping, object_id, block_id)

@@ -125,11 +125,10 @@ def get_object(context, object_id):
     if o:
         return o
         
-    block_ids = wibbrlib.mapping.get(context.map, object_id)
-    if not block_ids:
+    block_id = wibbrlib.mapping.get(context.map, object_id)
+    if not block_id:
         return None
 
-    block_id = block_ids[0]
     block = get_block(context, block_id)
     if not block:
         raise MissingBlock(block_id, object_id)

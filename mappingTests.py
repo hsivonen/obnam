@@ -15,25 +15,20 @@ class ObjectMappingTests(unittest.TestCase):
 
     def testGetNonexisting(self):
         m = wibbrlib.mapping.create()
-        blkids = wibbrlib.mapping.get(m, "pink")
-        self.failUnlessEqual(blkids, None)
+        self.failUnlessEqual(wibbrlib.mapping.get(m, "pink"), None)
 
     def testAddOneMapping(self):
         m = wibbrlib.mapping.create()
         wibbrlib.mapping.add(m, "pink", "pretty")
         self.failUnlessEqual(wibbrlib.mapping.count(m), 1)
         
-        blkids = wibbrlib.mapping.get(m, "pink")
-        self.failUnlessEqual(blkids, ["pretty"])
+        self.failUnlessEqual(wibbrlib.mapping.get(m, "pink"), "pretty")
 
     def testAddTwoMappings(self):
         m = wibbrlib.mapping.create()
         wibbrlib.mapping.add(m, "pink", "pretty")
-        wibbrlib.mapping.add(m, "pink", "beautiful")
-        self.failUnlessEqual(wibbrlib.mapping.count(m), 1)
-        
-        blkids = wibbrlib.mapping.get(m, "pink")
-        self.failUnlessEqual(blkids, ["pretty", "beautiful"])
+        self.failUnlessRaises(AssertionError, wibbrlib.mapping.add,
+                              m, "pink", "beautiful")
 
     def testGetNewMappings(self):
         m = wibbrlib.mapping.create()
@@ -82,4 +77,4 @@ class ObjectMappingTests(unittest.TestCase):
         m2 = wibbrlib.mapping.create()
         wibbrlib.mapping.decode_block(m2, block)
         self.failUnlessEqual(wibbrlib.mapping.count(m2), 1)
-        self.failUnlessEqual(wibbrlib.mapping.get(m2, "pink"), ["pretty"])
+        self.failUnlessEqual(wibbrlib.mapping.get(m2, "pink"), "pretty")
