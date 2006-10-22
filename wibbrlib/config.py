@@ -30,15 +30,15 @@ def parse_options(config, argv):
                       metavar="SIZE",
                       help="Make blocks that are about SIZE kilobytes")
     
-    parser.add_option("--cache-dir",
+    parser.add_option("--cache",
                       metavar="DIR",
                       help="Store cached blocks in DIR")
     
-    parser.add_option("--local-store",
+    parser.add_option("--store",
                       metavar="DIR",
                       help="Use DIR for local block storage (not caching)")
     
-    parser.add_option("--target-dir", "-C",
+    parser.add_option("--target", "-C",
                       metavar="DIR",
                       help="Resolve filenames relative to DIR")
 
@@ -46,11 +46,11 @@ def parse_options(config, argv):
     
     if options.block_size:
         config.set("wibbr", "block-size", "%d" % options.block_size)
-    if options.cache_dir:
-        config.set("wibbr", "cache-dir", options.cache_dir)
-    if options.local_store:
-        config.set("wibbr", "local-store", options.local_store)
-    if options.target_dir:
-        config.set("wibbr", "target-dir", options.target_dir)
+    if options.cache:
+        config.set("wibbr", "cache-dir", options.cache)
+    if options.store:
+        config.set("wibbr", "local-store", options.store)
+    if options.target:
+        config.set("wibbr", "target-dir", options.target)
 
     return args

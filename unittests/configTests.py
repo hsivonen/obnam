@@ -38,15 +38,15 @@ class CommandLineParsingTests(unittest.TestCase):
 
     def testCacheDir(self):
         config = wibbrlib.config.default_config()
-        wibbrlib.config.parse_options(config, ["--cache-dir=/tmp/foo"])
+        wibbrlib.config.parse_options(config, ["--cache=/tmp/foo"])
         self.failUnlessEqual(config.get("wibbr", "cache-dir"), "/tmp/foo")
 
     def testLocalStore(self):
         config = wibbrlib.config.default_config()
-        wibbrlib.config.parse_options(config, ["--local-store=/tmp/foo"])
+        wibbrlib.config.parse_options(config, ["--store=/tmp/foo"])
         self.failUnlessEqual(config.get("wibbr", "local-store"), "/tmp/foo")
 
     def testTargetDir(self):
         config = wibbrlib.config.default_config()
-        wibbrlib.config.parse_options(config, ["--target-dir=/tmp/foo"])
+        wibbrlib.config.parse_options(config, ["--target=/tmp/foo"])
         self.failUnlessEqual(config.get("wibbr", "target-dir"), "/tmp/foo")

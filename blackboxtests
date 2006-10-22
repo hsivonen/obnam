@@ -32,7 +32,7 @@ set -e
 # tmp="tmp"; rm -rf "$tmp"; mkdir "$tmp"
 tmp=$(mktemp -d)
 
-CONFIG="--cache-dir=$tmp/cache --local-store=$tmp/store"
+CONFIG="--cache=$tmp/cache --store=$tmp/store"
 
 MANIFESTOPTS="-i Inode -i Ctime -i Atime"
 
