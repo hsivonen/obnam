@@ -197,6 +197,17 @@ class HostBlockTests(unittest.TestCase):
         self.failUnlessEqual(host_id, host_id2)
         self.failUnlessEqual(gen_ids, gen_ids2)
         self.failUnlessEqual(map_ids, map_ids2)
+        
+    def testFormatVersion(self):
+        encoded = wibbrlib.obj.host_block_encode("pink", [], [])
+        decoded = wibbrlib.obj.block_decode(encoded)
+        c = wibbrlib.cmp.first_by_type(decoded, wibbrlib.cmp.CMP_OBJPART)
+        subs = wibbrlib.cmp.get_subcomponents(c)
+        id = wibbrlib.cmp.first_string_by_type(subs, wibbrlib.cmp.CMP_OBJID)
+        self.failUnlessEqual(id, "pink")
+        ver = wibbrlib.cmp.first_string_by_type(subs, 
+                                            wibbrlib.cmp.CMP_FORMATVERSION)
+        self.failUnlessEqual(ver, "1")
 
 
 class GetComponentTests(unittest.TestCase):

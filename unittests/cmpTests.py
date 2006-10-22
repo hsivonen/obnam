@@ -44,6 +44,7 @@ class ComponentTypeNameTests(unittest.TestCase):
         self.failUnlessEqual(t(c.CMP_BLOCKREF), "CMP_BLOCKREF")
         self.failUnlessEqual(t(c.CMP_MAPREF), "CMP_MAPREF")
         self.failUnlessEqual(t(c.CMP_FILEPARTREF), "CMP_FILEPARTREF")
+        self.failUnlessEqual(t(c.CMP_FORMATVERSION), "CMP_FORMATVERSION")
 
 
 class CreateComponentTests(unittest.TestCase):

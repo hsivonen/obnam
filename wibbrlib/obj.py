@@ -10,6 +10,11 @@ import wibbrlib.varint
 BLOCK_COOKIE = "blockhead\n"
 
 
+# Version of the storage format
+
+FORMAT_VERSION = "1"
+
+
 # Constants of object types
 
 _object_types = {}
@@ -324,6 +329,9 @@ def generation_object_decode(gen):
 def host_block_encode(host_id, gen_ids, map_block_ids):
     """Encode a new block with a host object"""
     o = create(host_id, OBJ_HOST)
+    
+    c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_FORMATVERSION, FORMAT_VERSION)
+    add(o, c)
 
     for gen_id in gen_ids:
         c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_GENREF, gen_id)
