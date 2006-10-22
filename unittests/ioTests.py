@@ -274,17 +274,21 @@ class ObjectCacheTests(unittest.TestCase):
         self.object3 = wibbrlib.obj.create("beautiful", 1)
 
     def testCreate(self):
-        oc = wibbrlib.io.ObjectCache()
+        context = wibbrlib.context.create()
+        oc = wibbrlib.io.ObjectCache(context)
         self.failUnlessEqual(oc.size(), 0)
+        self.failUnless(oc.MAX > 0)
         
     def testPut(self):
-        oc = wibbrlib.io.ObjectCache()
+        context = wibbrlib.context.create()
+        oc = wibbrlib.io.ObjectCache(context)
         self.failUnlessEqual(oc.get("pink"), None)
         oc.put(self.object)
         self.failUnlessEqual(oc.get("pink"), self.object)
 
     def testPutWithOverflow(self):
-        oc = wibbrlib.io.ObjectCache()
+        context = wibbrlib.context.create()
+        oc = wibbrlib.io.ObjectCache(context)
         oc.MAX = 1
         oc.put(self.object)
         self.failUnlessEqual(oc.size(), 1)
@@ -295,7 +299,8 @@ class ObjectCacheTests(unittest.TestCase):
         self.failUnlessEqual(oc.get("pretty"), self.object2)
 
     def testPutWithOverflowPart2(self):
-        oc = wibbrlib.io.ObjectCache()
+        context = wibbrlib.context.create()
+        oc = wibbrlib.io.ObjectCache(context)
         oc.MAX = 2
 
         oc.put(self.object)

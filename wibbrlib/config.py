@@ -10,6 +10,7 @@ def default_config():
         ("wibbr", "cache-dir", "tmp.cachedir"),
         ("wibbr", "local-store", "tmp.local-store"),
         ("wibbr", "target-dir", "."),
+        ("wibbr", "object-cache-size", "0"),
     )
     
     config = ConfigParser.RawConfigParser()
@@ -41,6 +42,11 @@ def parse_options(config, argv):
     parser.add_option("--target", "-C",
                       metavar="DIR",
                       help="Resolve filenames relative to DIR")
+    
+    parser.add_option("--object-cache-size",
+                      metavar="COUNT",
+                      help="Set object cache maximum size to COUNT objects" +
+                           " (default depends on block size")
 
     (options, args) = parser.parse_args(argv)
     
@@ -52,5 +58,7 @@ def parse_options(config, argv):
         config.set("wibbr", "local-store", options.store)
     if options.target:
         config.set("wibbr", "target-dir", options.target)
+    if options.object_cache_size:
+        config.set("wibbr", "object-cache-size", options.object_cache_size)
 
     return args

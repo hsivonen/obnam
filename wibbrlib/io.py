@@ -87,14 +87,16 @@ import os
 
 class ObjectCache:
 
-    def __init__(self):
+    def __init__(self, context):
+        self.MAX = context.config.getint("wibbr", "object-cache-size")
+        if self.MAX <= 0:
+            self.MAX = context.config.getint("wibbr", "block-size") / 64
+            # 64 bytes seems like a reasonably good guess at the typical
+            # size of an object that doesn't contain file data. Inodes,
+            # for example.
         self.objects = {}
         self.mru = []
-        if "WIBBR_OC_MAX" in os.environ:
-            self.MAX = int(os.environ["WIBBR_OC_MAX"])
-        else:
-            self.MAX = 2000
-        
+
     def get(self, object_id):
         if object_id in self.objects:
             self.mru.remove(object_id)
@@ -118,12 +120,15 @@ class ObjectCache:
     def size(self):
         return len(self.mru)
 
-object_cache = ObjectCache()
+_object_cache = None
 
 
 def get_object(context, object_id):
     """Fetch an object"""
-    o = object_cache.get(object_id)
+    global _object_cache
+    if _object_cache is None:
+        _object_cache = ObjectCache(context)
+    o = _object_cache.get(object_id)
     if o:
         return o
         
@@ -143,7 +148,7 @@ def get_object(context, object_id):
         subs = wibbrlib.cmp.get_subcomponents(component)
         o = create_object_from_component_list(subs)
         if wibbrlib.obj.get_kind(o) != wibbrlib.obj.OBJ_FILEPART:
-            object_cache.put(o)
+            _object_cache.put(o)
         if wibbrlib.obj.get_id(o) == object_id:
             the_one = o
     

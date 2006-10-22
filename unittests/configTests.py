@@ -17,11 +17,12 @@ class CommandLineParsingTests(unittest.TestCase):
     def testDefaultConfig(self):
         config = wibbrlib.config.default_config()
         self.failUnless(config.has_section("wibbr"))
-        self.failUnless(config.has_option("wibbr", "block-size"))
-        self.failUnless(config.has_option("wibbr", "cache-dir"))
-        self.failUnless(config.has_option("wibbr", "local-store"))
-        self.failUnless(config.has_option("wibbr", "target-dir"))
-        self.failUnless(config.has_option("wibbr", "host-id"))
+        needed = ["block-size", "cache-dir", "local-store", "target-dir",
+                  "host-id", "object-cache-size"]
+        needed.sort()
+        actual = config.options("wibbr")
+        actual.sort()
+        self.failUnlessEqual(actual, needed)
 
     def testEmpty(self):
         config = wibbrlib.config.default_config()
@@ -50,3 +51,8 @@ class CommandLineParsingTests(unittest.TestCase):
         config = wibbrlib.config.default_config()
         wibbrlib.config.parse_options(config, ["--target=/tmp/foo"])
         self.failUnlessEqual(config.get("wibbr", "target-dir"), "/tmp/foo")
+
+    def testObjectCacheSize(self):
+        config = wibbrlib.config.default_config()
+        wibbrlib.config.parse_options(config, ["--object-cache-size=42"])
+        self.failUnlessEqual(config.get("wibbr", "object-cache-size"), "42")
