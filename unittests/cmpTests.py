@@ -47,6 +47,15 @@ class ComponentKindNameTests(unittest.TestCase):
         self.failUnlessEqual(t(c.CMP_FORMATVERSION), "CMP_FORMATVERSION")
 
 
+class RefComponentTests(unittest.TestCase):
+
+    def test(self):
+        kinds = wibbrlib.cmp._component_kinds
+        for kind in kinds:
+            self.failUnlessEqual(kinds[kind][1].endswith("REF"),
+                                 wibbrlib.cmp.kind_is_reference(kind))
+
+
 class CreateComponentTests(unittest.TestCase):
 
     def testCreateLeaf(self):
