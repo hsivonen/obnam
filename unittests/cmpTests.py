@@ -18,7 +18,7 @@ class ComponentTypeNameTests(unittest.TestCase):
         self.failUnlessEqual(t(c.CMP_OBJTYPE), "CMP_OBJTYPE")
         self.failUnlessEqual(t(c.CMP_BLKID), "CMP_BLKID")
         self.failUnlessEqual(t(c.CMP_FILECHUNK), "CMP_FILECHUNK")
-        self.failUnlessEqual(t(c.CMP_OBJPART), "CMP_OBJPART")
+        self.failUnlessEqual(t(c.CMP_OBJECT), "CMP_OBJECT")
         self.failUnlessEqual(t(c.CMP_OBJMAP), "CMP_OBJMAP")
         self.failUnlessEqual(t(c.CMP_ST_MODE), "CMP_ST_MODE")
         self.failUnlessEqual(t(c.CMP_ST_INO), "CMP_ST_INO")
@@ -92,12 +92,12 @@ class ComponentEncodingDecodingTests(unittest.TestCase):
         self.doit(2, "hello, world\0this is fun")
 
     def testEmptyComposite(self):
-        self.doit(wibbrlib.cmp.CMP_OBJPART, [])
+        self.doit(wibbrlib.cmp.CMP_OBJECT, [])
 
     def testNonemptyComposite(self):
         c1 = wibbrlib.cmp.create(1, "pink")
         c2 = wibbrlib.cmp.create(2, "pretty")
-        self.doit(wibbrlib.cmp.CMP_OBJPART, [c1, c2])
+        self.doit(wibbrlib.cmp.CMP_OBJECT, [c1, c2])
 
 
 class ComponentDecodeAllTests(unittest.TestCase):

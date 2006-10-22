@@ -116,7 +116,7 @@ class BlockCreateTests(unittest.TestCase):
             wibbrlib.cmp.first_string_by_type(list, wibbrlib.cmp.CMP_BLKID),
             "blkid")
         self.failUnlessEqual(len(list), 2)
-        o2 = wibbrlib.cmp.first_by_type(list, wibbrlib.cmp.CMP_OBJPART)
+        o2 = wibbrlib.cmp.first_by_type(list, wibbrlib.cmp.CMP_OBJECT)
         self.failUnlessEqual(wibbrlib.obj.first_string_by_type(o, 2), 
                              "pretty")
         self.failUnlessEqual(object_queue_ids(oq), ["pink"])
@@ -201,7 +201,7 @@ class HostBlockTests(unittest.TestCase):
     def testFormatVersion(self):
         encoded = wibbrlib.obj.host_block_encode("pink", [], [])
         decoded = wibbrlib.obj.block_decode(encoded)
-        c = wibbrlib.cmp.first_by_type(decoded, wibbrlib.cmp.CMP_OBJPART)
+        c = wibbrlib.cmp.first_by_type(decoded, wibbrlib.cmp.CMP_OBJECT)
         subs = wibbrlib.cmp.get_subcomponents(c)
         id = wibbrlib.cmp.first_string_by_type(subs, wibbrlib.cmp.CMP_OBJID)
         self.failUnlessEqual(id, "pink")

@@ -179,7 +179,7 @@ def object_queue_ids(oq):
 def block_create_from_object_queue(blkid, oq):
     """Create a block from an object queue"""
     blkid = wibbrlib.cmp.create(wibbrlib.cmp.CMP_BLKID, blkid)
-    objects = [wibbrlib.cmp.create(wibbrlib.cmp.CMP_OBJPART, x[1])
+    objects = [wibbrlib.cmp.create(wibbrlib.cmp.CMP_OBJECT, x[1])
                for x in oq]
     return "".join([BLOCK_COOKIE] + 
                    [wibbrlib.cmp.encode(c) for c in [blkid] + objects])
@@ -357,7 +357,7 @@ def host_block_decode(block):
     map_ids = []
     gen_ids = []
 
-    objparts = wibbrlib.cmp.find_by_type(list, wibbrlib.cmp.CMP_OBJPART)
+    objparts = wibbrlib.cmp.find_by_type(list, wibbrlib.cmp.CMP_OBJECT)
     for objpart in objparts:
         subs = wibbrlib.cmp.get_subcomponents(objpart)
         map_ids += wibbrlib.cmp.find_strings_by_type(subs, 

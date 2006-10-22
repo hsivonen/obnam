@@ -136,7 +136,7 @@ def get_object(context, object_id):
         raise MissingBlock(block_id, object_id)
 
     list = wibbrlib.obj.block_decode(block)
-    list = wibbrlib.cmp.find_by_type(list, wibbrlib.cmp.CMP_OBJPART)
+    list = wibbrlib.cmp.find_by_type(list, wibbrlib.cmp.CMP_OBJECT)
 
     the_one = None
     for component in list:
