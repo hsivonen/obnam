@@ -84,5 +84,16 @@ def list(be):
     """Return list of all files on the remote server"""
     list = []
     for dirpath, _, filenames in os.walk(be.local_root):
+        if dirpath.startswith(be.local_root):
+            dirpath = dirpath[len(be.local_root):]
+            if dirpath.startswith(os.sep):
+                dirpath = dirpath[len(os.sep):]
         list += [os.path.join(dirpath, x) for x in filenames]
     return list
+
+
+def remove(be, block_id):
+    """Remove a block from the remote server"""
+    pathname = _block_remote_pathname(be, block_id)
+    if os.path.exists(pathname):
+        os.remove(pathname)

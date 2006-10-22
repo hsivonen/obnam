@@ -315,3 +315,21 @@ class ObjectCacheTests(unittest.TestCase):
         self.failUnlessEqual(oc.get("pink"), self.object)
         self.failUnlessEqual(oc.get("pretty"), None)
         self.failUnlessEqual(oc.get("beautiful"), self.object3)
+
+
+class GarbageCollectionTests(IoBase):
+
+    def testFindUnreachableFiles(self):
+        host_id = self.context.config.get("wibbr", "host-id")
+        host = wibbrlib.obj.host_block_encode(host_id, [], [])
+        wibbrlib.io.upload_host_block(self.context, host)
+
+        block_id = wibbrlib.backend.generate_block_id(self.context.be)
+        wibbrlib.backend.upload(self.context.be, block_id, "pink")
+
+        files = wibbrlib.backend.list(self.context.be)
+        self.failUnlessEqual(files, [host_id, block_id])
+
+        wibbrlib.io.collect_garbage(self.context)
+        files = wibbrlib.backend.list(self.context.be)
+        self.failUnlessEqual(files, [host_id])

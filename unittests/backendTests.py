@@ -101,10 +101,24 @@ class FileListTests(LocalBackendBase):
         block = "pretty"
         wibbrlib.backend.upload(be, id, block)
         list = wibbrlib.backend.list(be)
-        filename = os.path.join(self.rootdir, id)
-        self.failUnlessEqual(list, [filename])
+        self.failUnlessEqual(list, [id])
 
+        filename = os.path.join(self.rootdir, id)
         f = file(filename, "r")
         block2 = f.read()
         f.close()
         self.failUnlessEqual(block, block2)
+
+
+class RemoveTests(LocalBackendBase):
+
+    def test(self):
+        be = wibbrlib.backend.init(self.config, self.cache)
+        id = wibbrlib.backend.generate_block_id(be)
+        block = "pink is still pretty"
+        wibbrlib.backend.upload(be, id, block)
+
+        self.failUnlessEqual(wibbrlib.backend.list(be), [id])
+        
+        wibbrlib.backend.remove(be, id)
+        self.failUnlessEqual(wibbrlib.backend.list(be), [])

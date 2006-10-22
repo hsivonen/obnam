@@ -248,3 +248,40 @@ def set_inode(full_pathname, inode):
     mtime = wibbrlib.obj.first_varint_by_kind(inode, wibbrlib.cmp.CMP_ST_MTIME)
     os.utime(full_pathname, (atime, mtime))
     os.chmod(full_pathname, stat.S_IMODE(mode))
+
+
+def _find_refs(components):
+    """Return set of all references (recursively) in a list of components"""
+    refs = set()
+    for c in components:
+        kind = wibbrlib.cmp.get_kind(c)
+        if wibbrlib.cmp.kind_is_reference(kind):
+            refs.add(wibbrlib.cmp.get_string_value(c))
+        elif wibbrlib.cmp.kind_is_composite(kind):
+            refs = refs.union(_find_refs(wibbrlib.cmp.get_subcomponents(c)))
+    return refs
+
+
+def collect_garbage(context):
+    """Find files on the server store that are not linked from host object"""
+    files = wibbrlib.backend.list(context.be)
+    host_id = context.config.get("wibbr", "host-id")
+    remaining = set([host_id])
+    while remaining:
+        print repr(remaining)
+        block_id = remaining.pop()
+        if block_id not in files:
+            # We've already done this block.
+            continue
+        files.remove(block_id)
+
+        block = get_block(context, block_id)
+        if not block:
+            continue
+
+        refs = _find_refs(wibbrlib.obj.block_decode(block))
+        for ref in refs:
+            remaining.add(wibbrlib.mapping.get(context.map, ref))
+
+    for garbage in files:
+        wibbrlib.backend.remove(context.be, garbage)
