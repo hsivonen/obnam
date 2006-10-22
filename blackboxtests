@@ -55,7 +55,7 @@ do
             tar -C "$tmp/root" -xzf "$gen"
             ;;
         *.sh)
-            sh "$gen" "$tmp/root"
+            sh "$gen" "$tmp"
             ;;
         esac
         
