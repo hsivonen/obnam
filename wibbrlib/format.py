@@ -88,7 +88,7 @@ def inode_fields(inode):
     )
 
     list = []
-    for type, func in fields:
-        for value in wibbrlib.obj.find_varints_by_type(inode, type):
+    for kind, func in fields:
+        for value in wibbrlib.obj.find_varints_by_kind(inode, kind):
             list.append(func(value))
     return list

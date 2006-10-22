@@ -8,14 +8,14 @@ import unittest
 import wibbrlib
 
 
-class ComponentTypeNameTests(unittest.TestCase):
+class ComponentKindNameTests(unittest.TestCase):
 
     def test(self):
-        t = wibbrlib.cmp.type_name
+        t = wibbrlib.cmp.kind_name
         c = wibbrlib.cmp
         self.failUnlessEqual(t(-12765), "CMP_UNKNOWN")
         self.failUnlessEqual(t(c.CMP_OBJID), "CMP_OBJID")
-        self.failUnlessEqual(t(c.CMP_OBJTYPE), "CMP_OBJTYPE")
+        self.failUnlessEqual(t(c.CMP_OBJKIND), "CMP_OBJKIND")
         self.failUnlessEqual(t(c.CMP_BLKID), "CMP_BLKID")
         self.failUnlessEqual(t(c.CMP_FILECHUNK), "CMP_FILECHUNK")
         self.failUnlessEqual(t(c.CMP_OBJECT), "CMP_OBJECT")
@@ -52,7 +52,7 @@ class CreateComponentTests(unittest.TestCase):
     def testCreateLeaf(self):
         c = wibbrlib.cmp.create(1, "pink")
         self.failIfEqual(c, None)
-        self.failUnlessEqual(wibbrlib.cmp.get_type(c), 1)
+        self.failUnlessEqual(wibbrlib.cmp.get_kind(c), 1)
         self.failUnlessEqual(wibbrlib.cmp.get_string_value(c), "pink")
         self.failUnlessEqual(wibbrlib.cmp.is_composite(c), False)
 
@@ -60,7 +60,7 @@ class CreateComponentTests(unittest.TestCase):
         leaf1 = wibbrlib.cmp.create(1, "pink")
         leaf2 = wibbrlib.cmp.create(2, "pretty")
         c = wibbrlib.cmp.create(3, [leaf1, leaf2])
-        self.failUnlessEqual(wibbrlib.cmp.get_type(c), 3)
+        self.failUnlessEqual(wibbrlib.cmp.get_kind(c), 3)
         self.failUnlessEqual(wibbrlib.cmp.is_composite(c), True)
         self.failUnlessEqual(wibbrlib.cmp.get_subcomponents(c), 
                              [leaf1, leaf2])
@@ -68,14 +68,14 @@ class CreateComponentTests(unittest.TestCase):
 
 class ComponentEncodingDecodingTests(unittest.TestCase):
 
-    def doit(self, c_type, data):
-        c = wibbrlib.cmp.create(c_type, data)
+    def doit(self, c_kind, data):
+        c = wibbrlib.cmp.create(c_kind, data)
         encoded = wibbrlib.cmp.encode(c)
         (c2, pos) = wibbrlib.cmp.decode(encoded, 0)
         encoded2 = wibbrlib.cmp.encode(c2)
         self.failUnlessEqual(encoded, encoded2)
-        self.failUnlessEqual(wibbrlib.cmp.get_type(c), 
-                             wibbrlib.cmp.get_type(c2))
+        self.failUnlessEqual(wibbrlib.cmp.get_kind(c), 
+                             wibbrlib.cmp.get_kind(c2))
         self.failUnlessEqual(wibbrlib.cmp.is_composite(c), 
                              wibbrlib.cmp.is_composite(c2))
         self.failUnlessEqual(wibbrlib.cmp.is_composite(c),
@@ -102,8 +102,8 @@ class ComponentEncodingDecodingTests(unittest.TestCase):
 
 class ComponentDecodeAllTests(unittest.TestCase):
 
-    def remove_component(self, list, type, value):
-        self.failUnlessEqual(wibbrlib.cmp.get_type(list[0]), type)
+    def remove_component(self, list, kind, value):
+        self.failUnlessEqual(wibbrlib.cmp.get_kind(list[0]), kind)
         self.failUnlessEqual(wibbrlib.cmp.get_string_value(list[0]), 
                              value)
         del list[0]
@@ -129,82 +129,82 @@ class FindTests(unittest.TestCase):
     def tearDown(self):
         del self.list
 
-    def match(self, result, type, value):
+    def match(self, result, kind, value):
         self.failUnless(len(result) > 0)
         c = result[0]
-        self.failUnlessEqual(wibbrlib.cmp.get_type(c), type)
+        self.failUnlessEqual(wibbrlib.cmp.get_kind(c), kind)
         self.failUnlessEqual(wibbrlib.cmp.get_string_value(c), value)
         del result[0]
 
     def testFindAllOnes(self):
-        result = wibbrlib.cmp.find_by_type(self.list, 1)
+        result = wibbrlib.cmp.find_by_kind(self.list, 1)
         self.match(result, 1, "pink")
         self.failUnlessEqual(result, [])
 
     def testFindAllTwos(self):
-        result = wibbrlib.cmp.find_by_type(self.list, 2)
+        result = wibbrlib.cmp.find_by_kind(self.list, 2)
         self.match(result, 2, "pretty")
         self.failUnlessEqual(result, [])
 
     def testFindAllThrees(self):
-        result = wibbrlib.cmp.find_by_type(self.list, 3)
+        result = wibbrlib.cmp.find_by_kind(self.list, 3)
         self.match(result, 3, "black")
         self.match(result, 3, "box")
         self.failUnlessEqual(result, [])
 
     def testFindAllNones(self):
-        result = wibbrlib.cmp.find_by_type(self.list, 0)
+        result = wibbrlib.cmp.find_by_kind(self.list, 0)
         self.failUnlessEqual(result, [])
 
     def testFindFirstOne(self):
-        result = [wibbrlib.cmp.first_by_type(self.list, 1)]
+        result = [wibbrlib.cmp.first_by_kind(self.list, 1)]
         self.match(result, 1, "pink")
         self.failUnlessEqual(result, [])
 
     def testFindFirstTwo(self):
-        result = [wibbrlib.cmp.first_by_type(self.list, 2)]
+        result = [wibbrlib.cmp.first_by_kind(self.list, 2)]
         self.match(result, 2, "pretty")
         self.failUnlessEqual(result, [])
 
     def testFindFirstThree(self):
-        result = [wibbrlib.cmp.first_by_type(self.list, 3)]
+        result = [wibbrlib.cmp.first_by_kind(self.list, 3)]
         self.match(result, 3, "black")
         self.failUnlessEqual(result, [])
 
     def testFindFirstNone(self):
-        result = wibbrlib.cmp.first_by_type(self.list, 0)
+        result = wibbrlib.cmp.first_by_kind(self.list, 0)
         self.failUnlessEqual(result, None)
 
     def testFindAllStringOnes(self):
-        result = wibbrlib.cmp.find_strings_by_type(self.list, 1)
+        result = wibbrlib.cmp.find_strings_by_kind(self.list, 1)
         self.failUnlessEqual(result, ["pink"])
 
     def testFindAllStringTwos(self):
-        result = wibbrlib.cmp.find_strings_by_type(self.list, 2)
+        result = wibbrlib.cmp.find_strings_by_kind(self.list, 2)
         self.failUnlessEqual(result, ["pretty"])
 
     def testFindAllStringThrees(self):
-        result = wibbrlib.cmp.find_strings_by_type(self.list, 3)
+        result = wibbrlib.cmp.find_strings_by_kind(self.list, 3)
         self.failUnlessEqual(result, ["black", "box"])
 
     def testFindAllStringNones(self):
-        result = wibbrlib.cmp.find_strings_by_type(self.list, 0)
+        result = wibbrlib.cmp.find_strings_by_kind(self.list, 0)
         self.failUnlessEqual(result, [])
 
     def testFindFirstStringOne(self):
-        result = wibbrlib.cmp.first_string_by_type(self.list, 1)
+        result = wibbrlib.cmp.first_string_by_kind(self.list, 1)
         self.failUnlessEqual(result, "pink")
 
     def testFindFirstStringTwo(self):
-        result = wibbrlib.cmp.first_string_by_type(self.list, 2)
+        result = wibbrlib.cmp.first_string_by_kind(self.list, 2)
         self.failUnlessEqual(result, "pretty")
 
     def testFindFirstStringThree(self):
-        result = wibbrlib.cmp.first_string_by_type(self.list, 3)
+        result = wibbrlib.cmp.first_string_by_kind(self.list, 3)
         self.failUnlessEqual(result, "black")
 
     def testFindFirstStringNone(self):
-        result = wibbrlib.cmp.first_string_by_type(self.list, 0)
+        result = wibbrlib.cmp.first_string_by_kind(self.list, 0)
         self.failUnlessEqual(result, None)
 
 
@@ -225,5 +225,5 @@ class FindVarintTests(unittest.TestCase):
             list.append(c)
 
         for i in range(1024):
-            self.failUnlessEqual(wibbrlib.cmp.first_varint_by_type(list, i), 
+            self.failUnlessEqual(wibbrlib.cmp.first_varint_by_kind(list, i), 
                                  i)

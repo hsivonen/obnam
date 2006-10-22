@@ -30,7 +30,7 @@ def find_existing_inode(pathname, nst, prevgen_inodes):
             # requiring a new backup.
         )
         for a, b in fields:
-            b_value = wibbrlib.obj.first_varint_by_type(prev, b)
+            b_value = wibbrlib.obj.first_varint_by_kind(prev, b)
             if nst[a] != b_value:
                 return None
         return prev
@@ -76,11 +76,11 @@ def get_files_in_gen(context, gen_id):
     if not gen:
         raise Exception("wtf")
     dict = {}
-    for np in wibbrlib.obj.find_by_type(gen, wibbrlib.cmp.CMP_NAMEIPAIR):
+    for np in wibbrlib.obj.find_by_kind(gen, wibbrlib.cmp.CMP_NAMEIPAIR):
         subs = wibbrlib.cmp.get_subcomponents(np)
-        filename = wibbrlib.cmp.first_string_by_type(subs,
+        filename = wibbrlib.cmp.first_string_by_kind(subs,
                                      wibbrlib.cmp.CMP_FILENAME)
-        inode_id = wibbrlib.cmp.first_string_by_type(subs,
+        inode_id = wibbrlib.cmp.first_string_by_kind(subs,
                                      wibbrlib.cmp.CMP_INODEREF)
         inode = wibbrlib.io.get_object(context, inode_id)
         dict[filename] = inode
@@ -155,11 +155,11 @@ def show_generations(context, gen_ids):
         print "Generation:", gen_id
         gen = wibbrlib.io.get_object(context, gen_id)
         list = []
-        for c in wibbrlib.obj.find_by_type(gen, wibbrlib.cmp.CMP_NAMEIPAIR):
+        for c in wibbrlib.obj.find_by_kind(gen, wibbrlib.cmp.CMP_NAMEIPAIR):
             subs = wibbrlib.cmp.get_subcomponents(c)
-            inode_id = wibbrlib.cmp.first_string_by_type(subs, 
+            inode_id = wibbrlib.cmp.first_string_by_kind(subs, 
                                                  wibbrlib.cmp.CMP_INODEREF)
-            filename = wibbrlib.cmp.first_string_by_type(subs, 
+            filename = wibbrlib.cmp.first_string_by_kind(subs, 
                                                  wibbrlib.cmp.CMP_FILENAME)
             inode = wibbrlib.io.get_object(context, inode_id)
             if pretty:
@@ -187,13 +187,13 @@ def show_generations(context, gen_ids):
 
 
 def create_filesystem_object(context, full_pathname, inode):
-    mode = wibbrlib.obj.first_varint_by_type(inode, wibbrlib.cmp.CMP_ST_MODE)
+    mode = wibbrlib.obj.first_varint_by_kind(inode, wibbrlib.cmp.CMP_ST_MODE)
     if stat.S_ISDIR(mode):
         if not os.path.exists(full_pathname):
             os.makedirs(full_pathname, 0700)
     elif stat.S_ISREG(mode):
         fd = os.open(full_pathname, os.O_WRONLY | os.O_CREAT, 0)
-        cont_id = wibbrlib.obj.first_string_by_type(inode, 
+        cont_id = wibbrlib.obj.first_string_by_kind(inode, 
                                                     wibbrlib.cmp.CMP_CONTREF)
         wibbrlib.io.get_file_contents(context, fd, cont_id)
         os.close(fd)
@@ -221,11 +221,11 @@ def restore(context, gen_id):
     target = context.config.get("wibbr", "target-dir")
     
     list = []
-    for sub in wibbrlib.obj.find_by_type(gen, wibbrlib.cmp.CMP_NAMEIPAIR):
+    for sub in wibbrlib.obj.find_by_kind(gen, wibbrlib.cmp.CMP_NAMEIPAIR):
         subs = wibbrlib.cmp.get_subcomponents(sub)
-        inode_id = wibbrlib.cmp.first_string_by_type(subs,
+        inode_id = wibbrlib.cmp.first_string_by_kind(subs,
                                                  wibbrlib.cmp.CMP_INODEREF)
-        pathname = wibbrlib.cmp.first_string_by_type(subs,
+        pathname = wibbrlib.cmp.first_string_by_kind(subs,
                                                  wibbrlib.cmp.CMP_FILENAME)
 
         if pathname.startswith(os.sep):

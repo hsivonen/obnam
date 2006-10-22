@@ -1,63 +1,63 @@
 import wibbrlib.varint
 
 
-# Constants for component types
+# Constants for component kinds
 
-_component_types = {}
+_component_kinds = {}
 
-def _define_type(code, is_composite, name):
-    assert code not in _component_types
+def _define_kind(code, is_composite, name):
+    assert code not in _component_kinds
     assert is_composite in [True, False]
-    assert name not in _component_types.values()
-    _component_types[code] = (is_composite, name)
+    assert name not in _component_kinds.values()
+    _component_kinds[code] = (is_composite, name)
     return code
 
 
-CMP_OBJID         = _define_type( 1, False, "CMP_OBJID")
-CMP_OBJTYPE       = _define_type( 2, False, "CMP_OBJTYPE")
-CMP_BLKID         = _define_type( 3, False, "CMP_BLKID")
-CMP_FILECHUNK     = _define_type( 4, False, "CMP_FILECHUNK")
-CMP_OBJECT        = _define_type( 5, True,  "CMP_OBJECT")
-CMP_OBJMAP        = _define_type( 6, True,  "CMP_OBJMAP")
-CMP_ST_MODE       = _define_type( 7, False, "CMP_ST_MODE")
-CMP_ST_INO        = _define_type( 8, False, "CMP_ST_INO")
-CMP_ST_DEV        = _define_type( 9, False, "CMP_ST_DEV")
-CMP_ST_NLINK      = _define_type(10, False, "CMP_ST_NLINK")
-CMP_ST_UID        = _define_type(11, False, "CMP_ST_UID")
-CMP_ST_GID        = _define_type(12, False, "CMP_ST_GID")
-CMP_ST_SIZE       = _define_type(13, False, "CMP_ST_SIZE")
-CMP_ST_ATIME      = _define_type(14, False, "CMP_ST_ATIME")
-CMP_ST_MTIME      = _define_type(15, False, "CMP_ST_MTIME")
-CMP_ST_CTIME      = _define_type(16, False, "CMP_ST_CTIME")
-CMP_ST_BLOCKS     = _define_type(17, False, "CMP_ST_BLOCKS")
-CMP_ST_BLKSIZE    = _define_type(18, False, "CMP_ST_BLKSIZE")
-CMP_ST_RDEV       = _define_type(19, False, "CMP_ST_RDEV")
-CMP_CONTREF       = _define_type(20, False, "CMP_CONTREF")
-CMP_NAMEIPAIR     = _define_type(21, True,  "CMP_NAMEIPAIR")
-CMP_INODEREF      = _define_type(22, False, "CMP_INODEREF")
-CMP_FILENAME      = _define_type(23, False, "CMP_FILENAME")
-CMP_SIGDATA       = _define_type(24, False, "CMP_SIGDATA")
-CMP_SIGREF        = _define_type(25, False, "CMP_SIGREF")
-CMP_GENREF        = _define_type(26, False, "CMP_GENREF")
-CMP_OBJREF        = _define_type(28, False, "CMP_OBJREF")
-CMP_BLOCKREF      = _define_type(29, False, "CMP_BLOCKREF")
-CMP_MAPREF        = _define_type(30, False, "CMP_MAPREF")
-CMP_FILEPARTREF   = _define_type(31, False, "CMP_FILEPARTREF")
-CMP_FORMATVERSION = _define_type(32, False, "CMP_FORMATVERSION")
+CMP_OBJID         = _define_kind( 1, False, "CMP_OBJID")
+CMP_OBJKIND       = _define_kind( 2, False, "CMP_OBJKIND")
+CMP_BLKID         = _define_kind( 3, False, "CMP_BLKID")
+CMP_FILECHUNK     = _define_kind( 4, False, "CMP_FILECHUNK")
+CMP_OBJECT        = _define_kind( 5, True,  "CMP_OBJECT")
+CMP_OBJMAP        = _define_kind( 6, True,  "CMP_OBJMAP")
+CMP_ST_MODE       = _define_kind( 7, False, "CMP_ST_MODE")
+CMP_ST_INO        = _define_kind( 8, False, "CMP_ST_INO")
+CMP_ST_DEV        = _define_kind( 9, False, "CMP_ST_DEV")
+CMP_ST_NLINK      = _define_kind(10, False, "CMP_ST_NLINK")
+CMP_ST_UID        = _define_kind(11, False, "CMP_ST_UID")
+CMP_ST_GID        = _define_kind(12, False, "CMP_ST_GID")
+CMP_ST_SIZE       = _define_kind(13, False, "CMP_ST_SIZE")
+CMP_ST_ATIME      = _define_kind(14, False, "CMP_ST_ATIME")
+CMP_ST_MTIME      = _define_kind(15, False, "CMP_ST_MTIME")
+CMP_ST_CTIME      = _define_kind(16, False, "CMP_ST_CTIME")
+CMP_ST_BLOCKS     = _define_kind(17, False, "CMP_ST_BLOCKS")
+CMP_ST_BLKSIZE    = _define_kind(18, False, "CMP_ST_BLKSIZE")
+CMP_ST_RDEV       = _define_kind(19, False, "CMP_ST_RDEV")
+CMP_CONTREF       = _define_kind(20, False, "CMP_CONTREF")
+CMP_NAMEIPAIR     = _define_kind(21, True,  "CMP_NAMEIPAIR")
+CMP_INODEREF      = _define_kind(22, False, "CMP_INODEREF")
+CMP_FILENAME      = _define_kind(23, False, "CMP_FILENAME")
+CMP_SIGDATA       = _define_kind(24, False, "CMP_SIGDATA")
+CMP_SIGREF        = _define_kind(25, False, "CMP_SIGREF")
+CMP_GENREF        = _define_kind(26, False, "CMP_GENREF")
+CMP_OBJREF        = _define_kind(28, False, "CMP_OBJREF")
+CMP_BLOCKREF      = _define_kind(29, False, "CMP_BLOCKREF")
+CMP_MAPREF        = _define_kind(30, False, "CMP_MAPREF")
+CMP_FILEPARTREF   = _define_kind(31, False, "CMP_FILEPARTREF")
+CMP_FORMATVERSION = _define_kind(32, False, "CMP_FORMATVERSION")
 
 
-def type_name(type):
-    """Return a textual name for a numeric component type"""
-    if type in _component_types:
-        return _component_types[type][1]
+def kind_name(kind):
+    """Return a textual name for a numeric component kind"""
+    if kind in _component_kinds:
+        return _component_kinds[kind][1]
     else:
         return "CMP_UNKNOWN"
 
 
-def type_is_composite(type):
-    """Is a type supposed to be composite?"""
-    if type in _component_types:
-        return _component_types[type][0]
+def kind_is_composite(kind):
+    """Is a kind supposed to be composite?"""
+    if kind in _component_kinds:
+        return _component_kinds[kind][0]
     else:
         return False
 
@@ -65,12 +65,12 @@ def type_is_composite(type):
 class Component:
 
     def __init__(self):
-        self.type = None
+        self.kind = None
         self.str = None
         self.subcomponents = []
 
 
-def create(component_type, value):
+def create(component_kind, value):
     """Create a new component
     
     'value' must be either a string (for a leaf component) or a list
@@ -80,7 +80,7 @@ def create(component_type, value):
 
     assert type(value) in [type(""), type([])]
     c = Component()
-    c.type = component_type
+    c.kind = component_kind
     if type(value) == type(""):
         c.str = value
     else:
@@ -90,9 +90,9 @@ def create(component_type, value):
     return c
 
 
-def get_type(c):
-    """Return type type of a component"""
-    return c.type
+def get_kind(c):
+    """Return kind kind of a component"""
+    return c.kind
 
 
 def get_string_value(c):
@@ -128,14 +128,14 @@ def encode(c):
     else:
         encoded = c.str
     return wibbrlib.varint.encode(len(encoded)) + \
-           wibbrlib.varint.encode(c.type) + encoded
+           wibbrlib.varint.encode(c.kind) + encoded
 
 
 def decode(encoded, pos):
     """Decode a component in a string, return component and pos after it"""
     (size, pos) = wibbrlib.varint.decode(encoded, pos)
-    (type, pos) = wibbrlib.varint.decode(encoded, pos)
-    if type_is_composite(type):
+    (kind, pos) = wibbrlib.varint.decode(encoded, pos)
+    if kind_is_composite(kind):
         value = []
         pos2 = pos
         while pos2 < pos + size:
@@ -143,7 +143,7 @@ def decode(encoded, pos):
             value.append(sub)
     else:
         value = encoded[pos:pos+size]
-    return create(type, value), pos + size
+    return create(kind, value), pos + size
 
 
 def decode_all(encoded, pos):
@@ -156,37 +156,37 @@ def decode_all(encoded, pos):
     return list
 
 
-def find_by_type(components, wanted_type):
-    """Find components of a desired type in a list of components"""
-    return [c for c in components if get_type(c) == wanted_type]
+def find_by_kind(components, wanted_kind):
+    """Find components of a desired kind in a list of components"""
+    return [c for c in components if get_kind(c) == wanted_kind]
 
 
-def first_by_type(components, wanted_type):
-    """Find first component of a desired type in a list of components"""
+def first_by_kind(components, wanted_kind):
+    """Find first component of a desired kind in a list of components"""
     for c in components:
-        if get_type(c) == wanted_type:
+        if get_kind(c) == wanted_kind:
             return c
     return None
 
 
-def find_strings_by_type(components, wanted_type):
-    """Find components by type, return their string values"""
+def find_strings_by_kind(components, wanted_kind):
+    """Find components by kind, return their string values"""
     return [get_string_value(c) 
-            for c in find_by_type(components, wanted_type)]
+            for c in find_by_kind(components, wanted_kind)]
 
 
-def first_string_by_type(components, wanted_type):
-    """Find first component by type, return its string value"""
-    c = first_by_type(components, wanted_type)
+def first_string_by_kind(components, wanted_kind):
+    """Find first component by kind, return its string value"""
+    c = first_by_kind(components, wanted_kind)
     if c:
         return get_string_value(c)
     else:
         return None
 
 
-def first_varint_by_type(components, wanted_type):
-    """Find first component by type, return its integer value"""
-    c = first_by_type(components, wanted_type)
+def first_varint_by_kind(components, wanted_kind):
+    """Find first component by kind, return its integer value"""
+    c = first_by_kind(components, wanted_kind)
     if c:
         return get_varint_value(c)
     else:

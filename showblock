@@ -26,9 +26,9 @@ def format_decimal(data):
     
 
 component_data_formatters = {
-    wibbrlib.cmp.CMP_OBJTYPE: 
+    wibbrlib.cmp.CMP_OBJKIND: 
         lambda data: \
-            wibbrlib.obj.type_name(wibbrlib.varint.decode(data, 0)[0]),
+            wibbrlib.obj.kind_name(wibbrlib.varint.decode(data, 0)[0]),
     wibbrlib.cmp.CMP_ST_MODE: format_octal,
     wibbrlib.cmp.CMP_ST_INO: format_decimal,
     wibbrlib.cmp.CMP_ST_DEV: format_decimal,
@@ -48,13 +48,13 @@ component_data_formatters = {
 
 def show_component(component, indent=0):
     x = " " * (indent * 2)
-    type = wibbrlib.cmp.get_type(component)
-    print x + "Component:", type, wibbrlib.cmp.type_name(type)
+    kind = wibbrlib.cmp.get_kind(component)
+    print x + "Component:", kind, wibbrlib.cmp.kind_name(kind)
     if wibbrlib.cmp.is_composite(component):
         for c in wibbrlib.cmp.get_subcomponents(component):
             show_component(c, indent+1)
     else:
-        fmt = component_data_formatters.get(type, repr)
+        fmt = component_data_formatters.get(kind, repr)
         print x + "  data:", fmt(wibbrlib.cmp.get_string_value(component))
 
 

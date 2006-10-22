@@ -9,15 +9,15 @@ from wibbrlib.obj import *
 import wibbrlib
 
 
-class ObjectTypeNameTests(unittest.TestCase):
+class ObjectKindNameTests(unittest.TestCase):
 
     def test(self):
-        self.failUnlessEqual(type_name(-12765), "OBJ_UNKNOWN")
-        self.failUnlessEqual(type_name(OBJ_FILEPART), "OBJ_FILEPART")
-        self.failUnlessEqual(type_name(OBJ_INODE), "OBJ_INODE")
-        self.failUnlessEqual(type_name(OBJ_GEN), "OBJ_GEN")
-        self.failUnlessEqual(type_name(OBJ_SIG), "OBJ_SIG")
-        self.failUnlessEqual(type_name(OBJ_HOST), "OBJ_HOST")
+        self.failUnlessEqual(kind_name(-12765), "OBJ_UNKNOWN")
+        self.failUnlessEqual(kind_name(OBJ_FILEPART), "OBJ_FILEPART")
+        self.failUnlessEqual(kind_name(OBJ_INODE), "OBJ_INODE")
+        self.failUnlessEqual(kind_name(OBJ_GEN), "OBJ_GEN")
+        self.failUnlessEqual(kind_name(OBJ_SIG), "OBJ_SIG")
+        self.failUnlessEqual(kind_name(OBJ_HOST), "OBJ_HOST")
 
 
 class ObjectCreateTests(unittest.TestCase):
@@ -25,7 +25,7 @@ class ObjectCreateTests(unittest.TestCase):
     def testCreate(self):
         o = wibbrlib.obj.create("pink", 1)
         self.failUnlessEqual(wibbrlib.obj.get_id(o), "pink")
-        self.failUnlessEqual(wibbrlib.obj.get_type(o), 1)
+        self.failUnlessEqual(wibbrlib.obj.get_kind(o), 1)
         self.failUnlessEqual(wibbrlib.obj.get_components(o), [])
 
     def testAdd(self):
@@ -51,12 +51,12 @@ class ObjectEncodingDecodingTests(unittest.TestCase):
         self.failUnlessEqual(encoded, encoded2)
         return
         
-        self.failUnlessEqual(len(components), 4) # id, type, cmpnt1, cmpnt2
+        self.failUnlessEqual(len(components), 4) # id, kind, cmpnt1, cmpnt2
         
         self.failUnlessEqual(components[0], 
                              (wibbrlib.cmp.CMP_OBJID, "uuid"))
         self.failUnlessEqual(components[1], 
-                             (wibbrlib.cmp.CMP_OBJTYPE, 0xdada))
+                             (wibbrlib.cmp.CMP_OBJKIND, 0xdada))
         self.failUnlessEqual(components[2], (0xdeadbeef, "hello"))
         self.failUnlessEqual(components[3], (0xcafebabe, "world"))
 
@@ -99,7 +99,7 @@ class BlockCreateTests(unittest.TestCase):
         block = block_create_from_object_queue("blkid", oq)
         list = wibbrlib.obj.block_decode(block)
         self.failUnlessEqual(
-            wibbrlib.cmp.first_string_by_type(list, wibbrlib.cmp.CMP_BLKID),
+            wibbrlib.cmp.first_string_by_kind(list, wibbrlib.cmp.CMP_BLKID),
             "blkid")
         self.failUnlessEqual(len(list), 1)
         self.failUnlessEqual(object_queue_ids(oq), [])
@@ -113,11 +113,11 @@ class BlockCreateTests(unittest.TestCase):
 
         list = wibbrlib.obj.block_decode(block)
         self.failUnlessEqual(
-            wibbrlib.cmp.first_string_by_type(list, wibbrlib.cmp.CMP_BLKID),
+            wibbrlib.cmp.first_string_by_kind(list, wibbrlib.cmp.CMP_BLKID),
             "blkid")
         self.failUnlessEqual(len(list), 2)
-        o2 = wibbrlib.cmp.first_by_type(list, wibbrlib.cmp.CMP_OBJECT)
-        self.failUnlessEqual(wibbrlib.obj.first_string_by_type(o, 2), 
+        o2 = wibbrlib.cmp.first_by_kind(list, wibbrlib.cmp.CMP_OBJECT)
+        self.failUnlessEqual(wibbrlib.obj.first_string_by_kind(o, 2), 
                              "pretty")
         self.failUnlessEqual(object_queue_ids(oq), ["pink"])
 
@@ -178,10 +178,10 @@ class ObjectTests(unittest.TestCase):
         encoded = signature_object_encode(id, sig)
         o = wibbrlib.obj.decode(encoded, 0)
         self.failUnlessEqual(wibbrlib.obj.get_id(o), "pink")
-        self.failUnlessEqual(wibbrlib.obj.get_type(o), wibbrlib.obj.OBJ_SIG)
+        self.failUnlessEqual(wibbrlib.obj.get_kind(o), wibbrlib.obj.OBJ_SIG)
         self.failUnlessEqual(len(wibbrlib.obj.get_components(o)), 1)
         self.failUnlessEqual(
-            wibbrlib.obj.first_string_by_type(o, wibbrlib.cmp.CMP_SIGDATA),
+            wibbrlib.obj.first_string_by_kind(o, wibbrlib.cmp.CMP_SIGDATA),
             sig)
 
 
@@ -201,11 +201,11 @@ class HostBlockTests(unittest.TestCase):
     def testFormatVersion(self):
         encoded = wibbrlib.obj.host_block_encode("pink", [], [])
         decoded = wibbrlib.obj.block_decode(encoded)
-        c = wibbrlib.cmp.first_by_type(decoded, wibbrlib.cmp.CMP_OBJECT)
+        c = wibbrlib.cmp.first_by_kind(decoded, wibbrlib.cmp.CMP_OBJECT)
         subs = wibbrlib.cmp.get_subcomponents(c)
-        id = wibbrlib.cmp.first_string_by_type(subs, wibbrlib.cmp.CMP_OBJID)
+        id = wibbrlib.cmp.first_string_by_kind(subs, wibbrlib.cmp.CMP_OBJID)
         self.failUnlessEqual(id, "pink")
-        ver = wibbrlib.cmp.first_string_by_type(subs, 
+        ver = wibbrlib.cmp.first_string_by_kind(subs, 
                                             wibbrlib.cmp.CMP_FORMATVERSION)
         self.failUnlessEqual(ver, "1")
 
@@ -219,43 +219,43 @@ class GetComponentTests(unittest.TestCase):
         wibbrlib.obj.add(self.o, wibbrlib.cmp.create(3, "red"))
         wibbrlib.obj.add(self.o, wibbrlib.cmp.create(3, "too"))
 
-    def testGetByType(self):
+    def testGetByKind(self):
         find = lambda t: \
             [wibbrlib.cmp.get_string_value(c) 
-                for c in wibbrlib.obj.find_by_type(self.o, t)]
+                for c in wibbrlib.obj.find_by_kind(self.o, t)]
         self.failUnlessEqual(find(1), ["pink"])
         self.failUnlessEqual(find(2), ["pretty"])
         self.failUnlessEqual(find(3), ["red", "too"])
         self.failUnlessEqual(find(0), [])
 
-    def testGetStringsByType(self):
-        find = lambda t: wibbrlib.obj.find_strings_by_type(self.o, t)
+    def testGetStringsByKind(self):
+        find = lambda t: wibbrlib.obj.find_strings_by_kind(self.o, t)
         self.failUnlessEqual(find(1), ["pink"])
         self.failUnlessEqual(find(2), ["pretty"])
         self.failUnlessEqual(find(3), ["red", "too"])
         self.failUnlessEqual(find(0), [])
 
-    def helper(self, wanted_type):
-        c = wibbrlib.obj.first_by_type(self.o, wanted_type)
+    def helper(self, wanted_kind):
+        c = wibbrlib.obj.first_by_kind(self.o, wanted_kind)
         if c:
             return wibbrlib.cmp.get_string_value(c)
         else:
             return None
 
-    def testGetFirstByType(self):
+    def testGetFirstByKind(self):
         self.failUnlessEqual(self.helper(1), "pink")
         self.failUnlessEqual(self.helper(2), "pretty")
         self.failUnlessEqual(self.helper(3), "red")
         self.failUnlessEqual(self.helper(0), None)
 
-    def testGetFirstStringByType(self):
-        find = lambda t: wibbrlib.obj.first_string_by_type(self.o, t)
+    def testGetFirstStringByKind(self):
+        find = lambda t: wibbrlib.obj.first_string_by_kind(self.o, t)
         self.failUnlessEqual(find(1), "pink")
         self.failUnlessEqual(find(2), "pretty")
         self.failUnlessEqual(find(3), "red")
         self.failUnlessEqual(find(0), None)
 
-    def testGetVarintsByType(self):
+    def testGetVarintsByKind(self):
         list = range(1024)
 
         o = wibbrlib.obj.create("uuid", 0)
@@ -263,13 +263,13 @@ class GetComponentTests(unittest.TestCase):
             c = wibbrlib.cmp.create(0, wibbrlib.varint.encode(i))
             wibbrlib.obj.add(o, c)
 
-        self.failUnlessEqual(wibbrlib.obj.find_varints_by_type(o, 0), list)
+        self.failUnlessEqual(wibbrlib.obj.find_varints_by_kind(o, 0), list)
 
-    def testGetFirstSVarintByType(self):
+    def testGetFirstSVarintByKind(self):
         o = wibbrlib.obj.create("uuid", 0)
         for i in range(1024):
             c = wibbrlib.cmp.create(i, wibbrlib.varint.encode(i))
             wibbrlib.obj.add(o, c)
 
         for i in range(1024):
-            self.failUnlessEqual(wibbrlib.obj.first_varint_by_type(o, i), i)
+            self.failUnlessEqual(wibbrlib.obj.first_varint_by_kind(o, i), i)

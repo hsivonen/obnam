@@ -15,27 +15,27 @@ BLOCK_COOKIE = "blockhead\n"
 FORMAT_VERSION = "1"
 
 
-# Constants of object types
+# Constants of object kinds
 
-_object_types = {}
+_object_kinds = {}
 
-def _define_type(code, name):
-    assert code not in _object_types
-    assert name not in _object_types.values()
-    _object_types[code] = name
+def _define_kind(code, name):
+    assert code not in _object_kinds
+    assert name not in _object_kinds.values()
+    _object_kinds[code] = name
     return code
 
-OBJ_FILEPART     = _define_type(1, "OBJ_FILEPART")
-OBJ_INODE        = _define_type(2, "OBJ_INODE")
-OBJ_GEN          = _define_type(3, "OBJ_GEN")
-OBJ_SIG          = _define_type(4, "OBJ_SIG")
-OBJ_HOST         = _define_type(5, "OBJ_HOST")
-OBJ_FILECONTENTS = _define_type(6, "OBJ_FILECONTENTS")
+OBJ_FILEPART     = _define_kind(1, "OBJ_FILEPART")
+OBJ_INODE        = _define_kind(2, "OBJ_INODE")
+OBJ_GEN          = _define_kind(3, "OBJ_GEN")
+OBJ_SIG          = _define_kind(4, "OBJ_SIG")
+OBJ_HOST         = _define_kind(5, "OBJ_HOST")
+OBJ_FILECONTENTS = _define_kind(6, "OBJ_FILECONTENTS")
 
 
-def type_name(type):
-    """Return a textual name for a numeric object type"""
-    return _object_types.get(type, "OBJ_UNKNOWN")
+def kind_name(kind):
+    """Return a textual name for a numeric object kind"""
+    return _object_kinds.get(kind, "OBJ_UNKNOWN")
 
 
 def object_id_new():
@@ -47,15 +47,15 @@ class Object:
 
     def __init__(self):
         self.id = None
-        self.type = None
+        self.kind = None
         self.components = []
         
         
-def create(id, type):
+def create(id, kind):
     """Create a new backup object"""
     o = Object()
     o.id = id
-    o.type = type
+    o.kind = kind
     return o
 
 
@@ -64,9 +64,9 @@ def add(o, c):
     o.components.append(c)
 
 
-def get_type(o):
-    """Return the type of an object"""
-    return o.type
+def get_kind(o):
+    """Return the kind of an object"""
+    return o.kind
     
     
 def get_id(o):
@@ -79,44 +79,44 @@ def get_components(o):
     return o.components
 
 
-def find_by_type(o, wanted_type):
-    """Find all components of a desired type inside this object"""
+def find_by_kind(o, wanted_kind):
+    """Find all components of a desired kind inside this object"""
     return [c for c in get_components(o) 
-                if wibbrlib.cmp.get_type(c) == wanted_type]
+                if wibbrlib.cmp.get_kind(c) == wanted_kind]
 
 
-def find_strings_by_type(o, wanted_type):
-    """Find all components of a desired type, return their string values"""
+def find_strings_by_kind(o, wanted_kind):
+    """Find all components of a desired kind, return their string values"""
     return [wibbrlib.cmp.get_string_value(c) 
-                for c in find_by_type(o, wanted_type)]
+                for c in find_by_kind(o, wanted_kind)]
 
 
-def find_varints_by_type(o, wanted_type):
-    """Find all components of a desired type, return their varint values"""
+def find_varints_by_kind(o, wanted_kind):
+    """Find all components of a desired kind, return their varint values"""
     return [wibbrlib.cmp.get_varint_value(c) 
-                for c in find_by_type(o, wanted_type)]
+                for c in find_by_kind(o, wanted_kind)]
 
 
-def first_by_type(o, wanted_type):
-    """Find first component of a desired type"""
+def first_by_kind(o, wanted_kind):
+    """Find first component of a desired kind"""
     for c in get_components(o):
-        if wibbrlib.cmp.get_type(c) == wanted_type:
+        if wibbrlib.cmp.get_kind(c) == wanted_kind:
             return c
     return None
 
 
-def first_string_by_type(o, wanted_type):
-    """Find string value of first component of a desired type"""
-    c = first_by_type(o, wanted_type)
+def first_string_by_kind(o, wanted_kind):
+    """Find string value of first component of a desired kind"""
+    c = first_by_kind(o, wanted_kind)
     if c:
         return wibbrlib.cmp.get_string_value(c)
     else:
         return None
 
 
-def first_varint_by_type(o, wanted_type):
-    """Find string value of first component of a desired type"""
-    c = first_by_type(o, wanted_type)
+def first_varint_by_kind(o, wanted_kind):
+    """Find string value of first component of a desired kind"""
+    c = first_by_kind(o, wanted_kind)
     if c:
         return wibbrlib.cmp.get_varint_value(c)
     else:
@@ -126,9 +126,9 @@ def first_varint_by_type(o, wanted_type):
 def encode(o):
     """Encode an object as a string"""
     id = wibbrlib.cmp.create(wibbrlib.cmp.CMP_OBJID, o.id)
-    type = wibbrlib.cmp.create(wibbrlib.cmp.CMP_OBJTYPE, 
-                                     wibbrlib.varint.encode(o.type))
-    list = [id, type] + get_components(o)
+    kind = wibbrlib.cmp.create(wibbrlib.cmp.CMP_OBJKIND, 
+                                     wibbrlib.varint.encode(o.kind))
+    list = [id, kind] + get_components(o)
     list = [wibbrlib.cmp.encode(c) for c in list]
     return "".join(list)
 
@@ -141,11 +141,11 @@ def decode(encoded, pos):
         list.append(c)
     o = create("", 0)
     for c in list:
-        if c.type == wibbrlib.cmp.CMP_OBJID:
+        if c.kind == wibbrlib.cmp.CMP_OBJID:
             o.id = wibbrlib.cmp.get_string_value(c)
-        elif c.type == wibbrlib.cmp.CMP_OBJTYPE:
-            o.type = wibbrlib.cmp.get_string_value(c)
-            (o.type, _) = wibbrlib.varint.decode(o.type, 0)
+        elif c.kind == wibbrlib.cmp.CMP_OBJKIND:
+            o.kind = wibbrlib.cmp.get_string_value(c)
+            (o.kind, _) = wibbrlib.varint.decode(o.kind, 0)
         else:
             add(o, c)
     return o
@@ -237,10 +237,10 @@ def inode_object_encode(objid, stat_result, sig_id, contents_id):
         (wibbrlib.cmp.CMP_ST_BLKSIZE, "st_blksize"),
         (wibbrlib.cmp.CMP_ST_RDEV, "st_rdev"),
     )
-    for type, key in items:
+    for kind, key in items:
         if key in st:
             n = wibbrlib.varint.encode(st[key])
-            c = wibbrlib.cmp.create(type, n)
+            c = wibbrlib.cmp.create(kind, n)
             add(o, c)
 
     if sig_id:
@@ -255,14 +255,14 @@ def inode_object_encode(objid, stat_result, sig_id, contents_id):
     
 class UnknownInodeField(WibbrException):
 
-    def __init__(self, type):
-        self._msg = "Unknown field in inode object: %d" % type
+    def __init__(self, kind):
+        self._msg = "Unknown field in inode object: %d" % kind
 
 
 class NotAnInode(WibbrException):
 
-    def __init__(self, otype):
-        self._msg = "Object type is not inode: %d" % otype
+    def __init__(self, okind):
+        self._msg = "Object kind is not inode: %d" % okind
 
 
 def inode_object_decode(inode):
@@ -270,15 +270,15 @@ def inode_object_decode(inode):
     stat_results = {}
     list = wibbrlib.cmp.decode_all(inode, 0)
 
-    id = wibbrlib.cmp.first_string_by_type(list, wibbrlib.cmp.CMP_OBJID)
-    type = wibbrlib.cmp.first_varint_by_type(list, wibbrlib.cmp.CMP_OBJTYPE)
-    sigref = wibbrlib.cmp.first_string_by_type(list, wibbrlib.cmp.CMP_SIGREF)
-    contref = wibbrlib.cmp.first_string_by_type(list, 
+    id = wibbrlib.cmp.first_string_by_kind(list, wibbrlib.cmp.CMP_OBJID)
+    kind = wibbrlib.cmp.first_varint_by_kind(list, wibbrlib.cmp.CMP_OBJKIND)
+    sigref = wibbrlib.cmp.first_string_by_kind(list, wibbrlib.cmp.CMP_SIGREF)
+    contref = wibbrlib.cmp.first_string_by_kind(list, 
                                                 wibbrlib.cmp.CMP_CONTREF)
 
-    if type != OBJ_INODE:
-        raise NotAnInode(type)
-    o = create(id, type)
+    if kind != OBJ_INODE:
+        raise NotAnInode(kind)
+    o = create(id, kind)
 
     varint_items = {
         wibbrlib.cmp.CMP_ST_MODE: "st_mode",
@@ -295,10 +295,10 @@ def inode_object_decode(inode):
         wibbrlib.cmp.CMP_ST_BLKSIZE: "st_blksize",
         wibbrlib.cmp.CMP_ST_RDEV: "st_rdev",
     }
-    for type in varint_items:
-        n = wibbrlib.cmp.first_varint_by_type(list, type)
+    for kind in varint_items:
+        n = wibbrlib.cmp.first_varint_by_kind(list, kind)
         if n is not None:
-            stat_results[varint_items[type]] = n
+            stat_results[varint_items[kind]] = n
 
     return id, stat_results, sigref, contref
 
@@ -318,10 +318,10 @@ def generation_object_decode(gen):
     """Decode a generation object into objid, list of name, inode_id pairs"""
 
     o = decode(gen, 0)
-    list = find_by_type(o, wibbrlib.cmp.CMP_NAMEIPAIR)
+    list = find_by_kind(o, wibbrlib.cmp.CMP_NAMEIPAIR)
     makepair = lambda subs: \
-        (wibbrlib.cmp.first_string_by_type(subs, wibbrlib.cmp.CMP_FILENAME),
-         wibbrlib.cmp.first_string_by_type(subs, wibbrlib.cmp.CMP_INODEREF))
+        (wibbrlib.cmp.first_string_by_kind(subs, wibbrlib.cmp.CMP_FILENAME),
+         wibbrlib.cmp.first_string_by_kind(subs, wibbrlib.cmp.CMP_INODEREF))
     list = [makepair(wibbrlib.cmp.get_subcomponents(c)) for c in list]
     return o.id, list
 
@@ -352,17 +352,17 @@ def host_block_decode(block):
     
     list = block_decode(block)
     
-    host_id = wibbrlib.cmp.first_string_by_type(list, wibbrlib.cmp.CMP_BLKID)
+    host_id = wibbrlib.cmp.first_string_by_kind(list, wibbrlib.cmp.CMP_BLKID)
     
     map_ids = []
     gen_ids = []
 
-    objparts = wibbrlib.cmp.find_by_type(list, wibbrlib.cmp.CMP_OBJECT)
+    objparts = wibbrlib.cmp.find_by_kind(list, wibbrlib.cmp.CMP_OBJECT)
     for objpart in objparts:
         subs = wibbrlib.cmp.get_subcomponents(objpart)
-        map_ids += wibbrlib.cmp.find_strings_by_type(subs, 
+        map_ids += wibbrlib.cmp.find_strings_by_kind(subs, 
                                                     wibbrlib.cmp.CMP_MAPREF)
-        gen_ids += wibbrlib.cmp.find_strings_by_type(subs, 
+        gen_ids += wibbrlib.cmp.find_strings_by_kind(subs, 
                                                     wibbrlib.cmp.CMP_GENREF)
 
     return host_id, gen_ids, map_ids

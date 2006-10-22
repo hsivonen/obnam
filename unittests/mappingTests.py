@@ -58,16 +58,16 @@ class ObjectMappingTests(unittest.TestCase):
         # Make sure the encoding is correct
         list2 = wibbrlib.cmp.decode_all(list[0], 0)
         self.failUnlessEqual(len(list2), 1)
-        self.failUnlessEqual(wibbrlib.cmp.get_type(list2[0]), 
+        self.failUnlessEqual(wibbrlib.cmp.get_kind(list2[0]), 
                              wibbrlib.cmp.CMP_OBJMAP)
         
         list3 = wibbrlib.cmp.get_subcomponents(list2[0])
         self.failUnlessEqual(len(list3), 2)
-        self.failUnlessEqual(wibbrlib.cmp.get_type(list3[0]),
+        self.failUnlessEqual(wibbrlib.cmp.get_kind(list3[0]),
                              wibbrlib.cmp.CMP_BLOCKREF)
         self.failUnlessEqual(wibbrlib.cmp.get_string_value(list3[0]),
                              "pretty")
-        self.failUnlessEqual(wibbrlib.cmp.get_type(list3[1]),
+        self.failUnlessEqual(wibbrlib.cmp.get_kind(list3[1]),
                              wibbrlib.cmp.CMP_OBJREF)
         self.failUnlessEqual(wibbrlib.cmp.get_string_value(list3[1]),
                              "pink")

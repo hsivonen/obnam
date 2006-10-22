@@ -116,10 +116,10 @@ class GetObjectTests(IoBase):
         o = wibbrlib.io.get_object(self.context, id)
 
         self.failUnlessEqual(wibbrlib.obj.get_id(o), id)
-        self.failUnlessEqual(wibbrlib.obj.get_type(o), 0)
+        self.failUnlessEqual(wibbrlib.obj.get_kind(o), 0)
         list = wibbrlib.obj.get_components(o)
         self.failUnlessEqual(len(list), 1)
-        self.failUnlessEqual(wibbrlib.cmp.get_type(list[0]), 42)
+        self.failUnlessEqual(wibbrlib.cmp.get_kind(list[0]), 42)
         self.failUnlessEqual(wibbrlib.cmp.get_string_value(list[0]), 
                              "pretty")
 
@@ -248,8 +248,8 @@ class MetaDataTests(unittest.TestCase):
             (wibbrlib.cmp.CMP_ST_ATIME, 12765),
             (wibbrlib.cmp.CMP_ST_MTIME, 42),
         )
-        for type, value in fields:
-            c = wibbrlib.cmp.create(type, wibbrlib.varint.encode(value))
+        for kind, value in fields:
+            c = wibbrlib.cmp.create(kind, wibbrlib.varint.encode(value))
             wibbrlib.obj.add(o, c)
 
         (fd, name) = tempfile.mkstemp()

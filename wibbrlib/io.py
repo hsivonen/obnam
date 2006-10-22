@@ -69,17 +69,17 @@ class MissingBlock(wibbrlib.exception.WibbrException):
 
 def create_object_from_component_list(components):
     """Create a new object from a list of components"""
-    list = wibbrlib.cmp.find_by_type(components, wibbrlib.cmp.CMP_OBJID)
+    list = wibbrlib.cmp.find_by_kind(components, wibbrlib.cmp.CMP_OBJID)
     id = wibbrlib.cmp.get_string_value(list[0])
     
-    list = wibbrlib.cmp.find_by_type(components, wibbrlib.cmp.CMP_OBJTYPE)
-    type = wibbrlib.cmp.get_string_value(list[0])
-    (type, _) = wibbrlib.varint.decode(type, 0)
+    list = wibbrlib.cmp.find_by_kind(components, wibbrlib.cmp.CMP_OBJKIND)
+    kind = wibbrlib.cmp.get_string_value(list[0])
+    (kind, _) = wibbrlib.varint.decode(kind, 0)
 
-    o = wibbrlib.obj.create(id, type)
-    bad = (wibbrlib.cmp.CMP_OBJID, wibbrlib.cmp.CMP_OBJTYPE)
+    o = wibbrlib.obj.create(id, kind)
+    bad = (wibbrlib.cmp.CMP_OBJID, wibbrlib.cmp.CMP_OBJKIND)
     for c in components:
-        if wibbrlib.cmp.get_type(c) not in bad:
+        if wibbrlib.cmp.get_kind(c) not in bad:
             wibbrlib.obj.add(o, c)
     return o
 
@@ -136,25 +136,25 @@ def get_object(context, object_id):
         raise MissingBlock(block_id, object_id)
 
     list = wibbrlib.obj.block_decode(block)
-    list = wibbrlib.cmp.find_by_type(list, wibbrlib.cmp.CMP_OBJECT)
+    list = wibbrlib.cmp.find_by_kind(list, wibbrlib.cmp.CMP_OBJECT)
 
     the_one = None
     for component in list:
         subs = wibbrlib.cmp.get_subcomponents(component)
         o = create_object_from_component_list(subs)
-        if wibbrlib.obj.get_type(o) != wibbrlib.obj.OBJ_FILEPART:
+        if wibbrlib.obj.get_kind(o) != wibbrlib.obj.OBJ_FILEPART:
             object_cache.put(o)
         if wibbrlib.obj.get_id(o) == object_id:
             the_one = o
     
 #    for component in list:
 #        subs = wibbrlib.cmp.get_subcomponents(component)
-#        objids = wibbrlib.cmp.find_by_type(subs, wibbrlib.cmp.CMP_OBJID)
+#        objids = wibbrlib.cmp.find_by_kind(subs, wibbrlib.cmp.CMP_OBJID)
 #        objids = [wibbrlib.cmp.get_string_value(x) for x in objids]
 #        objids = [x for x in objids if x == object_id]
 #        if objids:
 #            o = create_object_from_component_list(subs)
-#            if wibbrlib.obj.get_type(o) != wibbrlib.obj.OBJ_FILEPART:
+#            if wibbrlib.obj.get_kind(o) != wibbrlib.obj.OBJ_FILEPART:
 #                object_cache.put(object_id, o)
 #            return o
                 
@@ -228,18 +228,18 @@ def get_file_contents(context, fd, cont_id):
     cont = wibbrlib.io.get_object(context, cont_id)
     if not cont:
         raise FileContentsObjectMissing(cont_id)
-    part_ids = wibbrlib.obj.find_strings_by_type(cont, 
+    part_ids = wibbrlib.obj.find_strings_by_kind(cont, 
                                               wibbrlib.cmp.CMP_FILEPARTREF)
     for part_id in part_ids:
         part = wibbrlib.io.get_object(context, part_id)
-        chunk = wibbrlib.obj.first_string_by_type(part, 
+        chunk = wibbrlib.obj.first_string_by_kind(part, 
                                                   wibbrlib.cmp.CMP_FILECHUNK)
         os.write(fd, chunk)
 
 
 def set_inode(full_pathname, inode):
-    mode = wibbrlib.obj.first_varint_by_type(inode, wibbrlib.cmp.CMP_ST_MODE)
-    atime = wibbrlib.obj.first_varint_by_type(inode, wibbrlib.cmp.CMP_ST_ATIME)
-    mtime = wibbrlib.obj.first_varint_by_type(inode, wibbrlib.cmp.CMP_ST_MTIME)
+    mode = wibbrlib.obj.first_varint_by_kind(inode, wibbrlib.cmp.CMP_ST_MODE)
+    atime = wibbrlib.obj.first_varint_by_kind(inode, wibbrlib.cmp.CMP_ST_ATIME)
+    mtime = wibbrlib.obj.first_varint_by_kind(inode, wibbrlib.cmp.CMP_ST_MTIME)
     os.utime(full_pathname, (atime, mtime))
     os.chmod(full_pathname, stat.S_IMODE(mode))
