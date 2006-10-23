@@ -317,6 +317,20 @@ class ObjectCacheTests(unittest.TestCase):
         self.failUnlessEqual(oc.get("beautiful"), self.object3)
 
 
+class ReachabilityTests(IoBase):
+
+    def testNoDataNoMaps(self):
+        host_id = self.context.config.get("wibbr", "host-id")
+        host = wibbrlib.obj.host_block_encode(host_id, [], [])
+        wibbrlib.io.upload_host_block(self.context, host)
+        
+        list = wibbrlib.io.find_reachable_data_blocks(self.context, host)
+        self.failUnlessEqual(list, [])
+        
+        list2 = wibbrlib.io.find_map_blocks_in_use(self.context, host, list)
+        self.failUnlessEqual(list2, [])
+
+
 class GarbageCollectionTests(IoBase):
 
     def testFindUnreachableFiles(self):

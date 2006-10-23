@@ -268,7 +268,6 @@ def collect_garbage(context):
     host_id = context.config.get("wibbr", "host-id")
     remaining = set([host_id])
     while remaining:
-        print repr(remaining)
         block_id = remaining.pop()
         if block_id not in files:
             # We've already done this block.
@@ -285,3 +284,36 @@ def collect_garbage(context):
 
     for garbage in files:
         wibbrlib.backend.remove(context.be, garbage)
+
+
+def find_reachable_data_blocks(context, host_block):
+    """Find all blocks with data that can be reached from host block"""
+    (_, gen_ids, _) = wibbrlib.obj.host_block_decode(host_block)
+    object_ids = set(gen_ids)
+    reachable_block_ids = set()
+    while object_ids:
+        object_id = object_ids.pop()
+        block_id = wibbrlib.mapping.get(context.map, object_id)
+        if block_id not in reachable_block_ids:
+            reachable_block_ids.add(block_id)
+            block = get_block(context, block_id)
+            for ref in _find_refs(wibbrlib.obj.block_decode(block)):
+                object_ids.add(ref)
+    return [x for x in reachable_block_ids]
+
+
+def find_map_blocks_in_use(context, host_block, data_block_ids):
+    """Given data blocks in use, return map blocks they're mentioned in"""
+    data_block_ids = set(data_block_ids)
+    (_, _, map_block_ids) = wibbrlib.obj.host_block_decode(host_block)
+    used_map_block_ids = set()
+    for map_block_id in map_block_ids:
+        block = get_block(context, map_block_id)
+        list = wibbrlib.obj.block_decode(block)
+        list = wibbrlib.cmp.find_by_kind(list, wibbrlib.cmp.CMP_OBJMAP)
+        for c in list:
+            id = wibbrlib.cmp.first_string_by_kind(c, 
+                                        wibbrlib.cmp.CMP_BLOCKREF)
+            if id in data_block_ids:
+                used_map_block_ids.add(id)
+    return [x for x in used_map_block_ids]
