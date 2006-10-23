@@ -241,6 +241,28 @@ def restore(context, gen_id):
         wibbrlib.io.set_inode(full_pathname, inode)
 
 
+def forget(context, forgettable_ids):
+    host_block = wibbrlib.io.get_host_block(context)
+    (host_id, gen_ids, map_block_ids) = \
+        wibbrlib.obj.host_block_decode(host_block)
+
+    for map_block_id in map_block_ids:
+        block = wibbrlib.io.get_block(context, map_block_id)
+        wibbrlib.mapping.decode_block(context.map, block)
+
+    for id in forgettable_ids:
+        if id in gen_ids:
+            gen_ids.remove(id)
+        else:
+            print "Warning: Generation", id, "is not known"
+
+    host_id = context.config.get("wibbr", "host-id")
+    block = wibbrlib.obj.host_block_encode(host_id, gen_ids, map_block_ids)
+    wibbrlib.io.upload_host_block(context, block)
+
+    wibbrlib.io.collect_garbage(context, block)
+
+
 class MissingCommandWord(wibbrlib.exception.WibbrException):
 
     def __init__(self):
@@ -289,6 +311,8 @@ def main():
         elif len(args) > 1:
             raise RestoreOnlyNeedsGenerationId()
         restore(context, args[0])
+    elif command == "forget":
+        forget(context, args)
     else:
         raise UnknownCommandWord(command)
 
