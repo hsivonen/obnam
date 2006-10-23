@@ -384,6 +384,6 @@ class GarbageCollectionTests(IoBase):
         files = wibbrlib.backend.list(self.context.be)
         self.failUnlessEqual(files, [host_id, block_id])
 
-        wibbrlib.io.collect_garbage(self.context)
+        wibbrlib.io.collect_garbage(self.context, host)
         files = wibbrlib.backend.list(self.context.be)
         self.failUnlessEqual(files, [host_id])

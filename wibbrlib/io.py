@@ -262,30 +262,6 @@ def _find_refs(components):
     return refs
 
 
-def collect_garbage(context):
-    """Find files on the server store that are not linked from host object"""
-    files = wibbrlib.backend.list(context.be)
-    host_id = context.config.get("wibbr", "host-id")
-    remaining = set([host_id])
-    while remaining:
-        block_id = remaining.pop()
-        if block_id not in files:
-            # We've already done this block.
-            continue
-        files.remove(block_id)
-
-        block = get_block(context, block_id)
-        if not block:
-            continue
-
-        refs = _find_refs(wibbrlib.obj.block_decode(block))
-        for ref in refs:
-            remaining.add(wibbrlib.mapping.get(context.map, ref))
-
-    for garbage in files:
-        wibbrlib.backend.remove(context.be, garbage)
-
-
 def find_reachable_data_blocks(context, host_block):
     """Find all blocks with data that can be reached from host block"""
     (_, gen_ids, _) = wibbrlib.obj.host_block_decode(host_block)
@@ -319,3 +295,17 @@ def find_map_blocks_in_use(context, host_block, data_block_ids):
                 used_map_block_ids.add(map_block_id)
                 break # We already know this entire map block is used
     return [x for x in used_map_block_ids]
+
+
+def collect_garbage(context, host_block):
+    """Find files on the server store that are not linked from host object"""
+    host_id = context.config.get("wibbr", "host-id")
+    data_block_ids = find_reachable_data_blocks(context, host_block)
+    map_block_ids = find_map_blocks_in_use(context, host_block, 
+                                           data_block_ids)
+    files = wibbrlib.backend.list(context.be)
+    for id in [host_id] + data_block_ids + map_block_ids:
+        if id in files:
+            files.remove(id)
+    for garbage in files:
+        wibbrlib.backend.remove(context.be, garbage)
