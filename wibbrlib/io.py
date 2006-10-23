@@ -312,7 +312,8 @@ def find_map_blocks_in_use(context, host_block, data_block_ids):
         list = wibbrlib.obj.block_decode(block)
         list = wibbrlib.cmp.find_by_kind(list, wibbrlib.cmp.CMP_OBJMAP)
         for c in list:
-            id = wibbrlib.cmp.first_string_by_kind(c, 
+            subs = wibbrlib.cmp.get_subcomponents(c)
+            id = wibbrlib.cmp.first_string_by_kind(subs, 
                                         wibbrlib.cmp.CMP_BLOCKREF)
             if id in data_block_ids:
                 used_map_block_ids.add(id)

@@ -330,6 +330,20 @@ class ReachabilityTests(IoBase):
         list2 = wibbrlib.io.find_map_blocks_in_use(self.context, host, list)
         self.failUnlessEqual(list2, [])
 
+    def testNoDataExtraMaps(self):
+        wibbrlib.mapping.add(self.context.map, "pink", "pretty")
+        map_block_id = "box"
+        map_block = wibbrlib.mapping.encode_new_to_block(self.context.map,
+                                                         map_block_id)
+        wibbrlib.backend.upload(self.context.be, map_block_id, map_block)
+
+        host_id = self.context.config.get("wibbr", "host-id")
+        host = wibbrlib.obj.host_block_encode(host_id, [], [map_block_id])
+        wibbrlib.io.upload_host_block(self.context, host)
+        
+        list = wibbrlib.io.find_map_blocks_in_use(self.context, host, [])
+        self.failUnlessEqual(list, [])
+
 
 class GarbageCollectionTests(IoBase):
 
