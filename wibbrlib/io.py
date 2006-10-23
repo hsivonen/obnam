@@ -316,5 +316,6 @@ def find_map_blocks_in_use(context, host_block, data_block_ids):
             id = wibbrlib.cmp.first_string_by_kind(subs, 
                                         wibbrlib.cmp.CMP_BLOCKREF)
             if id in data_block_ids:
-                used_map_block_ids.add(id)
+                used_map_block_ids.add(map_block_id)
+                break # We already know this entire map block is used
     return [x for x in used_map_block_ids]

@@ -344,6 +344,32 @@ class ReachabilityTests(IoBase):
         list = wibbrlib.io.find_map_blocks_in_use(self.context, host, [])
         self.failUnlessEqual(list, [])
 
+    def testDataAndMap(self):
+        o = wibbrlib.obj.create("rouge", wibbrlib.obj.OBJ_FILEPART)
+        c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_FILECHUNK, "moulin")
+        wibbrlib.obj.add(o, c)
+        encoded_o = wibbrlib.obj.encode(o)
+        
+        block_id = "pink"
+        oq = wibbrlib.obj.object_queue_create()
+        wibbrlib.obj.object_queue_add(oq, "rouge", encoded_o)
+        block = wibbrlib.obj.block_create_from_object_queue(block_id, oq)
+        wibbrlib.backend.upload(self.context.be, block_id, block)
+
+        wibbrlib.mapping.add(self.context.map, "rouge", block_id)
+        map_block_id = "pretty"
+        map_block = wibbrlib.mapping.encode_new_to_block(self.context.map,
+                                                         map_block_id)
+        wibbrlib.backend.upload(self.context.be, map_block_id, map_block)
+
+        host_id = self.context.config.get("wibbr", "host-id")
+        host = wibbrlib.obj.host_block_encode(host_id, [], [map_block_id])
+        wibbrlib.io.upload_host_block(self.context, host)
+        
+        list = wibbrlib.io.find_map_blocks_in_use(self.context, host, 
+                                                  [block_id])
+        self.failUnlessEqual(list, [map_block_id])
+
 
 class GarbageCollectionTests(IoBase):
 
