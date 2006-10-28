@@ -62,6 +62,7 @@ CMP_BLOCKREF      = _define_ref(        29, "CMP_BLOCKREF")
 CMP_MAPREF        = _define_ref(        30, "CMP_MAPREF")
 CMP_FILEPARTREF   = _define_ref(        31, "CMP_FILEPARTREF")
 CMP_FORMATVERSION = _define_plain(      32, "CMP_FORMATVERSION")
+CMP_FILE          = _define_composite(  33, "CMP_FILE")
 
 
 def kind_name(kind):
