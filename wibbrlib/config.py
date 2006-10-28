@@ -11,6 +11,7 @@ def default_config():
         ("wibbr", "local-store", "tmp.local-store"),
         ("wibbr", "target-dir", "."),
         ("wibbr", "object-cache-size", "0"),
+        ("wibbr", "log-level", "warning"),
     )
     
     config = ConfigParser.RawConfigParser()
@@ -29,24 +30,29 @@ def parse_options(config, argv):
     parser.add_option("--block-size",
                       type="int",
                       metavar="SIZE",
-                      help="Make blocks that are about SIZE kilobytes")
+                      help="make blocks that are about SIZE kilobytes")
     
     parser.add_option("--cache",
                       metavar="DIR",
-                      help="Store cached blocks in DIR")
+                      help="store cached blocks in DIR")
     
     parser.add_option("--store",
                       metavar="DIR",
-                      help="Use DIR for local block storage (not caching)")
+                      help="use DIR for local block storage (not caching)")
     
     parser.add_option("--target", "-C",
                       metavar="DIR",
-                      help="Resolve filenames relative to DIR")
+                      help="resolve filenames relative to DIR")
     
     parser.add_option("--object-cache-size",
                       metavar="COUNT",
-                      help="Set object cache maximum size to COUNT objects" +
+                      help="set object cache maximum size to COUNT objects" +
                            " (default depends on block size")
+    
+    parser.add_option("--log-level",
+                      metavar="LEVEL",
+                      help="set log level to LEVEL, one of debug, info, " +
+                           "warning, error, critical (default is warning)")
 
     (options, args) = parser.parse_args(argv)
     
@@ -60,5 +66,7 @@ def parse_options(config, argv):
         config.set("wibbr", "target-dir", options.target)
     if options.object_cache_size:
         config.set("wibbr", "object-cache-size", options.object_cache_size)
+    if options.log_level:
+        config.set("wibbr", "log-level", options.log_level)
 
     return args

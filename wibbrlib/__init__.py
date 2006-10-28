@@ -6,6 +6,7 @@ import context
 import exception
 import format
 import io
+import log
 import mapping
 import obj
 import rsync

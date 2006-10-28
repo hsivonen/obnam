@@ -18,7 +18,7 @@ class CommandLineParsingTests(unittest.TestCase):
         config = wibbrlib.config.default_config()
         self.failUnless(config.has_section("wibbr"))
         needed = ["block-size", "cache-dir", "local-store", "target-dir",
-                  "host-id", "object-cache-size"]
+                  "host-id", "object-cache-size", "log-level"]
         needed.sort()
         actual = config.options("wibbr")
         actual.sort()

@@ -3,6 +3,7 @@
 """Wibbr - a backup program"""
 
 
+import logging
 import os
 import stat
 import sys
@@ -295,6 +296,9 @@ def main():
 
     if not args:
         raise MissingCommandWord()
+
+    wibbrlib.log.setup(context.config)
+    logging.info("Wibbr starting up")
         
     command = args[0]
     args = args[1:]
@@ -315,6 +319,8 @@ def main():
         forget(context, args)
     else:
         raise UnknownCommandWord(command)
+
+    logging.info("Wibbr finishing")
 
 
 if __name__ == "__main__":
