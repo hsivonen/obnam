@@ -1,3 +1,6 @@
+import os
+
+
 import wibbrlib
 
 
@@ -18,6 +21,29 @@ def create_file_component(pathname):
     c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_FILENAME, pathname)
     subs.append(c)
     
+    st = os.lstat(pathname)
+    st = wibbrlib.obj.normalize_stat_result(st)
+
+    items = (
+        (wibbrlib.cmp.CMP_ST_MODE, "st_mode"),
+        (wibbrlib.cmp.CMP_ST_INO, "st_ino"),
+        (wibbrlib.cmp.CMP_ST_DEV, "st_dev"),
+        (wibbrlib.cmp.CMP_ST_NLINK, "st_nlink"),
+        (wibbrlib.cmp.CMP_ST_UID, "st_uid"),
+        (wibbrlib.cmp.CMP_ST_GID, "st_gid"),
+        (wibbrlib.cmp.CMP_ST_SIZE, "st_size"),
+        (wibbrlib.cmp.CMP_ST_ATIME, "st_atime"),
+        (wibbrlib.cmp.CMP_ST_MTIME, "st_mtime"),
+        (wibbrlib.cmp.CMP_ST_CTIME, "st_ctime"),
+        (wibbrlib.cmp.CMP_ST_BLOCKS, "st_blocks"),
+        (wibbrlib.cmp.CMP_ST_BLKSIZE, "st_blksize"),
+        (wibbrlib.cmp.CMP_ST_RDEV, "st_rdev"),
+    )
+    for kind, key in items:
+        if key in st:
+            n = wibbrlib.varint.encode(st[key])
+            subs.append(wibbrlib.cmp.create(kind, n))
+
     return wibbrlib.cmp.create(wibbrlib.cmp.CMP_FILE, subs)
 
 
