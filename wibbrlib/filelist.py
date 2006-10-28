@@ -71,4 +71,9 @@ def to_object(fl, object_id):
 def from_object(o):
     """Create a file list data structure from a backup object"""
     fl = create()
+    for file in wibbrlib.obj.find_by_kind(o, wibbrlib.cmp.CMP_FILE):
+        subs = wibbrlib.cmp.get_subcomponents(file)
+        pathname = wibbrlib.cmp.first_string_by_kind(subs, 
+                        wibbrlib.cmp.CMP_FILENAME)
+        fl[pathname] = file
     return fl
