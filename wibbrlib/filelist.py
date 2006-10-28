@@ -66,3 +66,9 @@ def to_object(fl, object_id):
     for pathname in fl:
         wibbrlib.obj.add(o, fl[pathname])
     return o
+
+
+def from_object(o):
+    """Create a file list data structure from a backup object"""
+    fl = create()
+    return fl
