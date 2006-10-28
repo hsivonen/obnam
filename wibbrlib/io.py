@@ -83,7 +83,6 @@ def create_object_from_component_list(components):
             wibbrlib.obj.add(o, c)
     return o
 
-import os
 
 class ObjectCache:
 
@@ -152,17 +151,6 @@ def get_object(context, object_id):
         if wibbrlib.obj.get_id(o) == object_id:
             the_one = o
     
-#    for component in list:
-#        subs = wibbrlib.cmp.get_subcomponents(component)
-#        objids = wibbrlib.cmp.find_by_kind(subs, wibbrlib.cmp.CMP_OBJID)
-#        objids = [wibbrlib.cmp.get_string_value(x) for x in objids]
-#        objids = [x for x in objids if x == object_id]
-#        if objids:
-#            o = create_object_from_component_list(subs)
-#            if wibbrlib.obj.get_kind(o) != wibbrlib.obj.OBJ_FILEPART:
-#                object_cache.put(object_id, o)
-#            return o
-                
     return the_one
 
 
