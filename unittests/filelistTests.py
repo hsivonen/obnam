@@ -67,14 +67,14 @@ class FilelistTests(unittest.TestCase):
 
     def testAddFind(self):
         fl = wibbrlib.filelist.create()
-        wibbrlib.filelist.add(fl, ".")
+        wibbrlib.filelist.add(fl, ".", "pink")
         self.failUnlessEqual(wibbrlib.filelist.num_files(fl), 1)
         c = wibbrlib.filelist.find(fl, ".")
         self.failUnlessEqual(wibbrlib.cmp.get_kind(c), wibbrlib.cmp.CMP_FILE)
 
     def testToFromObject(self):
         fl = wibbrlib.filelist.create()
-        wibbrlib.filelist.add(fl, ".")
+        wibbrlib.filelist.add(fl, ".", "pretty")
         o = wibbrlib.filelist.to_object(fl, "pink")
         self.failUnlessEqual(wibbrlib.obj.get_kind(o), 
                              wibbrlib.obj.OBJ_FILELIST)
