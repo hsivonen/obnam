@@ -78,3 +78,4 @@ class FilelistTests(unittest.TestCase):
         o = wibbrlib.filelist.to_object(fl, "pink")
         self.failUnlessEqual(wibbrlib.obj.get_kind(o), 
                              wibbrlib.obj.OBJ_FILELIST)
+        self.failUnlessEqual(wibbrlib.obj.get_id(o), "pink")
