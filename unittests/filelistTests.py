@@ -70,4 +70,4 @@ class FilelistTests(unittest.TestCase):
         wibbrlib.filelist.add(fl, ".")
         self.failUnlessEqual(wibbrlib.filelist.num_files(fl), 1)
         c = wibbrlib.filelist.find(fl, ".")
-        self.failIfEqual(c, None)
+        self.failUnlessEqual(wibbrlib.cmp.get_kind(c), wibbrlib.cmp.CMP_FILE)
