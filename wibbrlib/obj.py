@@ -31,6 +31,7 @@ OBJ_GEN          = _define_kind(3, "OBJ_GEN")
 OBJ_SIG          = _define_kind(4, "OBJ_SIG")
 OBJ_HOST         = _define_kind(5, "OBJ_HOST")
 OBJ_FILECONTENTS = _define_kind(6, "OBJ_FILECONTENTS")
+OBJ_FILELIST     = _define_kind(7, "OBJ_FILELIST")
 
 
 def kind_name(kind):

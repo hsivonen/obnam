@@ -58,3 +58,11 @@ def add(fl, pathname):
 def find(fl, pathname):
     """Get the CMP_FILE component that corresponds to a pathname"""
     return fl.get(pathname, None)
+
+
+def to_object(fl, object_id):
+    """Create an unencoded OBJ_FILELIST object from a file list"""
+    o = wibbrlib.obj.create(object_id, wibbrlib.obj.OBJ_FILELIST)
+    for pathname in fl:
+        wibbrlib.obj.add(o, fl[pathname])
+    return o

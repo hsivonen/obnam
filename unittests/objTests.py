@@ -18,6 +18,8 @@ class ObjectKindNameTests(unittest.TestCase):
         self.failUnlessEqual(kind_name(OBJ_GEN), "OBJ_GEN")
         self.failUnlessEqual(kind_name(OBJ_SIG), "OBJ_SIG")
         self.failUnlessEqual(kind_name(OBJ_HOST), "OBJ_HOST")
+        self.failUnlessEqual(kind_name(OBJ_FILECONTENTS), "OBJ_FILECONTENTS")
+        self.failUnlessEqual(kind_name(OBJ_FILELIST), "OBJ_FILELIST")
 
 
 class ObjectCreateTests(unittest.TestCase):
