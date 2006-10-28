@@ -111,6 +111,7 @@ class ObjectCache:
         
     def put(self, object):
         object_id = wibbrlib.obj.get_id(object)
+        self.forget(object_id)
         self.objects[object_id] = object
         self.mru.insert(0, object_id)
         while len(self.mru) > self.MAX:

@@ -387,3 +387,50 @@ class GarbageCollectionTests(IoBase):
         wibbrlib.io.collect_garbage(self.context, host)
         files = wibbrlib.backend.list(self.context.be)
         self.failUnlessEqual(files, [host_id])
+
+
+class ObjectCacheRegressionTest(unittest.TestCase):
+
+    # This test case is for a bug in wibbrlib.io.ObjectCache: with the
+    # right sequence of operations, the cache can end up in a state where
+    # the MRU list is too long, but contains two instances of the same
+    # object ID. When the list is shortened, the first instance of the
+    # ID is removed, and the object is also removed from the dictionary.
+    # If the list is still too long, it is shortened again, by removing
+    # the last item in the list, but that no longer is in the dictionary,
+    # resulting in the shortening not happening. Voila, an endless loop.
+    #
+    # As an example, if the object queue maximum size is 3, the following
+    # sequence exhibits the problem:
+    #
+    #       put('a')        mru = ['a']
+    #       put('b')        mru = ['b', 'a']
+    #       put('c')        mru = ['c', 'b', 'a']
+    #       put('a')        mru = ['a', 'c', 'b', 'a'], shortened into
+    #                           ['c', 'b', 'a'], and now dict no longer
+    #                           has 'a'
+    #       put('d')        mru = ['d', 'c', 'b', 'a'], which needs to be
+    #                           shortened by removing the last element, but
+    #                           since 'a' is no longer in dict, the list
+    #                           doesn't actually become shorter, and
+    #                           the shortening loop becomes infinite
+    #
+    # (The fix to the bug is, of course, to forget the object to be 
+    # inserted before inserting it, thus removing duplicates in the MRU
+    # list.)
+
+    def test(self):
+        context = wibbrlib.context.create()
+        context.config.set("wibbr", "object-cache-size", "3")
+        oc = wibbrlib.io.ObjectCache(context)
+        a = wibbrlib.obj.create("a", 0)
+        b = wibbrlib.obj.create("b", 0)
+        c = wibbrlib.obj.create("c", 0)
+        d = wibbrlib.obj.create("d", 0)
+        oc.put(a)
+        oc.put(b)
+        oc.put(c)
+        oc.put(a)
+        # If the bug is there, the next method call doesn't return.
+        # Beware the operator.
+        oc.put(b)
