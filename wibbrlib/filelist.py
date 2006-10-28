@@ -13,8 +13,12 @@ def num_files(fl):
 
 def create_file_component(pathname):
     """Create a CMP_FILE component for a given pathname (and metadata)"""
-    c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_FILE, "")
-    return c
+    subs = []
+    
+    c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_FILENAME, pathname)
+    subs.append(c)
+    
+    return wibbrlib.cmp.create(wibbrlib.cmp.CMP_FILE, subs)
 
 
 def add(fl, pathname):

@@ -9,6 +9,10 @@ class FileComponentTests(unittest.TestCase):
     def testCreate(self):
         c = wibbrlib.filelist.create_file_component(".")
         self.failIfEqual(c, None)
+        subs = wibbrlib.cmp.get_subcomponents(c)
+        self.failUnlessEqual(
+          wibbrlib.cmp.first_string_by_kind(subs, wibbrlib.cmp.CMP_FILENAME),
+          ".")
 
 
 class FilelistTests(unittest.TestCase):
