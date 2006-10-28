@@ -14,7 +14,7 @@ def num_files(fl):
     return len(fl)
 
 
-def create_file_component(pathname):
+def create_file_component(pathname, contref):
     """Create a CMP_FILE component for a given pathname (and metadata)"""
     subs = []
     
@@ -43,6 +43,9 @@ def create_file_component(pathname):
         if key in st:
             n = wibbrlib.varint.encode(st[key])
             subs.append(wibbrlib.cmp.create(kind, n))
+
+    if contref:
+        subs.append(wibbrlib.cmp.create(wibbrlib.cmp.CMP_CONTREF, contref))
 
     return wibbrlib.cmp.create(wibbrlib.cmp.CMP_FILE, subs)
 

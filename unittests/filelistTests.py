@@ -8,7 +8,7 @@ import wibbrlib
 class FileComponentTests(unittest.TestCase):
 
     def testCreate(self):
-        c = wibbrlib.filelist.create_file_component(".")
+        c = wibbrlib.filelist.create_file_component(".", "pink")
         self.failIfEqual(c, None)
         subs = wibbrlib.cmp.get_subcomponents(c)
         self.failUnlessEqual(
@@ -53,6 +53,10 @@ class FileComponentTests(unittest.TestCase):
           wibbrlib.cmp.first_varint_by_kind(subs, 
             wibbrlib.cmp.CMP_ST_BLKSIZE),
           st.st_blksize)
+
+        self.failUnlessEqual(
+            wibbrlib.cmp.first_string_by_kind(subs, wibbrlib.cmp.CMP_CONTREF),
+            "pink")
 
 
 class FilelistTests(unittest.TestCase):
