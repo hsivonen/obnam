@@ -88,7 +88,9 @@ def inode_fields(inode):
     )
 
     list = []
+    subs = wibbrlib.cmp.get_subcomponents(inode)
     for kind, func in fields:
-        for value in wibbrlib.obj.find_varints_by_kind(inode, kind):
+        for value in wibbrlib.cmp.find_strings_by_kind(subs, kind):
+            (value, _) = wibbrlib.varint.decode(value, 0)
             list.append(func(value))
     return list

@@ -304,27 +304,19 @@ def inode_object_decode(inode):
     return id, stat_results, sigref, contref
 
 
-def generation_object_encode(objid, pairs):
+def generation_object_encode(objid, filelist_id):
     """Encode a generation object, from list of filename, inode_id pairs"""
     o = create(objid, OBJ_GEN)
-    for filename, inode_id in pairs:
-        cf = wibbrlib.cmp.create(wibbrlib.cmp.CMP_FILENAME, filename)
-        ci = wibbrlib.cmp.create(wibbrlib.cmp.CMP_INODEREF, inode_id)
-        c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_NAMEIPAIR, [cf, ci])
-        add(o, c)
+    c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_FILELISTREF, filelist_id)
+    add(o, c)
     return encode(o)
 
 
 def generation_object_decode(gen):
-    """Decode a generation object into objid, list of name, inode_id pairs"""
+    """Decode a generation object into objid, file list ref"""
 
     o = decode(gen, 0)
-    list = find_by_kind(o, wibbrlib.cmp.CMP_NAMEIPAIR)
-    makepair = lambda subs: \
-        (wibbrlib.cmp.first_string_by_kind(subs, wibbrlib.cmp.CMP_FILENAME),
-         wibbrlib.cmp.first_string_by_kind(subs, wibbrlib.cmp.CMP_INODEREF))
-    list = [makepair(wibbrlib.cmp.get_subcomponents(c)) for c in list]
-    return o.id, list
+    return o.id, first_string_by_kind(o, wibbrlib.cmp.CMP_FILELISTREF)
 
 
 def host_block_encode(host_id, gen_ids, map_block_ids):

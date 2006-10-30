@@ -12,39 +12,14 @@ import time
 import wibbrlib
 
 
-def find_existing_inode(pathname, nst, prevgen_inodes):
-    prev = prevgen_inodes.get(pathname, None)
-    if prev:
-        fields = (
-            ("st_dev", wibbrlib.cmp.CMP_ST_DEV),
-            ("st_ino", wibbrlib.cmp.CMP_ST_INO),
-            ("st_mode", wibbrlib.cmp.CMP_ST_MODE),
-            ("st_nlink", wibbrlib.cmp.CMP_ST_NLINK),
-            ("st_uid", wibbrlib.cmp.CMP_ST_UID),
-            ("st_gid", wibbrlib.cmp.CMP_ST_GID),
-            ("st_rdev", wibbrlib.cmp.CMP_ST_RDEV),
-            ("st_size", wibbrlib.cmp.CMP_ST_SIZE),
-            ("st_blksize", wibbrlib.cmp.CMP_ST_BLKSIZE),
-            ("st_blocks", wibbrlib.cmp.CMP_ST_BLOCKS),
-            ("st_mtime", wibbrlib.cmp.CMP_ST_MTIME),
-            # No atime or ctime, on purpose. They can be changed without
-            # requiring a new backup.
-        )
-        for a, b in fields:
-            b_value = wibbrlib.obj.first_varint_by_kind(prev, b)
-            if nst[a] != b_value:
-                return None
-        return prev
-    else:
-        return None
-
-
-def backup_single_item(context, pathname, prevgen_inodes):
+def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
     st = os.lstat(wibbrlib.io.resolve(context, pathname))
     nst = wibbrlib.obj.normalize_stat_result(st)
-    inode = find_existing_inode(pathname, nst, prevgen_inodes)
-    if inode:
-        return wibbrlib.obj.get_id(inode)
+    file_cmp = wibbrlib.filelist.find_matching_inode(prevgen_filelist,
+                                                     pathname, st)
+    if file_cmp:
+        wibbrlib.filelist.add_file_component(new_filelist, pathname, file_cmp)
+        return
 
     if stat.S_ISREG(st.st_mode):
         sig_id = None
@@ -52,40 +27,34 @@ def backup_single_item(context, pathname, prevgen_inodes):
     else:
         (sig_id, cont_id) = (None, None)
 
-    inode_id = wibbrlib.obj.object_id_new()
-    inode = wibbrlib.obj.inode_object_encode(inode_id, nst, sig_id, cont_id)
-    wibbrlib.io.enqueue_object(context, context.oq, inode_id, inode)
-
-    return inode_id
+    file_cmp = wibbrlib.filelist.create_file_component_from_stat(pathname,
+                                                                 st, cont_id)
+    wibbrlib.filelist.add_file_component(new_filelist, pathname, file_cmp)
 
 
-def backup_directory(context, pairs, dirname, prevgen_inodes):
-    inode_id = backup_single_item(context, dirname, prevgen_inodes)
-    pairs.append((dirname, inode_id))
+def backup_directory(context, new_filelist, dirname, prevgen_filelist):
+    backup_single_item(context, dirname, new_filelist, prevgen_filelist)
     dirname = wibbrlib.io.resolve(context, dirname)
     for dirpath, dirnames, filenames in os.walk(dirname):
         dirpath = wibbrlib.io.unsolve(context, dirpath)
         for filename in dirnames + filenames:
             pathname = os.path.join(dirpath, filename)
-            inode_id = backup_single_item(context, pathname, prevgen_inodes)
-            pairs.append((pathname, inode_id))
+            backup_single_item(context, pathname, new_filelist, 
+                               prevgen_filelist)
 
 
-def get_files_in_gen(context, gen_id):
-    """Return all inodes in a generation, in a dict indexed by filename"""
+def get_filelist_in_gen(context, gen_id):
+    """Return the file list in a generation"""
     gen = wibbrlib.io.get_object(context, gen_id)
     if not gen:
         raise Exception("wtf")
-    dict = {}
-    for np in wibbrlib.obj.find_by_kind(gen, wibbrlib.cmp.CMP_NAMEIPAIR):
-        subs = wibbrlib.cmp.get_subcomponents(np)
-        filename = wibbrlib.cmp.first_string_by_kind(subs,
-                                     wibbrlib.cmp.CMP_FILENAME)
-        inode_id = wibbrlib.cmp.first_string_by_kind(subs,
-                                     wibbrlib.cmp.CMP_INODEREF)
-        inode = wibbrlib.io.get_object(context, inode_id)
-        dict[filename] = inode
-    return dict
+    ref = wibbrlib.obj.first_string_by_kind(gen, wibbrlib.cmp.CMP_FILELISTREF)
+    if not ref:
+        return None
+    fl = wibbrlib.io.get_object(context, ref)
+    if not fl:
+        raise Exception("wtf %s %s" % (ref, repr(fl)))
+    return wibbrlib.filelist.from_object(fl)
 
 
 def backup(context, args):
@@ -102,24 +71,31 @@ def backup(context, args):
         map_block_ids = []
 
     if gen_ids:
-        prevgen_inodes = get_files_in_gen(context, gen_ids[-1])
+        prevgen_filelist = get_filelist_in_gen(context, gen_ids[-1])
     else:
-        prevgen_inodes = {}
+        prevgen_filelist = None
+    if not prevgen_filelist:
+        prevgen_filelist = wibbrlib.filelist.create()
 
-    pairs = []
+    new_filelist = wibbrlib.filelist.create()
     for name in args:
         if name == "/":
             name = "."
         elif name and name[0] == "/":
             name = name[1:]
         if os.path.isdir(wibbrlib.io.resolve(context, name)):
-            backup_directory(context, pairs, name, prevgen_inodes)
+            backup_directory(context, new_filelist, name, prevgen_filelist)
         else:
             raise Exception("Not a directory: %s" % 
                 wibbrlib.io.resolve(context, name))
     
+    filelist_id = wibbrlib.obj.object_id_new()
+    filelist_obj = wibbrlib.filelist.to_object(new_filelist, filelist_id)
+    filelist_obj = wibbrlib.obj.encode(filelist_obj)
+    wibbrlib.io.enqueue_object(context, context.oq, filelist_id, filelist_obj)
+    
     gen_id = wibbrlib.obj.object_id_new()
-    gen = wibbrlib.obj.generation_object_encode(gen_id, pairs)
+    gen = wibbrlib.obj.generation_object_encode(gen_id, filelist_id)
     gen_ids.append(gen_id)
     wibbrlib.io.enqueue_object(context, context.oq, gen_id, gen)
     wibbrlib.io.flush_all_object_queues(context)
@@ -155,18 +131,18 @@ def show_generations(context, gen_ids):
     for gen_id in gen_ids:
         print "Generation:", gen_id
         gen = wibbrlib.io.get_object(context, gen_id)
+        fl_id = wibbrlib.obj.first_string_by_kind(gen, 
+                                wibbrlib.cmp.CMP_FILELISTREF)
+        fl = wibbrlib.io.get_object(context, fl_id)
         list = []
-        for c in wibbrlib.obj.find_by_kind(gen, wibbrlib.cmp.CMP_NAMEIPAIR):
+        for c in wibbrlib.obj.find_by_kind(fl, wibbrlib.cmp.CMP_FILE):
             subs = wibbrlib.cmp.get_subcomponents(c)
-            inode_id = wibbrlib.cmp.first_string_by_kind(subs, 
-                                                 wibbrlib.cmp.CMP_INODEREF)
             filename = wibbrlib.cmp.first_string_by_kind(subs, 
                                                  wibbrlib.cmp.CMP_FILENAME)
-            inode = wibbrlib.io.get_object(context, inode_id)
             if pretty:
-                list.append((wibbrlib.format.inode_fields(inode), filename))
+                list.append((wibbrlib.format.inode_fields(c), filename))
             else:
-                print " ".join(wibbrlib.format.inode_fields(inode)), filename
+                print " ".join(wibbrlib.format.inode_fields(c)), filename
 
         if pretty:
             widths = []
@@ -188,13 +164,18 @@ def show_generations(context, gen_ids):
 
 
 def create_filesystem_object(context, full_pathname, inode):
-    mode = wibbrlib.obj.first_varint_by_kind(inode, wibbrlib.cmp.CMP_ST_MODE)
+    logging.debug("Creating filesystem object %s" % full_pathname)
+    subs = wibbrlib.cmp.get_subcomponents(inode)
+    mode = wibbrlib.cmp.first_varint_by_kind(subs, wibbrlib.cmp.CMP_ST_MODE)
     if stat.S_ISDIR(mode):
         if not os.path.exists(full_pathname):
             os.makedirs(full_pathname, 0700)
     elif stat.S_ISREG(mode):
+        basedir = os.path.dirname(full_pathname)
+        if not os.path.exists(basedir):
+            os.makedirs(basedir, 0700)
         fd = os.open(full_pathname, os.O_WRONLY | os.O_CREAT, 0)
-        cont_id = wibbrlib.obj.first_string_by_kind(inode, 
+        cont_id = wibbrlib.cmp.first_string_by_kind(subs, 
                                                     wibbrlib.cmp.CMP_CONTREF)
         wibbrlib.io.get_file_contents(context, fd, cont_id)
         os.close(fd)
@@ -207,36 +188,47 @@ class UnknownGeneration(wibbrlib.exception.WibbrException):
 
 
 def restore(context, gen_id):
+    logging.debug("Restoring generation %s" % gen_id)
+
+    logging.debug("Fetching and decoding host block")
     host_block = wibbrlib.io.get_host_block(context)
     (host_id, _, map_block_ids) = \
         wibbrlib.obj.host_block_decode(host_block)
 
+    logging.debug("Decoding mapping blocks")
     for map_block_id in map_block_ids:
         block = wibbrlib.io.get_block(context, map_block_id)
         wibbrlib.mapping.decode_block(context.map, block)
-    
+
+    logging.debug("Getting generation object")    
     gen = wibbrlib.io.get_object(context, gen_id)
     if gen is None:
         raise UnknownGeneration(gen_id)
     
     target = context.config.get("wibbr", "target-dir")
-    
+    logging.debug("Restoring files under %s" % target)
+
+    logging.debug("Getting list of files in generation")
+    fl_id = wibbrlib.obj.first_string_by_kind(gen, 
+                        wibbrlib.cmp.CMP_FILELISTREF)
+    fl = wibbrlib.io.get_object(context, fl_id)
+
+    logging.debug("Restoring files")
     list = []
-    for sub in wibbrlib.obj.find_by_kind(gen, wibbrlib.cmp.CMP_NAMEIPAIR):
-        subs = wibbrlib.cmp.get_subcomponents(sub)
-        inode_id = wibbrlib.cmp.first_string_by_kind(subs,
-                                                 wibbrlib.cmp.CMP_INODEREF)
+    for c in wibbrlib.obj.find_by_kind(fl, wibbrlib.cmp.CMP_FILE):
+        subs = wibbrlib.cmp.get_subcomponents(c)
         pathname = wibbrlib.cmp.first_string_by_kind(subs,
                                                  wibbrlib.cmp.CMP_FILENAME)
+        logging.debug("Restoring %s" % pathname)
 
         if pathname.startswith(os.sep):
             pathname = "." + pathname
         full_pathname = os.path.join(target, pathname)
 
-        inode = wibbrlib.io.get_object(context, inode_id)
-        create_filesystem_object(context, full_pathname, inode)
-        list.append((full_pathname, inode))
+        create_filesystem_object(context, full_pathname, c)
+        list.append((full_pathname, c))
 
+    logging.debug("Fixing permissions")
     list.sort()
     for full_pathname, inode in list:
         wibbrlib.io.set_inode(full_pathname, inode)

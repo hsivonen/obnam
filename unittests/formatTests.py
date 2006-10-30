@@ -56,7 +56,6 @@ class FormatFileModeTest(unittest.TestCase):
 class FormatInodeFieldsTest(unittest.TestCase):
 
     def test(self):
-        o = wibbrlib.obj.create("pink", wibbrlib.obj.OBJ_INODE)
         int_fields = (wibbrlib.cmp.CMP_ST_MODE,
                       wibbrlib.cmp.CMP_ST_INO,
                       wibbrlib.cmp.CMP_ST_DEV,
@@ -70,11 +69,11 @@ class FormatInodeFieldsTest(unittest.TestCase):
                       wibbrlib.cmp.CMP_ST_BLOCKS,
                       wibbrlib.cmp.CMP_ST_BLKSIZE,
                       wibbrlib.cmp.CMP_ST_RDEV)
-        for x in int_fields:
-            c = wibbrlib.cmp.create(x, wibbrlib.varint.encode(1))
-            wibbrlib.obj.add(o, c)
+        list = [wibbrlib.cmp.create(x, wibbrlib.varint.encode(1))
+                for x in int_fields]
+        inode = wibbrlib.cmp.create(wibbrlib.cmp.CMP_FILE, list)
 
-        list = wibbrlib.format.inode_fields(o)
+        list = wibbrlib.format.inode_fields(inode)
         
         self.failUnlessEqual(list, ["?--------x"] + ["1"] * 4 +
                                    ["1970-01-01 00:00:01"])

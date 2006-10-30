@@ -232,9 +232,10 @@ def get_file_contents(context, fd, cont_id):
 
 
 def set_inode(full_pathname, inode):
-    mode = wibbrlib.obj.first_varint_by_kind(inode, wibbrlib.cmp.CMP_ST_MODE)
-    atime = wibbrlib.obj.first_varint_by_kind(inode, wibbrlib.cmp.CMP_ST_ATIME)
-    mtime = wibbrlib.obj.first_varint_by_kind(inode, wibbrlib.cmp.CMP_ST_MTIME)
+    subs = wibbrlib.cmp.get_subcomponents(inode)
+    mode = wibbrlib.cmp.first_varint_by_kind(subs, wibbrlib.cmp.CMP_ST_MODE)
+    atime = wibbrlib.cmp.first_varint_by_kind(subs, wibbrlib.cmp.CMP_ST_ATIME)
+    mtime = wibbrlib.cmp.first_varint_by_kind(subs, wibbrlib.cmp.CMP_ST_MTIME)
     os.utime(full_pathname, (atime, mtime))
     os.chmod(full_pathname, stat.S_IMODE(mode))
 
