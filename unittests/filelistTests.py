@@ -9,6 +9,14 @@ class FileComponentTests(unittest.TestCase):
 
     def testCreate(self):
         c = wibbrlib.filelist.create_file_component(".", "pink")
+        self.check(c)
+
+    def testCreateFromStatResult(self):
+        st = os.lstat(".")
+        c = wibbrlib.filelist.create_file_component_from_stat(".", st, "pink")
+        self.check(c)
+        
+    def check(self, c):
         self.failIfEqual(c, None)
         subs = wibbrlib.cmp.get_subcomponents(c)
         self.failUnlessEqual(

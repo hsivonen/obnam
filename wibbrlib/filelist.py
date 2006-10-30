@@ -6,12 +6,17 @@ import wibbrlib
 
 def create_file_component(pathname, contref):
     """Create a CMP_FILE component for a given pathname (and metadata)"""
+    return create_file_component_from_stat(pathname, os.lstat(pathname), 
+                                           contref)
+
+
+def create_file_component_from_stat(pathname, st, contref):
+    """Create a CMP_FILE component given pathname, stat results, etc"""
     subs = []
     
     c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_FILENAME, pathname)
     subs.append(c)
     
-    st = os.lstat(pathname)
     st = wibbrlib.obj.normalize_stat_result(st)
 
     items = (
