@@ -55,6 +55,11 @@ def add(fl, pathname, contref):
     fl[pathname] = create_file_component(pathname, contref)
 
 
+def add_file_component(fl, pathname, file_cmp):
+    """Add a file component to a file list"""
+    fl[pathname] = file_cmp
+
+
 def find(fl, pathname):
     """Get the CMP_FILE component that corresponds to a pathname"""
     return fl.get(pathname, None)
