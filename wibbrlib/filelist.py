@@ -60,6 +60,36 @@ def find(fl, pathname):
     return fl.get(pathname, None)
 
 
+def find_matching_inode(fl, pathname, stat_result):
+    """Find the CMP_FILE component that matches stat_result"""
+    prev = find(fl, pathname)
+    if prev:
+        prev_subs = wibbrlib.cmp.get_subcomponents(prev)
+        nst = wibbrlib.obj.normalize_stat_result(stat_result)
+        fields = (
+            ("st_dev", wibbrlib.cmp.CMP_ST_DEV),
+            ("st_ino", wibbrlib.cmp.CMP_ST_INO),
+            ("st_mode", wibbrlib.cmp.CMP_ST_MODE),
+            ("st_nlink", wibbrlib.cmp.CMP_ST_NLINK),
+            ("st_uid", wibbrlib.cmp.CMP_ST_UID),
+            ("st_gid", wibbrlib.cmp.CMP_ST_GID),
+            ("st_rdev", wibbrlib.cmp.CMP_ST_RDEV),
+            ("st_size", wibbrlib.cmp.CMP_ST_SIZE),
+            ("st_blksize", wibbrlib.cmp.CMP_ST_BLKSIZE),
+            ("st_blocks", wibbrlib.cmp.CMP_ST_BLOCKS),
+            ("st_mtime", wibbrlib.cmp.CMP_ST_MTIME),
+            # No atime or ctime, on purpose. They can be changed without
+            # requiring a new backup.
+        )
+        for a, b in fields:
+            b_value = wibbrlib.cmp.first_varint_by_kind(prev_subs, b)
+            if nst[a] != b_value:
+                return None
+        return prev
+    else:
+        return None
+
+
 def to_object(fl, object_id):
     """Create an unencoded OBJ_FILELIST object from a file list"""
     o = wibbrlib.obj.create(object_id, wibbrlib.obj.OBJ_FILELIST)

@@ -88,3 +88,25 @@ class FilelistTests(unittest.TestCase):
         c = wibbrlib.filelist.find(fl2, ".")
         self.failIfEqual(c, None)
         self.failUnlessEqual(wibbrlib.cmp.get_kind(c), wibbrlib.cmp.CMP_FILE)
+
+
+class FindTests(unittest.TestCase):
+
+    def testFindInodeSuccessful(self):
+        pathname = "Makefile"
+        fl = wibbrlib.filelist.create()
+        wibbrlib.filelist.add(fl, pathname, "pink")
+        st = os.lstat(pathname)
+        c = wibbrlib.filelist.find_matching_inode(fl, pathname, st)
+        subs = wibbrlib.cmp.get_subcomponents(c)
+        self.failUnlessEqual(
+          wibbrlib.cmp.first_varint_by_kind(subs, wibbrlib.cmp.CMP_ST_MTIME),
+          st.st_mtime)
+
+    def testFindInodeUnsuccessful(self):
+        pathname = "Makefile"
+        fl = wibbrlib.filelist.create()
+        wibbrlib.filelist.add(fl, pathname, "pink")
+        st = os.lstat(".")
+        c = wibbrlib.filelist.find_matching_inode(fl, pathname, st)
+        self.failUnlessEqual(c, None)
