@@ -13,6 +13,7 @@ import wibbrlib
 
 
 def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
+    logging.debug("Backing up %s" % pathname)
     st = os.lstat(wibbrlib.io.resolve(context, pathname))
     nst = wibbrlib.obj.normalize_stat_result(st)
     file_cmp = wibbrlib.filelist.find_matching_inode(prevgen_filelist,
@@ -21,6 +22,7 @@ def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
         wibbrlib.filelist.add_file_component(new_filelist, pathname, file_cmp)
         return
 
+    logging.debug("Backing up new (version of) file")
     if stat.S_ISREG(st.st_mode):
         sig_id = None
         cont_id = wibbrlib.io.create_file_contents_object(context, pathname)
@@ -33,6 +35,7 @@ def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
 
 
 def backup_directory(context, new_filelist, dirname, prevgen_filelist):
+    logging.info("Backing up %s" % dirname)
     backup_single_item(context, dirname, new_filelist, prevgen_filelist)
     dirname = wibbrlib.io.resolve(context, dirname)
     for dirpath, dirnames, filenames in os.walk(dirname):
@@ -58,11 +61,15 @@ def get_filelist_in_gen(context, gen_id):
 
 
 def backup(context, args):
+    logging.info("Starting backup")
+
+    logging.info("Getting and decoding host block")
     host_block = wibbrlib.io.get_host_block(context)
     if host_block:
         (host_id, gen_ids, map_block_ids) = \
             wibbrlib.obj.host_block_decode(host_block)
-    
+
+        logging.info("Decoding mapping blocks")    
         for map_block_id in map_block_ids:
             block = wibbrlib.io.get_block(context, map_block_id)
             wibbrlib.mapping.decode_block(context.map, block)
@@ -71,6 +78,7 @@ def backup(context, args):
         map_block_ids = []
 
     if gen_ids:
+        logging.info("Getting file list for previous generation")
         prevgen_filelist = get_filelist_in_gen(context, gen_ids[-1])
     else:
         prevgen_filelist = None
@@ -88,28 +96,33 @@ def backup(context, args):
         else:
             raise Exception("Not a directory: %s" % 
                 wibbrlib.io.resolve(context, name))
-    
+
+    logging.info("Creating new file list object")    
     filelist_id = wibbrlib.obj.object_id_new()
     filelist_obj = wibbrlib.filelist.to_object(new_filelist, filelist_id)
     filelist_obj = wibbrlib.obj.encode(filelist_obj)
     wibbrlib.io.enqueue_object(context, context.oq, filelist_id, filelist_obj)
     
+    logging.info("Creating new generation object")
     gen_id = wibbrlib.obj.object_id_new()
     gen = wibbrlib.obj.generation_object_encode(gen_id, filelist_id)
     gen_ids.append(gen_id)
     wibbrlib.io.enqueue_object(context, context.oq, gen_id, gen)
     wibbrlib.io.flush_all_object_queues(context)
 
+    logging.info("Creating new mapping block")
     map_block_id = wibbrlib.backend.generate_block_id(context.be)
     map_block = wibbrlib.mapping.encode_new_to_block(context.map, 
                                                      map_block_id)
     wibbrlib.backend.upload(context.be, map_block_id, map_block)
     map_block_ids.append(map_block_id)
 
+    logging.info("Creating new host block")
     host_id = context.config.get("wibbr", "host-id")
     block = wibbrlib.obj.host_block_encode(host_id, gen_ids, map_block_ids)
     wibbrlib.io.upload_host_block(context, block)
 
+    logging.info("Backup done")
 
 def generations(context):
     block = wibbrlib.io.get_host_block(context)
