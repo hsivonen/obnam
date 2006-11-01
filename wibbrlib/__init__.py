@@ -4,6 +4,7 @@ import cmp
 import config
 import context
 import exception
+import filelist
 import format
 import io
 import log

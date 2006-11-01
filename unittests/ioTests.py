@@ -242,22 +242,21 @@ class FileContentsTests(unittest.TestCase):
 class MetaDataTests(unittest.TestCase):
 
     def testSet(self):
-        o = wibbrlib.obj.create("pink", wibbrlib.obj.OBJ_INODE)
         fields = (
             (wibbrlib.cmp.CMP_ST_MODE, 0100664),
             (wibbrlib.cmp.CMP_ST_ATIME, 12765),
             (wibbrlib.cmp.CMP_ST_MTIME, 42),
         )
-        for kind, value in fields:
-            c = wibbrlib.cmp.create(kind, wibbrlib.varint.encode(value))
-            wibbrlib.obj.add(o, c)
+        list = [wibbrlib.cmp.create(kind, wibbrlib.varint.encode(value))
+                for kind, value in fields]
+        inode = wibbrlib.cmp.create(wibbrlib.cmp.CMP_FILE, list)
 
         (fd, name) = tempfile.mkstemp()
         os.close(fd)
         
         os.chmod(name, 0)
         
-        wibbrlib.io.set_inode(name, o)
+        wibbrlib.io.set_inode(name, inode)
         
         st = os.stat(name)
         
