@@ -38,7 +38,7 @@ def flush_object_queue(context, oq, map):
         block = wibbrlib.obj.block_create_from_object_queue(block_id, oq)
         wibbrlib.backend.upload(context.be, block_id, block)
         for id in wibbrlib.obj.object_queue_ids(oq):
-            wibbrlib.mapping.add(context.map, id, block_id)
+            wibbrlib.mapping.add(map, id, block_id)
 
 
 def flush_all_object_queues(context):
@@ -133,6 +133,8 @@ def get_object(context, object_id):
         return o
         
     block_id = wibbrlib.mapping.get(context.map, object_id)
+    if not block_id:
+        block_id = wibbrlib.mapping.get(context.contmap, object_id)
     if not block_id:
         return None
 
@@ -261,6 +263,8 @@ def find_reachable_data_blocks(context, host_block):
     while object_ids:
         object_id = object_ids.pop()
         block_id = wibbrlib.mapping.get(context.map, object_id)
+        if not block_id:
+            block_id = wibbrlib.mapping.get(context.contmap, object_id)
         if block_id not in reachable_block_ids:
             reachable_block_ids.add(block_id)
             block = get_block(context, block_id)
