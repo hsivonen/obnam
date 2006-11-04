@@ -71,7 +71,8 @@ def backup(context, args):
 
         logging.info("Decoding mapping blocks")
         wibbrlib.io.load_maps(context, context.map, map_block_ids)
-        wibbrlib.io.load_maps(context, context.contmap, contmap_block_ids)
+        # We don't need to load in file data, therefore we don't load
+        # the content map blocks.
     else:
         gen_ids = []
         map_block_ids = []
