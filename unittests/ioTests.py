@@ -129,7 +129,8 @@ class HostBlock(IoBase):
     def testFetchHostBlock(self):
         host_id = self.context.config.get("wibbr", "host-id")
         host = wibbrlib.obj.host_block_encode(host_id, ["gen1", "gen2"],
-                                                 ["map1", "map2"], [])
+                                                 ["map1", "map2"], 
+                                                 ["contmap1", "contmap2"])
         be = wibbrlib.backend.init(self.context.config, self.context.cache)
         
         wibbrlib.io.upload_host_block(self.context, host)
