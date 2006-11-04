@@ -69,10 +69,8 @@ def backup(context, args):
         (host_id, gen_ids, map_block_ids, contmap_block_ids) = \
             wibbrlib.obj.host_block_decode(host_block)
 
-        logging.info("Decoding mapping blocks")    
-        for map_block_id in map_block_ids:
-            block = wibbrlib.io.get_block(context, map_block_id)
-            wibbrlib.mapping.decode_block(context.map, block)
+        logging.info("Decoding mapping blocks")
+        wibbrlib.io.load_maps(context, context.map, map_block_ids)
         # FIXME: This needs to deal with contmaps, too.
     else:
         gen_ids = []
@@ -140,9 +138,7 @@ def show_generations(context, gen_ids):
     (host_id, _, map_block_ids, _) = \
         wibbrlib.obj.host_block_decode(host_block)
 
-    for map_block_id in map_block_ids:
-        block = wibbrlib.io.get_block(context, map_block_id)
-        wibbrlib.mapping.decode_block(context.map, block)
+    wibbrlib.io.load_maps(context, context.map, map_block_ids)
 
     pretty = False
     for gen_id in gen_ids:
@@ -213,9 +209,7 @@ def restore(context, gen_id):
         wibbrlib.obj.host_block_decode(host_block)
 
     logging.debug("Decoding mapping blocks")
-    for map_block_id in map_block_ids:
-        block = wibbrlib.io.get_block(context, map_block_id)
-        wibbrlib.mapping.decode_block(context.map, block)
+    wibbrlib.io.load_maps(context, context.map, map_block_ids)
     # FIXME: This needs to deal with content maps too.
 
     logging.debug("Getting generation object")    
@@ -257,9 +251,7 @@ def forget(context, forgettable_ids):
     (host_id, gen_ids, map_block_ids, contmap_block_ids) = \
         wibbrlib.obj.host_block_decode(host_block)
 
-    for map_block_id in map_block_ids:
-        block = wibbrlib.io.get_block(context, map_block_id)
-        wibbrlib.mapping.decode_block(context.map, block)
+    wibbrlib.io.load_maps(context, context.map, map_block_ids)
     # FIXME: This needs to deal with content maps, too.
 
     for id in forgettable_ids:
