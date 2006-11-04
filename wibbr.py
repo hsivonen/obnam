@@ -216,6 +216,7 @@ def restore(context, gen_id):
     for map_block_id in map_block_ids:
         block = wibbrlib.io.get_block(context, map_block_id)
         wibbrlib.mapping.decode_block(context.map, block)
+    # FIXME: This needs to deal with content maps too.
 
     logging.debug("Getting generation object")    
     gen = wibbrlib.io.get_object(context, gen_id)
