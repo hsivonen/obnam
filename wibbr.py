@@ -73,6 +73,7 @@ def backup(context, args):
         for map_block_id in map_block_ids:
             block = wibbrlib.io.get_block(context, map_block_id)
             wibbrlib.mapping.decode_block(context.map, block)
+        # FIXME: This needs to deal with contmaps, too.
     else:
         gen_ids = []
         map_block_ids = []
