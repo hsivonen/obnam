@@ -10,6 +10,7 @@ class Context:
         self.cache = None
         self.be = None
         self.map = wibbrlib.mapping.create()
+        self.contmap = wibbrlib.mapping.create()
         self.oq = wibbrlib.obj.object_queue_create()
         self.content_oq = wibbrlib.obj.object_queue_create()
 
