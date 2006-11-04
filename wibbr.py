@@ -101,13 +101,14 @@ def backup(context, args):
     filelist_id = wibbrlib.obj.object_id_new()
     filelist_obj = wibbrlib.filelist.to_object(new_filelist, filelist_id)
     filelist_obj = wibbrlib.obj.encode(filelist_obj)
-    wibbrlib.io.enqueue_object(context, context.oq, filelist_id, filelist_obj)
+    wibbrlib.io.enqueue_object(context, context.oq, context.map, 
+                               filelist_id, filelist_obj)
     
     logging.info("Creating new generation object")
     gen_id = wibbrlib.obj.object_id_new()
     gen = wibbrlib.obj.generation_object_encode(gen_id, filelist_id)
     gen_ids.append(gen_id)
-    wibbrlib.io.enqueue_object(context, context.oq, gen_id, gen)
+    wibbrlib.io.enqueue_object(context, context.oq, context.map, gen_id, gen)
     wibbrlib.io.flush_all_object_queues(context)
 
     logging.info("Creating new mapping blocks")

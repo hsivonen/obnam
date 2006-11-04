@@ -71,7 +71,8 @@ class IoBase(unittest.TestCase):
 class ObjectQueueFlushing(IoBase):
 
     def testEmptyQueue(self):
-        wibbrlib.io.flush_object_queue(self.context, self.context.oq)
+        wibbrlib.io.flush_object_queue(self.context, self.context.oq, 
+                                       self.context.map)
         list = wibbrlib.backend.list(self.context.be)
         self.failUnlessEqual(list, [])
 
@@ -80,7 +81,8 @@ class ObjectQueueFlushing(IoBase):
         
         self.failUnlessEqual(wibbrlib.backend.list(self.context.be), [])
         
-        wibbrlib.io.flush_object_queue(self.context, self.context.oq)
+        wibbrlib.io.flush_object_queue(self.context, self.context.oq,
+                                       self.context.map)
 
         list = wibbrlib.backend.list(self.context.be)
         self.failUnlessEqual(len(list), 1)
@@ -104,7 +106,8 @@ class GetObjectTests(IoBase):
 
     def upload_object(self, object_id, object):
         wibbrlib.obj.object_queue_add(self.context.oq, object_id, object)
-        wibbrlib.io.flush_object_queue(self.context, self.context.oq)
+        wibbrlib.io.flush_object_queue(self.context, self.context.oq,
+                                       self.context.map)
 
     def testGetObject(self):
         id = "pink"
@@ -158,7 +161,8 @@ class ObjectQueuingTests(unittest.TestCase):
 
         self.failUnlessEqual(self.find_block_files(context.config), [])
         
-        wibbrlib.io.enqueue_object(context, context.oq, object_id, object)
+        wibbrlib.io.enqueue_object(context, context.oq, context.map, 
+                                   object_id, object)
         
         self.failUnlessEqual(self.find_block_files(context.config), [])
         self.failUnlessEqual(
@@ -168,7 +172,8 @@ class ObjectQueuingTests(unittest.TestCase):
         object_id2 = "pink2"
         object2 = "x" * 1024
 
-        wibbrlib.io.enqueue_object(context, context.oq, object_id2, object2)
+        wibbrlib.io.enqueue_object(context, context.oq, context.map, 
+                                   object_id2, object2)
         
         self.failUnlessEqual(len(self.find_block_files(context.config)), 1)
         self.failUnlessEqual(
@@ -221,8 +226,10 @@ class FileContentsTests(unittest.TestCase):
         filename = "Makefile"
         
         id = wibbrlib.io.create_file_contents_object(self.context, filename)
-        wibbrlib.io.flush_object_queue(self.context, self.context.oq)
-        wibbrlib.io.flush_object_queue(self.context, self.context.content_oq)
+        wibbrlib.io.flush_object_queue(self.context, self.context.oq,
+                                       self.context.map)
+        wibbrlib.io.flush_object_queue(self.context, self.context.content_oq,
+                                       self.context.contmap)
         
         (fd, name) = tempfile.mkstemp()
         wibbrlib.io.get_file_contents(self.context, fd, id)
