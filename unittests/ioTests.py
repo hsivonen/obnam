@@ -339,6 +339,8 @@ class ReachabilityTests(IoBase):
 
         host_id = self.context.config.get("wibbr", "host-id")
         host = wibbrlib.obj.host_block_encode(host_id, [], [map_block_id], [])
+            # FIXME: This should test contmap block ids, too, but we need
+            # a separate map for that, which we don't yet have.
         wibbrlib.io.upload_host_block(self.context, host)
         
         list = wibbrlib.io.find_map_blocks_in_use(self.context, host, [])
