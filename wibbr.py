@@ -71,7 +71,7 @@ def backup(context, args):
 
         logging.info("Decoding mapping blocks")
         wibbrlib.io.load_maps(context, context.map, map_block_ids)
-        # FIXME: This needs to deal with contmaps, too.
+        wibbrlib.io.load_maps(context, context.contmap, contmap_block_ids)
     else:
         gen_ids = []
         map_block_ids = []
@@ -210,7 +210,7 @@ def restore(context, gen_id):
 
     logging.debug("Decoding mapping blocks")
     wibbrlib.io.load_maps(context, context.map, map_block_ids)
-    # FIXME: This needs to deal with content maps too.
+    wibbrlib.io.load_maps(context, context.contmap, contmap_block_ids)
 
     logging.debug("Getting generation object")    
     gen = wibbrlib.io.get_object(context, gen_id)
@@ -252,7 +252,7 @@ def forget(context, forgettable_ids):
         wibbrlib.obj.host_block_decode(host_block)
 
     wibbrlib.io.load_maps(context, context.map, map_block_ids)
-    # FIXME: This needs to deal with content maps, too.
+    wibbrlib.io.load_maps(context, context.contmap, contmap_block_ids)
 
     for id in forgettable_ids:
         if id in gen_ids:
