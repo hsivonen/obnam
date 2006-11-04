@@ -269,7 +269,8 @@ def forget(context, forgettable_ids):
             print "Warning: Generation", id, "is not known"
 
     host_id = context.config.get("wibbr", "host-id")
-    block = wibbrlib.obj.host_block_encode(host_id, gen_ids, map_block_ids, [])
+    block = wibbrlib.obj.host_block_encode(host_id, gen_ids, map_block_ids,
+                                           contmap_block_ids)
     wibbrlib.io.upload_host_block(context, block)
 
     wibbrlib.io.collect_garbage(context, block)
