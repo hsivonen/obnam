@@ -66,7 +66,7 @@ def backup(context, args):
     logging.info("Getting and decoding host block")
     host_block = wibbrlib.io.get_host_block(context)
     if host_block:
-        (host_id, gen_ids, map_block_ids) = \
+        (host_id, gen_ids, map_block_ids, contmap_block_ids) = \
             wibbrlib.obj.host_block_decode(host_block)
 
         logging.info("Decoding mapping blocks")    
@@ -76,6 +76,7 @@ def backup(context, args):
     else:
         gen_ids = []
         map_block_ids = []
+        contmap_block_ids = []
 
     if gen_ids:
         logging.info("Getting file list for previous generation")
@@ -119,21 +120,22 @@ def backup(context, args):
 
     logging.info("Creating new host block")
     host_id = context.config.get("wibbr", "host-id")
-    block = wibbrlib.obj.host_block_encode(host_id, gen_ids, map_block_ids)
+    block = wibbrlib.obj.host_block_encode(host_id, gen_ids, map_block_ids,
+                                           contmap_block_ids)
     wibbrlib.io.upload_host_block(context, block)
 
     logging.info("Backup done")
 
 def generations(context):
     block = wibbrlib.io.get_host_block(context)
-    (_, gen_ids, _) = wibbrlib.obj.host_block_decode(block)
+    (_, gen_ids, _, _) = wibbrlib.obj.host_block_decode(block)
     for id in gen_ids:
         print id
 
 
 def show_generations(context, gen_ids):
     host_block = wibbrlib.io.get_host_block(context)
-    (host_id, _, map_block_ids) = \
+    (host_id, _, map_block_ids, _) = \
         wibbrlib.obj.host_block_decode(host_block)
 
     for map_block_id in map_block_ids:
@@ -205,7 +207,7 @@ def restore(context, gen_id):
 
     logging.debug("Fetching and decoding host block")
     host_block = wibbrlib.io.get_host_block(context)
-    (host_id, _, map_block_ids) = \
+    (host_id, _, map_block_ids, contmap_block_ids) = \
         wibbrlib.obj.host_block_decode(host_block)
 
     logging.debug("Decoding mapping blocks")
@@ -249,7 +251,7 @@ def restore(context, gen_id):
 
 def forget(context, forgettable_ids):
     host_block = wibbrlib.io.get_host_block(context)
-    (host_id, gen_ids, map_block_ids) = \
+    (host_id, gen_ids, map_block_ids, contmap_block_ids) = \
         wibbrlib.obj.host_block_decode(host_block)
 
     for map_block_id in map_block_ids:
@@ -263,7 +265,7 @@ def forget(context, forgettable_ids):
             print "Warning: Generation", id, "is not known"
 
     host_id = context.config.get("wibbr", "host-id")
-    block = wibbrlib.obj.host_block_encode(host_id, gen_ids, map_block_ids)
+    block = wibbrlib.obj.host_block_encode(host_id, gen_ids, map_block_ids, [])
     wibbrlib.io.upload_host_block(context, block)
 
     wibbrlib.io.collect_garbage(context, block)

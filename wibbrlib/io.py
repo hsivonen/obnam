@@ -254,7 +254,7 @@ def _find_refs(components):
 
 def find_reachable_data_blocks(context, host_block):
     """Find all blocks with data that can be reached from host block"""
-    (_, gen_ids, _) = wibbrlib.obj.host_block_decode(host_block)
+    (_, gen_ids, _, _) = wibbrlib.obj.host_block_decode(host_block)
     object_ids = set(gen_ids)
     reachable_block_ids = set()
     while object_ids:
@@ -271,9 +271,10 @@ def find_reachable_data_blocks(context, host_block):
 def find_map_blocks_in_use(context, host_block, data_block_ids):
     """Given data blocks in use, return map blocks they're mentioned in"""
     data_block_ids = set(data_block_ids)
-    (_, _, map_block_ids) = wibbrlib.obj.host_block_decode(host_block)
+    (_, _, map_block_ids, contmap_block_ids) = \
+        wibbrlib.obj.host_block_decode(host_block)
     used_map_block_ids = set()
-    for map_block_id in map_block_ids:
+    for map_block_id in map_block_ids + contmap_block_ids:
         block = get_block(context, map_block_id)
         list = wibbrlib.obj.block_decode(block)
         list = wibbrlib.cmp.find_by_kind(list, wibbrlib.cmp.CMP_OBJMAP)
