@@ -364,16 +364,14 @@ class ReachabilityTests(IoBase):
         block = wibbrlib.obj.block_create_from_object_queue(block_id, oq)
         wibbrlib.backend.upload(self.context.be, block_id, block)
 
-        wibbrlib.mapping.add(self.context.map, "rouge", block_id)
+        wibbrlib.mapping.add(self.context.contmap, "rouge", block_id)
         map_block_id = "pretty"
-        map_block = wibbrlib.mapping.encode_new_to_block(self.context.map,
+        map_block = wibbrlib.mapping.encode_new_to_block(self.context.contmap,
                                                          map_block_id)
         wibbrlib.backend.upload(self.context.be, map_block_id, map_block)
 
         host_id = self.context.config.get("wibbr", "host-id")
-        host = wibbrlib.obj.host_block_encode(host_id, [], [map_block_id], [])
-            # FIXME: This should test contmap block ids, too, but we need
-            # a separate map for that, which we don't yet have.
+        host = wibbrlib.obj.host_block_encode(host_id, [], [], [map_block_id])
         wibbrlib.io.upload_host_block(self.context, host)
         
         list = wibbrlib.io.find_map_blocks_in_use(self.context, host, 
