@@ -301,3 +301,10 @@ def collect_garbage(context, host_block):
             files.remove(id)
     for garbage in files:
         wibbrlib.backend.remove(context.be, garbage)
+
+
+def load_maps(context, map, block_ids):
+    """Load and parse mapping blocks, store results in map"""
+    for id in block_ids:
+        block = wibbrlib.io.get_block(context, id)
+        wibbrlib.mapping.decode_block(map, block)

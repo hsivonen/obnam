@@ -438,3 +438,19 @@ class ObjectCacheRegressionTest(unittest.TestCase):
         # If the bug is there, the next method call doesn't return.
         # Beware the operator.
         oc.put(b)
+
+
+class LoadMapTests(IoBase):
+
+    def test(self):
+        map = wibbrlib.mapping.create()
+        wibbrlib.mapping.add(map, "pink", "pretty")
+        block_id = wibbrlib.backend.generate_block_id(self.context.be)
+        block = wibbrlib.mapping.encode_new_to_block(map, block_id)
+        wibbrlib.backend.upload(self.context.be, block_id, block)
+        
+        wibbrlib.io.load_maps(self.context, self.context.map, [block_id])
+        self.failUnlessEqual(wibbrlib.mapping.get(self.context.map, "pink"),
+                             "pretty")
+        self.failUnlessEqual(wibbrlib.mapping.get(self.context.map, "black"),
+                             None)
