@@ -118,6 +118,7 @@ def backup(context, args):
                                                      map_block_id)
     wibbrlib.backend.upload(context.be, map_block_id, map_block)
     map_block_ids.append(map_block_id)
+    # FIXME: This needs to deal with content maps too, in the future.
 
     logging.info("Creating new host block")
     host_id = context.config.get("wibbr", "host-id")
