@@ -110,13 +110,20 @@ def backup(context, args):
     wibbrlib.io.enqueue_object(context, context.oq, gen_id, gen)
     wibbrlib.io.flush_all_object_queues(context)
 
-    logging.info("Creating new mapping block")
-    map_block_id = wibbrlib.backend.generate_block_id(context.be)
-    map_block = wibbrlib.mapping.encode_new_to_block(context.map, 
-                                                     map_block_id)
-    wibbrlib.backend.upload(context.be, map_block_id, map_block)
-    map_block_ids.append(map_block_id)
-    # FIXME: This needs to deal with content maps too, in the future.
+    logging.info("Creating new mapping blocks")
+    if wibbrlib.mapping.get_new(context.map):
+        map_block_id = wibbrlib.backend.generate_block_id(context.be)
+        map_block = wibbrlib.mapping.encode_new_to_block(context.map, 
+                                                         map_block_id)
+        wibbrlib.backend.upload(context.be, map_block_id, map_block)
+        map_block_ids.append(map_block_id)
+
+    if wibbrlib.mapping.get_new(context.contmap):
+        contmap_block_id = wibbrlib.backend.generate_block_id(context.be)
+        contmap_block = wibbrlib.mapping.encode_new_to_block(context.contmap, 
+                                                             contmap_block_id)
+        wibbrlib.backend.upload(context.be, contmap_block_id, contmap_block)
+        contmap_block_ids.append(contmap_block_id)
 
     logging.info("Creating new host block")
     host_id = context.config.get("wibbr", "host-id")
