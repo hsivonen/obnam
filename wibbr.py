@@ -66,16 +66,17 @@ def backup(context, args):
     logging.info("Getting and decoding host block")
     host_block = wibbrlib.io.get_host_block(context)
     if host_block:
-        (host_id, gen_ids, map_block_ids) = \
+        (host_id, gen_ids, map_block_ids, contmap_block_ids) = \
             wibbrlib.obj.host_block_decode(host_block)
 
-        logging.info("Decoding mapping blocks")    
-        for map_block_id in map_block_ids:
-            block = wibbrlib.io.get_block(context, map_block_id)
-            wibbrlib.mapping.decode_block(context.map, block)
+        logging.info("Decoding mapping blocks")
+        wibbrlib.io.load_maps(context, context.map, map_block_ids)
+        # We don't need to load in file data, therefore we don't load
+        # the content map blocks.
     else:
         gen_ids = []
         map_block_ids = []
+        contmap_block_ids = []
 
     if gen_ids:
         logging.info("Getting file list for previous generation")
@@ -101,44 +102,52 @@ def backup(context, args):
     filelist_id = wibbrlib.obj.object_id_new()
     filelist_obj = wibbrlib.filelist.to_object(new_filelist, filelist_id)
     filelist_obj = wibbrlib.obj.encode(filelist_obj)
-    wibbrlib.io.enqueue_object(context, context.oq, filelist_id, filelist_obj)
+    wibbrlib.io.enqueue_object(context, context.oq, context.map, 
+                               filelist_id, filelist_obj)
     
     logging.info("Creating new generation object")
     gen_id = wibbrlib.obj.object_id_new()
     gen = wibbrlib.obj.generation_object_encode(gen_id, filelist_id)
     gen_ids.append(gen_id)
-    wibbrlib.io.enqueue_object(context, context.oq, gen_id, gen)
+    wibbrlib.io.enqueue_object(context, context.oq, context.map, gen_id, gen)
     wibbrlib.io.flush_all_object_queues(context)
 
-    logging.info("Creating new mapping block")
-    map_block_id = wibbrlib.backend.generate_block_id(context.be)
-    map_block = wibbrlib.mapping.encode_new_to_block(context.map, 
-                                                     map_block_id)
-    wibbrlib.backend.upload(context.be, map_block_id, map_block)
-    map_block_ids.append(map_block_id)
+    logging.info("Creating new mapping blocks")
+    if wibbrlib.mapping.get_new(context.map):
+        map_block_id = wibbrlib.backend.generate_block_id(context.be)
+        map_block = wibbrlib.mapping.encode_new_to_block(context.map, 
+                                                         map_block_id)
+        wibbrlib.backend.upload(context.be, map_block_id, map_block)
+        map_block_ids.append(map_block_id)
+
+    if wibbrlib.mapping.get_new(context.contmap):
+        contmap_block_id = wibbrlib.backend.generate_block_id(context.be)
+        contmap_block = wibbrlib.mapping.encode_new_to_block(context.contmap, 
+                                                             contmap_block_id)
+        wibbrlib.backend.upload(context.be, contmap_block_id, contmap_block)
+        contmap_block_ids.append(contmap_block_id)
 
     logging.info("Creating new host block")
     host_id = context.config.get("wibbr", "host-id")
-    block = wibbrlib.obj.host_block_encode(host_id, gen_ids, map_block_ids)
+    block = wibbrlib.obj.host_block_encode(host_id, gen_ids, map_block_ids,
+                                           contmap_block_ids)
     wibbrlib.io.upload_host_block(context, block)
 
     logging.info("Backup done")
 
 def generations(context):
     block = wibbrlib.io.get_host_block(context)
-    (_, gen_ids, _) = wibbrlib.obj.host_block_decode(block)
+    (_, gen_ids, _, _) = wibbrlib.obj.host_block_decode(block)
     for id in gen_ids:
         print id
 
 
 def show_generations(context, gen_ids):
     host_block = wibbrlib.io.get_host_block(context)
-    (host_id, _, map_block_ids) = \
+    (host_id, _, map_block_ids, _) = \
         wibbrlib.obj.host_block_decode(host_block)
 
-    for map_block_id in map_block_ids:
-        block = wibbrlib.io.get_block(context, map_block_id)
-        wibbrlib.mapping.decode_block(context.map, block)
+    wibbrlib.io.load_maps(context, context.map, map_block_ids)
 
     pretty = False
     for gen_id in gen_ids:
@@ -205,13 +214,12 @@ def restore(context, gen_id):
 
     logging.debug("Fetching and decoding host block")
     host_block = wibbrlib.io.get_host_block(context)
-    (host_id, _, map_block_ids) = \
+    (host_id, _, map_block_ids, contmap_block_ids) = \
         wibbrlib.obj.host_block_decode(host_block)
 
     logging.debug("Decoding mapping blocks")
-    for map_block_id in map_block_ids:
-        block = wibbrlib.io.get_block(context, map_block_id)
-        wibbrlib.mapping.decode_block(context.map, block)
+    wibbrlib.io.load_maps(context, context.map, map_block_ids)
+    wibbrlib.io.load_maps(context, context.contmap, contmap_block_ids)
 
     logging.debug("Getting generation object")    
     gen = wibbrlib.io.get_object(context, gen_id)
@@ -249,12 +257,11 @@ def restore(context, gen_id):
 
 def forget(context, forgettable_ids):
     host_block = wibbrlib.io.get_host_block(context)
-    (host_id, gen_ids, map_block_ids) = \
+    (host_id, gen_ids, map_block_ids, contmap_block_ids) = \
         wibbrlib.obj.host_block_decode(host_block)
 
-    for map_block_id in map_block_ids:
-        block = wibbrlib.io.get_block(context, map_block_id)
-        wibbrlib.mapping.decode_block(context.map, block)
+    wibbrlib.io.load_maps(context, context.map, map_block_ids)
+    wibbrlib.io.load_maps(context, context.contmap, contmap_block_ids)
 
     for id in forgettable_ids:
         if id in gen_ids:
@@ -263,7 +270,8 @@ def forget(context, forgettable_ids):
             print "Warning: Generation", id, "is not known"
 
     host_id = context.config.get("wibbr", "host-id")
-    block = wibbrlib.obj.host_block_encode(host_id, gen_ids, map_block_ids)
+    block = wibbrlib.obj.host_block_encode(host_id, gen_ids, map_block_ids,
+                                           contmap_block_ids)
     wibbrlib.io.upload_host_block(context, block)
 
     wibbrlib.io.collect_garbage(context, block)

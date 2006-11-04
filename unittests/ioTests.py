@@ -71,7 +71,8 @@ class IoBase(unittest.TestCase):
 class ObjectQueueFlushing(IoBase):
 
     def testEmptyQueue(self):
-        wibbrlib.io.flush_object_queue(self.context, self.context.oq)
+        wibbrlib.io.flush_object_queue(self.context, self.context.oq, 
+                                       self.context.map)
         list = wibbrlib.backend.list(self.context.be)
         self.failUnlessEqual(list, [])
 
@@ -80,7 +81,8 @@ class ObjectQueueFlushing(IoBase):
         
         self.failUnlessEqual(wibbrlib.backend.list(self.context.be), [])
         
-        wibbrlib.io.flush_object_queue(self.context, self.context.oq)
+        wibbrlib.io.flush_object_queue(self.context, self.context.oq,
+                                       self.context.map)
 
         list = wibbrlib.backend.list(self.context.be)
         self.failUnlessEqual(len(list), 1)
@@ -104,7 +106,8 @@ class GetObjectTests(IoBase):
 
     def upload_object(self, object_id, object):
         wibbrlib.obj.object_queue_add(self.context.oq, object_id, object)
-        wibbrlib.io.flush_object_queue(self.context, self.context.oq)
+        wibbrlib.io.flush_object_queue(self.context, self.context.oq,
+                                       self.context.map)
 
     def testGetObject(self):
         id = "pink"
@@ -129,7 +132,8 @@ class HostBlock(IoBase):
     def testFetchHostBlock(self):
         host_id = self.context.config.get("wibbr", "host-id")
         host = wibbrlib.obj.host_block_encode(host_id, ["gen1", "gen2"],
-                                                 ["map1", "map2"])
+                                                 ["map1", "map2"], 
+                                                 ["contmap1", "contmap2"])
         be = wibbrlib.backend.init(self.context.config, self.context.cache)
         
         wibbrlib.io.upload_host_block(self.context, host)
@@ -157,7 +161,8 @@ class ObjectQueuingTests(unittest.TestCase):
 
         self.failUnlessEqual(self.find_block_files(context.config), [])
         
-        wibbrlib.io.enqueue_object(context, context.oq, object_id, object)
+        wibbrlib.io.enqueue_object(context, context.oq, context.map, 
+                                   object_id, object)
         
         self.failUnlessEqual(self.find_block_files(context.config), [])
         self.failUnlessEqual(
@@ -167,7 +172,8 @@ class ObjectQueuingTests(unittest.TestCase):
         object_id2 = "pink2"
         object2 = "x" * 1024
 
-        wibbrlib.io.enqueue_object(context, context.oq, object_id2, object2)
+        wibbrlib.io.enqueue_object(context, context.oq, context.map, 
+                                   object_id2, object2)
         
         self.failUnlessEqual(len(self.find_block_files(context.config)), 1)
         self.failUnlessEqual(
@@ -220,8 +226,10 @@ class FileContentsTests(unittest.TestCase):
         filename = "Makefile"
         
         id = wibbrlib.io.create_file_contents_object(self.context, filename)
-        wibbrlib.io.flush_object_queue(self.context, self.context.oq)
-        wibbrlib.io.flush_object_queue(self.context, self.context.content_oq)
+        wibbrlib.io.flush_object_queue(self.context, self.context.oq,
+                                       self.context.map)
+        wibbrlib.io.flush_object_queue(self.context, self.context.content_oq,
+                                       self.context.contmap)
         
         (fd, name) = tempfile.mkstemp()
         wibbrlib.io.get_file_contents(self.context, fd, id)
@@ -320,7 +328,7 @@ class ReachabilityTests(IoBase):
 
     def testNoDataNoMaps(self):
         host_id = self.context.config.get("wibbr", "host-id")
-        host = wibbrlib.obj.host_block_encode(host_id, [], [])
+        host = wibbrlib.obj.host_block_encode(host_id, [], [], [])
         wibbrlib.io.upload_host_block(self.context, host)
         
         list = wibbrlib.io.find_reachable_data_blocks(self.context, host)
@@ -336,8 +344,16 @@ class ReachabilityTests(IoBase):
                                                          map_block_id)
         wibbrlib.backend.upload(self.context.be, map_block_id, map_block)
 
+        wibbrlib.mapping.add(self.context.contmap, "black", "beautiful")
+        contmap_block_id = "fiddly"
+        contmap_block = wibbrlib.mapping.encode_new_to_block(
+                            self.context.contmap, contmap_block_id)
+        wibbrlib.backend.upload(self.context.be, contmap_block_id, 
+                                contmap_block)
+
         host_id = self.context.config.get("wibbr", "host-id")
-        host = wibbrlib.obj.host_block_encode(host_id, [], [map_block_id])
+        host = wibbrlib.obj.host_block_encode(host_id, [], [map_block_id], 
+                                              [contmap_block_id])
         wibbrlib.io.upload_host_block(self.context, host)
         
         list = wibbrlib.io.find_map_blocks_in_use(self.context, host, [])
@@ -355,14 +371,14 @@ class ReachabilityTests(IoBase):
         block = wibbrlib.obj.block_create_from_object_queue(block_id, oq)
         wibbrlib.backend.upload(self.context.be, block_id, block)
 
-        wibbrlib.mapping.add(self.context.map, "rouge", block_id)
+        wibbrlib.mapping.add(self.context.contmap, "rouge", block_id)
         map_block_id = "pretty"
-        map_block = wibbrlib.mapping.encode_new_to_block(self.context.map,
+        map_block = wibbrlib.mapping.encode_new_to_block(self.context.contmap,
                                                          map_block_id)
         wibbrlib.backend.upload(self.context.be, map_block_id, map_block)
 
         host_id = self.context.config.get("wibbr", "host-id")
-        host = wibbrlib.obj.host_block_encode(host_id, [], [map_block_id])
+        host = wibbrlib.obj.host_block_encode(host_id, [], [], [map_block_id])
         wibbrlib.io.upload_host_block(self.context, host)
         
         list = wibbrlib.io.find_map_blocks_in_use(self.context, host, 
@@ -374,7 +390,7 @@ class GarbageCollectionTests(IoBase):
 
     def testFindUnreachableFiles(self):
         host_id = self.context.config.get("wibbr", "host-id")
-        host = wibbrlib.obj.host_block_encode(host_id, [], [])
+        host = wibbrlib.obj.host_block_encode(host_id, [], [], [])
         wibbrlib.io.upload_host_block(self.context, host)
 
         block_id = wibbrlib.backend.generate_block_id(self.context.be)
@@ -433,3 +449,19 @@ class ObjectCacheRegressionTest(unittest.TestCase):
         # If the bug is there, the next method call doesn't return.
         # Beware the operator.
         oc.put(b)
+
+
+class LoadMapTests(IoBase):
+
+    def test(self):
+        map = wibbrlib.mapping.create()
+        wibbrlib.mapping.add(map, "pink", "pretty")
+        block_id = wibbrlib.backend.generate_block_id(self.context.be)
+        block = wibbrlib.mapping.encode_new_to_block(map, block_id)
+        wibbrlib.backend.upload(self.context.be, block_id, block)
+        
+        wibbrlib.io.load_maps(self.context, self.context.map, [block_id])
+        self.failUnlessEqual(wibbrlib.mapping.get(self.context.map, "pink"),
+                             "pretty")
+        self.failUnlessEqual(wibbrlib.mapping.get(self.context.map, "black"),
+                             None)

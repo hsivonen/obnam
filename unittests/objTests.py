@@ -193,15 +193,19 @@ class HostBlockTests(unittest.TestCase):
         host_id = "pink"
         gen_ids = ["pretty", "beautiful"]
         map_ids = ["black", "box"]
-        host = wibbrlib.obj.host_block_encode(host_id, gen_ids, map_ids)
+        contmap_ids = ["tilu", "lii"]
+        host = wibbrlib.obj.host_block_encode(host_id, gen_ids, map_ids, 
+                                              contmap_ids)
         self.failUnless(host.startswith(wibbrlib.obj.BLOCK_COOKIE))
-        (host_id2, gen_ids2, map_ids2) = wibbrlib.obj.host_block_decode(host)
+        (host_id2, gen_ids2, map_ids2, contmap_ids2) = \
+            wibbrlib.obj.host_block_decode(host)
         self.failUnlessEqual(host_id, host_id2)
         self.failUnlessEqual(gen_ids, gen_ids2)
         self.failUnlessEqual(map_ids, map_ids2)
+        self.failUnlessEqual(contmap_ids, contmap_ids2)
         
     def testFormatVersion(self):
-        encoded = wibbrlib.obj.host_block_encode("pink", [], [])
+        encoded = wibbrlib.obj.host_block_encode("pink", [], [], [])
         decoded = wibbrlib.obj.block_decode(encoded)
         c = wibbrlib.cmp.first_by_kind(decoded, wibbrlib.cmp.CMP_OBJECT)
         subs = wibbrlib.cmp.get_subcomponents(c)

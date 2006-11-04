@@ -64,6 +64,7 @@ CMP_FILEPARTREF   = _define_ref(        31, "CMP_FILEPARTREF")
 CMP_FORMATVERSION = _define_plain(      32, "CMP_FORMATVERSION")
 CMP_FILE          = _define_composite(  33, "CMP_FILE")
 CMP_FILELISTREF   = _define_ref(        34, "CMP_FILELISTREF")
+CMP_CONTMAPREF    = _define_ref(        35, "CMP_CONTMAPREF")
 
 
 def kind_name(kind):

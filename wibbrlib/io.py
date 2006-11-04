@@ -26,7 +26,7 @@ def unsolve(context, pathname):
         return pathname
 
 
-def flush_object_queue(context, oq):
+def flush_object_queue(context, oq, map):
     """Put all objects in an object queue into a block and upload it
     
     Also put mappings into map.
@@ -38,14 +38,14 @@ def flush_object_queue(context, oq):
         block = wibbrlib.obj.block_create_from_object_queue(block_id, oq)
         wibbrlib.backend.upload(context.be, block_id, block)
         for id in wibbrlib.obj.object_queue_ids(oq):
-            wibbrlib.mapping.add(context.map, id, block_id)
+            wibbrlib.mapping.add(map, id, block_id)
 
 
 def flush_all_object_queues(context):
     """Flush and clear all object queues in a given context"""
-    flush_object_queue(context, context.oq)
+    flush_object_queue(context, context.oq, context.map)
     wibbrlib.obj.object_queue_clear(context.oq)
-    flush_object_queue(context, context.content_oq)
+    flush_object_queue(context, context.content_oq, context.contmap)
     wibbrlib.obj.object_queue_clear(context.content_oq)
 
 
@@ -134,6 +134,8 @@ def get_object(context, object_id):
         
     block_id = wibbrlib.mapping.get(context.map, object_id)
     if not block_id:
+        block_id = wibbrlib.mapping.get(context.contmap, object_id)
+    if not block_id:
         return None
 
     block = get_block(context, block_id)
@@ -172,12 +174,12 @@ def get_host_block(context):
         return wibbrlib.cache.get_block(context.cache, host_id)
 
 
-def enqueue_object(context, oq, object_id, object):
+def enqueue_object(context, oq, map, object_id, object):
     """Put an object into the object queue, and flush queue if too big"""
     block_size = context.config.getint("wibbr", "block-size")
     cur_size = wibbrlib.obj.object_queue_combined_size(oq)
     if len(object) + cur_size > block_size:
-        wibbrlib.io.flush_object_queue(context, oq)
+        wibbrlib.io.flush_object_queue(context, oq, map)
         wibbrlib.obj.object_queue_clear(oq)
     wibbrlib.obj.object_queue_add(oq, object_id, object)
 
@@ -197,7 +199,8 @@ def create_file_contents_object(context, filename):
         o = wibbrlib.obj.create(part_id, wibbrlib.obj.OBJ_FILEPART)
         wibbrlib.obj.add(o, c)
         o = wibbrlib.obj.encode(o)
-        enqueue_object(context, context.content_oq, part_id, o)
+        enqueue_object(context, context.content_oq, context.contmap, 
+                       part_id, o)
         part_ids.append(part_id)
     f.close()
 
@@ -206,7 +209,7 @@ def create_file_contents_object(context, filename):
         c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_FILEPARTREF, part_id)
         wibbrlib.obj.add(o, c)
     o = wibbrlib.obj.encode(o)
-    enqueue_object(context, context.oq, object_id, o)
+    enqueue_object(context, context.oq, context.map, object_id, o)
 
     return object_id
 
@@ -254,12 +257,14 @@ def _find_refs(components):
 
 def find_reachable_data_blocks(context, host_block):
     """Find all blocks with data that can be reached from host block"""
-    (_, gen_ids, _) = wibbrlib.obj.host_block_decode(host_block)
+    (_, gen_ids, _, _) = wibbrlib.obj.host_block_decode(host_block)
     object_ids = set(gen_ids)
     reachable_block_ids = set()
     while object_ids:
         object_id = object_ids.pop()
         block_id = wibbrlib.mapping.get(context.map, object_id)
+        if not block_id:
+            block_id = wibbrlib.mapping.get(context.contmap, object_id)
         if block_id not in reachable_block_ids:
             reachable_block_ids.add(block_id)
             block = get_block(context, block_id)
@@ -271,9 +276,10 @@ def find_reachable_data_blocks(context, host_block):
 def find_map_blocks_in_use(context, host_block, data_block_ids):
     """Given data blocks in use, return map blocks they're mentioned in"""
     data_block_ids = set(data_block_ids)
-    (_, _, map_block_ids) = wibbrlib.obj.host_block_decode(host_block)
+    (_, _, map_block_ids, contmap_block_ids) = \
+        wibbrlib.obj.host_block_decode(host_block)
     used_map_block_ids = set()
-    for map_block_id in map_block_ids:
+    for map_block_id in map_block_ids + contmap_block_ids:
         block = get_block(context, map_block_id)
         list = wibbrlib.obj.block_decode(block)
         list = wibbrlib.cmp.find_by_kind(list, wibbrlib.cmp.CMP_OBJMAP)
@@ -285,6 +291,7 @@ def find_map_blocks_in_use(context, host_block, data_block_ids):
                 used_map_block_ids.add(map_block_id)
                 break # We already know this entire map block is used
     return [x for x in used_map_block_ids]
+    # FIXME: This needs to keep normal and content maps separate.
 
 
 def collect_garbage(context, host_block):
@@ -299,3 +306,10 @@ def collect_garbage(context, host_block):
             files.remove(id)
     for garbage in files:
         wibbrlib.backend.remove(context.be, garbage)
+
+
+def load_maps(context, map, block_ids):
+    """Load and parse mapping blocks, store results in map"""
+    for id in block_ids:
+        block = wibbrlib.io.get_block(context, id)
+        wibbrlib.mapping.decode_block(map, block)

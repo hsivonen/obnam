@@ -11,7 +11,7 @@ class ContextCreateTests(unittest.TestCase):
         attrs = [x for x in dir(context) if not x.startswith("_")]
         attrs.sort()
         self.failUnlessEqual(attrs, 
-            ["be", "cache", "config", "content_oq", "map", "oq"])
+            ["be", "cache", "config", "content_oq", "contmap", "map", "oq"])
         self.failUnlessEqual(context.be, None)
         self.failUnlessEqual(context.cache, None)
         self.failIfEqual(context.config, None)

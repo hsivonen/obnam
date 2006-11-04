@@ -319,7 +319,7 @@ def generation_object_decode(gen):
     return o.id, first_string_by_kind(o, wibbrlib.cmp.CMP_FILELISTREF)
 
 
-def host_block_encode(host_id, gen_ids, map_block_ids):
+def host_block_encode(host_id, gen_ids, map_block_ids, contmap_block_ids):
     """Encode a new block with a host object"""
     o = create(host_id, OBJ_HOST)
     
@@ -332,6 +332,10 @@ def host_block_encode(host_id, gen_ids, map_block_ids):
     
     for map_block_id in map_block_ids:
         c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_MAPREF, map_block_id)
+        add(o, c)
+    
+    for map_block_id in contmap_block_ids:
+        c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_CONTMAPREF, map_block_id)
         add(o, c)
 
     oq = object_queue_create()
@@ -347,15 +351,18 @@ def host_block_decode(block):
     
     host_id = wibbrlib.cmp.first_string_by_kind(list, wibbrlib.cmp.CMP_BLKID)
     
-    map_ids = []
     gen_ids = []
+    map_ids = []
+    contmap_ids = []
 
     objparts = wibbrlib.cmp.find_by_kind(list, wibbrlib.cmp.CMP_OBJECT)
     for objpart in objparts:
         subs = wibbrlib.cmp.get_subcomponents(objpart)
-        map_ids += wibbrlib.cmp.find_strings_by_kind(subs, 
-                                                    wibbrlib.cmp.CMP_MAPREF)
         gen_ids += wibbrlib.cmp.find_strings_by_kind(subs, 
                                                     wibbrlib.cmp.CMP_GENREF)
+        map_ids += wibbrlib.cmp.find_strings_by_kind(subs, 
+                                                    wibbrlib.cmp.CMP_MAPREF)
+        contmap_ids += wibbrlib.cmp.find_strings_by_kind(subs, 
+                                                wibbrlib.cmp.CMP_CONTMAPREF)
 
-    return host_id, gen_ids, map_ids
+    return host_id, gen_ids, map_ids, contmap_ids
