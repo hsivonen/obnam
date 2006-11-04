@@ -260,6 +260,7 @@ def forget(context, forgettable_ids):
     for map_block_id in map_block_ids:
         block = wibbrlib.io.get_block(context, map_block_id)
         wibbrlib.mapping.decode_block(context.map, block)
+    # FIXME: This needs to deal with content maps, too.
 
     for id in forgettable_ids:
         if id in gen_ids:
