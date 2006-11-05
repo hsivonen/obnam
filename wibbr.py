@@ -48,16 +48,23 @@ def backup_directory(context, new_filelist, dirname, prevgen_filelist):
 
 def get_filelist_in_gen(context, gen_id):
     """Return the file list in a generation"""
+    logging.debug("Getting list of files in generation %s" % gen_id)
     gen = wibbrlib.io.get_object(context, gen_id)
     if not gen:
         raise Exception("wtf")
+    logging.debug("Finding first CMP_FILELISTREF component in generation")
     ref = wibbrlib.obj.first_string_by_kind(gen, wibbrlib.cmp.CMP_FILELISTREF)
     if not ref:
+        logging.debug("No CMP_FILELISTREFs")
         return None
+    logging.debug("Getting file list object")
     fl = wibbrlib.io.get_object(context, ref)
     if not fl:
         raise Exception("wtf %s %s" % (ref, repr(fl)))
-    return wibbrlib.filelist.from_object(fl)
+    logging.debug("Creating filelist object from components")
+    ret = wibbrlib.filelist.from_object(fl)
+    logging.debug("Got file list")
+    return ret
 
 
 def backup(context, args):

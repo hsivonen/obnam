@@ -1,6 +1,7 @@
 """Module for doing local file I/O and higher level remote operations"""
 
 
+import logging
 import os
 import stat
 
@@ -125,26 +126,38 @@ _object_cache = None
 
 def get_object(context, object_id):
     """Fetch an object"""
+    
+    logging.debug("Fetching object %s" % object_id)
+    
     global _object_cache
     if _object_cache is None:
         _object_cache = ObjectCache(context)
     o = _object_cache.get(object_id)
     if o:
+        logging.debug("Object is in cache, good")
         return o
         
+    logging.debug("Object not in cache, looking up mapping")
     block_id = wibbrlib.mapping.get(context.map, object_id)
     if not block_id:
         block_id = wibbrlib.mapping.get(context.contmap, object_id)
     if not block_id:
+        logging.warning("No block found that contains object %s" % object_id)
         return None
 
+    logging.debug("Fetching block")
     block = get_block(context, block_id)
     if not block:
+        logging.error("Block %s not found in store" % block_id)
         raise MissingBlock(block_id, object_id)
 
+    logging.debug("Decoding block")
     list = wibbrlib.obj.block_decode(block)
+    
+    logging.debug("Finding objects in block")
     list = wibbrlib.cmp.find_by_kind(list, wibbrlib.cmp.CMP_OBJECT)
 
+    logging.debug("Putting objects into object cache")
     the_one = None
     for component in list:
         subs = wibbrlib.cmp.get_subcomponents(component)
@@ -153,7 +166,8 @@ def get_object(context, object_id):
             _object_cache.put(o)
         if wibbrlib.obj.get_id(o) == object_id:
             the_one = o
-    
+
+    logging.debug("Returning desired object")    
     return the_one
 
 
