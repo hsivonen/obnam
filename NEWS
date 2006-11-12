@@ -1,0 +1,12 @@
+Obnam NEWS
+==========
+
+
+This file summarizes changes between releases of Obnam.
+
+
+Version 0.1, released 2006-11-12
+
+    * First alpha release. The code is completely rewritten from earlier
+      prototypes. Data formats have changed and old formats are not
+      supported.

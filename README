@@ -1,0 +1,27 @@
+README for Obnam, a backup program
+==================================
+
+This is an alpha version of Obnam, a backup system. This README needs
+some serious work, but the following sample command lines hopefully
+can get you going:
+
+    ./cli.py --store=/foo/store --cache=/foo/cache -C $HOME backup .
+    
+        Back up everything in your home directory. Store backups in
+        /foo in the sub-directories store and cache.
+        
+    ./cli.py --store=/foo/store --cache=/foo/cache generations
+    
+        Show the UUID of each generation (in time order) that exist in
+        the backup.
+
+    ./cli.py --store=/foo/store --cache=/foo/cache show-generations UUID
+    
+        Show the contents of a generation, given its UUID.
+        
+    ./cli.py --store=/foo/store --cache=/foo/cache forget UUID
+    
+        Remove the contents of a generation from the backup, given its
+        UUID.
+
+Please mail bug reports and suggestions to liw@iki.fi, thanks.
