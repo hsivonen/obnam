@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-"""Wibbr - a backup program"""
+"""A backup program"""
 
 
 import logging
@@ -135,7 +135,7 @@ def backup(context, args):
         contmap_block_ids.append(contmap_block_id)
 
     logging.info("Creating new host block")
-    host_id = context.config.get("wibbr", "host-id")
+    host_id = context.config.get("backup", "host-id")
     block = obnam.obj.host_block_encode(host_id, gen_ids, map_block_ids,
                                            contmap_block_ids)
     obnam.io.upload_host_block(context, block)
@@ -210,7 +210,7 @@ def create_filesystem_object(context, full_pathname, inode):
         os.close(fd)
 
 
-class UnknownGeneration(obnam.exception.WibbrException):
+class UnknownGeneration(obnam.exception.ExceptionBase):
 
     def __init__(self, gen_id):
         self._msg = "Can't find generation %s" % gen_id
@@ -233,7 +233,7 @@ def restore(context, gen_id):
     if gen is None:
         raise UnknownGeneration(gen_id)
     
-    target = context.config.get("wibbr", "target-dir")
+    target = context.config.get("backup", "target-dir")
     logging.debug("Restoring files under %s" % target)
 
     logging.debug("Getting list of files in generation")
@@ -276,7 +276,7 @@ def forget(context, forgettable_ids):
         else:
             print "Warning: Generation", id, "is not known"
 
-    host_id = context.config.get("wibbr", "host-id")
+    host_id = context.config.get("backup", "host-id")
     block = obnam.obj.host_block_encode(host_id, gen_ids, map_block_ids,
                                            contmap_block_ids)
     obnam.io.upload_host_block(context, block)
@@ -284,25 +284,25 @@ def forget(context, forgettable_ids):
     obnam.io.collect_garbage(context, block)
 
 
-class MissingCommandWord(obnam.exception.WibbrException):
+class MissingCommandWord(obnam.exception.ExceptionBase):
 
     def __init__(self):
         self._msg = "No command word given on command line"
 
 
-class RestoreNeedsGenerationId(obnam.exception.WibbrException):
+class RestoreNeedsGenerationId(obnam.exception.ExceptionBase):
 
     def __init__(self):
         self._msg = "The 'restore' operation needs id of generation to restore"
 
 
-class RestoreOnlyNeedsGenerationId(obnam.exception.WibbrException):
+class RestoreOnlyNeedsGenerationId(obnam.exception.ExceptionBase):
 
     def __init__(self):
         self._msg = "The 'restore' operation only needs generation id"
 
 
-class UnknownCommandWord(obnam.exception.WibbrException):
+class UnknownCommandWord(obnam.exception.ExceptionBase):
 
     def __init__(self, command):
         self._msg = "Unknown command '%s'" % command
@@ -318,7 +318,7 @@ def main():
         raise MissingCommandWord()
 
     obnam.log.setup(context.config)
-    logging.info("Wibbr starting up")
+    logging.info("Obnam starting up")
         
     command = args[0]
     args = args[1:]
@@ -340,7 +340,7 @@ def main():
     else:
         raise UnknownCommandWord(command)
 
-    logging.info("Wibbr finishing")
+    logging.info("Obnam finishing")
 
 
 if __name__ == "__main__":

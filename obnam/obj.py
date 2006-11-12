@@ -1,6 +1,6 @@
 import uuid
 
-from obnam.exception import WibbrException
+from obnam.exception import ExceptionBase
 import obnam.cmp
 import obnam.varint
 
@@ -254,13 +254,13 @@ def inode_object_encode(objid, stat_result, sig_id, contents_id):
     return encode(o)
     
     
-class UnknownInodeField(WibbrException):
+class UnknownInodeField(ExceptionBase):
 
     def __init__(self, kind):
         self._msg = "Unknown field in inode object: %d" % kind
 
 
-class NotAnInode(WibbrException):
+class NotAnInode(ExceptionBase):
 
     def __init__(self, okind):
         self._msg = "Object kind is not inode: %d" % okind

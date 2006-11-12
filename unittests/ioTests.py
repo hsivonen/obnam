@@ -27,7 +27,7 @@ class ResolveTests(unittest.TestCase):
         )
 
         for target, pathname, resolved in facit:
-            context.config.set("wibbr", "target-dir", target)
+            context.config.set("backup", "target-dir", target)
             x = obnam.io.resolve(context, pathname)
             self.failUnlessEqual(x, resolved)
             self.failUnlessEqual(obnam.io.unsolve(context, x), pathname)
@@ -45,8 +45,8 @@ class IoBase(unittest.TestCase):
         os.mkdir(self.rootdir)
         
         config_list = (
-            ("wibbr", "cache-dir", self.cachedir),
-            ("wibbr", "local-store", self.rootdir)
+            ("backup", "cache-dir", self.cachedir),
+            ("backup", "local-store", self.rootdir)
         )
     
         self.context = obnam.context.create()
@@ -130,7 +130,7 @@ class GetObjectTests(IoBase):
 class HostBlock(IoBase):
 
     def testFetchHostBlock(self):
-        host_id = self.context.config.get("wibbr", "host-id")
+        host_id = self.context.config.get("backup", "host-id")
         host = obnam.obj.host_block_encode(host_id, ["gen1", "gen2"],
                                                  ["map1", "map2"], 
                                                  ["contmap1", "contmap2"])
@@ -145,7 +145,7 @@ class ObjectQueuingTests(unittest.TestCase):
 
     def find_block_files(self, config):
         files = []
-        root = config.get("wibbr", "local-store")
+        root = config.get("backup", "local-store")
         for dirpath, _, filenames in os.walk(root):
             files += [os.path.join(dirpath, x) for x in filenames]
         files.sort()
@@ -155,7 +155,7 @@ class ObjectQueuingTests(unittest.TestCase):
         context = obnam.context.create()
         object_id = "pink"
         object = "pretty"
-        context.config.set("wibbr", "block-size", "%d" % 128)
+        context.config.set("backup", "block-size", "%d" % 128)
         context.cache = obnam.cache.init(context.config)
         context.be = obnam.backend.init(context.config, context.cache)
 
@@ -180,8 +180,8 @@ class ObjectQueuingTests(unittest.TestCase):
             obnam.obj.object_queue_combined_size(context.oq),
             len(object2))
 
-        shutil.rmtree(context.config.get("wibbr", "cache-dir"))
-        shutil.rmtree(context.config.get("wibbr", "local-store"))
+        shutil.rmtree(context.config.get("backup", "cache-dir"))
+        shutil.rmtree(context.config.get("backup", "local-store"))
 
 
 class FileContentsTests(unittest.TestCase):
@@ -194,8 +194,8 @@ class FileContentsTests(unittest.TestCase):
 
     def tearDown(self):
         for x in ["cache-dir", "local-store"]:
-            if os.path.exists(self.context.config.get("wibbr", x)):
-                shutil.rmtree(self.context.config.get("wibbr", x))
+            if os.path.exists(self.context.config.get("backup", x)):
+                shutil.rmtree(self.context.config.get("backup", x))
 
     def testEmptyFile(self):
         filename = "/dev/null"
@@ -211,7 +211,7 @@ class FileContentsTests(unittest.TestCase):
 
     def testNonEmptyFile(self):
         block_size = 16
-        self.context.config.set("wibbr", "block-size", "%d" % block_size)
+        self.context.config.set("backup", "block-size", "%d" % block_size)
         filename = "Makefile"
         
         id = obnam.io.create_file_contents_object(self.context, filename)
@@ -222,7 +222,7 @@ class FileContentsTests(unittest.TestCase):
 
     def testRestore(self):
         block_size = 16
-        self.context.config.set("wibbr", "block-size", "%d" % block_size)
+        self.context.config.set("backup", "block-size", "%d" % block_size)
         filename = "Makefile"
         
         id = obnam.io.create_file_contents_object(self.context, filename)
@@ -327,7 +327,7 @@ class ObjectCacheTests(unittest.TestCase):
 class ReachabilityTests(IoBase):
 
     def testNoDataNoMaps(self):
-        host_id = self.context.config.get("wibbr", "host-id")
+        host_id = self.context.config.get("backup", "host-id")
         host = obnam.obj.host_block_encode(host_id, [], [], [])
         obnam.io.upload_host_block(self.context, host)
         
@@ -351,7 +351,7 @@ class ReachabilityTests(IoBase):
         obnam.backend.upload(self.context.be, contmap_block_id, 
                                 contmap_block)
 
-        host_id = self.context.config.get("wibbr", "host-id")
+        host_id = self.context.config.get("backup", "host-id")
         host = obnam.obj.host_block_encode(host_id, [], [map_block_id], 
                                               [contmap_block_id])
         obnam.io.upload_host_block(self.context, host)
@@ -377,7 +377,7 @@ class ReachabilityTests(IoBase):
                                                          map_block_id)
         obnam.backend.upload(self.context.be, map_block_id, map_block)
 
-        host_id = self.context.config.get("wibbr", "host-id")
+        host_id = self.context.config.get("backup", "host-id")
         host = obnam.obj.host_block_encode(host_id, [], [], [map_block_id])
         obnam.io.upload_host_block(self.context, host)
         
@@ -389,7 +389,7 @@ class ReachabilityTests(IoBase):
 class GarbageCollectionTests(IoBase):
 
     def testFindUnreachableFiles(self):
-        host_id = self.context.config.get("wibbr", "host-id")
+        host_id = self.context.config.get("backup", "host-id")
         host = obnam.obj.host_block_encode(host_id, [], [], [])
         obnam.io.upload_host_block(self.context, host)
 
@@ -436,7 +436,7 @@ class ObjectCacheRegressionTest(unittest.TestCase):
 
     def test(self):
         context = obnam.context.create()
-        context.config.set("wibbr", "object-cache-size", "3")
+        context.config.set("backup", "object-cache-size", "3")
         oc = obnam.io.ObjectCache(context)
         a = obnam.obj.create("a", 0)
         b = obnam.obj.create("b", 0)

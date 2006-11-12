@@ -11,14 +11,14 @@ import obnam
 
 def resolve(context, pathname):
     """Resolve a pathname relative to the user's desired target directory"""
-    return os.path.join(context.config.get("wibbr", "target-dir"), pathname)
+    return os.path.join(context.config.get("backup", "target-dir"), pathname)
 
 
 def unsolve(context, pathname):
     """Undo resolve(context, pathname)"""
     if pathname == os.sep:
         return pathname
-    target = context.config.get("wibbr", "target-dir")
+    target = context.config.get("backup", "target-dir")
     if not target.endswith(os.sep):
         target += os.sep
     if pathname.startswith(target):
@@ -61,7 +61,7 @@ def get_block(context, block_id):
     return block
 
 
-class MissingBlock(obnam.exception.WibbrException):
+class MissingBlock(obnam.exception.ExceptionBase):
 
     def __init__(self, block_id, object_id):
         self._msg = "Block %s for object %s is missing" % \
@@ -88,9 +88,9 @@ def create_object_from_component_list(components):
 class ObjectCache:
 
     def __init__(self, context):
-        self.MAX = context.config.getint("wibbr", "object-cache-size")
+        self.MAX = context.config.getint("backup", "object-cache-size")
         if self.MAX <= 0:
-            self.MAX = context.config.getint("wibbr", "block-size") / 64
+            self.MAX = context.config.getint("backup", "block-size") / 64
             # 64 bytes seems like a reasonably good guess at the typical
             # size of an object that doesn't contain file data. Inodes,
             # for example.
@@ -174,13 +174,13 @@ def get_object(context, object_id):
 def upload_host_block(context, host_block):
     """Upload a host block"""
     return obnam.backend.upload(context.be, 
-                                   context.config.get("wibbr", "host-id"), 
+                                   context.config.get("backup", "host-id"), 
                                    host_block)
 
 
 def get_host_block(context):
     """Return (and fetch, if needed) the host block, or None if not found"""
-    host_id = context.config.get("wibbr", "host-id")
+    host_id = context.config.get("backup", "host-id")
     e = obnam.backend.download(context.be, host_id)
     if e:
         return None
@@ -190,7 +190,7 @@ def get_host_block(context):
 
 def enqueue_object(context, oq, map, object_id, object):
     """Put an object into the object queue, and flush queue if too big"""
-    block_size = context.config.getint("wibbr", "block-size")
+    block_size = context.config.getint("backup", "block-size")
     cur_size = obnam.obj.object_queue_combined_size(oq)
     if len(object) + cur_size > block_size:
         obnam.io.flush_object_queue(context, oq, map)
@@ -202,7 +202,7 @@ def create_file_contents_object(context, filename):
     """Create and queue objects to hold a file's contents"""
     object_id = obnam.obj.object_id_new()
     part_ids = []
-    block_size = context.config.getint("wibbr", "block-size")
+    block_size = context.config.getint("backup", "block-size")
     f = file(resolve(context, filename), "r")
     while True:
         data = f.read(block_size)
@@ -228,7 +228,7 @@ def create_file_contents_object(context, filename):
     return object_id
 
 
-class FileContentsObjectMissing(obnam.exception.WibbrException):
+class FileContentsObjectMissing(obnam.exception.ExceptionBase):
 
     def __init__(self, id):
         self._msg = "Missing file contents object: %s" % id
@@ -310,7 +310,7 @@ def find_map_blocks_in_use(context, host_block, data_block_ids):
 
 def collect_garbage(context, host_block):
     """Find files on the server store that are not linked from host object"""
-    host_id = context.config.get("wibbr", "host-id")
+    host_id = context.config.get("backup", "host-id")
     data_block_ids = find_reachable_data_blocks(context, host_block)
     map_block_ids = find_map_blocks_in_use(context, host_block, 
                                            data_block_ids)

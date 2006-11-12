@@ -1,4 +1,4 @@
-"""Wibbr backend for communicating with the backup server.
+"""Backup program backend for communicating with the backup server.
 
 This implementation only stores the stuff locally, however.
 
@@ -31,7 +31,7 @@ def init(config, cache):
     """Initialize the subsystem and return an opaque backend object"""
     be = LocalBackEnd()
     be.config = config
-    be.local_root = config.get("wibbr", "local-store")
+    be.local_root = config.get("backup", "local-store")
     be.cache = cache
     be.curdir = str(uuid.uuid4())
     return be

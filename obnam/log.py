@@ -27,7 +27,7 @@ class TimeOffsetFormatter(logging.Formatter):
         return "%dm%.1fs" % (minutes, seconds)
 
 def setup(config):
-    level = config.get("wibbr", "log-level")
+    level = config.get("backup", "log-level")
 
     formatter = TimeOffsetFormatter("%(asctime)s %(levelname)s: %(message)s")
     

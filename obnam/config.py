@@ -5,13 +5,13 @@ import optparse
 def default_config():
     """Return a ConfigParser object with the default builtin configuration"""
     items = (
-        ("wibbr", "host-id", "testhost"),
-        ("wibbr", "block-size", "%d" % (64 * 1024)),
-        ("wibbr", "cache-dir", "tmp.cachedir"),
-        ("wibbr", "local-store", "tmp.local-store"),
-        ("wibbr", "target-dir", "."),
-        ("wibbr", "object-cache-size", "0"),
-        ("wibbr", "log-level", "warning"),
+        ("backup", "host-id", "testhost"),
+        ("backup", "block-size", "%d" % (64 * 1024)),
+        ("backup", "cache-dir", "tmp.cachedir"),
+        ("backup", "local-store", "tmp.local-store"),
+        ("backup", "target-dir", "."),
+        ("backup", "object-cache-size", "0"),
+        ("backup", "log-level", "warning"),
     )
     
     config = ConfigParser.RawConfigParser()
@@ -57,16 +57,16 @@ def parse_options(config, argv):
     (options, args) = parser.parse_args(argv)
     
     if options.block_size:
-        config.set("wibbr", "block-size", "%d" % options.block_size)
+        config.set("backup", "block-size", "%d" % options.block_size)
     if options.cache:
-        config.set("wibbr", "cache-dir", options.cache)
+        config.set("backup", "cache-dir", options.cache)
     if options.store:
-        config.set("wibbr", "local-store", options.store)
+        config.set("backup", "local-store", options.store)
     if options.target:
-        config.set("wibbr", "target-dir", options.target)
+        config.set("backup", "target-dir", options.target)
     if options.object_cache_size:
-        config.set("wibbr", "object-cache-size", options.object_cache_size)
+        config.set("backup", "object-cache-size", options.object_cache_size)
     if options.log_level:
-        config.set("wibbr", "log-level", options.log_level)
+        config.set("backup", "log-level", options.log_level)
 
     return args

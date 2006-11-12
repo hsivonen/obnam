@@ -1,4 +1,4 @@
-"""Block cache for wibbr"""
+"""Block cache for backup program"""
 
 
 import os
@@ -13,7 +13,7 @@ class Cache:
 def init(config):
     """Initialize cache subsystem, return opaque cache object"""
     cache = Cache()
-    cache.cachedir = config.get("wibbr", "cache-dir")
+    cache.cachedir = config.get("backup", "cache-dir")
     if not os.path.isdir(cache.cachedir):
         os.makedirs(cache.cachedir, 0700)
     return cache
