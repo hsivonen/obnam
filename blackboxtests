@@ -1,8 +1,8 @@
 #!/bin/sh
 #
-# blackboxtests -- run black box tests for wibbr
+# blackboxtests -- run black box tests for obnam
 #
-# This script runs some automatic black box tests for wibbr. The tests
+# This script runs some automatic black box tests for obnam. The tests
 # are structured as follows: first the initial tree to be backed up is
 # created, and backed up. Then the tree is updated for the next
 # generation, which gets backed up. This is repeated for each
@@ -67,7 +67,7 @@ do
             exit 1
         fi
 
-        python wibbr.py $CONFIG -C "$tmp/root" backup .
+        python cli.py $CONFIG -C "$tmp/root" backup .
 
         if [ -e "$post" ] && ! sh "$post" "$tmp"
         then
@@ -76,13 +76,13 @@ do
         fi
     done
     
-    python wibbr.py $CONFIG generations |
+    python cli.py $CONFIG generations |
     nl |
     while read i genid
     do
         rm -rf "$tmp/root"
         mkdir "$tmp/root"
-        python wibbr.py $CONFIG -C "$tmp/root" restore "$genid"
+        python cli.py $CONFIG -C "$tmp/root" restore "$genid"
         python manifest.py $MANIFESTOPTS "$tmp/root" > "$tmp/manifest2-$i"
         diff -u -U 15 "$tmp/manifest-$i" "$tmp/manifest2-$i"
     done
