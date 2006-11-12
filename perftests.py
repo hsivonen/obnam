@@ -168,8 +168,8 @@ def run_testcase(testcase):
     
 
 def main():
-    print "Wibbr perftests starting."
-    print "========================="
+    print "Perftests starting"
+    print "=================="
     print
     print "Time at start:", time.strftime("%Y-%m-%d %H:%M:%S")
     print
