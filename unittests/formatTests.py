@@ -2,7 +2,7 @@ import stat
 import unittest
 
 
-import wibbrlib
+import obnam
 
 
 class FormatPermissionsTests(unittest.TestCase):
@@ -27,7 +27,7 @@ class FormatPermissionsTests(unittest.TestCase):
             (04000, "--S------"),   # Set user id (upper case since no x)
         )
         for mode, correct in facit:
-            self.failUnlessEqual(wibbrlib.format.permissions(mode), correct)
+            self.failUnlessEqual(obnam.format.permissions(mode), correct)
 
 
 class FormatFileTypeTests(unittest.TestCase):
@@ -44,36 +44,36 @@ class FormatFileTypeTests(unittest.TestCase):
             (stat.S_IFIFO, "p"),    # FIFO
         )
         for mode, correct in facit:
-            self.failUnlessEqual(wibbrlib.format.filetype(mode), correct)
+            self.failUnlessEqual(obnam.format.filetype(mode), correct)
 
 
 class FormatFileModeTest(unittest.TestCase):
 
     def test(self):
-        self.failUnlessEqual(wibbrlib.format.filemode(0100777), "-rwxrwxrwx")
+        self.failUnlessEqual(obnam.format.filemode(0100777), "-rwxrwxrwx")
 
 
 class FormatInodeFieldsTest(unittest.TestCase):
 
     def test(self):
-        int_fields = (wibbrlib.cmp.CMP_ST_MODE,
-                      wibbrlib.cmp.CMP_ST_INO,
-                      wibbrlib.cmp.CMP_ST_DEV,
-                      wibbrlib.cmp.CMP_ST_NLINK,
-                      wibbrlib.cmp.CMP_ST_UID,
-                      wibbrlib.cmp.CMP_ST_GID,
-                      wibbrlib.cmp.CMP_ST_SIZE,
-                      wibbrlib.cmp.CMP_ST_ATIME,
-                      wibbrlib.cmp.CMP_ST_MTIME,
-                      wibbrlib.cmp.CMP_ST_CTIME,
-                      wibbrlib.cmp.CMP_ST_BLOCKS,
-                      wibbrlib.cmp.CMP_ST_BLKSIZE,
-                      wibbrlib.cmp.CMP_ST_RDEV)
-        list = [wibbrlib.cmp.create(x, wibbrlib.varint.encode(1))
+        int_fields = (obnam.cmp.CMP_ST_MODE,
+                      obnam.cmp.CMP_ST_INO,
+                      obnam.cmp.CMP_ST_DEV,
+                      obnam.cmp.CMP_ST_NLINK,
+                      obnam.cmp.CMP_ST_UID,
+                      obnam.cmp.CMP_ST_GID,
+                      obnam.cmp.CMP_ST_SIZE,
+                      obnam.cmp.CMP_ST_ATIME,
+                      obnam.cmp.CMP_ST_MTIME,
+                      obnam.cmp.CMP_ST_CTIME,
+                      obnam.cmp.CMP_ST_BLOCKS,
+                      obnam.cmp.CMP_ST_BLKSIZE,
+                      obnam.cmp.CMP_ST_RDEV)
+        list = [obnam.cmp.create(x, obnam.varint.encode(1))
                 for x in int_fields]
-        inode = wibbrlib.cmp.create(wibbrlib.cmp.CMP_FILE, list)
+        inode = obnam.cmp.create(obnam.cmp.CMP_FILE, list)
 
-        list = wibbrlib.format.inode_fields(inode)
+        list = obnam.format.inode_fields(inode)
         
         self.failUnlessEqual(list, ["?--------x"] + ["1"] * 4 +
                                    ["1970-01-01 00:00:01"])

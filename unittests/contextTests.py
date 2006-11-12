@@ -1,13 +1,13 @@
 import unittest
 
 
-import wibbrlib
+import obnam
 
 
 class ContextCreateTests(unittest.TestCase):
 
     def test(self):
-        context = wibbrlib.context.create()
+        context = obnam.context.create()
         attrs = [x for x in dir(context) if not x.startswith("_")]
         attrs.sort()
         self.failUnlessEqual(attrs, 

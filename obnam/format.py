@@ -5,7 +5,7 @@ import stat
 import time
 
 
-import wibbrlib
+import obnam
 
 
 def permissions(mode):
@@ -79,18 +79,18 @@ def inode_fields(inode):
     format_time = lambda x: time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(x))
 
     fields = (
-        (wibbrlib.cmp.CMP_ST_MODE, filemode),
-        (wibbrlib.cmp.CMP_ST_NLINK, format_integer),
-        (wibbrlib.cmp.CMP_ST_UID, format_integer),
-        (wibbrlib.cmp.CMP_ST_GID, format_integer),
-        (wibbrlib.cmp.CMP_ST_SIZE, format_integer),
-        (wibbrlib.cmp.CMP_ST_MTIME, format_time),
+        (obnam.cmp.CMP_ST_MODE, filemode),
+        (obnam.cmp.CMP_ST_NLINK, format_integer),
+        (obnam.cmp.CMP_ST_UID, format_integer),
+        (obnam.cmp.CMP_ST_GID, format_integer),
+        (obnam.cmp.CMP_ST_SIZE, format_integer),
+        (obnam.cmp.CMP_ST_MTIME, format_time),
     )
 
     list = []
-    subs = wibbrlib.cmp.get_subcomponents(inode)
+    subs = obnam.cmp.get_subcomponents(inode)
     for kind, func in fields:
-        for value in wibbrlib.cmp.find_strings_by_kind(subs, kind):
-            (value, _) = wibbrlib.varint.decode(value, 0)
+        for value in obnam.cmp.find_strings_by_kind(subs, kind):
+            (value, _) = obnam.varint.decode(value, 0)
             list.append(func(value))
     return list

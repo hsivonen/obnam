@@ -3,7 +3,7 @@ import os
 import shutil
 import unittest
 
-import wibbrlib
+import obnam
 
 
 class CacheBase(unittest.TestCase):
@@ -30,17 +30,17 @@ class CacheBase(unittest.TestCase):
 class InitTests(CacheBase):
 
     def testInit(self):
-        cache = wibbrlib.cache.init(self.config)
+        cache = obnam.cache.init(self.config)
         self.failUnless(os.path.isdir(self.cachedir))
 
 
 class PutTests(CacheBase):
 
     def testPut(self):
-        cache = wibbrlib.cache.init(self.config)
+        cache = obnam.cache.init(self.config)
         id = "pink"
         block = "pretty"
-        wibbrlib.cache.put_block(cache, id, block)
+        obnam.cache.put_block(cache, id, block)
         
         pathname = os.path.join(self.cachedir, id)
         self.failUnless(os.path.isfile(pathname))
@@ -52,10 +52,10 @@ class PutTests(CacheBase):
 class GetTests(CacheBase):
 
     def testGet(self):
-        cache = wibbrlib.cache.init(self.config)
+        cache = obnam.cache.init(self.config)
         id = "pink"
         block = "pretty"
-        self.failUnlessEqual(wibbrlib.cache.get_block(cache, id), None)
+        self.failUnlessEqual(obnam.cache.get_block(cache, id), None)
 
-        wibbrlib.cache.put_block(cache, id, block)
-        self.failUnlessEqual(wibbrlib.cache.get_block(cache, id), block)
+        obnam.cache.put_block(cache, id, block)
+        self.failUnlessEqual(obnam.cache.get_block(cache, id), block)

@@ -6,7 +6,7 @@
 
 import sys
 
-import wibbrlib
+import obnam
 
 
 def format_objmap(data):
@@ -18,44 +18,44 @@ def format_objmap(data):
 
 
 def format_octal(data):
-    return "0%o" % wibbrlib.varint.decode(data, 0)[0]
+    return "0%o" % obnam.varint.decode(data, 0)[0]
 
 
 def format_decimal(data):
-    return "%d" % wibbrlib.varint.decode(data, 0)[0]
+    return "%d" % obnam.varint.decode(data, 0)[0]
     
 
 component_data_formatters = {
-    wibbrlib.cmp.CMP_OBJKIND: 
+    obnam.cmp.CMP_OBJKIND: 
         lambda data: \
-            wibbrlib.obj.kind_name(wibbrlib.varint.decode(data, 0)[0]),
-    wibbrlib.cmp.CMP_ST_MODE: format_octal,
-    wibbrlib.cmp.CMP_ST_INO: format_decimal,
-    wibbrlib.cmp.CMP_ST_DEV: format_decimal,
-    wibbrlib.cmp.CMP_ST_NLINK: format_decimal,
-    wibbrlib.cmp.CMP_ST_UID: format_decimal,
-    wibbrlib.cmp.CMP_ST_GID: format_decimal,
-    wibbrlib.cmp.CMP_ST_SIZE: format_decimal,
-    wibbrlib.cmp.CMP_ST_ATIME: format_decimal,
-    wibbrlib.cmp.CMP_ST_CTIME: format_decimal,
-    wibbrlib.cmp.CMP_ST_MTIME: format_decimal,
-    wibbrlib.cmp.CMP_ST_BLOCKS: format_decimal,
-    wibbrlib.cmp.CMP_ST_BLKSIZE: format_decimal,
-    wibbrlib.cmp.CMP_ST_RDEV: format_decimal,
-    wibbrlib.cmp.CMP_OBJMAP: format_objmap,
+            obnam.obj.kind_name(obnam.varint.decode(data, 0)[0]),
+    obnam.cmp.CMP_ST_MODE: format_octal,
+    obnam.cmp.CMP_ST_INO: format_decimal,
+    obnam.cmp.CMP_ST_DEV: format_decimal,
+    obnam.cmp.CMP_ST_NLINK: format_decimal,
+    obnam.cmp.CMP_ST_UID: format_decimal,
+    obnam.cmp.CMP_ST_GID: format_decimal,
+    obnam.cmp.CMP_ST_SIZE: format_decimal,
+    obnam.cmp.CMP_ST_ATIME: format_decimal,
+    obnam.cmp.CMP_ST_CTIME: format_decimal,
+    obnam.cmp.CMP_ST_MTIME: format_decimal,
+    obnam.cmp.CMP_ST_BLOCKS: format_decimal,
+    obnam.cmp.CMP_ST_BLKSIZE: format_decimal,
+    obnam.cmp.CMP_ST_RDEV: format_decimal,
+    obnam.cmp.CMP_OBJMAP: format_objmap,
 }
 
 
 def show_component(component, indent=0):
     x = " " * (indent * 2)
-    kind = wibbrlib.cmp.get_kind(component)
-    print x + "Component:", kind, wibbrlib.cmp.kind_name(kind)
-    if wibbrlib.cmp.is_composite(component):
-        for c in wibbrlib.cmp.get_subcomponents(component):
+    kind = obnam.cmp.get_kind(component)
+    print x + "Component:", kind, obnam.cmp.kind_name(kind)
+    if obnam.cmp.is_composite(component):
+        for c in obnam.cmp.get_subcomponents(component):
             show_component(c, indent+1)
     else:
         fmt = component_data_formatters.get(kind, repr)
-        print x + "  data:", fmt(wibbrlib.cmp.get_string_value(component))
+        print x + "  data:", fmt(obnam.cmp.get_string_value(component))
 
 
 def show_block(filename):
@@ -64,7 +64,7 @@ def show_block(filename):
     str = f.read()
     f.close()
     pos = 0
-    for c in wibbrlib.obj.block_decode(str):
+    for c in obnam.obj.block_decode(str):
         show_component(c)
         print
 

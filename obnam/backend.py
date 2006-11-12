@@ -8,10 +8,10 @@ This implementation only stores the stuff locally, however.
 import os
 
 import uuid
-import wibbrlib.cache
-import wibbrlib.cmp
-import wibbrlib.mapping
-import wibbrlib.obj
+import obnam.cache
+import obnam.cmp
+import obnam.mapping
+import obnam.obj
 
 
 MAX_BLOCKS_IN_CURDIR = 256
@@ -74,7 +74,7 @@ def download(be, block_id):
         f = file(_block_remote_pathname(be, block_id), "r")
         block = f.read()
         f.close()
-        wibbrlib.cache.put_block(be.cache, block_id, block)
+        obnam.cache.put_block(be.cache, block_id, block)
     except IOError, e:
         return e
     return None

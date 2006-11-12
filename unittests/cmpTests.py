@@ -1,18 +1,18 @@
-"""Unit tests for wibbrlib.cmp."""
+"""Unit tests for obnam.cmp."""
 
 
 import os
 import unittest
 
 
-import wibbrlib
+import obnam
 
 
 class ComponentKindNameTests(unittest.TestCase):
 
     def test(self):
-        t = wibbrlib.cmp.kind_name
-        c = wibbrlib.cmp
+        t = obnam.cmp.kind_name
+        c = obnam.cmp
         self.failUnlessEqual(t(-12765), "CMP_UNKNOWN")
         self.failUnlessEqual(t(c.CMP_OBJID), "CMP_OBJID")
         self.failUnlessEqual(t(c.CMP_OBJKIND), "CMP_OBJKIND")
@@ -53,48 +53,48 @@ class ComponentKindNameTests(unittest.TestCase):
 class RefComponentTests(unittest.TestCase):
 
     def test(self):
-        kinds = wibbrlib.cmp._component_kinds
+        kinds = obnam.cmp._component_kinds
         for kind in kinds:
             self.failUnlessEqual(kinds[kind][1].endswith("REF"),
-                                 wibbrlib.cmp.kind_is_reference(kind))
+                                 obnam.cmp.kind_is_reference(kind))
 
 
 class CreateComponentTests(unittest.TestCase):
 
     def testCreateLeaf(self):
-        c = wibbrlib.cmp.create(1, "pink")
+        c = obnam.cmp.create(1, "pink")
         self.failIfEqual(c, None)
-        self.failUnlessEqual(wibbrlib.cmp.get_kind(c), 1)
-        self.failUnlessEqual(wibbrlib.cmp.get_string_value(c), "pink")
-        self.failUnlessEqual(wibbrlib.cmp.is_composite(c), False)
+        self.failUnlessEqual(obnam.cmp.get_kind(c), 1)
+        self.failUnlessEqual(obnam.cmp.get_string_value(c), "pink")
+        self.failUnlessEqual(obnam.cmp.is_composite(c), False)
 
     def testCreateComposite(self):
-        leaf1 = wibbrlib.cmp.create(1, "pink")
-        leaf2 = wibbrlib.cmp.create(2, "pretty")
-        c = wibbrlib.cmp.create(3, [leaf1, leaf2])
-        self.failUnlessEqual(wibbrlib.cmp.get_kind(c), 3)
-        self.failUnlessEqual(wibbrlib.cmp.is_composite(c), True)
-        self.failUnlessEqual(wibbrlib.cmp.get_subcomponents(c), 
+        leaf1 = obnam.cmp.create(1, "pink")
+        leaf2 = obnam.cmp.create(2, "pretty")
+        c = obnam.cmp.create(3, [leaf1, leaf2])
+        self.failUnlessEqual(obnam.cmp.get_kind(c), 3)
+        self.failUnlessEqual(obnam.cmp.is_composite(c), True)
+        self.failUnlessEqual(obnam.cmp.get_subcomponents(c), 
                              [leaf1, leaf2])
 
 
 class ComponentEncodingDecodingTests(unittest.TestCase):
 
     def doit(self, c_kind, data):
-        c = wibbrlib.cmp.create(c_kind, data)
-        encoded = wibbrlib.cmp.encode(c)
-        (c2, pos) = wibbrlib.cmp.decode(encoded, 0)
-        encoded2 = wibbrlib.cmp.encode(c2)
+        c = obnam.cmp.create(c_kind, data)
+        encoded = obnam.cmp.encode(c)
+        (c2, pos) = obnam.cmp.decode(encoded, 0)
+        encoded2 = obnam.cmp.encode(c2)
         self.failUnlessEqual(encoded, encoded2)
-        self.failUnlessEqual(wibbrlib.cmp.get_kind(c), 
-                             wibbrlib.cmp.get_kind(c2))
-        self.failUnlessEqual(wibbrlib.cmp.is_composite(c), 
-                             wibbrlib.cmp.is_composite(c2))
-        self.failUnlessEqual(wibbrlib.cmp.is_composite(c),
+        self.failUnlessEqual(obnam.cmp.get_kind(c), 
+                             obnam.cmp.get_kind(c2))
+        self.failUnlessEqual(obnam.cmp.is_composite(c), 
+                             obnam.cmp.is_composite(c2))
+        self.failUnlessEqual(obnam.cmp.is_composite(c),
                              type(data) == type([]))
-        if not wibbrlib.cmp.is_composite(c):
-            self.failUnlessEqual(wibbrlib.cmp.get_string_value(c),
-                                 wibbrlib.cmp.get_string_value(c2))            
+        if not obnam.cmp.is_composite(c):
+            self.failUnlessEqual(obnam.cmp.get_string_value(c),
+                                 obnam.cmp.get_string_value(c2))            
         self.failUnlessEqual(pos, len(encoded))
 
     def testEmpty(self):
@@ -104,29 +104,29 @@ class ComponentEncodingDecodingTests(unittest.TestCase):
         self.doit(2, "hello, world\0this is fun")
 
     def testEmptyComposite(self):
-        self.doit(wibbrlib.cmp.CMP_OBJECT, [])
+        self.doit(obnam.cmp.CMP_OBJECT, [])
 
     def testNonemptyComposite(self):
-        c1 = wibbrlib.cmp.create(1, "pink")
-        c2 = wibbrlib.cmp.create(2, "pretty")
-        self.doit(wibbrlib.cmp.CMP_OBJECT, [c1, c2])
+        c1 = obnam.cmp.create(1, "pink")
+        c2 = obnam.cmp.create(2, "pretty")
+        self.doit(obnam.cmp.CMP_OBJECT, [c1, c2])
 
 
 class ComponentDecodeAllTests(unittest.TestCase):
 
     def remove_component(self, list, kind, value):
-        self.failUnlessEqual(wibbrlib.cmp.get_kind(list[0]), kind)
-        self.failUnlessEqual(wibbrlib.cmp.get_string_value(list[0]), 
+        self.failUnlessEqual(obnam.cmp.get_kind(list[0]), kind)
+        self.failUnlessEqual(obnam.cmp.get_string_value(list[0]), 
                              value)
         del list[0]
 
     def testDecodeAll(self):
-        c1 = wibbrlib.cmp.create(1, "pink")
-        c2 = wibbrlib.cmp.create(2, "pretty")
-        e1 = wibbrlib.cmp.encode(c1)
-        e2 = wibbrlib.cmp.encode(c2)
+        c1 = obnam.cmp.create(1, "pink")
+        c2 = obnam.cmp.create(2, "pretty")
+        e1 = obnam.cmp.encode(c1)
+        e2 = obnam.cmp.encode(c2)
         e = e1 + e2
-        list = wibbrlib.cmp.decode_all(e, 0)
+        list = obnam.cmp.decode_all(e, 0)
         self.remove_component(list, 1, "pink")
         self.remove_component(list, 2, "pretty")
         self.failUnlessEqual(list, [])
@@ -136,7 +136,7 @@ class FindTests(unittest.TestCase):
 
     def setUp(self):
         self.list = [(1, "pink"), (2, "pretty"), (3, "black"), (3, "box")]
-        self.list = [wibbrlib.cmp.create(a, b) for a, b in self.list]
+        self.list = [obnam.cmp.create(a, b) for a, b in self.list]
 
     def tearDown(self):
         del self.list
@@ -144,87 +144,87 @@ class FindTests(unittest.TestCase):
     def match(self, result, kind, value):
         self.failUnless(len(result) > 0)
         c = result[0]
-        self.failUnlessEqual(wibbrlib.cmp.get_kind(c), kind)
-        self.failUnlessEqual(wibbrlib.cmp.get_string_value(c), value)
+        self.failUnlessEqual(obnam.cmp.get_kind(c), kind)
+        self.failUnlessEqual(obnam.cmp.get_string_value(c), value)
         del result[0]
 
     def testFindAllOnes(self):
-        result = wibbrlib.cmp.find_by_kind(self.list, 1)
+        result = obnam.cmp.find_by_kind(self.list, 1)
         self.match(result, 1, "pink")
         self.failUnlessEqual(result, [])
 
     def testFindAllTwos(self):
-        result = wibbrlib.cmp.find_by_kind(self.list, 2)
+        result = obnam.cmp.find_by_kind(self.list, 2)
         self.match(result, 2, "pretty")
         self.failUnlessEqual(result, [])
 
     def testFindAllThrees(self):
-        result = wibbrlib.cmp.find_by_kind(self.list, 3)
+        result = obnam.cmp.find_by_kind(self.list, 3)
         self.match(result, 3, "black")
         self.match(result, 3, "box")
         self.failUnlessEqual(result, [])
 
     def testFindAllNones(self):
-        result = wibbrlib.cmp.find_by_kind(self.list, 0)
+        result = obnam.cmp.find_by_kind(self.list, 0)
         self.failUnlessEqual(result, [])
 
     def testFindFirstOne(self):
-        result = [wibbrlib.cmp.first_by_kind(self.list, 1)]
+        result = [obnam.cmp.first_by_kind(self.list, 1)]
         self.match(result, 1, "pink")
         self.failUnlessEqual(result, [])
 
     def testFindFirstTwo(self):
-        result = [wibbrlib.cmp.first_by_kind(self.list, 2)]
+        result = [obnam.cmp.first_by_kind(self.list, 2)]
         self.match(result, 2, "pretty")
         self.failUnlessEqual(result, [])
 
     def testFindFirstThree(self):
-        result = [wibbrlib.cmp.first_by_kind(self.list, 3)]
+        result = [obnam.cmp.first_by_kind(self.list, 3)]
         self.match(result, 3, "black")
         self.failUnlessEqual(result, [])
 
     def testFindFirstNone(self):
-        result = wibbrlib.cmp.first_by_kind(self.list, 0)
+        result = obnam.cmp.first_by_kind(self.list, 0)
         self.failUnlessEqual(result, None)
 
     def testFindAllStringOnes(self):
-        result = wibbrlib.cmp.find_strings_by_kind(self.list, 1)
+        result = obnam.cmp.find_strings_by_kind(self.list, 1)
         self.failUnlessEqual(result, ["pink"])
 
     def testFindAllStringTwos(self):
-        result = wibbrlib.cmp.find_strings_by_kind(self.list, 2)
+        result = obnam.cmp.find_strings_by_kind(self.list, 2)
         self.failUnlessEqual(result, ["pretty"])
 
     def testFindAllStringThrees(self):
-        result = wibbrlib.cmp.find_strings_by_kind(self.list, 3)
+        result = obnam.cmp.find_strings_by_kind(self.list, 3)
         self.failUnlessEqual(result, ["black", "box"])
 
     def testFindAllStringNones(self):
-        result = wibbrlib.cmp.find_strings_by_kind(self.list, 0)
+        result = obnam.cmp.find_strings_by_kind(self.list, 0)
         self.failUnlessEqual(result, [])
 
     def testFindFirstStringOne(self):
-        result = wibbrlib.cmp.first_string_by_kind(self.list, 1)
+        result = obnam.cmp.first_string_by_kind(self.list, 1)
         self.failUnlessEqual(result, "pink")
 
     def testFindFirstStringTwo(self):
-        result = wibbrlib.cmp.first_string_by_kind(self.list, 2)
+        result = obnam.cmp.first_string_by_kind(self.list, 2)
         self.failUnlessEqual(result, "pretty")
 
     def testFindFirstStringThree(self):
-        result = wibbrlib.cmp.first_string_by_kind(self.list, 3)
+        result = obnam.cmp.first_string_by_kind(self.list, 3)
         self.failUnlessEqual(result, "black")
 
     def testFindFirstStringNone(self):
-        result = wibbrlib.cmp.first_string_by_kind(self.list, 0)
+        result = obnam.cmp.first_string_by_kind(self.list, 0)
         self.failUnlessEqual(result, None)
 
 
 class GetVarintVAlueTest(unittest.TestCase):
 
     def test(self):
-        c = wibbrlib.cmp.create(1, wibbrlib.varint.encode(12765))
-        self.failUnlessEqual(wibbrlib.cmp.get_varint_value(c), 12765)
+        c = obnam.cmp.create(1, obnam.varint.encode(12765))
+        self.failUnlessEqual(obnam.cmp.get_varint_value(c), 12765)
 
 
 class FindVarintTests(unittest.TestCase):
@@ -232,10 +232,10 @@ class FindVarintTests(unittest.TestCase):
     def test(self):
         list = []
         for i in range(1024):
-            encoded = wibbrlib.varint.encode(i)
-            c = wibbrlib.cmp.create(i, encoded)
+            encoded = obnam.varint.encode(i)
+            c = obnam.cmp.create(i, encoded)
             list.append(c)
 
         for i in range(1024):
-            self.failUnlessEqual(wibbrlib.cmp.first_varint_by_kind(list, i), 
+            self.failUnlessEqual(obnam.cmp.first_varint_by_kind(list, i), 
                                  i)

@@ -4,13 +4,13 @@ import tempfile
 import unittest
 
 
-import wibbrlib
+import obnam
 
 
 class ResolveTests(unittest.TestCase):
 
     def test(self):
-        context = wibbrlib.context.create()
+        context = obnam.context.create()
         # We don't need the fields that are usually initialized manually.
 
         facit = (
@@ -28,11 +28,11 @@ class ResolveTests(unittest.TestCase):
 
         for target, pathname, resolved in facit:
             context.config.set("wibbr", "target-dir", target)
-            x = wibbrlib.io.resolve(context, pathname)
+            x = obnam.io.resolve(context, pathname)
             self.failUnlessEqual(x, resolved)
-            self.failUnlessEqual(wibbrlib.io.unsolve(context, x), pathname)
+            self.failUnlessEqual(obnam.io.unsolve(context, x), pathname)
 
-        self.failUnlessEqual(wibbrlib.io.unsolve(context, "/pink"), "pink")
+        self.failUnlessEqual(obnam.io.unsolve(context, "/pink"), "pink")
 
 
 class IoBase(unittest.TestCase):
@@ -49,15 +49,15 @@ class IoBase(unittest.TestCase):
             ("wibbr", "local-store", self.rootdir)
         )
     
-        self.context = wibbrlib.context.create()
+        self.context = obnam.context.create()
     
         for section, item, value in config_list:
             if not self.context.config.has_section(section):
                 self.context.config.add_section(section)
             self.context.config.set(section, item, value)
 
-        self.context.cache = wibbrlib.cache.init(self.context.config)
-        self.context.be = wibbrlib.backend.init(self.context.config, 
+        self.context.cache = obnam.cache.init(self.context.config)
+        self.context.be = obnam.backend.init(self.context.config, 
                                                 self.context.cache)
 
     def tearDown(self):
@@ -71,59 +71,59 @@ class IoBase(unittest.TestCase):
 class ObjectQueueFlushing(IoBase):
 
     def testEmptyQueue(self):
-        wibbrlib.io.flush_object_queue(self.context, self.context.oq, 
+        obnam.io.flush_object_queue(self.context, self.context.oq, 
                                        self.context.map)
-        list = wibbrlib.backend.list(self.context.be)
+        list = obnam.backend.list(self.context.be)
         self.failUnlessEqual(list, [])
 
     def testFlushing(self):
-        wibbrlib.obj.object_queue_add(self.context.oq, "pink", "pretty")
+        obnam.obj.object_queue_add(self.context.oq, "pink", "pretty")
         
-        self.failUnlessEqual(wibbrlib.backend.list(self.context.be), [])
+        self.failUnlessEqual(obnam.backend.list(self.context.be), [])
         
-        wibbrlib.io.flush_object_queue(self.context, self.context.oq,
+        obnam.io.flush_object_queue(self.context, self.context.oq,
                                        self.context.map)
 
-        list = wibbrlib.backend.list(self.context.be)
+        list = obnam.backend.list(self.context.be)
         self.failUnlessEqual(len(list), 1)
         
-        b1 = os.path.basename(wibbrlib.mapping.get(self.context.map, "pink"))
+        b1 = os.path.basename(obnam.mapping.get(self.context.map, "pink"))
         b2 = os.path.basename(list[0])
         self.failUnlessEqual(b1, b2)
 
     def testFlushAll(self):
-        wibbrlib.obj.object_queue_add(self.context.oq, "pink", "pretty")
-        wibbrlib.obj.object_queue_add(self.context.content_oq, "x", "y")
-        wibbrlib.io.flush_all_object_queues(self.context)
-        self.failUnlessEqual(len(wibbrlib.backend.list(self.context.be)), 2)
+        obnam.obj.object_queue_add(self.context.oq, "pink", "pretty")
+        obnam.obj.object_queue_add(self.context.content_oq, "x", "y")
+        obnam.io.flush_all_object_queues(self.context)
+        self.failUnlessEqual(len(obnam.backend.list(self.context.be)), 2)
         self.failUnlessEqual(
-          wibbrlib.obj.object_queue_combined_size(self.context.oq), 0)
+          obnam.obj.object_queue_combined_size(self.context.oq), 0)
         self.failUnlessEqual(
-          wibbrlib.obj.object_queue_combined_size(self.context.content_oq), 0)
+          obnam.obj.object_queue_combined_size(self.context.content_oq), 0)
 
 
 class GetObjectTests(IoBase):
 
     def upload_object(self, object_id, object):
-        wibbrlib.obj.object_queue_add(self.context.oq, object_id, object)
-        wibbrlib.io.flush_object_queue(self.context, self.context.oq,
+        obnam.obj.object_queue_add(self.context.oq, object_id, object)
+        obnam.io.flush_object_queue(self.context, self.context.oq,
                                        self.context.map)
 
     def testGetObject(self):
         id = "pink"
-        component = wibbrlib.cmp.create(42, "pretty")
-        object = wibbrlib.obj.create(id, 0)
-        wibbrlib.obj.add(object, component)
-        object = wibbrlib.obj.encode(object)
+        component = obnam.cmp.create(42, "pretty")
+        object = obnam.obj.create(id, 0)
+        obnam.obj.add(object, component)
+        object = obnam.obj.encode(object)
         self.upload_object(id, object)
-        o = wibbrlib.io.get_object(self.context, id)
+        o = obnam.io.get_object(self.context, id)
 
-        self.failUnlessEqual(wibbrlib.obj.get_id(o), id)
-        self.failUnlessEqual(wibbrlib.obj.get_kind(o), 0)
-        list = wibbrlib.obj.get_components(o)
+        self.failUnlessEqual(obnam.obj.get_id(o), id)
+        self.failUnlessEqual(obnam.obj.get_kind(o), 0)
+        list = obnam.obj.get_components(o)
         self.failUnlessEqual(len(list), 1)
-        self.failUnlessEqual(wibbrlib.cmp.get_kind(list[0]), 42)
-        self.failUnlessEqual(wibbrlib.cmp.get_string_value(list[0]), 
+        self.failUnlessEqual(obnam.cmp.get_kind(list[0]), 42)
+        self.failUnlessEqual(obnam.cmp.get_string_value(list[0]), 
                              "pretty")
 
 
@@ -131,13 +131,13 @@ class HostBlock(IoBase):
 
     def testFetchHostBlock(self):
         host_id = self.context.config.get("wibbr", "host-id")
-        host = wibbrlib.obj.host_block_encode(host_id, ["gen1", "gen2"],
+        host = obnam.obj.host_block_encode(host_id, ["gen1", "gen2"],
                                                  ["map1", "map2"], 
                                                  ["contmap1", "contmap2"])
-        be = wibbrlib.backend.init(self.context.config, self.context.cache)
+        be = obnam.backend.init(self.context.config, self.context.cache)
         
-        wibbrlib.io.upload_host_block(self.context, host)
-        host2 = wibbrlib.io.get_host_block(self.context)
+        obnam.io.upload_host_block(self.context, host)
+        host2 = obnam.io.get_host_block(self.context)
         self.failUnlessEqual(host, host2)
 
 
@@ -152,32 +152,32 @@ class ObjectQueuingTests(unittest.TestCase):
         return files
 
     def testEnqueue(self):
-        context = wibbrlib.context.create()
+        context = obnam.context.create()
         object_id = "pink"
         object = "pretty"
         context.config.set("wibbr", "block-size", "%d" % 128)
-        context.cache = wibbrlib.cache.init(context.config)
-        context.be = wibbrlib.backend.init(context.config, context.cache)
+        context.cache = obnam.cache.init(context.config)
+        context.be = obnam.backend.init(context.config, context.cache)
 
         self.failUnlessEqual(self.find_block_files(context.config), [])
         
-        wibbrlib.io.enqueue_object(context, context.oq, context.map, 
+        obnam.io.enqueue_object(context, context.oq, context.map, 
                                    object_id, object)
         
         self.failUnlessEqual(self.find_block_files(context.config), [])
         self.failUnlessEqual(
-            wibbrlib.obj.object_queue_combined_size(context.oq),
+            obnam.obj.object_queue_combined_size(context.oq),
             len(object))
         
         object_id2 = "pink2"
         object2 = "x" * 1024
 
-        wibbrlib.io.enqueue_object(context, context.oq, context.map, 
+        obnam.io.enqueue_object(context, context.oq, context.map, 
                                    object_id2, object2)
         
         self.failUnlessEqual(len(self.find_block_files(context.config)), 1)
         self.failUnlessEqual(
-            wibbrlib.obj.object_queue_combined_size(context.oq),
+            obnam.obj.object_queue_combined_size(context.oq),
             len(object2))
 
         shutil.rmtree(context.config.get("wibbr", "cache-dir"))
@@ -187,9 +187,9 @@ class ObjectQueuingTests(unittest.TestCase):
 class FileContentsTests(unittest.TestCase):
 
     def setUp(self):
-        self.context = wibbrlib.context.create()
-        self.context.cache = wibbrlib.cache.init(self.context.config)
-        self.context.be = wibbrlib.backend.init(self.context.config, 
+        self.context = obnam.context.create()
+        self.context.cache = obnam.cache.init(self.context.config)
+        self.context.be = obnam.backend.init(self.context.config, 
                                                 self.context.cache)
 
     def tearDown(self):
@@ -200,12 +200,12 @@ class FileContentsTests(unittest.TestCase):
     def testEmptyFile(self):
         filename = "/dev/null"
         
-        id = wibbrlib.io.create_file_contents_object(self.context, filename)
+        id = obnam.io.create_file_contents_object(self.context, filename)
 
         self.failIfEqual(id, None)
-        self.failUnlessEqual(wibbrlib.obj.object_queue_ids(self.context.oq), 
+        self.failUnlessEqual(obnam.obj.object_queue_ids(self.context.oq), 
                              [id])
-        self.failUnlessEqual(wibbrlib.mapping.count(self.context.map), 0)
+        self.failUnlessEqual(obnam.mapping.count(self.context.map), 0)
             # there's no mapping yet, because the queue is small enough
             # that there has been no need to flush it
 
@@ -214,10 +214,10 @@ class FileContentsTests(unittest.TestCase):
         self.context.config.set("wibbr", "block-size", "%d" % block_size)
         filename = "Makefile"
         
-        id = wibbrlib.io.create_file_contents_object(self.context, filename)
+        id = obnam.io.create_file_contents_object(self.context, filename)
 
         self.failIfEqual(id, None)
-        self.failUnlessEqual(wibbrlib.obj.object_queue_ids(self.context.oq),
+        self.failUnlessEqual(obnam.obj.object_queue_ids(self.context.oq),
                                                            [id])
 
     def testRestore(self):
@@ -225,14 +225,14 @@ class FileContentsTests(unittest.TestCase):
         self.context.config.set("wibbr", "block-size", "%d" % block_size)
         filename = "Makefile"
         
-        id = wibbrlib.io.create_file_contents_object(self.context, filename)
-        wibbrlib.io.flush_object_queue(self.context, self.context.oq,
+        id = obnam.io.create_file_contents_object(self.context, filename)
+        obnam.io.flush_object_queue(self.context, self.context.oq,
                                        self.context.map)
-        wibbrlib.io.flush_object_queue(self.context, self.context.content_oq,
+        obnam.io.flush_object_queue(self.context, self.context.content_oq,
                                        self.context.contmap)
         
         (fd, name) = tempfile.mkstemp()
-        wibbrlib.io.get_file_contents(self.context, fd, id)
+        obnam.io.get_file_contents(self.context, fd, id)
         os.close(fd)
         
         f = file(name, "r")
@@ -251,20 +251,20 @@ class MetaDataTests(unittest.TestCase):
 
     def testSet(self):
         fields = (
-            (wibbrlib.cmp.CMP_ST_MODE, 0100664),
-            (wibbrlib.cmp.CMP_ST_ATIME, 12765),
-            (wibbrlib.cmp.CMP_ST_MTIME, 42),
+            (obnam.cmp.CMP_ST_MODE, 0100664),
+            (obnam.cmp.CMP_ST_ATIME, 12765),
+            (obnam.cmp.CMP_ST_MTIME, 42),
         )
-        list = [wibbrlib.cmp.create(kind, wibbrlib.varint.encode(value))
+        list = [obnam.cmp.create(kind, obnam.varint.encode(value))
                 for kind, value in fields]
-        inode = wibbrlib.cmp.create(wibbrlib.cmp.CMP_FILE, list)
+        inode = obnam.cmp.create(obnam.cmp.CMP_FILE, list)
 
         (fd, name) = tempfile.mkstemp()
         os.close(fd)
         
         os.chmod(name, 0)
         
-        wibbrlib.io.set_inode(name, inode)
+        obnam.io.set_inode(name, inode)
         
         st = os.stat(name)
         
@@ -276,26 +276,26 @@ class MetaDataTests(unittest.TestCase):
 class ObjectCacheTests(unittest.TestCase):
 
     def setUp(self):
-        self.object = wibbrlib.obj.create("pink", 1)
-        self.object2 = wibbrlib.obj.create("pretty", 1)
-        self.object3 = wibbrlib.obj.create("beautiful", 1)
+        self.object = obnam.obj.create("pink", 1)
+        self.object2 = obnam.obj.create("pretty", 1)
+        self.object3 = obnam.obj.create("beautiful", 1)
 
     def testCreate(self):
-        context = wibbrlib.context.create()
-        oc = wibbrlib.io.ObjectCache(context)
+        context = obnam.context.create()
+        oc = obnam.io.ObjectCache(context)
         self.failUnlessEqual(oc.size(), 0)
         self.failUnless(oc.MAX > 0)
         
     def testPut(self):
-        context = wibbrlib.context.create()
-        oc = wibbrlib.io.ObjectCache(context)
+        context = obnam.context.create()
+        oc = obnam.io.ObjectCache(context)
         self.failUnlessEqual(oc.get("pink"), None)
         oc.put(self.object)
         self.failUnlessEqual(oc.get("pink"), self.object)
 
     def testPutWithOverflow(self):
-        context = wibbrlib.context.create()
-        oc = wibbrlib.io.ObjectCache(context)
+        context = obnam.context.create()
+        oc = obnam.io.ObjectCache(context)
         oc.MAX = 1
         oc.put(self.object)
         self.failUnlessEqual(oc.size(), 1)
@@ -306,8 +306,8 @@ class ObjectCacheTests(unittest.TestCase):
         self.failUnlessEqual(oc.get("pretty"), self.object2)
 
     def testPutWithOverflowPart2(self):
-        context = wibbrlib.context.create()
-        oc = wibbrlib.io.ObjectCache(context)
+        context = obnam.context.create()
+        oc = obnam.io.ObjectCache(context)
         oc.MAX = 2
 
         oc.put(self.object)
@@ -328,60 +328,60 @@ class ReachabilityTests(IoBase):
 
     def testNoDataNoMaps(self):
         host_id = self.context.config.get("wibbr", "host-id")
-        host = wibbrlib.obj.host_block_encode(host_id, [], [], [])
-        wibbrlib.io.upload_host_block(self.context, host)
+        host = obnam.obj.host_block_encode(host_id, [], [], [])
+        obnam.io.upload_host_block(self.context, host)
         
-        list = wibbrlib.io.find_reachable_data_blocks(self.context, host)
+        list = obnam.io.find_reachable_data_blocks(self.context, host)
         self.failUnlessEqual(list, [])
         
-        list2 = wibbrlib.io.find_map_blocks_in_use(self.context, host, list)
+        list2 = obnam.io.find_map_blocks_in_use(self.context, host, list)
         self.failUnlessEqual(list2, [])
 
     def testNoDataExtraMaps(self):
-        wibbrlib.mapping.add(self.context.map, "pink", "pretty")
+        obnam.mapping.add(self.context.map, "pink", "pretty")
         map_block_id = "box"
-        map_block = wibbrlib.mapping.encode_new_to_block(self.context.map,
+        map_block = obnam.mapping.encode_new_to_block(self.context.map,
                                                          map_block_id)
-        wibbrlib.backend.upload(self.context.be, map_block_id, map_block)
+        obnam.backend.upload(self.context.be, map_block_id, map_block)
 
-        wibbrlib.mapping.add(self.context.contmap, "black", "beautiful")
+        obnam.mapping.add(self.context.contmap, "black", "beautiful")
         contmap_block_id = "fiddly"
-        contmap_block = wibbrlib.mapping.encode_new_to_block(
+        contmap_block = obnam.mapping.encode_new_to_block(
                             self.context.contmap, contmap_block_id)
-        wibbrlib.backend.upload(self.context.be, contmap_block_id, 
+        obnam.backend.upload(self.context.be, contmap_block_id, 
                                 contmap_block)
 
         host_id = self.context.config.get("wibbr", "host-id")
-        host = wibbrlib.obj.host_block_encode(host_id, [], [map_block_id], 
+        host = obnam.obj.host_block_encode(host_id, [], [map_block_id], 
                                               [contmap_block_id])
-        wibbrlib.io.upload_host_block(self.context, host)
+        obnam.io.upload_host_block(self.context, host)
         
-        list = wibbrlib.io.find_map_blocks_in_use(self.context, host, [])
+        list = obnam.io.find_map_blocks_in_use(self.context, host, [])
         self.failUnlessEqual(list, [])
 
     def testDataAndMap(self):
-        o = wibbrlib.obj.create("rouge", wibbrlib.obj.OBJ_FILEPART)
-        c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_FILECHUNK, "moulin")
-        wibbrlib.obj.add(o, c)
-        encoded_o = wibbrlib.obj.encode(o)
+        o = obnam.obj.create("rouge", obnam.obj.OBJ_FILEPART)
+        c = obnam.cmp.create(obnam.cmp.CMP_FILECHUNK, "moulin")
+        obnam.obj.add(o, c)
+        encoded_o = obnam.obj.encode(o)
         
         block_id = "pink"
-        oq = wibbrlib.obj.object_queue_create()
-        wibbrlib.obj.object_queue_add(oq, "rouge", encoded_o)
-        block = wibbrlib.obj.block_create_from_object_queue(block_id, oq)
-        wibbrlib.backend.upload(self.context.be, block_id, block)
+        oq = obnam.obj.object_queue_create()
+        obnam.obj.object_queue_add(oq, "rouge", encoded_o)
+        block = obnam.obj.block_create_from_object_queue(block_id, oq)
+        obnam.backend.upload(self.context.be, block_id, block)
 
-        wibbrlib.mapping.add(self.context.contmap, "rouge", block_id)
+        obnam.mapping.add(self.context.contmap, "rouge", block_id)
         map_block_id = "pretty"
-        map_block = wibbrlib.mapping.encode_new_to_block(self.context.contmap,
+        map_block = obnam.mapping.encode_new_to_block(self.context.contmap,
                                                          map_block_id)
-        wibbrlib.backend.upload(self.context.be, map_block_id, map_block)
+        obnam.backend.upload(self.context.be, map_block_id, map_block)
 
         host_id = self.context.config.get("wibbr", "host-id")
-        host = wibbrlib.obj.host_block_encode(host_id, [], [], [map_block_id])
-        wibbrlib.io.upload_host_block(self.context, host)
+        host = obnam.obj.host_block_encode(host_id, [], [], [map_block_id])
+        obnam.io.upload_host_block(self.context, host)
         
-        list = wibbrlib.io.find_map_blocks_in_use(self.context, host, 
+        list = obnam.io.find_map_blocks_in_use(self.context, host, 
                                                   [block_id])
         self.failUnlessEqual(list, [map_block_id])
 
@@ -390,23 +390,23 @@ class GarbageCollectionTests(IoBase):
 
     def testFindUnreachableFiles(self):
         host_id = self.context.config.get("wibbr", "host-id")
-        host = wibbrlib.obj.host_block_encode(host_id, [], [], [])
-        wibbrlib.io.upload_host_block(self.context, host)
+        host = obnam.obj.host_block_encode(host_id, [], [], [])
+        obnam.io.upload_host_block(self.context, host)
 
-        block_id = wibbrlib.backend.generate_block_id(self.context.be)
-        wibbrlib.backend.upload(self.context.be, block_id, "pink")
+        block_id = obnam.backend.generate_block_id(self.context.be)
+        obnam.backend.upload(self.context.be, block_id, "pink")
 
-        files = wibbrlib.backend.list(self.context.be)
+        files = obnam.backend.list(self.context.be)
         self.failUnlessEqual(files, [host_id, block_id])
 
-        wibbrlib.io.collect_garbage(self.context, host)
-        files = wibbrlib.backend.list(self.context.be)
+        obnam.io.collect_garbage(self.context, host)
+        files = obnam.backend.list(self.context.be)
         self.failUnlessEqual(files, [host_id])
 
 
 class ObjectCacheRegressionTest(unittest.TestCase):
 
-    # This test case is for a bug in wibbrlib.io.ObjectCache: with the
+    # This test case is for a bug in obnam.io.ObjectCache: with the
     # right sequence of operations, the cache can end up in a state where
     # the MRU list is too long, but contains two instances of the same
     # object ID. When the list is shortened, the first instance of the
@@ -435,13 +435,13 @@ class ObjectCacheRegressionTest(unittest.TestCase):
     # list.)
 
     def test(self):
-        context = wibbrlib.context.create()
+        context = obnam.context.create()
         context.config.set("wibbr", "object-cache-size", "3")
-        oc = wibbrlib.io.ObjectCache(context)
-        a = wibbrlib.obj.create("a", 0)
-        b = wibbrlib.obj.create("b", 0)
-        c = wibbrlib.obj.create("c", 0)
-        d = wibbrlib.obj.create("d", 0)
+        oc = obnam.io.ObjectCache(context)
+        a = obnam.obj.create("a", 0)
+        b = obnam.obj.create("b", 0)
+        c = obnam.obj.create("c", 0)
+        d = obnam.obj.create("d", 0)
         oc.put(a)
         oc.put(b)
         oc.put(c)
@@ -454,14 +454,14 @@ class ObjectCacheRegressionTest(unittest.TestCase):
 class LoadMapTests(IoBase):
 
     def test(self):
-        map = wibbrlib.mapping.create()
-        wibbrlib.mapping.add(map, "pink", "pretty")
-        block_id = wibbrlib.backend.generate_block_id(self.context.be)
-        block = wibbrlib.mapping.encode_new_to_block(map, block_id)
-        wibbrlib.backend.upload(self.context.be, block_id, block)
+        map = obnam.mapping.create()
+        obnam.mapping.add(map, "pink", "pretty")
+        block_id = obnam.backend.generate_block_id(self.context.be)
+        block = obnam.mapping.encode_new_to_block(map, block_id)
+        obnam.backend.upload(self.context.be, block_id, block)
         
-        wibbrlib.io.load_maps(self.context, self.context.map, [block_id])
-        self.failUnlessEqual(wibbrlib.mapping.get(self.context.map, "pink"),
+        obnam.io.load_maps(self.context, self.context.map, [block_id])
+        self.failUnlessEqual(obnam.mapping.get(self.context.map, "pink"),
                              "pretty")
-        self.failUnlessEqual(wibbrlib.mapping.get(self.context.map, "black"),
+        self.failUnlessEqual(obnam.mapping.get(self.context.map, "black"),
                              None)

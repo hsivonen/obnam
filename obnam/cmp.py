@@ -1,4 +1,4 @@
-import wibbrlib.varint
+import obnam.varint
 
 
 # Constants for component kinds
@@ -133,7 +133,7 @@ def get_string_value(c):
 def get_varint_value(c):
     """Return integer value of leaf component"""
     assert c.str is not None
-    return wibbrlib.varint.decode(c.str, 0)[0]
+    return obnam.varint.decode(c.str, 0)[0]
 
 
 def get_subcomponents(c):
@@ -156,14 +156,14 @@ def encode(c):
         encoded = "".join(snippets)
     else:
         encoded = c.str
-    return wibbrlib.varint.encode(len(encoded)) + \
-           wibbrlib.varint.encode(c.kind) + encoded
+    return obnam.varint.encode(len(encoded)) + \
+           obnam.varint.encode(c.kind) + encoded
 
 
 def decode(encoded, pos):
     """Decode a component in a string, return component and pos after it"""
-    (size, pos) = wibbrlib.varint.decode(encoded, pos)
-    (kind, pos) = wibbrlib.varint.decode(encoded, pos)
+    (size, pos) = obnam.varint.decode(encoded, pos)
+    (kind, pos) = obnam.varint.decode(encoded, pos)
     if kind_is_composite(kind):
         value = []
         pos2 = pos

@@ -1,8 +1,8 @@
 import uuid
 
-from wibbrlib.exception import WibbrException
-import wibbrlib.cmp
-import wibbrlib.varint
+from obnam.exception import WibbrException
+import obnam.cmp
+import obnam.varint
 
 
 # Magic cookie at the beginning of every block
@@ -83,25 +83,25 @@ def get_components(o):
 def find_by_kind(o, wanted_kind):
     """Find all components of a desired kind inside this object"""
     return [c for c in get_components(o) 
-                if wibbrlib.cmp.get_kind(c) == wanted_kind]
+                if obnam.cmp.get_kind(c) == wanted_kind]
 
 
 def find_strings_by_kind(o, wanted_kind):
     """Find all components of a desired kind, return their string values"""
-    return [wibbrlib.cmp.get_string_value(c) 
+    return [obnam.cmp.get_string_value(c) 
                 for c in find_by_kind(o, wanted_kind)]
 
 
 def find_varints_by_kind(o, wanted_kind):
     """Find all components of a desired kind, return their varint values"""
-    return [wibbrlib.cmp.get_varint_value(c) 
+    return [obnam.cmp.get_varint_value(c) 
                 for c in find_by_kind(o, wanted_kind)]
 
 
 def first_by_kind(o, wanted_kind):
     """Find first component of a desired kind"""
     for c in get_components(o):
-        if wibbrlib.cmp.get_kind(c) == wanted_kind:
+        if obnam.cmp.get_kind(c) == wanted_kind:
             return c
     return None
 
@@ -110,7 +110,7 @@ def first_string_by_kind(o, wanted_kind):
     """Find string value of first component of a desired kind"""
     c = first_by_kind(o, wanted_kind)
     if c:
-        return wibbrlib.cmp.get_string_value(c)
+        return obnam.cmp.get_string_value(c)
     else:
         return None
 
@@ -119,18 +119,18 @@ def first_varint_by_kind(o, wanted_kind):
     """Find string value of first component of a desired kind"""
     c = first_by_kind(o, wanted_kind)
     if c:
-        return wibbrlib.cmp.get_varint_value(c)
+        return obnam.cmp.get_varint_value(c)
     else:
         return None
 
 
 def encode(o):
     """Encode an object as a string"""
-    id = wibbrlib.cmp.create(wibbrlib.cmp.CMP_OBJID, o.id)
-    kind = wibbrlib.cmp.create(wibbrlib.cmp.CMP_OBJKIND, 
-                                     wibbrlib.varint.encode(o.kind))
+    id = obnam.cmp.create(obnam.cmp.CMP_OBJID, o.id)
+    kind = obnam.cmp.create(obnam.cmp.CMP_OBJKIND, 
+                                     obnam.varint.encode(o.kind))
     list = [id, kind] + get_components(o)
-    list = [wibbrlib.cmp.encode(c) for c in list]
+    list = [obnam.cmp.encode(c) for c in list]
     return "".join(list)
 
 
@@ -138,15 +138,15 @@ def decode(encoded, pos):
     """Decode an object from a string"""
     list = []
     while pos < len(encoded):
-        (c, pos) = wibbrlib.cmp.decode(encoded, pos)
+        (c, pos) = obnam.cmp.decode(encoded, pos)
         list.append(c)
     o = create("", 0)
     for c in list:
-        if c.kind == wibbrlib.cmp.CMP_OBJID:
-            o.id = wibbrlib.cmp.get_string_value(c)
-        elif c.kind == wibbrlib.cmp.CMP_OBJKIND:
-            o.kind = wibbrlib.cmp.get_string_value(c)
-            (o.kind, _) = wibbrlib.varint.decode(o.kind, 0)
+        if c.kind == obnam.cmp.CMP_OBJID:
+            o.id = obnam.cmp.get_string_value(c)
+        elif c.kind == obnam.cmp.CMP_OBJKIND:
+            o.kind = obnam.cmp.get_string_value(c)
+            (o.kind, _) = obnam.varint.decode(o.kind, 0)
         else:
             add(o, c)
     return o
@@ -179,23 +179,23 @@ def object_queue_ids(oq):
 
 def block_create_from_object_queue(blkid, oq):
     """Create a block from an object queue"""
-    blkid = wibbrlib.cmp.create(wibbrlib.cmp.CMP_BLKID, blkid)
-    objects = [wibbrlib.cmp.create(wibbrlib.cmp.CMP_OBJECT, x[1])
+    blkid = obnam.cmp.create(obnam.cmp.CMP_BLKID, blkid)
+    objects = [obnam.cmp.create(obnam.cmp.CMP_OBJECT, x[1])
                for x in oq]
     return "".join([BLOCK_COOKIE] + 
-                   [wibbrlib.cmp.encode(c) for c in [blkid] + objects])
+                   [obnam.cmp.encode(c) for c in [blkid] + objects])
 
 
 def block_decode(block):
     """Return list of decoded components in block, or None on error"""
     if block.startswith(BLOCK_COOKIE):
-        return wibbrlib.cmp.decode_all(block, len(BLOCK_COOKIE))
+        return obnam.cmp.decode_all(block, len(BLOCK_COOKIE))
     else:
         return None
 
 
 def signature_object_encode(objid, sigdata):
-    c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_SIGDATA, sigdata)
+    c = obnam.cmp.create(obnam.cmp.CMP_SIGDATA, sigdata)
     o = create(objid, OBJ_SIG)
     add(o, c)
     return encode(o)
@@ -224,31 +224,31 @@ def inode_object_encode(objid, stat_result, sig_id, contents_id):
     st = stat_result
 
     items = (
-        (wibbrlib.cmp.CMP_ST_MODE, "st_mode"),
-        (wibbrlib.cmp.CMP_ST_INO, "st_ino"),
-        (wibbrlib.cmp.CMP_ST_DEV, "st_dev"),
-        (wibbrlib.cmp.CMP_ST_NLINK, "st_nlink"),
-        (wibbrlib.cmp.CMP_ST_UID, "st_uid"),
-        (wibbrlib.cmp.CMP_ST_GID, "st_gid"),
-        (wibbrlib.cmp.CMP_ST_SIZE, "st_size"),
-        (wibbrlib.cmp.CMP_ST_ATIME, "st_atime"),
-        (wibbrlib.cmp.CMP_ST_MTIME, "st_mtime"),
-        (wibbrlib.cmp.CMP_ST_CTIME, "st_ctime"),
-        (wibbrlib.cmp.CMP_ST_BLOCKS, "st_blocks"),
-        (wibbrlib.cmp.CMP_ST_BLKSIZE, "st_blksize"),
-        (wibbrlib.cmp.CMP_ST_RDEV, "st_rdev"),
+        (obnam.cmp.CMP_ST_MODE, "st_mode"),
+        (obnam.cmp.CMP_ST_INO, "st_ino"),
+        (obnam.cmp.CMP_ST_DEV, "st_dev"),
+        (obnam.cmp.CMP_ST_NLINK, "st_nlink"),
+        (obnam.cmp.CMP_ST_UID, "st_uid"),
+        (obnam.cmp.CMP_ST_GID, "st_gid"),
+        (obnam.cmp.CMP_ST_SIZE, "st_size"),
+        (obnam.cmp.CMP_ST_ATIME, "st_atime"),
+        (obnam.cmp.CMP_ST_MTIME, "st_mtime"),
+        (obnam.cmp.CMP_ST_CTIME, "st_ctime"),
+        (obnam.cmp.CMP_ST_BLOCKS, "st_blocks"),
+        (obnam.cmp.CMP_ST_BLKSIZE, "st_blksize"),
+        (obnam.cmp.CMP_ST_RDEV, "st_rdev"),
     )
     for kind, key in items:
         if key in st:
-            n = wibbrlib.varint.encode(st[key])
-            c = wibbrlib.cmp.create(kind, n)
+            n = obnam.varint.encode(st[key])
+            c = obnam.cmp.create(kind, n)
             add(o, c)
 
     if sig_id:
-        c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_SIGREF, sig_id)
+        c = obnam.cmp.create(obnam.cmp.CMP_SIGREF, sig_id)
         add(o, c)
     if contents_id:
-        c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_CONTREF, contents_id)
+        c = obnam.cmp.create(obnam.cmp.CMP_CONTREF, contents_id)
         add(o, c)
 
     return encode(o)
@@ -269,35 +269,35 @@ class NotAnInode(WibbrException):
 def inode_object_decode(inode):
     """Decode an inode object, return objid and what os.stat returns"""
     stat_results = {}
-    list = wibbrlib.cmp.decode_all(inode, 0)
+    list = obnam.cmp.decode_all(inode, 0)
 
-    id = wibbrlib.cmp.first_string_by_kind(list, wibbrlib.cmp.CMP_OBJID)
-    kind = wibbrlib.cmp.first_varint_by_kind(list, wibbrlib.cmp.CMP_OBJKIND)
-    sigref = wibbrlib.cmp.first_string_by_kind(list, wibbrlib.cmp.CMP_SIGREF)
-    contref = wibbrlib.cmp.first_string_by_kind(list, 
-                                                wibbrlib.cmp.CMP_CONTREF)
+    id = obnam.cmp.first_string_by_kind(list, obnam.cmp.CMP_OBJID)
+    kind = obnam.cmp.first_varint_by_kind(list, obnam.cmp.CMP_OBJKIND)
+    sigref = obnam.cmp.first_string_by_kind(list, obnam.cmp.CMP_SIGREF)
+    contref = obnam.cmp.first_string_by_kind(list, 
+                                                obnam.cmp.CMP_CONTREF)
 
     if kind != OBJ_INODE:
         raise NotAnInode(kind)
     o = create(id, kind)
 
     varint_items = {
-        wibbrlib.cmp.CMP_ST_MODE: "st_mode",
-        wibbrlib.cmp.CMP_ST_INO: "st_ino",
-        wibbrlib.cmp.CMP_ST_DEV: "st_dev",
-        wibbrlib.cmp.CMP_ST_NLINK: "st_nlink",
-        wibbrlib.cmp.CMP_ST_UID: "st_uid",
-        wibbrlib.cmp.CMP_ST_GID: "st_gid",
-        wibbrlib.cmp.CMP_ST_SIZE: "st_size",
-        wibbrlib.cmp.CMP_ST_ATIME: "st_atime",
-        wibbrlib.cmp.CMP_ST_MTIME: "st_mtime",
-        wibbrlib.cmp.CMP_ST_CTIME: "st_ctime",
-        wibbrlib.cmp.CMP_ST_BLOCKS: "st_blocks",
-        wibbrlib.cmp.CMP_ST_BLKSIZE: "st_blksize",
-        wibbrlib.cmp.CMP_ST_RDEV: "st_rdev",
+        obnam.cmp.CMP_ST_MODE: "st_mode",
+        obnam.cmp.CMP_ST_INO: "st_ino",
+        obnam.cmp.CMP_ST_DEV: "st_dev",
+        obnam.cmp.CMP_ST_NLINK: "st_nlink",
+        obnam.cmp.CMP_ST_UID: "st_uid",
+        obnam.cmp.CMP_ST_GID: "st_gid",
+        obnam.cmp.CMP_ST_SIZE: "st_size",
+        obnam.cmp.CMP_ST_ATIME: "st_atime",
+        obnam.cmp.CMP_ST_MTIME: "st_mtime",
+        obnam.cmp.CMP_ST_CTIME: "st_ctime",
+        obnam.cmp.CMP_ST_BLOCKS: "st_blocks",
+        obnam.cmp.CMP_ST_BLKSIZE: "st_blksize",
+        obnam.cmp.CMP_ST_RDEV: "st_rdev",
     }
     for kind in varint_items:
-        n = wibbrlib.cmp.first_varint_by_kind(list, kind)
+        n = obnam.cmp.first_varint_by_kind(list, kind)
         if n is not None:
             stat_results[varint_items[kind]] = n
 
@@ -307,7 +307,7 @@ def inode_object_decode(inode):
 def generation_object_encode(objid, filelist_id):
     """Encode a generation object, from list of filename, inode_id pairs"""
     o = create(objid, OBJ_GEN)
-    c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_FILELISTREF, filelist_id)
+    c = obnam.cmp.create(obnam.cmp.CMP_FILELISTREF, filelist_id)
     add(o, c)
     return encode(o)
 
@@ -316,26 +316,26 @@ def generation_object_decode(gen):
     """Decode a generation object into objid, file list ref"""
 
     o = decode(gen, 0)
-    return o.id, first_string_by_kind(o, wibbrlib.cmp.CMP_FILELISTREF)
+    return o.id, first_string_by_kind(o, obnam.cmp.CMP_FILELISTREF)
 
 
 def host_block_encode(host_id, gen_ids, map_block_ids, contmap_block_ids):
     """Encode a new block with a host object"""
     o = create(host_id, OBJ_HOST)
     
-    c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_FORMATVERSION, FORMAT_VERSION)
+    c = obnam.cmp.create(obnam.cmp.CMP_FORMATVERSION, FORMAT_VERSION)
     add(o, c)
 
     for gen_id in gen_ids:
-        c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_GENREF, gen_id)
+        c = obnam.cmp.create(obnam.cmp.CMP_GENREF, gen_id)
         add(o, c)
     
     for map_block_id in map_block_ids:
-        c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_MAPREF, map_block_id)
+        c = obnam.cmp.create(obnam.cmp.CMP_MAPREF, map_block_id)
         add(o, c)
     
     for map_block_id in contmap_block_ids:
-        c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_CONTMAPREF, map_block_id)
+        c = obnam.cmp.create(obnam.cmp.CMP_CONTMAPREF, map_block_id)
         add(o, c)
 
     oq = object_queue_create()
@@ -349,20 +349,20 @@ def host_block_decode(block):
     
     list = block_decode(block)
     
-    host_id = wibbrlib.cmp.first_string_by_kind(list, wibbrlib.cmp.CMP_BLKID)
+    host_id = obnam.cmp.first_string_by_kind(list, obnam.cmp.CMP_BLKID)
     
     gen_ids = []
     map_ids = []
     contmap_ids = []
 
-    objparts = wibbrlib.cmp.find_by_kind(list, wibbrlib.cmp.CMP_OBJECT)
+    objparts = obnam.cmp.find_by_kind(list, obnam.cmp.CMP_OBJECT)
     for objpart in objparts:
-        subs = wibbrlib.cmp.get_subcomponents(objpart)
-        gen_ids += wibbrlib.cmp.find_strings_by_kind(subs, 
-                                                    wibbrlib.cmp.CMP_GENREF)
-        map_ids += wibbrlib.cmp.find_strings_by_kind(subs, 
-                                                    wibbrlib.cmp.CMP_MAPREF)
-        contmap_ids += wibbrlib.cmp.find_strings_by_kind(subs, 
-                                                wibbrlib.cmp.CMP_CONTMAPREF)
+        subs = obnam.cmp.get_subcomponents(objpart)
+        gen_ids += obnam.cmp.find_strings_by_kind(subs, 
+                                                    obnam.cmp.CMP_GENREF)
+        map_ids += obnam.cmp.find_strings_by_kind(subs, 
+                                                    obnam.cmp.CMP_MAPREF)
+        contmap_ids += obnam.cmp.find_strings_by_kind(subs, 
+                                                obnam.cmp.CMP_CONTMAPREF)
 
     return host_id, gen_ids, map_ids, contmap_ids

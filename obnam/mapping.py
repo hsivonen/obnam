@@ -1,4 +1,4 @@
-import wibbrlib.cmp
+import obnam.cmp
 
 
 class Mappings:
@@ -58,33 +58,33 @@ def encode_new(mapping):
             dict[block_id] = [object_id]
     for block_id in dict:
         object_ids = dict[block_id]
-        object_ids = [wibbrlib.cmp.create(wibbrlib.cmp.CMP_OBJREF, x)
+        object_ids = [obnam.cmp.create(obnam.cmp.CMP_OBJREF, x)
                       for x in object_ids]
-        block_id = wibbrlib.cmp.create(wibbrlib.cmp.CMP_BLOCKREF, block_id)
-        c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_OBJMAP, 
+        block_id = obnam.cmp.create(obnam.cmp.CMP_BLOCKREF, block_id)
+        c = obnam.cmp.create(obnam.cmp.CMP_OBJMAP, 
                                 [block_id] + object_ids)
-        list.append(wibbrlib.cmp.encode(c))
+        list.append(obnam.cmp.encode(c))
     return list
 
 
 def encode_new_to_block(mapping, block_id):
     """Encode new mappings into a block"""
-    c = wibbrlib.cmp.create(wibbrlib.cmp.CMP_BLKID, block_id)
+    c = obnam.cmp.create(obnam.cmp.CMP_BLKID, block_id)
     list = encode_new(mapping)
-    block = "".join([wibbrlib.obj.BLOCK_COOKIE, wibbrlib.cmp.encode(c)] + list)
+    block = "".join([obnam.obj.BLOCK_COOKIE, obnam.cmp.encode(c)] + list)
     return block
 
 
 def decode_block(mapping, mapping_block):
     """Decode a block with mappings, add them to mapping object"""
-    list = wibbrlib.obj.block_decode(mapping_block)
-    maps = wibbrlib.cmp.find_by_kind(list, wibbrlib.cmp.CMP_OBJMAP)
+    list = obnam.obj.block_decode(mapping_block)
+    maps = obnam.cmp.find_by_kind(list, obnam.cmp.CMP_OBJMAP)
     for map in maps:
-        subs = wibbrlib.cmp.get_subcomponents(map)
-        block_id = wibbrlib.cmp.first_string_by_kind(subs, 
-                                               wibbrlib.cmp.CMP_BLOCKREF)
-        object_ids = wibbrlib.cmp.find_strings_by_kind(subs, 
-                                               wibbrlib.cmp.CMP_OBJREF)
+        subs = obnam.cmp.get_subcomponents(map)
+        block_id = obnam.cmp.first_string_by_kind(subs, 
+                                               obnam.cmp.CMP_BLOCKREF)
+        object_ids = obnam.cmp.find_strings_by_kind(subs, 
+                                               obnam.cmp.CMP_OBJREF)
         if object_ids and block_id:
             for object_id in object_ids:
                 _add_old(mapping, object_id, block_id)
