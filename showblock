@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 
-"""Show the contents of a Wibbr storage block."""
+"""Show the contents of a storage block."""
 
 
 import sys

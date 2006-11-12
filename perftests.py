@@ -17,15 +17,15 @@ def targz_method(tempdir, rootdir, testcase):
     return result, ["tar", "-C", rootdir, "-czf", result, "."]
 
 
-def wibbr_method(tempdir, rootdir, testcase):
-    result = os.path.join(tempdir, "wibbr-store")
-    return result, ["./wibbr", "--block-store", result, rootdir]
+def obnam(tempdir, rootdir, testcase):
+    result = os.path.join(tempdir, "obnam-store")
+    return result, ["./obnam", "--block-store", result, rootdir]
 
 
 backup_methods = (
     ("tar", tar_method),
     ("targz", targz_method),
-    ("wibbr", wibbr_method),
+    ("obnam", obnam_method),
 )
 
 
