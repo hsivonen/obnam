@@ -27,6 +27,19 @@ class BackendData:
         self.blocks_in_curdir = 0
 
 
+def parse_store_url(url):
+    """Parse a store url
+    
+    The url must either be a plain pathname, or it starts with sftp://
+    and specifies a remote store. Return a tuple username, host, port,
+    path, where elements can be None if they are meant to be the default
+    or are not relevant.
+    
+    """
+    
+    return None, None, None, url
+
+
 def init(config, cache):
     """Initialize the subsystem and return an opaque backend object"""
     be = BackendData()

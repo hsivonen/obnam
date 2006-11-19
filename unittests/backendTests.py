@@ -7,6 +7,22 @@ import unittest
 import obnam
 
 
+class ParseStoreUrlTests(unittest.TestCase):
+
+    def test(self):
+        cases = (
+            ("", None, None, None, ""),
+            ("foo", None, None, None, "foo"),
+            ("/", None, None, None, "/"),
+        )
+        for case in cases:
+            user, host, port, path = obnam.backend.parse_store_url(case[0])
+            self.failUnlessEqual(user, case[1])
+            self.failUnlessEqual(host, case[2])
+            self.failUnlessEqual(port, case[3])
+            self.failUnlessEqual(path, case[4])
+
+
 class LocalBackendBase(unittest.TestCase):
 
     def setUp(self):
