@@ -12,7 +12,7 @@ class CacheBase(unittest.TestCase):
         self.cachedir = "tmp.cachedir"
         
         config_list = (
-            ("backup", "cache-dir", self.cachedir),
+            ("backup", "cache", self.cachedir),
         )
     
         self.config = ConfigParser.ConfigParser()

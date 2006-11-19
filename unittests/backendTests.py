@@ -17,8 +17,8 @@ class LocalBackendBase(unittest.TestCase):
         os.mkdir(self.rootdir)
         
         config_list = (
-            ("backup", "cache-dir", self.cachedir),
-            ("backup", "local-store", self.rootdir)
+            ("backup", "cache", self.cachedir),
+            ("backup", "store", self.rootdir)
         )
     
         self.config = obnam.config.default_config()

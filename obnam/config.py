@@ -7,8 +7,8 @@ def default_config():
     items = (
         ("backup", "host-id", "testhost"),
         ("backup", "block-size", "%d" % (64 * 1024)),
-        ("backup", "cache-dir", "tmp.cachedir"),
-        ("backup", "local-store", "tmp.local-store"),
+        ("backup", "cache", "tmp.cache"),
+        ("backup", "store", "tmp.store"),
         ("backup", "target-dir", "."),
         ("backup", "object-cache-size", "0"),
         ("backup", "log-level", "warning"),
@@ -59,9 +59,9 @@ def parse_options(config, argv):
     if options.block_size:
         config.set("backup", "block-size", "%d" % options.block_size)
     if options.cache:
-        config.set("backup", "cache-dir", options.cache)
+        config.set("backup", "cache", options.cache)
     if options.store:
-        config.set("backup", "local-store", options.store)
+        config.set("backup", "store", options.store)
     if options.target:
         config.set("backup", "target-dir", options.target)
     if options.object_cache_size:

@@ -31,7 +31,7 @@ def init(config, cache):
     """Initialize the subsystem and return an opaque backend object"""
     be = LocalBackEnd()
     be.config = config
-    be.local_root = config.get("backup", "local-store")
+    be.local_root = config.get("backup", "store")
     be.cache = cache
     be.curdir = str(uuid.uuid4())
     return be

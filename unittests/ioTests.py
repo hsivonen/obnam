@@ -45,8 +45,8 @@ class IoBase(unittest.TestCase):
         os.mkdir(self.rootdir)
         
         config_list = (
-            ("backup", "cache-dir", self.cachedir),
-            ("backup", "local-store", self.rootdir)
+            ("backup", "cache", self.cachedir),
+            ("backup", "store", self.rootdir)
         )
     
         self.context = obnam.context.create()
@@ -145,7 +145,7 @@ class ObjectQueuingTests(unittest.TestCase):
 
     def find_block_files(self, config):
         files = []
-        root = config.get("backup", "local-store")
+        root = config.get("backup", "store")
         for dirpath, _, filenames in os.walk(root):
             files += [os.path.join(dirpath, x) for x in filenames]
         files.sort()
@@ -180,8 +180,8 @@ class ObjectQueuingTests(unittest.TestCase):
             obnam.obj.object_queue_combined_size(context.oq),
             len(object2))
 
-        shutil.rmtree(context.config.get("backup", "cache-dir"))
-        shutil.rmtree(context.config.get("backup", "local-store"))
+        shutil.rmtree(context.config.get("backup", "cache"))
+        shutil.rmtree(context.config.get("backup", "store"))
 
 
 class FileContentsTests(unittest.TestCase):
@@ -193,7 +193,7 @@ class FileContentsTests(unittest.TestCase):
                                                 self.context.cache)
 
     def tearDown(self):
-        for x in ["cache-dir", "local-store"]:
+        for x in ["cache", "store"]:
             if os.path.exists(self.context.config.get("backup", x)):
                 shutil.rmtree(self.context.config.get("backup", x))
 
