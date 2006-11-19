@@ -6,6 +6,7 @@ This implementation only stores the stuff locally, however.
 
 
 import os
+import urlparse
 
 import uuid
 import obnam.cache
@@ -37,7 +38,26 @@ def parse_store_url(url):
     
     """
     
-    return None, None, None, url
+    # urlparse in Python 2.4 doesn't know, by default, that sftp uses
+    # a netloc
+    if "sftp" not in urlparse.uses_netloc:
+        urlparse.uses_netloc.append("sftp")
+    
+    user = host = port = path = None
+    (scheme, netloc, path, query, fragment) = urlparse.urlsplit(url)
+    if False:
+        print "scheme:", scheme
+        print "netloc:", netloc
+        print "path:", path
+        print "query:", query
+        print "fragment:", fragment
+    
+    if scheme == "sftp":
+        host = netloc
+    else:
+        path = url
+    
+    return user, host, port, path
 
 
 def init(config, cache):
