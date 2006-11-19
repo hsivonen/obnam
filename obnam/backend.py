@@ -17,11 +17,11 @@ import obnam.obj
 MAX_BLOCKS_IN_CURDIR = 256
 
 
-class LocalBackEnd:
+class BackendData:
 
     def __init__(self):
         self.config = None
-        self.local_root = None
+        self.store = None
         self.cache = None
         self.curdir = None
         self.blocks_in_curdir = 0
@@ -29,9 +29,9 @@ class LocalBackEnd:
 
 def init(config, cache):
     """Initialize the subsystem and return an opaque backend object"""
-    be = LocalBackEnd()
+    be = BackendData()
     be.config = config
-    be.local_root = config.get("backup", "store")
+    be.store = config.get("backup", "store")
     be.cache = cache
     be.curdir = str(uuid.uuid4())
     return be
@@ -49,12 +49,12 @@ def generate_block_id(be):
 
 def _block_remote_pathname(be, block_id):
     """Return pathname on server for a given block id"""
-    return os.path.join(be.local_root, block_id)
+    return os.path.join(be.store, block_id)
 
 
 def upload(be, block_id, block):
     """Start the upload of a block to the remote server"""
-    curdir_full = os.path.join(be.local_root, be.curdir)
+    curdir_full = os.path.join(be.store, be.curdir)
     if not os.path.isdir(curdir_full):
         os.makedirs(curdir_full, 0700)
     f = file(_block_remote_pathname(be, block_id), "w")
@@ -83,9 +83,9 @@ def download(be, block_id):
 def list(be):
     """Return list of all files on the remote server"""
     list = []
-    for dirpath, _, filenames in os.walk(be.local_root):
-        if dirpath.startswith(be.local_root):
-            dirpath = dirpath[len(be.local_root):]
+    for dirpath, _, filenames in os.walk(be.store):
+        if dirpath.startswith(be.store):
+            dirpath = dirpath[len(be.store):]
             if dirpath.startswith(os.sep):
                 dirpath = dirpath[len(os.sep):]
         list += [os.path.join(dirpath, x) for x in filenames]
