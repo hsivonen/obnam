@@ -53,7 +53,13 @@ def parse_store_url(url):
         print "fragment:", fragment
     
     if scheme == "sftp":
-        host = netloc
+        if "@" in netloc:
+            (user, netloc) = netloc.split("@", 1)
+        if ":" in netloc:
+            (host, port) = netloc.split(":", 1)
+            port = int(port)
+        else:
+            host = netloc
     else:
         path = url
     
