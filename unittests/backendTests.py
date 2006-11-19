@@ -63,7 +63,7 @@ class InitTests(LocalBackendBase):
 
     def testInit(self):
         be = obnam.backend.init(self.config, self.cache)
-        self.failUnlessEqual(be.store, self.rootdir)
+        self.failUnlessEqual(be.url, self.rootdir)
 
 
 class IdTests(LocalBackendBase):

@@ -22,7 +22,11 @@ class BackendData:
 
     def __init__(self):
         self.config = None
-        self.store = None
+        self.url = None
+        self.user = None
+        self.host = None
+        self.port = None
+        self.path = None
         self.cache = None
         self.curdir = None
         self.blocks_in_curdir = 0
@@ -45,12 +49,6 @@ def parse_store_url(url):
     
     user = host = port = path = None
     (scheme, netloc, path, query, fragment) = urlparse.urlsplit(url)
-    if False:
-        print "scheme:", scheme
-        print "netloc:", netloc
-        print "path:", path
-        print "query:", query
-        print "fragment:", fragment
     
     if scheme == "sftp":
         if "@" in netloc:
@@ -70,7 +68,8 @@ def init(config, cache):
     """Initialize the subsystem and return an opaque backend object"""
     be = BackendData()
     be.config = config
-    be.store = config.get("backup", "store")
+    be.url = config.get("backup", "store")
+    (be.user, be.host, be.port, be.path) = parse_store_url(be.url)
     be.cache = cache
     be.curdir = str(uuid.uuid4())
     return be
@@ -88,12 +87,12 @@ def generate_block_id(be):
 
 def _block_remote_pathname(be, block_id):
     """Return pathname on server for a given block id"""
-    return os.path.join(be.store, block_id)
+    return os.path.join(be.path, block_id)
 
 
 def upload(be, block_id, block):
     """Start the upload of a block to the remote server"""
-    curdir_full = os.path.join(be.store, be.curdir)
+    curdir_full = os.path.join(be.path, be.curdir)
     if not os.path.isdir(curdir_full):
         os.makedirs(curdir_full, 0700)
     f = file(_block_remote_pathname(be, block_id), "w")
@@ -122,9 +121,9 @@ def download(be, block_id):
 def list(be):
     """Return list of all files on the remote server"""
     list = []
-    for dirpath, _, filenames in os.walk(be.store):
-        if dirpath.startswith(be.store):
-            dirpath = dirpath[len(be.store):]
+    for dirpath, _, filenames in os.walk(be.path):
+        if dirpath.startswith(be.path):
+            dirpath = dirpath[len(be.path):]
             if dirpath.startswith(os.sep):
                 dirpath = dirpath[len(os.sep):]
         list += [os.path.join(dirpath, x) for x in filenames]
