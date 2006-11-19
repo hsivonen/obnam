@@ -18,7 +18,7 @@ class CommandLineParsingTests(unittest.TestCase):
         config = obnam.config.default_config()
         self.failUnless(config.has_section("backup"))
         needed = ["block-size", "cache", "store", "target-dir",
-                  "host-id", "object-cache-size", "log-level"]
+                  "host-id", "object-cache-size", "log-level", "ssh-key"]
         needed.sort()
         actual = config.options("backup")
         actual.sort()

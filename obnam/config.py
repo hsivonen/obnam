@@ -9,6 +9,7 @@ def default_config():
         ("backup", "block-size", "%d" % (64 * 1024)),
         ("backup", "cache", "tmp.cache"),
         ("backup", "store", "tmp.store"),
+        ("backup", "ssh-key", "ssh-key"),
         ("backup", "target-dir", "."),
         ("backup", "object-cache-size", "0"),
         ("backup", "log-level", "warning"),
