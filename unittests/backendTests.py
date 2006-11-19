@@ -19,6 +19,7 @@ class ParseStoreUrlTests(unittest.TestCase):
             ("sftp://host/foo", None, "host", None, "/foo"),
             ("sftp://user@host/foo", "user", "host", None, "/foo"),
             ("sftp://host:22/foo", None, "host", 22, "/foo"),
+            ("sftp://user@host:22/foo", "user", "host", 22, "/foo"),
         )
         for case in cases:
             user, host, port, path = obnam.backend.parse_store_url(case[0])
