@@ -13,7 +13,7 @@ class Cache:
 def init(config):
     """Initialize cache subsystem, return opaque cache object"""
     cache = Cache()
-    cache.cachedir = config.get("backup", "cache-dir")
+    cache.cachedir = config.get("backup", "cache")
     if not os.path.isdir(cache.cachedir):
         os.makedirs(cache.cachedir, 0700)
     return cache

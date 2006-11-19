@@ -7,6 +7,28 @@ import unittest
 import obnam
 
 
+class ParseStoreUrlTests(unittest.TestCase):
+
+    def test(self):
+        cases = (
+            ("", None, None, None, ""),
+            ("foo", None, None, None, "foo"),
+            ("/", None, None, None, "/"),
+            ("sftp://host", None, "host", None, ""),
+            ("sftp://host/", None, "host", None, "/"),
+            ("sftp://host/foo", None, "host", None, "/foo"),
+            ("sftp://user@host/foo", "user", "host", None, "/foo"),
+            ("sftp://host:22/foo", None, "host", 22, "/foo"),
+            ("sftp://user@host:22/foo", "user", "host", 22, "/foo"),
+        )
+        for case in cases:
+            user, host, port, path = obnam.backend.parse_store_url(case[0])
+            self.failUnlessEqual(user, case[1])
+            self.failUnlessEqual(host, case[2])
+            self.failUnlessEqual(port, case[3])
+            self.failUnlessEqual(path, case[4])
+
+
 class LocalBackendBase(unittest.TestCase):
 
     def setUp(self):
@@ -17,8 +39,8 @@ class LocalBackendBase(unittest.TestCase):
         os.mkdir(self.rootdir)
         
         config_list = (
-            ("backup", "cache-dir", self.cachedir),
-            ("backup", "local-store", self.rootdir)
+            ("backup", "cache", self.cachedir),
+            ("backup", "store", self.rootdir)
         )
     
         self.config = obnam.config.default_config()
@@ -41,7 +63,7 @@ class InitTests(LocalBackendBase):
 
     def testInit(self):
         be = obnam.backend.init(self.config, self.cache)
-        self.failUnlessEqual(be.local_root, self.rootdir)
+        self.failUnlessEqual(be.url, self.rootdir)
 
 
 class IdTests(LocalBackendBase):

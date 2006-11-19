@@ -17,8 +17,8 @@ class CommandLineParsingTests(unittest.TestCase):
     def testDefaultConfig(self):
         config = obnam.config.default_config()
         self.failUnless(config.has_section("backup"))
-        needed = ["block-size", "cache-dir", "local-store", "target-dir",
-                  "host-id", "object-cache-size", "log-level"]
+        needed = ["block-size", "cache", "store", "target-dir",
+                  "host-id", "object-cache-size", "log-level", "ssh-key"]
         needed.sort()
         actual = config.options("backup")
         actual.sort()
@@ -40,12 +40,12 @@ class CommandLineParsingTests(unittest.TestCase):
     def testCacheDir(self):
         config = obnam.config.default_config()
         obnam.config.parse_options(config, ["--cache=/tmp/foo"])
-        self.failUnlessEqual(config.get("backup", "cache-dir"), "/tmp/foo")
+        self.failUnlessEqual(config.get("backup", "cache"), "/tmp/foo")
 
     def testLocalStore(self):
         config = obnam.config.default_config()
         obnam.config.parse_options(config, ["--store=/tmp/foo"])
-        self.failUnlessEqual(config.get("backup", "local-store"), "/tmp/foo")
+        self.failUnlessEqual(config.get("backup", "store"), "/tmp/foo")
 
     def testTargetDir(self):
         config = obnam.config.default_config()
