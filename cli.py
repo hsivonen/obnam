@@ -3,6 +3,10 @@
 """A backup program"""
 
 
+NAME = "obnam"
+VERSION = "0.2"
+
+
 import logging
 import os
 import stat
@@ -284,6 +288,11 @@ def forget(context, forgettable_ids):
     obnam.io.collect_garbage(context, block)
 
 
+def version():
+    """Report program name and version number of program to user"""
+    print "%s version %s" % (NAME, VERSION)
+
+
 class MissingCommandWord(obnam.exception.ExceptionBase):
 
     def __init__(self):
@@ -337,6 +346,8 @@ def main():
         restore(context, args[0])
     elif command == "forget":
         forget(context, args)
+    elif command == "version":
+        version()
     else:
         raise UnknownCommandWord(command)
 
