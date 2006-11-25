@@ -210,7 +210,7 @@ def create_filesystem_object(context, full_pathname, inode):
         fd = os.open(full_pathname, os.O_WRONLY | os.O_CREAT, 0)
         cont_id = obnam.cmp.first_string_by_kind(subs, 
                                                     obnam.cmp.CONTREF)
-        obnam.io.get_file_contents(context, fd, cont_id)
+        obnam.io.copy_file_contents(context, fd, cont_id)
         os.close(fd)
 
 

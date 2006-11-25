@@ -235,7 +235,7 @@ class FileContentsObjectMissing(obnam.exception.ExceptionBase):
         self._msg = "Missing file contents object: %s" % id
 
 
-def get_file_contents(context, fd, cont_id):
+def copy_file_contents(context, fd, cont_id):
     """Write contents of a file in backup to a file descriptor"""
     cont = obnam.io.get_object(context, cont_id)
     if not cont:

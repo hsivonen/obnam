@@ -235,7 +235,7 @@ class FileContentsTests(unittest.TestCase):
                                        self.context.contmap)
         
         (fd, name) = tempfile.mkstemp()
-        obnam.io.get_file_contents(self.context, fd, id)
+        obnam.io.copy_file_contents(self.context, fd, id)
         os.close(fd)
         
         f = file(name, "r")
