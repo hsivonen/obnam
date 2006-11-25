@@ -29,6 +29,40 @@ class ParseStoreUrlTests(unittest.TestCase):
             self.failUnlessEqual(path, case[4])
 
 
+class DircountTests(unittest.TestCase):
+
+    def testInit(self):
+        be = obnam.backend.BackendData()
+        self.failUnlessEqual(len(be.dircounts), obnam.backend.LEVELS)
+        for i in range(obnam.backend.LEVELS):
+            self.failUnlessEqual(be.dircounts[i], 0)
+        
+    def testIncrementOnce(self):
+        be = obnam.backend.BackendData()
+        obnam.backend.increment_dircounts(be)
+        self.failUnlessEqual(be.dircounts, [0, 0, 1])
+
+    def testIncrementMany(self):
+        be = obnam.backend.BackendData()
+        for i in range(obnam.backend.MAX_BLOCKS_PER_DIR):
+            obnam.backend.increment_dircounts(be)
+        self.failUnlessEqual(be.dircounts, 
+                             [0, 0, obnam.backend.MAX_BLOCKS_PER_DIR])
+
+        obnam.backend.increment_dircounts(be)
+        self.failUnlessEqual(be.dircounts, [0, 1, 0])
+
+        obnam.backend.increment_dircounts(be)
+        self.failUnlessEqual(be.dircounts, [0, 1, 1])
+
+    def testIncrementTop(self):
+        be = obnam.backend.BackendData()
+        be.dircounts = [0] + \
+            [obnam.backend.MAX_BLOCKS_PER_DIR] * (obnam.backend.LEVELS -1)
+        obnam.backend.increment_dircounts(be)
+        self.failUnlessEqual(be.dircounts, [1, 0, 0])
+
+
 class LocalBackendBase(unittest.TestCase):
 
     def setUp(self):
@@ -70,9 +104,9 @@ class IdTests(LocalBackendBase):
 
     def testGenerateBlockId(self):
         be = obnam.backend.init(self.config, self.cache)
-        self.failIfEqual(be.curdir, None)
+        self.failIfEqual(be.blockdir, None)
         id = obnam.backend.generate_block_id(be)
-        self.failUnless(id.startswith(be.curdir))
+        self.failUnless(id.startswith(be.blockdir))
         id2 = obnam.backend.generate_block_id(be)
         self.failIfEqual(id, id2)
 

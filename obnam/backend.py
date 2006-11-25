@@ -20,7 +20,28 @@ import obnam.map
 import obnam.obj
 
 
-MAX_BLOCKS_IN_CURDIR = 256
+# Block filenames are created using the following scheme:
+#
+# For each backup run, we create one directory, named by a UUID. Inside
+# this directory we create sub-directories, named by sequential integers,
+# up to a certain number of levels. The actual block files are created at
+# the lowest level, and we create the next lowest level directory when
+# we've reached some maximum of files in the directory.
+#
+# The rationale is that having too many files in one directory makes all
+# operations involving that directory slow, in many filesystems, because
+# of linear searches. By putting, say, only 256 files per directory, we
+# can keep things reasonably fast. However, if we create a a lot of blocks,
+# we'll end up creating a lot of directories, too. Thus, several levels of
+# directories are needed.
+#
+# With 256 files per directory, and three levels of directories, and one
+# megabyte per block file, we can create 16 terabytes of backup data without
+# exceeding contraints. After that, we get more than 256 entries per
+# directory, making things slow, but it'll still work.
+
+MAX_BLOCKS_PER_DIR = 256
+LEVELS = 3
 
 
 class BackendData:
@@ -33,8 +54,8 @@ class BackendData:
         self.port = None
         self.path = None
         self.cache = None
-        self.curdir = None
-        self.blocks_in_curdir = 0
+        self.blockdir = None
+        self.dircounts = [0] * LEVELS
         self.sftp_transport = None
         self.sftp_client = None
 
@@ -90,18 +111,28 @@ def init(config, cache):
     if be.port is None:
         be.port = 22 # 22 is the default port for ssh
     be.cache = cache
-    be.curdir = str(uuid.uuid4())
+    be.blockdir = str(uuid.uuid4())
     return be
+
+
+def increment_dircounts(be):
+    """Increment the counter for lowest directory level, and more if need be"""
+    level = len(be.dircounts) - 1
+    while level >= 0:
+        be.dircounts[level] += 1
+        if be.dircounts[level] <= MAX_BLOCKS_PER_DIR:
+            break
+        be.dircounts[level] = 0
+        level -= 1
 
 
 def generate_block_id(be):
     """Generate a new identifier for the block, when stored remotely"""
-    if be.blocks_in_curdir >= MAX_BLOCKS_IN_CURDIR:
-        be.curdir = str(uuid.uuid4())
-        be.blocks_in_curdir = 1
-    else:   
-        be.blocks_in_curdir += 1
-    return os.path.join(be.curdir, str(uuid.uuid4()))
+    increment_dircounts(be)
+    id = be.blockdir
+    for i in be.dircounts:
+        id = os.path.join(id, "%d" % i)
+    return id
 
 
 def _block_remote_pathname(be, block_id):
@@ -167,9 +198,9 @@ def upload(be, block_id, block):
         f.write(block)
         f.close()
     else:
-        curdir_full = os.path.join(be.path, be.curdir)
-        if not os.path.isdir(curdir_full):
-            os.makedirs(curdir_full, 0700)
+        dir_full = os.path.join(be.path, os.path.dirname(block_id))
+        if not os.path.isdir(dir_full):
+            os.makedirs(dir_full, 0700)
         f = file(_block_remote_pathname(be, block_id), "w")
         f.write(block)
         f.close()
