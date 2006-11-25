@@ -11,8 +11,8 @@ class Context:
         self.be = None
         self.map = obnam.map.create()
         self.contmap = obnam.map.create()
-        self.oq = obnam.obj.object_queue_create()
-        self.content_oq = obnam.obj.object_queue_create()
+        self.oq = obnam.obj.queue_create()
+        self.content_oq = obnam.obj.queue_create()
 
 
 def create():

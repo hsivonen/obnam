@@ -152,32 +152,32 @@ def decode(encoded, pos):
     return o
 
 
-def object_queue_create():
+def queue_create():
     """Create an empty object queue"""
     return []
 
 
-def object_queue_clear(oq):
+def queue_clear(oq):
     """Remove all objects from an object queue"""
     del oq[:]
 
 
-def object_queue_add(oq, object_id, object):
+def queue_add(oq, object_id, object):
     """Add an encoded object into an object queue"""
     oq.append((object_id, object))
 
 
-def object_queue_is_empty(oq):
+def queue_is_empty(oq):
     """Is an object queue empty?"""
     return len(oq) == 0
 
 
-def object_queue_combined_size(oq):
+def queue_combined_size(oq):
     """Return the combined size of all objects in an object queue"""
     return sum([len(x[1]) for x in oq])
 
 
-def object_queue_ids(oq):
+def queue_ids(oq):
     """Return identifiers for all the objects in the object queue"""
     return [x[0] for x in oq]
 
@@ -343,8 +343,8 @@ def host_block_encode(host_id, gen_ids, map_block_ids, contmap_block_ids):
         c = obnam.cmp.create(obnam.cmp.CMP_CONTMAPREF, map_block_id)
         add(o, c)
 
-    oq = object_queue_create()
-    object_queue_add(oq, host_id, encode(o))
+    oq = queue_create()
+    queue_add(oq, host_id, encode(o))
     block = block_create_from_object_queue(host_id, oq)
     return block
 

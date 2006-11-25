@@ -77,7 +77,7 @@ class ObjectQueueFlushing(IoBase):
         self.failUnlessEqual(list, [])
 
     def testFlushing(self):
-        obnam.obj.object_queue_add(self.context.oq, "pink", "pretty")
+        obnam.obj.queue_add(self.context.oq, "pink", "pretty")
         
         self.failUnlessEqual(obnam.backend.list(self.context.be), [])
         
@@ -92,20 +92,20 @@ class ObjectQueueFlushing(IoBase):
         self.failUnlessEqual(b1, b2)
 
     def testFlushAll(self):
-        obnam.obj.object_queue_add(self.context.oq, "pink", "pretty")
-        obnam.obj.object_queue_add(self.context.content_oq, "x", "y")
+        obnam.obj.queue_add(self.context.oq, "pink", "pretty")
+        obnam.obj.queue_add(self.context.content_oq, "x", "y")
         obnam.io.flush_all_object_queues(self.context)
         self.failUnlessEqual(len(obnam.backend.list(self.context.be)), 2)
-        self.failUnless(obnam.obj.object_queue_is_empty(
+        self.failUnless(obnam.obj.queue_is_empty(
             self.context.oq))
-        self.failUnless(obnam.obj.object_queue_is_empty(
+        self.failUnless(obnam.obj.queue_is_empty(
             self.context.content_oq))
 
 
 class GetObjectTests(IoBase):
 
     def upload_object(self, object_id, object):
-        obnam.obj.object_queue_add(self.context.oq, object_id, object)
+        obnam.obj.queue_add(self.context.oq, object_id, object)
         obnam.io.flush_object_queue(self.context, self.context.oq,
                                        self.context.map)
 
@@ -166,7 +166,7 @@ class ObjectQueuingTests(unittest.TestCase):
         
         self.failUnlessEqual(self.find_block_files(context.config), [])
         self.failUnlessEqual(
-            obnam.obj.object_queue_combined_size(context.oq),
+            obnam.obj.queue_combined_size(context.oq),
             len(object))
         
         object_id2 = "pink2"
@@ -177,7 +177,7 @@ class ObjectQueuingTests(unittest.TestCase):
         
         self.failUnlessEqual(len(self.find_block_files(context.config)), 1)
         self.failUnlessEqual(
-            obnam.obj.object_queue_combined_size(context.oq),
+            obnam.obj.queue_combined_size(context.oq),
             len(object2))
 
         shutil.rmtree(context.config.get("backup", "cache"))
@@ -204,7 +204,7 @@ class FileContentsTests(unittest.TestCase):
         id = obnam.io.create_file_contents_object(self.context, filename)
 
         self.failIfEqual(id, None)
-        self.failUnlessEqual(obnam.obj.object_queue_ids(self.context.oq), 
+        self.failUnlessEqual(obnam.obj.queue_ids(self.context.oq), 
                              [id])
         self.failUnlessEqual(obnam.map.count(self.context.map), 0)
             # there's no mapping yet, because the queue is small enough
@@ -220,7 +220,7 @@ class FileContentsTests(unittest.TestCase):
         id = obnam.io.create_file_contents_object(self.context, filename)
 
         self.failIfEqual(id, None)
-        self.failUnlessEqual(obnam.obj.object_queue_ids(self.context.oq),
+        self.failUnlessEqual(obnam.obj.queue_ids(self.context.oq),
                                                            [id])
 
     def testRestore(self):
@@ -369,8 +369,8 @@ class ReachabilityTests(IoBase):
         encoded_o = obnam.obj.encode(o)
         
         block_id = "pink"
-        oq = obnam.obj.object_queue_create()
-        obnam.obj.object_queue_add(oq, "rouge", encoded_o)
+        oq = obnam.obj.queue_create()
+        obnam.obj.queue_add(oq, "rouge", encoded_o)
         block = obnam.obj.block_create_from_object_queue(block_id, oq)
         obnam.backend.upload(self.context.be, block_id, block)
 

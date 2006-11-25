@@ -66,51 +66,51 @@ class ObjectEncodingDecodingTests(unittest.TestCase):
 class ObjectQueueTests(unittest.TestCase):
 
     def testCreate(self):
-        self.failUnlessEqual(object_queue_create(), [])
+        self.failUnlessEqual(queue_create(), [])
 
     def testAdd(self):
-        oq = object_queue_create()
-        object_queue_add(oq, "xx", "abc")
+        oq = queue_create()
+        queue_add(oq, "xx", "abc")
         self.failUnlessEqual(oq, [("xx", "abc")])
 
     def testSize(self):
-        oq = object_queue_create()
-        self.failUnless(object_queue_is_empty(oq))
-        object_queue_add(oq, "xx", "abc")
-        self.failUnlessEqual(object_queue_combined_size(oq), 3)
-        object_queue_add(oq, "yy", "abc")
-        self.failUnlessEqual(object_queue_combined_size(oq), 6)
+        oq = queue_create()
+        self.failUnless(queue_is_empty(oq))
+        queue_add(oq, "xx", "abc")
+        self.failUnlessEqual(queue_combined_size(oq), 3)
+        queue_add(oq, "yy", "abc")
+        self.failUnlessEqual(queue_combined_size(oq), 6)
 
     def testClear(self):
-        oq = object_queue_create()
+        oq = queue_create()
         oq_orig = oq
-        self.failUnless(object_queue_is_empty(oq))
-        object_queue_clear(oq)
-        self.failUnlessEqual(object_queue_combined_size(oq), 0)
-        object_queue_add(oq, "xx", "abc")
-        self.failUnlessEqual(object_queue_combined_size(oq), 3)
-        object_queue_clear(oq)
-        self.failUnless(object_queue_is_empty(oq))
+        self.failUnless(queue_is_empty(oq))
+        queue_clear(oq)
+        self.failUnlessEqual(queue_combined_size(oq), 0)
+        queue_add(oq, "xx", "abc")
+        self.failUnlessEqual(queue_combined_size(oq), 3)
+        queue_clear(oq)
+        self.failUnless(queue_is_empty(oq))
         self.failUnless(oq == oq_orig)
 
 
 class BlockCreateTests(unittest.TestCase):
 
     def testEmptyObjectQueue(self):
-        oq = object_queue_create()
+        oq = queue_create()
         block = block_create_from_object_queue("blkid", oq)
         list = obnam.obj.block_decode(block)
         self.failUnlessEqual(
             obnam.cmp.first_string_by_kind(list, obnam.cmp.CMP_BLKID),
             "blkid")
         self.failUnlessEqual(len(list), 1)
-        self.failUnlessEqual(object_queue_ids(oq), [])
+        self.failUnlessEqual(queue_ids(oq), [])
 
     def testObjectQueue(self):
         o = obnam.obj.create("pink", 1)
         obnam.obj.add(o, obnam.cmp.create(2, "pretty"))
-        oq = object_queue_create()
-        object_queue_add(oq, "pink", obnam.obj.encode(o))
+        oq = queue_create()
+        queue_add(oq, "pink", obnam.obj.encode(o))
         block = block_create_from_object_queue("blkid", oq)
 
         list = obnam.obj.block_decode(block)
@@ -121,7 +121,7 @@ class BlockCreateTests(unittest.TestCase):
         o2 = obnam.cmp.first_by_kind(list, obnam.cmp.CMP_OBJECT)
         self.failUnlessEqual(obnam.obj.first_string_by_kind(o, 2), 
                              "pretty")
-        self.failUnlessEqual(object_queue_ids(oq), ["pink"])
+        self.failUnlessEqual(queue_ids(oq), ["pink"])
 
 
 class InodeTests(unittest.TestCase):

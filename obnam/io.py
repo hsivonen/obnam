@@ -35,13 +35,13 @@ def flush_object_queue(context, oq, map):
     
     """
     
-    if not obnam.obj.object_queue_is_empty(oq):
+    if not obnam.obj.queue_is_empty(oq):
         block_id = obnam.backend.generate_block_id(context.be)
         block = obnam.obj.block_create_from_object_queue(block_id, oq)
         obnam.backend.upload(context.be, block_id, block)
-        for id in obnam.obj.object_queue_ids(oq):
+        for id in obnam.obj.queue_ids(oq):
             obnam.map.add(map, id, block_id)
-        obnam.obj.object_queue_clear(oq)
+        obnam.obj.queue_clear(oq)
 
 
 def flush_all_object_queues(context):
@@ -191,11 +191,11 @@ def get_host_block(context):
 def enqueue_object(context, oq, map, object_id, object):
     """Put an object into the object queue, and flush queue if too big"""
     block_size = context.config.getint("backup", "block-size")
-    cur_size = obnam.obj.object_queue_combined_size(oq)
+    cur_size = obnam.obj.queue_combined_size(oq)
     if len(object) + cur_size > block_size:
         obnam.io.flush_object_queue(context, oq, map)
-        obnam.obj.object_queue_clear(oq)
-    obnam.obj.object_queue_add(oq, object_id, object)
+        obnam.obj.queue_clear(oq)
+    obnam.obj.queue_add(oq, object_id, object)
 
 
 def create_file_contents_object(context, filename):
