@@ -1,6 +1,0 @@
-#!/bin/sh
-
-if [ "$1" = remove ]
-then
-    rm -f /usr/lib/python2.4/site-packages/obnam/*.py[co]
-fi
