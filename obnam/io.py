@@ -31,7 +31,7 @@ def unsolve(context, pathname):
 def flush_object_queue(context, oq, map):
     """Put all objects in an object queue into a block and upload it
     
-    Also put mappings into map.
+    Also put mappings into map. The queue is cleared (emptied) afterwards.
     
     """
     
@@ -41,14 +41,13 @@ def flush_object_queue(context, oq, map):
         obnam.backend.upload(context.be, block_id, block)
         for id in obnam.obj.object_queue_ids(oq):
             obnam.mapping.add(map, id, block_id)
+        obnam.obj.object_queue_clear(oq)
 
 
 def flush_all_object_queues(context):
     """Flush and clear all object queues in a given context"""
     flush_object_queue(context, context.oq, context.map)
-    obnam.obj.object_queue_clear(context.oq)
     flush_object_queue(context, context.content_oq, context.contmap)
-    obnam.obj.object_queue_clear(context.content_oq)
 
 
 def get_block(context, block_id):
