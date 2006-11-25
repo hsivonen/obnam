@@ -96,10 +96,10 @@ class ObjectQueueFlushing(IoBase):
         obnam.obj.object_queue_add(self.context.content_oq, "x", "y")
         obnam.io.flush_all_object_queues(self.context)
         self.failUnlessEqual(len(obnam.backend.list(self.context.be)), 2)
-        self.failUnlessEqual(
-          obnam.obj.object_queue_combined_size(self.context.oq), 0)
-        self.failUnlessEqual(
-          obnam.obj.object_queue_combined_size(self.context.content_oq), 0)
+        self.failUnless(obnam.obj.object_queue_is_empty(
+            self.context.oq))
+        self.failUnless(obnam.obj.object_queue_is_empty(
+            self.context.content_oq))
 
 
 class GetObjectTests(IoBase):

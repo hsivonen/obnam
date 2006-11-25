@@ -35,7 +35,7 @@ def flush_object_queue(context, oq, map):
     
     """
     
-    if obnam.obj.object_queue_combined_size(oq) > 0:
+    if not obnam.obj.object_queue_is_empty(oq):
         block_id = obnam.backend.generate_block_id(context.be)
         block = obnam.obj.block_create_from_object_queue(block_id, oq)
         obnam.backend.upload(context.be, block_id, block)

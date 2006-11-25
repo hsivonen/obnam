@@ -75,7 +75,7 @@ class ObjectQueueTests(unittest.TestCase):
 
     def testSize(self):
         oq = object_queue_create()
-        self.failUnlessEqual(object_queue_combined_size(oq), 0)
+        self.failUnless(object_queue_is_empty(oq))
         object_queue_add(oq, "xx", "abc")
         self.failUnlessEqual(object_queue_combined_size(oq), 3)
         object_queue_add(oq, "yy", "abc")
@@ -84,13 +84,13 @@ class ObjectQueueTests(unittest.TestCase):
     def testClear(self):
         oq = object_queue_create()
         oq_orig = oq
-        self.failUnlessEqual(object_queue_combined_size(oq), 0)
+        self.failUnless(object_queue_is_empty(oq))
         object_queue_clear(oq)
         self.failUnlessEqual(object_queue_combined_size(oq), 0)
         object_queue_add(oq, "xx", "abc")
         self.failUnlessEqual(object_queue_combined_size(oq), 3)
         object_queue_clear(oq)
-        self.failUnlessEqual(object_queue_combined_size(oq), 0)
+        self.failUnless(object_queue_is_empty(oq))
         self.failUnless(oq == oq_orig)
 
 

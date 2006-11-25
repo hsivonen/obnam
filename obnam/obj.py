@@ -167,6 +167,11 @@ def object_queue_add(oq, object_id, object):
     oq.append((object_id, object))
 
 
+def object_queue_is_empty(oq):
+    """Is an object queue empty?"""
+    return len(oq) == 0
+
+
 def object_queue_combined_size(oq):
     """Return the combined size of all objects in an object queue"""
     return sum([len(x[1]) for x in oq])
