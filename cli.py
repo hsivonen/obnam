@@ -56,10 +56,10 @@ def get_filelist_in_gen(context, gen_id):
     gen = obnam.io.get_object(context, gen_id)
     if not gen:
         raise Exception("wtf")
-    logging.debug("Finding first CMP_FILELISTREF component in generation")
-    ref = obnam.obj.first_string_by_kind(gen, obnam.cmp.CMP_FILELISTREF)
+    logging.debug("Finding first FILELISTREF component in generation")
+    ref = obnam.obj.first_string_by_kind(gen, obnam.cmp.FILELISTREF)
     if not ref:
-        logging.debug("No CMP_FILELISTREFs")
+        logging.debug("No FILELISTREFs")
         return None
     logging.debug("Getting file list object")
     fl = obnam.io.get_object(context, ref)
@@ -165,13 +165,13 @@ def show_generations(context, gen_ids):
         print "Generation:", gen_id
         gen = obnam.io.get_object(context, gen_id)
         fl_id = obnam.obj.first_string_by_kind(gen, 
-                                obnam.cmp.CMP_FILELISTREF)
+                                obnam.cmp.FILELISTREF)
         fl = obnam.io.get_object(context, fl_id)
         list = []
-        for c in obnam.obj.find_by_kind(fl, obnam.cmp.CMP_FILE):
+        for c in obnam.obj.find_by_kind(fl, obnam.cmp.FILE):
             subs = obnam.cmp.get_subcomponents(c)
             filename = obnam.cmp.first_string_by_kind(subs, 
-                                                 obnam.cmp.CMP_FILENAME)
+                                                 obnam.cmp.FILENAME)
             if pretty:
                 list.append((obnam.format.inode_fields(c), filename))
             else:
@@ -199,7 +199,7 @@ def show_generations(context, gen_ids):
 def create_filesystem_object(context, full_pathname, inode):
     logging.debug("Creating filesystem object %s" % full_pathname)
     subs = obnam.cmp.get_subcomponents(inode)
-    mode = obnam.cmp.first_varint_by_kind(subs, obnam.cmp.CMP_ST_MODE)
+    mode = obnam.cmp.first_varint_by_kind(subs, obnam.cmp.ST_MODE)
     if stat.S_ISDIR(mode):
         if not os.path.exists(full_pathname):
             os.makedirs(full_pathname, 0700)
@@ -209,7 +209,7 @@ def create_filesystem_object(context, full_pathname, inode):
             os.makedirs(basedir, 0700)
         fd = os.open(full_pathname, os.O_WRONLY | os.O_CREAT, 0)
         cont_id = obnam.cmp.first_string_by_kind(subs, 
-                                                    obnam.cmp.CMP_CONTREF)
+                                                    obnam.cmp.CONTREF)
         obnam.io.get_file_contents(context, fd, cont_id)
         os.close(fd)
 
@@ -242,15 +242,15 @@ def restore(context, gen_id):
 
     logging.debug("Getting list of files in generation")
     fl_id = obnam.obj.first_string_by_kind(gen, 
-                        obnam.cmp.CMP_FILELISTREF)
+                        obnam.cmp.FILELISTREF)
     fl = obnam.io.get_object(context, fl_id)
 
     logging.debug("Restoring files")
     list = []
-    for c in obnam.obj.find_by_kind(fl, obnam.cmp.CMP_FILE):
+    for c in obnam.obj.find_by_kind(fl, obnam.cmp.FILE):
         subs = obnam.cmp.get_subcomponents(c)
         pathname = obnam.cmp.first_string_by_kind(subs,
-                                                 obnam.cmp.CMP_FILENAME)
+                                                 obnam.cmp.FILENAME)
         logging.debug("Restoring %s" % pathname)
 
         if pathname.startswith(os.sep):

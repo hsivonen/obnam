@@ -25,18 +25,18 @@ def _define_kind(code, name):
     _object_kinds[code] = name
     return code
 
-OBJ_FILEPART     = _define_kind(1, "OBJ_FILEPART")
-OBJ_INODE        = _define_kind(2, "OBJ_INODE")
-OBJ_GEN          = _define_kind(3, "OBJ_GEN")
-OBJ_SIG          = _define_kind(4, "OBJ_SIG")
-OBJ_HOST         = _define_kind(5, "OBJ_HOST")
-OBJ_FILECONTENTS = _define_kind(6, "OBJ_FILECONTENTS")
-OBJ_FILELIST     = _define_kind(7, "OBJ_FILELIST")
+FILEPART     = _define_kind(1, "FILEPART")
+INODE        = _define_kind(2, "INODE")
+GEN          = _define_kind(3, "GEN")
+SIG          = _define_kind(4, "SIG")
+HOST         = _define_kind(5, "HOST")
+FILECONTENTS = _define_kind(6, "FILECONTENTS")
+FILELIST     = _define_kind(7, "FILELIST")
 
 
 def kind_name(kind):
     """Return a textual name for a numeric object kind"""
-    return _object_kinds.get(kind, "OBJ_UNKNOWN")
+    return _object_kinds.get(kind, "UNKNOWN")
 
 
 def object_id_new():
@@ -126,8 +126,8 @@ def first_varint_by_kind(o, wanted_kind):
 
 def encode(o):
     """Encode an object as a string"""
-    id = obnam.cmp.create(obnam.cmp.CMP_OBJID, o.id)
-    kind = obnam.cmp.create(obnam.cmp.CMP_OBJKIND, 
+    id = obnam.cmp.create(obnam.cmp.OBJID, o.id)
+    kind = obnam.cmp.create(obnam.cmp.OBJKIND, 
                                      obnam.varint.encode(o.kind))
     list = [id, kind] + get_components(o)
     list = [obnam.cmp.encode(c) for c in list]
@@ -142,9 +142,9 @@ def decode(encoded, pos):
         list.append(c)
     o = create("", 0)
     for c in list:
-        if c.kind == obnam.cmp.CMP_OBJID:
+        if c.kind == obnam.cmp.OBJID:
             o.id = obnam.cmp.get_string_value(c)
-        elif c.kind == obnam.cmp.CMP_OBJKIND:
+        elif c.kind == obnam.cmp.OBJKIND:
             o.kind = obnam.cmp.get_string_value(c)
             (o.kind, _) = obnam.varint.decode(o.kind, 0)
         else:
@@ -184,8 +184,8 @@ def queue_ids(oq):
 
 def block_create_from_object_queue(blkid, oq):
     """Create a block from an object queue"""
-    blkid = obnam.cmp.create(obnam.cmp.CMP_BLKID, blkid)
-    objects = [obnam.cmp.create(obnam.cmp.CMP_OBJECT, x[1])
+    blkid = obnam.cmp.create(obnam.cmp.BLKID, blkid)
+    objects = [obnam.cmp.create(obnam.cmp.OBJECT, x[1])
                for x in oq]
     return "".join([BLOCK_COOKIE] + 
                    [obnam.cmp.encode(c) for c in [blkid] + objects])
@@ -200,8 +200,8 @@ def block_decode(block):
 
 
 def signature_object_encode(objid, sigdata):
-    c = obnam.cmp.create(obnam.cmp.CMP_SIGDATA, sigdata)
-    o = create(objid, OBJ_SIG)
+    c = obnam.cmp.create(obnam.cmp.SIGDATA, sigdata)
+    o = create(objid, SIG)
     add(o, c)
     return encode(o)
 
@@ -224,24 +224,24 @@ def normalize_stat_result(stat_result):
 
 def inode_object_encode(objid, stat_result, sig_id, contents_id):
     """Create an inode object from the return value of os.stat"""
-    o = create(objid, OBJ_INODE)
+    o = create(objid, INODE)
 
     st = stat_result
 
     items = (
-        (obnam.cmp.CMP_ST_MODE, "st_mode"),
-        (obnam.cmp.CMP_ST_INO, "st_ino"),
-        (obnam.cmp.CMP_ST_DEV, "st_dev"),
-        (obnam.cmp.CMP_ST_NLINK, "st_nlink"),
-        (obnam.cmp.CMP_ST_UID, "st_uid"),
-        (obnam.cmp.CMP_ST_GID, "st_gid"),
-        (obnam.cmp.CMP_ST_SIZE, "st_size"),
-        (obnam.cmp.CMP_ST_ATIME, "st_atime"),
-        (obnam.cmp.CMP_ST_MTIME, "st_mtime"),
-        (obnam.cmp.CMP_ST_CTIME, "st_ctime"),
-        (obnam.cmp.CMP_ST_BLOCKS, "st_blocks"),
-        (obnam.cmp.CMP_ST_BLKSIZE, "st_blksize"),
-        (obnam.cmp.CMP_ST_RDEV, "st_rdev"),
+        (obnam.cmp.ST_MODE, "st_mode"),
+        (obnam.cmp.ST_INO, "st_ino"),
+        (obnam.cmp.ST_DEV, "st_dev"),
+        (obnam.cmp.ST_NLINK, "st_nlink"),
+        (obnam.cmp.ST_UID, "st_uid"),
+        (obnam.cmp.ST_GID, "st_gid"),
+        (obnam.cmp.ST_SIZE, "st_size"),
+        (obnam.cmp.ST_ATIME, "st_atime"),
+        (obnam.cmp.ST_MTIME, "st_mtime"),
+        (obnam.cmp.ST_CTIME, "st_ctime"),
+        (obnam.cmp.ST_BLOCKS, "st_blocks"),
+        (obnam.cmp.ST_BLKSIZE, "st_blksize"),
+        (obnam.cmp.ST_RDEV, "st_rdev"),
     )
     for kind, key in items:
         if key in st:
@@ -250,10 +250,10 @@ def inode_object_encode(objid, stat_result, sig_id, contents_id):
             add(o, c)
 
     if sig_id:
-        c = obnam.cmp.create(obnam.cmp.CMP_SIGREF, sig_id)
+        c = obnam.cmp.create(obnam.cmp.SIGREF, sig_id)
         add(o, c)
     if contents_id:
-        c = obnam.cmp.create(obnam.cmp.CMP_CONTREF, contents_id)
+        c = obnam.cmp.create(obnam.cmp.CONTREF, contents_id)
         add(o, c)
 
     return encode(o)
@@ -276,30 +276,30 @@ def inode_object_decode(inode):
     stat_results = {}
     list = obnam.cmp.decode_all(inode, 0)
 
-    id = obnam.cmp.first_string_by_kind(list, obnam.cmp.CMP_OBJID)
-    kind = obnam.cmp.first_varint_by_kind(list, obnam.cmp.CMP_OBJKIND)
-    sigref = obnam.cmp.first_string_by_kind(list, obnam.cmp.CMP_SIGREF)
+    id = obnam.cmp.first_string_by_kind(list, obnam.cmp.OBJID)
+    kind = obnam.cmp.first_varint_by_kind(list, obnam.cmp.OBJKIND)
+    sigref = obnam.cmp.first_string_by_kind(list, obnam.cmp.SIGREF)
     contref = obnam.cmp.first_string_by_kind(list, 
-                                                obnam.cmp.CMP_CONTREF)
+                                                obnam.cmp.CONTREF)
 
-    if kind != OBJ_INODE:
+    if kind != INODE:
         raise NotAnInode(kind)
     o = create(id, kind)
 
     varint_items = {
-        obnam.cmp.CMP_ST_MODE: "st_mode",
-        obnam.cmp.CMP_ST_INO: "st_ino",
-        obnam.cmp.CMP_ST_DEV: "st_dev",
-        obnam.cmp.CMP_ST_NLINK: "st_nlink",
-        obnam.cmp.CMP_ST_UID: "st_uid",
-        obnam.cmp.CMP_ST_GID: "st_gid",
-        obnam.cmp.CMP_ST_SIZE: "st_size",
-        obnam.cmp.CMP_ST_ATIME: "st_atime",
-        obnam.cmp.CMP_ST_MTIME: "st_mtime",
-        obnam.cmp.CMP_ST_CTIME: "st_ctime",
-        obnam.cmp.CMP_ST_BLOCKS: "st_blocks",
-        obnam.cmp.CMP_ST_BLKSIZE: "st_blksize",
-        obnam.cmp.CMP_ST_RDEV: "st_rdev",
+        obnam.cmp.ST_MODE: "st_mode",
+        obnam.cmp.ST_INO: "st_ino",
+        obnam.cmp.ST_DEV: "st_dev",
+        obnam.cmp.ST_NLINK: "st_nlink",
+        obnam.cmp.ST_UID: "st_uid",
+        obnam.cmp.ST_GID: "st_gid",
+        obnam.cmp.ST_SIZE: "st_size",
+        obnam.cmp.ST_ATIME: "st_atime",
+        obnam.cmp.ST_MTIME: "st_mtime",
+        obnam.cmp.ST_CTIME: "st_ctime",
+        obnam.cmp.ST_BLOCKS: "st_blocks",
+        obnam.cmp.ST_BLKSIZE: "st_blksize",
+        obnam.cmp.ST_RDEV: "st_rdev",
     }
     for kind in varint_items:
         n = obnam.cmp.first_varint_by_kind(list, kind)
@@ -311,8 +311,8 @@ def inode_object_decode(inode):
 
 def generation_object_encode(objid, filelist_id):
     """Encode a generation object, from list of filename, inode_id pairs"""
-    o = create(objid, OBJ_GEN)
-    c = obnam.cmp.create(obnam.cmp.CMP_FILELISTREF, filelist_id)
+    o = create(objid, GEN)
+    c = obnam.cmp.create(obnam.cmp.FILELISTREF, filelist_id)
     add(o, c)
     return encode(o)
 
@@ -321,26 +321,26 @@ def generation_object_decode(gen):
     """Decode a generation object into objid, file list ref"""
 
     o = decode(gen, 0)
-    return o.id, first_string_by_kind(o, obnam.cmp.CMP_FILELISTREF)
+    return o.id, first_string_by_kind(o, obnam.cmp.FILELISTREF)
 
 
 def host_block_encode(host_id, gen_ids, map_block_ids, contmap_block_ids):
     """Encode a new block with a host object"""
-    o = create(host_id, OBJ_HOST)
+    o = create(host_id, HOST)
     
-    c = obnam.cmp.create(obnam.cmp.CMP_FORMATVERSION, FORMAT_VERSION)
+    c = obnam.cmp.create(obnam.cmp.FORMATVERSION, FORMAT_VERSION)
     add(o, c)
 
     for gen_id in gen_ids:
-        c = obnam.cmp.create(obnam.cmp.CMP_GENREF, gen_id)
+        c = obnam.cmp.create(obnam.cmp.GENREF, gen_id)
         add(o, c)
     
     for map_block_id in map_block_ids:
-        c = obnam.cmp.create(obnam.cmp.CMP_MAPREF, map_block_id)
+        c = obnam.cmp.create(obnam.cmp.MAPREF, map_block_id)
         add(o, c)
     
     for map_block_id in contmap_block_ids:
-        c = obnam.cmp.create(obnam.cmp.CMP_CONTMAPREF, map_block_id)
+        c = obnam.cmp.create(obnam.cmp.CONTMAPREF, map_block_id)
         add(o, c)
 
     oq = queue_create()
@@ -354,20 +354,20 @@ def host_block_decode(block):
     
     list = block_decode(block)
     
-    host_id = obnam.cmp.first_string_by_kind(list, obnam.cmp.CMP_BLKID)
+    host_id = obnam.cmp.first_string_by_kind(list, obnam.cmp.BLKID)
     
     gen_ids = []
     map_ids = []
     contmap_ids = []
 
-    objparts = obnam.cmp.find_by_kind(list, obnam.cmp.CMP_OBJECT)
+    objparts = obnam.cmp.find_by_kind(list, obnam.cmp.OBJECT)
     for objpart in objparts:
         subs = obnam.cmp.get_subcomponents(objpart)
         gen_ids += obnam.cmp.find_strings_by_kind(subs, 
-                                                    obnam.cmp.CMP_GENREF)
+                                                    obnam.cmp.GENREF)
         map_ids += obnam.cmp.find_strings_by_kind(subs, 
-                                                    obnam.cmp.CMP_MAPREF)
+                                                    obnam.cmp.MAPREF)
         contmap_ids += obnam.cmp.find_strings_by_kind(subs, 
-                                                obnam.cmp.CMP_CONTMAPREF)
+                                                obnam.cmp.CONTMAPREF)
 
     return host_id, gen_ids, map_ids, contmap_ids

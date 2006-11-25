@@ -26,23 +26,23 @@ def format_decimal(data):
     
 
 component_data_formatters = {
-    obnam.cmp.CMP_OBJKIND: 
+    obnam.cmp.OBJKIND: 
         lambda data: \
             obnam.obj.kind_name(obnam.varint.decode(data, 0)[0]),
-    obnam.cmp.CMP_ST_MODE: format_octal,
-    obnam.cmp.CMP_ST_INO: format_decimal,
-    obnam.cmp.CMP_ST_DEV: format_decimal,
-    obnam.cmp.CMP_ST_NLINK: format_decimal,
-    obnam.cmp.CMP_ST_UID: format_decimal,
-    obnam.cmp.CMP_ST_GID: format_decimal,
-    obnam.cmp.CMP_ST_SIZE: format_decimal,
-    obnam.cmp.CMP_ST_ATIME: format_decimal,
-    obnam.cmp.CMP_ST_CTIME: format_decimal,
-    obnam.cmp.CMP_ST_MTIME: format_decimal,
-    obnam.cmp.CMP_ST_BLOCKS: format_decimal,
-    obnam.cmp.CMP_ST_BLKSIZE: format_decimal,
-    obnam.cmp.CMP_ST_RDEV: format_decimal,
-    obnam.cmp.CMP_OBJMAP: format_objmap,
+    obnam.cmp.ST_MODE: format_octal,
+    obnam.cmp.ST_INO: format_decimal,
+    obnam.cmp.ST_DEV: format_decimal,
+    obnam.cmp.ST_NLINK: format_decimal,
+    obnam.cmp.ST_UID: format_decimal,
+    obnam.cmp.ST_GID: format_decimal,
+    obnam.cmp.ST_SIZE: format_decimal,
+    obnam.cmp.ST_ATIME: format_decimal,
+    obnam.cmp.ST_CTIME: format_decimal,
+    obnam.cmp.ST_MTIME: format_decimal,
+    obnam.cmp.ST_BLOCKS: format_decimal,
+    obnam.cmp.ST_BLKSIZE: format_decimal,
+    obnam.cmp.ST_RDEV: format_decimal,
+    obnam.cmp.OBJMAP: format_objmap,
 }
 
 

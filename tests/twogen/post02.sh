@@ -4,7 +4,7 @@ set -e
 
 n=$(find "$1/store" -type f | 
     xargs ./showblock | 
-    grep -c '^ *data: OBJ_FILECONTENTS$'; 
+    grep -c '^ *data: FILECONTENTS$'; 
     true)
 
 if [ "$n" != 2 ]

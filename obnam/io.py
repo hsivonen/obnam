@@ -70,15 +70,15 @@ class MissingBlock(obnam.exception.ExceptionBase):
 
 def create_object_from_component_list(components):
     """Create a new object from a list of components"""
-    list = obnam.cmp.find_by_kind(components, obnam.cmp.CMP_OBJID)
+    list = obnam.cmp.find_by_kind(components, obnam.cmp.OBJID)
     id = obnam.cmp.get_string_value(list[0])
     
-    list = obnam.cmp.find_by_kind(components, obnam.cmp.CMP_OBJKIND)
+    list = obnam.cmp.find_by_kind(components, obnam.cmp.OBJKIND)
     kind = obnam.cmp.get_string_value(list[0])
     (kind, _) = obnam.varint.decode(kind, 0)
 
     o = obnam.obj.create(id, kind)
-    bad = (obnam.cmp.CMP_OBJID, obnam.cmp.CMP_OBJKIND)
+    bad = (obnam.cmp.OBJID, obnam.cmp.OBJKIND)
     for c in components:
         if obnam.cmp.get_kind(c) not in bad:
             obnam.obj.add(o, c)
@@ -155,14 +155,14 @@ def get_object(context, object_id):
     list = obnam.obj.block_decode(block)
     
     logging.debug("Finding objects in block")
-    list = obnam.cmp.find_by_kind(list, obnam.cmp.CMP_OBJECT)
+    list = obnam.cmp.find_by_kind(list, obnam.cmp.OBJECT)
 
     logging.debug("Putting objects into object cache")
     the_one = None
     for component in list:
         subs = obnam.cmp.get_subcomponents(component)
         o = create_object_from_component_list(subs)
-        if obnam.obj.get_kind(o) != obnam.obj.OBJ_FILEPART:
+        if obnam.obj.get_kind(o) != obnam.obj.FILEPART:
             _object_cache.put(o)
         if obnam.obj.get_id(o) == object_id:
             the_one = o
@@ -210,18 +210,18 @@ def create_file_contents_object(context, filename):
         data = f.stdout.read(block_size)
         if not data:
             break
-        c = obnam.cmp.create(obnam.cmp.CMP_FILECHUNK, data)
+        c = obnam.cmp.create(obnam.cmp.FILECHUNK, data)
         part_id = obnam.obj.object_id_new()
-        o = obnam.obj.create(part_id, obnam.obj.OBJ_FILEPART)
+        o = obnam.obj.create(part_id, obnam.obj.FILEPART)
         obnam.obj.add(o, c)
         o = obnam.obj.encode(o)
         enqueue_object(context, context.content_oq, context.contmap, 
                        part_id, o)
         part_ids.append(part_id)
 
-    o = obnam.obj.create(object_id, obnam.obj.OBJ_FILECONTENTS)
+    o = obnam.obj.create(object_id, obnam.obj.FILECONTENTS)
     for part_id in part_ids:
-        c = obnam.cmp.create(obnam.cmp.CMP_FILEPARTREF, part_id)
+        c = obnam.cmp.create(obnam.cmp.FILEPARTREF, part_id)
         obnam.obj.add(o, c)
     o = obnam.obj.encode(o)
     enqueue_object(context, context.oq, context.map, object_id, o)
@@ -241,19 +241,19 @@ def get_file_contents(context, fd, cont_id):
     if not cont:
         raise FileContentsObjectMissing(cont_id)
     part_ids = obnam.obj.find_strings_by_kind(cont, 
-                                              obnam.cmp.CMP_FILEPARTREF)
+                                              obnam.cmp.FILEPARTREF)
     for part_id in part_ids:
         part = obnam.io.get_object(context, part_id)
         chunk = obnam.obj.first_string_by_kind(part, 
-                                                  obnam.cmp.CMP_FILECHUNK)
+                                                  obnam.cmp.FILECHUNK)
         os.write(fd, chunk)
 
 
 def set_inode(full_pathname, inode):
     subs = obnam.cmp.get_subcomponents(inode)
-    mode = obnam.cmp.first_varint_by_kind(subs, obnam.cmp.CMP_ST_MODE)
-    atime = obnam.cmp.first_varint_by_kind(subs, obnam.cmp.CMP_ST_ATIME)
-    mtime = obnam.cmp.first_varint_by_kind(subs, obnam.cmp.CMP_ST_MTIME)
+    mode = obnam.cmp.first_varint_by_kind(subs, obnam.cmp.ST_MODE)
+    atime = obnam.cmp.first_varint_by_kind(subs, obnam.cmp.ST_ATIME)
+    mtime = obnam.cmp.first_varint_by_kind(subs, obnam.cmp.ST_MTIME)
     os.utime(full_pathname, (atime, mtime))
     os.chmod(full_pathname, stat.S_IMODE(mode))
 
@@ -297,11 +297,11 @@ def find_map_blocks_in_use(context, host_block, data_block_ids):
     for map_block_id in map_block_ids + contmap_block_ids:
         block = get_block(context, map_block_id)
         list = obnam.obj.block_decode(block)
-        list = obnam.cmp.find_by_kind(list, obnam.cmp.CMP_OBJMAP)
+        list = obnam.cmp.find_by_kind(list, obnam.cmp.OBJMAP)
         for c in list:
             subs = obnam.cmp.get_subcomponents(c)
             id = obnam.cmp.first_string_by_kind(subs, 
-                                        obnam.cmp.CMP_BLOCKREF)
+                                        obnam.cmp.BLOCKREF)
             if id in data_block_ids:
                 used_map_block_ids.add(map_block_id)
                 break # We already know this entire map block is used

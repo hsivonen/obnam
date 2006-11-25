@@ -56,22 +56,22 @@ class FormatFileModeTest(unittest.TestCase):
 class FormatInodeFieldsTest(unittest.TestCase):
 
     def test(self):
-        int_fields = (obnam.cmp.CMP_ST_MODE,
-                      obnam.cmp.CMP_ST_INO,
-                      obnam.cmp.CMP_ST_DEV,
-                      obnam.cmp.CMP_ST_NLINK,
-                      obnam.cmp.CMP_ST_UID,
-                      obnam.cmp.CMP_ST_GID,
-                      obnam.cmp.CMP_ST_SIZE,
-                      obnam.cmp.CMP_ST_ATIME,
-                      obnam.cmp.CMP_ST_MTIME,
-                      obnam.cmp.CMP_ST_CTIME,
-                      obnam.cmp.CMP_ST_BLOCKS,
-                      obnam.cmp.CMP_ST_BLKSIZE,
-                      obnam.cmp.CMP_ST_RDEV)
+        int_fields = (obnam.cmp.ST_MODE,
+                      obnam.cmp.ST_INO,
+                      obnam.cmp.ST_DEV,
+                      obnam.cmp.ST_NLINK,
+                      obnam.cmp.ST_UID,
+                      obnam.cmp.ST_GID,
+                      obnam.cmp.ST_SIZE,
+                      obnam.cmp.ST_ATIME,
+                      obnam.cmp.ST_MTIME,
+                      obnam.cmp.ST_CTIME,
+                      obnam.cmp.ST_BLOCKS,
+                      obnam.cmp.ST_BLKSIZE,
+                      obnam.cmp.ST_RDEV)
         list = [obnam.cmp.create(x, obnam.varint.encode(1))
                 for x in int_fields]
-        inode = obnam.cmp.create(obnam.cmp.CMP_FILE, list)
+        inode = obnam.cmp.create(obnam.cmp.FILE, list)
 
         list = obnam.format.inode_fields(inode)
         

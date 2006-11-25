@@ -254,13 +254,13 @@ class MetaDataTests(unittest.TestCase):
 
     def testSet(self):
         fields = (
-            (obnam.cmp.CMP_ST_MODE, 0100664),
-            (obnam.cmp.CMP_ST_ATIME, 12765),
-            (obnam.cmp.CMP_ST_MTIME, 42),
+            (obnam.cmp.ST_MODE, 0100664),
+            (obnam.cmp.ST_ATIME, 12765),
+            (obnam.cmp.ST_MTIME, 42),
         )
         list = [obnam.cmp.create(kind, obnam.varint.encode(value))
                 for kind, value in fields]
-        inode = obnam.cmp.create(obnam.cmp.CMP_FILE, list)
+        inode = obnam.cmp.create(obnam.cmp.FILE, list)
 
         (fd, name) = tempfile.mkstemp()
         os.close(fd)
@@ -363,8 +363,8 @@ class ReachabilityTests(IoBase):
         self.failUnlessEqual(list, [])
 
     def testDataAndMap(self):
-        o = obnam.obj.create("rouge", obnam.obj.OBJ_FILEPART)
-        c = obnam.cmp.create(obnam.cmp.CMP_FILECHUNK, "moulin")
+        o = obnam.obj.create("rouge", obnam.obj.FILEPART)
+        c = obnam.cmp.create(obnam.cmp.FILECHUNK, "moulin")
         obnam.obj.add(o, c)
         encoded_o = obnam.obj.encode(o)
         

@@ -20,50 +20,50 @@ class FileComponentTests(unittest.TestCase):
         self.failIfEqual(c, None)
         subs = obnam.cmp.get_subcomponents(c)
         self.failUnlessEqual(
-          obnam.cmp.first_string_by_kind(subs, obnam.cmp.CMP_FILENAME),
+          obnam.cmp.first_string_by_kind(subs, obnam.cmp.FILENAME),
           ".")
 
         st = os.lstat(".")
         self.failUnlessEqual(
-          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.CMP_ST_MODE),
+          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.ST_MODE),
           st.st_mode)
         self.failUnlessEqual(
-          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.CMP_ST_INO),
+          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.ST_INO),
           st.st_ino)
         self.failUnlessEqual(
-          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.CMP_ST_DEV),
+          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.ST_DEV),
           st.st_dev)
         self.failUnlessEqual(
-          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.CMP_ST_NLINK),
+          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.ST_NLINK),
           st.st_nlink)
         self.failUnlessEqual(
-          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.CMP_ST_UID),
+          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.ST_UID),
           st.st_uid)
         self.failUnlessEqual(
-          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.CMP_ST_GID),
+          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.ST_GID),
           st.st_gid)
         self.failUnlessEqual(
-          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.CMP_ST_SIZE),
+          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.ST_SIZE),
           st.st_size)
         self.failUnlessEqual(
-          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.CMP_ST_ATIME),
+          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.ST_ATIME),
           st.st_atime)
         self.failUnlessEqual(
-          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.CMP_ST_MTIME),
+          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.ST_MTIME),
           st.st_mtime)
         self.failUnlessEqual(
-          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.CMP_ST_CTIME),
+          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.ST_CTIME),
           st.st_ctime)
         self.failUnlessEqual(
-          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.CMP_ST_BLOCKS),
+          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.ST_BLOCKS),
           st.st_blocks)
         self.failUnlessEqual(
           obnam.cmp.first_varint_by_kind(subs, 
-            obnam.cmp.CMP_ST_BLKSIZE),
+            obnam.cmp.ST_BLKSIZE),
           st.st_blksize)
 
         self.failUnlessEqual(
-            obnam.cmp.first_string_by_kind(subs, obnam.cmp.CMP_CONTREF),
+            obnam.cmp.first_string_by_kind(subs, obnam.cmp.CONTREF),
             "pink")
 
 
@@ -78,7 +78,7 @@ class FilelistTests(unittest.TestCase):
         obnam.filelist.add(fl, ".", "pink")
         self.failUnlessEqual(obnam.filelist.num_files(fl), 1)
         c = obnam.filelist.find(fl, ".")
-        self.failUnlessEqual(obnam.cmp.get_kind(c), obnam.cmp.CMP_FILE)
+        self.failUnlessEqual(obnam.cmp.get_kind(c), obnam.cmp.FILE)
 
     def testAddFileComponent(self):
         fl = obnam.filelist.create()
@@ -86,14 +86,14 @@ class FilelistTests(unittest.TestCase):
         obnam.filelist.add_file_component(fl, ".", fc)
         self.failUnlessEqual(obnam.filelist.num_files(fl), 1)
         c = obnam.filelist.find(fl, ".")
-        self.failUnlessEqual(obnam.cmp.get_kind(c), obnam.cmp.CMP_FILE)
+        self.failUnlessEqual(obnam.cmp.get_kind(c), obnam.cmp.FILE)
 
     def testToFromObject(self):
         fl = obnam.filelist.create()
         obnam.filelist.add(fl, ".", "pretty")
         o = obnam.filelist.to_object(fl, "pink")
         self.failUnlessEqual(obnam.obj.get_kind(o), 
-                             obnam.obj.OBJ_FILELIST)
+                             obnam.obj.FILELIST)
         self.failUnlessEqual(obnam.obj.get_id(o), "pink")
         
         fl2 = obnam.filelist.from_object(o)
@@ -103,7 +103,7 @@ class FilelistTests(unittest.TestCase):
 
         c = obnam.filelist.find(fl2, ".")
         self.failIfEqual(c, None)
-        self.failUnlessEqual(obnam.cmp.get_kind(c), obnam.cmp.CMP_FILE)
+        self.failUnlessEqual(obnam.cmp.get_kind(c), obnam.cmp.FILE)
 
 
 class FindTests(unittest.TestCase):
@@ -116,7 +116,7 @@ class FindTests(unittest.TestCase):
         c = obnam.filelist.find_matching_inode(fl, pathname, st)
         subs = obnam.cmp.get_subcomponents(c)
         self.failUnlessEqual(
-          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.CMP_ST_MTIME),
+          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.ST_MTIME),
           st.st_mtime)
 
     def testFindInodeUnsuccessful(self):

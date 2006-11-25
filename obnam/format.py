@@ -79,12 +79,12 @@ def inode_fields(inode):
     format_time = lambda x: time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(x))
 
     fields = (
-        (obnam.cmp.CMP_ST_MODE, filemode),
-        (obnam.cmp.CMP_ST_NLINK, format_integer),
-        (obnam.cmp.CMP_ST_UID, format_integer),
-        (obnam.cmp.CMP_ST_GID, format_integer),
-        (obnam.cmp.CMP_ST_SIZE, format_integer),
-        (obnam.cmp.CMP_ST_MTIME, format_time),
+        (obnam.cmp.ST_MODE, filemode),
+        (obnam.cmp.ST_NLINK, format_integer),
+        (obnam.cmp.ST_UID, format_integer),
+        (obnam.cmp.ST_GID, format_integer),
+        (obnam.cmp.ST_SIZE, format_integer),
+        (obnam.cmp.ST_MTIME, format_time),
     )
 
     list = []

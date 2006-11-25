@@ -12,14 +12,14 @@ import obnam
 class ObjectKindNameTests(unittest.TestCase):
 
     def test(self):
-        self.failUnlessEqual(kind_name(-12765), "OBJ_UNKNOWN")
-        self.failUnlessEqual(kind_name(OBJ_FILEPART), "OBJ_FILEPART")
-        self.failUnlessEqual(kind_name(OBJ_INODE), "OBJ_INODE")
-        self.failUnlessEqual(kind_name(OBJ_GEN), "OBJ_GEN")
-        self.failUnlessEqual(kind_name(OBJ_SIG), "OBJ_SIG")
-        self.failUnlessEqual(kind_name(OBJ_HOST), "OBJ_HOST")
-        self.failUnlessEqual(kind_name(OBJ_FILECONTENTS), "OBJ_FILECONTENTS")
-        self.failUnlessEqual(kind_name(OBJ_FILELIST), "OBJ_FILELIST")
+        self.failUnlessEqual(kind_name(-12765), "UNKNOWN")
+        self.failUnlessEqual(kind_name(FILEPART), "FILEPART")
+        self.failUnlessEqual(kind_name(INODE), "INODE")
+        self.failUnlessEqual(kind_name(GEN), "GEN")
+        self.failUnlessEqual(kind_name(SIG), "SIG")
+        self.failUnlessEqual(kind_name(HOST), "HOST")
+        self.failUnlessEqual(kind_name(FILECONTENTS), "FILECONTENTS")
+        self.failUnlessEqual(kind_name(FILELIST), "FILELIST")
 
 
 class ObjectCreateTests(unittest.TestCase):
@@ -56,9 +56,9 @@ class ObjectEncodingDecodingTests(unittest.TestCase):
         self.failUnlessEqual(len(components), 4) # id, kind, cmpnt1, cmpnt2
         
         self.failUnlessEqual(components[0], 
-                             (obnam.cmp.CMP_OBJID, "uuid"))
+                             (obnam.cmp.OBJID, "uuid"))
         self.failUnlessEqual(components[1], 
-                             (obnam.cmp.CMP_OBJKIND, 0xdada))
+                             (obnam.cmp.OBJKIND, 0xdada))
         self.failUnlessEqual(components[2], (0xdeadbeef, "hello"))
         self.failUnlessEqual(components[3], (0xcafebabe, "world"))
 
@@ -101,7 +101,7 @@ class BlockCreateTests(unittest.TestCase):
         block = block_create_from_object_queue("blkid", oq)
         list = obnam.obj.block_decode(block)
         self.failUnlessEqual(
-            obnam.cmp.first_string_by_kind(list, obnam.cmp.CMP_BLKID),
+            obnam.cmp.first_string_by_kind(list, obnam.cmp.BLKID),
             "blkid")
         self.failUnlessEqual(len(list), 1)
         self.failUnlessEqual(queue_ids(oq), [])
@@ -115,10 +115,10 @@ class BlockCreateTests(unittest.TestCase):
 
         list = obnam.obj.block_decode(block)
         self.failUnlessEqual(
-            obnam.cmp.first_string_by_kind(list, obnam.cmp.CMP_BLKID),
+            obnam.cmp.first_string_by_kind(list, obnam.cmp.BLKID),
             "blkid")
         self.failUnlessEqual(len(list), 2)
-        o2 = obnam.cmp.first_by_kind(list, obnam.cmp.CMP_OBJECT)
+        o2 = obnam.cmp.first_by_kind(list, obnam.cmp.OBJECT)
         self.failUnlessEqual(obnam.obj.first_string_by_kind(o, 2), 
                              "pretty")
         self.failUnlessEqual(queue_ids(oq), ["pink"])
@@ -180,10 +180,10 @@ class ObjectTests(unittest.TestCase):
         encoded = signature_object_encode(id, sig)
         o = obnam.obj.decode(encoded, 0)
         self.failUnlessEqual(obnam.obj.get_id(o), "pink")
-        self.failUnlessEqual(obnam.obj.get_kind(o), obnam.obj.OBJ_SIG)
+        self.failUnlessEqual(obnam.obj.get_kind(o), obnam.obj.SIG)
         self.failUnlessEqual(len(obnam.obj.get_components(o)), 1)
         self.failUnlessEqual(
-            obnam.obj.first_string_by_kind(o, obnam.cmp.CMP_SIGDATA),
+            obnam.obj.first_string_by_kind(o, obnam.cmp.SIGDATA),
             sig)
 
 
@@ -207,12 +207,12 @@ class HostBlockTests(unittest.TestCase):
     def testFormatVersion(self):
         encoded = obnam.obj.host_block_encode("pink", [], [], [])
         decoded = obnam.obj.block_decode(encoded)
-        c = obnam.cmp.first_by_kind(decoded, obnam.cmp.CMP_OBJECT)
+        c = obnam.cmp.first_by_kind(decoded, obnam.cmp.OBJECT)
         subs = obnam.cmp.get_subcomponents(c)
-        id = obnam.cmp.first_string_by_kind(subs, obnam.cmp.CMP_OBJID)
+        id = obnam.cmp.first_string_by_kind(subs, obnam.cmp.OBJID)
         self.failUnlessEqual(id, "pink")
         ver = obnam.cmp.first_string_by_kind(subs, 
-                                            obnam.cmp.CMP_FORMATVERSION)
+                                            obnam.cmp.FORMATVERSION)
         self.failUnlessEqual(ver, "1")
 
 

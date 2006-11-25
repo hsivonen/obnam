@@ -58,10 +58,10 @@ def encode_new(mapping):
             dict[block_id] = [object_id]
     for block_id in dict:
         object_ids = dict[block_id]
-        object_ids = [obnam.cmp.create(obnam.cmp.CMP_OBJREF, x)
+        object_ids = [obnam.cmp.create(obnam.cmp.OBJREF, x)
                       for x in object_ids]
-        block_id = obnam.cmp.create(obnam.cmp.CMP_BLOCKREF, block_id)
-        c = obnam.cmp.create(obnam.cmp.CMP_OBJMAP, 
+        block_id = obnam.cmp.create(obnam.cmp.BLOCKREF, block_id)
+        c = obnam.cmp.create(obnam.cmp.OBJMAP, 
                                 [block_id] + object_ids)
         list.append(obnam.cmp.encode(c))
     return list
@@ -69,7 +69,7 @@ def encode_new(mapping):
 
 def encode_new_to_block(mapping, block_id):
     """Encode new mappings into a block"""
-    c = obnam.cmp.create(obnam.cmp.CMP_BLKID, block_id)
+    c = obnam.cmp.create(obnam.cmp.BLKID, block_id)
     list = encode_new(mapping)
     block = "".join([obnam.obj.BLOCK_COOKIE, obnam.cmp.encode(c)] + list)
     return block
@@ -78,13 +78,13 @@ def encode_new_to_block(mapping, block_id):
 def decode_block(mapping, mapping_block):
     """Decode a block with mappings, add them to mapping object"""
     list = obnam.obj.block_decode(mapping_block)
-    maps = obnam.cmp.find_by_kind(list, obnam.cmp.CMP_OBJMAP)
+    maps = obnam.cmp.find_by_kind(list, obnam.cmp.OBJMAP)
     for map in maps:
         subs = obnam.cmp.get_subcomponents(map)
         block_id = obnam.cmp.first_string_by_kind(subs, 
-                                               obnam.cmp.CMP_BLOCKREF)
+                                               obnam.cmp.BLOCKREF)
         object_ids = obnam.cmp.find_strings_by_kind(subs, 
-                                               obnam.cmp.CMP_OBJREF)
+                                               obnam.cmp.OBJREF)
         if object_ids and block_id:
             for object_id in object_ids:
                 _add_old(mapping, object_id, block_id)
