@@ -87,7 +87,7 @@ class ObjectQueueFlushing(IoBase):
         list = obnam.backend.list(self.context.be)
         self.failUnlessEqual(len(list), 1)
         
-        b1 = os.path.basename(obnam.mapping.get(self.context.map, "pink"))
+        b1 = os.path.basename(obnam.map.get(self.context.map, "pink"))
         b2 = os.path.basename(list[0])
         self.failUnlessEqual(b1, b2)
 
@@ -206,7 +206,7 @@ class FileContentsTests(unittest.TestCase):
         self.failIfEqual(id, None)
         self.failUnlessEqual(obnam.obj.object_queue_ids(self.context.oq), 
                              [id])
-        self.failUnlessEqual(obnam.mapping.count(self.context.map), 0)
+        self.failUnlessEqual(obnam.map.count(self.context.map), 0)
             # there's no mapping yet, because the queue is small enough
             # that there has been no need to flush it
 
@@ -341,15 +341,15 @@ class ReachabilityTests(IoBase):
         self.failUnlessEqual(list2, [])
 
     def testNoDataExtraMaps(self):
-        obnam.mapping.add(self.context.map, "pink", "pretty")
+        obnam.map.add(self.context.map, "pink", "pretty")
         map_block_id = "box"
-        map_block = obnam.mapping.encode_new_to_block(self.context.map,
+        map_block = obnam.map.encode_new_to_block(self.context.map,
                                                          map_block_id)
         obnam.backend.upload(self.context.be, map_block_id, map_block)
 
-        obnam.mapping.add(self.context.contmap, "black", "beautiful")
+        obnam.map.add(self.context.contmap, "black", "beautiful")
         contmap_block_id = "fiddly"
-        contmap_block = obnam.mapping.encode_new_to_block(
+        contmap_block = obnam.map.encode_new_to_block(
                             self.context.contmap, contmap_block_id)
         obnam.backend.upload(self.context.be, contmap_block_id, 
                                 contmap_block)
@@ -374,9 +374,9 @@ class ReachabilityTests(IoBase):
         block = obnam.obj.block_create_from_object_queue(block_id, oq)
         obnam.backend.upload(self.context.be, block_id, block)
 
-        obnam.mapping.add(self.context.contmap, "rouge", block_id)
+        obnam.map.add(self.context.contmap, "rouge", block_id)
         map_block_id = "pretty"
-        map_block = obnam.mapping.encode_new_to_block(self.context.contmap,
+        map_block = obnam.map.encode_new_to_block(self.context.contmap,
                                                          map_block_id)
         obnam.backend.upload(self.context.be, map_block_id, map_block)
 
@@ -457,14 +457,14 @@ class ObjectCacheRegressionTest(unittest.TestCase):
 class LoadMapTests(IoBase):
 
     def test(self):
-        map = obnam.mapping.create()
-        obnam.mapping.add(map, "pink", "pretty")
+        map = obnam.map.create()
+        obnam.map.add(map, "pink", "pretty")
         block_id = obnam.backend.generate_block_id(self.context.be)
-        block = obnam.mapping.encode_new_to_block(map, block_id)
+        block = obnam.map.encode_new_to_block(map, block_id)
         obnam.backend.upload(self.context.be, block_id, block)
         
         obnam.io.load_maps(self.context, self.context.map, [block_id])
-        self.failUnlessEqual(obnam.mapping.get(self.context.map, "pink"),
+        self.failUnlessEqual(obnam.map.get(self.context.map, "pink"),
                              "pretty")
-        self.failUnlessEqual(obnam.mapping.get(self.context.map, "black"),
+        self.failUnlessEqual(obnam.map.get(self.context.map, "black"),
                              None)

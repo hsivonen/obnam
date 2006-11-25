@@ -8,7 +8,7 @@ import filelist
 import format
 import io
 import log
-import mapping
+import map
 import obj
 import rsync
 import varint

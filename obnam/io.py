@@ -40,7 +40,7 @@ def flush_object_queue(context, oq, map):
         block = obnam.obj.block_create_from_object_queue(block_id, oq)
         obnam.backend.upload(context.be, block_id, block)
         for id in obnam.obj.object_queue_ids(oq):
-            obnam.mapping.add(map, id, block_id)
+            obnam.map.add(map, id, block_id)
         obnam.obj.object_queue_clear(oq)
 
 
@@ -138,9 +138,9 @@ def get_object(context, object_id):
         return o
         
     logging.debug("Object not in cache, looking up mapping")
-    block_id = obnam.mapping.get(context.map, object_id)
+    block_id = obnam.map.get(context.map, object_id)
     if not block_id:
-        block_id = obnam.mapping.get(context.contmap, object_id)
+        block_id = obnam.map.get(context.contmap, object_id)
     if not block_id:
         logging.warning("No block found that contains object %s" % object_id)
         return None
@@ -277,9 +277,9 @@ def find_reachable_data_blocks(context, host_block):
     reachable_block_ids = set()
     while object_ids:
         object_id = object_ids.pop()
-        block_id = obnam.mapping.get(context.map, object_id)
+        block_id = obnam.map.get(context.map, object_id)
         if not block_id:
-            block_id = obnam.mapping.get(context.contmap, object_id)
+            block_id = obnam.map.get(context.contmap, object_id)
         if block_id not in reachable_block_ids:
             reachable_block_ids.add(block_id)
             block = get_block(context, block_id)
@@ -327,4 +327,4 @@ def load_maps(context, map, block_ids):
     """Load and parse mapping blocks, store results in map"""
     for id in block_ids:
         block = obnam.io.get_block(context, id)
-        obnam.mapping.decode_block(map, block)
+        obnam.map.decode_block(map, block)

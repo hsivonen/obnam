@@ -1,4 +1,4 @@
-"""Unit tests for obnam.mapping."""
+"""Unit tests for obnam.map."""
 
 
 import unittest
@@ -10,49 +10,49 @@ import obnam
 class ObjectMappingTests(unittest.TestCase):
 
     def testEmpty(self):
-        m = obnam.mapping.create()
-        self.failUnlessEqual(obnam.mapping.count(m), 0)
+        m = obnam.map.create()
+        self.failUnlessEqual(obnam.map.count(m), 0)
 
     def testGetNonexisting(self):
-        m = obnam.mapping.create()
-        self.failUnlessEqual(obnam.mapping.get(m, "pink"), None)
+        m = obnam.map.create()
+        self.failUnlessEqual(obnam.map.get(m, "pink"), None)
 
     def testAddOneMapping(self):
-        m = obnam.mapping.create()
-        obnam.mapping.add(m, "pink", "pretty")
-        self.failUnlessEqual(obnam.mapping.count(m), 1)
+        m = obnam.map.create()
+        obnam.map.add(m, "pink", "pretty")
+        self.failUnlessEqual(obnam.map.count(m), 1)
         
-        self.failUnlessEqual(obnam.mapping.get(m, "pink"), "pretty")
+        self.failUnlessEqual(obnam.map.get(m, "pink"), "pretty")
 
     def testAddTwoMappings(self):
-        m = obnam.mapping.create()
-        obnam.mapping.add(m, "pink", "pretty")
-        self.failUnlessRaises(AssertionError, obnam.mapping.add,
+        m = obnam.map.create()
+        obnam.map.add(m, "pink", "pretty")
+        self.failUnlessRaises(AssertionError, obnam.map.add,
                               m, "pink", "beautiful")
 
     def testGetNewMappings(self):
-        m = obnam.mapping.create()
-        self.failUnlessEqual(obnam.mapping.get_new(m), [])
-        obnam.mapping.add(m, "pink", "pretty")
-        self.failUnlessEqual(obnam.mapping.get_new(m), ["pink"])
-        obnam.mapping.reset_new(m)
-        self.failUnlessEqual(obnam.mapping.get_new(m), [])
-        obnam.mapping.add(m, "black", "beautiful")
-        self.failUnlessEqual(obnam.mapping.get_new(m), ["black"])
+        m = obnam.map.create()
+        self.failUnlessEqual(obnam.map.get_new(m), [])
+        obnam.map.add(m, "pink", "pretty")
+        self.failUnlessEqual(obnam.map.get_new(m), ["pink"])
+        obnam.map.reset_new(m)
+        self.failUnlessEqual(obnam.map.get_new(m), [])
+        obnam.map.add(m, "black", "beautiful")
+        self.failUnlessEqual(obnam.map.get_new(m), ["black"])
 
     def testMappingEncodings(self):
         # Set up a mapping
-        m = obnam.mapping.create()
+        m = obnam.map.create()
         
         # It's empty; make sure encoding new ones returns an empty list
-        list = obnam.mapping.encode_new(m)
+        list = obnam.map.encode_new(m)
         self.failUnlessEqual(list, [])
 
         # Add a mapping
-        obnam.mapping.add(m, "pink", "pretty")
+        obnam.map.add(m, "pink", "pretty")
 
         # Encode the new mapping, make sure that goes well
-        list = obnam.mapping.encode_new(m)
+        list = obnam.map.encode_new(m)
         self.failUnlessEqual(len(list), 1)
         
         # Make sure the encoding is correct
@@ -73,8 +73,8 @@ class ObjectMappingTests(unittest.TestCase):
                              "pink")
 
         # Now try decoding with the official function
-        block = obnam.mapping.encode_new_to_block(m, "black")
-        m2 = obnam.mapping.create()
-        obnam.mapping.decode_block(m2, block)
-        self.failUnlessEqual(obnam.mapping.count(m2), 1)
-        self.failUnlessEqual(obnam.mapping.get(m2, "pink"), "pretty")
+        block = obnam.map.encode_new_to_block(m, "black")
+        m2 = obnam.map.create()
+        obnam.map.decode_block(m2, block)
+        self.failUnlessEqual(obnam.map.count(m2), 1)
+        self.failUnlessEqual(obnam.map.get(m2, "pink"), "pretty")

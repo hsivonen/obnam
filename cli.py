@@ -124,16 +124,16 @@ def backup(context, args):
     obnam.io.flush_all_object_queues(context)
 
     logging.info("Creating new mapping blocks")
-    if obnam.mapping.get_new(context.map):
+    if obnam.map.get_new(context.map):
         map_block_id = obnam.backend.generate_block_id(context.be)
-        map_block = obnam.mapping.encode_new_to_block(context.map, 
+        map_block = obnam.map.encode_new_to_block(context.map, 
                                                          map_block_id)
         obnam.backend.upload(context.be, map_block_id, map_block)
         map_block_ids.append(map_block_id)
 
-    if obnam.mapping.get_new(context.contmap):
+    if obnam.map.get_new(context.contmap):
         contmap_block_id = obnam.backend.generate_block_id(context.be)
-        contmap_block = obnam.mapping.encode_new_to_block(context.contmap, 
+        contmap_block = obnam.map.encode_new_to_block(context.contmap, 
                                                              contmap_block_id)
         obnam.backend.upload(context.be, contmap_block_id, contmap_block)
         contmap_block_ids.append(contmap_block_id)

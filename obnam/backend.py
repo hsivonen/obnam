@@ -16,7 +16,7 @@ import paramiko
 import uuid
 import obnam.cache
 import obnam.cmp
-import obnam.mapping
+import obnam.map
 import obnam.obj
 
 
