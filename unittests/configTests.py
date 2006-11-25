@@ -18,7 +18,8 @@ class CommandLineParsingTests(unittest.TestCase):
         config = obnam.config.default_config()
         self.failUnless(config.has_section("backup"))
         needed = ["block-size", "cache", "store", "target-dir",
-                  "host-id", "object-cache-size", "log-level", "ssh-key"]
+                  "host-id", "object-cache-size", "log-level", "ssh-key",
+                  "odirect-read"]
         needed.sort()
         actual = config.options("backup")
         actual.sort()
@@ -56,3 +57,8 @@ class CommandLineParsingTests(unittest.TestCase):
         config = obnam.config.default_config()
         obnam.config.parse_options(config, ["--object-cache-size=42"])
         self.failUnlessEqual(config.get("backup", "object-cache-size"), "42")
+
+    def testOdirectRead(self):
+        config = obnam.config.default_config()
+        obnam.config.parse_options(config, ["--odirect-read=x"])
+        self.failUnlessEqual(config.get("backup", "odirect-read"), "x")

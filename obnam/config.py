@@ -13,6 +13,7 @@ def default_config():
         ("backup", "target-dir", "."),
         ("backup", "object-cache-size", "0"),
         ("backup", "log-level", "warning"),
+        ("backup", "odirect-read", "./odirect_read"),
     )
     
     config = ConfigParser.RawConfigParser()
@@ -59,6 +60,11 @@ def parse_options(config, argv):
                       metavar="FILE",
                       help="read ssh private key from FILE (and public key " +
                            "from FILE.pub)")
+    
+    parser.add_option("--odirect-read",
+                      metavar="PROGRAM",
+                      help="use PROGRAM to read contents of plain files " +
+                           "(default is helper that avoids buffer cache)")
 
     (options, args) = parser.parse_args(argv)
     
@@ -76,5 +82,7 @@ def parse_options(config, argv):
         config.set("backup", "log-level", options.log_level)
     if options.ssh_key:
         config.set("backup", "ssh-key", options.ssh_key)
+    if options.odirect_read:
+        config.set("backup", "odirect-read", options.odirect_read)
 
     return args

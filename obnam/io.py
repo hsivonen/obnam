@@ -4,6 +4,7 @@
 import logging
 import os
 import stat
+import subprocess
 
 
 import obnam
@@ -202,10 +203,12 @@ def create_file_contents_object(context, filename):
     """Create and queue objects to hold a file's contents"""
     object_id = obnam.obj.object_id_new()
     part_ids = []
+    odirect_read = context.config.get("backup", "odirect-read")
     block_size = context.config.getint("backup", "block-size")
-    f = file(resolve(context, filename), "r")
+    f = subprocess.Popen([odirect_read, resolve(context, filename)], 
+                         stdout=subprocess.PIPE)
     while True:
-        data = f.read(block_size)
+        data = f.stdout.read(block_size)
         if not data:
             break
         c = obnam.cmp.create(obnam.cmp.CMP_FILECHUNK, data)
@@ -216,7 +219,6 @@ def create_file_contents_object(context, filename):
         enqueue_object(context, context.content_oq, context.contmap, 
                        part_id, o)
         part_ids.append(part_id)
-    f.close()
 
     o = obnam.obj.create(object_id, obnam.obj.OBJ_FILECONTENTS)
     for part_id in part_ids:

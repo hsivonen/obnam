@@ -198,7 +198,8 @@ class FileContentsTests(unittest.TestCase):
                 shutil.rmtree(self.context.config.get("backup", x))
 
     def testEmptyFile(self):
-        filename = "/dev/null"
+        (fd, filename) = tempfile.mkstemp()
+        os.close(fd)
         
         id = obnam.io.create_file_contents_object(self.context, filename)
 
@@ -208,6 +209,8 @@ class FileContentsTests(unittest.TestCase):
         self.failUnlessEqual(obnam.mapping.count(self.context.map), 0)
             # there's no mapping yet, because the queue is small enough
             # that there has been no need to flush it
+
+        os.remove(filename)
 
     def testNonEmptyFile(self):
         block_size = 16
