@@ -20,7 +20,7 @@ check: all
 	sh blackboxtests tests/*
 
 clean:
-	rm -rf *~ */*~ *.pyc *.pyo */*.pyc */*.pyo tmp.* odirect_read
+	rm -rf *~ */*~ *.pyc *.pyo */*.pyc */*.pyo tmp.* odirect_read obnam.1
 
 
 install:
