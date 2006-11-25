@@ -13,7 +13,7 @@ import obnam
 
 
 def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
-    logging.debug("Backing up %s" % pathname)
+    logging.debug("Seeing if %s needs backing up" % pathname)
     st = os.lstat(obnam.io.resolve(context, pathname))
     nst = obnam.obj.normalize_stat_result(st)
     file_cmp = obnam.filelist.find_matching_inode(prevgen_filelist,
@@ -22,7 +22,7 @@ def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
         obnam.filelist.add_file_component(new_filelist, pathname, file_cmp)
         return
 
-    logging.debug("Backing up new (version of) file")
+    logging.info("Backing up %s" % pathname)
     if stat.S_ISREG(st.st_mode):
         sig_id = None
         cont_id = obnam.io.create_file_contents_object(context, pathname)
