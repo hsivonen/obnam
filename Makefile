@@ -1,17 +1,23 @@
+CC = gcc
+CFLAGS = -D_GNU_SOURCE
+
 prefix = /usr/local
 bindir = $(prefix)/bin
 libdir = $(prefix)/lib
 pydir = $(libdir)/python2.4
 sitedir = $(pydir)/site-packages
 
-all:
+all: odirect_read
 
-check:
+odirect_read: odirect_read.c
+
+check: all
+	./test_odirect_read
 	python testrun.py
 	sh blackboxtests tests/*
 
 clean:
-	rm -rf *~ */*~ *.pyc *.pyo */*.pyc */*.pyo tmp.*
+	rm -rf *~ */*~ *.pyc *.pyo */*.pyc */*.pyo tmp.* odirect_read
 
 
 install:
