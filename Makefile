@@ -7,9 +7,12 @@ libdir = $(prefix)/lib
 pydir = $(libdir)/python2.4
 sitedir = $(pydir)/site-packages
 
-all: odirect_read
+all: odirect_read obnam.1
 
 odirect_read: odirect_read.c
+
+obnam.1: obnam.docbook
+	docbook2x-man obnam.docbook
 
 check: all
 	./test_odirect_read
