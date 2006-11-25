@@ -54,6 +54,11 @@ def parse_options(config, argv):
                       metavar="LEVEL",
                       help="set log level to LEVEL, one of debug, info, " +
                            "warning, error, critical (default is warning)")
+    
+    parser.add_option("--ssh-key",
+                      metavar="FILE",
+                      help="read ssh private key from FILE (and public key " +
+                           "from FILE.pub)")
 
     (options, args) = parser.parse_args(argv)
     
@@ -69,5 +74,7 @@ def parse_options(config, argv):
         config.set("backup", "object-cache-size", options.object_cache_size)
     if options.log_level:
         config.set("backup", "log-level", options.log_level)
+    if options.ssh_key:
+        config.set("backup", "ssh-key", options.ssh_key)
 
     return args
