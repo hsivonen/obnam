@@ -6,7 +6,7 @@ def default_config():
     """Return a ConfigParser object with the default builtin configuration"""
     items = (
         ("backup", "host-id", "testhost"),
-        ("backup", "block-size", "%d" % (64 * 1024)),
+        ("backup", "block-size", "%d" % (1024 * 1024)),
         ("backup", "cache", "tmp.cache"),
         ("backup", "store", "tmp.store"),
         ("backup", "ssh-key", "ssh-key"),
