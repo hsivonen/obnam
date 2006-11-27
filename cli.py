@@ -327,7 +327,7 @@ def main():
         raise MissingCommandWord()
 
     obnam.log.setup(context.config)
-    logging.info("Obnam starting up")
+    logging.info("%s %s starting up" % (NAME, VERSION))
         
     command = args[0]
     args = args[1:]
