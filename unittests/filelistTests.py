@@ -10,13 +10,14 @@ class FileComponentTests(unittest.TestCase):
     filename = "README"
 
     def testCreate(self):
-        c = obnam.filelist.create_file_component(self.filename, "pink")
+        c = obnam.filelist.create_file_component(self.filename, "pink", 
+                                                 "pretty")
         self.check(c)
 
     def testCreateFromStatResult(self):
         st = os.lstat(self.filename)
-        c = obnam.filelist.create_file_component_from_stat(self.filename, 
-                                                           st, "pink")
+        c = obnam.filelist.create_file_component_from_stat(self.filename, st,
+                                                           "pink", "pretty")
         self.check(c)
         
     def check(self, c):
@@ -70,7 +71,7 @@ class FileComponentTests(unittest.TestCase):
             "pink")
         self.failUnlessEqual(
             obnam.cmp.first_string_by_kind(subs, obnam.cmp.SIGREF),
-            None)
+            "pretty")
 
 
 class FilelistTests(unittest.TestCase):
@@ -88,7 +89,7 @@ class FilelistTests(unittest.TestCase):
 
     def testAddFileComponent(self):
         fl = obnam.filelist.create()
-        fc = obnam.filelist.create_file_component(".", "pink")
+        fc = obnam.filelist.create_file_component(".", "pink", None)
         obnam.filelist.add_file_component(fl, ".", fc)
         self.failUnlessEqual(obnam.filelist.num_files(fl), 1)
         c = obnam.filelist.find(fl, ".")
