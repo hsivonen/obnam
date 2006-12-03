@@ -34,7 +34,7 @@ def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
         (sig_id, cont_id) = (None, None)
 
     file_cmp = obnam.filelist.create_file_component_from_stat(pathname, st,
-                                                              cont_id, None)
+                                                              cont_id, sig_id)
     obnam.filelist.add_file_component(new_filelist, pathname, file_cmp)
 
 
