@@ -75,7 +75,7 @@ def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
 
 
 def backup_directory(context, new_filelist, dirname, prevgen_filelist):
-    logging.info("Backing up %s" % dirname)
+    logging.info("Backing up directory %s" % dirname)
     backup_single_item(context, dirname, new_filelist, prevgen_filelist)
     dirname = obnam.io.resolve(context, dirname)
     for dirpath, dirnames, filenames in os.walk(dirname):
