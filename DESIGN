@@ -1,0 +1,307 @@
+Wibbr Storage Design
+====================
+
+:Author: Lars Wirzenius
+:Date: 2006-10-28
+
+
+
+Introduction
+------------
+
+This paper describes the storage structure for a backup system. The
+backups are done over a network to an FTP server, or other server of
+similar complexity. The server does not (necessarily) have any
+understanding of what the data is, it just stores it. The backups are
+encrypted and signed by the client to ensure confidentiality and
+incorruptness.
+
+The detailed requirements for the system are documented elsewhere.
+
+
+
+General requirements
+--------------------
+
+The storage structure must fill the following requirements:
+
+* Avoid downloading files from the server in normal operation. Downloading
+  takes time and the bandwidth may be metered by the byte.
+
+* Avoid storing excessive amounts of data on the client.
+
+* Avoid transferring or storing very large or very small files. Large
+  transfers are more likely to be interrupted, and it may not be possible
+  to continue them. Small transfers cause connection setup overhead to
+  become significant. The remote filesystem may have limits on maximum
+  file size, and may have a large block size, meaning that a small file
+  will still use up an entire block.
+  
+It is clear from these requirements that the file size must be
+configurable, since no size is good for every situation.
+
+
+
+Logical and physical structures
+-------------------------------
+
+Data is stored in the backup storage in a two-level structure: the
+"logical structure" and the "physical structure". The logical structure
+concerns itself with storing the data and metadata of files, and keeping
+track of which version of which file belongs to which generations of
+backups. The physical structure stores the information in the logical
+structure in actual files on the backup server.
+
+
+
+The logical structure
+---------------------
+
+The logical structure consists of a number of "storage objects" arranged
+into a directed acyclic graph (DAG). The root of the DAG is a "host
+object", which is (in essence) a list of backup generations.
+
+Each generation is represented by its own "generation object", and
+consists of a list of pairs of pathnames and references to inodes.
+
+The pathname is just a string object, but the inode is a further object
+that consists of the file metadata in the filesystem inode, and a
+reference to the rsync signature object, and finally either a reference
+to an object containing the entire contents of the file, or a reference
+to the delta object.
+
+The signature object contains the rsync block signatures. The file
+contents object contains the entire contents of the file. The delta
+object contains the rsync delta (all the changes from a previous version
+of the file), plus a reference to the delta or file contents object from
+which the delta was computed.
+
+    host
+    |   \
+    |    \
+    v     v
+    gen   gen
+    |   \
+    |    \
+    v     v
+    inode inode
+    |  \      \
+    |   \      \
+    v    v      v
+    sig  delta  filedata
+
+Note that multiple inodes may refer to the same signature, file
+contents, and delta objects. This way, we can store identical copies of
+the same data only once.
+
+
+
+The physical structure
+----------------------
+
+At the physical level the backup storage is divided into a number of
+files which we will call blocks. Each block file attempts to be of a
+uniform size (user adjustable, but let's assume one megabyte for now).
+If it does not manage to be exactly that size, that is not a problem as
+such, but the goal is to be near the size. A uniform size gives less
+information to an attacker.
+
+Each block contains one or more storage objects from the logical level,
+or parts of them, for objects that are bigger than the target size of a
+block. To make it quick to find which block or blocks contain an object,
+there are special blocks that contain a mapping between object
+identifiers to block identifiers.
+
+A block is divided into "components", which contain three fields: size,
+kind, and contents. The size field gives the size of the data field, and
+kind gives its meaning. Components may contain other components in the
+data field.
+
+
+
+Initializing the backup store for a host
+----------------------------------------
+
+To initialize the backup store for a host, you create the host
+object/block. This requires creating a UUID that refers to the host, and
+filling in the fields in the objects, and then uploading it. You store
+the host object's UUID on the client.
+
+In the case of a complete disaster, where the host UUID gets lost, you
+scan all blocks to find the host block that refers to the client you're
+interested in. Note that there might be several host blocks in the same
+server account, referring to different client computers.
+
+
+
+Adding a backup generation
+--------------------------
+
+To add a new backup generation, you scan the filesystem for all files.
+For each file, you see if you can re-use the inode, signature, or
+contents/delta, and if not, you create new ones. You create the list of
+files and inode references into a new generation. You put all the new
+objects into blocks and upload the blocks to the server, then update the
+host block and upload that.
+
+If the process fails before the transaction has completed (the new
+version of the host block has been successfully uploaded), you remember
+this at the client side, and retry at a suitable time. If the client
+loses its memory, the backup storage is going to contain a number of
+unaffiliated blocks that need to be discarded at some point.
+
+
+
+Forgetting generations
+----------------------
+
+To forget one or more generations, you first create a new host block
+that drops the unwanted generations from the list of generations. Then
+you get a list of all block files, and go through the DAG and mark all
+the blocks that are still being used. Then you delete the block files
+that are no longer being used.
+
+Note that this requires some thought if there is a need to allow several
+client hosts to share a backup server account. When creating the list of
+all blocks, you should ignore blocks not belonging to your client. If
+the server is an FTP server, creating a per-host directory would work.
+
+Note that the server may contain blocks that are lost due to the client
+forgetting about a half-finished transaction; see the previous section,
+"Adding a backup generation". These blocks should probably also be
+removed during a forgetting operation, at least the option to do so
+should be given.
+
+
+Basic data types
+-----------------
+
+There are two basic types of data stored in the backups: integers and
+strings.
+
+Integers are non-negative arbitrarily big integer (as far as the storage
+format is concerned). They are encoded in storage as a sequence of bytes
+giving ASCII digits, followed by a newline. For example, the value 42
+would be encoded as the bytes 0x34, 0x32, 0x0a, in that order.
+
+Strings are just sequences of bytes (octets). Depending on circumstance,
+they may be interpreted as, say, UTF-8 filenames.
+
+
+Block representation
+--------------------
+
+A block starts with the magic cookie "blockhead\n" (not including the
+quotes, and ending in a newline character, using ASCII encoding). After
+that a series of encoded components, one of which is a BLKID component,
+giving the identifier for the block (typically also part of its name).
+
+
+Objects
+-------
+
+Objects consist of an integer kind, a string identifier, and some
+sequence of components. Depending on the kind, the components differ.
+
+
+The objects in backup storage look like below. A "*" is used to indicate
+repetition (zero or more instances). Order of components inside an object
+or another component is not specified.
+
+    HOST object
+        OBJID
+        OBJKIND
+        FORMATVERSION
+        GENREF*
+        MAPREF*
+
+    OBJMAP component (at block level)
+        BLOCKREF
+        OBJREF*
+
+    GEN object
+        OBJID
+        OBJKIND
+        FILE*
+            FILENAME*
+            SIGREF
+            CONTREF
+            ST_MODE
+            ST_INO
+            ST_DEV
+            ST_NLINK
+            ST_UID
+            ST_GID
+            ST_SIZE
+            ST_ATIME
+            ST_MTIME
+            ST_CTIME
+            ST_BLOCKS
+            ST_BLKSIZE
+            ST_RDEV
+
+    SIG object
+        SIGDATA
+
+    FILECONTENTS object
+        FILEPARTREF*
+        
+    FILEPART object
+        FILECHUNK
+
+
+Components
+----------
+
+Both objects and blocks consist of some number of components. Each
+component consists of three fields: size, kind, and data. The size and
+kind are integers, encoded as variable integers as described above.
+The data is one of: raw binary string, a variable integer, or a
+sequence of components. What the data is can be deduced from the kind
+of the component.
+
+Below is a list of all component kinds, including a description. Components
+that reference a block or object use the UUID to do it.
+
+    Kind        Code    Data        Description
+    -------------------------------------------------------------------------
+    OBJID       1       string      The UUID for an object.
+    OBJKIND     2       int         The kind of an object.
+    BLKID       3       string      The UUID for a block.
+    FILECHUNK   4       string      A part of the contents of a file.
+    OBJECT      5       n/a         A block-level component that contains 
+                                    an object.
+    OBJMAP      6       n/a         Mapping of object ids to block id (all 
+                                    the objects inside one block go into one 
+                                    OBJMAP)
+    ST_MODE     7       int         The st_mode field of a struct stat.
+    ST_INO      8       int         The st_ino field of a struct stat.
+    ST_DEV      9       int         The st_dev field of a struct stat.
+    ST_NLINK    10      int         The st_nlink field of a struct stat.
+    ST_UID      11      int         The st_uid field of a struct stat.
+    ST_GID      12      int         The st_gid field of a struct stat.
+    ST_SIZE     13      int         The st_size field of a struct stat.
+    ST_ATIME    14      int         The st_atime field of a struct stat.
+    ST_MTIME    15      int         The st_mtime field of a struct stat.
+    ST_CTIME    16      int         The st_ctime field of a struct stat.
+    ST_BLOCKS   17      int         The st_blocks field of a struct stat.
+    ST_BLKSIZE  18      int         The st_blksize field of a struct stat.
+    ST_RDEV     19      int         The st_rdev field of a struct stat.
+    CONTREF     20      string      Reference to a FILECONTENTS object.
+    NAMEIPAIR   21      n/a         A pair of INODEREF and FILENAME.
+    INODEREF    22      string      Reference to an inode object.
+    FILENAME    23      string      A file's name.
+    SIGDATA     24      string      Rsync signature data for a file.
+    SIGREF      25      string      A reference to a SIG object.
+    GENREF      26      string      A reference to a GEN object.
+    OBJREF      28      string      A reference to any kind of object (for 
+                                    OBJMAP components).
+    BLOCKREF    29      string      A reference to a block.
+    MAPREF      30      string      A reference to a map block (block 
+                                    containing only OBJMAP components).
+    FILEPARTREF 31      string      A reference to a FILEPART object.
+    FORMATVERSION 32    string      Version of the storage format
+
+The actual code for a kind is the number from the table above, shifted
+two bits up, and with the new lowest two bits used for flags: 0x01 for
+"composite component", and 0x02 for "reference component".
