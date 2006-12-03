@@ -5,6 +5,7 @@ import logging
 import os
 import stat
 import subprocess
+import tempfile
 
 
 import obnam
@@ -247,6 +248,63 @@ def copy_file_contents(context, fd, cont_id):
         chunk = obnam.obj.first_string_by_kind(part, 
                                                   obnam.cmp.FILECHUNK)
         os.write(fd, chunk)
+
+
+def reconstruct_file_contents(context, fd, delta_id):
+    """Write (to file descriptor) file contents, given an rsync delta"""
+    logging.debug("Reconstructing contents %s to %d" % (delta_id, fd))
+
+    logging.debug("Finding chain of DELTAs") 
+       
+    delta = obnam.io.get_object(context, delta_id)
+    if not delta:
+        logging.error("Can't find DELTA object to reconstruct: %s" % delta_id)
+        return
+
+    stack = [delta]
+    while True:
+        prev_delta_id = obnam.obj.first_string_by_kind(stack[-1], 
+                                                       obnam.cmp.DELTAREF)
+        if not prev_delta_id:
+            break
+        prev_delta = obnam.io.get_object(context, prev_delta_id)
+        if not prev_delta:
+            logging.error("Can't find DELTA object %s" % prev_delta_id)
+            return
+        stack.append(prev_delta)
+
+    cont_id = obnam.obj.first_string_by_kind(stack[-1], obnam.cmp.CONTREF)
+    if not cont_id:
+        logging.error("DELTA object chain does not end in CONTREF")
+        return
+    
+    logging.debug("Creating initial version of file")    
+    (temp_fd1, temp_name1) = tempfile.mkstemp()
+    copy_file_contents(context, temp_fd1, cont_id)
+    
+    while stack:
+        delta = stack[-1]
+        stack = stack[:-1]
+        logging.debug("Applying DELTA %s" % obnam.obj.get_id(delta))
+        
+        deltadata = obnam.obj.first_string_by_kind(delta, obnam.cmp.DELTADATA)
+        
+        (temp_fd2, temp_name2) = tempfile.mkstemp()
+        obnam.rsync.apply_delta(temp_name1, deltadata, temp_name2)
+        os.remove(temp_name1)
+        os.close(temp_fd1)
+        temp_name1 = temp_name2
+        temp_fd1 = temp_fd2
+
+    logging.debug("Copying final version of file to file descriptor %d" % fd)    
+    while True:
+        data = os.read(temp_fd1, 64 * 1024)
+        if not data:
+            break
+        os.write(fd, data)
+    
+    os.close(temp_fd1)
+    os.remove(temp_name1)
 
 
 def set_inode(full_pathname, inode):

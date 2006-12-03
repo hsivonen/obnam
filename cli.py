@@ -38,7 +38,35 @@ def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
             sig = obnam.obj.signature_object_encode(sig_id, sigdata)
             obnam.io.enqueue_object(context, context.oq, context.map, 
                                     sig_id, sig)
-        cont_id = obnam.io.create_file_contents_object(context, pathname)
+
+        prev = obnam.filelist.find(prevgen_filelist, pathname)
+        if prev:
+            subs = obnam.cmp.get_subcomponents(prev)
+            prev_sig_id = obnam.cmp.first_string_by_kind(subs, 
+                                                         obnam.cmp.SIGREF)
+            if prev_sig_id:
+                prev_sig = obnam.io.get_object(context, prev_sig_id)
+                if prev_sig:
+                    prev_sigdata = obnam.obj.first_string_by_kind(prev_sig,
+                                                        obnam.cmp.SIGDATA)
+                    if prev_sigdata:
+                        xcont_ref = obnam.cmp.first_string_by_kind(subs,
+                                                        obnam.cmp.CONTREF)
+                        xdelta_ref = obnam.cmp.first_string_by_kind(subs,
+                                                        obnam.cmp.DELTAREF)
+                    
+                        deltadata = obnam.rsync.compute_delta(prev_sigdata,
+                                                              resolved)
+                        delta_id = obnam.obj.object_id_new()
+                        delta = obnam.obj.delta_object_encode(delta_id, 
+                                                              deltadata,
+                                                              xcont_ref,
+                                                              xdelta_ref)
+                        obnam.io.enqueue_object(context, context.oq, 
+                                                context.map, delta_id, delta)
+
+        if not delta_id:
+            cont_id = obnam.io.create_file_contents_object(context, pathname)
 
     file_cmp = obnam.filelist.create_file_component_from_stat(pathname, st,
                                                               cont_id, sig_id,
@@ -216,9 +244,13 @@ def create_filesystem_object(context, full_pathname, inode):
         if not os.path.exists(basedir):
             os.makedirs(basedir, 0700)
         fd = os.open(full_pathname, os.O_WRONLY | os.O_CREAT, 0)
-        cont_id = obnam.cmp.first_string_by_kind(subs, 
-                                                    obnam.cmp.CONTREF)
-        obnam.io.copy_file_contents(context, fd, cont_id)
+        cont_id = obnam.cmp.first_string_by_kind(subs, obnam.cmp.CONTREF)
+        if cont_id:
+            obnam.io.copy_file_contents(context, fd, cont_id)
+        else:
+            delta_id = obnam.cmp.first_string_by_kind(subs, 
+                                                      obnam.cmp.DELTAREF)
+            obnam.io.reconstruct_file_contents(context, fd, delta_id)
         os.close(fd)
 
 
