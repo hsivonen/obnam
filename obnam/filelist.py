@@ -4,13 +4,13 @@ import os
 import obnam
 
 
-def create_file_component(pathname, contref):
+def create_file_component(pathname, contref, sigref, deltaref):
     """Create a FILE component for a given pathname (and metadata)"""
     return create_file_component_from_stat(pathname, os.lstat(pathname), 
-                                           contref)
+                                           contref, sigref, deltaref)
 
 
-def create_file_component_from_stat(pathname, st, contref):
+def create_file_component_from_stat(pathname, st, contref, sigref, deltaref):
     """Create a FILE component given pathname, stat results, etc"""
     subs = []
     
@@ -41,6 +41,10 @@ def create_file_component_from_stat(pathname, st, contref):
 
     if contref:
         subs.append(obnam.cmp.create(obnam.cmp.CONTREF, contref))
+    if sigref:
+        subs.append(obnam.cmp.create(obnam.cmp.SIGREF, sigref))
+    if deltaref:
+        subs.append(obnam.cmp.create(obnam.cmp.DELTAREF, deltaref))
 
     return obnam.cmp.create(obnam.cmp.FILE, subs)
 
@@ -55,9 +59,9 @@ def num_files(fl):
     return len(fl)
 
 
-def add(fl, pathname, contref):
+def add(fl, pathname, contref, sigref, deltaref):
     """Add a file (and its metadata) to a file list"""
-    fl[pathname] = create_file_component(pathname, contref)
+    fl[pathname] = create_file_component(pathname, contref, sigref, deltaref)
 
 
 def add_file_component(fl, pathname, file_cmp):

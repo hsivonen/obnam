@@ -32,6 +32,7 @@ SIG          = _define_kind(4, "SIG")
 HOST         = _define_kind(5, "HOST")
 FILECONTENTS = _define_kind(6, "FILECONTENTS")
 FILELIST     = _define_kind(7, "FILELIST")
+DELTA        = _define_kind(8, "DELTA")
 
 
 def kind_name(kind):
@@ -200,8 +201,22 @@ def block_decode(block):
 
 
 def signature_object_encode(objid, sigdata):
+    """Encode a SIG object"""
     c = obnam.cmp.create(obnam.cmp.SIGDATA, sigdata)
     o = create(objid, SIG)
+    add(o, c)
+    return encode(o)
+
+
+def delta_object_encode(objid, deltadata, cont_ref, delta_ref):
+    """Encode a DELTA object"""
+    o = create(objid, DELTA)
+    c = obnam.cmp.create(obnam.cmp.DELTADATA, deltadata)
+    add(o, c)
+    if cont_ref:
+        c = obnam.cmp.create(obnam.cmp.CONTREF, cont_ref)
+    else:
+        c = obnam.cmp.create(obnam.cmp.DELTAREF, delta_ref)
     add(o, c)
     return encode(o)
 

@@ -20,6 +20,7 @@ class ObjectKindNameTests(unittest.TestCase):
         self.failUnlessEqual(kind_name(HOST), "HOST")
         self.failUnlessEqual(kind_name(FILECONTENTS), "FILECONTENTS")
         self.failUnlessEqual(kind_name(FILELIST), "FILELIST")
+        self.failUnlessEqual(kind_name(DELTA), "DELTA")
 
 
 class ObjectCreateTests(unittest.TestCase):
@@ -185,6 +186,21 @@ class ObjectTests(unittest.TestCase):
         self.failUnlessEqual(
             obnam.obj.first_string_by_kind(o, obnam.cmp.SIGDATA),
             sig)
+
+    def testCreateDeltaObject(self):
+        id = "pink"
+        delta = "xyzzy"
+        encoded = delta_object_encode(id, delta, "pretty", None)
+        o = obnam.obj.decode(encoded, 0)
+        self.failUnlessEqual(obnam.obj.get_id(o), "pink")
+        self.failUnlessEqual(obnam.obj.get_kind(o), obnam.obj.DELTA)
+        self.failUnlessEqual(len(obnam.obj.get_components(o)), 2)
+        self.failUnlessEqual(
+            obnam.obj.first_string_by_kind(o, obnam.cmp.DELTADATA),
+            delta)
+        self.failUnlessEqual(
+            obnam.obj.first_string_by_kind(o, obnam.cmp.CONTREF),
+            "pretty")
 
 
 class HostBlockTests(unittest.TestCase):

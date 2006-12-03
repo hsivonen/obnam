@@ -23,3 +23,16 @@ def compute_delta(signature, filename):
         return stdout
     else:
         return False
+
+
+def apply_delta(basis_filename, deltadata, new_filename):
+    """Apply an rsync delta for a file, to get a new version of it"""
+    p = subprocess.Popen(["rdiff", "--", "patch", basis_filename, "-",
+                          new_filename],
+                         stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE)
+    (stdout, stderr) = p.communicate(input=deltadata)
+    if p.returncode == 0:
+        return True
+    else:
+        return False

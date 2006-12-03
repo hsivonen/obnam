@@ -65,6 +65,8 @@ FORMATVERSION = _define_plain(      32, "FORMATVERSION")
 FILE          = _define_composite(  33, "FILE")
 FILELISTREF   = _define_ref(        34, "FILELISTREF")
 CONTMAPREF    = _define_ref(        35, "CONTMAPREF")
+DELTAREF      = _define_ref(        36, "DELTAREF")
+DELTADATA     = _define_plain(      37, "DELTADATA")
 
 
 def kind_name(kind):

@@ -2,6 +2,7 @@
 
 
 import os
+import tempfile
 import unittest
 
 
@@ -27,3 +28,25 @@ class RsyncTests(unittest.TestCase):
         # in different situations. Eventually we'll move away from rdiff,
         # and then this should become clearer. --liw, 2006-09-24
         self.failUnlessEqual(delta, "rs\x026\x00")
+
+    def create_file(self, contents):
+        (fd, filename) = tempfile.mkstemp()
+        os.write(fd, contents)
+        os.close(fd)
+        return filename
+
+    def testApplyDelta(self):
+        first = self.create_file("pink")
+        second = self.create_file("pretty")
+        sig = obnam.rsync.compute_signature(first)
+        delta = obnam.rsync.compute_delta(sig, second)
+
+        (fd, third) = tempfile.mkstemp()
+        os.close(fd)
+        obnam.rsync.apply_delta(first, delta, third)
+        
+        f = file(third, "r")
+        third_data = f.read()
+        f.close()
+
+        self.failUnlessEqual(third_data, "pretty")
