@@ -18,17 +18,25 @@ import obnam
 
 def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
     logging.debug("Seeing if %s needs backing up" % pathname)
-    st = os.lstat(obnam.io.resolve(context, pathname))
+    resolved = obnam.io.resolve(context, pathname)
+    st = os.lstat(resolved)
     nst = obnam.obj.normalize_stat_result(st)
     file_cmp = obnam.filelist.find_matching_inode(prevgen_filelist,
-                                                     pathname, st)
+                                                  pathname, st)
     if file_cmp:
         obnam.filelist.add_file_component(new_filelist, pathname, file_cmp)
         return
 
     logging.info("Backing up %s" % pathname)
     if stat.S_ISREG(st.st_mode):
-        sig_id = None
+        sigdata = obnam.rsync.compute_signature(resolved)
+        if sigdata:
+            sig_id = obnam.obj.object_id_new()
+            sig = obnam.obj.signature_object_encode(sig_id, sigdata)
+            obnam.io.enqueue_object(context, context.oq, context.map, 
+                                    sig_id, sig)
+        else:
+            sig_id = None
         cont_id = obnam.io.create_file_contents_object(context, pathname)
     else:
         (sig_id, cont_id) = (None, None)

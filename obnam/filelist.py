@@ -57,9 +57,9 @@ def num_files(fl):
     return len(fl)
 
 
-def add(fl, pathname, contref):
+def add(fl, pathname, contref, sigref):
     """Add a file (and its metadata) to a file list"""
-    fl[pathname] = create_file_component(pathname, contref, None)
+    fl[pathname] = create_file_component(pathname, contref, sigref)
 
 
 def add_file_component(fl, pathname, file_cmp):
