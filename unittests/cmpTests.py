@@ -48,6 +48,7 @@ class ComponentKindNameTests(unittest.TestCase):
         self.failUnlessEqual(t(c.FILE), "FILE")
         self.failUnlessEqual(t(c.FILELISTREF), "FILELISTREF")
         self.failUnlessEqual(t(c.CONTMAPREF), "CONTMAPREF")
+        self.failUnlessEqual(t(c.DELTAREF), "DELTAREF")
 
 
 class RefComponentTests(unittest.TestCase):

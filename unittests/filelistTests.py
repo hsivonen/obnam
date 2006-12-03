@@ -11,13 +11,14 @@ class FileComponentTests(unittest.TestCase):
 
     def testCreate(self):
         c = obnam.filelist.create_file_component(self.filename, "pink", 
-                                                 "pretty")
+                                                 "pretty", "black")
         self.check(c)
 
     def testCreateFromStatResult(self):
         st = os.lstat(self.filename)
         c = obnam.filelist.create_file_component_from_stat(self.filename, st,
-                                                           "pink", "pretty")
+                                                           "pink", "pretty",
+                                                           "black")
         self.check(c)
         
     def check(self, c):
@@ -72,6 +73,9 @@ class FileComponentTests(unittest.TestCase):
         self.failUnlessEqual(
             obnam.cmp.first_string_by_kind(subs, obnam.cmp.SIGREF),
             "pretty")
+        self.failUnlessEqual(
+            obnam.cmp.first_string_by_kind(subs, obnam.cmp.DELTAREF),
+            "black")
 
 
 class FilelistTests(unittest.TestCase):
@@ -82,14 +86,14 @@ class FilelistTests(unittest.TestCase):
 
     def testAddFind(self):
         fl = obnam.filelist.create()
-        obnam.filelist.add(fl, ".", "pink", None)
+        obnam.filelist.add(fl, ".", "pink", None, None)
         self.failUnlessEqual(obnam.filelist.num_files(fl), 1)
         c = obnam.filelist.find(fl, ".")
         self.failUnlessEqual(obnam.cmp.get_kind(c), obnam.cmp.FILE)
 
     def testAddFileComponent(self):
         fl = obnam.filelist.create()
-        fc = obnam.filelist.create_file_component(".", "pink", None)
+        fc = obnam.filelist.create_file_component(".", "pink", None, None)
         obnam.filelist.add_file_component(fl, ".", fc)
         self.failUnlessEqual(obnam.filelist.num_files(fl), 1)
         c = obnam.filelist.find(fl, ".")
@@ -97,7 +101,7 @@ class FilelistTests(unittest.TestCase):
 
     def testToFromObject(self):
         fl = obnam.filelist.create()
-        obnam.filelist.add(fl, ".", "pretty", None)
+        obnam.filelist.add(fl, ".", "pretty", None, None)
         o = obnam.filelist.to_object(fl, "pink")
         self.failUnlessEqual(obnam.obj.get_kind(o), 
                              obnam.obj.FILELIST)
@@ -118,7 +122,7 @@ class FindTests(unittest.TestCase):
     def testFindInodeSuccessful(self):
         pathname = "Makefile"
         fl = obnam.filelist.create()
-        obnam.filelist.add(fl, pathname, "pink", None)
+        obnam.filelist.add(fl, pathname, "pink", None, None)
         st = os.lstat(pathname)
         c = obnam.filelist.find_matching_inode(fl, pathname, st)
         subs = obnam.cmp.get_subcomponents(c)
@@ -129,7 +133,7 @@ class FindTests(unittest.TestCase):
     def testFindInodeUnsuccessful(self):
         pathname = "Makefile"
         fl = obnam.filelist.create()
-        obnam.filelist.add(fl, pathname, "pink", None)
+        obnam.filelist.add(fl, pathname, "pink", None, None)
         st = os.lstat(".")
         c = obnam.filelist.find_matching_inode(fl, pathname, st)
         self.failUnlessEqual(c, None)

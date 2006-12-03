@@ -28,6 +28,9 @@ def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
         return
 
     logging.info("Backing up %s" % pathname)
+    sig_id = None
+    delta_id = None
+    cont_id = None
     if stat.S_ISREG(st.st_mode):
         sigdata = obnam.rsync.compute_signature(resolved)
         if sigdata:
@@ -35,14 +38,11 @@ def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
             sig = obnam.obj.signature_object_encode(sig_id, sigdata)
             obnam.io.enqueue_object(context, context.oq, context.map, 
                                     sig_id, sig)
-        else:
-            sig_id = None
         cont_id = obnam.io.create_file_contents_object(context, pathname)
-    else:
-        (sig_id, cont_id) = (None, None)
 
     file_cmp = obnam.filelist.create_file_component_from_stat(pathname, st,
-                                                              cont_id, sig_id)
+                                                              cont_id, sig_id,
+                                                              delta_id)
     obnam.filelist.add_file_component(new_filelist, pathname, file_cmp)
 
 
