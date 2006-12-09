@@ -38,7 +38,7 @@ class RsyncTests(unittest.TestCase):
     
         context = obnam.context.create()
         sig = obnam.rsync.compute_signature(context, empty_file)
-        delta = obnam.rsync.compute_delta(sig, empty_file)
+        delta = obnam.rsync.compute_delta(context, sig, empty_file)
 
         os.remove(empty_file)
 
@@ -60,7 +60,7 @@ class RsyncTests(unittest.TestCase):
         first = self.create_file("pink")
         second = self.create_file("pretty")
         sig = obnam.rsync.compute_signature(context, first)
-        delta = obnam.rsync.compute_delta(sig, second)
+        delta = obnam.rsync.compute_delta(context, sig, second)
 
         (fd, third) = tempfile.mkstemp()
         os.close(fd)

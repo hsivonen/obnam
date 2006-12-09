@@ -55,7 +55,8 @@ def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
                         xdelta_ref = obnam.cmp.first_string_by_kind(subs,
                                                         obnam.cmp.DELTAREF)
                     
-                        deltadata = obnam.rsync.compute_delta(prev_sigdata,
+                        deltadata = obnam.rsync.compute_delta(context,
+                                                              prev_sigdata,
                                                               resolved)
                         delta_id = obnam.obj.object_id_new()
                         delta = obnam.obj.delta_object_encode(delta_id, 

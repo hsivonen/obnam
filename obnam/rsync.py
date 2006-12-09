@@ -1,4 +1,6 @@
+import os
 import subprocess
+import tempfile
 
 
 def pipeline(*args):
@@ -26,12 +28,16 @@ def compute_signature(context, filename):
         return False
 
 
-def compute_delta(signature, filename):
+def compute_delta(context, signature, filename):
     """Compute an rsync delta for a file, given signature of old version"""
-    p = subprocess.Popen(["rdiff", "--", "delta", "-", filename, "-"],
-                         stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE)
-    (stdout, stderr) = p.communicate(signature)
+    (fd, tempname) = tempfile.mkstemp()
+    os.write(fd, signature)
+    os.close(fd)
+
+    p = pipeline([context.config.get("backup", "odirect-read"), filename],
+                  ["rdiff", "--", "delta", tempname, "-", "-"])
+
+    (stdout, stderr) = p.communicate(None)
     if p.returncode == 0:
         return stdout
     else:
