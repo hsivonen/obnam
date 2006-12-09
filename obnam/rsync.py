@@ -1,6 +1,20 @@
 import subprocess
 
 
+def pipeline(*args):
+    """Set up a Unix pipeline of processes, given the argv lists
+    
+    Returns a subprocess.Popen object corresponding to the last process
+    in the pipeline.
+
+    """
+    
+    p = subprocess.Popen(args[0], stdin=None, stdout=subprocess.PIPE)
+    for argv in args[1:]:
+        p = subprocess.Popen(argv, stdin=p.stdout, stdout=subprocess.PIPE)
+    return p
+
+
 def compute_signature(filename):
     """Compute an rsync signature for 'filename'"""
     p = subprocess.Popen(["rdiff", "--", "signature", filename, "-"],

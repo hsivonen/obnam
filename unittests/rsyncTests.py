@@ -11,6 +11,13 @@ import obnam
 
 class RsyncTests(unittest.TestCase):
 
+    def testPipeline(self):
+        p = obnam.rsync.pipeline(["/bin/echo", "foo"], ["cat"])
+        output = p.stdout.read()
+        exit = p.wait()
+        self.failUnlessEqual(output, "foo\n")
+        self.failUnlessEqual(exit, 0)
+
     def testSignature(self):
         sig = obnam.rsync.compute_signature("/dev/null")
         os.system("rdiff signature /dev/null devnull.sig.temp")
