@@ -15,11 +15,10 @@ def pipeline(*args):
     return p
 
 
-def compute_signature(filename):
+def compute_signature(context, filename):
     """Compute an rsync signature for 'filename'"""
-    p = subprocess.Popen(["rdiff", "--", "signature", filename, "-"],
-                         stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE)
+    p = pipeline([context.config.get("backup", "odirect-read"), filename],
+                  ["rdiff", "--", "signature", "-", "-"])
     (stdout, stderr) = p.communicate(None)
     if p.returncode == 0:
         return stdout

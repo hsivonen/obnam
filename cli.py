@@ -32,7 +32,7 @@ def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
     delta_id = None
     cont_id = None
     if stat.S_ISREG(st.st_mode):
-        sigdata = obnam.rsync.compute_signature(resolved)
+        sigdata = obnam.rsync.compute_signature(context, resolved)
         if sigdata:
             sig_id = obnam.obj.object_id_new()
             sig = obnam.obj.signature_object_encode(sig_id, sigdata)
