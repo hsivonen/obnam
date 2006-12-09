@@ -38,6 +38,7 @@ def compute_delta(context, signature, filename):
                   ["rdiff", "--", "delta", tempname, "-", "-"])
 
     (stdout, stderr) = p.communicate(None)
+    os.remove(tempname)
     if p.returncode == 0:
         return stdout
     else:
