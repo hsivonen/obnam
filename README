@@ -25,3 +25,33 @@ can get you going:
         UUID.
 
 Please mail bug reports and suggestions to liw@iki.fi, thanks.
+
+
+Legal stuff:
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+A copy of the GPL version 2 is included in the file COPYING.
+
+The file uuid.py is a separate work, included here for convenience.
+A future version will be included in Python 2.5. It is licensed under
+the Python Software Foundaion License used by Python itself. From
+the author:
+
+    uuid.py is now released in the Python Package Index (see python.org)
+    and will be included in Python 2.5, so it is under the Python
+    license like the rest of Python.
+
+Since Obnam supports Python 2.4, uuid.py is included here.
