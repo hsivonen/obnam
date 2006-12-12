@@ -47,7 +47,7 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
     
-    fd = open(argv[1], O_RDONLY | O_DIRECT);
+    fd = open(argv[1], O_RDONLY | O_DIRECT | O_LARGEFILE);
     if (fd == -1) {
         fprintf(stderr, "%s: ERROR: Trying to open %s: %d: %s\n",
                 argv[0], argv[1], errno, strerror(errno));
