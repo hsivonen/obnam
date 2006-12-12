@@ -35,9 +35,10 @@ import obnam
 
 def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
     logging.debug("Seeing if %s needs backing up" % pathname)
+
     resolved = obnam.io.resolve(context, pathname)
     st = os.lstat(resolved)
-    nst = obnam.obj.normalize_stat_result(st)
+    
     file_cmp = obnam.filelist.find_matching_inode(prevgen_filelist,
                                                   pathname, st)
     if file_cmp:
