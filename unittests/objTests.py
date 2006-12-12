@@ -84,12 +84,13 @@ class ObjectEncodingDecodingTests(unittest.TestCase):
 class ObjectQueueTests(unittest.TestCase):
 
     def testCreate(self):
-        self.failUnlessEqual(queue_create(), [])
+        oq = queue_create()
+        self.failUnlessEqual(queue_combined_size(oq), 0)
 
     def testAdd(self):
         oq = queue_create()
         queue_add(oq, "xx", "abc")
-        self.failUnlessEqual(oq, [("xx", "abc")])
+        self.failUnlessEqual(queue_combined_size(oq), 3)
 
     def testSize(self):
         oq = queue_create()
