@@ -173,41 +173,54 @@ def decode(encoded, pos):
     return o
 
 
+class ObjectQueue:
+
+    def __init__(self):
+        self.clear()
+        
+    def add(self, object_id, encoded_object):
+        self.queue.append((object_id, encoded_object))
+        self.size += len(encoded_object)
+        
+    def clear(self):
+        self.queue = []
+        self.size = 0
+
+
 def queue_create():
     """Create an empty object queue"""
-    return []
+    return ObjectQueue()
 
 
 def queue_clear(oq):
     """Remove all objects from an object queue"""
-    del oq[:]
+    oq.clear()
 
 
 def queue_add(oq, object_id, object):
     """Add an encoded object into an object queue"""
-    oq.append((object_id, object))
+    oq.add(object_id, object)
 
 
 def queue_is_empty(oq):
     """Is an object queue empty?"""
-    return len(oq) == 0
+    return oq.size == 0
 
 
 def queue_combined_size(oq):
     """Return the combined size of all objects in an object queue"""
-    return sum([len(x[1]) for x in oq])
+    return oq.size
 
 
 def queue_ids(oq):
     """Return identifiers for all the objects in the object queue"""
-    return [x[0] for x in oq]
+    return [x[0] for x in oq.queue]
 
 
 def block_create_from_object_queue(blkid, oq):
     """Create a block from an object queue"""
     blkid = obnam.cmp.create(obnam.cmp.BLKID, blkid)
-    objects = [obnam.cmp.create(obnam.cmp.OBJECT, x[1])
-               for x in oq]
+    objects = [obnam.cmp.create(obnam.cmp.OBJECT, x[1]) for x in oq.queue]
     return "".join([BLOCK_COOKIE] + 
                    [obnam.cmp.encode(c) for c in [blkid] + objects])
 
