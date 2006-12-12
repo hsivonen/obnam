@@ -44,11 +44,18 @@ def obnam_method(tempdir, rootdir):
     return result, ["./cli.py", "--store", result, "-C", rootdir, "backup", "."]
 
 
+def profiled_obnam_method(tempdir, rootdir):
+    result, args = obnam_method(tempdir, rootdir)
+    return result, ["/usr/lib/python2.4/profile.py", "-o", "obnam.prof"] \
+                    + args
+
+
 backup_methods = (
     ("tar", tar_method),
     ("targz", targz_method),
     ("rsync", rsync_method),
-    ("obnam", obnam_method),
+#    ("obnam", obnam_method),
+    ("obnam", profiled_obnam_method),
 )
 
 
