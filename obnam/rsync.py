@@ -23,27 +23,76 @@ import subprocess
 import tempfile
 
 
-def pipeline(*args):
-    """Set up a Unix pipeline of processes, given the argv lists
+def start_process(argv, stdin_fd, stdout_fd):
+    """Start a new process, using stdin/out_fd for its standard in/out"""
+    pid = os.fork()
+    if pid == -1:
+        raise Exception("fork failed")
+    elif pid == 0:
+        os.dup2(stdin_fd, 0)
+        os.dup2(stdout_fd, 1)
+        os.close(stdin_fd)
+        os.close(stdout_fd)
+        os.execvp(argv[0], argv)
+        os._exit(os.EX_NOTFOUND)
+    else:
+        return pid
+
+def start_pipeline(*argvlist):
+    """Start a Unix pipeline, given list of argv arrays
     
-    Returns a subprocess.Popen object corresponding to the last process
-    in the pipeline.
+    Return list of pids for the processes in the pipeline, a file descriptor
+    from which the first process reads its standard input, and a file
+    descriptor to which the last process writes it standard output.
 
     """
-    
-    p = subprocess.Popen(args[0], stdin=None, stdout=subprocess.PIPE)
-    for argv in args[1:]:
-        p = subprocess.Popen(argv, stdin=p.stdout, stdout=subprocess.PIPE)
-    return p
+
+    assert len(argvlist) > 0
+
+    pipe = os.pipe()
+    stdin_fd = pipe[1]
+    pids = []
+
+    for argv in argvlist:
+        new_pipe = os.pipe()
+        pids.append(start_process(argv, pipe[0], new_pipe[1]))
+        os.close(pipe[0])
+        os.close(new_pipe[1])
+        pipe = new_pipe
+
+    return pids, stdin_fd, pipe[0]
+
+
+def wait_pipeline(pids):
+    """Wait for all processes in a list to die, return exit code of last"""
+    exit = None
+    for pid in pids:
+        (_, exit) = os.waitpid(pid, 0)
+    return exit
+
+
+def read_until_eof(fd):
+    """Read from a file descriptor until the end of the file"""
+    data = ""
+    while True:
+        chunk = os.read(fd, 64 * 1024)
+        if not chunk:
+            break
+        data += chunk
+    return data
 
 
 def compute_signature(context, filename):
     """Compute an rsync signature for 'filename'"""
-    p = pipeline([context.config.get("backup", "odirect-read"), filename],
-                  ["rdiff", "--", "signature", "-", "-"])
-    (stdout, stderr) = p.communicate(None)
-    if p.returncode == 0:
-        return stdout
+    pids, stdin_fd, stdout_fd = \
+      start_pipeline([context.config.get("backup", "odirect-read"), filename],
+                     ["rdiff", "--", "signature", "-", "-"])
+    os.close(stdin_fd)
+    stdout_data = read_until_eof(stdout_fd)
+    os.close(stdout_fd)
+    exit = wait_pipeline(pids)
+    if exit == 0:
+        return stdout_data
     else:
         return False
 
@@ -54,13 +103,16 @@ def compute_delta(context, signature, filename):
     os.write(fd, signature)
     os.close(fd)
 
-    p = pipeline([context.config.get("backup", "odirect-read"), filename],
-                  ["rdiff", "--", "delta", tempname, "-", "-"])
-
-    (stdout, stderr) = p.communicate(None)
+    pids, stdin_fd, stdout_fd = \
+      start_pipeline([context.config.get("backup", "odirect-read"), filename],
+                     ["rdiff", "--", "delta", tempname, "-", "-"])
+    os.close(stdin_fd)
+    stdout_data = read_until_eof(stdout_fd)
+    os.close(stdout_fd)
+    exit = wait_pipeline(pids)
     os.remove(tempname)
-    if p.returncode == 0:
-        return stdout
+    if exit == 0:
+        return stdout_data
     else:
         return False
 
