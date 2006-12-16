@@ -54,8 +54,8 @@ backup_methods = (
     ("tar", tar_method),
     ("targz", targz_method),
     ("rsync", rsync_method),
-#    ("obnam", obnam_method),
-    ("obnam", profiled_obnam_method),
+    ("obnam", obnam_method),
+#    ("obnam", profiled_obnam_method),
 )
 
 
@@ -133,11 +133,9 @@ def run_testcase(testcase):
     
 
 def main():
-    for dirname in sys.argv[1:]:
-        for filename in os.listdir(dirname):
-            if filename.endswith(".tar.bz2") or filename.endswith(".tar.gz"):
-                testcase = os.path.join(dirname, filename)
-                run_testcase(testcase)
+    for filename in sys.argv[1:]:
+        if filename.endswith(".tar.bz2") or filename.endswith(".tar.gz"):
+            run_testcase(filename)
 
 
 if __name__ == "__main__":
