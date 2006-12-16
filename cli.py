@@ -154,10 +154,6 @@ def backup(context, args):
 
     new_filelist = obnam.filelist.create()
     for name in args:
-        if name == "/":
-            name = "."
-        elif name and name[0] == "/":
-            name = name[1:]
         if os.path.isdir(obnam.io.resolve(context, name)):
             backup_directory(context, new_filelist, name, prevgen_filelist)
         else:
