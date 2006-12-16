@@ -93,6 +93,10 @@ def parse_store_url(url):
     path, where elements can be None if they are meant to be the default
     or are not relevant.
     
+    Note that we follow the bzr (and lftp?) syntax: sftp://foo/bar is an
+    absolute path, /foo, and sftp://foo/~/bar is "bar" relative to the
+    user's home directory.
+    
     """
     
     # urlparse in Python 2.4 doesn't know, by default, that sftp uses
@@ -111,6 +115,8 @@ def parse_store_url(url):
             port = int(port)
         else:
             host = netloc
+        if path.startswith("/~/"):
+            path = path[3:]
     else:
         path = url
     
