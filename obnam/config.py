@@ -111,7 +111,7 @@ def parse_options(config, argv):
     if options.use_psyco:
         try:
             import psyco
-            psyco.full()
+            psyco.profile()
         except ImportError:
             pass
 
