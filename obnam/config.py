@@ -85,6 +85,10 @@ def parse_options(config, argv):
                       metavar="PROGRAM",
                       help="use PROGRAM to read contents of plain files " +
                            "(default is helper that avoids buffer cache)")
+    
+    parser.add_option("--use-psyco",
+                      action="store_true", default=False,
+                      help="use the psyco Python extension, if available")
 
     (options, args) = parser.parse_args(argv)
     
@@ -104,5 +108,11 @@ def parse_options(config, argv):
         config.set("backup", "ssh-key", options.ssh_key)
     if options.odirect_read:
         config.set("backup", "odirect-read", options.odirect_read)
+    if options.use_psyco:
+        try:
+            import psyco
+            psyco.full()
+        except ImportError:
+            pass
 
     return args
