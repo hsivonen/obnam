@@ -254,22 +254,6 @@ def delta_object_encode(objid, deltadata, cont_ref, delta_ref):
     return encode(o)
 
 
-def normalize_stat_result(stat_result):
-    """Create a new, normalized object from the return value of os.stat
-    
-    The normalized value has the st_xxx fields that the return value of
-    os.stat has, but two normalized values may be safely compared for
-    equality. 
-    
-    """
-    
-    fields = [x for x in dir(stat_result) if x.startswith("st_")]
-    o = {}
-    for x in fields:
-        o[x] = int(stat_result.__getattribute__(x))
-    return o
-
-
 def inode_object_encode(objid, stat_result, sig_id, contents_id):
     """Create an inode object from the return value of os.stat"""
     o = create(objid, INODE)
@@ -317,44 +301,6 @@ class NotAnInode(ExceptionBase):
 
     def __init__(self, okind):
         self._msg = "Object kind is not inode: %d" % okind
-
-
-def inode_object_decode(inode):
-    """Decode an inode object, return objid and what os.stat returns"""
-    stat_results = {}
-    list = obnam.cmp.decode_all(inode, 0)
-
-    id = obnam.cmp.first_string_by_kind(list, obnam.cmp.OBJID)
-    kind = obnam.cmp.first_varint_by_kind(list, obnam.cmp.OBJKIND)
-    sigref = obnam.cmp.first_string_by_kind(list, obnam.cmp.SIGREF)
-    contref = obnam.cmp.first_string_by_kind(list, 
-                                                obnam.cmp.CONTREF)
-
-    if kind != INODE:
-        raise NotAnInode(kind)
-    o = create(id, kind)
-
-    varint_items = {
-        obnam.cmp.ST_MODE: "st_mode",
-        obnam.cmp.ST_INO: "st_ino",
-        obnam.cmp.ST_DEV: "st_dev",
-        obnam.cmp.ST_NLINK: "st_nlink",
-        obnam.cmp.ST_UID: "st_uid",
-        obnam.cmp.ST_GID: "st_gid",
-        obnam.cmp.ST_SIZE: "st_size",
-        obnam.cmp.ST_ATIME: "st_atime",
-        obnam.cmp.ST_MTIME: "st_mtime",
-        obnam.cmp.ST_CTIME: "st_ctime",
-        obnam.cmp.ST_BLOCKS: "st_blocks",
-        obnam.cmp.ST_BLKSIZE: "st_blksize",
-        obnam.cmp.ST_RDEV: "st_rdev",
-    }
-    for kind in varint_items:
-        n = obnam.cmp.first_varint_by_kind(list, kind)
-        if n is not None:
-            stat_results[varint_items[kind]] = n
-
-    return id, stat_results, sigref, contref
 
 
 def generation_object_encode(objid, filelist_id):

@@ -37,8 +37,6 @@ def create_file_component_from_stat(pathname, st, contref, sigref, deltaref):
     c = obnam.cmp.create(obnam.cmp.FILENAME, pathname)
     subs.append(c)
     
-    st = obnam.obj.normalize_stat_result(st)
-
     items = (
         (obnam.cmp.ST_MODE, "st_mode"),
         (obnam.cmp.ST_INO, "st_ino"),
@@ -54,9 +52,10 @@ def create_file_component_from_stat(pathname, st, contref, sigref, deltaref):
         (obnam.cmp.ST_BLKSIZE, "st_blksize"),
         (obnam.cmp.ST_RDEV, "st_rdev"),
     )
+    st_keys = dir(st)
     for kind, key in items:
-        if key in st:
-            n = obnam.varint.encode(st[key])
+        if key in st_keys:
+            n = obnam.varint.encode(st.__getattribute__(key))
             subs.append(obnam.cmp.create(kind, n))
 
     if contref:
@@ -99,7 +98,6 @@ def find_matching_inode(fl, pathname, stat_result):
     prev = find(fl, pathname)
     if prev:
         prev_subs = obnam.cmp.get_subcomponents(prev)
-        nst = obnam.obj.normalize_stat_result(stat_result)
         fields = (
             ("st_dev", obnam.cmp.ST_DEV),
             ("st_ino", obnam.cmp.ST_INO),
@@ -117,7 +115,7 @@ def find_matching_inode(fl, pathname, stat_result):
         )
         for a, b in fields:
             b_value = obnam.cmp.first_varint_by_kind(prev_subs, b)
-            if nst[a] != b_value:
+            if stat_result.__getattribute__(a) != b_value:
                 return None
         return prev
     else:

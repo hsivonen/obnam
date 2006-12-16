@@ -143,21 +143,6 @@ class BlockCreateTests(unittest.TestCase):
         self.failUnlessEqual(queue_ids(oq), ["pink"])
 
 
-class InodeTests(unittest.TestCase):
-
-    def testEncodeDecode(self):
-        stats1 = normalize_stat_result(os.stat("Makefile"))
-        id1 = "xyzzy"
-        sigref1 = "maze"
-        contref1 = "plugh"
-        inode = inode_object_encode(id1, stats1, sigref1, contref1)
-        (id2, stats2, sigref2, contref2) = inode_object_decode(inode)
-        self.failUnlessEqual(id1, id2)
-        self.failUnlessEqual(stats1, stats2)
-        self.failUnlessEqual(sigref1, sigref2)
-        self.failUnlessEqual(contref1, contref2)
-
-
 class GenerationTests(unittest.TestCase):
 
     def testEncodeDecode(self):
@@ -167,23 +152,6 @@ class GenerationTests(unittest.TestCase):
         (id2, fl2) = generation_object_decode(gen)
         self.failUnlessEqual(id1, id2)
         self.failUnlessEqual(fl1, fl2)
-
-
-class NormalizedInodeTests(unittest.TestCase):
-
-    def testNormalization(self):
-        st1 = os.stat("Makefile")
-        st2 = os.stat(".")
-        st3 = os.stat("..")
-        nst1 = normalize_stat_result(st1)
-        nst2 = normalize_stat_result(st2)
-        nst3 = normalize_stat_result(st3)
-        self.failUnlessEqual(nst1, normalize_stat_result(st1))
-        self.failUnlessEqual(nst2, normalize_stat_result(st2))
-        self.failUnlessEqual(nst3, normalize_stat_result(st3))
-        self.failIfEqual(nst1, nst2)
-        self.failIfEqual(nst2, nst3)
-        self.failIfEqual(nst3, nst1)
 
 
 class ObjectTests(unittest.TestCase):
