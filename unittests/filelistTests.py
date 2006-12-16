@@ -48,44 +48,23 @@ class FileComponentTests(unittest.TestCase):
           obnam.cmp.first_string_by_kind(subs, obnam.cmp.FILENAME),
           self.filename)
 
+        c_stat = obnam.cmp.first_by_kind(subs, obnam.cmp.STAT)
+        c_st = obnam.cmp.parse_stat_component(c_stat)
+
         st = os.lstat(self.filename)
-        self.failUnlessEqual(
-          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.ST_MODE),
-          st.st_mode)
-        self.failUnlessEqual(
-          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.ST_INO),
-          st.st_ino)
-        self.failUnlessEqual(
-          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.ST_DEV),
-          st.st_dev)
-        self.failUnlessEqual(
-          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.ST_NLINK),
-          st.st_nlink)
-        self.failUnlessEqual(
-          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.ST_UID),
-          st.st_uid)
-        self.failUnlessEqual(
-          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.ST_GID),
-          st.st_gid)
-        self.failUnlessEqual(
-          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.ST_SIZE),
-          st.st_size)
-        self.failUnlessEqual(
-          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.ST_ATIME),
-          st.st_atime)
-        self.failUnlessEqual(
-          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.ST_MTIME),
-          st.st_mtime)
-        self.failUnlessEqual(
-          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.ST_CTIME),
-          st.st_ctime)
-        self.failUnlessEqual(
-          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.ST_BLOCKS),
-          st.st_blocks)
-        self.failUnlessEqual(
-          obnam.cmp.first_varint_by_kind(subs, 
-            obnam.cmp.ST_BLKSIZE),
-          st.st_blksize)
+        self.failUnlessEqual(c_st.st_mode, st.st_mode)
+        self.failUnlessEqual(c_st.st_ino, st.st_ino)
+        self.failUnlessEqual(c_st.st_dev, st.st_dev)
+        self.failUnlessEqual(c_st.st_nlink, st.st_nlink)
+        self.failUnlessEqual(c_st.st_uid, st.st_uid)
+        self.failUnlessEqual(c_st.st_gid, st.st_gid)
+        self.failUnlessEqual(c_st.st_size, st.st_size)
+        self.failUnlessEqual(c_st.st_atime, st.st_atime)
+        self.failUnlessEqual(c_st.st_mtime, st.st_mtime)
+        self.failUnlessEqual(c_st.st_ctime, st.st_ctime)
+        self.failUnlessEqual(c_st.st_blocks, st.st_blocks)
+        self.failUnlessEqual(c_st.st_blksize, st.st_blksize)
+        self.failUnlessEqual(c_st.st_rdev, st.st_rdev)
 
         self.failUnlessEqual(
             obnam.cmp.first_string_by_kind(subs, obnam.cmp.CONTREF),
@@ -146,9 +125,9 @@ class FindTests(unittest.TestCase):
         st = os.lstat(pathname)
         c = obnam.filelist.find_matching_inode(fl, pathname, st)
         subs = obnam.cmp.get_subcomponents(c)
-        self.failUnlessEqual(
-          obnam.cmp.first_varint_by_kind(subs, obnam.cmp.ST_MTIME),
-          st.st_mtime)
+        stat = obnam.cmp.first_by_kind(subs, obnam.cmp.STAT)
+        st2 = obnam.cmp.parse_stat_component(stat)
+        self.failUnlessEqual(st.st_mtime, st2.st_mtime)
 
     def testFindInodeUnsuccessful(self):
         pathname = "Makefile"

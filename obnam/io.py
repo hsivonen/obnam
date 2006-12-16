@@ -324,13 +324,12 @@ def reconstruct_file_contents(context, fd, delta_id):
     os.remove(temp_name1)
 
 
-def set_inode(full_pathname, inode):
-    subs = obnam.cmp.get_subcomponents(inode)
-    mode = obnam.cmp.first_varint_by_kind(subs, obnam.cmp.ST_MODE)
-    atime = obnam.cmp.first_varint_by_kind(subs, obnam.cmp.ST_ATIME)
-    mtime = obnam.cmp.first_varint_by_kind(subs, obnam.cmp.ST_MTIME)
-    os.utime(full_pathname, (atime, mtime))
-    os.chmod(full_pathname, stat.S_IMODE(mode))
+def set_inode(full_pathname, file_component):
+    subs = obnam.cmp.get_subcomponents(file_component)
+    stat_component = obnam.cmp.first_by_kind(subs, obnam.cmp.STAT)
+    st = obnam.cmp.parse_stat_component(stat_component)
+    os.utime(full_pathname, (st.st_atime, st.st_mtime))
+    os.chmod(full_pathname, stat.S_IMODE(st.st_mode))
 
 
 def _find_refs(components):

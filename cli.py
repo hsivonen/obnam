@@ -250,7 +250,9 @@ def show_generations(context, gen_ids):
 def create_filesystem_object(context, full_pathname, inode):
     logging.debug("Creating filesystem object %s" % full_pathname)
     subs = obnam.cmp.get_subcomponents(inode)
-    mode = obnam.cmp.first_varint_by_kind(subs, obnam.cmp.ST_MODE)
+    stat_component = obnam.cmp.first_by_kind(subs, obnam.cmp.STAT)
+    st = obnam.cmp.parse_stat_component(stat_component)
+    mode = st.st_mode
     if stat.S_ISDIR(mode):
         if not os.path.exists(full_pathname):
             os.makedirs(full_pathname, 0700)
