@@ -273,27 +273,23 @@ class FileContentsTests(unittest.TestCase):
 class MetaDataTests(unittest.TestCase):
 
     def testSet(self):
-        fields = (
-            (obnam.cmp.ST_MODE, 0100664),
-            (obnam.cmp.ST_ATIME, 12765),
-            (obnam.cmp.ST_MTIME, 42),
-        )
-        list = [obnam.cmp.create(kind, obnam.varint.encode(value))
-                for kind, value in fields]
-        inode = obnam.cmp.create(obnam.cmp.FILE, list)
-
         (fd, name) = tempfile.mkstemp()
         os.close(fd)
         
+        st1 = os.stat(name)
+        inode = obnam.filelist.create_file_component_from_stat(name, st1, 
+                                                               None, None,
+                                                               None)
+
         os.chmod(name, 0)
         
         obnam.io.set_inode(name, inode)
         
-        st = os.stat(name)
+        st2 = os.stat(name)
         
-        self.failUnlessEqual(st.st_mode, fields[0][1])
-        self.failUnlessEqual(st.st_atime, fields[1][1])
-        self.failUnlessEqual(st.st_mtime, fields[2][1])
+        self.failUnlessEqual(st1.st_mode, st2.st_mode)
+        self.failUnlessEqual(st1.st_atime, st2.st_atime)
+        self.failUnlessEqual(st1.st_mtime, st2.st_mtime)
 
 
 class ObjectCacheTests(unittest.TestCase):

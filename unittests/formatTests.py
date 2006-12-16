@@ -25,6 +25,12 @@ import unittest
 import obnam
 
 
+class Fake:
+
+    def __getattr__(self, name):
+        return self.__dict__[name]
+
+
 class FormatPermissionsTests(unittest.TestCase):
 
     def testFormatPermissions(self):
@@ -76,24 +82,25 @@ class FormatFileModeTest(unittest.TestCase):
 class FormatInodeFieldsTest(unittest.TestCase):
 
     def test(self):
-        int_fields = (obnam.cmp.ST_MODE,
-                      obnam.cmp.ST_INO,
-                      obnam.cmp.ST_DEV,
-                      obnam.cmp.ST_NLINK,
-                      obnam.cmp.ST_UID,
-                      obnam.cmp.ST_GID,
-                      obnam.cmp.ST_SIZE,
-                      obnam.cmp.ST_ATIME,
-                      obnam.cmp.ST_MTIME,
-                      obnam.cmp.ST_CTIME,
-                      obnam.cmp.ST_BLOCKS,
-                      obnam.cmp.ST_BLKSIZE,
-                      obnam.cmp.ST_RDEV)
-        list = [obnam.cmp.create(x, obnam.varint.encode(1))
-                for x in int_fields]
-        inode = obnam.cmp.create(obnam.cmp.FILE, list)
+        st = Fake()
+        st.st_mode = 1
+        st.st_ino = 1
+        st.st_dev = 1
+        st.st_nlink = 1
+        st.st_uid = 1
+        st.st_gid = 1
+        st.st_size = 1
+        st.st_atime = 1
+        st.st_mtime = 1
+        st.st_ctime = 1
+        st.st_blocks = 1
+        st.st_blksize = 1
+        st.st_rdev = 1
+        file_component = \
+            obnam.filelist.create_file_component_from_stat("Makefile", st, 
+                                                           None, None, None)
 
-        list = obnam.format.inode_fields(inode)
+        list = obnam.format.inode_fields(file_component)
         
         self.failUnlessEqual(list, ["?--------x"] + ["1"] * 4 +
                                    ["1970-01-01 00:00:01"])

@@ -91,23 +91,23 @@ def filemode(mode):
     return filetype(mode) + permissions(mode)
 
 
-def inode_fields(inode):
+def inode_fields(file_component):
     format_integer = lambda x: "%d" % x
     format_time = lambda x: time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(x))
 
     fields = (
-        (obnam.cmp.ST_MODE, filemode),
-        (obnam.cmp.ST_NLINK, format_integer),
-        (obnam.cmp.ST_UID, format_integer),
-        (obnam.cmp.ST_GID, format_integer),
-        (obnam.cmp.ST_SIZE, format_integer),
-        (obnam.cmp.ST_MTIME, format_time),
+        ("st_mode", filemode),
+        ("st_nlink", format_integer),
+        ("st_uid", format_integer),
+        ("st_gid", format_integer),
+        ("st_size", format_integer),
+        ("st_mtime", format_time),
     )
 
     list = []
-    subs = obnam.cmp.get_subcomponents(inode)
+    subs = obnam.cmp.get_subcomponents(file_component)
+    stat_component = obnam.cmp.first_by_kind(subs, obnam.cmp.STAT)
+    st = obnam.cmp.parse_stat_component(stat_component)
     for kind, func in fields:
-        for value in obnam.cmp.find_strings_by_kind(subs, kind):
-            (value, _) = obnam.varint.decode(value, 0)
-            list.append(func(value))
+        list.append(func(st.__getattribute__(kind)))
     return list

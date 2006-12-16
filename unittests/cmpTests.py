@@ -37,19 +37,6 @@ class ComponentKindNameTests(unittest.TestCase):
         self.failUnlessEqual(t(c.FILECHUNK), "FILECHUNK")
         self.failUnlessEqual(t(c.OBJECT), "OBJECT")
         self.failUnlessEqual(t(c.OBJMAP), "OBJMAP")
-        self.failUnlessEqual(t(c.ST_MODE), "ST_MODE")
-        self.failUnlessEqual(t(c.ST_INO), "ST_INO")
-        self.failUnlessEqual(t(c.ST_DEV), "ST_DEV")
-        self.failUnlessEqual(t(c.ST_NLINK), "ST_NLINK")
-        self.failUnlessEqual(t(c.ST_UID), "ST_UID")
-        self.failUnlessEqual(t(c.ST_GID), "ST_GID")
-        self.failUnlessEqual(t(c.ST_SIZE), "ST_SIZE")
-        self.failUnlessEqual(t(c.ST_ATIME), "ST_ATIME")
-        self.failUnlessEqual(t(c.ST_MTIME), "ST_MTIME")
-        self.failUnlessEqual(t(c.ST_CTIME), "ST_CTIME")
-        self.failUnlessEqual(t(c.ST_BLOCKS), "ST_BLOCKS")
-        self.failUnlessEqual(t(c.ST_BLKSIZE), "ST_BLKSIZE")
-        self.failUnlessEqual(t(c.ST_RDEV), "ST_RDEV")
         self.failUnlessEqual(t(c.CONTREF), "CONTREF")
         self.failUnlessEqual(t(c.NAMEIPAIR), "NAMEIPAIR")
         self.failUnlessEqual(t(c.INODEREF), "INODEREF")
@@ -67,6 +54,7 @@ class ComponentKindNameTests(unittest.TestCase):
         self.failUnlessEqual(t(c.CONTMAPREF), "CONTMAPREF")
         self.failUnlessEqual(t(c.DELTAREF), "DELTAREF")
         self.failUnlessEqual(t(c.DELTADATA), "DELTADATA")
+        self.failUnlessEqual(t(c.STAT), "STAT")
 
 
 class RefComponentTests(unittest.TestCase):
@@ -258,3 +246,20 @@ class FindVarintTests(unittest.TestCase):
         for i in range(1024):
             self.failUnlessEqual(obnam.cmp.first_varint_by_kind(list, i), 
                                  i)
+
+
+class StatTests(unittest.TestCase):
+
+    def testEncodeDecode(self):
+        st1 = os.stat("Makefile")
+        stat = obnam.cmp.create_stat_component(st1)
+        st2 = obnam.cmp.parse_stat_component(stat)
+        
+        names1 = [x for x in dir(st1) if x.startswith("st_")]
+        names2 = [x for x in dir(st2) if x.startswith("st_")]
+        names1.sort()
+        names2.sort()
+        self.failUnlessEqual(names1, names2)
+        for name in names1:
+            self.failUnlessEqual(st1.__getattribute__(name),
+                                 st2.__getattribute__(name))

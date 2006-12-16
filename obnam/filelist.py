@@ -34,29 +34,9 @@ def create_file_component_from_stat(pathname, st, contref, sigref, deltaref):
     """Create a FILE component given pathname, stat results, etc"""
     subs = []
     
-    c = obnam.cmp.create(obnam.cmp.FILENAME, pathname)
-    subs.append(c)
+    subs.append(obnam.cmp.create(obnam.cmp.FILENAME, pathname))
     
-    items = (
-        (obnam.cmp.ST_MODE, "st_mode"),
-        (obnam.cmp.ST_INO, "st_ino"),
-        (obnam.cmp.ST_DEV, "st_dev"),
-        (obnam.cmp.ST_NLINK, "st_nlink"),
-        (obnam.cmp.ST_UID, "st_uid"),
-        (obnam.cmp.ST_GID, "st_gid"),
-        (obnam.cmp.ST_SIZE, "st_size"),
-        (obnam.cmp.ST_ATIME, "st_atime"),
-        (obnam.cmp.ST_MTIME, "st_mtime"),
-        (obnam.cmp.ST_CTIME, "st_ctime"),
-        (obnam.cmp.ST_BLOCKS, "st_blocks"),
-        (obnam.cmp.ST_BLKSIZE, "st_blksize"),
-        (obnam.cmp.ST_RDEV, "st_rdev"),
-    )
-    st_keys = dir(st)
-    for kind, key in items:
-        if key in st_keys:
-            n = obnam.varint.encode(st.__getattribute__(key))
-            subs.append(obnam.cmp.create(kind, n))
+    subs.append(obnam.cmp.create_stat_component(st))
 
     if contref:
         subs.append(obnam.cmp.create(obnam.cmp.CONTREF, contref))
@@ -98,24 +78,27 @@ def find_matching_inode(fl, pathname, stat_result):
     prev = find(fl, pathname)
     if prev:
         prev_subs = obnam.cmp.get_subcomponents(prev)
+        prev_stat = obnam.cmp.first_by_kind(prev_subs, obnam.cmp.STAT)
+        prev_st = obnam.cmp.parse_stat_component(prev_stat)
         fields = (
-            ("st_dev", obnam.cmp.ST_DEV),
-            ("st_ino", obnam.cmp.ST_INO),
-            ("st_mode", obnam.cmp.ST_MODE),
-            ("st_nlink", obnam.cmp.ST_NLINK),
-            ("st_uid", obnam.cmp.ST_UID),
-            ("st_gid", obnam.cmp.ST_GID),
-            ("st_rdev", obnam.cmp.ST_RDEV),
-            ("st_size", obnam.cmp.ST_SIZE),
-            ("st_blksize", obnam.cmp.ST_BLKSIZE),
-            ("st_blocks", obnam.cmp.ST_BLOCKS),
-            ("st_mtime", obnam.cmp.ST_MTIME),
+            "st_dev",
+            "st_ino",
+            "st_mode",
+            "st_nlink",
+            "st_uid",
+            "st_gid",
+            "st_rdev",
+            "st_size",
+            "st_blksize",
+            "st_blocks",
+            "st_mtime",
             # No atime or ctime, on purpose. They can be changed without
             # requiring a new backup.
         )
-        for a, b in fields:
-            b_value = obnam.cmp.first_varint_by_kind(prev_subs, b)
-            if stat_result.__getattribute__(a) != b_value:
+        for field in fields:
+            a_value = stat_result.__getattribute__(field)
+            b_value = prev_st.__getattribute__(field)
+            if a_value != b_value:
                 return None
         return prev
     else:

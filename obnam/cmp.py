@@ -57,19 +57,7 @@ BLKID         = _define_plain(       3, "BLKID")
 FILECHUNK     = _define_plain(       4, "FILECHUNK")
 OBJECT        = _define_composite(   5, "OBJECT")
 OBJMAP        = _define_composite(   6, "OBJMAP")
-ST_MODE       = _define_plain(       7, "ST_MODE")
-ST_INO        = _define_plain(       8, "ST_INO")
-ST_DEV        = _define_plain(       9, "ST_DEV")
-ST_NLINK      = _define_plain(      10, "ST_NLINK")
-ST_UID        = _define_plain(      11, "ST_UID")
-ST_GID        = _define_plain(      12, "ST_GID")
-ST_SIZE       = _define_plain(      13, "ST_SIZE")
-ST_ATIME      = _define_plain(      14, "ST_ATIME")
-ST_MTIME      = _define_plain(      15, "ST_MTIME")
-ST_CTIME      = _define_plain(      16, "ST_CTIME")
-ST_BLOCKS     = _define_plain(      17, "ST_BLOCKS")
-ST_BLKSIZE    = _define_plain(      18, "ST_BLKSIZE")
-ST_RDEV       = _define_plain(      19, "ST_RDEV")
+# 7-19 have been obsoleted and should not exist anywhere in the universe.
 CONTREF       = _define_ref(        20, "CONTREF")
 NAMEIPAIR     = _define_composite(  21, "NAMEIPAIR")
 INODEREF      = _define_ref(        22, "INODEREF")
@@ -87,6 +75,7 @@ FILELISTREF   = _define_ref(        34, "FILELISTREF")
 CONTMAPREF    = _define_ref(        35, "CONTMAPREF")
 DELTAREF      = _define_ref(        36, "DELTAREF")
 DELTADATA     = _define_plain(      37, "DELTADATA")
+STAT          = _define_plain(      38, "STAT")
 
 
 def kind_name(kind):
@@ -242,3 +231,48 @@ def first_varint_by_kind(components, wanted_kind):
         return get_varint_value(c)
     else:
         return None
+
+
+def create_stat_component(st):
+    """Create a STAT component, given a stat result"""
+    return obnam.cmp.create(obnam.cmp.STAT,
+                            obnam.varint.encode(st.st_mode) +
+                            obnam.varint.encode(st.st_ino) +
+                            obnam.varint.encode(st.st_dev) +
+                            obnam.varint.encode(st.st_nlink) +
+                            obnam.varint.encode(st.st_uid) +
+                            obnam.varint.encode(st.st_gid) +
+                            obnam.varint.encode(st.st_size) +
+                            obnam.varint.encode(st.st_atime) +
+                            obnam.varint.encode(st.st_mtime) +
+                            obnam.varint.encode(st.st_ctime) +
+                            obnam.varint.encode(st.st_blocks) +
+                            obnam.varint.encode(st.st_blksize) +
+                            obnam.varint.encode(st.st_rdev))
+
+
+class FakeStatResult:
+
+    def __getattribute__(self, name):
+        return self.__dict__[name]
+        
+
+def parse_stat_component(stat_component):
+    """Return an object like a stat result from a decoded stat_component"""
+    st = FakeStatResult()
+    value = get_string_value(stat_component)
+    pos = 0
+    (st.st_mode, pos) = obnam.varint.decode(value, pos)
+    (st.st_ino, pos) = obnam.varint.decode(value, pos)
+    (st.st_dev, pos) = obnam.varint.decode(value, pos)
+    (st.st_nlink, pos) = obnam.varint.decode(value, pos)
+    (st.st_uid, pos) = obnam.varint.decode(value, pos)
+    (st.st_gid, pos) = obnam.varint.decode(value, pos)
+    (st.st_size, pos) = obnam.varint.decode(value, pos)
+    (st.st_atime, pos) = obnam.varint.decode(value, pos)
+    (st.st_mtime, pos) = obnam.varint.decode(value, pos)
+    (st.st_ctime, pos) = obnam.varint.decode(value, pos)
+    (st.st_blocks, pos) = obnam.varint.decode(value, pos)
+    (st.st_blksize, pos) = obnam.varint.decode(value, pos)
+    (st.st_rdev, pos) = obnam.varint.decode(value, pos)
+    return st
