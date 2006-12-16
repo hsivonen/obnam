@@ -40,6 +40,7 @@ class ParseStoreUrlTests(unittest.TestCase):
             ("sftp://user@host/foo", "user", "host", None, "/foo"),
             ("sftp://host:22/foo", None, "host", 22, "/foo"),
             ("sftp://user@host:22/foo", "user", "host", 22, "/foo"),
+            ("sftp://host/~/foo", None, "host", None, "foo"),
         )
         for case in cases:
             user, host, port, path = obnam.backend.parse_store_url(case[0])
@@ -139,6 +140,8 @@ class UploadTests(LocalBackendBase):
         block = "pink is pretty"
         ret = obnam.backend.upload(be, id, block)
         self.failUnlessEqual(ret, None)
+        self.failUnlessEqual(obnam.backend.get_bytes_read(be), 0)
+        self.failUnlessEqual(obnam.backend.get_bytes_written(be), len(block))
         
         pathname = os.path.join(self.rootdir, id)
         self.failUnless(os.path.isfile(pathname))
@@ -159,6 +162,8 @@ class DownloadTests(LocalBackendBase):
         
         success = obnam.backend.download(be, id)
         self.failUnlessEqual(success, None)
+        self.failUnlessEqual(obnam.backend.get_bytes_read(be), len(block))
+        self.failUnlessEqual(obnam.backend.get_bytes_written(be), len(block))
         
     def testError(self):
         be = obnam.backend.init(self.config, self.cache)

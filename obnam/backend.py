@@ -75,6 +75,8 @@ class BackendData:
         self.dircounts = [0] * LEVELS
         self.sftp_transport = None
         self.sftp_client = None
+        self.bytes_read = 0
+        self.bytes_written = 0
 
 
 def get_default_user():
@@ -92,6 +94,10 @@ def parse_store_url(url):
     and specifies a remote store. Return a tuple username, host, port,
     path, where elements can be None if they are meant to be the default
     or are not relevant.
+    
+    Note that we follow the bzr (and lftp?) syntax: sftp://foo/bar is an
+    absolute path, /foo, and sftp://foo/~/bar is "bar" relative to the
+    user's home directory.
     
     """
     
@@ -111,6 +117,8 @@ def parse_store_url(url):
             port = int(port)
         else:
             host = netloc
+        if path.startswith("/~/"):
+            path = path[3:]
     else:
         path = url
     
@@ -130,6 +138,16 @@ def init(config, cache):
     be.cache = cache
     be.blockdir = str(uuid.uuid4())
     return be
+
+
+def get_bytes_read(be):
+    """Return number of bytes read from the store during this run"""
+    return be.bytes_read
+
+
+def get_bytes_written(be):
+    """Return number of bytes written to the store during this run"""
+    return be.bytes_written
 
 
 def increment_dircounts(be):
@@ -221,6 +239,7 @@ def upload(be, block_id, block):
         f = file(_block_remote_pathname(be, block_id), "w")
         f.write(block)
         f.close()
+    be.bytes_written += len(block)
     return None
 
 
@@ -248,6 +267,7 @@ def download(be, block_id):
             obnam.cache.put_block(be.cache, block_id, block)
         except IOError, e:
             return e
+    be.bytes_read += len(block)
     return None
 
 
