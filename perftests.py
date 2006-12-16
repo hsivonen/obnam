@@ -17,10 +17,13 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import md5
 import os
 import shutil
+import socket
 import sys
 import tempfile
+import time
 
 
 def tar_method(tempdir, rootdir):
@@ -105,6 +108,18 @@ def format(desc, user, system, real, size):
                 (desc, user, system, real, size/(1024*1024))
 
 
+def md5sum_of_file(filename):
+    m = md5.new()
+    f = file(filename, "r")
+    while True:
+        data = f.read(4096)
+        if not data:
+            break
+        m.update(data)
+    f.close()
+    return m.hexdigest()
+
+
 def run_testcase(testcase):
     tempdir = create_tempdir()
     rootdir = os.path.join(tempdir, "root")
@@ -113,6 +128,10 @@ def run_testcase(testcase):
     print "Testcase: " + testcase
     print "==========" + "=" * len(testcase)
     print 
+    print "Host:", socket.gethostname()
+    print "Date:", time.asctime()
+    print "MD5:", md5sum_of_file(testcase)
+    print
     x = heading()
     print x
     print "-" * len(x)
