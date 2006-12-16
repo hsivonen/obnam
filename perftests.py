@@ -64,7 +64,7 @@ backup_methods = (
     ("rsync", rsync_method),
     ("obnam", obnam_method),
 #    ("obnam-profiled", profiled_obnam_method),
-    ("obnam-psyco", psyco_obnam_method),
+#    ("obnam-psyco", psyco_obnam_method),
 )
 
 
