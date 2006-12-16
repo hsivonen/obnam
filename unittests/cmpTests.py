@@ -259,3 +259,20 @@ class FindVarintTests(unittest.TestCase):
         for i in range(1024):
             self.failUnlessEqual(obnam.cmp.first_varint_by_kind(list, i), 
                                  i)
+
+
+class StatTests(unittest.TestCase):
+
+    def testEncodeDecode(self):
+        st1 = os.stat("Makefile")
+        stat = obnam.cmp.create_stat_component(st1)
+        st2 = obnam.cmp.parse_stat_component(stat)
+        
+        names1 = [x for x in dir(st1) if x.startswith("st_")]
+        names2 = [x for x in dir(st2) if x.startswith("st_")]
+        names1.sort()
+        names2.sort()
+        self.failUnlessEqual(names1, names2)
+        for name in names1:
+            self.failUnlessEqual(st1.__getattribute__(name),
+                                 st2.__getattribute__(name))
