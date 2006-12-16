@@ -87,6 +87,7 @@ FILELISTREF   = _define_ref(        34, "FILELISTREF")
 CONTMAPREF    = _define_ref(        35, "CONTMAPREF")
 DELTAREF      = _define_ref(        36, "DELTAREF")
 DELTADATA     = _define_plain(      37, "DELTADATA")
+STAT          = _define_plain(      38, "STAT")
 
 
 def kind_name(kind):

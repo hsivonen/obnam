@@ -67,6 +67,7 @@ class ComponentKindNameTests(unittest.TestCase):
         self.failUnlessEqual(t(c.CONTMAPREF), "CONTMAPREF")
         self.failUnlessEqual(t(c.DELTAREF), "DELTAREF")
         self.failUnlessEqual(t(c.DELTADATA), "DELTADATA")
+        self.failUnlessEqual(t(c.STAT), "STAT")
 
 
 class RefComponentTests(unittest.TestCase):
