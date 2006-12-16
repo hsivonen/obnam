@@ -50,12 +50,18 @@ def profiled_obnam_method(tempdir, rootdir):
                     + args
 
 
+def psyco_obnam_method(tempdir, rootdir):
+    result, args = obnam_method(tempdir, rootdir)
+    return result, args + ["--use-psyco"]
+
+
 backup_methods = (
     ("tar", tar_method),
     ("targz", targz_method),
     ("rsync", rsync_method),
     ("obnam", obnam_method),
-#    ("obnam", profiled_obnam_method),
+#    ("obnam-profiled", profiled_obnam_method),
+#    ("obnam-psyco", psyco_obnam_method),
 )
 
 
@@ -90,12 +96,12 @@ def sizeof(file_or_dir):
 
 
 def heading():
-    return "%-12s %6s %6s %6s %6s" % \
+    return "%-14s %6s %6s %6s %6s" % \
                 ("Method", "User", "System", "Real", "MB")
 
 
 def format(desc, user, system, real, size):
-    return "%-12s %6.1f %6.1f %6.1f %6d" % \
+    return "%-14s %6.1f %6.1f %6.1f %6d" % \
                 (desc, user, system, real, size/(1024*1024))
 
 
