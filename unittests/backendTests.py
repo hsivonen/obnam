@@ -140,6 +140,8 @@ class UploadTests(LocalBackendBase):
         block = "pink is pretty"
         ret = obnam.backend.upload(be, id, block)
         self.failUnlessEqual(ret, None)
+        self.failUnlessEqual(obnam.backend.get_bytes_read(be), 0)
+        self.failUnlessEqual(obnam.backend.get_bytes_written(be), len(block))
         
         pathname = os.path.join(self.rootdir, id)
         self.failUnless(os.path.isfile(pathname))
@@ -160,6 +162,8 @@ class DownloadTests(LocalBackendBase):
         
         success = obnam.backend.download(be, id)
         self.failUnlessEqual(success, None)
+        self.failUnlessEqual(obnam.backend.get_bytes_read(be), len(block))
+        self.failUnlessEqual(obnam.backend.get_bytes_written(be), len(block))
         
     def testError(self):
         be = obnam.backend.init(self.config, self.cache)
