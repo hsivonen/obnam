@@ -254,55 +254,6 @@ def delta_object_encode(objid, deltadata, cont_ref, delta_ref):
     return encode(o)
 
 
-def inode_object_encode(objid, stat_result, sig_id, contents_id):
-    """Create an inode object from the return value of os.stat"""
-    o = create(objid, INODE)
-
-    st = stat_result
-
-    items = (
-        (obnam.cmp.ST_MODE, "st_mode"),
-        (obnam.cmp.ST_INO, "st_ino"),
-        (obnam.cmp.ST_DEV, "st_dev"),
-        (obnam.cmp.ST_NLINK, "st_nlink"),
-        (obnam.cmp.ST_UID, "st_uid"),
-        (obnam.cmp.ST_GID, "st_gid"),
-        (obnam.cmp.ST_SIZE, "st_size"),
-        (obnam.cmp.ST_ATIME, "st_atime"),
-        (obnam.cmp.ST_MTIME, "st_mtime"),
-        (obnam.cmp.ST_CTIME, "st_ctime"),
-        (obnam.cmp.ST_BLOCKS, "st_blocks"),
-        (obnam.cmp.ST_BLKSIZE, "st_blksize"),
-        (obnam.cmp.ST_RDEV, "st_rdev"),
-    )
-    for kind, key in items:
-        if key in st:
-            n = obnam.varint.encode(st[key])
-            c = obnam.cmp.create(kind, n)
-            add(o, c)
-
-    if sig_id:
-        c = obnam.cmp.create(obnam.cmp.SIGREF, sig_id)
-        add(o, c)
-    if contents_id:
-        c = obnam.cmp.create(obnam.cmp.CONTREF, contents_id)
-        add(o, c)
-
-    return encode(o)
-    
-    
-class UnknownInodeField(ExceptionBase):
-
-    def __init__(self, kind):
-        self._msg = "Unknown field in inode object: %d" % kind
-
-
-class NotAnInode(ExceptionBase):
-
-    def __init__(self, okind):
-        self._msg = "Object kind is not inode: %d" % okind
-
-
 def generation_object_encode(objid, filelist_id):
     """Encode a generation object, from list of filename, inode_id pairs"""
     o = create(objid, GEN)
