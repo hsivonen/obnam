@@ -72,10 +72,12 @@ def get_block(context, block_id):
     """Get a block from cache or by downloading it"""
     block = obnam.cache.get_block(context.cache, block_id)
     if not block:
-        e = obnam.backend.download(context.be, block_id)
-        if e:
-            raise e
-        block = obnam.cache.get_block(context.cache, block_id)
+        result = obnam.backend.download(context.be, block_id)
+        if type(result) == type(""):
+            block = result
+        else:
+            # it's an exception
+            raise result
     return block
 
 
@@ -199,9 +201,9 @@ def upload_host_block(context, host_block):
 def get_host_block(context):
     """Return (and fetch, if needed) the host block, or None if not found"""
     host_id = context.config.get("backup", "host-id")
-    e = obnam.backend.download(context.be, host_id)
-    if e:
-        return None
+    result = obnam.backend.download(context.be, host_id)
+    if type(result) == type(""):
+        return result
     else:
         return obnam.cache.get_block(context.cache, host_id)
 

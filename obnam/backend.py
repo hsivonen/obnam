@@ -246,7 +246,7 @@ def upload(be, block_id, block):
 def download(be, block_id):
     """Download a block from the remote server
     
-    Return exception for error, or None for OK.
+    Return the unparsed block (a string), or an exception for errors.
     
     """
     
@@ -268,7 +268,7 @@ def download(be, block_id):
         except IOError, e:
             return e
     be.bytes_read += len(block)
-    return None
+    return block
 
 
 def sftp_listdir_abs(sftp, dirname):
