@@ -78,6 +78,7 @@ DELTADATA     = _define_plain(      37, "DELTADATA")
 STAT          = _define_plain(      38, "STAT")
 GENSTART      = _define_plain(      39, "GENSTART")
 GENEND        = _define_plain(      40, "GENEND")
+DELTAPARTREF  = _define_ref(        41, "DELTAPARTREF")
 
 
 def kind_name(kind):

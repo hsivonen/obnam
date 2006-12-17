@@ -304,10 +304,12 @@ def reconstruct_file_contents(context, fd, delta_id):
         stack = stack[:-1]
         logging.debug("Applying DELTA %s" % obnam.obj.get_id(delta))
         
-        deltadata = obnam.obj.first_string_by_kind(delta, obnam.cmp.DELTADATA)
+        deltapart_ids = obnam.obj.find_strings_by_kind(delta, 
+                                                       obnam.cmp.DELTAPARTREF)
         
         (temp_fd2, temp_name2) = tempfile.mkstemp()
-        obnam.rsync.apply_delta(temp_name1, deltadata, temp_name2)
+        obnam.rsync.apply_delta(context, temp_name1, deltapart_ids, 
+                                temp_name2)
         os.remove(temp_name1)
         os.close(temp_fd1)
         temp_name1 = temp_name2

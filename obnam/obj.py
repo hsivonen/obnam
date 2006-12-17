@@ -53,6 +53,7 @@ HOST         = _define_kind(5, "HOST")
 FILECONTENTS = _define_kind(6, "FILECONTENTS")
 FILELIST     = _define_kind(7, "FILELIST")
 DELTA        = _define_kind(8, "DELTA")
+DELTAPART    = _define_kind(9, "DELTAPART")
 
 
 def kind_name(kind):
@@ -241,11 +242,11 @@ def signature_object_encode(objid, sigdata):
     return encode(o)
 
 
-def delta_object_encode(objid, deltadata, cont_ref, delta_ref):
+def delta_object_encode(objid, deltapart_refs, cont_ref, delta_ref):
     """Encode a DELTA object"""
     o = create(objid, DELTA)
-    c = obnam.cmp.create(obnam.cmp.DELTADATA, deltadata)
-    add(o, c)
+    for deltapart_ref in deltapart_refs:
+        add(o, obnam.cmp.create(obnam.cmp.DELTAPARTREF, deltapart_ref))
     if cont_ref:
         c = obnam.cmp.create(obnam.cmp.CONTREF, cont_ref)
     else:

@@ -23,6 +23,9 @@ import subprocess
 import tempfile
 
 
+import obnam
+
+
 def start_process(argv, stdin_fd, stdout_fd):
     """Start a new process, using stdin/out_fd for its standard in/out"""
     pid = os.fork()
@@ -98,7 +101,12 @@ def compute_signature(context, filename):
 
 
 def compute_delta(context, signature, filename):
-    """Compute an rsync delta for a file, given signature of old version"""
+    """Compute an rsync delta for a file, given signature of old version
+    
+    Return list of ids of DELTAPART objects.
+    
+    """
+
     (fd, tempname) = tempfile.mkstemp()
     os.write(fd, signature)
     os.close(fd)
@@ -107,24 +115,54 @@ def compute_delta(context, signature, filename):
       start_pipeline([context.config.get("backup", "odirect-read"), filename],
                      ["rdiff", "--", "delta", tempname, "-", "-"])
     os.close(stdin_fd)
-    stdout_data = read_until_eof(stdout_fd)
+    list = []
+    block_size = context.config.getint("backup", "block-size")
+    while True:
+        data = os.read(stdout_fd, block_size)
+        if not data:
+            break
+        id = obnam.obj.object_id_new()
+        o = obnam.obj.create(id, obnam.obj.DELTAPART)
+        obnam.obj.add(o, obnam.cmp.create(obnam.cmp.DELTADATA, data))
+        o = obnam.obj.encode(o)
+        obnam.io.enqueue_object(context, context.content_oq, 
+                                context.contmap, id, o)
+        list.append(id)
     os.close(stdout_fd)
     exit = wait_pipeline(pids)
     os.remove(tempname)
     if exit == 0:
-        return stdout_data
+        return list
     else:
         return False
 
 
-def apply_delta(basis_filename, deltadata, new_filename):
+def apply_delta(context, basis_filename, deltapart_ids, new_filename):
     """Apply an rsync delta for a file, to get a new version of it"""
+    
+    devnull = os.open("/dev/null", os.O_WRONLY)
+    if devnull == -1:
+        return False
+
     p = subprocess.Popen(["rdiff", "--", "patch", basis_filename, "-",
                           new_filename],
-                         stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                         stdin=subprocess.PIPE, stdout=devnull,
                          stderr=subprocess.PIPE)
-    (stdout, stderr) = p.communicate(input=deltadata)
-    if p.returncode == 0:
+
+    ret = True
+    for id in deltapart_ids:
+        deltapart = obnam.io.get_object(context, id)
+        if deltapart:
+            deltadata = obnam.obj.first_string_by_kind(deltapart,
+                                                       obnam.cmp.DELTADATA)
+            p.stdin.write(deltadata)
+        else:
+            assert 0
+            ret = False
+
+    p.communicate(input="")
+    os.close(devnull)
+    if ret and p.returncode == 0:
         return True
     else:
         return False
