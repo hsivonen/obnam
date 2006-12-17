@@ -264,7 +264,6 @@ def download(be, block_id):
             f = file(_block_remote_pathname(be, block_id), "r")
             block = f.read()
             f.close()
-            obnam.cache.put_block(be.cache, block_id, block)
         except IOError, e:
             return e
     be.bytes_read += len(block)
