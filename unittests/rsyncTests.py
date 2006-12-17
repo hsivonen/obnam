@@ -60,10 +60,19 @@ class RsyncTests(unittest.TestCase):
         os.close(fd)
     
         context = obnam.context.create()
+        context.cache = obnam.cache.init(context.config)
+        context.be = obnam.backend.init(context.config, context.cache)
+
         sig = obnam.rsync.compute_signature(context, empty_file)
-        delta = obnam.rsync.compute_delta(context, sig, empty_file)
+        deltapart_ids = obnam.rsync.compute_delta(context, sig, empty_file)
 
         os.remove(empty_file)
+        self.failUnlessEqual(len(deltapart_ids), 1)
+
+        obnam.io.flush_all_object_queues(context)
+        delta = obnam.io.get_object(context, deltapart_ids[0])
+        self.failIfEqual(delta, None)
+        delta = obnam.obj.first_string_by_kind(delta, obnam.cmp.DELTADATA)
 
         # The hex string below is what rdiff outputs. I've no idea what
         # the format is, and the empty delta is expressed differently
@@ -79,15 +88,18 @@ class RsyncTests(unittest.TestCase):
 
     def testApplyDelta(self):
         context = obnam.context.create()
+        context.cache = obnam.cache.init(context.config)
+        context.be = obnam.backend.init(context.config, context.cache)
         
         first = self.create_file("pink")
         second = self.create_file("pretty")
         sig = obnam.rsync.compute_signature(context, first)
-        delta = obnam.rsync.compute_delta(context, sig, second)
+        deltapart_ids = obnam.rsync.compute_delta(context, sig, second)
+        obnam.io.flush_all_object_queues(context)
 
         (fd, third) = tempfile.mkstemp()
         os.close(fd)
-        obnam.rsync.apply_delta(first, delta, third)
+        obnam.rsync.apply_delta(context, first, deltapart_ids, third)
         
         f = file(third, "r")
         third_data = f.read()

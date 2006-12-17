@@ -57,6 +57,7 @@ class ComponentKindNameTests(unittest.TestCase):
         self.failUnlessEqual(t(c.STAT), "STAT")
         self.failUnlessEqual(t(c.GENSTART), "GENSTART")
         self.failUnlessEqual(t(c.GENEND), "GENEND")
+        self.failUnlessEqual(t(c.DELTAPARTREF), "DELTAPARTREF")
 
 
 class RefComponentTests(unittest.TestCase):
