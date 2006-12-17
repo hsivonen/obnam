@@ -148,10 +148,14 @@ class GenerationTests(unittest.TestCase):
     def testEncodeDecode(self):
         id1 = "pink"
         fl1 = "pretty"
-        gen = generation_object_encode(id1, fl1)
-        (id2, fl2) = generation_object_decode(gen)
+        start1 = 12765
+        end1 = 37337
+        gen = generation_object_encode(id1, fl1, start1, end1)
+        (id2, fl2, start2, end2) = generation_object_decode(gen)
         self.failUnlessEqual(id1, id2)
         self.failUnlessEqual(fl1, fl2)
+        self.failUnlessEqual(start1, start2)
+        self.failUnlessEqual(end1, end2)
 
 
 class ObjectTests(unittest.TestCase):

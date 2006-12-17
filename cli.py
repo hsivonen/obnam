@@ -152,6 +152,7 @@ def backup(context, args):
     if not prevgen_filelist:
         prevgen_filelist = obnam.filelist.create()
 
+    start_time = int(time.time())
     new_filelist = obnam.filelist.create()
     for name in args:
         if os.path.isdir(obnam.io.resolve(context, name)):
@@ -159,6 +160,7 @@ def backup(context, args):
         else:
             raise Exception("Not a directory: %s" % 
                 obnam.io.resolve(context, name))
+    end_time = int(time.time())
 
     logging.info("Creating new file list object")    
     filelist_id = obnam.obj.object_id_new()
@@ -169,7 +171,8 @@ def backup(context, args):
     
     logging.info("Creating new generation object")
     gen_id = obnam.obj.object_id_new()
-    gen = obnam.obj.generation_object_encode(gen_id, filelist_id)
+    gen = obnam.obj.generation_object_encode(gen_id, filelist_id, start_time,
+                                             end_time)
     gen_ids.append(gen_id)
     obnam.io.enqueue_object(context, context.oq, context.map, gen_id, gen)
     obnam.io.flush_all_object_queues(context)
@@ -204,6 +207,30 @@ def generations(context):
         print id
 
 
+def format_period(start, end):
+    """Format a period of time in a format that is easy to read for humans"""
+    start = time.localtime(start)
+    end = time.localtime(end)
+    if start[0:3] == end[0:3]:
+        return "%s %s - %s" % \
+            (time.strftime("%Y-%m-%d", start),
+             time.strftime("%H:%M", start),
+             time.strftime("%H:%M", end))
+    else:
+        return "%s %s - %s %s" % \
+            (time.strftime("%Y-%m-%d", start),
+             time.strftime("%H:%M", start),
+             time.strftime("%Y-%m-%d", end),
+             time.strftime("%H:%M", end))
+
+
+def format_generation_period(gen):
+    """Return human readable string to show the period of a generation"""
+    start_time = obnam.obj.first_varint_by_kind(gen, obnam.cmp.GENSTART)
+    end_time = obnam.obj.first_varint_by_kind(gen, obnam.cmp.GENEND)
+    return format_period(start_time, end_time)
+
+
 def show_generations(context, gen_ids):
     host_block = obnam.io.get_host_block(context)
     (host_id, _, map_block_ids, _) = \
@@ -213,8 +240,11 @@ def show_generations(context, gen_ids):
 
     pretty = False
     for gen_id in gen_ids:
-        print "Generation:", gen_id
         gen = obnam.io.get_object(context, gen_id)
+        start_time = obnam.obj.first_varint_by_kind(gen, obnam.cmp.GENSTART)
+        end_time = obnam.obj.first_varint_by_kind(gen, obnam.cmp.GENEND)
+        print "Generation: %s %s" % (gen_id, format_generation_period(gen))
+
         fl_id = obnam.obj.first_string_by_kind(gen, 
                                 obnam.cmp.FILELISTREF)
         fl = obnam.io.get_object(context, fl_id)

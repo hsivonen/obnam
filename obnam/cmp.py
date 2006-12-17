@@ -76,6 +76,8 @@ CONTMAPREF    = _define_ref(        35, "CONTMAPREF")
 DELTAREF      = _define_ref(        36, "DELTAREF")
 DELTADATA     = _define_plain(      37, "DELTADATA")
 STAT          = _define_plain(      38, "STAT")
+GENSTART      = _define_plain(      39, "GENSTART")
+GENEND        = _define_plain(      40, "GENEND")
 
 
 def kind_name(kind):

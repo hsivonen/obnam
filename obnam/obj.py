@@ -254,11 +254,13 @@ def delta_object_encode(objid, deltadata, cont_ref, delta_ref):
     return encode(o)
 
 
-def generation_object_encode(objid, filelist_id):
+def generation_object_encode(objid, filelist_id, start_time, end_time):
     """Encode a generation object, from list of filename, inode_id pairs"""
     o = create(objid, GEN)
-    c = obnam.cmp.create(obnam.cmp.FILELISTREF, filelist_id)
-    add(o, c)
+    add(o, obnam.cmp.create(obnam.cmp.FILELISTREF, filelist_id))
+    add(o, obnam.cmp.create(obnam.cmp.GENSTART, 
+                            obnam.varint.encode(start_time)))
+    add(o, obnam.cmp.create(obnam.cmp.GENEND, obnam.varint.encode(end_time)))
     return encode(o)
 
 
@@ -266,7 +268,9 @@ def generation_object_decode(gen):
     """Decode a generation object into objid, file list ref"""
 
     o = decode(gen, 0)
-    return o.id, first_string_by_kind(o, obnam.cmp.FILELISTREF)
+    return o.id, first_string_by_kind(o, obnam.cmp.FILELISTREF), \
+           first_varint_by_kind(o, obnam.cmp.GENSTART), \
+           first_varint_by_kind(o, obnam.cmp.GENEND)
 
 
 def host_block_encode(host_id, gen_ids, map_block_ids, contmap_block_ids):
