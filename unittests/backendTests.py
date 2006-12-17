@@ -161,7 +161,7 @@ class DownloadTests(LocalBackendBase):
         obnam.backend.upload(be, id, block)
         
         success = obnam.backend.download(be, id)
-        self.failUnlessEqual(success, None)
+        self.failUnlessEqual(type(success), type(""))
         self.failUnlessEqual(obnam.backend.get_bytes_read(be), len(block))
         self.failUnlessEqual(obnam.backend.get_bytes_written(be), len(block))
         
