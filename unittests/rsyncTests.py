@@ -19,6 +19,7 @@
 
 
 import os
+import shutil
 import tempfile
 import unittest
 
@@ -79,7 +80,9 @@ class RsyncTests(unittest.TestCase):
         # in different situations. Eventually we'll move away from rdiff,
         # and then this should become clearer. --liw, 2006-09-24
         self.failUnlessEqual(delta, "rs\x026\x00")
-
+        
+        shutil.rmtree(context.config.get("backup", "store"))
+        
     def create_file(self, contents):
         (fd, filename) = tempfile.mkstemp()
         os.write(fd, contents)
@@ -106,3 +109,5 @@ class RsyncTests(unittest.TestCase):
         f.close()
 
         self.failUnlessEqual(third_data, "pretty")
+        
+        shutil.rmtree(context.config.get("backup", "store"))

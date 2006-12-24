@@ -200,8 +200,8 @@ class ObjectQueuingTests(unittest.TestCase):
             obnam.obj.queue_combined_size(context.oq),
             len(object2))
 
-        shutil.rmtree(context.config.get("backup", "cache"))
-        shutil.rmtree(context.config.get("backup", "store"))
+        shutil.rmtree(context.config.get("backup", "cache"), True)
+        shutil.rmtree(context.config.get("backup", "store"), True)
 
 
 class FileContentsTests(unittest.TestCase):
