@@ -39,7 +39,7 @@ class CommandLineParsingTests(unittest.TestCase):
         self.failUnless(config.has_section("backup"))
         needed = ["block-size", "cache", "store", "target-dir",
                   "host-id", "object-cache-size", "log-level", "ssh-key",
-                  "odirect-read"]
+                  "odirect-read", "log-file"]
         needed.sort()
         actual = config.options("backup")
         actual.sort()

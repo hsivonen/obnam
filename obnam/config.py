@@ -61,6 +61,10 @@ def parse_options(config, argv):
                       help="set object cache maximum size to COUNT objects" +
                            " (default depends on block size")
     
+    parser.add_option("--log-file",
+                      metavar="FILE",
+                      help="append log messages to FILE")
+    
     parser.add_option("--log-level",
                       metavar="LEVEL",
                       help="set log level to LEVEL, one of debug, info, " +
@@ -92,6 +96,8 @@ def parse_options(config, argv):
         config.set("backup", "target-dir", options.target)
     if options.object_cache_size:
         config.set("backup", "object-cache-size", options.object_cache_size)
+    if options.log_file:
+        config.set("backup", "log-file", options.log_file)
     if options.log_level:
         config.set("backup", "log-level", options.log_level)
     if options.ssh_key:

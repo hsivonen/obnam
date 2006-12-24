@@ -10,6 +10,7 @@ items = (
     ("backup", "ssh-key", "ssh-key"),
     ("backup", "target-dir", "."),
     ("backup", "object-cache-size", "0"),
+    ("backup", "log-file", ""),
     ("backup", "log-level", "warning"),
     ("backup", "odirect-read", "./odirect_read"),
 )
