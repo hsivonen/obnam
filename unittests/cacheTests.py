@@ -42,7 +42,8 @@ class CacheBase(unittest.TestCase):
             self.config.set(section, item, value)
 
     def tearDown(self):
-        shutil.rmtree(self.cachedir)
+        if os.path.exists(self.cachedir):
+            shutil.rmtree(self.cachedir)
         del self.cachedir
         del self.config
 
@@ -51,7 +52,7 @@ class InitTests(CacheBase):
 
     def testInit(self):
         cache = obnam.cache.init(self.config)
-        self.failUnless(os.path.isdir(self.cachedir))
+        self.failIf(os.path.isdir(self.cachedir))
 
 
 class PutTests(CacheBase):
