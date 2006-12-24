@@ -47,11 +47,16 @@ class TimeOffsetFormatter(logging.Formatter):
         return "%dm%.1fs" % (minutes, seconds)
 
 def setup(config):
+    filename = config.get("backup", "log-file")
+    if filename:
+        f = file(filename, "a")
+    else:
+        f = sys.stdout
     level = config.get("backup", "log-level")
 
     formatter = TimeOffsetFormatter("%(asctime)s %(levelname)s: %(message)s")
     
-    handler = logging.StreamHandler(sys.stdout)
+    handler = logging.StreamHandler(f)
     handler.setFormatter(formatter)
     
     logger = logging.getLogger()
