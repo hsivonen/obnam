@@ -224,6 +224,15 @@ def sftp_makedirs(sftp, dirname, mode=0777):
 
 def upload(be, block_id, block):
     """Start the upload of a block to the remote server"""
+    
+    if be.config.get("backup", "gpg-encrypt-to"):
+        logging.debug("Encrypting block before upload")
+        encrypted = obnam.gpg.encrypt(be.config, block)
+        if encrypted is None:
+            logging.error("Can't encrypt block for upload, not uploading it")
+            return None
+        block = encrypted
+    
     logging.debug("Uploading block %s (%d bytes)" % (block_id, len(block)))
     if _use_sftp(be):
         _connect_sftp(be)
@@ -267,6 +276,15 @@ def download(be, block_id):
         except IOError, e:
             return e
     be.bytes_read += len(block)
+    
+    if be.config.get("backup", "gpg-encrypt-to"):
+        logging.debug("Decoding downloaded block before using it")
+        decrypted = obnam.gpg.decrypt(be.config, block)
+        if decrypted is None:
+            logging.error("Can't decrypt downloaded block, not using it")
+            return None
+        block = decrypted
+    
     return block
 
 
