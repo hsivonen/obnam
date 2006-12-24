@@ -15,21 +15,29 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-"""The init file for the obnam module."""
+"""Unit tests for obnam.gpg."""
 
 
-import backend
-import cache
-import cmp
-import config
-import context
-import exception
-import filelist
-import format
-import gpg
-import io
-import log
-import map
-import obj
-import rsync
-import varint
+import os
+import shutil
+import tempfile
+import unittest
+
+
+import obnam
+
+
+class GpgTests(unittest.TestCase):
+
+    def test(self):
+        block = "pink"
+        config = obnam.config.default_config()
+        config.set("backup", "gpg-home", "sample-gpg-home")
+        config.set("backup", "gpg-encrypt-to", "490C9ED1")
+        config.set("backup", "gpg-sign-with", "490C9ED1")
+        
+        encrypted = obnam.gpg.encrypt(config, block)
+        self.failIf(block in encrypted)
+        
+        decrypted = obnam.gpg.decrypt(config, encrypted)
+        self.failUnlessEqual(block, decrypted)

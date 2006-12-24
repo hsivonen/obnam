@@ -32,10 +32,13 @@ def start_process(argv, stdin_fd, stdout_fd):
     if pid == -1:
         raise Exception("fork failed")
     elif pid == 0:
+        devnull_fd = os.open("/dev/null", os.O_RDWR)
         os.dup2(stdin_fd, 0)
         os.dup2(stdout_fd, 1)
+        os.dup2(devnull_fd, 2)
         os.close(stdin_fd)
         os.close(stdout_fd)
+        os.close(devnull_fd)
         os.execvp(argv[0], argv)
         os._exit(os.EX_NOTFOUND)
     else:
