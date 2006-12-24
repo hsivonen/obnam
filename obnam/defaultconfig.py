@@ -13,4 +13,7 @@ items = (
     ("backup", "log-file", ""),
     ("backup", "log-level", "warning"),
     ("backup", "odirect-read", "./odirect_read"),
+    ("backup", "gpg-home", "./gpg"),
+    ("backup", "gpg-encrypt-to", ""),
+    ("backup", "gpg-sign-with", ""),
 )
