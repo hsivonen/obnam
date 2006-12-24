@@ -80,6 +80,20 @@ def parse_options(config, argv):
                       help="use PROGRAM to read contents of plain files " +
                            "(default is helper that avoids buffer cache)")
     
+    parser.add_option("--gpg-home",
+                      metavar="DIR",
+                      help="use DIR as the location for GnuPG keyrings and " +
+                           "other data files")
+    
+    parser.add_option("--gpg-encrypt-to",
+                      metavar="KEYID", 
+                      action="append",
+                      help="add KEYID to list of keys to use for encryption")
+    
+    parser.add_option("--gpg-sign-with",
+                      metavar="KEYID",
+                      help="sign backups with KEYID")
+    
     parser.add_option("--use-psyco",
                       action="store_true", default=False,
                       help="use the psyco Python extension, if available")
@@ -104,6 +118,13 @@ def parse_options(config, argv):
         config.set("backup", "ssh-key", options.ssh_key)
     if options.odirect_read:
         config.set("backup", "odirect-read", options.odirect_read)
+    if options.gpg_home:
+        config.set("backup", "gpg-home", options.gpg_home)
+    if options.gpg_encrypt_to:
+        config.set("backup", "gpg-encrypt-to", 
+                   " ".join(options.gpg_encrypt_to))
+    if options.gpg_sign_with:
+        config.set("backup", "gpg-sign-with", options.gpg_sign_with)
     if options.use_psyco:
         try:
             import psyco
