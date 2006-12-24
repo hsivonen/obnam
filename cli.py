@@ -277,12 +277,27 @@ def show_generations(context, gen_ids):
                 print "  ", " ".join(cols), filename
 
 
-def create_filesystem_object(context, full_pathname, inode):
+def hardlink_key(st):
+    """Compute key into hardlink lookup table from stat result"""
+    return "%d/%d" % (st.st_ino, st.st_dev)
+
+
+def create_filesystem_object(context, hardlinks, full_pathname, inode):
     logging.debug("Creating filesystem object %s" % full_pathname)
     subs = obnam.cmp.get_subcomponents(inode)
     stat_component = obnam.cmp.first_by_kind(subs, obnam.cmp.STAT)
     st = obnam.cmp.parse_stat_component(stat_component)
     mode = st.st_mode
+
+    if st.st_nlink > 1 and not stat.S_ISDIR(mode):
+        key = hardlink_key(st)
+        if key in hardlinks:
+            existing_link = hardlinks[key]
+            os.link(existing_link, full_pathname)
+            return
+        else:
+            hardlinks[key] = full_pathname
+
     if stat.S_ISDIR(mode):
         if not os.path.exists(full_pathname):
             os.makedirs(full_pathname, 0700)
@@ -334,6 +349,7 @@ def restore(context, gen_id):
 
     logging.debug("Restoring files")
     list = []
+    hardlinks = {}
     for c in obnam.obj.find_by_kind(fl, obnam.cmp.FILE):
         subs = obnam.cmp.get_subcomponents(c)
         pathname = obnam.cmp.first_string_by_kind(subs,
@@ -344,7 +360,7 @@ def restore(context, gen_id):
             pathname = "." + pathname
         full_pathname = os.path.join(target, pathname)
 
-        create_filesystem_object(context, full_pathname, c)
+        create_filesystem_object(context, hardlinks, full_pathname, c)
         list.append((full_pathname, c))
 
     logging.debug("Fixing permissions")
