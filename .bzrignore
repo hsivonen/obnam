@@ -3,3 +3,4 @@ debian
 obnam.1
 odirect_read.1
 .coverage
+sample-gpg-home/random_seed
