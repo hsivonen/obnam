@@ -42,6 +42,12 @@ check: all
 	python testrun.py
 	sh blackboxtests tests/*
 
+coverage: all
+	rm -f .coverage
+	coverage.py -x testrun.py
+	coverage.py -r -o /usr,/var,$(HOME)/bin,uuid,testrun | \
+	    awk '/%$$/ && $$(NF-2) != $$(NF-1) { print }'
+
 clean:
 	rm -f *~ */*~ *.pyc *.pyo */*.pyc */*.pyo tmp.* odirect_read 
 	rm -f obnam.1 odirect_read.1
