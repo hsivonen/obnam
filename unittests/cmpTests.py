@@ -249,6 +249,7 @@ class FindVarintTests(unittest.TestCase):
         for i in range(1024):
             self.failUnlessEqual(obnam.cmp.first_varint_by_kind(list, i), 
                                  i)
+        self.failUnlessEqual(obnam.cmp.first_varint_by_kind(list, -1), None)
 
 
 class StatTests(unittest.TestCase):
