@@ -27,6 +27,18 @@ import unittest
 import obnam
 
 
+class ExceptionTests(unittest.TestCase):
+
+    def testMissingBlock(self):
+        e = obnam.io.MissingBlock("pink", "pretty")
+        self.failUnless("pink" in str(e))
+        self.failUnless("pretty" in str(e))
+
+    def testFileContentsObjectMissing(self):
+        e = obnam.io.FileContentsObjectMissing("pink")
+        self.failUnless("pink" in str(e))
+
+
 class ResolveTests(unittest.TestCase):
 
     def test(self):
