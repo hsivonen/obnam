@@ -95,3 +95,19 @@ class ObjectMappingTests(unittest.TestCase):
         obnam.map.decode_block(m2, block)
         self.failUnlessEqual(obnam.map.count(m2), 1)
         self.failUnlessEqual(obnam.map.get(m2, "pink"), "pretty")
+
+    def testMappingEncodingsForTwoInOneBlock(self):
+        m = obnam.map.create()
+        
+        obnam.map.add(m, "pink", "pretty")
+        obnam.map.add(m, "black", "pretty")
+
+        list = obnam.map.encode_new(m)
+        self.failUnlessEqual(len(list), 1)
+        
+        block = obnam.map.encode_new_to_block(m, "box")
+        m2 = obnam.map.create()
+        obnam.map.decode_block(m2, block)
+        self.failUnlessEqual(obnam.map.count(m), obnam.map.count(m2))
+        self.failUnlessEqual(obnam.map.get(m2, "pink"), "pretty")
+        self.failUnlessEqual(obnam.map.get(m2, "black"), "pretty")
