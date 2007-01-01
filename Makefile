@@ -49,8 +49,8 @@ coverage: all
 	    awk '/%$$/ && $$(NF-2) != $$(NF-1) { print }'
 
 clean:
-	rm -f *~ */*~ *.pyc *.pyo */*.pyc */*.pyo tmp.* odirect_read 
-	rm -f obnam.1 odirect_read.1
+	rm -f *~ */*~ *.pyc *.pyo */*.pyc */*.pyo tmp.* *,cover */*,cover
+	rm -f obnam.1 odirect_read.1 odirect_read
 
 
 install: all
