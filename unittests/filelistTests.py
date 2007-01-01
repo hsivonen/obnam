@@ -136,3 +136,5 @@ class FindTests(unittest.TestCase):
         st = os.lstat(".")
         c = obnam.filelist.find_matching_inode(fl, pathname, st)
         self.failUnlessEqual(c, None)
+        c = obnam.filelist.find_matching_inode(fl, "plirps", st)
+        self.failUnlessEqual(c, None)
