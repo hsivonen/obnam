@@ -182,7 +182,7 @@ class ObjectTests(unittest.TestCase):
             obnam.obj.first_string_by_kind(o, obnam.cmp.SIGDATA),
             sig)
 
-    def testCreateDeltaObject(self):
+    def testCreateDeltaObjectWithContRef(self):
         id = "pink"
         deltapart_ref = "xyzzy"
         encoded = delta_object_encode(id, [deltapart_ref], "pretty", None)
@@ -195,6 +195,21 @@ class ObjectTests(unittest.TestCase):
             deltapart_ref)
         self.failUnlessEqual(
             obnam.obj.first_string_by_kind(o, obnam.cmp.CONTREF),
+            "pretty")
+
+    def testCreateDeltaObjectWithDeltaRef(self):
+        id = "pink"
+        deltapart_ref = "xyzzy"
+        encoded = delta_object_encode(id, [deltapart_ref], None, "pretty")
+        o = obnam.obj.decode(encoded, 0)
+        self.failUnlessEqual(obnam.obj.get_id(o), "pink")
+        self.failUnlessEqual(obnam.obj.get_kind(o), obnam.obj.DELTA)
+        self.failUnlessEqual(len(obnam.obj.get_components(o)), 2)
+        self.failUnlessEqual(
+            obnam.obj.first_string_by_kind(o, obnam.cmp.DELTAPARTREF),
+            deltapart_ref)
+        self.failUnlessEqual(
+            obnam.obj.first_string_by_kind(o, obnam.cmp.DELTAREF),
             "pretty")
 
 
