@@ -116,6 +116,9 @@ class ObjectQueueTests(unittest.TestCase):
 
 class BlockCreateTests(unittest.TestCase):
 
+    def testDecodeInvalidObject(self):
+        self.failUnlessEqual(obnam.obj.block_decode("pink"), None)
+
     def testEmptyObjectQueue(self):
         oq = queue_create()
         block = block_create_from_object_queue("blkid", oq)
