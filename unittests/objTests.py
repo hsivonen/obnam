@@ -287,3 +287,4 @@ class GetComponentTests(unittest.TestCase):
 
         for i in range(1024):
             self.failUnlessEqual(obnam.obj.first_varint_by_kind(o, i), i)
+        self.failUnlessEqual(obnam.obj.first_varint_by_kind(o, -1), None)
