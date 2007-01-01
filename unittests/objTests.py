@@ -70,16 +70,6 @@ class ObjectEncodingDecodingTests(unittest.TestCase):
         encoded2 = obnam.obj.encode(o2)
         
         self.failUnlessEqual(encoded, encoded2)
-        return
-        
-        self.failUnlessEqual(len(components), 4) # id, kind, cmpnt1, cmpnt2
-        
-        self.failUnlessEqual(components[0], 
-                             (obnam.cmp.OBJID, "uuid"))
-        self.failUnlessEqual(components[1], 
-                             (obnam.cmp.OBJKIND, 0xdada))
-        self.failUnlessEqual(components[2], (0xdeadbeef, "hello"))
-        self.failUnlessEqual(components[3], (0xcafebabe, "world"))
 
 
 class ObjectQueueTests(unittest.TestCase):

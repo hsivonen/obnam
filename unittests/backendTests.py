@@ -100,8 +100,6 @@ class LocalBackendBase(unittest.TestCase):
     
         self.config = obnam.config.default_config()
         for section, item, value in config_list:
-            if not self.config.has_section(section):
-                self.config.add_section(section)
             self.config.set(section, item, value)
 
         self.cache = obnam.cache.init(self.config)

@@ -72,8 +72,6 @@ class IoBase(unittest.TestCase):
         self.context = obnam.context.create()
     
         for section, item, value in config_list:
-            if not self.context.config.has_section(section):
-                self.context.config.add_section(section)
             self.context.config.set(section, item, value)
 
         self.context.cache = obnam.cache.init(self.context.config)
