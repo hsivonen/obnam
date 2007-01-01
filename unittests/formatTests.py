@@ -27,8 +27,7 @@ import obnam
 
 class Fake:
 
-    def __getattr__(self, name):
-        return self.__dict__[name]
+    pass
 
 
 class FormatPermissionsTests(unittest.TestCase):

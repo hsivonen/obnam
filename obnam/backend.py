@@ -222,10 +222,17 @@ def sftp_makedirs(sftp, dirname, mode=0777):
             sftp.mkdir(dirname, mode=mode)
 
 
+def _use_gpg(be):
+    """Should we use gpg to encrypt/decrypt blocks?"""
+    no_gpg = be.config.get("backup", "no-gpg").strip().lower()
+    encrypt_to = be.config.get("backup", "gpg-encrypt-to")
+    return no_gpg not in ["yes", "true"] and encrypt_to
+
+
 def upload(be, block_id, block):
     """Start the upload of a block to the remote server"""
     
-    if be.config.get("backup", "gpg-encrypt-to"):
+    if _use_gpg(be):
         logging.debug("Encrypting block before upload")
         encrypted = obnam.gpg.encrypt(be.config, block)
         if encrypted is None:
@@ -277,7 +284,7 @@ def download(be, block_id):
             return e
     be.bytes_read += len(block)
     
-    if be.config.get("backup", "gpg-encrypt-to"):
+    if _use_gpg(be):
         logging.debug("Decoding downloaded block before using it")
         decrypted = obnam.gpg.decrypt(be.config, block)
         if decrypted is None:

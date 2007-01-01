@@ -20,11 +20,34 @@
 
 import ConfigParser
 import os
+import pwd
 import shutil
 import tempfile
 import unittest
 
 import obnam
+
+
+class GetDefaultUserTest(unittest.TestCase):
+
+    def testLogname(self):
+        orig = os.environ.get("LOGNAME", None)
+        os.environ["LOGNAME"] = "pink"
+        self.failUnlessEqual(obnam.backend.get_default_user(), "pink")
+        # Just in case the user's name is "pink"...
+        os.environ["LOGNAME"] = "pretty"
+        self.failUnlessEqual(obnam.backend.get_default_user(), "pretty")
+        if orig is not None:
+            os.environ["LOGNAME"] = orig
+
+    def testNoLogname(self):
+        orig = os.environ.get("LOGNAME", None)
+        del os.environ["LOGNAME"]
+        user = obnam.backend.get_default_user()
+        uid = pwd.getpwnam(user)[2]
+        self.failUnlessEqual(uid, os.getuid())
+        if orig is not None:
+            os.environ["LOGNAME"] = orig
 
 
 class ParseStoreUrlTests(unittest.TestCase):
@@ -100,8 +123,6 @@ class LocalBackendBase(unittest.TestCase):
     
         self.config = obnam.config.default_config()
         for section, item, value in config_list:
-            if not self.config.has_section(section):
-                self.config.add_section(section)
             self.config.set(section, item, value)
 
         self.cache = obnam.cache.init(self.config)
@@ -135,6 +156,9 @@ class IdTests(LocalBackendBase):
 class UploadTests(LocalBackendBase):
 
     def testUpload(self):
+        self.config.set("backup", "gpg-home", "")
+        self.config.set("backup", "gpg-encrypt-to", "")
+        self.config.set("backup", "gpg-sign-with", "")
         be = obnam.backend.init(self.config, self.cache)
         id = obnam.backend.generate_block_id(be)
         block = "pink is pretty"
@@ -155,6 +179,10 @@ class UploadTests(LocalBackendBase):
 class DownloadTests(LocalBackendBase):
 
     def testOK(self):
+        self.config.set("backup", "gpg-home", "")
+        self.config.set("backup", "gpg-encrypt-to", "")
+        self.config.set("backup", "gpg-sign-with", "")
+
         be = obnam.backend.init(self.config, self.cache)
         id = obnam.backend.generate_block_id(be)
         block = "pink is still pretty"
@@ -175,6 +203,10 @@ class DownloadTests(LocalBackendBase):
 class FileListTests(LocalBackendBase):
 
     def testFileList(self):
+        self.config.set("backup", "gpg-home", "")
+        self.config.set("backup", "gpg-encrypt-to", "")
+        self.config.set("backup", "gpg-sign-with", "")
+
         be = obnam.backend.init(self.config, self.cache)
         self.failUnlessEqual(obnam.backend.list(be), [])
         

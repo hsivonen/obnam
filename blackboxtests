@@ -49,7 +49,15 @@ set -e
 # tmp="tmp"; rm -rf "$tmp"; mkdir "$tmp"
 tmp=$(mktemp -d)
 
-CONFIG="--cache=$tmp/cache --store=$tmp/store"
+if [ "$1" == "--use-coverage" ]
+then
+    shift
+    CMD="coverage.py -x"
+else
+    CMD="python"
+fi
+
+CONFIG="--cache=$tmp/cache --store=$tmp/store --no-gpg --log-file=/dev/null --log-level=debug"
 
 MANIFESTOPTS="-i Inode -i Ctime -i Atime"
 
@@ -84,7 +92,7 @@ do
             exit 1
         fi
 
-        python cli.py $CONFIG -C "$tmp/root" backup .
+        $CMD cli.py $CONFIG -C "$tmp/root" backup .
 
         if [ -e "$post" ] && ! sh "$post" "$tmp"
         then
@@ -93,7 +101,7 @@ do
         fi
     done
     
-    python cli.py $CONFIG generations |
+    $CMD cli.py $CONFIG generations |
     nl |
     while read i genid
     do

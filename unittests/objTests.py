@@ -70,16 +70,6 @@ class ObjectEncodingDecodingTests(unittest.TestCase):
         encoded2 = obnam.obj.encode(o2)
         
         self.failUnlessEqual(encoded, encoded2)
-        return
-        
-        self.failUnlessEqual(len(components), 4) # id, kind, cmpnt1, cmpnt2
-        
-        self.failUnlessEqual(components[0], 
-                             (obnam.cmp.OBJID, "uuid"))
-        self.failUnlessEqual(components[1], 
-                             (obnam.cmp.OBJKIND, 0xdada))
-        self.failUnlessEqual(components[2], (0xdeadbeef, "hello"))
-        self.failUnlessEqual(components[3], (0xcafebabe, "world"))
 
 
 class ObjectQueueTests(unittest.TestCase):
@@ -115,6 +105,9 @@ class ObjectQueueTests(unittest.TestCase):
 
 
 class BlockCreateTests(unittest.TestCase):
+
+    def testDecodeInvalidObject(self):
+        self.failUnlessEqual(obnam.obj.block_decode("pink"), None)
 
     def testEmptyObjectQueue(self):
         oq = queue_create()
@@ -179,7 +172,7 @@ class ObjectTests(unittest.TestCase):
             obnam.obj.first_string_by_kind(o, obnam.cmp.SIGDATA),
             sig)
 
-    def testCreateDeltaObject(self):
+    def testCreateDeltaObjectWithContRef(self):
         id = "pink"
         deltapart_ref = "xyzzy"
         encoded = delta_object_encode(id, [deltapart_ref], "pretty", None)
@@ -192,6 +185,21 @@ class ObjectTests(unittest.TestCase):
             deltapart_ref)
         self.failUnlessEqual(
             obnam.obj.first_string_by_kind(o, obnam.cmp.CONTREF),
+            "pretty")
+
+    def testCreateDeltaObjectWithDeltaRef(self):
+        id = "pink"
+        deltapart_ref = "xyzzy"
+        encoded = delta_object_encode(id, [deltapart_ref], None, "pretty")
+        o = obnam.obj.decode(encoded, 0)
+        self.failUnlessEqual(obnam.obj.get_id(o), "pink")
+        self.failUnlessEqual(obnam.obj.get_kind(o), obnam.obj.DELTA)
+        self.failUnlessEqual(len(obnam.obj.get_components(o)), 2)
+        self.failUnlessEqual(
+            obnam.obj.first_string_by_kind(o, obnam.cmp.DELTAPARTREF),
+            deltapart_ref)
+        self.failUnlessEqual(
+            obnam.obj.first_string_by_kind(o, obnam.cmp.DELTAREF),
             "pretty")
 
 
@@ -287,3 +295,4 @@ class GetComponentTests(unittest.TestCase):
 
         for i in range(1024):
             self.failUnlessEqual(obnam.obj.first_varint_by_kind(o, i), i)
+        self.failUnlessEqual(obnam.obj.first_varint_by_kind(o, -1), None)

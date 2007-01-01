@@ -40,7 +40,7 @@ class CommandLineParsingTests(unittest.TestCase):
         needed = ["block-size", "cache", "store", "target-dir",
                   "host-id", "object-cache-size", "log-level", "ssh-key",
                   "odirect-read", "log-file", "gpg-home", "gpg-encrypt-to",
-                  "gpg-sign-with"]
+                  "gpg-sign-with", "no-gpg"]
         needed.sort()
         actual = config.options("backup")
         actual.sort()
@@ -83,3 +83,42 @@ class CommandLineParsingTests(unittest.TestCase):
         config = obnam.config.default_config()
         obnam.config.parse_options(config, ["--odirect-read=x"])
         self.failUnlessEqual(config.get("backup", "odirect-read"), "x")
+
+    def testLogFile(self):
+        config = obnam.config.default_config()
+        obnam.config.parse_options(config, ["--log-file=x"])
+        self.failUnlessEqual(config.get("backup", "log-file"), "x")
+
+    def testLogLevel(self):
+        config = obnam.config.default_config()
+        obnam.config.parse_options(config, ["--log-level=info"])
+        self.failUnlessEqual(config.get("backup", "log-level"), "info")
+
+    def testSshKey(self):
+        config = obnam.config.default_config()
+        obnam.config.parse_options(config, ["--ssh-key=foo"])
+        self.failUnlessEqual(config.get("backup", "ssh-key"), "foo")
+
+    def testGpgHome(self):
+        config = obnam.config.default_config()
+        obnam.config.parse_options(config, ["--gpg-home=foo"])
+        self.failUnlessEqual(config.get("backup", "gpg-home"), "foo")
+
+    def testGpgEncryptTo(self):
+        config = obnam.config.default_config()
+        obnam.config.parse_options(config, ["--gpg-encrypt-to=foo"])
+        self.failUnlessEqual(config.get("backup", "gpg-encrypt-to"), "foo")
+
+    def testGpgSignWith(self):
+        config = obnam.config.default_config()
+        obnam.config.parse_options(config, ["--gpg-sign-with=foo"])
+        self.failUnlessEqual(config.get("backup", "gpg-sign-with"), "foo")
+
+    def testNoGpg(self):
+        config = obnam.config.default_config()
+        obnam.config.parse_options(config, ["--no-gpg"])
+        self.failUnlessEqual(config.get("backup", "no-gpg"), "true")
+
+    def testUsePsyco(self):
+        config = obnam.config.default_config()
+        obnam.config.parse_options(config, ["--use-psyco"])
