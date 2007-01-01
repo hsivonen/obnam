@@ -33,3 +33,9 @@ class VarintEncodeDecodeTests(unittest.TestCase):
             (i2, pos) = obnam.varint.decode(str, 0)
             self.failUnlessEqual(i, i2)
             self.failUnlessEqual(pos, len(str))
+
+    def testError(self):
+        str = "asdf"
+        n, pos = obnam.varint.decode(str, 0)
+        self.failUnlessEqual(n, -1)
+        self.failUnlessEqual(pos, 0)
