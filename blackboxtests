@@ -49,7 +49,7 @@ set -e
 # tmp="tmp"; rm -rf "$tmp"; mkdir "$tmp"
 tmp=$(mktemp -d)
 
-CONFIG="--cache=$tmp/cache --store=$tmp/store"
+CONFIG="--cache=$tmp/cache --store=$tmp/store --no-gpg"
 
 MANIFESTOPTS="-i Inode -i Ctime -i Atime"
 

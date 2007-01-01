@@ -16,4 +16,5 @@ items = (
     ("backup", "gpg-home", "sample-gpg-home"),
     ("backup", "gpg-encrypt-to", "490C9ED1"),
     ("backup", "gpg-sign-with", "490C9ED1"),
+    ("backup", "no-gpg", ""),
 )

@@ -94,6 +94,9 @@ def parse_options(config, argv):
                       metavar="KEYID",
                       help="sign backups with KEYID")
     
+    parser.add_option("--no-gpg", action="store_true", default=False,
+                      help="don't use gpg at all")
+    
     parser.add_option("--use-psyco",
                       action="store_true", default=False,
                       help="use the psyco Python extension, if available")
@@ -125,6 +128,8 @@ def parse_options(config, argv):
                    " ".join(options.gpg_encrypt_to))
     if options.gpg_sign_with:
         config.set("backup", "gpg-sign-with", options.gpg_sign_with)
+    if options.no_gpg:
+        config.set("backup", "no-gpg", "true")
     if options.use_psyco:
         try:
             import psyco
