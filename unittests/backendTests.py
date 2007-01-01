@@ -156,6 +156,9 @@ class IdTests(LocalBackendBase):
 class UploadTests(LocalBackendBase):
 
     def testUpload(self):
+        self.config.set("backup", "gpg-home", "")
+        self.config.set("backup", "gpg-encrypt-to", "")
+        self.config.set("backup", "gpg-sign-with", "")
         be = obnam.backend.init(self.config, self.cache)
         id = obnam.backend.generate_block_id(be)
         block = "pink is pretty"
@@ -176,6 +179,10 @@ class UploadTests(LocalBackendBase):
 class DownloadTests(LocalBackendBase):
 
     def testOK(self):
+        self.config.set("backup", "gpg-home", "")
+        self.config.set("backup", "gpg-encrypt-to", "")
+        self.config.set("backup", "gpg-sign-with", "")
+
         be = obnam.backend.init(self.config, self.cache)
         id = obnam.backend.generate_block_id(be)
         block = "pink is still pretty"
@@ -196,6 +203,10 @@ class DownloadTests(LocalBackendBase):
 class FileListTests(LocalBackendBase):
 
     def testFileList(self):
+        self.config.set("backup", "gpg-home", "")
+        self.config.set("backup", "gpg-encrypt-to", "")
+        self.config.set("backup", "gpg-sign-with", "")
+
         be = obnam.backend.init(self.config, self.cache)
         self.failUnlessEqual(obnam.backend.list(be), [])
         
