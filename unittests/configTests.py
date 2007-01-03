@@ -52,6 +52,11 @@ class CommandLineParsingTests(unittest.TestCase):
         self.failUnlessEqual(self.config_as_string(config), 
                      self.config_as_string(obnam.config.default_config()))
 
+    def testHostId(self):
+        config = obnam.config.default_config()
+        obnam.config.parse_options(config, ["--host-id=pink"])
+        self.failUnlessEqual(config.get("backup", "host-id"), "pink")
+
     def testBlockSize(self):
         config = obnam.config.default_config()
         obnam.config.parse_options(config, ["--block-size=12765"])
