@@ -39,6 +39,11 @@ def parse_options(config, argv):
     """Parse command line arguments and set config values accordingly"""
     parser = optparse.OptionParser()
     
+    parser.add_option("--host-id",
+                      metavar="ID",
+                      help="use ID to identify this host, instead of '%s'" %
+                            config.get("backup", "host-id"))
+    
     parser.add_option("--block-size",
                       type="int",
                       metavar="SIZE",
@@ -103,6 +108,8 @@ def parse_options(config, argv):
 
     (options, args) = parser.parse_args(argv)
     
+    if options.host_id:
+        config.set("backup", "host-id", options.host_id)
     if options.block_size:
         config.set("backup", "block-size", "%d" % options.block_size)
     if options.cache:
