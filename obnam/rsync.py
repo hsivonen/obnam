@@ -18,6 +18,7 @@
 """Rsync stuff for making backups"""
 
 
+import logging
 import os
 import subprocess
 import tempfile
@@ -28,6 +29,7 @@ import obnam
 
 def start_process(argv, stdin_fd, stdout_fd):
     """Start a new process, using stdin/out_fd for its standard in/out"""
+    logging.debug("Starting process: %s" % argv)
     pid = os.fork()
     if pid == -1:
         raise Exception("fork failed")

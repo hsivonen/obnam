@@ -37,13 +37,13 @@ def encrypt(config, data):
 
     cat = ["cat", tempname]
 
-    gpg = ["gpg", "-q", "--encrypt", "--sign"]
+    gpg = ["gpg", "-q", "--encrypt"]
     gpg += ["--homedir=%s" % config.get("backup", "gpg-home")]
     recipients = config.get("backup", "gpg-encrypt-to").split(" ")
     gpg += ["-r%s" % x for x in recipients]
     signer = config.get("backup", "gpg-sign-with")
     if signer:
-        gpg += ["-u%s" % signer]
+        gpg += ["--sign", "-u%s" % signer]
 
     pids, stdin_fd, stdout_fd = obnam.rsync.start_pipeline(cat, gpg)
     os.close(stdin_fd)
