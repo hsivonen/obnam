@@ -235,22 +235,24 @@ class ConfigFile:
         lineno = 0
         section = None
 
+        matchers = (
+            (self.comment_pattern, 
+             lambda m: None),
+            (self.section_pattern, 
+             lambda m: self.add_section(m.group("section"))),
+        )
+
         while True:
             line = f.readline()
             if not line:
                 break
             lineno += 1
 
-            m_comment = self.comment_pattern.match(line)
-            m_section = self.section_pattern.match(line)
-            
-            if m_comment:
-                pass
-
-            elif m_section:
-                section = m_section.group("section")
-                if not self.has_section(section):
-                    self.add_section(section)
-
-            else:
+            m = None
+            for pattern, func in matchers:
+                m = pattern.match(line)
+                if m:
+                    func(m)
+                    break
+            if not m:
                 raise ParsingError(filename, lineno)

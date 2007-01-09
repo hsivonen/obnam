@@ -292,6 +292,11 @@ class ReadTests(unittest.TestCase):
         cf = self.parse("[foo]\n[bar]\n")
         self.failUnlessEqual(cf.sections(), ["bar", "foo"])
 
+    def testSameSectionTwice(self):
+        self.failUnlessRaises(obnam.cfgfile.DuplicationError,
+                              self.parse,
+                              "[foo]\n[foo]\n")
+
     def testParsingError(self):
         self.failUnlessRaises(obnam.cfgfile.ParsingError,
                               self.parse, "xxxx")
