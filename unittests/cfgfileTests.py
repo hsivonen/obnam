@@ -313,5 +313,9 @@ class ReadTests(unittest.TestCase):
         cf = self.parse("[foo]\nbar = foobar\nbar = baz\n")
         self.failUnlessEqual(cf.get("foo", "bar"), ["foobar", "baz"])
 
+    def testContinuationLine(self):
+        cf = self.parse("[foo]\nbar = \n foobar\n")
+        self.failUnlessEqual(cf.get("foo", "bar"), " foobar")
+
 
 unittest.main()

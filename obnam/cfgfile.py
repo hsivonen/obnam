@@ -227,6 +227,7 @@ class ConfigFile:
     comment_pattern = re.compile(r"\s*(#.*)?$")
     section_pattern = re.compile(r"\[(?P<section>.*)\]$")
     option_line1_pattern = re.compile(r"(?P<option>\S*)\s*=(?P<value>.*)$")
+    option_line2_pattern = re.compile(r"\s+(?P<value>.*)$")
 
     def handle_section(self, section, option, match):
         section = match.group("section")
@@ -240,7 +241,6 @@ class ConfigFile:
         return section, option
         
     def handle_option_line2(self, section, option, match):
-        option = match.group("option")
         value = match.group("value")
 
         values = self.get(section, option)
@@ -269,6 +269,7 @@ class ConfigFile:
              lambda section, option, match: (section, option)),
             (self.section_pattern, self.handle_section),
             (self.option_line1_pattern, self.handle_option_line1),
+            (self.option_line2_pattern, self.handle_option_line2),
         )
     
         while True:
