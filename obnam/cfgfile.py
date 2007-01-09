@@ -28,7 +28,34 @@ so this is written from scratch.
 """
 
 
+import obnam
+
+
+class Error(obnam.exception.ExceptionBase):
+
+    pass
+    
+    
+class DuplicationError(Error):
+
+    def __init__(self, section):
+        self._msg = "section %s already exists" % section
+
+
 class ConfigFile:
+
+    def __init__(self):
+        self._dict = {}
+
+    def has_section(self, section):
+        """Does this configuration file have a particular section?"""
+        return section in self._dict
+
+    def add_section(self, section):
+        """Add a new, empty section called section"""
+        if self.has_section(section):
+            raise DuplicationError(section)
+        self._dict[section] = {}
 
     def parse_string(self, str):
         """Parse a string as a configuration file"""
@@ -36,4 +63,4 @@ class ConfigFile:
 
     def sections(self):
         """Return all sections we know about"""
-        return []
+        return sorted(self._dict.keys())

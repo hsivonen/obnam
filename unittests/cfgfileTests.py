@@ -23,6 +23,35 @@ import unittest
 import obnam
 
 
+class ManipulationTests(unittest.TestCase):
+
+    def setUp(self):
+        self.cf = obnam.cfgfile.ConfigFile()
+        
+    def tearDown(self):
+        self.cf = None
+
+    def testEmptySections(self):
+        self.failUnlessEqual(self.cf.sections(), [])
+        
+    def testAddSectionNew(self):
+        self.cf.add_section("foo")
+        self.failUnlessEqual(self.cf.sections(), ["foo"])
+        
+    def testAddSectionExisting(self):
+        self.cf.add_section("foo")
+        self.failUnlessRaises(obnam.cfgfile.DuplicationError,
+                              self.cf.add_section,
+                              "foo")
+
+    def testHasSectionForExisting(self):
+        self.cf.add_section("foo")
+        self.failUnless(self.cf.has_section("foo"))
+
+    def testHasSectionForNotExisting(self):
+        self.failIf(self.cf.has_section("foo"))
+
+
 class ParseTests(unittest.TestCase):
 
     def testEmpty(self):
