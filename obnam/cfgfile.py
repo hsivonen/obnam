@@ -169,3 +169,15 @@ class ConfigFile:
             self._dict[section][option].append(value)
         else:
             self._dict[section][option] = [value]
+
+    def items(self, section):
+        """Return list of (option, value) pairs for a section
+        
+        Note that the value is a single string, or a list of strings,
+        similar to the get method.
+        """
+
+        list = []
+        for option in self.options(section):
+            list.append((option, self.get(section, option)))
+        return list

@@ -200,6 +200,27 @@ class OptionsTests(unittest.TestCase):
             self.cf.set("foo", "bar", x)
             self.failUnlessEqual(self.cf.getboolean("foo", "bar"), False)
 
+    def testItemsNonExistentSection(self):
+        self.failUnlessRaises(obnam.cfgfile.NoSectionError,
+                              self.cf.items,
+                              "foo")
+
+    def testItemsEmpty(self):
+        self.cf.add_section("foo")
+        self.failUnlessEqual(self.cf.items("foo"), [])
+
+    def testItemsNonEmpty(self):
+        self.cf.add_section("foo")
+        options = ["%d" % x for x in range(4)]
+        for option in options:
+            self.cf.append("foo", option, option)
+            self.cf.append("foo", option, option)
+        self.failUnlessEqual(self.cf.items("foo"), 
+                             [("0", ["0", "0"]),
+                              ("1", ["1", "1"]),
+                              ("2", ["2", "2"]),
+                              ("3", ["3", "3"])])
+
 
 class ParseTests(unittest.TestCase):
 
