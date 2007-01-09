@@ -211,3 +211,7 @@ class ConfigFile:
                     values = [values]
                 for value in values:
                     f.write("%s = %s\n" % (option, value))
+
+    def readfp(self, f):
+        """Read configuration file from open file"""
+        return

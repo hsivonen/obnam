@@ -272,11 +272,12 @@ bar = baz
 """)
 
 
-class ParseTests(unittest.TestCase):
+class ReadTests(unittest.TestCase):
 
     def testEmpty(self):
         cf = obnam.cfgfile.ConfigFile()
-        cf.parse_string("")
+        f = StringIO.StringIO("")
+        cf.readfp(f)
         self.failUnlessEqual(cf.sections(), [])
 
 
