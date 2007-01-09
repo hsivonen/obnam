@@ -305,5 +305,9 @@ class ReadTests(unittest.TestCase):
         cf = self.parse("# blah\n[foo]\n\n\n")
         self.failUnlessEqual(cf.sections(), ["foo"])
 
+    def testSingleLineValue(self):
+        cf = self.parse("[foo]\nbar = foobar\n")
+        self.failUnlessEqual(cf.get("foo", "bar"), "foobar")
+
 
 unittest.main()

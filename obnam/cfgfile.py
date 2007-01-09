@@ -225,7 +225,35 @@ class ConfigFile:
 
     # Regular expression patterns for parsing configuration files.
     comment_pattern = re.compile(r"\s*(#.*)?$")
-    section_pattern = re.compile(r"^\[(?P<section>.*)\]$")
+    section_pattern = re.compile(r"\[(?P<section>.*)\]$")
+    option_line1_pattern = re.compile(r"(?P<option>\S*)\s*=(?P<value>.*)$")
+
+    def handle_section(self, section, option, match):
+        section = match.group("section")
+        self.add_section(section)
+        return section, option
+        
+    def handle_option_line1(self, section, option, match):
+        option = match.group("option")
+        value = match.group("value")
+        self.append(section, option, value.strip())
+        return section, option
+        
+    def handle_option_line2(self, section, option, match):
+        option = match.group("option")
+        value = match.group("value")
+
+        values = self.get(section, option)
+        if type(values) != type([]):
+            values = [values]
+        if values:
+            values[-1] = values[-1] + " " + value.strip()
+
+        self.remove_option(section, option)
+        for value in values:
+            self.append(section, option, value)
+
+        return section, option
 
     def readfp(self, f, filename=None):
         """Read configuration file from open file"""
@@ -234,14 +262,15 @@ class ConfigFile:
 
         lineno = 0
         section = None
+        option = None
 
         matchers = (
             (self.comment_pattern, 
-             lambda m: None),
-            (self.section_pattern, 
-             lambda m: self.add_section(m.group("section"))),
+             lambda section, option, match: (section, option)),
+            (self.section_pattern, self.handle_section),
+            (self.option_line1_pattern, self.handle_option_line1),
         )
-
+    
         while True:
             line = f.readline()
             if not line:
@@ -252,7 +281,7 @@ class ConfigFile:
             for pattern, func in matchers:
                 m = pattern.match(line)
                 if m:
-                    func(m)
+                    section, option = func(section, option, m)
                     break
             if not m:
                 raise ParsingError(filename, lineno)
