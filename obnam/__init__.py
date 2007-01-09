@@ -20,6 +20,7 @@
 
 import backend
 import cache
+import cfgfile
 import cmp
 import config
 import context

@@ -18,7 +18,6 @@
 """Unit tests for obnam.cache"""
 
 
-import ConfigParser
 import os
 import shutil
 import unittest
@@ -35,7 +34,7 @@ class CacheBase(unittest.TestCase):
             ("backup", "cache", self.cachedir),
         )
     
-        self.config = ConfigParser.ConfigParser()
+        self.config = obnam.cfgfile.ConfigFile()
         for section, item, value in config_list:
             if not self.config.has_section(section):
                 self.config.add_section(section)

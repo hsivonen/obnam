@@ -26,6 +26,7 @@ VERSION = "0.2"
 
 import logging
 import os
+import re
 import stat
 import sys
 import time
@@ -94,6 +95,11 @@ def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
 
 
 def backup_directory(context, new_filelist, dirname, prevgen_filelist):
+    patterns = []
+    for pattern in context.config.getvalues("backup", "exclude"):
+        logging.debug("Compiling exclusion pattern '%s'" % pattern)
+        patterns.append(re.compile(pattern))
+
     logging.info("Backing up directory %s" % dirname)
     backup_single_item(context, dirname, new_filelist, prevgen_filelist)
     dirname = obnam.io.resolve(context, dirname)
@@ -101,8 +107,12 @@ def backup_directory(context, new_filelist, dirname, prevgen_filelist):
         dirpath = obnam.io.unsolve(context, dirpath)
         for filename in dirnames + filenames:
             pathname = os.path.join(dirpath, filename)
-            backup_single_item(context, pathname, new_filelist, 
-                               prevgen_filelist)
+            for pattern in patterns:
+                if pattern.search(pathname):
+                    break
+            else:
+                backup_single_item(context, pathname, new_filelist, 
+                                   prevgen_filelist)
 
 
 def get_filelist_in_gen(context, gen_id):
