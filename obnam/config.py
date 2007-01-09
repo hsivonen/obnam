@@ -104,6 +104,11 @@ def parse_options(config, argv):
     parser.add_option("--use-psyco",
                       action="store_true", default=False,
                       help="use the psyco Python extension, if available")
+    
+    parser.add_option("--exclude",
+                      metavar="REGEXP", 
+                      action="append",
+                      help="exclude pathnames matching REGEXP")
 
     (options, args) = parser.parse_args(argv)
     
@@ -130,12 +135,17 @@ def parse_options(config, argv):
     if options.gpg_home:
         config.set("backup", "gpg-home", options.gpg_home)
     if options.gpg_encrypt_to:
-        config.set("backup", "gpg-encrypt-to", 
-                   " ".join(options.gpg_encrypt_to))
+        config.remove_option("backup", "gpg-encrypt-to")
+        for keyid in options.gpg_encrypt_to:
+            config.append("backup", "gpg-encrypt-to", keyid)
     if options.gpg_sign_with:
         config.set("backup", "gpg-sign-with", options.gpg_sign_with)
     if options.no_gpg:
         config.set("backup", "no-gpg", "true")
+    if options.exclude:
+        config.remove_option("backup", "exclude")
+        for pattern in options.exclude:
+            config.append("backup", "exclude", pattern)
     if options.use_psyco:
         try:
             import psyco
