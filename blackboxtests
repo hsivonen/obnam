@@ -27,7 +27,7 @@
 # This script outputs nothing if everything went well, and errors if
 # something went badly.
 #
-# Copyright (C) 2006  Lars Wirzenius <liw@iki.fi>
+# Copyright (C) 2006, 2007  Lars Wirzenius <liw@iki.fi>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -57,7 +57,8 @@ else
     CMD="python"
 fi
 
-CONFIG="--cache=$tmp/cache --store=$tmp/store --no-gpg --log-file=/dev/null --log-level=debug"
+CONFIG="--cache=$tmp/cache --store=$tmp/store --no-gpg"
+CONFIG="$CONFIG --log-file=/dev/null --log-level=debug --exclude=exclude"
 
 MANIFESTOPTS="-i Inode -i Ctime -i Atime"
 

@@ -132,6 +132,18 @@ class OptionsTests(unittest.TestCase):
         self.cf.set("foo", "bar", "foobar")
         self.failUnlessEqual(self.cf.get("foo", "bar"), "foobar")
 
+    def testGetValuesSingle(self):
+        self.cf.add_section("foo")
+        self.cf.append("foo", "bar", "foobar")
+        self.failUnlessEqual(self.cf.getvalues("foo", "bar"), ["foobar"])
+
+    def testGetValuesMultiple(self):
+        self.cf.add_section("foo")
+        self.cf.append("foo", "bar", "foobar")
+        self.cf.append("foo", "bar", "baz")
+        self.failUnlessEqual(self.cf.getvalues("foo", "bar"), 
+                             ["foobar", "baz"])
+
     def testAppendNonExistingSection(self):
         self.failUnlessRaises(obnam.cfgfile.NoSectionError,
                               self.cf.append,

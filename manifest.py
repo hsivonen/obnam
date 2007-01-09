@@ -62,11 +62,13 @@ import md5
 import optparse
 import os
 import pwd
+import re
 import stat
 import sys
 import time
 import urllib
 
+exclude = []
 
 printable_fields = [
     "Pathname", "Type", "Mode", "Inode", "Device", "Nlink", "UID",
@@ -155,9 +157,14 @@ class Manifest:
                     pathname = os.path.join(dirpath, x)
                     assert pathname.startswith(root + os.sep)
                     key = pathname[len(root + os.sep):]
-                    self.fsys_objects[key] = FilesystemObject(pathname, key)
+                    self.add_item(key, FilesystemObject(pathname, key))
         else:
-            self.fsys_objects[root] = FilesystemObject(root, root)
+            self.add_item(root, FilesystemObject(root, root))
+
+    def add_item(self, key, fsys_object):
+        for pattern in exclude:
+            if not pattern.search(key):
+                self.fsys_objects[key] = fsys_object
 
     def write(self, f):
         pathnames = self.fsys_objects.keys()
@@ -170,10 +177,15 @@ class Manifest:
 def parse_command_line():
     parser = optparse.OptionParser()
     
+    parser.add_option("-e", "--exclude", action="append")
     parser.add_option("-i", "--ignore", action="append")
     parser.add_option("-I", "--ignore-for-dir", action="append")
     
     (options, roots) = parser.parse_args()
+
+    if options.exclude:
+        for x in options.exclude:
+            exclude.append(re.compile(x))
     
     if options.ignore:
         for x in options.ignore:

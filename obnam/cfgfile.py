@@ -174,6 +174,18 @@ class ConfigFile:
             return False
         raise ValueError
 
+    def getvalues(self, section, option):
+        """Return list of values for an option in a section
+        
+        Note that the return value is always a list of strings. It might
+        be empty.
+        
+        """
+        values = self.get(section, option)
+        if type(values) != type([]):
+            values = [values]
+        return values
+
     def append(self, section, option, value):
         """Append a new value for an option"""
         if not self.has_section(section):
