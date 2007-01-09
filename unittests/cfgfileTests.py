@@ -51,6 +51,19 @@ class ManipulationTests(unittest.TestCase):
     def testHasSectionForNotExisting(self):
         self.failIf(self.cf.has_section("foo"))
 
+    def testSectionsEmpty(self):
+        self.failUnlessEqual(self.cf.sections(), [])
+
+    def testSectionsOne(self):
+        self.cf.add_section("foo")
+        self.failUnlessEqual(self.cf.sections(), ["foo"])
+
+    def testSectionsMany(self):
+        list = ["%d" % x for x in range(100)]
+        for section in list:
+            self.cf.add_section(section)
+        self.failUnlessEqual(self.cf.sections(), sorted(list))
+
 
 class ParseTests(unittest.TestCase):
 
