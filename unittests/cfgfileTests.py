@@ -147,6 +147,28 @@ class OptionsTests(unittest.TestCase):
         self.failUnlessEqual(self.cf.options("foo"), ["bar"])
         self.failUnlessEqual(self.cf.get("foo", "bar"), "foobar")
 
+    def testGetIntNonInteger(self):
+        self.cf.add_section("foo")
+        self.cf.set("foo", "bar", "foobar")
+        self.failUnlessRaises(ValueError,
+                              self.cf.getint,
+                              "foo", "bar")
+
+    def testGetIntDecimalInteger(self):
+        self.cf.add_section("foo")
+        self.cf.set("foo", "bar", "12765")
+        self.failUnlessEqual(self.cf.getint("foo", "bar"), 12765)
+
+    def testGetIntHexadecimalInteger(self):
+        self.cf.add_section("foo")
+        self.cf.set("foo", "bar", "0x12765")
+        self.failUnlessEqual(self.cf.getint("foo", "bar"), 0x12765)
+
+    def testGetIntOctalInteger(self):
+        self.cf.add_section("foo")
+        self.cf.set("foo", "bar", "033")
+        self.failUnlessEqual(self.cf.getint("foo", "bar"), 3*8 + 3)
+
 
 class ParseTests(unittest.TestCase):
 

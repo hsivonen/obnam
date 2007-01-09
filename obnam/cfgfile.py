@@ -126,6 +126,15 @@ class ConfigFile:
         else:
             return value
 
+    def getint(self, section, option):
+        """Return value of an option in a section as an integer
+        
+        If the value is not a single string encoding an integer, then
+        ValueError is raised.
+        
+        """
+        return int(self.get(section, option), 0)
+
     def append(self, section, option, value):
         """Append a new value for an option"""
         if not self.has_section(section):
