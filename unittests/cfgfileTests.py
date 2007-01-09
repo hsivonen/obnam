@@ -318,4 +318,20 @@ class ReadTests(unittest.TestCase):
         self.failUnlessEqual(cf.get("foo", "bar"), " foobar")
 
 
+class ReadWriteTest(unittest.TestCase):
+
+    def test(self):
+        cf = obnam.cfgfile.ConfigFile()
+        cf.add_section("foo")
+        cf.append("foo", "bar", "foobar")
+        cf.append("foo", "bar", "baz")
+        f = StringIO.StringIO()
+        cf.write(f)
+        f.seek(0, 0)
+        cf2 = obnam.cfgfile.ConfigFile()
+        cf2.readfp(f)
+        self.failUnlessEqual(cf2.sections(), ["foo"])
+        self.failUnlessEqual(cf2.items("foo"), [("bar", ["foobar", "baz"])])
+
+
 unittest.main()
