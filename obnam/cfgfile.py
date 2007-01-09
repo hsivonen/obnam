@@ -200,4 +200,14 @@ class ConfigFile:
             return True
         else:
             return False
-        
+
+    def write(self, f):
+        """Write configuration file to open file"""
+        for section in self.sections():
+            f.write("[%s]\n" % section)
+            for option in self.options(section):
+                values = self.get(section, option)
+                if type(values) != type([]):
+                    values = [values]
+                for value in values:
+                    f.write("%s = %s\n" % (option, value))

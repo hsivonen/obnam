@@ -18,6 +18,7 @@
 """Unit tests for obnam.cfgfile."""
 
 
+import StringIO
 import unittest
 
 import obnam
@@ -242,6 +243,33 @@ class OptionsTests(unittest.TestCase):
         self.cf.set("foo", "bar", "foobar")
         self.failUnlessEqual(self.cf.remove_option("foo", "bar"), True)
         self.failUnlessEqual(self.cf.items("foo"), [])
+
+
+class WriteTests(unittest.TestCase):
+
+    def testSingleValue(self):
+        cf = obnam.cfgfile.ConfigFile()
+        cf.add_section("foo")
+        cf.set("foo", "bar", "foobar")
+        f = StringIO.StringIO()
+        cf.write(f)
+        self.failUnlessEqual(f.getvalue(), """\
+[foo]
+bar = foobar
+""")
+
+    def testMultiValue(self):
+        cf = obnam.cfgfile.ConfigFile()
+        cf.add_section("foo")
+        cf.append("foo", "bar", "foobar")
+        cf.append("foo", "bar", "baz")
+        f = StringIO.StringIO()
+        cf.write(f)
+        self.failUnlessEqual(f.getvalue(), """\
+[foo]
+bar = foobar
+bar = baz
+""")
 
 
 class ParseTests(unittest.TestCase):
