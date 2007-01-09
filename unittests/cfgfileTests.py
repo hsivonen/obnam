@@ -169,6 +169,18 @@ class OptionsTests(unittest.TestCase):
         self.cf.set("foo", "bar", "033")
         self.failUnlessEqual(self.cf.getint("foo", "bar"), 3*8 + 3)
 
+    def testGetFloagNonFloat(self):
+        self.cf.add_section("foo")
+        self.cf.set("foo", "bar", "foobar")
+        self.failUnlessRaises(ValueError,
+                              self.cf.getfloat,
+                              "foo", "bar")
+
+    def testGetFloat(self):
+        self.cf.add_section("foo")
+        self.cf.set("foo", "bar", "12.765")
+        self.failUnlessEqual(self.cf.getfloat("foo", "bar"), 12.765)
+
 
 class ParseTests(unittest.TestCase):
 

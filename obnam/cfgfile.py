@@ -135,6 +135,15 @@ class ConfigFile:
         """
         return int(self.get(section, option), 0)
 
+    def getfloat(self, section, option):
+        """Return value of an option in a section as a floating point value
+        
+        If the value is not a single string encoding a floating point, then
+        ValueError is raised.
+        
+        """
+        return float(self.get(section, option))
+
     def append(self, section, option, value):
         """Append a new value for an option"""
         if not self.has_section(section):
