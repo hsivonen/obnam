@@ -221,6 +221,21 @@ class OptionsTests(unittest.TestCase):
                               ("2", ["2", "2"]),
                               ("3", ["3", "3"])])
 
+    def testRemoveOptionNonExistentSection(self):
+        self.failUnlessRaises(obnam.cfgfile.NoSectionError,
+                              self.cf.remove_option,
+                              "foo", "bar")
+
+    def testRemoveOptionNonExistentOption(self):
+        self.cf.add_section("foo")
+        self.failUnlessEqual(self.cf.remove_option("foo", "bar"), False)
+
+    def testRemoveOptionExistingOption(self):
+        self.cf.add_section("foo")
+        self.cf.set("foo", "bar", "foobar")
+        self.failUnlessEqual(self.cf.remove_option("foo", "bar"), True)
+        self.failUnlessEqual(self.cf.items("foo"), [])
+
 
 class ParseTests(unittest.TestCase):
 

@@ -181,3 +181,14 @@ class ConfigFile:
         for option in self.options(section):
             list.append((option, self.get(section, option)))
         return list
+
+    def remove_option(self, section, option):
+        """Remove an option from a section"""
+        if not self.has_section(section):
+            raise NoSectionError(section)
+        option = self.optionxform(option)
+        if self.has_option(section, option):
+            del self._dict[section][option]
+            return True
+        else:
+            return False
