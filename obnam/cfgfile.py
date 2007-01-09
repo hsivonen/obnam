@@ -15,22 +15,25 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-"""The init file for the obnam module."""
+"""Configuration file I/O
+
+This module is similar to Python's standard ConfigParser module, but
+can handle options with a list of values. This is important for Obnam,
+since some of its options need to be able to be specified multiple 
+times. For example, exclude patterns for files.
+
+There seems to be no good way of extending the ConfigParser class,
+so this is written from scratch.
+
+"""
 
 
-import backend
-import cache
-import cfgfile
-import cmp
-import config
-import context
-import exception
-import filelist
-import format
-import gpg
-import io
-import log
-import map
-import obj
-import rsync
-import varint
+class ConfigFile:
+
+    def parse_string(self, str):
+        """Parse a string as a configuration file"""
+        pass
+
+    def sections(self):
+        """Return all sections we know about"""
+        return []

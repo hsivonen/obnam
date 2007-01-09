@@ -15,22 +15,20 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-"""The init file for the obnam module."""
+"""Unit tests for obnam.cfgfile."""
 
 
-import backend
-import cache
-import cfgfile
-import cmp
-import config
-import context
-import exception
-import filelist
-import format
-import gpg
-import io
-import log
-import map
-import obj
-import rsync
-import varint
+import unittest
+
+import obnam
+
+
+class ParseTests(unittest.TestCase):
+
+    def testEmpty(self):
+        cf = obnam.cfgfile.ConfigFile()
+        cf.parse_string("")
+        self.failUnlessEqual(cf.sections(), [])
+
+
+unittest.main()
