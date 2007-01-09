@@ -332,6 +332,3 @@ class ReadWriteTest(unittest.TestCase):
         cf2.readfp(f)
         self.failUnlessEqual(cf2.sections(), ["foo"])
         self.failUnlessEqual(cf2.items("foo"), [("bar", ["foobar", "baz"])])
-
-
-unittest.main()

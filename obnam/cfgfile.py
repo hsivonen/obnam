@@ -25,6 +25,9 @@ times. For example, exclude patterns for files.
 There seems to be no good way of extending the ConfigParser class,
 so this is written from scratch.
 
+This module does not support the interpolation or defaults features
+of ConfigParser. It should otherwise be compatible.
+
 """
 
 
