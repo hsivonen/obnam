@@ -18,15 +18,14 @@
 """Obnam configuration and option handling"""
 
 
-import ConfigParser
 import optparse
 
 import obnam.defaultconfig
 
 
 def default_config():
-    """Return a ConfigParser object with the default builtin configuration"""
-    config = ConfigParser.RawConfigParser()
+    """Return a obnam.cfgfile.ConfigFile object with the default builtin configuration"""
+    config = obnam.cfgfile.ConfigFile()
     for section, item, value in obnam.defaultconfig.items:
         if not config.has_section(section):
             config.add_section(section)

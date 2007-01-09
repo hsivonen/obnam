@@ -18,7 +18,6 @@
 """Unit tests for obnam.backend"""
 
 
-import ConfigParser
 import os
 import pwd
 import shutil
