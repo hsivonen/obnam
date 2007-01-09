@@ -274,11 +274,31 @@ bar = baz
 
 class ReadTests(unittest.TestCase):
 
-    def testEmpty(self):
+    def parse(self, file_contents):
         cf = obnam.cfgfile.ConfigFile()
-        f = StringIO.StringIO("")
+        f = StringIO.StringIO(file_contents)
         cf.readfp(f)
+        return cf
+
+    def testEmpty(self):
+        cf = self.parse("")
         self.failUnlessEqual(cf.sections(), [])
+
+    def testEmptySection(self):
+        cf = self.parse("[foo]\n")
+        self.failUnlessEqual(cf.sections(), ["foo"])
+
+    def testTwoEmptySection(self):
+        cf = self.parse("[foo]\n[bar]\n")
+        self.failUnlessEqual(cf.sections(), ["bar", "foo"])
+
+    def testParsingError(self):
+        self.failUnlessRaises(obnam.cfgfile.ParsingError,
+                              self.parse, "xxxx")
+
+    def testComment(self):
+        cf = self.parse("# blah\n[foo]\n\n\n")
+        self.failUnlessEqual(cf.sections(), ["foo"])
 
 
 unittest.main()

@@ -28,6 +28,8 @@ so this is written from scratch.
 """
 
 
+import re
+
 import obnam
 
 
@@ -54,6 +56,15 @@ class NoOptionError(Error):
         self._msg = (
             "configuration file does not have option %s in section %s" % 
                 (option, section))
+
+
+class ParsingError(Error):
+    
+    def __init__(self, filename, lineno):
+        if filename is None:
+            self._msg = "Syntax error on line %d of unnamed file" % lineno
+        else:
+            self._msg = "Syntax error in %s, line %d" % (filename, lineno)
 
 
 class ConfigFile:
@@ -212,6 +223,34 @@ class ConfigFile:
                 for value in values:
                     f.write("%s = %s\n" % (option, value))
 
-    def readfp(self, f):
+    # Regular expression patterns for parsing configuration files.
+    comment_pattern = re.compile(r"\s*(#.*)?$")
+    section_pattern = re.compile(r"^\[(?P<section>.*)\]$")
+
+    def readfp(self, f, filename=None):
         """Read configuration file from open file"""
-        return
+        if filename is None and "filename" in dir(f):
+            filename = f.filename
+
+        lineno = 0
+        section = None
+
+        while True:
+            line = f.readline()
+            if not line:
+                break
+            lineno += 1
+
+            m_comment = self.comment_pattern.match(line)
+            m_section = self.section_pattern.match(line)
+            
+            if m_comment:
+                pass
+
+            elif m_section:
+                section = m_section.group("section")
+                if not self.has_section(section):
+                    self.add_section(section)
+
+            else:
+                raise ParsingError(filename, lineno)
