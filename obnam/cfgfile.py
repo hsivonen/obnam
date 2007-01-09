@@ -144,6 +144,22 @@ class ConfigFile:
         """
         return float(self.get(section, option))
 
+    def getboolean(self, section, option):
+        """Convert value of option in section into a boolean value
+        
+        The value must be a single string that is "yes", "true", "on", or
+        "1" for True (ignoring upper/lowercase), or "no", "false", "off", or
+        "0" for False. Any other value will cause ValueError to be raised.
+        
+        """
+        value = self.get(section, option)
+        value = value.lower()
+        if value in ["yes", "on", "true", "1"]:
+            return True
+        if value in ["no", "off", "false", "0"]:
+            return False
+        raise ValueError
+
     def append(self, section, option, value):
         """Append a new value for an option"""
         if not self.has_section(section):
