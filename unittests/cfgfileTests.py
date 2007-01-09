@@ -23,7 +23,7 @@ import unittest
 import obnam
 
 
-class ManipulationTests(unittest.TestCase):
+class SectionTests(unittest.TestCase):
 
     def setUp(self):
         self.cf = obnam.cfgfile.ConfigFile()
@@ -63,6 +63,66 @@ class ManipulationTests(unittest.TestCase):
         for section in list:
             self.cf.add_section(section)
         self.failUnlessEqual(self.cf.sections(), sorted(list))
+
+
+class OptionsTests(unittest.TestCase):
+
+    def setUp(self):
+        self.cf = obnam.cfgfile.ConfigFile()
+        
+    def tearDown(self):
+        self.cf = None
+        
+    def testOptionsNonExistentSection(self):
+        self.failUnlessRaises(obnam.cfgfile.NoSectionError,
+                              self.cf.options,
+                              "foo")
+
+    def testOptionsEmptySection(self):
+        self.cf.add_section("foo")
+        self.failUnlessEqual(self.cf.options("foo"), [])
+
+    def testOptionsNonEmptySection(self):
+        self.cf.add_section("foo")
+        options = ["%d" % x for x in range(100)]
+        for option in options:
+            self.cf.set("foo", option, option)
+        self.failUnlessEqual(self.cf.options("foo"), sorted(options))
+
+    def testHasOptionNonExistingSection(self):
+        self.failUnlessRaises(obnam.cfgfile.NoSectionError,
+                              self.cf.has_option,
+                              "foo", "bar")
+
+    def testHasOptionNonExistingOption(self):
+        self.cf.add_section("foo")
+        self.failIf(self.cf.has_option("foo", "bar"))
+
+    def testHasOptionExistingOption(self):
+        self.cf.add_section("foo")
+        self.cf.set("foo", "bar", "foobar")
+        self.failUnless(self.cf.has_option("foo", "bar"))
+
+    def testGetNonExistingSection(self):
+        self.failUnlessRaises(obnam.cfgfile.NoSectionError,
+                              self.cf.get,
+                              "foo", "bar")
+
+    def testGetNonExistingOption(self):
+        self.cf.add_section("foo")
+        self.failUnlessRaises(obnam.cfgfile.NoOptionError,
+                              self.cf.get,
+                              "foo", "bar")
+
+    def testSetNonExistingSection(self):
+        self.failUnlessRaises(obnam.cfgfile.NoSectionError,
+                              self.cf.set,
+                              "foo", "bar", "foobar")
+
+    def testSetAndGet(self):
+        self.cf.add_section("foo")
+        self.cf.set("foo", "bar", "foobar")
+        self.failUnlessEqual(self.cf.get("foo", "bar"), "foobar")
 
 
 class ParseTests(unittest.TestCase):

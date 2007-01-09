@@ -42,6 +42,20 @@ class DuplicationError(Error):
         self._msg = "section %s already exists" % section
 
 
+class NoSectionError(Error):
+
+    def __init__(self, section):
+        self._msg = "configuration file does not have section %s" % section
+
+
+class NoOptionError(Error):
+
+    def __init__(self, section, option):
+        self._msg = (
+            "configuration file does not have option %s in section %s" % 
+                (option, section))
+
+
 class ConfigFile:
 
     def __init__(self):
@@ -64,3 +78,44 @@ class ConfigFile:
     def sections(self):
         """Return all sections we know about"""
         return sorted(self._dict.keys())
+
+    def options(self, section):
+        """Return list of option names used in a given section"""
+        if not self.has_section(section):
+            raise NoSectionError(section)
+        return sorted(self._dict[section].keys())
+
+    def has_option(self, section, option):
+        """Does a section have a particular option?"""
+        if not self.has_section(section):
+            raise NoSectionError(section)
+        return option in self._dict[section]
+
+    def set(self, section, option, value):
+        """Set the value of an option in a section
+        
+        Note that this replaces all existing values.
+        
+        """
+        if not self.has_section(section):
+            raise NoSectionError(section)
+        self._dict[section][option] = [value]
+
+    def get(self, section, option):
+        """Return the value of an option in a section
+        
+        Note that this can return a string or a list of strings, depending
+        on whether the option has a single value, or several. If the option
+        has not been set, NoOptionError is raised.
+        
+        """
+        if not self.has_section(section):
+            raise NoSectionError(section)
+        if not self.has_option(section, option):
+            raise NoOptionError(section, option)
+        value = self._dict[section][option]
+        if len(value) == 1:
+            return value[0]
+        else:
+            return value
+
