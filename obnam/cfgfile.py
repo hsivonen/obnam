@@ -119,3 +119,11 @@ class ConfigFile:
         else:
             return value
 
+    def append(self, section, option, value):
+        """Append a new value for an option"""
+        if not self.has_section(section):
+            raise NoSectionError(section)
+        if self.has_option(section, option):
+            self._dict[section][option].append(value)
+        else:
+            self._dict[section][option] = [value]
