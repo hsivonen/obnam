@@ -61,6 +61,10 @@ class ConfigFile:
     def __init__(self):
         self._dict = {}
 
+    def optionxform(self, option):
+        """Transform name of option into canonical form"""
+        return option.lower()
+
     def has_section(self, section):
         """Does this configuration file have a particular section?"""
         return section in self._dict
@@ -89,6 +93,7 @@ class ConfigFile:
         """Does a section have a particular option?"""
         if not self.has_section(section):
             raise NoSectionError(section)
+        option = self.optionxform(option)
         return option in self._dict[section]
 
     def set(self, section, option, value):
@@ -99,6 +104,7 @@ class ConfigFile:
         """
         if not self.has_section(section):
             raise NoSectionError(section)
+        option = self.optionxform(option)
         self._dict[section][option] = [value]
 
     def get(self, section, option):
@@ -111,6 +117,7 @@ class ConfigFile:
         """
         if not self.has_section(section):
             raise NoSectionError(section)
+        option = self.optionxform(option)
         if not self.has_option(section, option):
             raise NoOptionError(section, option)
         value = self._dict[section][option]
@@ -123,6 +130,7 @@ class ConfigFile:
         """Append a new value for an option"""
         if not self.has_section(section):
             raise NoSectionError(section)
+        option = self.optionxform(option)
         if self.has_option(section, option):
             self._dict[section][option].append(value)
         else:

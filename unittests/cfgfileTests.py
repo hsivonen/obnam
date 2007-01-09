@@ -140,6 +140,13 @@ class OptionsTests(unittest.TestCase):
         self.cf.append("foo", "bar", "baz")
         self.failUnlessEqual(self.cf.get("foo", "bar"), ["foobar", "baz"])
 
+    def testOptionXform(self):
+        self.cf.add_section("foo")
+        self.cf.set("foo", "BAR", "foobar")
+        self.failUnless(self.cf.has_option("foo", "bar"))
+        self.failUnlessEqual(self.cf.options("foo"), ["bar"])
+        self.failUnlessEqual(self.cf.get("foo", "bar"), "foobar")
+
 
 class ParseTests(unittest.TestCase):
 
