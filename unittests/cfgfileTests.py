@@ -64,6 +64,13 @@ class SectionTests(unittest.TestCase):
             self.cf.add_section(section)
         self.failUnlessEqual(self.cf.sections(), sorted(list))
 
+    def testRemoveSectionNonExistentSection(self):
+        self.failUnlessEqual(self.cf.remove_section("foo"), False)
+
+    def testRemoveSectionExistingSection(self):
+        self.cf.add_section("foo")
+        self.failUnlessEqual(self.cf.remove_section("foo"), True)
+
 
 class OptionsTests(unittest.TestCase):
 

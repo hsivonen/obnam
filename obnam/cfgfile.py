@@ -183,7 +183,7 @@ class ConfigFile:
         return list
 
     def remove_option(self, section, option):
-        """Remove an option from a section"""
+        """Remove an option (all values) from a section"""
         if not self.has_section(section):
             raise NoSectionError(section)
         option = self.optionxform(option)
@@ -192,3 +192,12 @@ class ConfigFile:
             return True
         else:
             return False
+
+    def remove_section(self, section):
+        """Remove a section"""
+        if self.has_section(section):
+            del self._dict[section]
+            return True
+        else:
+            return False
+        
