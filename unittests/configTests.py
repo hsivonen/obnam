@@ -40,7 +40,7 @@ class CommandLineParsingTests(unittest.TestCase):
         needed = ["block-size", "cache", "store", "target-dir",
                   "host-id", "object-cache-size", "log-level", "ssh-key",
                   "odirect-read", "log-file", "gpg-home", "gpg-encrypt-to",
-                  "gpg-sign-with", "no-gpg", "exclude"]
+                  "gpg-sign-with", "no-gpg", "exclude", "odirect-pipe"]
         needed.sort()
         actual = config.options("backup")
         actual.sort()
@@ -88,6 +88,11 @@ class CommandLineParsingTests(unittest.TestCase):
         config = obnam.config.default_config()
         obnam.config.parse_options(config, ["--odirect-read=x"])
         self.failUnlessEqual(config.get("backup", "odirect-read"), "x")
+
+    def testOdirectPipe(self):
+        config = obnam.config.default_config()
+        obnam.config.parse_options(config, ["--odirect-pipe=x"])
+        self.failUnlessEqual(config.get("backup", "odirect-pipe"), "x")
 
     def testLogFile(self):
         config = obnam.config.default_config()

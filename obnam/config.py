@@ -84,6 +84,11 @@ def parse_options(config, argv):
                       help="use PROGRAM to read contents of plain files " +
                            "(default is helper that avoids buffer cache)")
     
+    parser.add_option("--odirect-pipe",
+                      metavar="PROGRAM",
+                      help="use PROGRAM as the odirect_pipe program " +
+                           "(default is helper that avoids buffer cache)")
+    
     parser.add_option("--gpg-home",
                       metavar="DIR",
                       help="use DIR as the location for GnuPG keyrings and " +
@@ -132,6 +137,8 @@ def parse_options(config, argv):
         config.set("backup", "ssh-key", options.ssh_key)
     if options.odirect_read:
         config.set("backup", "odirect-read", options.odirect_read)
+    if options.odirect_pipe:
+        config.set("backup", "odirect-pipe", options.odirect_pipe)
     if options.gpg_home:
         config.set("backup", "gpg-home", options.gpg_home)
     if options.gpg_encrypt_to:
