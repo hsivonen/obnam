@@ -97,8 +97,9 @@ def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
 def backup_directory(context, new_filelist, dirname, prevgen_filelist):
     patterns = []
     for pattern in context.config.getvalues("backup", "exclude"):
-        logging.debug("Compiling exclusion pattern '%s'" % pattern)
-        patterns.append(re.compile(pattern))
+        if pattern:
+            logging.debug("Compiling exclusion pattern '%s'" % pattern)
+            patterns.append(re.compile(pattern))
 
     logging.info("Backing up directory %s" % dirname)
     backup_single_item(context, dirname, new_filelist, prevgen_filelist)
@@ -109,6 +110,7 @@ def backup_directory(context, new_filelist, dirname, prevgen_filelist):
             pathname = os.path.join(dirpath, filename)
             for pattern in patterns:
                 if pattern.search(pathname):
+                    logging.debug("Excluding %s" % pathname)
                     break
             else:
                 backup_single_item(context, pathname, new_filelist, 
