@@ -34,9 +34,7 @@ def encrypt(config, data):
 
     (fd, tempname) = tempfile.mkstemp()
     os.write(fd, data)
-    os.close(fd)
-
-    cat = ["cat", tempname]
+    os.lseek(fd, 0, 0)
 
     gpg = ["gpg", "-q", "--encrypt"]
     gpg += ["--homedir=%s" % config.get("backup", "gpg-home")]
@@ -46,18 +44,21 @@ def encrypt(config, data):
     if signer:
         gpg += ["--sign", "-u%s" % signer]
 
-    pids, stdin_fd, stdout_fd = obnam.rsync.start_pipeline(cat, gpg)
-    os.close(stdin_fd)
-    encrypted = obnam.rsync.read_until_eof(stdout_fd)
-    exit = obnam.rsync.wait_pipeline(pids)
-    
+    p = subprocess.Popen(gpg, stdin=fd, stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE)
+    (encrypted, stderr_data) = p.communicate()
+
+    os.close(fd)
     os.remove(tempname)
     
-    if exit == 0:
+    if p.returncode == 0:
         logging.debug("Encryption OK")    
         return encrypted
     else:
-        logging.warning("GPG failed to encrypt: exit code %d" % exit)
+        logging.warning("GPG failed to encrypt: exit code %d" % p.returncode)
+        if stderr_data:
+            logging.warning("GPG stderr output:\n%s" % 
+                            indent_string(stderr_data))
         return None
 
 
