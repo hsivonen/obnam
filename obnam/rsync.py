@@ -117,14 +117,16 @@ def compute_delta(context, signature, filename):
     os.write(fd, signature)
     os.close(fd)
 
-    pids, stdin_fd, stdout_fd = \
-      start_pipeline([context.config.get("backup", "odirect-read"), filename],
-                     ["rdiff", "--", "delta", tempname, "-", "-"])
-    os.close(stdin_fd)
+    argv = [context.config.get("backup", "odirect-pipe"),
+            context.config.get("backup", "odirect-read"),
+            filename,
+            "rdiff", "--", "delta", tempname, "-", "-"]
+    p = subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
     list = []
     block_size = context.config.getint("backup", "block-size")
     while True:
-        data = os.read(stdout_fd, block_size)
+        data = p.stdout.read(block_size)
         if not data:
             break
         id = obnam.obj.object_id_new()
@@ -134,8 +136,7 @@ def compute_delta(context, signature, filename):
         obnam.io.enqueue_object(context, context.content_oq, 
                                 context.contmap, id, o)
         list.append(id)
-    os.close(stdout_fd)
-    exit = wait_pipeline(pids)
+    exit = p.wait()
     os.remove(tempname)
     if exit == 0:
         return list
