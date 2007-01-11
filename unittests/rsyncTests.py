@@ -29,19 +29,6 @@ import obnam
 
 class RsyncTests(unittest.TestCase):
 
-    def testPipeline(self):
-        pids, _, out = obnam.rsync.start_pipeline(["/bin/echo", "foo"], 
-                                                   ["cat"])
-        output = ""
-        while True:
-            data = os.read(out, 1024)
-            if not data:
-                break
-            output += data
-        exit = obnam.rsync.wait_pipeline(pids)
-        self.failUnlessEqual(output, "foo\n")
-        self.failUnlessEqual(exit, 0)
-
     def testSignature(self):
         (fd, empty_file) = tempfile.mkstemp()
         os.close(fd)
