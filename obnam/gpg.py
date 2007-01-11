@@ -20,6 +20,7 @@
 
 import logging
 import os
+import subprocess
 import tempfile
 
 
@@ -60,6 +61,11 @@ def encrypt(config, data):
         return None
 
 
+def indent_string(str, indent=2):
+    """Indent all lines in a string with 'indent' spaces"""
+    return "".join([(" " * indent) + x for x in str.split("\n")])
+
+
 def decrypt(config, data):
     """Decrypt data according to config"""
     
@@ -73,16 +79,17 @@ def decrypt(config, data):
     gpg += ["--homedir=%s" % config.get("backup", "gpg-home")]
     gpg += [tempname]
 
-    pids, stdin_fd, stdout_fd = obnam.rsync.start_pipeline(gpg)
-    os.close(stdin_fd)
-    decrypted = obnam.rsync.read_until_eof(stdout_fd)
-    exit = obnam.rsync.wait_pipeline(pids)
-    
+    p = subprocess.Popen(gpg, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (decrypted, stderr_data) = p.communicate()
+
     os.remove(tempname)
-    
-    if exit == 0:
-        logging.debug("Decryption OK")    
+
+    if p.returncode == 0:
+        logging.debug("Decryption OK")
         return decrypted
     else:
-        logging.warning("GPG failed to decrypt: exit code %d" % exit)
+        logging.warning("GPG failed to decrypt: exit code %d" % p.returncode)
+        if stderr_data:
+            logging.warning("GPG stderr output:\n%s" % 
+                            indent_string(stderr_data))
         return None
