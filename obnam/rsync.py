@@ -27,69 +27,6 @@ import tempfile
 import obnam
 
 
-def start_process(argv, stdin_fd, stdout_fd):
-    """Start a new process, using stdin/out_fd for its standard in/out"""
-    logging.debug("Starting process: %s" % argv)
-    pid = os.fork()
-    if pid == -1:
-        raise Exception("fork failed")
-    elif pid == 0:
-        devnull_fd = os.open("/dev/null", os.O_RDWR)
-        os.dup2(stdin_fd, 0)
-        os.dup2(stdout_fd, 1)
-#        os.dup2(devnull_fd, 2)
-        os.close(stdin_fd)
-        os.close(stdout_fd)
-        os.close(devnull_fd)
-        os.execvp(argv[0], argv)
-        os._exit(os.EX_NOTFOUND)
-    else:
-        return pid
-
-def start_pipeline(*argvlist):
-    """Start a Unix pipeline, given list of argv arrays
-    
-    Return list of pids for the processes in the pipeline, a file descriptor
-    from which the first process reads its standard input, and a file
-    descriptor to which the last process writes it standard output.
-
-    """
-
-    assert len(argvlist) > 0
-
-    pipe = os.pipe()
-    stdin_fd = pipe[1]
-    pids = []
-
-    for argv in argvlist:
-        new_pipe = os.pipe()
-        pids.append(start_process(argv, pipe[0], new_pipe[1]))
-        os.close(pipe[0])
-        os.close(new_pipe[1])
-        pipe = new_pipe
-
-    return pids, stdin_fd, pipe[0]
-
-
-def wait_pipeline(pids):
-    """Wait for all processes in a list to die, return exit code of last"""
-    exit = None
-    for pid in pids:
-        (_, exit) = os.waitpid(pid, 0)
-    return exit
-
-
-def read_until_eof(fd):
-    """Read from a file descriptor until the end of the file"""
-    data = ""
-    while True:
-        chunk = os.read(fd, 64 * 1024)
-        if not chunk:
-            break
-        data += chunk
-    return data
-
-
 def compute_signature(context, filename):
     """Compute an rsync signature for 'filename'"""
 
