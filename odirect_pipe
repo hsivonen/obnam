@@ -1,0 +1,7 @@
+#!/bin/sh
+
+odirect="$1"
+filename="$2"
+shift 2
+"$odirect" "$filename" |
+exec "$@"

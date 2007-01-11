@@ -92,14 +92,15 @@ def read_until_eof(fd):
 
 def compute_signature(context, filename):
     """Compute an rsync signature for 'filename'"""
-    pids, stdin_fd, stdout_fd = \
-      start_pipeline([context.config.get("backup", "odirect-read"), filename],
-                     ["rdiff", "--", "signature", "-", "-"])
-    os.close(stdin_fd)
-    stdout_data = read_until_eof(stdout_fd)
-    os.close(stdout_fd)
-    exit = wait_pipeline(pids)
-    if exit == 0:
+
+    argv = [context.config.get("backup", "odirect-pipe"),
+            context.config.get("backup", "odirect-read"),
+            filename,
+            "rdiff", "--", "signature", "-", "-"]
+    p = subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout_data, stderr_data = p.communicate()
+    
+    if p.returncode == 0:
         return stdout_data
     else:
         return False
