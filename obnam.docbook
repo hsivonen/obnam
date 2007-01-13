@@ -205,8 +205,15 @@ with this program; if not, write to the Free Software Foundation, Inc.,
       <varlistentry>
         <term><option>--exclude</option>=<replaceable>REGEXP</replaceable></term>
         <listitem>
-          <para>exclude pathnames matching
+          <para>Exclude pathnames matching
           <replaceable>REGEXP</replaceable>.</para>
+        </listitem>
+      </varlistentry>
+    
+      <varlistentry>
+        <term><option>--progress</option></term>
+        <listitem>
+          <para>Report progress of backups as they're made.</para>
         </listitem>
       </varlistentry>
     

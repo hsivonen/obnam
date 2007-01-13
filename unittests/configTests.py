@@ -40,7 +40,8 @@ class CommandLineParsingTests(unittest.TestCase):
         needed = ["block-size", "cache", "store", "target-dir",
                   "host-id", "object-cache-size", "log-level", "ssh-key",
                   "odirect-read", "log-file", "gpg-home", "gpg-encrypt-to",
-                  "gpg-sign-with", "no-gpg", "exclude", "odirect-pipe"]
+                  "gpg-sign-with", "no-gpg", "exclude", "odirect-pipe",
+                  "report-progress"]
         needed.sort()
         actual = config.options("backup")
         actual.sort()
@@ -137,3 +138,9 @@ class CommandLineParsingTests(unittest.TestCase):
         config = obnam.config.default_config()
         obnam.config.parse_options(config, ["--exclude=foo"])
         self.failUnlessEqual(config.get("backup", "exclude"), "foo")
+
+    def testReportProgress(self):
+        config = obnam.config.default_config()
+        self.failIf(config.getboolean("backup", "report-progress"))
+        obnam.config.parse_options(config, ["--progress"])
+        self.failUnless(config.getboolean("backup", "report-progress"))
