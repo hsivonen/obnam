@@ -36,7 +36,8 @@ def default_config():
 
 def build_parser():
     """Create command line parser"""
-    parser = optparse.OptionParser()
+    parser = optparse.OptionParser(version="%s %s" % 
+                                            (obnam.NAME, obnam.VERSION))
     
     parser.add_option("--host-id",
                       metavar="ID",
