@@ -1,4 +1,4 @@
-obnam (0.2-1) unstable; urgency=low
+obnam (0.3-1) unstable; urgency=low
 
   * First release of the .deb package. There have been prototypes privately
     packaged under different names, but this code is not directly derived
