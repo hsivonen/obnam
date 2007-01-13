@@ -29,6 +29,9 @@ sitedir = $(pydir)/site-packages
 
 all: odirect_read obnam.1 odirect_read.1
 
+version:
+	./cli.py --version
+
 odirect_read: odirect_read.c
 
 obnam.1: obnam.docbook

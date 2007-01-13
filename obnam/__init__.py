@@ -18,6 +18,10 @@
 """The init file for the obnam module."""
 
 
+NAME = "obnam"
+VERSION = "0.3"
+
+
 import backend
 import cache
 import cfgfile

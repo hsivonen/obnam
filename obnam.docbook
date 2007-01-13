@@ -217,6 +217,13 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         </listitem>
       </varlistentry>
     
+      <varlistentry>
+        <term><option>--version</option></term>
+        <listitem>
+          <para>Print out name and version of program.</para>
+        </listitem>
+      </varlistentry>
+    
     </variablelist>
     
   </refsect1>
