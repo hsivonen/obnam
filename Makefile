@@ -41,6 +41,7 @@ check: all
 	./test_odirect_read
 	python testrun.py
 	sh blackboxtests tests/*
+	./check-options
 
 coverage: all
 	rm -f .coverage
