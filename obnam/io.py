@@ -173,6 +173,9 @@ def get_object(context, object_id):
 
     logging.debug("Decoding block")
     list = obnam.obj.block_decode(block)
+    if not list:
+        logging.warning("Block %s decodes into nothing" % block_id)
+        return None
     
     logging.debug("Finding objects in block")
     list = obnam.cmp.find_by_kind(list, obnam.cmp.OBJECT)

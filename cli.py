@@ -117,6 +117,7 @@ def clear_progress(context):
         prev_progress_timestamp = 0
 
 
+num_files = 0
 def backup_directory(context, new_filelist, dirname, prevgen_filelist):
     patterns = []
     for pattern in context.config.getvalues("backup", "exclude"):
@@ -127,11 +128,11 @@ def backup_directory(context, new_filelist, dirname, prevgen_filelist):
     logging.debug("Backing up directory %s" % dirname)
     backup_single_item(context, dirname, new_filelist, prevgen_filelist)
     dirname = obnam.io.resolve(context, dirname)
-    num_files = 0
     for dirpath, dirnames, filenames in os.walk(dirname):
         dirpath = obnam.io.unsolve(context, dirpath)
         for filename in dirnames + filenames:
             pathname = os.path.join(dirpath, filename)
+            global num_files
             num_files += 1
             show_progress(context, num_files, pathname)
             for pattern in patterns:
