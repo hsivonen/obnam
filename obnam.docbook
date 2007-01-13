@@ -70,9 +70,143 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <term><option>-h</option></term>
         <term><option>--help</option></term>
         <listitem>
-        
           <para>Show help message and exit.</para>
-        
+        </listitem>
+      </varlistentry>
+    
+      <varlistentry>
+        <term><option>--host-id</option>=<replaceable>ID</replaceable></term>
+        <listitem>
+          <para>Use <replaceable>ID</replaceable> to identify this host.</para>
+        </listitem>
+      </varlistentry>
+    
+      <varlistentry>
+        <term><option>--block-size</option>=<replaceable>SIZE</replaceable></term>
+        <listitem>
+          <para>Make blocks that are about SIZE kilobytes.</para>
+        </listitem>
+      </varlistentry>
+    
+      <varlistentry>
+        <term><option>--cache</option>=<replaceable>DIR</replaceable></term>
+        <listitem>
+          <para>Store cached blocks in <replaceable>DIR</replaceable>.</para>
+        </listitem>
+      </varlistentry>
+    
+      <varlistentry>
+        <term><option>--store</option>=<replaceable>DIR</replaceable></term>
+        <listitem>
+          <para>Use <replaceable>DIR</replaceable> for local block
+          storage (not caching).</para>
+        </listitem>
+      </varlistentry>
+    
+      <varlistentry>
+        <term><option>-C</option> <replaceable>DIR</replaceable></term>
+        <term><option>--target</option>=<replaceable>DIR</replaceable></term>
+        <listitem>
+          <para>Resolve filenames relative to DIR.</para>
+        </listitem>
+      </varlistentry>
+    
+      <varlistentry>
+        <term><option>--object-cache-size</option>=<replaceable>COUNT</replaceable></term>
+        <listitem>
+          <para>Set object cache maximum size to
+          <replaceable>COUNT</replaceable> objects (default depends on
+          block size.</para>
+        </listitem>
+      </varlistentry>
+    
+      <varlistentry>
+        <term><option>--log-file</option>=<replaceable>FILE</replaceable></term>
+        <listitem>
+          <para>Append log messages to
+          <replaceable>FILE</replaceable>.</para>
+        </listitem>
+      </varlistentry>
+    
+      <varlistentry>
+        <term><option>--log-level</option>=<replaceable>LEVEL</replaceable></term>
+        <listitem>
+          <para>Set log level to <replaceable>LEVEL</replaceable>, one
+          of <literal>debug</literal>, <literal>info</literal>,
+          <literal>warning</literal>, <literal>error</literal>,
+          <literal>critical</literal> (default is
+          <literal>warning</literal>).</para>
+        </listitem>
+      </varlistentry>
+    
+      <varlistentry>
+        <term><option>--ssh-key</option>=<replaceable>FILE</replaceable></term>
+        <listitem>
+          <para>Read ssh private key from
+          <replaceable>FILE</replaceable> (and public key from
+          <replaceable>FILE</replaceable><literal>.pub</literal>).</para>
+        </listitem>
+      </varlistentry>
+    
+      <varlistentry>
+        <term><option>--odirect-read</option>=<replaceable>PROGRAM</replaceable></term>
+        <listitem>
+          <para>Use <replaceable>PROGRAM</replaceable> to read contents
+          of plain files (default is helper that avoids buffer
+          cache).</para>
+        </listitem>
+      </varlistentry>
+    
+      <varlistentry>
+        <term><option>--odirect-pipe</option>=<replaceable>DIR</replaceable></term>
+        <listitem>
+          <para>Use <replaceable>DIR</replaceable> as the odirect_pipe
+          program (default is helper that avoids buffer cache).</para>
+        </listitem>
+      </varlistentry>
+    
+      <varlistentry>
+        <term><option>--gpg-home</option>=<replaceable>DIR</replaceable></term>
+        <listitem>
+          <para>Use <replaceable>DIR</replaceable> as the location for
+          GnuPG keyrings and other data files.</para>
+        </listitem>
+      </varlistentry>
+    
+      <varlistentry>
+        <term><option>--gpg-encrypt-to</option>=<replaceable>KEYID</replaceable></term>
+        <listitem>
+          <para>Add <replaceable>KEYID</replaceable> to list of keys to
+          use for encryption.</para>
+        </listitem>
+      </varlistentry>
+    
+      <varlistentry>
+        <term><option>--gpg-sign-with</option>=<replaceable>KEYID</replaceable></term>
+        <listitem>
+          <para>Sign backups with <replaceable>KEYID</replaceable>.</para>
+        </listitem>
+      </varlistentry>
+    
+      <varlistentry>
+        <term><option>--no-gpg</option></term>
+        <listitem>
+          <para>Don't use gpg at all.</para>
+        </listitem>
+      </varlistentry>
+    
+      <varlistentry>
+        <term><option>--use-psyco</option></term>
+        <listitem>
+          <para>Use the psyco Python extension, if available.</para>
+        </listitem>
+      </varlistentry>
+    
+      <varlistentry>
+        <term><option>--exclude</option>=<replaceable>REGEXP</replaceable></term>
+        <listitem>
+          <para>exclude pathnames matching
+          <replaceable>REGEXP</replaceable>.</para>
         </listitem>
       </varlistentry>
     

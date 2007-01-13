@@ -7,7 +7,7 @@ from_manpage()
     (man -l obnam.1 2>/dev/null) | 
     grep '^       -' | 
     tr , '\n' | 
-    sed 's/^ *//' |
+    sed 's/^ *//;s/[= ].*//' |
     sort
 }
 
@@ -23,4 +23,4 @@ from_manpage > $temp1
 temp2=$(mktemp)
 from_code > $temp2
 
-diff $temp1 $temp2
+diff -u $temp1 $temp2
