@@ -34,8 +34,8 @@ def default_config():
     return config
 
 
-def parse_options(config, argv):
-    """Parse command line arguments and set config values accordingly"""
+def build_parser(config):
+    """Create command line parser"""
     parser = optparse.OptionParser()
     
     parser.add_option("--host-id",
@@ -115,6 +115,13 @@ def parse_options(config, argv):
                       action="append",
                       help="exclude pathnames matching REGEXP")
 
+    return parser
+    
+
+def parse_options(config, argv):
+    """Parse command line arguments and set config values accordingly"""
+
+    parser = build_parser(config)
     (options, args) = parser.parse_args(argv)
     
     if options.host_id:
