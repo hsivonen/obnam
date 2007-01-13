@@ -18,7 +18,7 @@
 """The init file for the obnam module."""
 
 
-NAME = "Obnam"
+NAME = "obnam"
 VERSION = "0.3"
 
 
