@@ -113,6 +113,11 @@ def build_parser():
                       metavar="REGEXP", 
                       action="append",
                       help="exclude pathnames matching REGEXP")
+    
+    parser.add_option("--progress",
+                      dest="report_progress",
+                      action="store_true", default=False,
+                      help="report progress when backups are made")
 
     return parser
     
@@ -159,6 +164,8 @@ def parse_options(config, argv):
         config.remove_option("backup", "exclude")
         for pattern in options.exclude:
             config.append("backup", "exclude", pattern)
+    if options.report_progress:
+        config.set("backup", "report-progress", "true")
     if options.use_psyco:
         try:
             import psyco

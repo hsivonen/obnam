@@ -20,4 +20,5 @@ items = (
     ("backup", "gpg-sign-with", "490C9ED1"),
     ("backup", "no-gpg", ""),
     ("backup", "exclude", ""),
+    ("backup", "report-progress", "false"),
 )
