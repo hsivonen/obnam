@@ -19,7 +19,7 @@
 
 
 NAME = "Obnam"
-VERSION = "0.2"
+VERSION = "0.3"
 
 
 import backend
