@@ -60,5 +60,24 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     over computer networks.</para>
 
   </refsect1>
+  
+  <refsect1>
+    <title>OPTIONS</title>
+    
+    <variablelist>
+    
+      <varlistentry>
+        <term><option>-h</option></term>
+        <term><option>--help</option></term>
+        <listitem>
+        
+          <para>Show help message and exit.</para>
+        
+        </listitem>
+      </varlistentry>
+    
+    </variablelist>
+    
+  </refsect1>
 
 </refentry>

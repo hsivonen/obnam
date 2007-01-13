@@ -1,0 +1,26 @@
+#!/bin/sh
+#
+# Check that the manual page contains all options.
+
+from_manpage()
+{
+    (man -l obnam.1 2>/dev/null) | 
+    grep '^       -' | 
+    tr , '\n' | 
+    sed 's/^ *//' |
+    sort
+}
+
+from_code()
+{
+    python -c 'import obnam; obnam.config.print_option_names()' |
+    sort
+}
+
+temp1=$(mktemp)
+from_manpage > $temp1
+
+temp2=$(mktemp)
+from_code > $temp2
+
+diff $temp1 $temp2

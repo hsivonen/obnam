@@ -34,14 +34,13 @@ def default_config():
     return config
 
 
-def build_parser(config):
+def build_parser():
     """Create command line parser"""
     parser = optparse.OptionParser()
     
     parser.add_option("--host-id",
                       metavar="ID",
-                      help="use ID to identify this host, instead of '%s'" %
-                            config.get("backup", "host-id"))
+                      help="use ID to identify this host")
     
     parser.add_option("--block-size",
                       type="int",
@@ -121,7 +120,7 @@ def build_parser(config):
 def parse_options(config, argv):
     """Parse command line arguments and set config values accordingly"""
 
-    parser = build_parser(config)
+    parser = build_parser()
     (options, args) = parser.parse_args(argv)
     
     if options.host_id:
@@ -168,3 +167,13 @@ def parse_options(config, argv):
             pass
 
     return args
+
+
+def print_option_names():
+    """Write to stdout a list of option names"""
+    # Note that this is ugly, since it uses undocumented underscored
+    # attributes, but it's the only way I could find to make it work.
+    parser = build_parser()
+    for option in parser.option_list:
+        for name in option._short_opts + option._long_opts:
+            print name
