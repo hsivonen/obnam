@@ -46,7 +46,7 @@ def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
         obnam.filelist.add_file_component(new_filelist, pathname, file_cmp)
         return
 
-    logging.info("Backing up %s" % pathname)
+    logging.debug("Backing up %s" % pathname)
     sig_id = None
     delta_id = None
     cont_id = None
@@ -94,6 +94,29 @@ def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
     obnam.filelist.add_file_component(new_filelist, pathname, file_cmp)
 
 
+import time
+prev_progress = ""
+prev_progress_timestamp = 0
+
+def show_progress(context, num_files, current):
+    global prev_progress, prev_progress_timestamp
+    if context.config.getboolean("backup", "report-progress"):
+        if time.time() - prev_progress_timestamp >= 0.1:
+            sys.stdout.write("\b \b" * len(prev_progress))
+            part_one = "Files found: %d, currently: " % num_files
+            prev_progress = "%s%s" % (part_one, current[-(79-len(part_one)):])
+            sys.stdout.write(prev_progress)
+            sys.stdout.flush()
+            prev_progress_timestamp = time.time()
+
+def clear_progress(context):
+    global prev_progress, prev_progress_timestamp
+    if context.config.getboolean("backup", "report-progress"):
+        sys.stdout.write("\b \b" * len(prev_progress))
+        prev_progress = ""
+        prev_progress_timestamp = 0
+
+
 def backup_directory(context, new_filelist, dirname, prevgen_filelist):
     patterns = []
     for pattern in context.config.getvalues("backup", "exclude"):
@@ -101,13 +124,16 @@ def backup_directory(context, new_filelist, dirname, prevgen_filelist):
             logging.debug("Compiling exclusion pattern '%s'" % pattern)
             patterns.append(re.compile(pattern))
 
-    logging.info("Backing up directory %s" % dirname)
+    logging.debug("Backing up directory %s" % dirname)
     backup_single_item(context, dirname, new_filelist, prevgen_filelist)
     dirname = obnam.io.resolve(context, dirname)
+    num_files = 0
     for dirpath, dirnames, filenames in os.walk(dirname):
         dirpath = obnam.io.unsolve(context, dirpath)
         for filename in dirnames + filenames:
             pathname = os.path.join(dirpath, filename)
+            num_files += 1
+            show_progress(context, num_files, pathname)
             for pattern in patterns:
                 if pattern.search(pathname):
                     logging.debug("Excluding %s" % pathname)
@@ -115,6 +141,7 @@ def backup_directory(context, new_filelist, dirname, prevgen_filelist):
             else:
                 backup_single_item(context, pathname, new_filelist, 
                                    prevgen_filelist)
+    clear_progress(context)
 
 
 def get_filelist_in_gen(context, gen_id):
