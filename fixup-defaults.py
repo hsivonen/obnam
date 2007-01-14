@@ -20,13 +20,13 @@
 
 import sys
 
-import obnam
+import obnam.config
 
 
 def main():
-    context = obnam.context.create()
-    args = obnam.config.parse_options(context.config, sys.argv[1:])
-    obnam.config.write_defaultconfig(context.config)
+    config = obnam.config.default_config()
+    args = obnam.config.parse_options(config, sys.argv[1:])
+    obnam.config.write_defaultconfig(config)
 
 
 if __name__ == "__main__":
