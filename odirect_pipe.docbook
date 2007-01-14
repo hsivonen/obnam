@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+
+Copyright 2007 Lars Wirzenius (liw@iki.fi)
+
+This program is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the
+Free Software Foundation; either version 2 of the License, or (at your
+option) any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+-->
+
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook V4.1//EN"
+"file:///usr/share/xml/docbook/schema/dtd/4.4/docbookx.dtd"
+[]>
+
+<refentry>
+
+  <refentryinfo>
+    <address>
+      <email>liw@iki.fi</email>
+    </address>
+    <author>
+      <firstname>Lars</firstname>
+      <surname>Wirzenius</surname>
+    </author>
+    <date>2007-01-14</date>
+  </refentryinfo>
+  
+  <refmeta>
+    <refentrytitle>odirect_pipe</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  
+  <refnamediv>
+    <refname>odirect_pipe</refname> 
+    <refpurpose>run a filter and feed it's stdin via odirect_read</refpurpose>
+  </refnamediv>
+  
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>odirect_pipe</command>
+      <arg><replaceable>odirect_read</replaceable></arg>
+      <arg><replaceable>filename</replaceable></arg>
+      <arg><replaceable>command</replaceable></arg>
+      <arg><replaceable>arg...</replaceable></arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+  
+  <refsect1>
+    <title>DESCRIPTION</title>
+
+    <para><command>odirect_pipe</command> runs a command that reads input
+    from the standard input, and feeds it the input through 
+    <command>odirect_read</command>.</para>
+    
+    <para><command>odirect_read</command> is used by the
+    <command>obnam</command> backup tool.</para>
+
+  </refsect1>
+
+</refentry>
