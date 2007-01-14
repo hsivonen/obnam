@@ -75,6 +75,6 @@ install: all
 	    --ssh-key= \
 	    --store= \
 	    --host-id="socket.gethostname()" \
-	    --cache= 
+	    --cache= \
 	    > $(sitedir)/obnam/defaultconfig.py
 	install -m 0644 uuid.py $(sitedir)
