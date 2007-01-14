@@ -27,7 +27,7 @@ man1dir = $(mandir)/man1
 pydir = $(libdir)/python2.4
 sitedir = $(pydir)/site-packages
 
-all: odirect_read obnam.1 odirect_read.1
+all: odirect_read obnam.1 odirect_read.1 odirect_pipe.1
 
 version:
 	./cli.py --version
@@ -39,6 +39,9 @@ obnam.1: obnam.docbook
 
 odirect_read.1: odirect_read.docbook
 	docbook2x-man odirect_read.docbook
+
+odirect_pipe.1: odirect_pipe.docbook
+	docbook2x-man odirect_pipe.docbook
 
 check: all
 	./test_odirect_read
@@ -55,13 +58,13 @@ coverage: all
 
 clean:
 	rm -f *~ */*~ *.pyc *.pyo */*.pyc */*.pyo tmp.* *,cover */*,cover
-	rm -f obnam.1 odirect_read.1 odirect_read
+	rm -f obnam.1 odirect_read.1 odirect_read odirect_pipe.1
 
 
 install: all
 	install -d $(bindir)
 	install cli.py $(bindir)/obnam
-	install odirect_read $(bindir)
+	install odirect_read odirect_pipe $(bindir)
 	install -d $(man1dir)
 	install -m 0644 *.1 $(man1dir)
 	install -d $(sitedir)/obnam
@@ -74,7 +77,7 @@ install: all
 	    --odirect-pipe=odirect_pipe \
 	    --ssh-key= \
 	    --store= \
-	    --host-id="socket.gethostname()" \
-	    --cache= 
+	    --host-id= \
+	    --cache= \
 	    > $(sitedir)/obnam/defaultconfig.py
 	install -m 0644 uuid.py $(sitedir)
