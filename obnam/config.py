@@ -19,6 +19,7 @@
 
 
 import optparse
+import socket
 import sys
 
 import obnam.defaultconfig
@@ -31,6 +32,9 @@ def default_config():
         if not config.has_section(section):
             config.add_section(section)
         config.set(section, item, value)
+
+    if config.get("backup", "host-id") == "":
+        config.set("backup", "host-id", socket.gethostname())
     
     return config
 

@@ -2,9 +2,8 @@
 # "make install". The values here are suitable for development purposes,
 # but not for real use.
 
-import socket
 items = (
-    ("backup", "host-id", socket.gethostname()),
+    ("backup", "host-id", ""),
     ("backup", "block-size", "%d" % (1024 * 1024)),
     ("backup", "cache", "tmp.cache"),
     ("backup", "store", "tmp.store"),
