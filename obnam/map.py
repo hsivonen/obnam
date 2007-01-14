@@ -98,6 +98,8 @@ def encode_new_to_block(mapping, block_id):
 def decode_block(mapping, mapping_block):
     """Decode a block with mappings, add them to mapping object"""
     list = obnam.obj.block_decode(mapping_block)
+    if not list:
+        return
     maps = obnam.cmp.find_by_kind(list, obnam.cmp.OBJMAP)
     for map in maps:
         subs = obnam.cmp.get_subcomponents(map)
