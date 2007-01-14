@@ -19,6 +19,7 @@
 
 
 import optparse
+import sys
 
 import obnam.defaultconfig
 
@@ -129,44 +130,48 @@ def parse_options(config, argv):
     parser = build_parser()
     (options, args) = parser.parse_args(argv)
     
-    if options.host_id:
+    if options.host_id is not None:
         config.set("backup", "host-id", options.host_id)
-    if options.block_size:
+    if options.block_size is not None:
         config.set("backup", "block-size", "%d" % options.block_size)
-    if options.cache:
+    if options.cache is not None:
         config.set("backup", "cache", options.cache)
-    if options.store:
+    if options.store is not None:
         config.set("backup", "store", options.store)
-    if options.target:
+    if options.target is not None:
         config.set("backup", "target-dir", options.target)
-    if options.object_cache_size:
+    if options.object_cache_size is not None:
         config.set("backup", "object-cache-size", options.object_cache_size)
-    if options.log_file:
+    if options.log_file is not None:
         config.set("backup", "log-file", options.log_file)
-    if options.log_level:
+    if options.log_level is not None:
         config.set("backup", "log-level", options.log_level)
-    if options.ssh_key:
+    if options.ssh_key is not None:
         config.set("backup", "ssh-key", options.ssh_key)
-    if options.odirect_read:
+    if options.odirect_read is not None:
         config.set("backup", "odirect-read", options.odirect_read)
-    if options.odirect_pipe:
+    if options.odirect_pipe is not None:
         config.set("backup", "odirect-pipe", options.odirect_pipe)
-    if options.gpg_home:
+    if options.gpg_home is not None:
         config.set("backup", "gpg-home", options.gpg_home)
-    if options.gpg_encrypt_to:
+    if options.gpg_encrypt_to is not None:
         config.remove_option("backup", "gpg-encrypt-to")
         for keyid in options.gpg_encrypt_to:
             config.append("backup", "gpg-encrypt-to", keyid)
-    if options.gpg_sign_with:
+    if options.gpg_sign_with is not None:
         config.set("backup", "gpg-sign-with", options.gpg_sign_with)
     if options.no_gpg:
         config.set("backup", "no-gpg", "true")
-    if options.exclude:
+    else:
+        config.set("backup", "no-gpg", "false")
+    if options.exclude is not None:
         config.remove_option("backup", "exclude")
         for pattern in options.exclude:
             config.append("backup", "exclude", pattern)
     if options.report_progress:
         config.set("backup", "report-progress", "true")
+    else:
+        config.set("backup", "report-progress", "false")
     if options.use_psyco:
         try:
             import psyco
@@ -185,3 +190,15 @@ def print_option_names():
     for option in parser.option_list:
         for name in option._short_opts + option._long_opts:
             print name
+
+
+def write_defaultconfig(config):
+    """Write to stdout a new defaultconfig.py, using values from config"""
+
+    items = []
+    for section in config.sections():
+        for key in config.options(section):
+            items.append('  ("%s", "%s", "%s"),' % 
+                            (section, key, config.get(section, key)))
+
+    sys.stdout.write("import socket\nitems = (\n%s\n)\n""" % "\n".join(items))

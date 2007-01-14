@@ -66,5 +66,15 @@ install: all
 	install -m 0644 *.1 $(man1dir)
 	install -d $(sitedir)/obnam
 	install -m 0644 obnam/*.py $(sitedir)/obnam
-	sed -i '/"gpg-/s/"[^"]*"),$$/""),/' $(sitedir)/obnam/defaultconfig.py
+	python fixup-defaults.py \
+	    --gpg-encrypt-to= \
+	    --gpg-home= \
+	    --gpg-sign-with= \
+	    --odirect-read=odirect_read \
+	    --odirect-pipe=odirect_pipe \
+	    --ssh-key= \
+	    --store= \
+	    --host-id="socket.gethostname()" \
+	    --cache= 
+	    > $(sitedir)/obnam/defaultconfig.py
 	install -m 0644 uuid.py $(sitedir)
