@@ -66,7 +66,7 @@ install: all
 	install -m 0644 *.1 $(man1dir)
 	install -d $(sitedir)/obnam
 	install -m 0644 obnam/*.py $(sitedir)/obnam
-	python fixup-defaults.py \
+	python2.4 fixup-defaults.py \
 	    --gpg-encrypt-to= \
 	    --gpg-home= \
 	    --gpg-sign-with= \
