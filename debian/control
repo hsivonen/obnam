@@ -7,6 +7,6 @@ Build-Depends: docbook2x, docbook-xml, python2.4, python-paramiko
 
 Package: obnam
 Architecture: any
-Depends: python2.4, python-paramiko
+Depends: python2.4, python-paramiko, rdiff, gnupg
 Description: online backup tool
  Obnam is a tool for making backups over a network to a remote computer.
