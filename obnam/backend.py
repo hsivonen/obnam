@@ -232,8 +232,9 @@ def _use_gpg(be):
 def upload(be, block_id, block):
     """Start the upload of a block to the remote server"""
     
+    logging.debug("Uploading block %s" % block_id)
     if _use_gpg(be):
-        logging.debug("Encrypting block before upload")
+        logging.debug("Encrypting block %s before upload" % block_id)
         encrypted = obnam.gpg.encrypt(be.config, block)
         if encrypted is None:
             logging.error("Can't encrypt block for upload, not uploading it")
@@ -266,6 +267,7 @@ def download(be, block_id):
     
     """
     
+    logging.debug("Downloading block %s" % block_id)
     if _use_sftp(be):
         try:
             _connect_sftp(be)
@@ -285,7 +287,7 @@ def download(be, block_id):
     be.bytes_read += len(block)
     
     if _use_gpg(be):
-        logging.debug("Decoding downloaded block before using it")
+        logging.debug("Decoding downloaded block %s before using it", block_id)
         decrypted = obnam.gpg.decrypt(be.config, block)
         if decrypted is None:
             logging.error("Can't decrypt downloaded block, not using it")
@@ -306,21 +308,22 @@ def sftp_listdir_abs(sftp, dirname):
 def sftp_recursive_listdir(sftp, dirname="."):
     """Similar to SFTPClient's listdir_attr, but recursively"""
     list = []
-    unprocessed = listdir_abs(sftp, dirname)
+    logging.debug("sftp: listing files in %s" % dirname)
+    unprocessed = sftp_listdir_abs(sftp, dirname)
     while unprocessed:
         item, unprocessed = unprocessed[0], unprocessed[1:]
-        print item.filename
         if stat.S_ISDIR(item.st_mode):
-            unprocessed += listdir_abs(sftp, item.filename)
-        list.append(item.filename)
+            logging.debug("sftp: listing files in %s" % item.filename)
+            unprocessed += sftp_listdir_abs(sftp, item.filename)
+        elif stat.S_ISREG(item.st_mode):
+            list.append(item.filename)
     return list
 
 
 def list(be):
     """Return list of all files on the remote server"""
     if _use_sftp(be):
-        list = sftp_recursive_listdir(be.sftp_client, be.path)
-        list = [x.filename for x in list if stat.S_ISDIR(x.st_mode)]
+        return sftp_recursive_listdir(be.sftp_client, be.path)
     else:
         list = []
         for dirpath, _, filenames in os.walk(be.path):
@@ -335,8 +338,12 @@ def list(be):
 def remove(be, block_id):
     """Remove a block from the remote server"""
     pathname = _block_remote_pathname(be, block_id)
-    if _use_sftp(be):
-        be.sftp_client.remove(pathname)
-    else:
-        if os.path.exists(pathname):
-            os.remove(pathname)
+    try:
+        if _use_sftp(be):
+            be.sftp_client.remove(pathname)
+        else:
+            if os.path.exists(pathname):
+                os.remove(pathname)
+    except IOError:
+        # We ignore any errors in removing a file.
+        pass

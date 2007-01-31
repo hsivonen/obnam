@@ -361,7 +361,10 @@ def find_reachable_data_blocks(context, host_block):
         block_id = obnam.map.get(context.map, object_id)
         if not block_id:
             block_id = obnam.map.get(context.contmap, object_id)
-        if block_id not in reachable_block_ids:
+        if not block_id:
+            logging.warning("Can't find object %s in any block" % object_id)
+        elif block_id not in reachable_block_ids:
+            assert block_id is not None
             reachable_block_ids.add(block_id)
             block = get_block(context, block_id)
             for ref in _find_refs(obnam.obj.block_decode(block)):
@@ -378,6 +381,12 @@ def find_map_blocks_in_use(context, host_block, data_block_ids):
     for map_block_id in map_block_ids + contmap_block_ids:
         block = get_block(context, map_block_id)
         list = obnam.obj.block_decode(block)
+        if list is None:
+            logging.warning("Error decoding block %s" % map_block_id)
+            continue
+        if type(list) != type([]):
+            print "list:", repr(list)
+            assert False
         list = obnam.cmp.find_by_kind(list, obnam.cmp.OBJMAP)
         for c in list:
             subs = obnam.cmp.get_subcomponents(c)
@@ -392,16 +401,22 @@ def find_map_blocks_in_use(context, host_block, data_block_ids):
 
 def collect_garbage(context, host_block):
     """Find files on the server store that are not linked from host object"""
+    logging.debug("Collecting garbage")
     host_id = context.config.get("backup", "host-id")
+    logging.debug("GC: finding reachable data")
     data_block_ids = find_reachable_data_blocks(context, host_block)
+    logging.debug("GC: finding map blocks still in use")
     map_block_ids = find_map_blocks_in_use(context, host_block, 
                                            data_block_ids)
+    logging.debug("GC: finding all files in store")
     files = obnam.backend.list(context.be)
     for id in [host_id] + data_block_ids + map_block_ids:
         if id in files:
             files.remove(id)
     for garbage in files:
+        logging.debug("GC: Removing file %s" % garbage)
         obnam.backend.remove(context.be, garbage)
+    logging.debug("GC: done")
 
 
 def load_maps(context, map, block_ids):
