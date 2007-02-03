@@ -26,7 +26,7 @@ import obnam.defaultconfig
 
 
 def default_config():
-    """Return a obnam.cfgfile.ConfigFile object with the default builtin configuration"""
+    """Return a obnam.cfgfile.ConfigFile with the default builtin config"""
     config = obnam.cfgfile.ConfigFile()
     for section, item, value in obnam.defaultconfig.items:
         if not config.has_section(section):
@@ -124,6 +124,11 @@ def build_parser():
                       dest="report_progress",
                       action="store_true", default=False,
                       help="report progress when backups are made")
+    
+    parser.add_option("--generation-times",
+                      action="store_true", default=False,
+                      help="show generation start/end times " +
+                           "with the 'generations' command")
 
     return parser
     
@@ -176,6 +181,10 @@ def parse_options(config, argv):
         config.set("backup", "report-progress", "true")
     else:
         config.set("backup", "report-progress", "false")
+    if options.generation_times:
+        config.set("backup", "generation-times", "true")
+    else:
+        config.set("backup", "generation-times", "false")
     if options.use_psyco:
         try:
             import psyco

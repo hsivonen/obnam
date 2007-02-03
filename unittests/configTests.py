@@ -41,7 +41,7 @@ class CommandLineParsingTests(unittest.TestCase):
                   "host-id", "object-cache-size", "log-level", "ssh-key",
                   "odirect-read", "log-file", "gpg-home", "gpg-encrypt-to",
                   "gpg-sign-with", "no-gpg", "exclude", "odirect-pipe",
-                  "report-progress"]
+                  "report-progress", "generation-times"]
         needed.sort()
         actual = config.options("backup")
         actual.sort()
