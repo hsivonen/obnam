@@ -103,3 +103,9 @@ class FormatInodeFieldsTest(unittest.TestCase):
         
         self.failUnlessEqual(list, ["?--------x"] + ["1"] * 4 +
                                    ["1970-01-01 00:00:01"])
+
+
+class FormatTimeTests(unittest.TestCase):
+
+    def test(self):
+        self.failUnlessEqual(obnam.format.timestamp(1), "1970-01-01 00:00:01")

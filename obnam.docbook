@@ -224,6 +224,16 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         </listitem>
       </varlistentry>
     
+      <varlistentry>
+        <term><option>--generation-times</option></term>
+        <listitem>
+          <para>With the <literal>generations</literal> command, 
+          show also the start and end times of each generation. Note
+          that this means the operation runs slower, since it needs to
+          download more data from the store.</para>
+        </listitem>
+      </varlistentry>
+    
     </variablelist>
     
   </refsect1>

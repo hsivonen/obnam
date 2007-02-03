@@ -20,4 +20,5 @@ items = (
     ("backup", "no-gpg", "false"),
     ("backup", "exclude", ""),
     ("backup", "report-progress", "false"),
+    ("backup", "generation-times", "false"),
 )
