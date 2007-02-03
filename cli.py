@@ -236,11 +236,24 @@ def backup(context, args):
 
     logging.info("Backup done")
 
+
 def generations(context):
     block = obnam.io.get_host_block(context)
-    (_, gen_ids, _, _) = obnam.obj.host_block_decode(block)
+    (_, gen_ids, map_block_ids, _) = obnam.obj.host_block_decode(block)
+    if context.config.getboolean("backup", "generation-times"):
+        obnam.io.load_maps(context, context.map, map_block_ids)
     for id in gen_ids:
-        print id
+        if context.config.getboolean("backup", "generation-times"):
+            gen = obnam.io.get_object(context, id)
+            if not gen:
+                logging.warning("Can't find info about generation %s" % id)
+            else:
+                start = obnam.obj.first_varint_by_kind(gen, obnam.cmp.GENSTART)
+                end = obnam.obj.first_varint_by_kind(gen, obnam.cmp.GENEND)
+                print id, obnam.format.timestamp(start), "--", \
+                    obnam.format.timestamp(end)
+        else:
+            print id
 
 
 def format_period(start, end):

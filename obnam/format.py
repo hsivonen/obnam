@@ -93,7 +93,6 @@ def filemode(mode):
 
 def inode_fields(file_component):
     format_integer = lambda x: "%d" % x
-    format_time = lambda x: time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(x))
 
     fields = (
         ("st_mode", filemode),
@@ -101,7 +100,7 @@ def inode_fields(file_component):
         ("st_uid", format_integer),
         ("st_gid", format_integer),
         ("st_size", format_integer),
-        ("st_mtime", format_time),
+        ("st_mtime", timestamp),
     )
 
     list = []
@@ -111,3 +110,8 @@ def inode_fields(file_component):
     for kind, func in fields:
         list.append(func(st.__getattribute__(kind)))
     return list
+
+
+def timestamp(seconds):
+    """Format a time stamp given in seconds since epoch"""
+    return time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(seconds))
