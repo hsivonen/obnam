@@ -99,7 +99,7 @@ def show_progress(context, num_files, current):
     if context.config.getboolean("backup", "report-progress"):
         if time.time() - prev_progress_timestamp >= 0.1:
             sys.stdout.write("\b \b" * len(prev_progress))
-            part_one = "Files: %d, up: %d MB down %d MB, now: " % \
+            part_one = "Files: %d, up: %d MB, down: %d MB, now: " % \
                 (num_files, 
                  obnam.backend.get_bytes_written(context.be) / 1024 / 1024,
                  obnam.backend.get_bytes_read(context.be) / 1024 / 1024)
