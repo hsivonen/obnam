@@ -447,6 +447,7 @@ def main():
     args = obnam.config.parse_options(context.config, sys.argv[1:])
     context.cache = obnam.cache.init(context.config)
     context.be = obnam.backend.init(context.config, context.cache)
+    obnam.backend.set_progress_reporter(context.be, context.progress)
 
     if not args:
         raise MissingCommandWord()

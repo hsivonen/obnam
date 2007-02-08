@@ -77,6 +77,7 @@ class BackendData:
         self.sftp_client = None
         self.bytes_read = 0
         self.bytes_written = 0
+        self.progress = None
 
 
 def get_default_user():
@@ -138,6 +139,10 @@ def init(config, cache):
     be.cache = cache
     be.blockdir = str(uuid.uuid4())
     return be
+
+
+def set_progress_reporter(be, progress):
+    be.progress = progress
 
 
 def get_bytes_read(be):
@@ -257,6 +262,8 @@ def upload(be, block_id, block):
         f.write(block)
         f.close()
     be.bytes_written += len(block)
+    if be.progress:
+        be.progress.update_uploaded(be.bytes_written)
     return None
 
 
@@ -286,6 +293,8 @@ def download(be, block_id):
         except IOError, e:
             return e
     be.bytes_read += len(block)
+    if be.progress:
+        be.progress.update_downloaded(be.bytes_read)
     
     if _use_gpg(be):
         logging.debug("Decoding downloaded block %s before using it", block_id)
