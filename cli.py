@@ -90,32 +90,6 @@ def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
     obnam.filelist.add_file_component(new_filelist, pathname, file_cmp)
 
 
-import time
-prev_progress = ""
-prev_progress_timestamp = 0
-
-def show_progress(context, num_files, current):
-    global prev_progress, prev_progress_timestamp
-    if context.config.getboolean("backup", "report-progress"):
-        if time.time() - prev_progress_timestamp >= 0.1:
-            sys.stdout.write("\b \b" * len(prev_progress))
-            part_one = "Files: %d, up: %d MB, down: %d MB, now: " % \
-                (num_files, 
-                 obnam.backend.get_bytes_written(context.be) / 1024 / 1024,
-                 obnam.backend.get_bytes_read(context.be) / 1024 / 1024)
-            prev_progress = "%s%s" % (part_one, current[-(79-len(part_one)):])
-            sys.stdout.write(prev_progress)
-            sys.stdout.flush()
-            prev_progress_timestamp = time.time()
-
-def clear_progress(context):
-    global prev_progress, prev_progress_timestamp
-    if context.config.getboolean("backup", "report-progress"):
-        sys.stdout.write("\b \b" * len(prev_progress))
-        prev_progress = ""
-        prev_progress_timestamp = 0
-
-
 num_files = 0
 def backup_directory(context, new_filelist, dirname, prevgen_filelist):
     patterns = []
@@ -133,7 +107,8 @@ def backup_directory(context, new_filelist, dirname, prevgen_filelist):
             pathname = os.path.join(dirpath, filename)
             global num_files
             num_files += 1
-            show_progress(context, num_files, pathname)
+            context.progress.update_total_files(num_files)
+            context.progress.update_current_file(pathname)
             for pattern in patterns:
                 if pattern.search(pathname):
                     logging.debug("Excluding %s" % pathname)
@@ -141,7 +116,7 @@ def backup_directory(context, new_filelist, dirname, prevgen_filelist):
             else:
                 backup_single_item(context, pathname, new_filelist, 
                                    prevgen_filelist)
-    clear_progress(context)
+    context.progress.clear()
 
 
 def get_filelist_in_gen(context, gen_id):
@@ -472,6 +447,7 @@ def main():
     args = obnam.config.parse_options(context.config, sys.argv[1:])
     context.cache = obnam.cache.init(context.config)
     context.be = obnam.backend.init(context.config, context.cache)
+    obnam.backend.set_progress_reporter(context.be, context.progress)
 
     if not args:
         raise MissingCommandWord()

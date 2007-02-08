@@ -33,6 +33,7 @@ class Context:
         self.contmap = obnam.map.create()
         self.oq = obnam.obj.queue_create()
         self.content_oq = obnam.obj.queue_create()
+        self.progress = obnam.progress.ProgressReporter(self.config)
 
 
 def create():

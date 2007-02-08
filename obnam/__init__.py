@@ -36,5 +36,6 @@ import io
 import log
 import map
 import obj
+import progress
 import rsync
 import varint
