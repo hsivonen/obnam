@@ -274,7 +274,8 @@ def download(be, block_id):
             f = be.sftp_client.file(_block_remote_pathname(be, block_id), "r")
             block = f.read()
             f.close()
-            obnam.cache.put_block(be.cache, block_id, block)
+            if be.config.get("backup", "cache"):
+                obnam.cache.put_block(be.cache, block_id, block)
         except IOError, e:
             return e
     else:
