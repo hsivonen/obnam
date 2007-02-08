@@ -475,6 +475,7 @@ def main():
     else:
         raise UnknownCommandWord(command)
 
+    context.progress.clear()
     logging.info("Store I/O: %d kB read, %d kB written" % 
                  (obnam.backend.get_bytes_read(context.be) / 1024,
                   obnam.backend.get_bytes_written(context.be) / 1024))
