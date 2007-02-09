@@ -477,6 +477,8 @@ def main():
         restore(context, args[0])
     elif command == "forget":
         forget(context, args)
+    elif command == "write-config":
+        context.config.write(sys.stdout)
     else:
         raise UnknownCommandWord(command)
 
