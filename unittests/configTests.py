@@ -144,3 +144,27 @@ class CommandLineParsingTests(unittest.TestCase):
         self.failIf(config.getboolean("backup", "report-progress"))
         obnam.config.parse_options(config, ["--progress"])
         self.failUnless(config.getboolean("backup", "report-progress"))
+
+
+class ConfigFileReadingTests(unittest.TestCase):
+
+    def setUp(self):
+        self.filename = "unittest.conf"
+        f = file(self.filename, "w")
+        f.write("""\
+[backup]
+store =
+store = pink
+cache =
+cache = pretty
+""")
+        f.close()
+        
+    def tearDown(self):
+        os.remove(self.filename)
+    
+    def testReadConfigFile(self):
+        config = obnam.config.default_config()
+        obnam.config.read_config_file(config, self.filename)
+        self.failUnlessEqual(config.get("backup", "store"), "pink")
+        self.failUnlessEqual(config.get("backup", "cache"), "pretty")

@@ -131,6 +131,17 @@ def build_parser():
                            "with the 'generations' command")
 
     return parser
+
+
+def read_config_file(config, filename):
+    """Read a config file, if it exists"""
+    try:
+        f = file(filename)
+    except IOError:
+        pass
+    else:
+        config.readfp(f, filename)
+        f.close()
     
 
 def parse_options(config, argv):
@@ -138,7 +149,7 @@ def parse_options(config, argv):
 
     parser = build_parser()
     (options, args) = parser.parse_args(argv)
-    
+
     if options.host_id is not None:
         config.set("backup", "host-id", options.host_id)
     if options.block_size is not None:

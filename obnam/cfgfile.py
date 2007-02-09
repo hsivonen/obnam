@@ -25,6 +25,19 @@ times. For example, exclude patterns for files.
 There seems to be no good way of extending the ConfigParser class,
 so this is written from scratch.
 
+The way it works: you can have the same name multiple times, and every
+time adds a value to the list of values. This also works across
+configuration files.
+
+If you want to forget all existing values, set the value to be empty:
+
+    foo =
+
+Note that if you're using continuation lines, the first line may not be 
+empty.
+
+This may be a bad syntax, we'll see.
+
 This module does not support the interpolation or defaults features
 of ConfigParser. It should otherwise be compatible.
 
@@ -246,13 +259,20 @@ class ConfigFile:
 
     def handle_section(self, section, option, match):
         section = match.group("section")
-        self.add_section(section)
+        if not self.has_section(section):
+            # It's OK for the section to exist already. We might be reading
+            # several configuration files into the same CfgFile object.
+            self.add_section(section)
         return section, option
         
     def handle_option_line1(self, section, option, match):
         option = match.group("option")
         value = match.group("value")
-        self.append(section, option, value.strip())
+        value = value.strip()
+        if value:
+            self.append(section, option, value)
+        else:
+            self._dict[section][option] = []
         return section, option
         
     def handle_option_line2(self, section, option, match):
