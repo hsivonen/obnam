@@ -114,8 +114,13 @@ def backup_directory(context, new_filelist, dirname, prevgen_filelist):
                     logging.debug("Excluding %s" % pathname)
                     break
             else:
-                backup_single_item(context, pathname, new_filelist, 
-                                   prevgen_filelist)
+                try:
+                    backup_single_item(context, pathname, new_filelist, 
+                                       prevgen_filelist)
+                except EnvironmentError, e:
+                    logging.warning("File disappeared or other error: " +
+                                    "%s: %d: %s" %
+                                     (pathname, e.errno, e.strerror))
     context.progress.clear()
 
 
