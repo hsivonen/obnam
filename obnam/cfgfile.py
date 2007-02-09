@@ -25,18 +25,16 @@ times. For example, exclude patterns for files.
 There seems to be no good way of extending the ConfigParser class,
 so this is written from scratch.
 
-The way it works: you can have the same name multiple times, and every
-time adds a value to the list of values. This also works across
-configuration files.
+The way it works: 
 
-If you want to forget all existing values, set the value to be empty:
+    foo = bar
+    # foo now has one value, "bar"
+    foo += foobar
+    # note the +=; foo now has two values, "bar" and "foobar"
+    foo = pink
+    # foo now has one value again, "pink"
 
-    foo =
-
-Note that if you're using continuation lines, the first line may not be 
-empty.
-
-This may be a bad syntax, we'll see.
+This also works across configuration files.
 
 This module does not support the interpolation or defaults features
 of ConfigParser. It should otherwise be compatible.
@@ -247,14 +245,18 @@ class ConfigFile:
             for option in self.options(section):
                 values = self.get(section, option)
                 if type(values) != type([]):
-                    values = [values]
-                for value in values:
-                    f.write("%s = %s\n" % (option, value))
+                    f.write("%s = %s\n" % (option, values))
+                else:
+                    if values:
+                        f.write("%s = %s\n" % (option, values[0]))
+                    for value in values[1:]:
+                        f.write("%s += %s\n" % (option, value))
 
     # Regular expression patterns for parsing configuration files.
     comment_pattern = re.compile(r"\s*(#.*)?$")
     section_pattern = re.compile(r"\[(?P<section>.*)\]$")
-    option_line1_pattern = re.compile(r"(?P<option>\S*)\s*=(?P<value>.*)$")
+    option_line1_pattern = re.compile(r"(?P<option>\S*)\s*(?P<op>\+?=)" +
+                                      r"(?P<value>.*)$")
     option_line2_pattern = re.compile(r"\s+(?P<value>.*)$")
 
     def handle_section(self, section, option, match):
@@ -267,12 +269,13 @@ class ConfigFile:
         
     def handle_option_line1(self, section, option, match):
         option = match.group("option")
+        op = match.group("op")
         value = match.group("value")
         value = value.strip()
-        if value:
+        if op == "+=":
             self.append(section, option, value)
         else:
-            self._dict[section][option] = []
+            self.set(section, option, value)
         return section, option
         
     def handle_option_line2(self, section, option, match):

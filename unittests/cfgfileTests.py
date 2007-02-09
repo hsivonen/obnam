@@ -280,7 +280,7 @@ bar = foobar
         self.failUnlessEqual(f.getvalue(), """\
 [foo]
 bar = foobar
-bar = baz
+bar += baz
 """)
 
 
@@ -317,26 +317,24 @@ class ReadTests(unittest.TestCase):
         self.failUnlessEqual(cf.get("foo", "bar"), "foobar")
 
     def testSingleLineTwoValues(self):
-        cf = self.parse("[foo]\nbar = foobar\nbar = baz\n")
+        cf = self.parse("[foo]\nbar = foobar\nbar += baz\n")
         self.failUnlessEqual(cf.get("foo", "bar"), ["foobar", "baz"])
 
     def testContinuationLine(self):
         cf = self.parse("[foo]\nbar = foo\n bar\n")
         self.failUnlessEqual(cf.get("foo", "bar"), "foo bar")
 
-    def testSingleLineTwoValuesButClearingInBetween(self):
-        cf = self.parse("[foo]\nbar = foobar\nbar =\nbar = baz\n")
+    def testSingleLineTwiceButOnlyOneResultValue(self):
+        cf = self.parse("[foo]\nbar = foobar\nbar = baz\n")
         self.failUnlessEqual(cf.get("foo", "bar"), "baz")
 
     def testReadTwo(self):
         f1 = StringIO.StringIO("""\
 [backup]
-store = 
 store = pink
 """)
         f2 = StringIO.StringIO("""\
 [backup]
-cache = 
 cache = pretty
 """)
         cf = obnam.cfgfile.ConfigFile()

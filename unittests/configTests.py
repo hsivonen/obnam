@@ -153,9 +153,7 @@ class ConfigFileReadingTests(unittest.TestCase):
         f = file(self.filename, "w")
         f.write("""\
 [backup]
-store =
 store = pink
-cache =
 cache = pretty
 """)
         f.close()
