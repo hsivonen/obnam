@@ -280,7 +280,7 @@ bar = foobar
         self.failUnlessEqual(f.getvalue(), """\
 [foo]
 bar = foobar
-bar = baz
+bar += baz
 """)
 
 
@@ -304,11 +304,6 @@ class ReadTests(unittest.TestCase):
         cf = self.parse("[foo]\n[bar]\n")
         self.failUnlessEqual(cf.sections(), ["bar", "foo"])
 
-    def testSameSectionTwice(self):
-        self.failUnlessRaises(obnam.cfgfile.DuplicationError,
-                              self.parse,
-                              "[foo]\n[foo]\n")
-
     def testParsingError(self):
         self.failUnlessRaises(obnam.cfgfile.ParsingError,
                               self.parse, "xxxx")
@@ -322,12 +317,31 @@ class ReadTests(unittest.TestCase):
         self.failUnlessEqual(cf.get("foo", "bar"), "foobar")
 
     def testSingleLineTwoValues(self):
-        cf = self.parse("[foo]\nbar = foobar\nbar = baz\n")
+        cf = self.parse("[foo]\nbar = foobar\nbar += baz\n")
         self.failUnlessEqual(cf.get("foo", "bar"), ["foobar", "baz"])
 
     def testContinuationLine(self):
-        cf = self.parse("[foo]\nbar = \n foobar\n")
-        self.failUnlessEqual(cf.get("foo", "bar"), " foobar")
+        cf = self.parse("[foo]\nbar = foo\n bar\n")
+        self.failUnlessEqual(cf.get("foo", "bar"), "foo bar")
+
+    def testSingleLineTwiceButOnlyOneResultValue(self):
+        cf = self.parse("[foo]\nbar = foobar\nbar = baz\n")
+        self.failUnlessEqual(cf.get("foo", "bar"), "baz")
+
+    def testReadTwo(self):
+        f1 = StringIO.StringIO("""\
+[backup]
+store = pink
+""")
+        f2 = StringIO.StringIO("""\
+[backup]
+cache = pretty
+""")
+        cf = obnam.cfgfile.ConfigFile()
+        cf.readfp(f1)
+        cf.readfp(f2)
+        self.failUnlessEqual(cf.get("backup", "store"), "pink")
+        self.failUnlessEqual(cf.get("backup", "cache"), "pretty")
 
 
 class ReadWriteTest(unittest.TestCase):

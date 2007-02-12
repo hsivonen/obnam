@@ -29,6 +29,12 @@ import obnam
 
 class CommandLineParsingTests(unittest.TestCase):
 
+    def setUp(self):
+        obnam.config.set_default_paths([])
+        
+    def tearDown(self):
+        obnam.config.set_default_paths(None)
+
     def config_as_string(self, config):
         f = StringIO.StringIO()
         config.write(f)
@@ -144,3 +150,102 @@ class CommandLineParsingTests(unittest.TestCase):
         self.failIf(config.getboolean("backup", "report-progress"))
         obnam.config.parse_options(config, ["--progress"])
         self.failUnless(config.getboolean("backup", "report-progress"))
+
+    def testNoConfigs(self):
+        parser = obnam.config.build_parser()
+        options, args = parser.parse_args([])
+        self.failUnlessEqual(options.no_configs, False)
+        options, args = parser.parse_args(["--no-configs"])
+        self.failUnlessEqual(options.no_configs, True)
+
+    def testConfig(self):
+        parser = obnam.config.build_parser()
+        options, args = parser.parse_args([])
+        self.failUnlessEqual(options.configs, None)
+        options, args = parser.parse_args(["--config=pink"])
+        self.failUnlessEqual(options.configs, ["pink"])
+
+
+class ConfigReadingOptionsTests(unittest.TestCase):
+
+    names = ["tmp.1.conf", "tmp.2.conf", "tmp.3.conf"]
+
+    def setUp(self):
+        obnam.config.forget_config_file_log()
+        for name in self.names:
+            f = file(name, "w")
+            f.write("[backup]\nblock-size = 1024\n")
+            f.close()
+        obnam.config.set_default_paths(self.names)
+
+    def tearDown(self):
+        obnam.config.set_default_paths(None)
+        for name in self.names:
+            if os.path.exists(name):
+                os.remove(name)
+
+    def testNoDefaults(self):
+        obnam.config.set_default_paths([])
+        config = obnam.config.default_config()
+        obnam.config.parse_options(config, [])
+        self.failUnlessEqual(obnam.config.get_config_file_log(), [])
+
+    def testDefaults(self):
+        config = obnam.config.default_config()
+        obnam.config.parse_options(config, [])
+        self.failUnlessEqual(obnam.config.get_config_file_log(), self.names)
+
+    def testNoConfigsOption(self):
+        config = obnam.config.default_config()
+        obnam.config.parse_options(config, ["--no-configs"])
+        self.failUnlessEqual(obnam.config.get_config_file_log(), [])
+
+    def testNoConfigsOptionPlusConfigOption(self):
+        config = obnam.config.default_config()
+        obnam.config.parse_options(config, ["--no-configs"] +
+                        ["--config=%s" % x for x in self.names])
+        self.failUnlessEqual(obnam.config.get_config_file_log(), self.names)
+
+    def testDefaultsPlusConfigOption(self):
+        config = obnam.config.default_config()
+        obnam.config.parse_options(config, ["--config=/dev/null"])
+        self.failUnlessEqual(obnam.config.get_config_file_log(), 
+                             self.names + ["/dev/null"])
+
+
+class ConfigFileReadingTests(unittest.TestCase):
+
+    def setUp(self):
+        self.filename = "unittest.conf"
+        f = file(self.filename, "w")
+        f.write("""\
+[backup]
+store = pink
+cache = pretty
+""")
+        f.close()
+        
+    def tearDown(self):
+        os.remove(self.filename)
+    
+    def testReadConfigFile(self):
+        config = obnam.config.default_config()
+        obnam.config.read_config_file(config, self.filename)
+        self.failUnlessEqual(config.get("backup", "store"), "pink")
+        self.failUnlessEqual(config.get("backup", "cache"), "pretty")
+
+    def testDefaultConfigsForRoot(self):
+        config = obnam.config.default_config()
+        obnam.config.set_uid_and_home(0, "/root")
+        configs = obnam.config.get_default_paths()
+        self.failUnlessEqual(configs,
+                             ["/usr/share/obnam/obnam.conf",
+                              "/etc/obnam/obnam.conf"])
+
+    def testDefaultConfigsForUser(self):
+        config = obnam.config.default_config()
+        obnam.config.set_uid_and_home(12765, "/home/pretty")
+        configs = obnam.config.get_default_paths()
+        self.failUnlessEqual(configs,
+                             ["/usr/share/obnam/obnam.conf",
+                              "/home/pretty/.obnam/obnam.conf"])

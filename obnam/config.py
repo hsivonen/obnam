@@ -19,6 +19,8 @@
 
 
 import optparse
+import os
+import pwd
 import socket
 import sys
 
@@ -129,16 +131,61 @@ def build_parser():
                       action="store_true", default=False,
                       help="show generation start/end times " +
                            "with the 'generations' command")
+    
+    parser.add_option("--no-configs",
+                      action="store_true", default=False,
+                      help="don't read any configuration files not " +
+                           "explicitly named with --config")
+    
+    parser.add_option("--config",
+                      dest="configs",
+                      action="append",
+                      metavar="FILE",
+                      help="also read FILE when reading configuration files")
 
     return parser
+
+
+# For unit testing purposes.
+
+_config_file_log = []
+def remember_config_file(pathname): _config_file_log.append(pathname)
+def forget_config_file_log(): del _config_file_log[:]
+def get_config_file_log(): return _config_file_log[:]
+
+
+def read_config_file(config, filename):
+    """Read a config file, if it exists"""
+    try:
+        f = file(filename)
+    except IOError:
+        pass
+    else:
+        config.readfp(f, filename)
+        f.close()
+        remember_config_file(filename)
     
 
 def parse_options(config, argv):
-    """Parse command line arguments and set config values accordingly"""
+    """Parse command line arguments and set config values accordingly
+    
+    This also reads all the default configuration files at the opportune
+    moment.
+    
+    """
 
     parser = build_parser()
     (options, args) = parser.parse_args(argv)
+
+    paths = []
+    if not options.no_configs:
+        paths += get_default_paths()
+    if options.configs:
+        paths += options.configs
     
+    for filename in paths:
+        read_config_file(config, filename)
+
     if options.host_id is not None:
         config.set("backup", "host-id", options.host_id)
     if options.block_size is not None:
@@ -215,3 +262,54 @@ def write_defaultconfig(config):
                             (section, key, config.get(section, key)))
 
     sys.stdout.write("import socket\nitems = (\n%s\n)\n""" % "\n".join(items))
+
+
+# Allow unit tests to override default path list.
+
+_default_paths = None
+
+def set_default_paths(default_paths):
+    global _default_paths
+    _default_paths = default_paths
+
+
+def get_default_paths():
+    """Return list of paths to look for config files"""
+    
+    if _default_paths is not None:
+        return _default_paths
+    
+    list = []
+
+    list.append("/usr/share/obnam/obnam.conf")
+
+    if get_uid() == 0:
+        list.append("/etc/obnam/obnam.conf")
+    else:
+        list.append(os.path.join(get_home(), ".obnam", "obnam.conf"))
+        
+    return list
+
+
+# We use a little wrapper layer around the os.* stuff to allow unit tests
+# to override things.
+
+_uid = None
+_home = None
+
+def get_uid():
+    if _uid is None:
+        return os.getuid()
+    else:
+        return _uid
+    
+def get_home():
+    if _home is None:
+        return pwd.getpwuid(get_uid()).pw_dir
+    else:
+        return _home
+    
+def set_uid_and_home(uid, home):
+    global _uid, _home
+    _uid = uid
+    _home = home
