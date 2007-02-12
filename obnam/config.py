@@ -19,6 +19,8 @@
 
 
 import optparse
+import os
+import pwd
 import socket
 import sys
 
@@ -226,3 +228,43 @@ def write_defaultconfig(config):
                             (section, key, config.get(section, key)))
 
     sys.stdout.write("import socket\nitems = (\n%s\n)\n""" % "\n".join(items))
+
+
+def get_default_paths(host_id):
+    """Return list of paths to look for config files"""
+    list = []
+
+    list.append("/usr/share/obnam/obnam.conf")
+
+    if get_uid() == 0:
+        list.append("/etc/obnam/obnam.conf")
+        list.append("/etc/obnam/%s.conf" % host_id)
+    else:
+        list.append(os.path.join(get_home(), ".obnam", "obnam.conf"))
+        list.append(os.path.join(get_home(), ".obnam", host_id + ".conf"))
+        
+    return list
+
+
+# We use a little wrapper layer around the os.* stuff to allow unit tests
+# to override things.
+
+_uid = None
+_home = None
+
+def get_uid():
+    if _uid is None:
+        return os.getuid()
+    else:
+        return _uid
+    
+def get_home():
+    if _home is None:
+        return pwd.getpwuid(_uid).pw_dir
+    else:
+        return _home
+    
+def set_uid_and_home(uid, home):
+    global _uid, _home
+    _uid = uid
+    _home = home

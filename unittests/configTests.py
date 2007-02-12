@@ -166,3 +166,21 @@ cache = pretty
         obnam.config.read_config_file(config, self.filename)
         self.failUnlessEqual(config.get("backup", "store"), "pink")
         self.failUnlessEqual(config.get("backup", "cache"), "pretty")
+
+    def testDefaultConfigsForRoot(self):
+        config = obnam.config.default_config()
+        obnam.config.set_uid_and_home(0, "/root")
+        configs = obnam.config.get_default_paths("pink")
+        self.failUnlessEqual(configs,
+                             ["/usr/share/obnam/obnam.conf",
+                              "/etc/obnam/obnam.conf",
+                              "/etc/obnam/pink.conf"])
+
+    def testDefaultConfigsForUser(self):
+        config = obnam.config.default_config()
+        obnam.config.set_uid_and_home(12765, "/home/pretty")
+        configs = obnam.config.get_default_paths("pink")
+        self.failUnlessEqual(configs,
+                             ["/usr/share/obnam/obnam.conf",
+                              "/home/pretty/.obnam/obnam.conf",
+                              "/home/pretty/.obnam/pink.conf"])
