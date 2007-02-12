@@ -158,10 +158,18 @@ def read_config_file(config, filename):
     
 
 def parse_options(config, argv):
-    """Parse command line arguments and set config values accordingly"""
+    """Parse command line arguments and set config values accordingly
+    
+    This also reads all the default configuration files at the opportune
+    moment.
+    
+    """
 
     parser = build_parser()
     (options, args) = parser.parse_args(argv)
+
+    for filename in get_default_paths(config.get("backup", "host-id")):
+        read_config_file(config, filename)
 
     if options.host_id is not None:
         config.set("backup", "host-id", options.host_id)
@@ -241,8 +249,21 @@ def write_defaultconfig(config):
     sys.stdout.write("import socket\nitems = (\n%s\n)\n""" % "\n".join(items))
 
 
+# Allow unit tests to override default path list.
+
+_default_paths = None
+
+def set_default_paths(default_paths):
+    global _default_paths
+    _default_paths = default_paths
+
+
 def get_default_paths(host_id):
     """Return list of paths to look for config files"""
+    
+    if _default_paths is not None:
+        return _default_paths
+    
     list = []
 
     list.append("/usr/share/obnam/obnam.conf")

@@ -29,6 +29,12 @@ import obnam
 
 class CommandLineParsingTests(unittest.TestCase):
 
+    def setUp(self):
+        obnam.config.set_default_paths([])
+        
+    def tearDown(self):
+        obnam.config.set_default_paths(None)
+
     def config_as_string(self, config):
         f = StringIO.StringIO()
         config.write(f)
