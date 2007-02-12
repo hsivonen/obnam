@@ -271,7 +271,7 @@ def get_uid():
     
 def get_home():
     if _home is None:
-        return pwd.getpwuid(_uid).pw_dir
+        return pwd.getpwuid(get_uid()).pw_dir
     else:
         return _home
     
