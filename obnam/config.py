@@ -136,6 +136,12 @@ def build_parser():
                       action="store_true", default=False,
                       help="don't read any configuration files not " +
                            "explicitly named with --config")
+    
+    parser.add_option("--config",
+                      dest="configs",
+                      action="append",
+                      metavar="FILE",
+                      help="also read FILE when reading configuration files")
 
     return parser
 

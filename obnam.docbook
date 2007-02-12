@@ -242,6 +242,15 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         </listitem>
       </varlistentry>
     
+      <varlistentry>
+        <term><option>--config</option>=<replaceable>FILE</replaceable></term>
+        <listitem>
+          <para>In addition to any other configuration files, also read
+          <replaceable>FILE</replaceable>, after the other files have been
+          read.</para>
+        </listitem>
+      </varlistentry>
+    
     </variablelist>
     
   </refsect1>
