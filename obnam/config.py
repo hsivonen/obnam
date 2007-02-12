@@ -179,7 +179,7 @@ def parse_options(config, argv):
 
     paths = []
     if not options.no_configs:
-        paths += get_default_paths(config.get("backup", "host-id"))
+        paths += get_default_paths()
     if options.configs:
         paths += options.configs
     
@@ -273,7 +273,7 @@ def set_default_paths(default_paths):
     _default_paths = default_paths
 
 
-def get_default_paths(host_id):
+def get_default_paths():
     """Return list of paths to look for config files"""
     
     if _default_paths is not None:
@@ -285,10 +285,8 @@ def get_default_paths(host_id):
 
     if get_uid() == 0:
         list.append("/etc/obnam/obnam.conf")
-        list.append("/etc/obnam/%s.conf" % host_id)
     else:
         list.append(os.path.join(get_home(), ".obnam", "obnam.conf"))
-        list.append(os.path.join(get_home(), ".obnam", host_id + ".conf"))
         
     return list
 
