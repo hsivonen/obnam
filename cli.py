@@ -119,8 +119,7 @@ def backup_directory(context, new_filelist, dirname, prevgen_filelist):
                                        prevgen_filelist)
                 except EnvironmentError, e:
                     logging.warning("File disappeared or other error: " +
-                                    "%s: %d: %s" %
-                                     (pathname, e.errno, e.strerror))
+                                    "%s: %s" % (pathname, e.strerror))
     context.progress.clear()
 
 
