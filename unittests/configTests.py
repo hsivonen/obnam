@@ -195,10 +195,16 @@ class ConfigReadingOptionsTests(unittest.TestCase):
         obnam.config.parse_options(config, [])
         self.failUnlessEqual(obnam.config.get_config_file_log(), self.names)
 
-    def testNoDefaultsOption(self):
+    def testNoConfigsOption(self):
         config = obnam.config.default_config()
         obnam.config.parse_options(config, ["--no-configs"])
         self.failUnlessEqual(obnam.config.get_config_file_log(), [])
+
+    def testNoConfigsOptionPlusConfigOption(self):
+        config = obnam.config.default_config()
+        obnam.config.parse_options(config, ["--no-configs"] +
+                        ["--config=%s" % x for x in self.names])
+        self.failUnlessEqual(obnam.config.get_config_file_log(), self.names)
 
 
 class ConfigFileReadingTests(unittest.TestCase):
