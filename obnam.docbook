@@ -234,6 +234,14 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         </listitem>
       </varlistentry>
     
+      <varlistentry>
+        <term><option>--no-configs</option></term>
+        <listitem>
+          <para>Do not read any default configuration files, only those
+          explicitly named with <option>--config</option>.</para>
+        </listitem>
+      </varlistentry>
+    
     </variablelist>
     
   </refsect1>

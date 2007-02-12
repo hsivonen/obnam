@@ -131,6 +131,11 @@ def build_parser():
                       action="store_true", default=False,
                       help="show generation start/end times " +
                            "with the 'generations' command")
+    
+    parser.add_option("--no-configs",
+                      action="store_true", default=False,
+                      help="don't read any configuration files not " +
+                           "explicitly named with --config")
 
     return parser
 
