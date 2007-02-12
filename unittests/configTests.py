@@ -166,6 +166,41 @@ class CommandLineParsingTests(unittest.TestCase):
         self.failUnlessEqual(options.configs, ["pink"])
 
 
+class ConfigReadingOptionsTests(unittest.TestCase):
+
+    names = ["tmp.1.conf", "tmp.2.conf", "tmp.3.conf"]
+
+    def setUp(self):
+        obnam.config.forget_config_file_log()
+        for name in self.names:
+            f = file(name, "w")
+            f.write("[backup]\nblock-size = 1024\n")
+            f.close()
+        obnam.config.set_default_paths(self.names)
+
+    def tearDown(self):
+        obnam.config.set_default_paths(None)
+        for name in self.names:
+            if os.path.exists(name):
+                os.remove(name)
+
+    def testNoDefaults(self):
+        obnam.config.set_default_paths([])
+        config = obnam.config.default_config()
+        obnam.config.parse_options(config, [])
+        self.failUnlessEqual(obnam.config.get_config_file_log(), [])
+
+    def testDefaults(self):
+        config = obnam.config.default_config()
+        obnam.config.parse_options(config, [])
+        self.failUnlessEqual(obnam.config.get_config_file_log(), self.names)
+
+    def testNoDefaultsOption(self):
+        config = obnam.config.default_config()
+        obnam.config.parse_options(config, ["--no-configs"])
+        self.failUnlessEqual(obnam.config.get_config_file_log(), [])
+
+
 class ConfigFileReadingTests(unittest.TestCase):
 
     def setUp(self):

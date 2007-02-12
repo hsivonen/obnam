@@ -146,6 +146,14 @@ def build_parser():
     return parser
 
 
+# For unit testing purposes.
+
+_config_file_log = []
+def remember_config_file(pathname): _config_file_log.append(pathname)
+def forget_config_file_log(): del _config_file_log[:]
+def get_config_file_log(): return _config_file_log[:]
+
+
 def read_config_file(config, filename):
     """Read a config file, if it exists"""
     try:
@@ -155,6 +163,7 @@ def read_config_file(config, filename):
     else:
         config.readfp(f, filename)
         f.close()
+        remember_config_file(filename)
     
 
 def parse_options(config, argv):
@@ -168,7 +177,13 @@ def parse_options(config, argv):
     parser = build_parser()
     (options, args) = parser.parse_args(argv)
 
-    for filename in get_default_paths(config.get("backup", "host-id")):
+    paths = []
+    if not options.no_configs:
+        paths += get_default_paths(config.get("backup", "host-id"))
+    if options.configs:
+        paths += options.configs
+    
+    for filename in paths:
         read_config_file(config, filename)
 
     if options.host_id is not None:
