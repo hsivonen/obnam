@@ -4,6 +4,26 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
+Version 0.3, released 2007-02-13
+
+    * Now uses the rsync algorithm for handling changed files.
+
+    * sftp transport.
+    
+    * Encryption of backups.
+    
+    * Reads files by bypassing the operating system disk cache, so that
+      doing a backup doesn't fill the cache with useless stuff.
+      
+    * Support for configuration files.
+    
+    * Possibility to exclude files using regular expressions on pathnames.
+      
+    * Many speed improvements.
+    
+    * Optional progress indication.
+    
+    * Numerous other small improvements.
 
 Version 0.1, released 2006-11-12
 
