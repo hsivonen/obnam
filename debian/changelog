@@ -4,4 +4,4 @@ obnam (0.3-1) unstable; urgency=low
     packaged under different names, but this code is not directly derived
     from them, and neither is the packaging.
 
- -- Lars Wirzenius <liw@iki.fi>  Sun, 25 Nov 2006 22:53:00 +0200
+ -- Lars Wirzenius <liw@iki.fi>  Tue, 13 Feb 2007 11:38:16 +0200
