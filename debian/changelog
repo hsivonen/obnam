@@ -1,11 +1,12 @@
 obnam (0.4-1) unstable; urgency=low
 
   * New upstream version.
-  * A default configuration is now included in /usr/share/obnam/obnam.conf,
-    and the directory /etc/obnam (and /etc/obnam/gpg) is now created by
-    default.
+  * A default configuration is now included in /usr/share/obnam/obnam.conf.
+  * The directory /etc/obnam is created by default, so the sysadmin has a
+    convenient place to put a configuration file.
+  * /etc/obnam/gpg and /etc/obnam/ssh are likewise created for convenience.
 
- -- Lars Wirzenius <liw@iki.fi>  Thu, 15 Feb 2007 21:50:26 +0200
+ -- Lars Wirzenius <liw@iki.fi>  Thu, 15 Feb 2007 22:57:54 +0200
 
 obnam (0.3-1) unstable; urgency=low
 
