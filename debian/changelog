@@ -1,3 +1,9 @@
+obnam (0.4-1) unstable; urgency=low
+
+  * New upstream version.
+
+ -- Lars Wirzenius <liw@iki.fi>  Thu, 15 Feb 2007 21:30:25 +0200
+
 obnam (0.3-1) unstable; urgency=low
 
   * First release of the .deb package. There have been prototypes privately

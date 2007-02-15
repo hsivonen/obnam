@@ -4,6 +4,12 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
+Version 0.4, released 2007-02-15
+
+    * odirect_read now works over Samba and other network filesystems.
+      It does not use O_DIRECT in those cases, since that won't work,
+      but backups can be made, at the expense of some disk cache flushing.
+
 Version 0.3, released 2007-02-13
 
     * Now uses the rsync algorithm for handling changed files.
