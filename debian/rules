@@ -10,6 +10,7 @@ binary: binary-arch binary-indep
 binary-arch: build
 	rm -rf debian/tmp
 	install -d debian/tmp debian/tmp/DEBIAN
+	install -m 0644 debian/conffiles debian/tmp/DEBIAN/conffiles
 	install -d debian/tmp/etc/obnam/gpg
 	install -d -m 0700 debian/tmp/etc/obnam/ssh
 	install -d debian/tmp/etc/cron.daily
