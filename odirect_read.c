@@ -49,6 +49,14 @@ int main(int argc, char **argv)
     
     fd = open(argv[1], O_RDONLY | O_DIRECT | O_LARGEFILE);
     if (fd == -1) {
+        /* 
+         * Let's try this again without O_DIRECT, just in case we're trying
+         * to read a device file, or a network filesystem, or something
+         * else that won't work with O_DIRECT.
+         */
+        fd = open(argv[1], O_RDONLY | O_LARGEFILE);
+    }
+    if (fd == -1) {
         fprintf(stderr, "%s: ERROR: Trying to open %s: %d: %s\n",
                 argv[0], argv[1], errno, strerror(errno));
         return EXIT_FAILURE;
