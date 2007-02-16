@@ -1,31 +1,8 @@
 README for Obnam, a backup program
 ==================================
 
-This is an alpha version of Obnam, a backup system. This README needs
-some serious work, but the following sample command lines hopefully
-can get you going:
-
-    ./cli.py --store=/foo/store --cache=/foo/cache -C $HOME backup .
-    
-        Back up everything in your home directory. Store backups in
-        /foo in the sub-directories store and cache.
-        
-    ./cli.py --store=/foo/store --cache=/foo/cache generations
-    
-        Show the UUID of each generation (in time order) that exist in
-        the backup.
-
-    ./cli.py --store=/foo/store --cache=/foo/cache show-generations UUID
-    
-        Show the contents of a generation, given its UUID.
-        
-    ./cli.py --store=/foo/store --cache=/foo/cache forget UUID
-    
-        Remove the contents of a generation from the backup, given its
-        UUID.
-
-Please mail bug reports and suggestions to liw@iki.fi, thanks.
-
+This is Obnam, a backup system. Please see the obnam.1 manual page ("man
+obnam" after installation) for instructions on how to use.
 
 Legal stuff:
 
@@ -47,7 +24,7 @@ A copy of the GPL version 2 is included in the file COPYING.
 
 The file uuid.py is a separate work, included here for convenience.
 A future version will be included in Python 2.5. It is licensed under
-the Python Software Foundaion License used by Python itself. From
+the Python Software Foundation License used by Python itself. From
 the author:
 
     uuid.py is now released in the Python Package Index (see python.org)
