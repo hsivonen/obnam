@@ -34,8 +34,8 @@ binary-arch: build
 	dpkg-gencontrol -isp
 	chown -R root:root debian/tmp
 	chmod -R o-s,go=u,go-ws debian/tmp
-	chmod 0700 debian/tmp/obnam/gpg
-	chmod 0700 debian/tmp/obnam/ssh
+	chmod 0700 debian/tmp/etc/obnam/gpg
+	chmod 0700 debian/tmp/etc/obnam/ssh
 	dpkg --build debian/tmp ..
 
 binary-indep:
