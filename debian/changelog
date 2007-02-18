@@ -1,3 +1,14 @@
+obnam (0.5-1) unstable; urgency=low
+
+  * Fix permissions of /etc/obnam/gpg and /etc/obnam/ssh. This fix only
+    works on initial installations, but since there are no real installations
+    yet, that's good enough.
+  * debian/lintian.overrides: Added lintian overrides about non-standard
+    directory permissions.
+  * debian/linda.overrides: Added corresponding linda overrides, too.
+
+ -- Lars Wirzenius <liw@iki.fi>  Sun, 18 Feb 2007 10:22:22 +0200
+
 obnam (0.4-1) unstable; urgency=low
 
   * New upstream version.
