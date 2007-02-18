@@ -11,8 +11,8 @@ binary-arch: build
 	rm -rf debian/tmp
 	install -d debian/tmp debian/tmp/DEBIAN
 	install -m 0644 debian/conffiles debian/tmp/DEBIAN/conffiles
-	install -d -m 0700 debian/tmp/etc/obnam/gpg
-	install -d -m 0700 debian/tmp/etc/obnam/ssh
+	install debian/tmp/etc/obnam/gpg
+	install debian/tmp/etc/obnam/ssh
 	install -d debian/tmp/etc/cron.daily
 	install -m 0755 debian/cron.daily debian/tmp/etc/cron.daily/obnam
 	install -d debian/tmp/etc/default
@@ -34,6 +34,8 @@ binary-arch: build
 	dpkg-gencontrol -isp
 	chown -R root:root debian/tmp
 	chmod -R o-s,go=u,go-ws debian/tmp
+	chmod 0700 debian/tmp/obnam/gpg
+	chmod 0700 debian/tmp/obnam/ssh
 	dpkg --build debian/tmp ..
 
 binary-indep:
