@@ -282,5 +282,87 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </variablelist>
     
   </refsect1>
+  
+  
+  <refsect1>
+    <title>CONFIGURATION FILES</title>
+    
+    <para><command>obnam</command> looks for several configuration files
+    when it starts up. The list of files depends on whether it is
+    started by the root user, or some other user. See the FILES section
+    for the list. Each file is read if it exists, and ignored if it does
+    not. Each file may change the configuration variables, the effect is
+    cumulative.</para>
+    
+    <para>The files follow the "INI" file syntax, as defined by the
+    Python <literal>ConfigParser</literal> class. The following is an
+    example, which lists all configuration variables:
+    
+<programlisting>[backup]
+block-size = 1048576
+cache = tmp.cache
+exclude =
+generation-times = false
+gpg-encrypt-to = 490C9ED1
+gpg-home = sample-gpg-home
+gpg-sign-with = 490C9ED1
+host-id = dorfl
+log-file =
+log-level = warning
+no-gpg = false
+odirect-pipe = ./odirect_pipe
+odirect-read = ./odirect_read
+ssh-key = ssh-key
+store = tmp.store</programlisting>
+
+    The syntax is slightly extended from the standard syntax: you can
+    list multiple values for one value with the <literal>+=</literal>
+    operator. For example, if you want to have multiple
+    <literal>exclude</literal> values, write this:
+    
+<programlisting>exclude = first
+exclude += second
+exclude += third</programlisting>
+
+    This multi-value syntax is useful only with <literal>exclude</literal>
+    at the moment.</para>
+    
+    <para>The variables correspond to the options of the same names.</para>
+    
+  </refsect1>
+  
+  
+  <refsect1>
+    <title>FILES</title>
+    
+    <variablelist>
+        
+        <varlistentry>
+            <term><filename>/usr/share/obnam/obnam.conf</filename></term>
+            <listitem>
+                <para>First configuration file <command>obnam</command>
+                reads if it exists.</para>
+            </listitem>
+        </varlistentry>
+
+        <varlistentry>
+            <term><filename>/etc/obnam/obnam.conf</filename></term>
+            <listitem>
+                <para>For the root user, the second configuration file
+                <command>obnam</command> reads if it exists.</para>
+            </listitem>
+        </varlistentry>
+        
+        <varlistentry>
+            <term><filename>~/.obnam/obnam.conf</filename></term>
+            <listitem>
+                <para>For other users, the second configuration file
+                <command>obnam</command> reads if it exists.</para>
+            </listitem>
+        </varlistentry>
+        
+    </variablelist>
+      
+  </refsect1>
 
 </refentry>
