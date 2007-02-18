@@ -1,0 +1,8 @@
+# GnuPG and SSH whine if their directories have too permissive permissions.
+# We therefore install them with 0700, and this makes linda whine instead.
+
+Tag: non-standard-dir-perm
+Data: /etc/obnam/gpg
+
+Tag: non-standard-dir-perm
+Data: /etc/obnam/ssh

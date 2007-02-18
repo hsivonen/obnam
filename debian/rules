@@ -14,6 +14,9 @@ binary-arch: build
 	install -d debian/tmp/usr/share/lintian/overrides
 	install -m 0644 debian/lintian.overrides \
 	    debian/tmp/usr/share/lintian/overrides/$P
+	install -d debian/tmp/usr/share/linda/overrides
+	install -m 0644 debian/linda.overrides \
+	    debian/tmp/usr/share/linda/overrides/$P
 	install -d debian/tmp/etc/obnam/gpg
 	install -d debian/tmp/etc/obnam/ssh
 	install -d debian/tmp/etc/cron.daily
