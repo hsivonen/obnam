@@ -2,7 +2,7 @@
 
 <!--
 
-Copyright 2006 Lars Wirzenius (liw@iki.fi)
+Copyright 2006, 2007 Lars Wirzenius (liw@iki.fi)
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the
@@ -34,7 +34,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
       <firstname>Lars</firstname>
       <surname>Wirzenius</surname>
     </author>
-    <date>2006-11-25</date>
+    <date>2007-02-18</date>
   </refentryinfo>
   
   <refmeta>
@@ -49,15 +49,43 @@ with this program; if not, write to the Free Software Foundation, Inc.,
   
   <refsynopsisdiv>
     <cmdsynopsis>
-      <command>obnam</command>
+      <command>obnam backup</command>
+      <arg choice="opt">options</arg>
+      <arg choice="plain" rep="repeat">directory</arg>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>obnam generations</command>
+      <arg choice="opt">options</arg>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>obnam show-generations</command>
+      <arg choice="opt">options</arg>
+      <arg choice="plain" rep="repeat">generation-id</arg>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>obnam restore</command>
+      <arg choice="opt">options</arg>
+      <arg choice="plain">generation-id</arg>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>obnam forget</command>
+      <arg choice="opt">options</arg>
+      <arg choice="plain" rep="repeat">generation-id</arg>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>obnam write-config</command>
+      <arg choice="opt">options</arg>
     </cmdsynopsis>
   </refsynopsisdiv>
   
   <refsect1>
     <title>DESCRIPTION</title>
 
-    <para><command>obnam</command> is a tool to do remote backups
-    over computer networks.</para>
+    <para><command>obnam</command> is a tool to do off-site backups over
+    computer networks. It backs files up using the
+    <command>rsync</command> algorithm, for efficiency, and encrypts the
+    backups before sending data over the network to be stored on a
+    remote server, for security.</para>
 
   </refsect1>
   
@@ -65,6 +93,78 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <title>OPTIONS</title>
     
     <variablelist>
+    
+      <varlistentry>
+        <term><option>--block-size</option>=<replaceable>SIZE</replaceable></term>
+        <listitem>
+          <para>Make blocks that are about SIZE kilobytes.</para>
+        </listitem>
+      </varlistentry>
+    
+      <varlistentry>
+        <term><option>-C</option> <replaceable>DIR</replaceable></term>
+        <term><option>--target</option>=<replaceable>DIR</replaceable></term>
+        <listitem>
+          <para>Resolve filenames relative to DIR.</para>
+        </listitem>
+      </varlistentry>
+    
+      <varlistentry>
+        <term><option>--cache</option>=<replaceable>DIR</replaceable></term>
+        <listitem>
+          <para>Store cached blocks in <replaceable>DIR</replaceable>.</para>
+        </listitem>
+      </varlistentry>
+    
+      <varlistentry>
+        <term><option>--config</option>=<replaceable>FILE</replaceable></term>
+        <listitem>
+          <para>In addition to any other configuration files, also read
+          <replaceable>FILE</replaceable>, after the other files have been
+          read.</para>
+        </listitem>
+      </varlistentry>
+    
+      <varlistentry>
+        <term><option>--exclude</option>=<replaceable>REGEXP</replaceable></term>
+        <listitem>
+          <para>Exclude pathnames matching
+          <replaceable>REGEXP</replaceable>.</para>
+        </listitem>
+      </varlistentry>
+    
+      <varlistentry>
+        <term><option>--generation-times</option></term>
+        <listitem>
+          <para>With the <literal>generations</literal> command, 
+          show also the start and end times of each generation. Note
+          that this means the operation runs slower, since it needs to
+          download more data from the store.</para>
+        </listitem>
+      </varlistentry>
+    
+      <varlistentry>
+        <term><option>--gpg-encrypt-to</option>=<replaceable>KEYID</replaceable></term>
+        <listitem>
+          <para>Add <replaceable>KEYID</replaceable> to list of keys to
+          use for encryption.</para>
+        </listitem>
+      </varlistentry>
+    
+      <varlistentry>
+        <term><option>--gpg-home</option>=<replaceable>DIR</replaceable></term>
+        <listitem>
+          <para>Use <replaceable>DIR</replaceable> as the location for
+          GnuPG keyrings and other data files.</para>
+        </listitem>
+      </varlistentry>
+    
+      <varlistentry>
+        <term><option>--gpg-sign-with</option>=<replaceable>KEYID</replaceable></term>
+        <listitem>
+          <para>Sign backups with <replaceable>KEYID</replaceable>.</para>
+        </listitem>
+      </varlistentry>
     
       <varlistentry>
         <term><option>-h</option></term>
@@ -78,45 +178,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <term><option>--host-id</option>=<replaceable>ID</replaceable></term>
         <listitem>
           <para>Use <replaceable>ID</replaceable> to identify this host.</para>
-        </listitem>
-      </varlistentry>
-    
-      <varlistentry>
-        <term><option>--block-size</option>=<replaceable>SIZE</replaceable></term>
-        <listitem>
-          <para>Make blocks that are about SIZE kilobytes.</para>
-        </listitem>
-      </varlistentry>
-    
-      <varlistentry>
-        <term><option>--cache</option>=<replaceable>DIR</replaceable></term>
-        <listitem>
-          <para>Store cached blocks in <replaceable>DIR</replaceable>.</para>
-        </listitem>
-      </varlistentry>
-    
-      <varlistentry>
-        <term><option>--store</option>=<replaceable>DIR</replaceable></term>
-        <listitem>
-          <para>Use <replaceable>DIR</replaceable> for local block
-          storage (not caching).</para>
-        </listitem>
-      </varlistentry>
-    
-      <varlistentry>
-        <term><option>-C</option> <replaceable>DIR</replaceable></term>
-        <term><option>--target</option>=<replaceable>DIR</replaceable></term>
-        <listitem>
-          <para>Resolve filenames relative to DIR.</para>
-        </listitem>
-      </varlistentry>
-    
-      <varlistentry>
-        <term><option>--object-cache-size</option>=<replaceable>COUNT</replaceable></term>
-        <listitem>
-          <para>Set object cache maximum size to
-          <replaceable>COUNT</replaceable> objects (default depends on
-          block size.</para>
         </listitem>
       </varlistentry>
     
@@ -140,11 +201,34 @@ with this program; if not, write to the Free Software Foundation, Inc.,
       </varlistentry>
     
       <varlistentry>
-        <term><option>--ssh-key</option>=<replaceable>FILE</replaceable></term>
+        <term><option>--no-configs</option></term>
         <listitem>
-          <para>Read ssh private key from
-          <replaceable>FILE</replaceable> (and public key from
-          <replaceable>FILE</replaceable><literal>.pub</literal>).</para>
+          <para>Do not read any default configuration files, only those
+          explicitly named with <option>--config</option>.</para>
+        </listitem>
+      </varlistentry>
+    
+      <varlistentry>
+        <term><option>--no-gpg</option></term>
+        <listitem>
+          <para>Don't use gpg at all.</para>
+        </listitem>
+      </varlistentry>
+    
+      <varlistentry>
+        <term><option>--object-cache-size</option>=<replaceable>COUNT</replaceable></term>
+        <listitem>
+          <para>Set object cache maximum size to
+          <replaceable>COUNT</replaceable> objects (default depends on
+          block size.</para>
+        </listitem>
+      </varlistentry>
+    
+      <varlistentry>
+        <term><option>--odirect-pipe</option>=<replaceable>DIR</replaceable></term>
+        <listitem>
+          <para>Use <replaceable>DIR</replaceable> as the odirect_pipe
+          program (default is helper that avoids buffer cache).</para>
         </listitem>
       </varlistentry>
     
@@ -158,40 +242,26 @@ with this program; if not, write to the Free Software Foundation, Inc.,
       </varlistentry>
     
       <varlistentry>
-        <term><option>--odirect-pipe</option>=<replaceable>DIR</replaceable></term>
+        <term><option>--progress</option></term>
         <listitem>
-          <para>Use <replaceable>DIR</replaceable> as the odirect_pipe
-          program (default is helper that avoids buffer cache).</para>
+          <para>Report progress of backups as they're made.</para>
         </listitem>
       </varlistentry>
     
       <varlistentry>
-        <term><option>--gpg-home</option>=<replaceable>DIR</replaceable></term>
+        <term><option>--ssh-key</option>=<replaceable>FILE</replaceable></term>
         <listitem>
-          <para>Use <replaceable>DIR</replaceable> as the location for
-          GnuPG keyrings and other data files.</para>
+          <para>Read ssh private key from
+          <replaceable>FILE</replaceable> (and public key from
+          <replaceable>FILE</replaceable><literal>.pub</literal>).</para>
         </listitem>
       </varlistentry>
     
       <varlistentry>
-        <term><option>--gpg-encrypt-to</option>=<replaceable>KEYID</replaceable></term>
+        <term><option>--store</option>=<replaceable>DIR</replaceable></term>
         <listitem>
-          <para>Add <replaceable>KEYID</replaceable> to list of keys to
-          use for encryption.</para>
-        </listitem>
-      </varlistentry>
-    
-      <varlistentry>
-        <term><option>--gpg-sign-with</option>=<replaceable>KEYID</replaceable></term>
-        <listitem>
-          <para>Sign backups with <replaceable>KEYID</replaceable>.</para>
-        </listitem>
-      </varlistentry>
-    
-      <varlistentry>
-        <term><option>--no-gpg</option></term>
-        <listitem>
-          <para>Don't use gpg at all.</para>
+          <para>Use <replaceable>DIR</replaceable> for local block
+          storage (not caching).</para>
         </listitem>
       </varlistentry>
     
@@ -203,56 +273,96 @@ with this program; if not, write to the Free Software Foundation, Inc.,
       </varlistentry>
     
       <varlistentry>
-        <term><option>--exclude</option>=<replaceable>REGEXP</replaceable></term>
-        <listitem>
-          <para>Exclude pathnames matching
-          <replaceable>REGEXP</replaceable>.</para>
-        </listitem>
-      </varlistentry>
-    
-      <varlistentry>
-        <term><option>--progress</option></term>
-        <listitem>
-          <para>Report progress of backups as they're made.</para>
-        </listitem>
-      </varlistentry>
-    
-      <varlistentry>
         <term><option>--version</option></term>
         <listitem>
           <para>Print out name and version of program.</para>
         </listitem>
       </varlistentry>
     
-      <varlistentry>
-        <term><option>--generation-times</option></term>
-        <listitem>
-          <para>With the <literal>generations</literal> command, 
-          show also the start and end times of each generation. Note
-          that this means the operation runs slower, since it needs to
-          download more data from the store.</para>
-        </listitem>
-      </varlistentry>
-    
-      <varlistentry>
-        <term><option>--no-configs</option></term>
-        <listitem>
-          <para>Do not read any default configuration files, only those
-          explicitly named with <option>--config</option>.</para>
-        </listitem>
-      </varlistentry>
-    
-      <varlistentry>
-        <term><option>--config</option>=<replaceable>FILE</replaceable></term>
-        <listitem>
-          <para>In addition to any other configuration files, also read
-          <replaceable>FILE</replaceable>, after the other files have been
-          read.</para>
-        </listitem>
-      </varlistentry>
-    
     </variablelist>
     
+  </refsect1>
+  
+  
+  <refsect1>
+    <title>CONFIGURATION FILES</title>
+    
+    <para><command>obnam</command> looks for several configuration files
+    when it starts up. The list of files depends on whether it is
+    started by the root user, or some other user. See the FILES section
+    for the list. Each file is read if it exists, and ignored if it does
+    not. Each file may change the configuration variables, the effect is
+    cumulative.</para>
+    
+    <para>The files follow the "INI" file syntax, as defined by the
+    Python <literal>ConfigParser</literal> class. The following is an
+    example, which lists all configuration variables:
+    
+<programlisting>[backup]
+block-size = 1048576
+cache = tmp.cache
+exclude =
+generation-times = false
+gpg-encrypt-to = 490C9ED1
+gpg-home = sample-gpg-home
+gpg-sign-with = 490C9ED1
+host-id = dorfl
+log-file =
+log-level = warning
+no-gpg = false
+odirect-pipe = ./odirect_pipe
+odirect-read = ./odirect_read
+ssh-key = ssh-key
+store = tmp.store</programlisting>
+
+    The syntax is slightly extended from the standard syntax: you can
+    list multiple values for one value with the <literal>+=</literal>
+    operator. For example, if you want to have multiple
+    <literal>exclude</literal> values, write this:
+    
+<programlisting>exclude = first
+exclude += second
+exclude += third</programlisting>
+
+    This multi-value syntax is useful only with <literal>exclude</literal>
+    at the moment.</para>
+    
+    <para>The variables correspond to the options of the same names.</para>
+    
+  </refsect1>
+  
+  
+  <refsect1>
+    <title>FILES</title>
+    
+    <variablelist>
+        
+        <varlistentry>
+            <term><filename>/usr/share/obnam/obnam.conf</filename></term>
+            <listitem>
+                <para>First configuration file <command>obnam</command>
+                reads if it exists.</para>
+            </listitem>
+        </varlistentry>
+
+        <varlistentry>
+            <term><filename>/etc/obnam/obnam.conf</filename></term>
+            <listitem>
+                <para>For the root user, the second configuration file
+                <command>obnam</command> reads if it exists.</para>
+            </listitem>
+        </varlistentry>
+        
+        <varlistentry>
+            <term><filename>~/.obnam/obnam.conf</filename></term>
+            <listitem>
+                <para>For other users, the second configuration file
+                <command>obnam</command> reads if it exists.</para>
+            </listitem>
+        </varlistentry>
+        
+    </variablelist>
+      
   </refsect1>
 
 </refentry>
