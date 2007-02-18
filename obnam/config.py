@@ -267,6 +267,8 @@ def write_defaultconfig(config):
 # Allow unit tests to override default path list.
 
 _default_paths = None
+if "default_paths" in dir(obnam.defaultconfig):
+    _default_paths = obnam.defaultconfig.default_paths
 
 def set_default_paths(default_paths):
     global _default_paths
