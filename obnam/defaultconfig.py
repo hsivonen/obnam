@@ -22,3 +22,5 @@ items = (
     ("backup", "report-progress", "false"),
     ("backup", "generation-times", "false"),
 )
+
+default_paths = []
