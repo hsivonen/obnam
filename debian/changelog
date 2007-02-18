@@ -1,4 +1,4 @@
-obnam (0.4-2) unstable; urgency=low
+obnam (0.5-1) unstable; urgency=low
 
   * Fix permissions of /etc/obnam/gpg and /etc/obnam/ssh. This fix only
     works on initial installations, but since there are no real installations
