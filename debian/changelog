@@ -1,3 +1,10 @@
+obnam (0.6-1) unstable; urgency=low
+
+  * New upstream version. Fixes odirect_read so it works under Linux
+    kernel 2.4.
+
+ -- Lars Wirzenius <liw@iki.fi>  Tue, 20 Feb 2007 21:38:41 +0200
+
 obnam (0.5-1) unstable; urgency=low
 
   * Fix permissions of /etc/obnam/gpg and /etc/obnam/ssh. This fix only

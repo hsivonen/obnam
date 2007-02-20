@@ -4,6 +4,16 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
+Version 0.6, released 2007-02-20
+    
+    * Manual page updates.
+    
+    * odirect_read now works under Linux kernel 2.4.
+
+Version 0.5, released 2007-02-15
+
+    * Debian packaging much improved.
+
 Version 0.4, released 2007-02-15
 
     * odirect_read now works over Samba and other network filesystems.
