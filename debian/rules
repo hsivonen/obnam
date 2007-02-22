@@ -21,6 +21,8 @@ binary-arch: build
 	install -d debian/tmp/etc/obnam/ssh
 	install -d debian/tmp/etc/cron.daily
 	install -m 0755 debian/cron.daily debian/tmp/etc/cron.daily/obnam
+	install -d debian/tmp/etc/cron.d
+	install -m 0644 debian/cron.d debian/tmp/etc/cron.d/obnam
 	install -d debian/tmp/etc/default
 	install -m 0644 debian/default debian/tmp/etc/default/obnam
 	install -d debian/tmp/usr/bin
