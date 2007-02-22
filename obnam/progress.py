@@ -34,14 +34,17 @@ class ProgressReporter:
         self.timestamp = 0
         self.min_time = 1.0 # seconds
 
+    def reporting_is_allowed(self):
+        return self.config.getboolean("backup", "report-progress")
+
     def clear(self):
-        if self.config.getboolean("backup", "report-progress"):
+        if self.reporting_is_allowed():
             sys.stdout.write("\b \b" * len(self.prev_output))
             sys.stdout.flush()
         
     def update(self, key, value):
         self.dict[key] = value
-        if self.config.getboolean("backup", "report-progress"):
+        if self.reporting_is_allowed():
             now = time.time()
             if now - self.timestamp >= self.min_time:
                 self.clear()
@@ -51,10 +54,14 @@ class ProgressReporter:
                              (self.dict["uploaded"] / 1024 / 1024))
                 parts.append("down: %d MB" % 
                              (self.dict["downloaded"] / 1024 / 1024))
-                parts.append("now:")
-                part_one = ", ".join(parts)
-                current = self.dict["current_file"] or ""
-                progress = "%s%s" % (part_one, current[-(79-len(part_one)):])
+                current = self.dict["current_file"]
+                if current:
+                    parts.append("now:")
+                    part_one = ", ".join(parts)
+                    progress = "%s%s" % (part_one, 
+                                         current[-(79-len(part_one)):])
+                else:
+                    progress = ", ".join(parts)
                 sys.stdout.write(progress)
                 sys.stdout.flush()
                 self.prev_output = progress
@@ -71,3 +78,10 @@ class ProgressReporter:
 
     def update_current_file(self, current_file):
         self.update("current_file", current_file)
+
+    def final_report(self):
+        self.timestamp = 0
+        self.update_current_file(None)
+        if self.reporting_is_allowed():
+            sys.stdout.write("\n")
+            sys.stdout.flush()
