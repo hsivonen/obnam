@@ -1,2 +1,3 @@
 /etc/default/obnam
 /etc/cron.daily/obnam
+/etc/cron.d/obnam
