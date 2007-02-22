@@ -57,7 +57,7 @@ coverage: all
 	awk '/%$$/ && $$(NF-2)!=$$(NF-1) {print $$0,"   ",$$(NF-2)-$$(NF-1)}'
 
 clean:
-	rm -f *~ */*~ *.pyc *.pyo */*.pyc */*.pyo tmp.* *,cover */*,cover
+	rm -rf *~ */*~ *.pyc *.pyo */*.pyc */*.pyo tmp.* *,cover */*,cover
 	rm -f obnam.1 odirect_read.1 odirect_read odirect_pipe.1
 
 
