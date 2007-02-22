@@ -39,7 +39,7 @@ class ProgressReporter:
 
     def clear(self):
         if self.reporting_is_allowed():
-            sys.stdout.write("\b \b" * len(self.prev_output))
+            sys.stdout.write("\r" + " " * len(self.prev_output) + "\r")
             sys.stdout.flush()
         
     def update(self, key, value):
