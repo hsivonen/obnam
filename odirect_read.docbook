@@ -2,7 +2,7 @@
 
 <!--
 
-Copyright 2006 Lars Wirzenius (liw@iki.fi)
+Copyright 2006, 2007 Lars Wirzenius (liw@iki.fi)
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the
@@ -34,7 +34,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
       <firstname>Lars</firstname>
       <surname>Wirzenius</surname>
     </author>
-    <date>2006-11-25</date>
+    <date>2007-02-23</date>
   </refentryinfo>
   
   <refmeta>
@@ -65,6 +65,13 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <para><command>odirect_read</command> is used by the
     <command>obnam</command> backup tool.</para>
 
+  </refsect1>
+  
+  <refsect1>
+    <title>BUGS</title>
+    
+    <para>Avoiding the cache might not work under Linux 2.4 kernels.</para>
+    
   </refsect1>
 
 </refentry>
