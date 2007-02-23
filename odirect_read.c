@@ -76,16 +76,12 @@ int main(int argc, char **argv)
                 argv[1], errno, strerror(errno));
         return EXIT_FAILURE;
     }
-    fprintf(stderr, "block size is %lu\n", (unsigned long) sfs.f_bsize);
     
     /* 
      * In some quick testing, buffers much bigger than this did not make
      * things happen faster.
      */
     buf_size = sfs.f_bsize * 32;
-    fprintf(stderr, "buf_size is %ld\n", (long) buf_size);
-    fprintf(stderr, "buf_size % block size = %ld\n", 
-            (long) buf_size % (long) sfs.f_bsize);
 
     error = posix_memalign(&buf, sfs.f_bsize, buf_size);
     if (error != 0) {
@@ -93,21 +89,10 @@ int main(int argc, char **argv)
                 argv[0], error, strerror(error));
         return EXIT_FAILURE;
     }
-    fprintf(stderr, "buf = %p\n", (void *) buf);
-    fprintf(stderr, "buf % block size = %ld\n", 
-            (long) buf % (long) sfs.f_bsize);
     
     ssize_t total = 0;
     for (;;) {
-        fprintf(stderr, "total = %ld, lseek = %ld\n", (long) total,
-                (long) lseek(fd, 0, SEEK_CUR));
         num_read = read(fd, buf, buf_size);
-        {
-            int e = errno;
-            fprintf(stderr, "num_read = %ld, errno = %d\n", 
-                    (long) num_read, e);
-            errno = e;
-        }
 
         if (num_read == -1 && errno == EINTR)
             continue;
