@@ -80,6 +80,20 @@ class ObnamFS(fuse.Fuse):
         (_, gen_ids, _, _) = obnam.obj.host_block_decode(block)
         return gen_ids
 
+    def generation_mtime(self, gen_id):
+        block = obnam.io.get_host_block(self.context)
+        (_, gen_ids, map_block_ids, _) = obnam.obj.host_block_decode(block)
+        if gen_id not in gen_ids:
+            logging.warning("Can't find generation %s" % gen_id)
+            return 0
+
+        obnam.io.load_maps(self.context, self.context.map, map_block_ids)
+        gen = obnam.io.get_object(self.context, gen_id)
+        if not gen:
+            logging.warning("Can't find info about generation %s" % gen_id)
+        else:
+            return obnam.obj.first_varint_by_kind(gen, obnam.cmp.GENEND)
+        
     def getattr(self, path):
         if path == "/":
             return make_stat_result(st_mode=stat.S_IFDIR | 0700, st_nlink=2,
@@ -87,7 +101,11 @@ class ObnamFS(fuse.Fuse):
         elif path.startswith("/") and "/" not in path[1:]:
             gen_ids = self.generations()
             if path[1:] in gen_ids:
+                mtime = self.generation_mtime(path[1:])
                 return make_stat_result(st_mode=stat.S_IFDIR | 0700,
+                                        st_atime=mtime,
+                                        st_mtime=mtime,
+                                        st_ctime=mtime,
                                         st_nlink=2,
                                         st_uid=os.getuid(),
                                         st_gid=os.getgid())

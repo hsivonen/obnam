@@ -24,6 +24,20 @@ die()
     exit 1
 }
 
+# mtime for file/dir in same format as "obnam --generation-times" outputs
+file_mtime()
+{
+    TZ=GMT stat -c %y "$1" | sed 's/\..*//' | tr -d ' '
+}
+
+# mtime for a generation (last timestamp)
+gen_mtime()
+{
+    ./cli.py --store="$store" --generation-times generations |
+    sed -n "/$1/s/.* -- //p" |
+    tr -d ' '
+}
+
 set -e
 echo "Testing obnamfs. You may need to clean up manually if something fails"
 
@@ -56,6 +70,8 @@ done
 for gen in $(./cli.py --store="$store" generations)
 do
     [ -d "$mount/$gen" ] || die "Generation $gen not listed"
+    [ $(file_mtime "$mount/$gen") = $(gen_mtime "$gen") ] || \
+        die "Generation $gen mtime is wrong"
 done
 
 # Unmount it.
