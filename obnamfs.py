@@ -72,33 +72,99 @@ class ObnamFS(fuse.Fuse):
                                              self.context.cache)
         obnam.backend.set_progress_reporter(self.context.be, 
                                             self.context.progress)
+        obnam.log.setup(self.context.config)
+
+        block = obnam.io.get_host_block(self.context)
+        (_, gen_ids, map_block_ids, _) = obnam.obj.host_block_decode(block)
+        self.gen_ids = gen_ids
+        obnam.io.load_maps(self.context, self.context.map, map_block_ids)
 
         fuse.Fuse.__init__(self, *args, **kw)
 
     def generations(self):
-        block = obnam.io.get_host_block(self.context)
-        (_, gen_ids, _, _) = obnam.obj.host_block_decode(block)
-        return gen_ids
+        return self.gen_ids
 
     def generation_mtime(self, gen_id):
-        block = obnam.io.get_host_block(self.context)
-        (_, gen_ids, map_block_ids, _) = obnam.obj.host_block_decode(block)
-        if gen_id not in gen_ids:
-            logging.warning("Can't find generation %s" % gen_id)
-            return 0
-
-        obnam.io.load_maps(self.context, self.context.map, map_block_ids)
         gen = obnam.io.get_object(self.context, gen_id)
         if not gen:
             logging.warning("Can't find info about generation %s" % gen_id)
         else:
             return obnam.obj.first_varint_by_kind(gen, obnam.cmp.GENEND)
+
+    def generation_filelist(self, gen_id):
+        gen = obnam.io.get_object(self.context, gen_id)
+        if not gen:
+            return None
+        fl_id = obnam.obj.first_string_by_kind(gen, obnam.cmp.FILELISTREF)
+        if not fl_id:
+            return None
+        fl = obnam.io.get_object(self.context, fl_id)
+        if not fl:
+            return None
+        fl = obnam.filelist.from_object(fl)
+        if not fl:
+            logging.error("fl is None, wtf?")
+            return None
+        return fl
+
+    def get_stat(self, fl, path):
+        c = obnam.filelist.find(fl, path)
+        if not c:
+            return None
+        subs = obnam.cmp.get_subcomponents(c)
+        stat_component = obnam.cmp.first_by_kind(subs, obnam.cmp.STAT)
+        if stat_component:
+            st = obnam.cmp.parse_stat_component(stat_component)
+            return make_stat_result(st_mode=st.st_mode,
+                                    st_ino=st.st_ino,
+                                    st_nlink=st.st_nlink,
+                                    st_uid=st.st_uid,
+                                    st_gid=st.st_gid,
+                                    st_size=st.st_size,
+                                    st_atime=st.st_atime,
+                                    st_mtime=st.st_mtime,
+                                    st_ctime=st.st_ctime)
+        else:
+            return None
+
+    def generation_listing(self, gen_id):
+        gen = obnam.io.get_object(self.context, gen_id)
+        if not gen:
+            return []
+        fl_id = obnam.obj.first_string_by_kind(gen, obnam.cmp.FILELISTREF)
+        if not fl_id:
+            return []
+        fl = obnam.io.get_object(self.context, fl_id)
+        if not fl:
+            return []
+
+        list = []
+        for c in obnam.obj.find_by_kind(fl, obnam.cmp.FILE):
+            subs = obnam.cmp.get_subcomponents(c)
+            filename = obnam.cmp.first_string_by_kind(subs, 
+                                                      obnam.cmp.FILENAME)
+            list.append(filename)
+        return list
+
+    def parse_pathname(self, pathname):
+        if pathname == "/":
+            return None, None
+        if not pathname.startswith("/"):
+            return None, None
+        pathname = pathname[1:]
+        parts = pathname.split("/", 1)
+        if len(parts) == 1:
+            return pathname, None
+        else:
+            return parts[0], parts[1]
         
     def getattr(self, path):
-        if path == "/":
+        logging.debug("getattr: %s" % repr(path))
+        first_part, relative_path = self.parse_pathname(path)
+        if first_part is None:
             return make_stat_result(st_mode=stat.S_IFDIR | 0700, st_nlink=2,
                                     st_uid=os.getuid(), st_gid=os.getgid())
-        elif path.startswith("/") and "/" not in path[1:]:
+        elif relative_path is None:
             gen_ids = self.generations()
             if path[1:] in gen_ids:
                 mtime = self.generation_mtime(path[1:])
@@ -109,14 +175,43 @@ class ObnamFS(fuse.Fuse):
                                         st_nlink=2,
                                         st_uid=os.getuid(),
                                         st_gid=os.getgid())
+        else:
+            fl = self.generation_filelist(first_part)
+            if not fl:
+                return -errno.ENOENT
+            st = self.get_stat(fl, relative_path)
+            if st:
+                return st
+            else:
+                return -errno.ENOENT
 
-        return -errno.ENOENT
+    def make_getdir_result(self, names):
+        return [(name, 0) for name in [".", ".."] + names]
 
     def getdir(self, path):
-        if path == "/":
-            return [(x, 0) for x in [".", ".."] + self.generations()]
+        logging.debug("getdir: %s" % repr(path))
+        first_part, relative_path = self.parse_pathname(path)
+        if first_part is None:
+            # It's the root!
+            return self.make_getdir_result(self.generations())
+        elif relative_path is None:
+            # It's the root of a generation.
+            list = self.generation_listing(first_part)
+            list = [name for name in list if "/" not in name]
+            return self.make_getdir_result(list)
         else:
-            return []
+            # It's (hopefully) a directory within a generation.
+            fl = self.generation_filelist(first_part)
+            st = self.get_stat(fl, relative_path)
+            if not stat.S_ISDIR(st.st_mode):
+                return -errno.ENOTDIR
+
+            list = self.generation_listing(first_part)
+            prefix = relative_path + "/"
+            list = [x[len(prefix):] for x in list 
+                    if x.startswith(prefix) and
+                       "/" not in x[len(prefix):]]
+            return self.make_getdir_result(list)
 
 
 def main():

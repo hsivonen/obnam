@@ -74,6 +74,14 @@ do
         die "Generation $gen mtime is wrong"
 done
 
+# Check that the latest generation contains all the right files.
+list1=$(mktemp)
+list2=$(mktemp)
+(cd "$mount/$gen"; find obnam) | sort > "$list1"
+find obnam | sort > "$list2"
+diff -ru "$list1" "$list2" || die "File lists/contents don't match"
+rm -f "$list1" "$list2"
+
 # Unmount it.
 echo "Unmounting."
 fusermount -u "$mount"
