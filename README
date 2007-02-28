@@ -32,3 +32,35 @@ the author:
     license like the rest of Python.
 
 Since Obnam supports Python 2.4, uuid.py is included here.
+
+
+ObnamFS: Backups as a read-only FUSE filesystem
+-----------------------------------------------
+
+In order to make browsing and restoring as pleasant as possible, backups
+made with Obnam are available as a read-only filesystem, implemented
+using FUSE.
+
+To use this, make sure your system supports FUSE. Then run the 
+following command:
+
+    obnamfs MOUNTPOINT
+    
+where MOUNTPOINT is the location (directory) where you want your backups
+to be visible. Obnamfs uses the same configuration file as plain obnam.
+Those obnam command line options that are relevant for obnamfs work in
+the identical way.
+
+The virtual filesystem created this way is accessible only by the user
+who ran obnamfs. That is, the root of the virtual filesystem is owned by
+the user who ran obnamfs, and has 0700 permissions. All backed up files
+have the same numeric owner and group, and the same permissions, as are
+stored for them in the backup.
+
+To unmount the filesystem, run the following command:
+
+    fusermount -u MOUNTPOINT
+    
+where MOUNTPOINT is the same location you gave to obnamfs.
+
+For more information about FUSE, see http://fuse.sourceforge.net/
