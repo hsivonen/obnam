@@ -75,15 +75,11 @@ do
 done
 
 # Check that the latest generation contains all the right files.
-list1=$(mktemp)
-list2=$(mktemp)
-(cd "$mount/$gen"; find obnam) | sort > "$list1"
-find obnam | sort > "$list2"
-diff -ru "$list1" "$list2" || die "File lists/contents don't match"
-rm -f "$list1" "$list2"
+diff -rq obnam "$mount/$gen/obnam" || die "File lists/contents don't match"
 
 # Unmount it.
 echo "Unmounting."
+sleep 2
 fusermount -u "$mount"
 
 # Clean up.

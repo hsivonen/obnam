@@ -26,6 +26,7 @@ import os
 import re
 import stat
 import sys
+import tempfile
 import time
 
 import fuse
@@ -75,9 +76,12 @@ class ObnamFS(fuse.Fuse):
         obnam.log.setup(self.context.config)
 
         block = obnam.io.get_host_block(self.context)
-        (_, gen_ids, map_block_ids, _) = obnam.obj.host_block_decode(block)
+        (_, gen_ids, map_block_ids, contmap_ids) = \
+            obnam.obj.host_block_decode(block)
         self.gen_ids = gen_ids
         obnam.io.load_maps(self.context, self.context.map, map_block_ids)
+        obnam.io.load_maps(self.context, self.context.contmap, 
+                           contmap_ids)
 
         fuse.Fuse.__init__(self, *args, **kw)
 
@@ -213,7 +217,77 @@ class ObnamFS(fuse.Fuse):
                        "/" not in x[len(prefix):]]
             return self.make_getdir_result(list)
 
+    def decide_read_error(self, pathname):
+        first_part, relative_path = self.parse_pathname(pathname)
+        if first_part is None or relative_path is None:
+            return -errno.EISDIR
+        else:
+            fl = self.generation_filelist(first_part)
+            if not fl:
+                return -errno.ENOENT
+            st = self.get_stat(fl, relative_path)
+            if st:
+                if stat.S_ISREG(st.st_mode):
+                    return 0
+                else:
+                    return -errno.EACCESS
+            else:
+                return -errno.ENOENT
 
+    def open(self, path, flags):
+        logging.debug("open: %s 0x%x" % (repr(path), flags))
+        first_part, relative_path = self.parse_pathname(path)
+
+        readonly_flags = (flags & 3) == os.O_RDONLY
+
+        error = self.decide_read_error(path)
+        if error:
+            return error
+        elif readonly_flags:
+            return 0
+        else:
+            return -errno.EACCESS
+
+    def read(self, path, length, offset):
+        logging.debug("read: %s %d %d" % (repr(path), length, offset))
+        first_part, relative_path = self.parse_pathname(path)
+
+        error = self.decide_read_error(path)
+        if error:
+            return error
+        else:
+            fl = self.generation_filelist(first_part)
+            if not fl:
+                return -errno.ENOENT
+            c = obnam.filelist.find(fl, relative_path)
+            if not c:
+                return -errno.ENOENT
+
+            subs = obnam.cmp.get_subcomponents(c)
+        
+            fd, tempname = tempfile.mkstemp()
+            os.remove(tempname)
+
+            cont_id = obnam.cmp.first_string_by_kind(subs, obnam.cmp.CONTREF)
+            if cont_id:
+                obnam.io.copy_file_contents(self.context, fd, cont_id)
+            else:
+                delta_id = obnam.cmp.first_string_by_kind(subs, 
+                                                          obnam.cmp.DELTAREF)
+                obnam.io.reconstruct_file_contents(self.context, fd, delta_id)
+            
+            os.lseek(fd, offset, 0)
+            data = os.read(fd, length)
+
+            os.close(fd)
+            
+            return data
+
+    def release(self, path, flags):
+        logging.debug("release: %s 0x%x" % (repr(path), flags))
+        return 0
+            
+            
 def main():
     server = ObnamFS()
     server.main()
