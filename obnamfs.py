@@ -20,6 +20,7 @@
 """A FUSE filesystem for backups made with Obnam"""
 
 
+import errno
 import logging
 import os
 import re
@@ -62,14 +63,42 @@ class ObnamFS(fuse.Fuse):
 
     """A FUSE filesystem interface to backups made with Obnam"""
     
+    def __init__(self, *args, **kw):
+        self.context = obnam.context.create()
+        argv = obnam.config.parse_options(self.context.config, sys.argv[1:])
+        sys.argv = [sys.argv[0]] + argv
+        self.context.cache = obnam.cache.init(self.context.config)
+        self.context.be = obnam.backend.init(self.context.config, 
+                                             self.context.cache)
+        obnam.backend.set_progress_reporter(self.context.be, 
+                                            self.context.progress)
+
+        fuse.Fuse.__init__(self, *args, **kw)
+
+    def generations(self):
+        block = obnam.io.get_host_block(self.context)
+        (_, gen_ids, _, _) = obnam.obj.host_block_decode(block)
+        return gen_ids
+
     def getattr(self, path):
         if path == "/":
             return make_stat_result(st_mode=stat.S_IFDIR | 0700, st_nlink=2,
                                     st_uid=os.getuid(), st_gid=os.getgid())
-            return -errno.ENOENT
+        elif path.startswith("/") and "/" not in path[1:]:
+            gen_ids = self.generations()
+            if path[1:] in gen_ids:
+                return make_stat_result(st_mode=stat.S_IFDIR | 0700,
+                                        st_nlink=2,
+                                        st_uid=os.getuid(),
+                                        st_gid=os.getgid())
+
+        return -errno.ENOENT
 
     def getdir(self, path):
-        return ((".", 0), ("..", 0))
+        if path == "/":
+            return [(x, 0) for x in [".", ".."] + self.generations()]
+        else:
+            return []
 
 
 def main():

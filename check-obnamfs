@@ -40,7 +40,7 @@ echo "Creating backup."
 
 # Mount it.
 echo "Mounting."
-./obnamfs.py "$mount" &
+./obnamfs.py --store="$store" "$mount" &
 
 while ! mount | grep " $mount " > /dev/null
 do
@@ -51,6 +51,12 @@ done
 [ $(stat -c %u "$mount/.") = $(id -u) ] || die "UID is wrong"
 [ $(stat -c %g "$mount/.") = $(id -g) ] || die "GID is wrong"
 [ $(stat -c %a "$mount/.") = 700 ] || die "permissions are wrong"
+
+# Check that there is a sub-directory named after each generation.
+for gen in $(./cli.py --store="$store" generations)
+do
+    [ -d "$mount/$gen" ] || die "Generation $gen not listed"
+done
 
 # Unmount it.
 echo "Unmounting."
