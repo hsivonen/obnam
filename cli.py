@@ -1,6 +1,6 @@
 #!/usr/bin/python2.4
 #
-# Copyright (C) 2006  Lars Wirzenius <liw@iki.fi>
+# Copyright (C) 2006, 2007  Lars Wirzenius <liw@iki.fi>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
