@@ -60,7 +60,7 @@ OBJMAP        = _define_composite(   6, "OBJMAP")
 # 7-19 have been obsoleted and should not exist anywhere in the universe.
 CONTREF       = _define_ref(        20, "CONTREF")
 NAMEIPAIR     = _define_composite(  21, "NAMEIPAIR")
-INODEREF      = _define_ref(        22, "INODEREF")
+# 22 has been obsoleted and should not exist anywhere in the universe.
 FILENAME      = _define_plain(      23, "FILENAME")
 SIGDATA       = _define_plain(      24, "SIGDATA")
 SIGREF        = _define_ref(        25, "SIGREF")

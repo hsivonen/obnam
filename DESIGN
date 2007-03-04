@@ -1,22 +1,19 @@
-Wibbr Storage Design
+Obnam Storage Design
 ====================
 
 :Author: Lars Wirzenius
-:Date: 2006-12-03
+:Date: 2007-03-04
 
 
 
 Introduction
 ------------
 
-This paper describes the storage structure for a backup system. The
-backups are done over a network to an FTP server, or other server of
-similar complexity. The server does not (necessarily) have any
-understanding of what the data is, it just stores it. The backups are
-encrypted and signed by the client to ensure confidentiality and
-incorruptness.
-
-The detailed requirements for the system are documented elsewhere.
+This paper describes the storage structure for Obnam, a backup system.
+The backups are done over a network to an SFTP server, or other server
+of similar complexity. The server does not have any understanding of
+what the data is, it just stores it. The backups are encrypted and
+signed by the client to ensure they remain confidential and valid.
 
 
 
@@ -62,7 +59,9 @@ into a directed acyclic graph (DAG). The root of the DAG is a "host
 object", which is (in essence) a list of backup generations.
 
 Each generation is represented by its own "generation object", and
-consists of a list of pairs of pathnames and references to inodes.
+consists of a list of pairs of pathnames and references to inodes
+(although this is implemented in a more complicated manner, for
+efficiency).
 
 The pathname is just a string object, but the inode is a further object
 that consists of the file metadata in the filesystem inode, and a
@@ -82,13 +81,13 @@ which the delta was computed.
     v     v
     gen   gen
     |   \
-    |    \
-    v     v
-    inode inode
-    |  \      \
-    |   \      \
-    v    v      v
-    sig  delta  filedata
+    |    ------\
+    v           v
+    inode      inode
+    |  \        |   \
+    |   \       |    \
+    v    v      v     v
+    sig  delta  sig  filedata
 
 Note that multiple inodes may refer to the same signature, file
 contents, and delta objects. This way, we can store identical copies of
@@ -152,8 +151,8 @@ unaffiliated blocks that need to be discarded at some point.
 
 
 
-Forgetting generations
-----------------------
+Forgetting (removing) generations
+---------------------------------
 
 To forget one or more generations, you first create a new host block
 that drops the unwanted generations from the list of generations. Then
@@ -179,7 +178,7 @@ Basic data types
 There are two basic types of data stored in the backups: integers and
 strings.
 
-Integers are non-negative arbitrarily big integer (as far as the storage
+Integers are non-negative arbitrarily big integers (as far as the storage
 format is concerned). They are encoded in storage as a sequence of bytes
 giving ASCII digits, followed by a newline. For example, the value 42
 would be encoded as the bytes 0x34, 0x32, 0x0a, in that order.
@@ -191,10 +190,10 @@ they may be interpreted as, say, UTF-8 filenames.
 Block representation
 --------------------
 
-A block starts with the magic cookie "blockhead\n" (not including the
-quotes, and ending in a newline character, using ASCII encoding). After
-that a series of encoded components, one of which is a BLKID component,
-giving the identifier for the block (typically also part of its name).
+A block starts with the magic cookie "blockhead\n" in ASCII encoding
+(with the "\n" indicating a newline character). After that a series of
+encoded components, one of which is a BLKID component, giving the
+identifier for the block (typically also part of its name).
 
 
 Objects
@@ -203,55 +202,65 @@ Objects
 Objects consist of an integer kind, a string identifier, and some
 sequence of components. Depending on the kind, the components differ.
 
-
 The objects in backup storage look like below. A "*" is used to indicate
-repetition (zero or more instances). Order of components inside an object
-or another component is not specified.
+repetition (zero or more instances). A "?" is used to indicate optional
+components. Order of consecutive components of the same type is often
+significant.
 
     HOST object
         OBJID
         OBJKIND
         FORMATVERSION
-        GENREF*
+        GENREF* (oldest first)
         MAPREF*
-
-    OBJMAP component (at block level)
-        BLOCKREF
-        OBJREF*
+        CONTMAPREF*
 
     GEN object
         OBJID
         OBJKIND
+        FILELISTREF
+        GENSTART
+        GENEND
+
+    FILELIST
         FILE*
-            FILENAME*
-            SIGREF
-            DELTAREF
-            CONTREF
-            ST_MODE
-            ST_INO
-            ST_DEV
-            ST_NLINK
-            ST_UID
-            ST_GID
-            ST_SIZE
-            ST_ATIME
-            ST_MTIME
-            ST_CTIME
-            ST_BLOCKS
-            ST_BLKSIZE
-            ST_RDEV
+            FILENAME
+            STAT -- specially encoded component with struct stat fields
+            CONTREF? -- either this or DELTAREF must be there
+            SIGREF?
+            DELTAREF?
 
     SIG object
+        OBJID
+        OBJKIND
         SIGDATA
 
     DELTA object
+        OBJID
+        OBJKIND
+        DELTAPARTREFS* -- in order
+        CONTREF? -- this or DELTAREF must exist
+        DELTAREF?
+
+    DELTAPART object
+        OBJID
+        OBJKIND
         DELTADATA
 
     FILECONTENTS object
+        OBJID
+        OBJKIND
         FILEPARTREF*
         
     FILEPART object
+        OBJID
+        OBJKIND
         FILECHUNK
+
+    OBJMAP component (at block level)
+        -- lists which objects exist in each block
+        BLOCKREF -- the block id
+        OBJREF* -- list of objects in that block
 
 
 Components
@@ -278,22 +287,8 @@ that reference a block or object use the UUID to do it.
     OBJMAP      6       n/a         Mapping of object ids to block id (all 
                                     the objects inside one block go into one 
                                     OBJMAP)
-    ST_MODE     7       int         The st_mode field of a struct stat.
-    ST_INO      8       int         The st_ino field of a struct stat.
-    ST_DEV      9       int         The st_dev field of a struct stat.
-    ST_NLINK    10      int         The st_nlink field of a struct stat.
-    ST_UID      11      int         The st_uid field of a struct stat.
-    ST_GID      12      int         The st_gid field of a struct stat.
-    ST_SIZE     13      int         The st_size field of a struct stat.
-    ST_ATIME    14      int         The st_atime field of a struct stat.
-    ST_MTIME    15      int         The st_mtime field of a struct stat.
-    ST_CTIME    16      int         The st_ctime field of a struct stat.
-    ST_BLOCKS   17      int         The st_blocks field of a struct stat.
-    ST_BLKSIZE  18      int         The st_blksize field of a struct stat.
-    ST_RDEV     19      int         The st_rdev field of a struct stat.
     CONTREF     20      string      Reference to a FILECONTENTS object.
     NAMEIPAIR   21      n/a         A pair of INODEREF and FILENAME.
-    INODEREF    22      string      Reference to an inode object.
     FILENAME    23      string      A file's name.
     SIGDATA     24      string      Rsync signature data for a file.
     SIGREF      25      string      A reference to a SIG object.
@@ -304,8 +299,24 @@ that reference a block or object use the UUID to do it.
     MAPREF      30      string      A reference to a map block (block 
                                     containing only OBJMAP components).
     FILEPARTREF 31      string      A reference to a FILEPART object.
-    FORMATVERSION 32    string      Version of the storage format
+    FORMATVERSION 32    string      Version of the storage format.
+    FILE        33      n/a         Meta data about a file.
+    FILELISTREF 34      string      A reference to a FILELIST object.
+    CONTMAPREF  35      string      A reference to a CONTMAP object.
+    DELTAREF    36      string      A reference to a DELTA object.
+    DELTADATA   37      string      Partial rsync delta data for a file.
+    STAT        38      n/a         struct stat data, specially encoded.
+    GENSTART    39      integer     A generation's starting timestamp.
+    GENEND      40      integer     A generation's ending timestamp.
+    DELTAPARTREF 41     string      A reference to a DELTAPART object.
 
 The actual code for a kind is the number from the table above, shifted
 two bits up, and with the new lowest two bits used for flags: 0x01 for
 "composite component", and 0x02 for "reference component".
+
+The STAT component is encoded specially, for speed. It is a sequence of
+variable length integers, for the following fields in a struct stat:
+st_mode, st_ino, st_dev, st_nlink, st_uid, st_gid, st_size, st_atime,
+st_mtime, st_ctime, st_blocks, st_blksize, st_rdev. An approach for
+using components, as for everything else, would have been nice, but
+proved to be pretty slow.

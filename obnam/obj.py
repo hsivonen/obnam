@@ -46,7 +46,7 @@ def _define_kind(code, name):
     return code
 
 FILEPART     = _define_kind(1, "FILEPART")
-INODE        = _define_kind(2, "INODE")
+# object kind 2 used to be INODE, but it's been removed
 GEN          = _define_kind(3, "GEN")
 SIG          = _define_kind(4, "SIG")
 HOST         = _define_kind(5, "HOST")
@@ -233,7 +233,7 @@ def block_decode(block):
     else:
         return None
 
-
+    
 def signature_object_encode(objid, sigdata):
     """Encode a SIG object"""
     c = obnam.cmp.create(obnam.cmp.SIGDATA, sigdata)

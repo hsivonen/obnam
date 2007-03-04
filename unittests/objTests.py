@@ -31,7 +31,6 @@ class ObjectKindNameTests(unittest.TestCase):
     def test(self):
         self.failUnlessEqual(kind_name(-12765), "UNKNOWN")
         self.failUnlessEqual(kind_name(FILEPART), "FILEPART")
-        self.failUnlessEqual(kind_name(INODE), "INODE")
         self.failUnlessEqual(kind_name(GEN), "GEN")
         self.failUnlessEqual(kind_name(SIG), "SIG")
         self.failUnlessEqual(kind_name(HOST), "HOST")

@@ -39,7 +39,6 @@ class ComponentKindNameTests(unittest.TestCase):
         self.failUnlessEqual(t(c.OBJMAP), "OBJMAP")
         self.failUnlessEqual(t(c.CONTREF), "CONTREF")
         self.failUnlessEqual(t(c.NAMEIPAIR), "NAMEIPAIR")
-        self.failUnlessEqual(t(c.INODEREF), "INODEREF")
         self.failUnlessEqual(t(c.FILENAME), "FILENAME")
         self.failUnlessEqual(t(c.SIGDATA), "SIGDATA")
         self.failUnlessEqual(t(c.SIGREF), "SIGREF")
