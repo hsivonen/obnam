@@ -55,6 +55,7 @@ def flush_object_queue(context, oq, map):
     
     if not obnam.obj.queue_is_empty(oq):
         block_id = obnam.backend.generate_block_id(context.be)
+        logging.debug("Creating new object block %s" % block_id)
         block = obnam.obj.block_create_from_object_queue(block_id, oq)
         obnam.backend.upload(context.be, block_id, block)
         for id in obnam.obj.queue_ids(oq):
@@ -78,6 +79,14 @@ def get_block(context, block_id):
         else:
             # it's an exception
             raise result
+    # FIXME: the following is ugly
+    elif obnam.backend._use_gpg(context.be):
+        logging.debug("Decoding cached block %s before using it", block_id)
+        decrypted = obnam.gpg.decrypt(context.config, block)
+        if decrypted is None:
+            logging.error("Can't decrypt downloaded block, not using it")
+            return None
+        block = decrypted
     return block
 
 
@@ -204,6 +213,7 @@ def upload_host_block(context, host_block):
 def get_host_block(context):
     """Return (and fetch, if needed) the host block, or None if not found"""
     host_id = context.config.get("backup", "host-id")
+    logging.debug("Getting host block %s" % host_id)
     result = obnam.backend.download(context.be, host_id)
     if type(result) == type(""):
         return result
@@ -422,5 +432,6 @@ def collect_garbage(context, host_block):
 def load_maps(context, map, block_ids):
     """Load and parse mapping blocks, store results in map"""
     for id in block_ids:
+        logging.debug("Loading map block %s" % id)
         block = obnam.io.get_block(context, id)
         obnam.map.decode_block(map, block)
