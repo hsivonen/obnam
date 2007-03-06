@@ -114,6 +114,8 @@ class ObnamFS(fuse.Fuse):
         obnam.io.load_maps(self.context, self.context.contmap, 
                            contmap_ids)
 
+        self.fl_cache = {}
+
         fuse.Fuse.__init__(self, *args, **kw)
 
     def generations(self):
@@ -127,6 +129,9 @@ class ObnamFS(fuse.Fuse):
             return obnam.obj.first_varint_by_kind(gen, obnam.cmp.GENEND)
 
     def generation_filelist(self, gen_id):
+        if gen_id in self.fl_cache:
+            return self.fl_cache[gen_id]
+    
         gen = obnam.io.get_object(self.context, gen_id)
         if not gen:
             logging.debug("FS: generation_filelist: does not exist")
@@ -156,6 +161,7 @@ class ObnamFS(fuse.Fuse):
                                                                None)
             obnam.filelist.add_file_component(fl, fake, c)
 
+        self.fl_cache[gen_id] = fl
         return fl
 
     def get_stat(self, fl, path):
