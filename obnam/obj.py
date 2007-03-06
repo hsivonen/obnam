@@ -17,6 +17,7 @@
 
 """Backup objects"""
 
+import logging
 
 import uuid
 
@@ -63,7 +64,9 @@ def kind_name(kind):
 
 def object_id_new():
     """Return a string that is a universally unique ID for an object"""
-    return str(uuid.uuid4())
+    id = str(uuid.uuid4())
+    logging.debug("Creating object id %s" % id)
+    return id
 
 
 class Object:
@@ -220,6 +223,7 @@ def queue_ids(oq):
 
 def block_create_from_object_queue(blkid, oq):
     """Create a block from an object queue"""
+    logging.debug("Creating block %s" % blkid)
     blkid = obnam.cmp.create(obnam.cmp.BLKID, blkid)
     objects = [obnam.cmp.create(obnam.cmp.OBJECT, x[1]) for x in oq.queue]
     return "".join([BLOCK_COOKIE] + 
@@ -231,6 +235,7 @@ def block_decode(block):
     if block.startswith(BLOCK_COOKIE):
         return obnam.cmp.decode_all(block, len(BLOCK_COOKIE))
     else:
+        logging.debug("xxx block does not start with cookie: %s" % repr(block))
         return None
 
     
