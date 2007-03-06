@@ -278,8 +278,6 @@ class ObnamFS(fuse.Fuse):
 
             list = [x[len(prefix):] for x in list 
                     if x.startswith(prefix) and "/" not in x[len(prefix):]]
-            list = sorted(list)
-            list = list[:16]
             return self.make_getdir_result(list)
 
     def decide_read_error(self, pathname):
