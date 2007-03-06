@@ -178,7 +178,7 @@ class ConfigFile:
         
         """
         value = self.get(section, option)
-        value = value.lower()
+        value = value.lower().strip()
         if value in ["yes", "on", "true", "1"]:
             return True
         if value in ["no", "off", "false", "0"]:

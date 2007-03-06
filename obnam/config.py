@@ -110,7 +110,7 @@ def build_parser():
                       metavar="KEYID",
                       help="sign backups with KEYID")
     
-    parser.add_option("--no-gpg", action="store_true", default=False,
+    parser.add_option("--no-gpg", action="store_true",
                       help="don't use gpg at all")
     
     parser.add_option("--use-psyco",
@@ -216,9 +216,9 @@ def parse_options(config, argv):
             config.append("backup", "gpg-encrypt-to", keyid)
     if options.gpg_sign_with is not None:
         config.set("backup", "gpg-sign-with", options.gpg_sign_with)
-    if options.no_gpg:
+    if options.no_gpg is True:
         config.set("backup", "no-gpg", "true")
-    else:
+    elif options.no_gpg is False:
         config.set("backup", "no-gpg", "false")
     if options.exclude is not None:
         config.remove_option("backup", "exclude")
