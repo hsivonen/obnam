@@ -141,14 +141,18 @@ class ObnamFS(fuse.Fuse):
             return None
 
     def generation_listing(self, gen_id):
+        logging.debug("FS: generatin_listing for %s" % gen_id)
         gen = obnam.io.get_object(self.context, gen_id)
         if not gen:
+            logging.debug("FS: generation_listing: does not exist")
             return []
         fl_id = obnam.obj.first_string_by_kind(gen, obnam.cmp.FILELISTREF)
         if not fl_id:
+            logging.debug("FS: generation_listing: no FILELISTREF")
             return []
         fl = obnam.io.get_object(self.context, fl_id)
         if not fl:
+            logging.debug("FS: generation_listing: no FILELIST %s" % fl_id)
             return []
 
         list = []
@@ -157,6 +161,8 @@ class ObnamFS(fuse.Fuse):
             filename = obnam.cmp.first_string_by_kind(subs, 
                                                       obnam.cmp.FILENAME)
             list.append(filename)
+
+        logging.debug("FS: generation_listing: returning %s" % repr(list))
         return list
 
     def parse_pathname(self, pathname):
