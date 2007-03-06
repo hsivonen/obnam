@@ -115,6 +115,7 @@ class ObnamFS(fuse.Fuse):
                            contmap_ids)
 
         self.fl_cache = {}
+        self.handles = {}
 
         fuse.Fuse.__init__(self, *args, **kw)
 
@@ -208,12 +209,14 @@ class ObnamFS(fuse.Fuse):
             return parts[0], parts[1]
         
     def getattr(self, path):
-        logging.debug("FS: getattr: %s" % repr(path))
+        if path != "/":
+            logging.debug("FS: getattr: %s" % repr(path))
         first_part, relative_path = self.parse_pathname(path)
         if first_part is None:
             return make_stat_result(st_mode=stat.S_IFDIR | 0700, st_nlink=2,
                                     st_uid=os.getuid(), st_gid=os.getgid())
         elif relative_path is None:
+            logging.debug("FS: getattr: returning result for generation")
             gen_ids = self.generations()
             if path[1:] in gen_ids:
                 mtime = self.generation_mtime(path[1:])
@@ -224,7 +227,11 @@ class ObnamFS(fuse.Fuse):
                                         st_nlink=2,
                                         st_uid=os.getuid(),
                                         st_gid=os.getgid())
+            else:
+                return -errno.ENOENT
         else:
+            logging.debug("FS: getattr: returning result for dir in gen")
+            logging.debug("FS: getattr: relative_path=%s" % relative_path)
             fl = self.generation_filelist(first_part)
             if not fl:
                 return -errno.ENOENT
@@ -253,16 +260,26 @@ class ObnamFS(fuse.Fuse):
             logging.debug("FS: getdir: first level names: %s" % repr(roots))
             return self.make_getdir_result(roots)
         else:
-            logging.debug("FS: it's a directory within a generation")
+            logging.debug("FS: getdir: it's a directory within a generation")
             fl = self.generation_filelist(first_part)
             st = self.get_stat(fl, relative_path)
             if not stat.S_ISDIR(st.st_mode):
+                logging.debug("FS: getdir: it's not a directory!")
                 return -errno.ENOTDIR
 
-            list = self.generation_listing(first_part)
+            list = obnam.filelist.list_files(fl)
             prefix = relative_path + "/"
+            if prefix in list:
+                # If the backup was made with "obnam backup foo/", the trailing
+                # slash is included in the name in the filelist. This is
+                # a bug in obnam, but since we can't be sure there aren't
+                # users with backups made like that, we need to deal with it.
+                list.remove(prefix)
+
             list = [x[len(prefix):] for x in list 
                     if x.startswith(prefix) and "/" not in x[len(prefix):]]
+            list = sorted(list)
+            list = list[:16]
             return self.make_getdir_result(list)
 
     def decide_read_error(self, pathname):
@@ -290,32 +307,25 @@ class ObnamFS(fuse.Fuse):
 
         error = self.decide_read_error(path)
         if error:
+            logging.debug("FS: open: returning error %s" % error)
             return error
         elif readonly_flags:
-            return 0
-        else:
-            return -errno.EACCESS
+            if path in self.handles:
+                fd, counter = self.handles[path]
+                self.handles[path] = (fd, counter + 1)
+                logging.debug("FS: open: reusing existing handle")
+                return 0
 
-    def read(self, path, length, offset):
-        logging.debug("FS: read: %s %d %d" % (repr(path), length, offset))
-        first_part, relative_path = self.parse_pathname(path)
-
-        error = self.decide_read_error(path)
-        if error:
-            return error
-        else:
-            fl = self.generation_filelist(first_part)
-            if not fl:
-                return -errno.ENOENT
-            c = obnam.filelist.find(fl, relative_path)
-            if not c:
-                return -errno.ENOENT
-
-            subs = obnam.cmp.get_subcomponents(c)
-        
             fd, tempname = tempfile.mkstemp()
             os.remove(tempname)
 
+            fl = self.generation_filelist(first_part)
+            c = obnam.filelist.find(fl, relative_path)
+            if not c:
+                logging.debug("FS: open: file not found: %s" % relative_path)
+                return -errno.ENOENT
+
+            subs = obnam.cmp.get_subcomponents(c)
             cont_id = obnam.cmp.first_string_by_kind(subs, obnam.cmp.CONTREF)
             if cont_id:
                 obnam.io.copy_file_contents(self.context, fd, cont_id)
@@ -323,17 +333,39 @@ class ObnamFS(fuse.Fuse):
                 delta_id = obnam.cmp.first_string_by_kind(subs, 
                                                           obnam.cmp.DELTAREF)
                 obnam.io.reconstruct_file_contents(self.context, fd, delta_id)
-            
+
+            self.handles[path] = (fd, 1)
+            return 0
+        else:
+            return -errno.EACCESS
+
+    def read(self, path, length, offset):
+        logging.debug("FS: read: %s %d %d" % (repr(path), length, offset))
+        
+        if path not in self.handles:
+            return -errno.EBADF
+
+        fd, counter = self.handles[path]
+        try:
             os.lseek(fd, offset, 0)
             data = os.read(fd, length)
+        except os.error:
+            return -errno.EIO
 
-            os.close(fd)
-            
-            return data
+        return data
 
     def release(self, path, flags):
         logging.debug("FS: release: %s 0x%x" % (repr(path), flags))
-        return 0
+        if path in self.handles:
+            fd, counter = self.handles[path]
+            if counter == 1:
+                os.close(fd)
+                del self.handles[path]
+            else:
+                self.handles[path] = (fd, counter - 1)
+            return 0
+        else:
+            return -errno.EBADF
             
             
 def main():
