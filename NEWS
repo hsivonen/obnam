@@ -4,11 +4,22 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
-Version 0.6, released 2007-02-20
+Version 0.6, released 2007-03-06
     
     * Manual page updates.
     
     * odirect_read now works under Linux kernel 2.4.
+    
+    * --progress reports final numbers at the end of the backup, and
+      doesn't mess up the output under screen(1).
+      
+    * Log file time stamps are now absolute, instead of being relative to
+      the beginning of the program.
+      
+    * There is a preliminary FUSE filesystem for browsing and reading
+      backups made with Obnam.
+      
+    * A problem with caching combined with encryption was fixed.
 
 Version 0.5, released 2007-02-15
 
