@@ -100,7 +100,7 @@ class ObnamFS(fuse.Fuse):
     def generation_mtime(self, gen_id):
         gen = obnam.io.get_object(self.context, gen_id)
         if not gen:
-            logging.warning("Can't find info about generation %s" % gen_id)
+            logging.warning("FS: Can't find info about generation %s" % gen_id)
         else:
             return obnam.obj.first_varint_by_kind(gen, obnam.cmp.GENEND)
 
@@ -116,7 +116,7 @@ class ObnamFS(fuse.Fuse):
             return None
         fl = obnam.filelist.from_object(fl)
         if not fl:
-            logging.error("fl is None, wtf?")
+            logging.error("FS: fl is None, wtf?")
             return None
         return fl
 
@@ -172,7 +172,7 @@ class ObnamFS(fuse.Fuse):
             return parts[0], parts[1]
         
     def getattr(self, path):
-        logging.debug("getattr: %s" % repr(path))
+        logging.debug("FS: getattr: %s" % repr(path))
         first_part, relative_path = self.parse_pathname(path)
         if first_part is None:
             return make_stat_result(st_mode=stat.S_IFDIR | 0700, st_nlink=2,
@@ -202,7 +202,7 @@ class ObnamFS(fuse.Fuse):
         return [(name, 0) for name in [".", ".."] + names]
 
     def getdir(self, path):
-        logging.debug("getdir: %s" % repr(path))
+        logging.debug("FS: getdir: %s" % repr(path))
         first_part, relative_path = self.parse_pathname(path)
         if first_part is None:
             # It's the root!
@@ -244,7 +244,7 @@ class ObnamFS(fuse.Fuse):
                 return -errno.ENOENT
 
     def open(self, path, flags):
-        logging.debug("open: %s 0x%x" % (repr(path), flags))
+        logging.debug("FS: open: %s 0x%x" % (repr(path), flags))
         first_part, relative_path = self.parse_pathname(path)
 
         readonly_flags = (flags & 3) == os.O_RDONLY
@@ -258,7 +258,7 @@ class ObnamFS(fuse.Fuse):
             return -errno.EACCESS
 
     def read(self, path, length, offset):
-        logging.debug("read: %s %d %d" % (repr(path), length, offset))
+        logging.debug("FS: read: %s %d %d" % (repr(path), length, offset))
         first_part, relative_path = self.parse_pathname(path)
 
         error = self.decide_read_error(path)
@@ -293,7 +293,7 @@ class ObnamFS(fuse.Fuse):
             return data
 
     def release(self, path, flags):
-        logging.debug("release: %s 0x%x" % (repr(path), flags))
+        logging.debug("FS: release: %s 0x%x" % (repr(path), flags))
         return 0
             
             
@@ -302,7 +302,7 @@ def main():
         server = ObnamFS()
     except NoHostBlock, e:
         sys.stderr.write("ERROR: " + str(e) + "\n")
-        logging.error(str(e))
+        logging.error("FS: " + str(e))
     else:
         server.main()
 
