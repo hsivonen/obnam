@@ -17,6 +17,7 @@
 
 """Mapping of object to block identifiers"""
 
+import logging
 
 import obnam.cmp
 
@@ -97,16 +98,22 @@ def encode_new_to_block(mapping, block_id):
 
 def decode_block(mapping, mapping_block):
     """Decode a block with mappings, add them to mapping object"""
+    logging.debug("Decoding mapping block")
     list = obnam.obj.block_decode(mapping_block)
+    logging.debug("xxx list=%s" % repr(list))
     if not list:
+        logging.debug("Mapping block is empty")
         return
     maps = obnam.cmp.find_by_kind(list, obnam.cmp.OBJMAP)
+    logging.debug("Mapping block contains %d maps" % len(maps))
     for map in maps:
         subs = obnam.cmp.get_subcomponents(map)
         block_id = obnam.cmp.first_string_by_kind(subs, 
                                                obnam.cmp.BLOCKREF)
         object_ids = obnam.cmp.find_strings_by_kind(subs, 
                                                obnam.cmp.OBJREF)
+        logging.debug("Map contains %d objects" % len(object_ids))
         if object_ids and block_id:
             for object_id in object_ids:
+                logging.debug("Object %s in block %s" % (object_id, block_id))
                 _add_old(mapping, object_id, block_id)
