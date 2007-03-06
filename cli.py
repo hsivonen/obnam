@@ -270,7 +270,7 @@ def show_generations(context, gen_ids):
 
     obnam.io.load_maps(context, context.map, map_block_ids)
 
-    pretty = False
+    pretty = True
     for gen_id in gen_ids:
         gen = obnam.io.get_object(context, gen_id)
         start_time = obnam.obj.first_varint_by_kind(gen, obnam.cmp.GENSTART)
