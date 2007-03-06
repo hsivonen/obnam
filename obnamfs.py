@@ -60,6 +60,13 @@ def make_stat_result(st_mode=0, st_ino=0, st_dev=0, st_nlink=0, st_uid=0,
     return os.stat_result(tup, dict)
 
 
+class NoHostBlock(obnam.exception.ExceptionBase):
+
+    def __init__(self):
+        self._msg = \
+            "There is no host block, cannot mount backups as file system"
+
+
 class ObnamFS(fuse.Fuse):
 
     """A FUSE filesystem interface to backups made with Obnam"""
@@ -76,6 +83,8 @@ class ObnamFS(fuse.Fuse):
         obnam.log.setup(self.context.config)
 
         block = obnam.io.get_host_block(self.context)
+        if block is None:
+            raise NoHostBlock()
         (_, gen_ids, map_block_ids, contmap_ids) = \
             obnam.obj.host_block_decode(block)
         self.gen_ids = gen_ids
@@ -289,8 +298,13 @@ class ObnamFS(fuse.Fuse):
             
             
 def main():
-    server = ObnamFS()
-    server.main()
+    try:
+        server = ObnamFS()
+    except NoHostBlock, e:
+        sys.stderr.write("ERROR: " + str(e) + "\n")
+        logging.error(str(e))
+    else:
+        server.main()
 
 
 if __name__ == "__main__":
