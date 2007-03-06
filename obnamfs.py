@@ -60,6 +60,28 @@ def make_stat_result(st_mode=0, st_ino=0, st_dev=0, st_nlink=0, st_uid=0,
     return os.stat_result(tup, dict)
 
 
+def deduce_fake_dirs(paths):
+    fakes = []
+    
+    dirs = set()
+    for path in paths:
+        path = os.path.dirname(path)
+        while path not in ["/", ""]:
+            dirs.add(path)
+            path = os.path.dirname(path)
+    
+    if "" in dirs:
+        dirs.remove("")
+    if "/" in dirs:
+        dirs.remove("/")
+        
+    for dir in dirs:
+        if dir not in paths:
+            fakes.append(dir)
+    
+    return sorted(fakes)
+
+
 class NoHostBlock(obnam.exception.ExceptionBase):
 
     def __init__(self):
@@ -107,17 +129,33 @@ class ObnamFS(fuse.Fuse):
     def generation_filelist(self, gen_id):
         gen = obnam.io.get_object(self.context, gen_id)
         if not gen:
+            logging.debug("FS: generation_filelist: does not exist")
             return None
         fl_id = obnam.obj.first_string_by_kind(gen, obnam.cmp.FILELISTREF)
         if not fl_id:
+            logging.debug("FS: generation_filelist: no FILELISTREF")
             return None
         fl = obnam.io.get_object(self.context, fl_id)
         if not fl:
+            logging.debug("FS: generation_filelist: no FILELIST %s" % fl_id)
             return None
+
+        list = []
+        for c in obnam.obj.find_by_kind(fl, obnam.cmp.FILE):
+            subs = obnam.cmp.get_subcomponents(c)
+            filename = obnam.cmp.first_string_by_kind(subs, 
+                                                      obnam.cmp.FILENAME)
+            list.append(filename)
+
         fl = obnam.filelist.from_object(fl)
-        if not fl:
-            logging.error("FS: fl is None, wtf?")
-            return None
+
+        for fake in deduce_fake_dirs(list):
+            st = make_stat_result(st_mode=stat.S_IFDIR | 0755)
+            c = obnam.filelist.create_file_component_from_stat(fake, st,
+                                                               None, None, 
+                                                               None)
+            obnam.filelist.add_file_component(fl, fake, c)
+
         return fl
 
     def get_stat(self, fl, path):
@@ -141,28 +179,14 @@ class ObnamFS(fuse.Fuse):
             return None
 
     def generation_listing(self, gen_id):
-        logging.debug("FS: generatin_listing for %s" % gen_id)
-        gen = obnam.io.get_object(self.context, gen_id)
-        if not gen:
-            logging.debug("FS: generation_listing: does not exist")
-            return []
-        fl_id = obnam.obj.first_string_by_kind(gen, obnam.cmp.FILELISTREF)
-        if not fl_id:
-            logging.debug("FS: generation_listing: no FILELISTREF")
-            return []
-        fl = obnam.io.get_object(self.context, fl_id)
+        logging.debug("FS: generation_listing for %s" % gen_id)
+        fl = self.generation_filelist(gen_id)
         if not fl:
-            logging.debug("FS: generation_listing: no FILELIST %s" % fl_id)
+            logging.debug("FS: generation_listing: no FILELIST")
             return []
 
-        list = []
-        for c in obnam.obj.find_by_kind(fl, obnam.cmp.FILE):
-            subs = obnam.cmp.get_subcomponents(c)
-            filename = obnam.cmp.first_string_by_kind(subs, 
-                                                      obnam.cmp.FILENAME)
-            list.append(filename)
-
-        logging.debug("FS: generation_listing: returning %s" % repr(list))
+        list = obnam.filelist.list_files(fl)
+        logging.debug("FS: generation_listing: returning %d items" % len(list))
         return list
 
     def parse_pathname(self, pathname):
@@ -205,6 +229,7 @@ class ObnamFS(fuse.Fuse):
                 return -errno.ENOENT
 
     def make_getdir_result(self, names):
+        logging.debug("FS: make_getdir_result: got %d names" % len(names))
         list = [(name, 0) for name in [".", ".."] + names]
         logging.debug("FS: make_getdir_result: %s" % repr(list))
         return list
@@ -218,8 +243,9 @@ class ObnamFS(fuse.Fuse):
         elif relative_path is None:
             logging.debug("FS: getdir: it's the root of a generation")
             list = self.generation_listing(first_part)
-            list = [name for name in list if "/" not in name]
-            return self.make_getdir_result(list)
+            roots = [name for name in list if "/" not in name]
+            logging.debug("FS: getdir: first level names: %s" % repr(roots))
+            return self.make_getdir_result(roots)
         else:
             logging.debug("FS: it's a directory within a generation")
             fl = self.generation_filelist(first_part)
@@ -230,8 +256,7 @@ class ObnamFS(fuse.Fuse):
             list = self.generation_listing(first_part)
             prefix = relative_path + "/"
             list = [x[len(prefix):] for x in list 
-                    if x.startswith(prefix) and
-                       "/" not in x[len(prefix):]]
+                    if x.startswith(prefix) and "/" not in x[len(prefix):]]
             return self.make_getdir_result(list)
 
     def decide_read_error(self, pathname):
