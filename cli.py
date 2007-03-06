@@ -129,7 +129,7 @@ def get_filelist_in_gen(context, gen_id):
     logging.debug("Getting list of files in generation %s" % gen_id)
     gen = obnam.io.get_object(context, gen_id)
     if not gen:
-        raise Exception("wtf")
+        raise Exception("wtf: " + gen_id)
     logging.debug("Finding first FILELISTREF component in generation")
     ref = obnam.obj.first_string_by_kind(gen, obnam.cmp.FILELISTREF)
     if not ref:
@@ -188,8 +188,8 @@ def backup(context, args):
     obnam.io.enqueue_object(context, context.oq, context.map, 
                                filelist_id, filelist_obj)
     
-    logging.info("Creating new generation object")
     gen_id = obnam.obj.object_id_new()
+    logging.info("Creating new generation object %s" % gen_id)
     gen = obnam.obj.generation_object_encode(gen_id, filelist_id, start_time,
                                              end_time)
     gen_ids.append(gen_id)
@@ -199,13 +199,14 @@ def backup(context, args):
     logging.info("Creating new mapping blocks")
     if obnam.map.get_new(context.map):
         map_block_id = obnam.backend.generate_block_id(context.be)
-        map_block = obnam.map.encode_new_to_block(context.map, 
-                                                         map_block_id)
+        logging.debug("Creating normal mapping block %s" % map_block_id)
+        map_block = obnam.map.encode_new_to_block(context.map, map_block_id)
         obnam.backend.upload(context.be, map_block_id, map_block)
         map_block_ids.append(map_block_id)
 
     if obnam.map.get_new(context.contmap):
         contmap_block_id = obnam.backend.generate_block_id(context.be)
+        logging.debug("Creating content mapping block %s" % contmap_block_id)
         contmap_block = obnam.map.encode_new_to_block(context.contmap, 
                                                              contmap_block_id)
         obnam.backend.upload(context.be, contmap_block_id, contmap_block)
