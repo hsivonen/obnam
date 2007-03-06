@@ -199,21 +199,23 @@ class ObnamFS(fuse.Fuse):
                 return -errno.ENOENT
 
     def make_getdir_result(self, names):
-        return [(name, 0) for name in [".", ".."] + names]
+        list = [(name, 0) for name in [".", ".."] + names]
+        logging.debug("FS: make_getdir_result: %s" % repr(list))
+        return list
 
     def getdir(self, path):
         logging.debug("FS: getdir: %s" % repr(path))
         first_part, relative_path = self.parse_pathname(path)
         if first_part is None:
-            # It's the root!
+            logging.debug("FS: getdir: returning list of generations")
             return self.make_getdir_result(self.generations())
         elif relative_path is None:
-            # It's the root of a generation.
+            logging.debug("FS: getdir: it's the root of a generation")
             list = self.generation_listing(first_part)
             list = [name for name in list if "/" not in name]
             return self.make_getdir_result(list)
         else:
-            # It's (hopefully) a directory within a generation.
+            logging.debug("FS: it's a directory within a generation")
             fl = self.generation_filelist(first_part)
             st = self.get_stat(fl, relative_path)
             if not stat.S_ISDIR(st.st_mode):
@@ -304,6 +306,7 @@ def main():
         sys.stderr.write("ERROR: " + str(e) + "\n")
         logging.error("FS: " + str(e))
     else:
+        logging.info("FS: backup filesystem is mounted")
         server.main()
 
 
