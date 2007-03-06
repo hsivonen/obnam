@@ -90,6 +90,11 @@ class FilelistTests(unittest.TestCase):
         c = obnam.filelist.find(fl, ".")
         self.failUnlessEqual(obnam.cmp.get_kind(c), obnam.cmp.FILE)
 
+    def testListFiles(self):
+        fl = obnam.filelist.create()
+        obnam.filelist.add(fl, ".", "pink", None, None)
+        self.failUnlessEqual(obnam.filelist.list_files(fl), ["."])
+
     def testAddFileComponent(self):
         fl = obnam.filelist.create()
         fc = obnam.filelist.create_file_component(".", "pink", None, None)
