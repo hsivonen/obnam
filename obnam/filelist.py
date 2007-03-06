@@ -58,6 +58,11 @@ def num_files(fl):
     return len(fl)
 
 
+def list_files(fl):
+    """Return list of all file in the file list currently"""
+    return fl.keys()
+
+
 def add(fl, pathname, contref, sigref, deltaref):
     """Add a file (and its metadata) to a file list"""
     fl[pathname] = create_file_component(pathname, contref, sigref, deltaref)
