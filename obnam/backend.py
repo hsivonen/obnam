@@ -229,9 +229,11 @@ def sftp_makedirs(sftp, dirname, mode=0777):
 
 def _use_gpg(be):
     """Should we use gpg to encrypt/decrypt blocks?"""
-    no_gpg = be.config.get("backup", "no-gpg").strip().lower()
-    encrypt_to = be.config.get("backup", "gpg-encrypt-to")
-    return no_gpg not in ["yes", "true"] and encrypt_to
+    no_gpg = be.config.getboolean("backup", "no-gpg")
+    if no_gpg:
+        return False
+    encrypt_to = be.config.get("backup", "gpg-encrypt-to").strip()
+    return encrypt_to
 
 
 def upload(be, block_id, block):
