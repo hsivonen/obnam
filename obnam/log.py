@@ -1,4 +1,4 @@
-# Copyright (C) 2006  Lars Wirzenius <liw@iki.fi>
+# Copyright (C) 2006, 2007  Lars Wirzenius <liw@iki.fi>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 
 
 import logging
+import os
 import sys
 import time
 
@@ -35,7 +36,8 @@ levels = {
 def setup(config):
     filename = config.get("backup", "log-file")
     if filename:
-        f = file(filename, "a")
+        fd = os.open(filename, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0600)
+        f = os.fdopen(fd, "a")
     else:
         f = sys.stdout
     level = config.get("backup", "log-level")
