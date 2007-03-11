@@ -67,6 +67,7 @@ clean:
 install: all
 	install -d $(bindir)
 	install cli.py $(bindir)/obnam
+	install obnamfs.py $(bindir)/obnamfs
 	install odirect_read odirect_pipe $(bindir)
 	install -d $(man1dir)
 	install -m 0644 *.1 $(man1dir)
