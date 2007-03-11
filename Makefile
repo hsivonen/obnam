@@ -27,7 +27,7 @@ man1dir = $(mandir)/man1
 pydir = $(libdir)/python2.4
 sitedir = $(pydir)/site-packages
 
-all: odirect_read obnam.1 odirect_read.1 odirect_pipe.1
+all: odirect_read obnam.1 odirect_read.1 odirect_pipe.1 obnamfs.1
 
 version:
 	./cli.py --version
@@ -36,6 +36,9 @@ odirect_read: odirect_read.c
 
 obnam.1: obnam.docbook
 	docbook2x-man obnam.docbook
+
+obnamfs.1: obnamfs.docbook
+	docbook2x-man obnamfs.docbook
 
 odirect_read.1: odirect_read.docbook
 	docbook2x-man odirect_read.docbook
