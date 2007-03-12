@@ -138,6 +138,7 @@ class Object:
         return "".join(list)
 
 
+# This function is only used during testing.
 def decode(encoded):
     """Decode an object from a string"""
     parser = obnam.cmp.Parser(encoded)
