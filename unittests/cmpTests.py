@@ -127,37 +127,6 @@ class ComponentParserTest(unittest.TestCase):
         self.failUnlessEqual(encoded, encoded2)
 
 
-class ComponentEncodingDecodingTests(unittest.TestCase):
-
-    def doit(self, c_kind, data):
-        c = obnam.cmp.Component(c_kind, data)
-        encoded = c.encode()
-        (c2, pos) = obnam.cmp.decode(encoded, 0)
-        encoded2 = c2.encode()
-        self.failUnlessEqual(encoded, encoded2)
-        self.failUnlessEqual(c.get_kind(), c2.get_kind())
-        self.failUnlessEqual(c.is_composite(), c2.is_composite())
-        self.failUnlessEqual(c.is_composite(), type(data) == type([]))
-        if not c.is_composite():
-            self.failUnlessEqual(c.get_string_value(),
-                                 c2.get_string_value())
-        self.failUnlessEqual(pos, len(encoded))
-
-    def testEmpty(self):
-        self.doit(1, "")
-
-    def testNonempty(self):
-        self.doit(2, "hello, world\0this is fun")
-
-    def testEmptyComposite(self):
-        self.doit(obnam.cmp.OBJECT, [])
-
-    def testNonemptyComposite(self):
-        c1 = obnam.cmp.Component(1, "pink")
-        c2 = obnam.cmp.Component(2, "pretty")
-        self.doit(obnam.cmp.OBJECT, [c1, c2])
-
-
 class ComponentDecodeAllTests(unittest.TestCase):
 
     def remove_component(self, list, kind, value):
@@ -171,7 +140,7 @@ class ComponentDecodeAllTests(unittest.TestCase):
         e1 = c1.encode()
         e2 = c2.encode()
         e = e1 + e2
-        list = obnam.cmp.decode_all(e, 0)
+        list = obnam.cmp.Parser(e).decode_all()
         self.remove_component(list, 1, "pink")
         self.remove_component(list, 2, "pretty")
         self.failUnlessEqual(list, [])

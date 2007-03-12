@@ -158,10 +158,8 @@ def encode(o):
 
 def decode(encoded, pos):
     """Decode an object from a string"""
-    list = []
-    while pos < len(encoded):
-        (c, pos) = obnam.cmp.decode(encoded, pos)
-        list.append(c)
+    parser = obnam.cmp.Parser(encoded, pos)
+    list = parser.decode_all()
     o = create("", 0)
     for c in list:
         if c.kind == obnam.cmp.OBJID:
@@ -230,7 +228,8 @@ def block_create_from_object_queue(blkid, oq):
 def block_decode(block):
     """Return list of decoded components in block, or None on error"""
     if block.startswith(BLOCK_COOKIE):
-        return obnam.cmp.decode_all(block, len(BLOCK_COOKIE))
+        parser = obnam.cmp.Parser(block, len(BLOCK_COOKIE))
+        return parser.decode_all()
     else:
         logging.debug("xxx block does not start with cookie: %s" % repr(block))
         return None

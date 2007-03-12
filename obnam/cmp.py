@@ -195,19 +195,6 @@ class Parser:
         return list
 
 
-def decode(encoded, pos):
-    """Decode a component in a string, return component and pos after it"""
-    parser = Parser(encoded, pos)
-    c = parser.decode()
-    return c, parser.pos
-
-
-def decode_all(encoded, pos):
-    """Return list of all components in a string"""
-    parser = Parser(encoded, pos)
-    return parser.decode_all()
-
-
 def find_by_kind(components, wanted_kind):
     """Find components of a desired kind in a list of components"""
     return [c for c in components if c.get_kind() == wanted_kind]

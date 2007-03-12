@@ -73,7 +73,7 @@ class ObjectMappingTests(unittest.TestCase):
         self.failUnlessEqual(len(list), 1)
         
         # Make sure the encoding is correct
-        list2 = obnam.cmp.decode_all(list[0], 0)
+        list2 = obnam.cmp.Parser(list[0]).decode_all()
         self.failUnlessEqual(len(list2), 1)
         self.failUnlessEqual(list2[0].get_kind(), obnam.cmp.OBJMAP)
         
