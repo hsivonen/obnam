@@ -160,42 +160,26 @@ class ObjectQueue:
         self.clear()
         
     def add(self, object_id, encoded_object):
+        """Add an encoded object into an object queue"""
         self.queue.append((object_id, encoded_object))
         self.size += len(encoded_object)
         
     def clear(self):
+        """Remove all objects from an object queue"""
         self.queue = []
         self.size = 0
 
+    def is_empty(self):
+        """Is an object queue empty?"""
+        return self.size == 0
 
-def queue_create():
-    """Create an empty object queue"""
-    return ObjectQueue()
+    def combined_size(self):
+        """Return the combined size of all objects in an object queue"""
+        return self.size
 
-
-def queue_clear(oq):
-    """Remove all objects from an object queue"""
-    oq.clear()
-
-
-def queue_add(oq, object_id, object):
-    """Add an encoded object into an object queue"""
-    oq.add(object_id, object)
-
-
-def queue_is_empty(oq):
-    """Is an object queue empty?"""
-    return oq.size == 0
-
-
-def queue_combined_size(oq):
-    """Return the combined size of all objects in an object queue"""
-    return oq.size
-
-
-def queue_ids(oq):
-    """Return identifiers for all the objects in the object queue"""
-    return [x[0] for x in oq.queue]
+    def ids(self):
+        """Return identifiers for all the objects in the object queue"""
+        return [x[0] for x in self.queue]
 
 
 def block_create_from_object_queue(blkid, oq):
@@ -277,8 +261,8 @@ def host_block_encode(host_id, gen_ids, map_block_ids, contmap_block_ids):
         c = obnam.cmp.Component(obnam.cmp.CONTMAPREF, map_block_id)
         o.add(c)
 
-    oq = queue_create()
-    queue_add(oq, host_id, o.encode())
+    oq = ObjectQueue()
+    oq.add(host_id, o.encode())
     block = block_create_from_object_queue(host_id, oq)
     return block
 

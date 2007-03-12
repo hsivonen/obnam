@@ -31,8 +31,8 @@ class Context:
         self.be = None
         self.map = obnam.map.create()
         self.contmap = obnam.map.create()
-        self.oq = obnam.obj.queue_create()
-        self.content_oq = obnam.obj.queue_create()
+        self.oq = obnam.obj.ObjectQueue()
+        self.content_oq = obnam.obj.ObjectQueue()
         self.progress = obnam.progress.ProgressReporter(self.config)
 
 
