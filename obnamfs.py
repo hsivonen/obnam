@@ -101,7 +101,7 @@ class ObnamFS(fuse.Fuse):
         if not gen:
             logging.warning("FS: Can't find info about generation %s" % gen_id)
         else:
-            return obnam.obj.first_varint_by_kind(gen, obnam.cmp.GENEND)
+            return gen.first_varint_by_kind(obnam.cmp.GENEND)
 
     def generation_filelist(self, gen_id):
         if gen_id in self.fl_cache:
@@ -111,7 +111,7 @@ class ObnamFS(fuse.Fuse):
         if not gen:
             logging.debug("FS: generation_filelist: does not exist")
             return None
-        fl_id = obnam.obj.first_string_by_kind(gen, obnam.cmp.FILELISTREF)
+        fl_id = gen.first_string_by_kind(obnam.cmp.FILELISTREF)
         if not fl_id:
             logging.debug("FS: generation_filelist: no FILELISTREF")
             return None
@@ -121,7 +121,7 @@ class ObnamFS(fuse.Fuse):
             return None
 
         list = []
-        for c in obnam.obj.find_by_kind(fl, obnam.cmp.FILE):
+        for c in fl.find_by_kind(obnam.cmp.FILE):
             subs = c.get_subcomponents()
             filename = obnam.cmp.first_string_by_kind(subs, 
                                                       obnam.cmp.FILENAME)

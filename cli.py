@@ -62,7 +62,7 @@ def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
             if prev_sig_id:
                 prev_sig = obnam.io.get_object(context, prev_sig_id)
                 if prev_sig:
-                    prev_sigdata = obnam.obj.first_string_by_kind(prev_sig,
+                    prev_sigdata = prev_sig.first_string_by_kind(
                                                         obnam.cmp.SIGDATA)
                     if prev_sigdata:
                         xcont_ref = obnam.cmp.first_string_by_kind(subs,
@@ -131,7 +131,7 @@ def get_filelist_in_gen(context, gen_id):
     if not gen:
         raise Exception("wtf: " + gen_id)
     logging.debug("Finding first FILELISTREF component in generation")
-    ref = obnam.obj.first_string_by_kind(gen, obnam.cmp.FILELISTREF)
+    ref = gen.first_string_by_kind(obnam.cmp.FILELISTREF)
     if not ref:
         logging.debug("No FILELISTREFs")
         return None
@@ -232,8 +232,8 @@ def generations(context):
             if not gen:
                 logging.warning("Can't find info about generation %s" % id)
             else:
-                start = obnam.obj.first_varint_by_kind(gen, obnam.cmp.GENSTART)
-                end = obnam.obj.first_varint_by_kind(gen, obnam.cmp.GENEND)
+                start = gen.first_varint_by_kind(obnam.cmp.GENSTART)
+                end = gen.first_varint_by_kind(obnam.cmp.GENEND)
                 print id, obnam.format.timestamp(start), "--", \
                     obnam.format.timestamp(end)
         else:
@@ -259,8 +259,8 @@ def format_period(start, end):
 
 def format_generation_period(gen):
     """Return human readable string to show the period of a generation"""
-    start_time = obnam.obj.first_varint_by_kind(gen, obnam.cmp.GENSTART)
-    end_time = obnam.obj.first_varint_by_kind(gen, obnam.cmp.GENEND)
+    start_time = gen.first_varint_by_kind(obnam.cmp.GENSTART)
+    end_time = gen.first_varint_by_kind(obnam.cmp.GENEND)
     return format_period(start_time, end_time)
 
 
@@ -274,15 +274,14 @@ def show_generations(context, gen_ids):
     pretty = True
     for gen_id in gen_ids:
         gen = obnam.io.get_object(context, gen_id)
-        start_time = obnam.obj.first_varint_by_kind(gen, obnam.cmp.GENSTART)
-        end_time = obnam.obj.first_varint_by_kind(gen, obnam.cmp.GENEND)
+        start_time = gen.first_varint_by_kind(obnam.cmp.GENSTART)
+        end_time = gen.first_varint_by_kind(obnam.cmp.GENEND)
         print "Generation: %s %s" % (gen_id, format_generation_period(gen))
 
-        fl_id = obnam.obj.first_string_by_kind(gen, 
-                                obnam.cmp.FILELISTREF)
+        fl_id = gen.first_string_by_kind(obnam.cmp.FILELISTREF)
         fl = obnam.io.get_object(context, fl_id)
         list = []
-        for c in obnam.obj.find_by_kind(fl, obnam.cmp.FILE):
+        for c in fl.find_by_kind(obnam.cmp.FILE):
             subs = c.get_subcomponents()
             filename = obnam.cmp.first_string_by_kind(subs, 
                                                  obnam.cmp.FILENAME)
@@ -376,14 +375,13 @@ def restore(context, gen_id):
     logging.debug("Restoring files under %s" % target)
 
     logging.debug("Getting list of files in generation")
-    fl_id = obnam.obj.first_string_by_kind(gen, 
-                        obnam.cmp.FILELISTREF)
+    fl_id = gen.first_string_by_kind(obnam.cmp.FILELISTREF)
     fl = obnam.io.get_object(context, fl_id)
 
     logging.debug("Restoring files")
     list = []
     hardlinks = {}
-    for c in obnam.obj.find_by_kind(fl, obnam.cmp.FILE):
+    for c in fl.find_by_kind(obnam.cmp.FILE):
         subs = c.get_subcomponents()
         pathname = obnam.cmp.first_string_by_kind(subs,
                                                  obnam.cmp.FILENAME)

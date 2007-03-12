@@ -91,48 +91,42 @@ class Object:
     def get_components(self):
         """Return list of all components in an object"""
         return self.components
+    
+    def find_by_kind(self, wanted_kind):
+        """Find all components of a desired kind inside this object"""
+        return [c for c in self.get_components() 
+                    if c.get_kind() == wanted_kind]
 
+    def find_strings_by_kind(self, wanted_kind):
+        """Find all components of a desired kind, return string values"""
+        return [c.get_string_value() for c in self.find_by_kind(wanted_kind)]
 
-def find_by_kind(o, wanted_kind):
-    """Find all components of a desired kind inside this object"""
-    return [c for c in o.get_components() if c.get_kind() == wanted_kind]
+    def find_varints_by_kind(self, wanted_kind):
+        """Find all components of a desired kind, return varint values"""
+        return [c.get_varint_value() for c in self.find_by_kind(wanted_kind)]
 
-
-def find_strings_by_kind(o, wanted_kind):
-    """Find all components of a desired kind, return their string values"""
-    return [c.get_string_value() for c in find_by_kind(o, wanted_kind)]
-
-
-def find_varints_by_kind(o, wanted_kind):
-    """Find all components of a desired kind, return their varint values"""
-    return [c.get_varint_value() for c in find_by_kind(o, wanted_kind)]
-
-
-def first_by_kind(o, wanted_kind):
-    """Find first component of a desired kind"""
-    for c in o.get_components():
-        if c.get_kind() == wanted_kind:
-            return c
-    return None
-
-
-def first_string_by_kind(o, wanted_kind):
-    """Find string value of first component of a desired kind"""
-    c = first_by_kind(o, wanted_kind)
-    if c:
-        return c.get_string_value()
-    else:
+    def first_by_kind(self, wanted_kind):
+        """Find first component of a desired kind"""
+        for c in self.get_components():
+            if c.get_kind() == wanted_kind:
+                return c
         return None
 
+    def first_string_by_kind(self, wanted_kind):
+        """Find string value of first component of a desired kind"""
+        c = self.first_by_kind(wanted_kind)
+        if c:
+            return c.get_string_value()
+        else:
+            return None
 
-def first_varint_by_kind(o, wanted_kind):
-    """Find string value of first component of a desired kind"""
-    c = first_by_kind(o, wanted_kind)
-    if c:
-        return c.get_varint_value()
-    else:
-        return None
-
+    def first_varint_by_kind(self, wanted_kind):
+        """Find string value of first component of a desired kind"""
+        c = self.first_by_kind(wanted_kind)
+        if c:
+            return c.get_varint_value()
+        else:
+            return None
 
 def encode(o):
     """Encode an object as a string"""
@@ -259,9 +253,9 @@ def generation_object_decode(gen):
     """Decode a generation object into objid, file list ref"""
 
     o = decode(gen, 0)
-    return o.id, first_string_by_kind(o, obnam.cmp.FILELISTREF), \
-           first_varint_by_kind(o, obnam.cmp.GENSTART), \
-           first_varint_by_kind(o, obnam.cmp.GENEND)
+    return o.id, o.first_string_by_kind(obnam.cmp.FILELISTREF), \
+           o.first_varint_by_kind(obnam.cmp.GENSTART), \
+           o.first_varint_by_kind(obnam.cmp.GENEND)
 
 
 def host_block_encode(host_id, gen_ids, map_block_ids, contmap_block_ids):

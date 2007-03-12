@@ -121,7 +121,7 @@ def to_object(fl, object_id):
 def from_object(o):
     """Create a file list data structure from a backup object"""
     fl = create()
-    for file in obnam.obj.find_by_kind(o, obnam.cmp.FILE):
+    for file in o.find_by_kind(obnam.cmp.FILE):
         subs = file.get_subcomponents()
         pathname = obnam.cmp.first_string_by_kind(subs, obnam.cmp.FILENAME)
         fl[pathname] = file

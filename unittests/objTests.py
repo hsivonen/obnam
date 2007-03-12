@@ -131,8 +131,7 @@ class BlockCreateTests(unittest.TestCase):
             "blkid")
         self.failUnlessEqual(len(list), 2)
         o2 = obnam.cmp.first_by_kind(list, obnam.cmp.OBJECT)
-        self.failUnlessEqual(obnam.obj.first_string_by_kind(o, 2), 
-                             "pretty")
+        self.failUnlessEqual(o.first_string_by_kind(2), "pretty")
         self.failUnlessEqual(queue_ids(oq), ["pink"])
 
 
@@ -167,9 +166,7 @@ class ObjectTests(unittest.TestCase):
         self.failUnlessEqual(o.get_id(), "pink")
         self.failUnlessEqual(o.get_kind(), obnam.obj.SIG)
         self.failUnlessEqual(len(o.get_components()), 1)
-        self.failUnlessEqual(
-            obnam.obj.first_string_by_kind(o, obnam.cmp.SIGDATA),
-            sig)
+        self.failUnlessEqual(o.first_string_by_kind(obnam.cmp.SIGDATA), sig)
 
     def testCreateDeltaObjectWithContRef(self):
         id = "pink"
@@ -179,12 +176,10 @@ class ObjectTests(unittest.TestCase):
         self.failUnlessEqual(o.get_id(), "pink")
         self.failUnlessEqual(o.get_kind(), obnam.obj.DELTA)
         self.failUnlessEqual(len(o.get_components()), 2)
-        self.failUnlessEqual(
-            obnam.obj.first_string_by_kind(o, obnam.cmp.DELTAPARTREF),
-            deltapart_ref)
-        self.failUnlessEqual(
-            obnam.obj.first_string_by_kind(o, obnam.cmp.CONTREF),
-            "pretty")
+        self.failUnlessEqual(o.first_string_by_kind(obnam.cmp.DELTAPARTREF),
+                             deltapart_ref)
+        self.failUnlessEqual(o.first_string_by_kind(obnam.cmp.CONTREF),
+                             "pretty")
 
     def testCreateDeltaObjectWithDeltaRef(self):
         id = "pink"
@@ -194,12 +189,10 @@ class ObjectTests(unittest.TestCase):
         self.failUnlessEqual(o.get_id(), "pink")
         self.failUnlessEqual(o.get_kind(), obnam.obj.DELTA)
         self.failUnlessEqual(len(o.get_components()), 2)
-        self.failUnlessEqual(
-            obnam.obj.first_string_by_kind(o, obnam.cmp.DELTAPARTREF),
-            deltapart_ref)
-        self.failUnlessEqual(
-            obnam.obj.first_string_by_kind(o, obnam.cmp.DELTAREF),
-            "pretty")
+        self.failUnlessEqual(o.first_string_by_kind(obnam.cmp.DELTAPARTREF),
+                             deltapart_ref)
+        self.failUnlessEqual(o.first_string_by_kind(obnam.cmp.DELTAREF),
+                             "pretty")
 
 
 class HostBlockTests(unittest.TestCase):
@@ -242,21 +235,21 @@ class GetComponentTests(unittest.TestCase):
 
     def testGetByKind(self):
         find = lambda t: \
-            [c.get_string_value() for c in obnam.obj.find_by_kind(self.o, t)]
+            [c.get_string_value() for c in self.o.find_by_kind(t)]
         self.failUnlessEqual(find(1), ["pink"])
         self.failUnlessEqual(find(2), ["pretty"])
         self.failUnlessEqual(find(3), ["red", "too"])
         self.failUnlessEqual(find(0), [])
 
     def testGetStringsByKind(self):
-        find = lambda t: obnam.obj.find_strings_by_kind(self.o, t)
+        find = lambda t: self.o.find_strings_by_kind(t)
         self.failUnlessEqual(find(1), ["pink"])
         self.failUnlessEqual(find(2), ["pretty"])
         self.failUnlessEqual(find(3), ["red", "too"])
         self.failUnlessEqual(find(0), [])
 
     def helper(self, wanted_kind):
-        c = obnam.obj.first_by_kind(self.o, wanted_kind)
+        c = self.o.first_by_kind(wanted_kind)
         if c:
             return c.get_string_value()
         else:
@@ -269,7 +262,7 @@ class GetComponentTests(unittest.TestCase):
         self.failUnlessEqual(self.helper(0), None)
 
     def testGetFirstStringByKind(self):
-        find = lambda t: obnam.obj.first_string_by_kind(self.o, t)
+        find = lambda t: self.o.first_string_by_kind(t)
         self.failUnlessEqual(find(1), "pink")
         self.failUnlessEqual(find(2), "pretty")
         self.failUnlessEqual(find(3), "red")
@@ -283,7 +276,7 @@ class GetComponentTests(unittest.TestCase):
             c = obnam.cmp.Component(0, obnam.varint.encode(i))
             o.add(c)
 
-        self.failUnlessEqual(obnam.obj.find_varints_by_kind(o, 0), list)
+        self.failUnlessEqual(o.find_varints_by_kind(0), list)
 
     def testGetFirstSVarintByKind(self):
         o = obnam.obj.Object("uuid", 0)
@@ -292,5 +285,5 @@ class GetComponentTests(unittest.TestCase):
             o.add(c)
 
         for i in range(1024):
-            self.failUnlessEqual(obnam.obj.first_varint_by_kind(o, i), i)
-        self.failUnlessEqual(obnam.obj.first_varint_by_kind(o, -1), None)
+            self.failUnlessEqual(o.first_varint_by_kind(i), i)
+        self.failUnlessEqual(o.first_varint_by_kind(-1), None)

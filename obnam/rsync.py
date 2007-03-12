@@ -97,8 +97,7 @@ def apply_delta(context, basis_filename, deltapart_ids, new_filename):
     for id in deltapart_ids:
         deltapart = obnam.io.get_object(context, id)
         if deltapart:
-            deltadata = obnam.obj.first_string_by_kind(deltapart,
-                                                       obnam.cmp.DELTADATA)
+            deltadata = deltapart.first_string_by_kind(obnam.cmp.DELTADATA)
             p.stdin.write(deltadata)
         else:
             assert 0

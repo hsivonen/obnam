@@ -273,12 +273,10 @@ def copy_file_contents(context, fd, cont_id):
     cont = obnam.io.get_object(context, cont_id)
     if not cont:
         raise FileContentsObjectMissing(cont_id)
-    part_ids = obnam.obj.find_strings_by_kind(cont, 
-                                              obnam.cmp.FILEPARTREF)
+    part_ids = cont.find_strings_by_kind(obnam.cmp.FILEPARTREF)
     for part_id in part_ids:
         part = obnam.io.get_object(context, part_id)
-        chunk = obnam.obj.first_string_by_kind(part, 
-                                                  obnam.cmp.FILECHUNK)
+        chunk = part.first_string_by_kind(obnam.cmp.FILECHUNK)
         os.write(fd, chunk)
 
 
@@ -295,8 +293,7 @@ def reconstruct_file_contents(context, fd, delta_id):
 
     stack = [delta]
     while True:
-        prev_delta_id = obnam.obj.first_string_by_kind(stack[-1], 
-                                                       obnam.cmp.DELTAREF)
+        prev_delta_id = stack[-1].first_string_by_kind(obnam.cmp.DELTAREF)
         if not prev_delta_id:
             break
         prev_delta = obnam.io.get_object(context, prev_delta_id)
@@ -305,7 +302,7 @@ def reconstruct_file_contents(context, fd, delta_id):
             return
         stack.append(prev_delta)
 
-    cont_id = obnam.obj.first_string_by_kind(stack[-1], obnam.cmp.CONTREF)
+    cont_id = stack[-1].first_string_by_kind(obnam.cmp.CONTREF)
     if not cont_id:
         logging.error("DELTA object chain does not end in CONTREF")
         return
@@ -319,8 +316,7 @@ def reconstruct_file_contents(context, fd, delta_id):
         stack = stack[:-1]
         logging.debug("Applying DELTA %s" % delta.get_id())
         
-        deltapart_ids = obnam.obj.find_strings_by_kind(delta, 
-                                                       obnam.cmp.DELTAPARTREF)
+        deltapart_ids = delta.find_strings_by_kind(obnam.cmp.DELTAPARTREF)
         
         (temp_fd2, temp_name2) = tempfile.mkstemp()
         obnam.rsync.apply_delta(context, temp_name1, deltapart_ids, 

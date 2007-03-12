@@ -60,7 +60,7 @@ class RsyncTests(unittest.TestCase):
         obnam.io.flush_all_object_queues(context)
         delta = obnam.io.get_object(context, deltapart_ids[0])
         self.failIfEqual(delta, None)
-        delta = obnam.obj.first_string_by_kind(delta, obnam.cmp.DELTADATA)
+        delta = delta.first_string_by_kind(obnam.cmp.DELTADATA)
 
         # The hex string below is what rdiff outputs. I've no idea what
         # the format is, and the empty delta is expressed differently
