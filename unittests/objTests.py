@@ -242,8 +242,7 @@ class GetComponentTests(unittest.TestCase):
 
     def testGetByKind(self):
         find = lambda t: \
-            [obnam.cmp.get_string_value(c) 
-                for c in obnam.obj.find_by_kind(self.o, t)]
+            [c.get_string_value() for c in obnam.obj.find_by_kind(self.o, t)]
         self.failUnlessEqual(find(1), ["pink"])
         self.failUnlessEqual(find(2), ["pretty"])
         self.failUnlessEqual(find(3), ["red", "too"])
@@ -259,7 +258,7 @@ class GetComponentTests(unittest.TestCase):
     def helper(self, wanted_kind):
         c = obnam.obj.first_by_kind(self.o, wanted_kind)
         if c:
-            return obnam.cmp.get_string_value(c)
+            return c.get_string_value()
         else:
             return None
 

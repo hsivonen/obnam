@@ -153,8 +153,7 @@ class GetObjectTests(IoBase):
         list = obnam.obj.get_components(o)
         self.failUnlessEqual(len(list), 1)
         self.failUnlessEqual(list[0].get_kind(), 42)
-        self.failUnlessEqual(obnam.cmp.get_string_value(list[0]), 
-                             "pretty")
+        self.failUnlessEqual(list[0].get_string_value(), "pretty")
 
 
 class HostBlock(IoBase):

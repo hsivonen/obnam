@@ -112,8 +112,7 @@ def find_by_kind(o, wanted_kind):
 
 def find_strings_by_kind(o, wanted_kind):
     """Find all components of a desired kind, return their string values"""
-    return [obnam.cmp.get_string_value(c) 
-                for c in find_by_kind(o, wanted_kind)]
+    return [c.get_string_value() for c in find_by_kind(o, wanted_kind)]
 
 
 def find_varints_by_kind(o, wanted_kind):
@@ -134,7 +133,7 @@ def first_string_by_kind(o, wanted_kind):
     """Find string value of first component of a desired kind"""
     c = first_by_kind(o, wanted_kind)
     if c:
-        return obnam.cmp.get_string_value(c)
+        return c.get_string_value()
     else:
         return None
 
@@ -167,9 +166,9 @@ def decode(encoded, pos):
     o = create("", 0)
     for c in list:
         if c.kind == obnam.cmp.OBJID:
-            o.id = obnam.cmp.get_string_value(c)
+            o.id = c.get_string_value()
         elif c.kind == obnam.cmp.OBJKIND:
-            o.kind = obnam.cmp.get_string_value(c)
+            o.kind = c.get_string_value()
             (o.kind, _) = obnam.varint.decode(o.kind, 0)
         else:
             add(o, c)

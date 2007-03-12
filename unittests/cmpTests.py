@@ -74,7 +74,7 @@ class CreateComponentTests(unittest.TestCase):
         c = obnam.cmp.create(1, "pink")
         self.failIfEqual(c, None)
         self.failUnlessEqual(c.get_kind(), 1)
-        self.failUnlessEqual(obnam.cmp.get_string_value(c), "pink")
+        self.failUnlessEqual(c.get_string_value(), "pink")
         self.failUnlessEqual(obnam.cmp.is_composite(c), False)
 
     def testCreateComposite(self):
@@ -101,8 +101,8 @@ class ComponentEncodingDecodingTests(unittest.TestCase):
         self.failUnlessEqual(obnam.cmp.is_composite(c),
                              type(data) == type([]))
         if not obnam.cmp.is_composite(c):
-            self.failUnlessEqual(obnam.cmp.get_string_value(c),
-                                 obnam.cmp.get_string_value(c2))            
+            self.failUnlessEqual(c.get_string_value(),
+                                 c2.get_string_value())
         self.failUnlessEqual(pos, len(encoded))
 
     def testEmpty(self):
@@ -124,8 +124,7 @@ class ComponentDecodeAllTests(unittest.TestCase):
 
     def remove_component(self, list, kind, value):
         self.failUnlessEqual(list[0].get_kind(), kind)
-        self.failUnlessEqual(obnam.cmp.get_string_value(list[0]), 
-                             value)
+        self.failUnlessEqual(list[0].get_string_value(), value)
         del list[0]
 
     def testDecodeAll(self):
@@ -153,7 +152,7 @@ class FindTests(unittest.TestCase):
         self.failUnless(len(result) > 0)
         c = result[0]
         self.failUnlessEqual(c.get_kind(), kind)
-        self.failUnlessEqual(obnam.cmp.get_string_value(c), value)
+        self.failUnlessEqual(c.get_string_value(), value)
         del result[0]
 
     def testFindAllOnes(self):

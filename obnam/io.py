@@ -100,10 +100,10 @@ class MissingBlock(obnam.exception.ExceptionBase):
 def create_object_from_component_list(components):
     """Create a new object from a list of components"""
     list = obnam.cmp.find_by_kind(components, obnam.cmp.OBJID)
-    id = obnam.cmp.get_string_value(list[0])
+    id = list[0].get_string_value()
     
     list = obnam.cmp.find_by_kind(components, obnam.cmp.OBJKIND)
-    kind = obnam.cmp.get_string_value(list[0])
+    kind = list[0].get_string_value()
     (kind, _) = obnam.varint.decode(kind, 0)
 
     o = obnam.obj.create(id, kind)
@@ -355,7 +355,7 @@ def _find_refs(components):
     for c in components:
         kind = c.get_kind()
         if obnam.cmp.kind_is_reference(kind):
-            refs.add(obnam.cmp.get_string_value(c))
+            refs.add(c.get_string_value())
         elif obnam.cmp.kind_is_composite(kind):
             refs = refs.union(_find_refs(obnam.cmp.get_subcomponents(c)))
     return refs

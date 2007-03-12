@@ -159,9 +159,6 @@ def create(component_kind, value):
     return Component(component_kind, value)
 
 
-def get_string_value(c):
-    return c.get_string_value()
-
 def get_varint_value(c):
     return c.get_varint_value()
 
@@ -218,7 +215,7 @@ def first_by_kind(components, wanted_kind):
 
 def find_strings_by_kind(components, wanted_kind):
     """Find components by kind, return their string values"""
-    return [get_string_value(c) 
+    return [c.get_string_value() 
             for c in find_by_kind(components, wanted_kind)]
 
 
@@ -226,7 +223,7 @@ def first_string_by_kind(components, wanted_kind):
     """Find first component by kind, return its string value"""
     c = first_by_kind(components, wanted_kind)
     if c:
-        return get_string_value(c)
+        return c.get_string_value()
     else:
         return None
 
@@ -267,7 +264,7 @@ class FakeStatResult:
 def parse_stat_component(stat_component):
     """Return an object like a stat result from a decoded stat_component"""
     st = FakeStatResult()
-    value = get_string_value(stat_component)
+    value = stat_component.get_string_value()
     pos = 0
     (st.st_mode, pos) = obnam.varint.decode(value, pos)
     (st.st_ino, pos) = obnam.varint.decode(value, pos)

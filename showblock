@@ -58,7 +58,7 @@ def show_component(component, indent=0):
             show_component(c, indent+1)
     else:
         fmt = component_data_formatters.get(kind, repr)
-        print x + "  data:", fmt(obnam.cmp.get_string_value(component))
+        print x + "  data:", fmt(component.get_string_value())
 
 
 def show_block(filename):
