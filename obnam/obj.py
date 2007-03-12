@@ -87,16 +87,15 @@ class Object:
     def get_id(self):
         """Return the identifier for an object"""
         return self.id
-    
-        
-def get_components(o):
-    """Return list of all components in an object"""
-    return o.components
+            
+    def get_components(self):
+        """Return list of all components in an object"""
+        return self.components
 
 
 def find_by_kind(o, wanted_kind):
     """Find all components of a desired kind inside this object"""
-    return [c for c in get_components(o) if c.get_kind() == wanted_kind]
+    return [c for c in o.get_components() if c.get_kind() == wanted_kind]
 
 
 def find_strings_by_kind(o, wanted_kind):
@@ -111,7 +110,7 @@ def find_varints_by_kind(o, wanted_kind):
 
 def first_by_kind(o, wanted_kind):
     """Find first component of a desired kind"""
-    for c in get_components(o):
+    for c in o.get_components():
         if c.get_kind() == wanted_kind:
             return c
     return None
@@ -140,7 +139,7 @@ def encode(o):
     id = obnam.cmp.Component(obnam.cmp.OBJID, o.id)
     kind = obnam.cmp.Component(obnam.cmp.OBJKIND, 
                                      obnam.varint.encode(o.kind))
-    list = [id, kind] + get_components(o)
+    list = [id, kind] + o.get_components()
     list = [c.encode() for c in list]
     return "".join(list)
 

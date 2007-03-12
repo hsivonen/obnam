@@ -150,7 +150,7 @@ class GetObjectTests(IoBase):
 
         self.failUnlessEqual(o.get_id(), id)
         self.failUnlessEqual(o.get_kind(), 0)
-        list = obnam.obj.get_components(o)
+        list = o.get_components()
         self.failUnlessEqual(len(list), 1)
         self.failUnlessEqual(list[0].get_kind(), 42)
         self.failUnlessEqual(list[0].get_string_value(), "pretty")
