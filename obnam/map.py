@@ -84,7 +84,7 @@ def encode_new(mapping):
         block_id = obnam.cmp.create(obnam.cmp.BLOCKREF, block_id)
         c = obnam.cmp.create(obnam.cmp.OBJMAP, 
                                 [block_id] + object_ids)
-        list.append(obnam.cmp.encode(c))
+        list.append(c.encode())
     return list
 
 
@@ -92,7 +92,7 @@ def encode_new_to_block(mapping, block_id):
     """Encode new mappings into a block"""
     c = obnam.cmp.create(obnam.cmp.BLKID, block_id)
     list = encode_new(mapping)
-    block = "".join([obnam.obj.BLOCK_COOKIE, obnam.cmp.encode(c)] + list)
+    block = "".join([obnam.obj.BLOCK_COOKIE, c.encode()] + list)
     return block
 
 

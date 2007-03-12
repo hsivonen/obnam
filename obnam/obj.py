@@ -152,7 +152,7 @@ def encode(o):
     kind = obnam.cmp.create(obnam.cmp.OBJKIND, 
                                      obnam.varint.encode(o.kind))
     list = [id, kind] + get_components(o)
-    list = [obnam.cmp.encode(c) for c in list]
+    list = [c.encode() for c in list]
     return "".join(list)
 
 
@@ -224,7 +224,7 @@ def block_create_from_object_queue(blkid, oq):
     blkid = obnam.cmp.create(obnam.cmp.BLKID, blkid)
     objects = [obnam.cmp.create(obnam.cmp.OBJECT, x[1]) for x in oq.queue]
     return "".join([BLOCK_COOKIE] + 
-                   [obnam.cmp.encode(c) for c in [blkid] + objects])
+                   [c.encode() for c in [blkid] + objects])
 
 
 def block_decode(block):

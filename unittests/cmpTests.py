@@ -90,9 +90,9 @@ class ComponentEncodingDecodingTests(unittest.TestCase):
 
     def doit(self, c_kind, data):
         c = obnam.cmp.create(c_kind, data)
-        encoded = obnam.cmp.encode(c)
+        encoded = c.encode()
         (c2, pos) = obnam.cmp.decode(encoded, 0)
-        encoded2 = obnam.cmp.encode(c2)
+        encoded2 = c2.encode()
         self.failUnlessEqual(encoded, encoded2)
         self.failUnlessEqual(c.get_kind(), c2.get_kind())
         self.failUnlessEqual(c.is_composite(), c2.is_composite())
@@ -127,8 +127,8 @@ class ComponentDecodeAllTests(unittest.TestCase):
     def testDecodeAll(self):
         c1 = obnam.cmp.create(1, "pink")
         c2 = obnam.cmp.create(2, "pretty")
-        e1 = obnam.cmp.encode(c1)
-        e2 = obnam.cmp.encode(c2)
+        e1 = c1.encode()
+        e2 = c2.encode()
         e = e1 + e2
         list = obnam.cmp.decode_all(e, 0)
         self.remove_component(list, 1, "pink")

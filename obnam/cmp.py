@@ -160,10 +160,6 @@ def create(component_kind, value):
     return Component(component_kind, value)
 
 
-def encode(c):
-    return c.encode()
-
-
 def decode(encoded, pos):
     """Decode a component in a string, return component and pos after it"""
     (size, pos) = obnam.varint.decode(encoded, pos)
