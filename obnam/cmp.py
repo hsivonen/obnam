@@ -107,71 +107,79 @@ def kind_is_reference(kind):
 
 class Component:
 
-    def __init__(self):
-        self.kind = None
-        self.str = None
-        self.subcomponents = []
+    def __init__(self, kind, value):
+        self.kind = kind
+        assert type(value) in [type(""), type([])]
+        if type(value) == type(""):
+            self.str = value
+            self.subcomponents = []
+        else:
+            self.str = None
+            for x in value:
+                assert isinstance(x, Component)
+            self.subcomponents = value[:]
 
+    def get_kind(self):
+        """Return kind kind of a component"""
+        return self.kind
+
+    def get_string_value(self):
+        """Return string value of leaf component"""
+        assert self.str is not None
+        return self.str
+
+    def get_varint_value(self):
+        """Return integer value of leaf component"""
+        assert self.str is not None
+        return obnam.varint.decode(self.str, 0)[0]
+
+    def get_subcomponents(self):
+        """Return list of subcomponents of composite component"""
+        assert self.str is None
+        return self.subcomponents
+
+    def is_composite(self):
+        """Is a component a leaf component or a composite one?"""
+        return self.str is None
+
+    def encode(self):
+        """Encode a component as a string"""
+        if self.is_composite():
+            snippets = []
+            for sub in self.get_subcomponents():
+                snippets.append(sub.encode())
+            encoded = "".join(snippets)
+            # FIXME: snippets = [sub.encode() for sub in self.get_subcomponents()]
+        else:
+            encoded = self.str
+        return obnam.varint.encode(len(encoded)) + \
+               obnam.varint.encode(self.kind) + encoded
 
 def create(component_kind, value):
-    """Create a new component
-    
-    'value' must be either a string (for a leaf component) or a list
-    of component values.
-    
-    """
-
-    assert type(value) in [type(""), type([])]
-    c = Component()
-    c.kind = component_kind
-    if type(value) == type(""):
-        c.str = value
-    else:
-        for x in value:
-            assert type(x) == type(c)
-        c.subcomponents = value[:]
-    return c
+    return Component(component_kind, value)
 
 
 def get_kind(c):
-    """Return kind kind of a component"""
-    return c.kind
+    return c.get_kind()
 
 
 def get_string_value(c):
-    """Return string value of leaf component"""
-    assert c.str is not None
-    return c.str
-
+    return c.get_string_value()
 
 def get_varint_value(c):
-    """Return integer value of leaf component"""
-    assert c.str is not None
-    return obnam.varint.decode(c.str, 0)[0]
+    return c.get_varint_value()
 
 
 def get_subcomponents(c):
-    """Return list of subcomponents of composite component"""
-    assert c.str is None
-    return c.subcomponents
+    return c.get_subcomponents()
 
 
 def is_composite(c):
-    """Is a component a leaf component or a composite one?"""
-    return c.str is None
+    return c.is_composite()
 
 
 def encode(c):
-    """Encode a component as a string"""
-    if is_composite(c):
-        snippets = []
-        for sub in get_subcomponents(c):
-            snippets.append(encode(sub))
-        encoded = "".join(snippets)
-    else:
-        encoded = c.str
-    return obnam.varint.encode(len(encoded)) + \
-           obnam.varint.encode(c.kind) + encoded
+    return c.encode()
 
 
 def decode(encoded, pos):
