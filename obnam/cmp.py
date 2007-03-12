@@ -160,10 +160,6 @@ def create(component_kind, value):
     return Component(component_kind, value)
 
 
-def is_composite(c):
-    return c.is_composite()
-
-
 def encode(c):
     return c.encode()
 

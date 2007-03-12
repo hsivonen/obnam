@@ -75,14 +75,14 @@ class CreateComponentTests(unittest.TestCase):
         self.failIfEqual(c, None)
         self.failUnlessEqual(c.get_kind(), 1)
         self.failUnlessEqual(c.get_string_value(), "pink")
-        self.failUnlessEqual(obnam.cmp.is_composite(c), False)
+        self.failUnlessEqual(c.is_composite(), False)
 
     def testCreateComposite(self):
         leaf1 = obnam.cmp.create(1, "pink")
         leaf2 = obnam.cmp.create(2, "pretty")
         c = obnam.cmp.create(3, [leaf1, leaf2])
         self.failUnlessEqual(c.get_kind(), 3)
-        self.failUnlessEqual(obnam.cmp.is_composite(c), True)
+        self.failUnlessEqual(c.is_composite(), True)
         self.failUnlessEqual(c.get_subcomponents(), [leaf1, leaf2])
 
 
@@ -95,11 +95,9 @@ class ComponentEncodingDecodingTests(unittest.TestCase):
         encoded2 = obnam.cmp.encode(c2)
         self.failUnlessEqual(encoded, encoded2)
         self.failUnlessEqual(c.get_kind(), c2.get_kind())
-        self.failUnlessEqual(obnam.cmp.is_composite(c), 
-                             obnam.cmp.is_composite(c2))
-        self.failUnlessEqual(obnam.cmp.is_composite(c),
-                             type(data) == type([]))
-        if not obnam.cmp.is_composite(c):
+        self.failUnlessEqual(c.is_composite(), c2.is_composite())
+        self.failUnlessEqual(c.is_composite(), type(data) == type([]))
+        if not c.is_composite():
             self.failUnlessEqual(c.get_string_value(),
                                  c2.get_string_value())
         self.failUnlessEqual(pos, len(encoded))
