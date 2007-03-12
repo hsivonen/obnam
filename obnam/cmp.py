@@ -159,10 +159,6 @@ def create(component_kind, value):
     return Component(component_kind, value)
 
 
-def get_kind(c):
-    return c.get_kind()
-
-
 def get_string_value(c):
     return c.get_string_value()
 
@@ -209,13 +205,13 @@ def decode_all(encoded, pos):
 
 def find_by_kind(components, wanted_kind):
     """Find components of a desired kind in a list of components"""
-    return [c for c in components if get_kind(c) == wanted_kind]
+    return [c for c in components if c.get_kind() == wanted_kind]
 
 
 def first_by_kind(components, wanted_kind):
     """Find first component of a desired kind in a list of components"""
     for c in components:
-        if get_kind(c) == wanted_kind:
+        if c.get_kind() == wanted_kind:
             return c
     return None
 

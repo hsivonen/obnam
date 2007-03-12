@@ -107,8 +107,7 @@ def get_components(o):
 
 def find_by_kind(o, wanted_kind):
     """Find all components of a desired kind inside this object"""
-    return [c for c in get_components(o) 
-                if obnam.cmp.get_kind(c) == wanted_kind]
+    return [c for c in get_components(o) if c.get_kind() == wanted_kind]
 
 
 def find_strings_by_kind(o, wanted_kind):
@@ -126,7 +125,7 @@ def find_varints_by_kind(o, wanted_kind):
 def first_by_kind(o, wanted_kind):
     """Find first component of a desired kind"""
     for c in get_components(o):
-        if obnam.cmp.get_kind(c) == wanted_kind:
+        if c.get_kind() == wanted_kind:
             return c
     return None
 

@@ -88,7 +88,7 @@ class FilelistTests(unittest.TestCase):
         obnam.filelist.add(fl, ".", "pink", None, None)
         self.failUnlessEqual(obnam.filelist.num_files(fl), 1)
         c = obnam.filelist.find(fl, ".")
-        self.failUnlessEqual(obnam.cmp.get_kind(c), obnam.cmp.FILE)
+        self.failUnlessEqual(c.get_kind(), obnam.cmp.FILE)
 
     def testListFiles(self):
         fl = obnam.filelist.create()
@@ -101,7 +101,7 @@ class FilelistTests(unittest.TestCase):
         obnam.filelist.add_file_component(fl, ".", fc)
         self.failUnlessEqual(obnam.filelist.num_files(fl), 1)
         c = obnam.filelist.find(fl, ".")
-        self.failUnlessEqual(obnam.cmp.get_kind(c), obnam.cmp.FILE)
+        self.failUnlessEqual(c.get_kind(), obnam.cmp.FILE)
 
     def testToFromObject(self):
         fl = obnam.filelist.create()
@@ -118,7 +118,7 @@ class FilelistTests(unittest.TestCase):
 
         c = obnam.filelist.find(fl2, ".")
         self.failIfEqual(c, None)
-        self.failUnlessEqual(obnam.cmp.get_kind(c), obnam.cmp.FILE)
+        self.failUnlessEqual(c.get_kind(), obnam.cmp.FILE)
 
 
 class FindTests(unittest.TestCase):

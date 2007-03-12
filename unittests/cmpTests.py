@@ -73,7 +73,7 @@ class CreateComponentTests(unittest.TestCase):
     def testCreateLeaf(self):
         c = obnam.cmp.create(1, "pink")
         self.failIfEqual(c, None)
-        self.failUnlessEqual(obnam.cmp.get_kind(c), 1)
+        self.failUnlessEqual(c.get_kind(), 1)
         self.failUnlessEqual(obnam.cmp.get_string_value(c), "pink")
         self.failUnlessEqual(obnam.cmp.is_composite(c), False)
 
@@ -81,7 +81,7 @@ class CreateComponentTests(unittest.TestCase):
         leaf1 = obnam.cmp.create(1, "pink")
         leaf2 = obnam.cmp.create(2, "pretty")
         c = obnam.cmp.create(3, [leaf1, leaf2])
-        self.failUnlessEqual(obnam.cmp.get_kind(c), 3)
+        self.failUnlessEqual(c.get_kind(), 3)
         self.failUnlessEqual(obnam.cmp.is_composite(c), True)
         self.failUnlessEqual(obnam.cmp.get_subcomponents(c), 
                              [leaf1, leaf2])
@@ -95,8 +95,7 @@ class ComponentEncodingDecodingTests(unittest.TestCase):
         (c2, pos) = obnam.cmp.decode(encoded, 0)
         encoded2 = obnam.cmp.encode(c2)
         self.failUnlessEqual(encoded, encoded2)
-        self.failUnlessEqual(obnam.cmp.get_kind(c), 
-                             obnam.cmp.get_kind(c2))
+        self.failUnlessEqual(c.get_kind(), c2.get_kind())
         self.failUnlessEqual(obnam.cmp.is_composite(c), 
                              obnam.cmp.is_composite(c2))
         self.failUnlessEqual(obnam.cmp.is_composite(c),
@@ -124,7 +123,7 @@ class ComponentEncodingDecodingTests(unittest.TestCase):
 class ComponentDecodeAllTests(unittest.TestCase):
 
     def remove_component(self, list, kind, value):
-        self.failUnlessEqual(obnam.cmp.get_kind(list[0]), kind)
+        self.failUnlessEqual(list[0].get_kind(), kind)
         self.failUnlessEqual(obnam.cmp.get_string_value(list[0]), 
                              value)
         del list[0]
@@ -153,7 +152,7 @@ class FindTests(unittest.TestCase):
     def match(self, result, kind, value):
         self.failUnless(len(result) > 0)
         c = result[0]
-        self.failUnlessEqual(obnam.cmp.get_kind(c), kind)
+        self.failUnlessEqual(c.get_kind(), kind)
         self.failUnlessEqual(obnam.cmp.get_string_value(c), value)
         del result[0]
 

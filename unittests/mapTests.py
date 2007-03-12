@@ -75,17 +75,14 @@ class ObjectMappingTests(unittest.TestCase):
         # Make sure the encoding is correct
         list2 = obnam.cmp.decode_all(list[0], 0)
         self.failUnlessEqual(len(list2), 1)
-        self.failUnlessEqual(obnam.cmp.get_kind(list2[0]), 
-                             obnam.cmp.OBJMAP)
+        self.failUnlessEqual(list2[0].get_kind(), obnam.cmp.OBJMAP)
         
         list3 = obnam.cmp.get_subcomponents(list2[0])
         self.failUnlessEqual(len(list3), 2)
-        self.failUnlessEqual(obnam.cmp.get_kind(list3[0]),
-                             obnam.cmp.BLOCKREF)
+        self.failUnlessEqual(list3[0].get_kind(), obnam.cmp.BLOCKREF)
         self.failUnlessEqual(obnam.cmp.get_string_value(list3[0]),
                              "pretty")
-        self.failUnlessEqual(obnam.cmp.get_kind(list3[1]),
-                             obnam.cmp.OBJREF)
+        self.failUnlessEqual(list3[1].get_kind(), obnam.cmp.OBJREF)
         self.failUnlessEqual(obnam.cmp.get_string_value(list3[1]),
                              "pink")
 

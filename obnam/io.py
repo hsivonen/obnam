@@ -109,7 +109,7 @@ def create_object_from_component_list(components):
     o = obnam.obj.create(id, kind)
     bad = (obnam.cmp.OBJID, obnam.cmp.OBJKIND)
     for c in components:
-        if obnam.cmp.get_kind(c) not in bad:
+        if c.get_kind() not in bad:
             obnam.obj.add(o, c)
     return o
 
@@ -353,7 +353,7 @@ def _find_refs(components):
     """Return set of all references (recursively) in a list of components"""
     refs = set()
     for c in components:
-        kind = obnam.cmp.get_kind(c)
+        kind = c.get_kind()
         if obnam.cmp.kind_is_reference(kind):
             refs.add(obnam.cmp.get_string_value(c))
         elif obnam.cmp.kind_is_composite(kind):
