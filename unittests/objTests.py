@@ -45,7 +45,7 @@ class ObjectCreateTests(unittest.TestCase):
     def testCreate(self):
         o = obnam.obj.create("pink", 1)
         self.failUnlessEqual(obnam.obj.get_id(o), "pink")
-        self.failUnlessEqual(obnam.obj.get_kind(o), 1)
+        self.failUnlessEqual(o.get_kind(), 1)
         self.failUnlessEqual(obnam.obj.get_components(o), [])
 
     def testAdd(self):
@@ -165,7 +165,7 @@ class ObjectTests(unittest.TestCase):
         encoded = signature_object_encode(id, sig)
         o = obnam.obj.decode(encoded, 0)
         self.failUnlessEqual(obnam.obj.get_id(o), "pink")
-        self.failUnlessEqual(obnam.obj.get_kind(o), obnam.obj.SIG)
+        self.failUnlessEqual(o.get_kind(), obnam.obj.SIG)
         self.failUnlessEqual(len(obnam.obj.get_components(o)), 1)
         self.failUnlessEqual(
             obnam.obj.first_string_by_kind(o, obnam.cmp.SIGDATA),
@@ -177,7 +177,7 @@ class ObjectTests(unittest.TestCase):
         encoded = delta_object_encode(id, [deltapart_ref], "pretty", None)
         o = obnam.obj.decode(encoded, 0)
         self.failUnlessEqual(obnam.obj.get_id(o), "pink")
-        self.failUnlessEqual(obnam.obj.get_kind(o), obnam.obj.DELTA)
+        self.failUnlessEqual(o.get_kind(), obnam.obj.DELTA)
         self.failUnlessEqual(len(obnam.obj.get_components(o)), 2)
         self.failUnlessEqual(
             obnam.obj.first_string_by_kind(o, obnam.cmp.DELTAPARTREF),
@@ -192,7 +192,7 @@ class ObjectTests(unittest.TestCase):
         encoded = delta_object_encode(id, [deltapart_ref], None, "pretty")
         o = obnam.obj.decode(encoded, 0)
         self.failUnlessEqual(obnam.obj.get_id(o), "pink")
-        self.failUnlessEqual(obnam.obj.get_kind(o), obnam.obj.DELTA)
+        self.failUnlessEqual(o.get_kind(), obnam.obj.DELTA)
         self.failUnlessEqual(len(obnam.obj.get_components(o)), 2)
         self.failUnlessEqual(
             obnam.obj.first_string_by_kind(o, obnam.cmp.DELTAPARTREF),

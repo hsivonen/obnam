@@ -79,18 +79,17 @@ class Object:
     def add(self, c):
         """Add a component"""
         self.components.append(c)
-        
+
+    def get_kind(self):
+        """Return the kind of an object"""
+        return self.kind
+    
         
 def create(id, kind):
     """Create a new backup object"""
     return Object(id, kind)
 
 
-def get_kind(o):
-    """Return the kind of an object"""
-    return o.kind
-    
-    
 def get_id(o):
     """Return the identifier for an object"""
     return o.id

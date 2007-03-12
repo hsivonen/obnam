@@ -149,7 +149,7 @@ class GetObjectTests(IoBase):
         o = obnam.io.get_object(self.context, id)
 
         self.failUnlessEqual(obnam.obj.get_id(o), id)
-        self.failUnlessEqual(obnam.obj.get_kind(o), 0)
+        self.failUnlessEqual(o.get_kind(), 0)
         list = obnam.obj.get_components(o)
         self.failUnlessEqual(len(list), 1)
         self.failUnlessEqual(list[0].get_kind(), 42)

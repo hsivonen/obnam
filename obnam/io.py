@@ -194,7 +194,7 @@ def get_object(context, object_id):
     for component in list:
         subs = component.get_subcomponents()
         o = create_object_from_component_list(subs)
-        if obnam.obj.get_kind(o) != obnam.obj.FILEPART:
+        if o.get_kind() != obnam.obj.FILEPART:
             _object_cache.put(o)
         if obnam.obj.get_id(o) == object_id:
             the_one = o
