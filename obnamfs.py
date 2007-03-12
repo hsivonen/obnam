@@ -148,7 +148,7 @@ class ObnamFS(fuse.Fuse):
 
         list = []
         for c in obnam.obj.find_by_kind(fl, obnam.cmp.FILE):
-            subs = obnam.cmp.get_subcomponents(c)
+            subs = c.get_subcomponents()
             filename = obnam.cmp.first_string_by_kind(subs, 
                                                       obnam.cmp.FILENAME)
             list.append(filename)
@@ -169,7 +169,7 @@ class ObnamFS(fuse.Fuse):
         c = obnam.filelist.find(fl, path)
         if not c:
             return None
-        subs = obnam.cmp.get_subcomponents(c)
+        subs = c.get_subcomponents()
         stat_component = obnam.cmp.first_by_kind(subs, obnam.cmp.STAT)
         if stat_component:
             st = obnam.cmp.parse_stat_component(stat_component)
@@ -323,7 +323,7 @@ class ObnamFS(fuse.Fuse):
                 logging.debug("FS: open: file not found: %s" % relative_path)
                 return -errno.ENOENT
 
-            subs = obnam.cmp.get_subcomponents(c)
+            subs = c.get_subcomponents()
             cont_id = obnam.cmp.first_string_by_kind(subs, obnam.cmp.CONTREF)
             if cont_id:
                 obnam.io.copy_file_contents(self.context, fd, cont_id)

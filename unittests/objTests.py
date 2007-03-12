@@ -223,7 +223,7 @@ class HostBlockTests(unittest.TestCase):
         encoded = obnam.obj.host_block_encode("pink", [], [], [])
         decoded = obnam.obj.block_decode(encoded)
         c = obnam.cmp.first_by_kind(decoded, obnam.cmp.OBJECT)
-        subs = obnam.cmp.get_subcomponents(c)
+        subs = c.get_subcomponents()
         id = obnam.cmp.first_string_by_kind(subs, obnam.cmp.OBJID)
         self.failUnlessEqual(id, "pink")
         ver = obnam.cmp.first_string_by_kind(subs, 

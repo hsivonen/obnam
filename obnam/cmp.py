@@ -160,10 +160,6 @@ def create(component_kind, value):
     return Component(component_kind, value)
 
 
-def get_subcomponents(c):
-    return c.get_subcomponents()
-
-
 def is_composite(c):
     return c.is_composite()
 

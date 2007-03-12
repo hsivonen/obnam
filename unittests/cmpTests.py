@@ -83,8 +83,7 @@ class CreateComponentTests(unittest.TestCase):
         c = obnam.cmp.create(3, [leaf1, leaf2])
         self.failUnlessEqual(c.get_kind(), 3)
         self.failUnlessEqual(obnam.cmp.is_composite(c), True)
-        self.failUnlessEqual(obnam.cmp.get_subcomponents(c), 
-                             [leaf1, leaf2])
+        self.failUnlessEqual(c.get_subcomponents(), [leaf1, leaf2])
 
 
 class ComponentEncodingDecodingTests(unittest.TestCase):

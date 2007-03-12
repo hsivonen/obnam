@@ -314,12 +314,10 @@ def host_block_decode(block):
 
     objparts = obnam.cmp.find_by_kind(list, obnam.cmp.OBJECT)
     for objpart in objparts:
-        subs = obnam.cmp.get_subcomponents(objpart)
-        gen_ids += obnam.cmp.find_strings_by_kind(subs, 
-                                                    obnam.cmp.GENREF)
-        map_ids += obnam.cmp.find_strings_by_kind(subs, 
-                                                    obnam.cmp.MAPREF)
+        subs = objpart.get_subcomponents()
+        gen_ids += obnam.cmp.find_strings_by_kind(subs, obnam.cmp.GENREF)
+        map_ids += obnam.cmp.find_strings_by_kind(subs, obnam.cmp.MAPREF)
         contmap_ids += obnam.cmp.find_strings_by_kind(subs, 
-                                                obnam.cmp.CONTMAPREF)
+                                                      obnam.cmp.CONTMAPREF)
 
     return host_id, gen_ids, map_ids, contmap_ids

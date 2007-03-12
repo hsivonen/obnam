@@ -82,7 +82,7 @@ def find_matching_inode(fl, pathname, stat_result):
     """Find the FILE component that matches stat_result"""
     prev = find(fl, pathname)
     if prev:
-        prev_subs = obnam.cmp.get_subcomponents(prev)
+        prev_subs = prev.get_subcomponents()
         prev_stat = obnam.cmp.first_by_kind(prev_subs, obnam.cmp.STAT)
         prev_st = obnam.cmp.parse_stat_component(prev_stat)
         fields = (
@@ -122,8 +122,7 @@ def from_object(o):
     """Create a file list data structure from a backup object"""
     fl = create()
     for file in obnam.obj.find_by_kind(o, obnam.cmp.FILE):
-        subs = obnam.cmp.get_subcomponents(file)
-        pathname = obnam.cmp.first_string_by_kind(subs, 
-                        obnam.cmp.FILENAME)
+        subs = file.get_subcomponents()
+        pathname = obnam.cmp.first_string_by_kind(subs, obnam.cmp.FILENAME)
         fl[pathname] = file
     return fl

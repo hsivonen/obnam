@@ -107,7 +107,7 @@ def decode_block(mapping, mapping_block):
     maps = obnam.cmp.find_by_kind(list, obnam.cmp.OBJMAP)
     logging.debug("Mapping block contains %d maps" % len(maps))
     for map in maps:
-        subs = obnam.cmp.get_subcomponents(map)
+        subs = map.get_subcomponents()
         block_id = obnam.cmp.first_string_by_kind(subs, 
                                                obnam.cmp.BLOCKREF)
         object_ids = obnam.cmp.find_strings_by_kind(subs, 

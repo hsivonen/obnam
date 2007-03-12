@@ -77,7 +77,7 @@ class ObjectMappingTests(unittest.TestCase):
         self.failUnlessEqual(len(list2), 1)
         self.failUnlessEqual(list2[0].get_kind(), obnam.cmp.OBJMAP)
         
-        list3 = obnam.cmp.get_subcomponents(list2[0])
+        list3 = list2[0].get_subcomponents()
         self.failUnlessEqual(len(list3), 2)
         self.failUnlessEqual(list3[0].get_kind(), obnam.cmp.BLOCKREF)
         self.failUnlessEqual(list3[0].get_string_value(), "pretty")

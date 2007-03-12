@@ -104,7 +104,7 @@ def inode_fields(file_component):
     )
 
     list = []
-    subs = obnam.cmp.get_subcomponents(file_component)
+    subs = file_component.get_subcomponents()
     stat_component = obnam.cmp.first_by_kind(subs, obnam.cmp.STAT)
     st = obnam.cmp.parse_stat_component(stat_component)
     for kind, func in fields:

@@ -192,7 +192,7 @@ def get_object(context, object_id):
     logging.debug("Putting objects into object cache")
     the_one = None
     for component in list:
-        subs = obnam.cmp.get_subcomponents(component)
+        subs = component.get_subcomponents()
         o = create_object_from_component_list(subs)
         if obnam.obj.get_kind(o) != obnam.obj.FILEPART:
             _object_cache.put(o)
@@ -342,7 +342,7 @@ def reconstruct_file_contents(context, fd, delta_id):
 
 
 def set_inode(full_pathname, file_component):
-    subs = obnam.cmp.get_subcomponents(file_component)
+    subs = file_component.get_subcomponents()
     stat_component = obnam.cmp.first_by_kind(subs, obnam.cmp.STAT)
     st = obnam.cmp.parse_stat_component(stat_component)
     os.utime(full_pathname, (st.st_atime, st.st_mtime))
@@ -357,7 +357,7 @@ def _find_refs(components):
         if obnam.cmp.kind_is_reference(kind):
             refs.add(c.get_string_value())
         elif obnam.cmp.kind_is_composite(kind):
-            refs = refs.union(_find_refs(obnam.cmp.get_subcomponents(c)))
+            refs = refs.union(_find_refs(c.get_subcomponents()))
     return refs
 
 
@@ -399,7 +399,7 @@ def find_map_blocks_in_use(context, host_block, data_block_ids):
             assert False
         list = obnam.cmp.find_by_kind(list, obnam.cmp.OBJMAP)
         for c in list:
-            subs = obnam.cmp.get_subcomponents(c)
+            subs = c.get_subcomponents()
             id = obnam.cmp.first_string_by_kind(subs, 
                                         obnam.cmp.BLOCKREF)
             if id in data_block_ids:

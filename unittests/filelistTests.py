@@ -43,7 +43,7 @@ class FileComponentTests(unittest.TestCase):
         
     def check(self, c):
         self.failIfEqual(c, None)
-        subs = obnam.cmp.get_subcomponents(c)
+        subs = c.get_subcomponents()
         self.failUnlessEqual(
           obnam.cmp.first_string_by_kind(subs, obnam.cmp.FILENAME),
           self.filename)
@@ -129,7 +129,7 @@ class FindTests(unittest.TestCase):
         obnam.filelist.add(fl, pathname, "pink", None, None)
         st = os.lstat(pathname)
         c = obnam.filelist.find_matching_inode(fl, pathname, st)
-        subs = obnam.cmp.get_subcomponents(c)
+        subs = c.get_subcomponents()
         stat = obnam.cmp.first_by_kind(subs, obnam.cmp.STAT)
         st2 = obnam.cmp.parse_stat_component(stat)
         self.failUnlessEqual(st.st_mtime, st2.st_mtime)

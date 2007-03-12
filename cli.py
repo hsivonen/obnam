@@ -56,7 +56,7 @@ def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
 
         prev = obnam.filelist.find(prevgen_filelist, pathname)
         if prev:
-            subs = obnam.cmp.get_subcomponents(prev)
+            subs = prev.get_subcomponents()
             prev_sig_id = obnam.cmp.first_string_by_kind(subs, 
                                                          obnam.cmp.SIGREF)
             if prev_sig_id:
@@ -283,7 +283,7 @@ def show_generations(context, gen_ids):
         fl = obnam.io.get_object(context, fl_id)
         list = []
         for c in obnam.obj.find_by_kind(fl, obnam.cmp.FILE):
-            subs = obnam.cmp.get_subcomponents(c)
+            subs = c.get_subcomponents()
             filename = obnam.cmp.first_string_by_kind(subs, 
                                                  obnam.cmp.FILENAME)
             if pretty:
@@ -317,7 +317,7 @@ def hardlink_key(st):
 
 def create_filesystem_object(context, hardlinks, full_pathname, inode):
     logging.debug("Creating filesystem object %s" % full_pathname)
-    subs = obnam.cmp.get_subcomponents(inode)
+    subs = inode.get_subcomponents()
     stat_component = obnam.cmp.first_by_kind(subs, obnam.cmp.STAT)
     st = obnam.cmp.parse_stat_component(stat_component)
     mode = st.st_mode
@@ -384,7 +384,7 @@ def restore(context, gen_id):
     list = []
     hardlinks = {}
     for c in obnam.obj.find_by_kind(fl, obnam.cmp.FILE):
-        subs = obnam.cmp.get_subcomponents(c)
+        subs = c.get_subcomponents()
         pathname = obnam.cmp.first_string_by_kind(subs,
                                                  obnam.cmp.FILENAME)
         logging.debug("Restoring %s" % pathname)
