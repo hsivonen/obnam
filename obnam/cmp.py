@@ -156,10 +156,6 @@ class Component:
                obnam.varint.encode(self.kind) + encoded
 
 
-def create(component_kind, value):
-    return Component(component_kind, value)
-
-
 def decode(encoded, pos):
     """Decode a component in a string, return component and pos after it"""
     (size, pos) = obnam.varint.decode(encoded, pos)
@@ -172,7 +168,7 @@ def decode(encoded, pos):
             value.append(sub)
     else:
         value = encoded[pos:pos+size]
-    return create(kind, value), pos + size
+    return Component(kind, value), pos + size
 
 
 def decode_all(encoded, pos):
@@ -224,20 +220,20 @@ def first_varint_by_kind(components, wanted_kind):
 
 def create_stat_component(st):
     """Create a STAT component, given a stat result"""
-    return obnam.cmp.create(obnam.cmp.STAT,
-                            obnam.varint.encode(st.st_mode) +
-                            obnam.varint.encode(st.st_ino) +
-                            obnam.varint.encode(st.st_dev) +
-                            obnam.varint.encode(st.st_nlink) +
-                            obnam.varint.encode(st.st_uid) +
-                            obnam.varint.encode(st.st_gid) +
-                            obnam.varint.encode(st.st_size) +
-                            obnam.varint.encode(st.st_atime) +
-                            obnam.varint.encode(st.st_mtime) +
-                            obnam.varint.encode(st.st_ctime) +
-                            obnam.varint.encode(st.st_blocks) +
-                            obnam.varint.encode(st.st_blksize) +
-                            obnam.varint.encode(st.st_rdev))
+    return Component(obnam.cmp.STAT,
+                     obnam.varint.encode(st.st_mode) +
+                     obnam.varint.encode(st.st_ino) +
+                     obnam.varint.encode(st.st_dev) +
+                     obnam.varint.encode(st.st_nlink) +
+                     obnam.varint.encode(st.st_uid) +
+                     obnam.varint.encode(st.st_gid) +
+                     obnam.varint.encode(st.st_size) +
+                     obnam.varint.encode(st.st_atime) +
+                     obnam.varint.encode(st.st_mtime) +
+                     obnam.varint.encode(st.st_ctime) +
+                     obnam.varint.encode(st.st_blocks) +
+                     obnam.varint.encode(st.st_blksize) +
+                     obnam.varint.encode(st.st_rdev))
 
 
 class FakeStatResult:

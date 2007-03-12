@@ -71,16 +71,16 @@ class RefComponentTests(unittest.TestCase):
 class CreateComponentTests(unittest.TestCase):
 
     def testCreateLeaf(self):
-        c = obnam.cmp.create(1, "pink")
+        c = obnam.cmp.Component(1, "pink")
         self.failIfEqual(c, None)
         self.failUnlessEqual(c.get_kind(), 1)
         self.failUnlessEqual(c.get_string_value(), "pink")
         self.failUnlessEqual(c.is_composite(), False)
 
     def testCreateComposite(self):
-        leaf1 = obnam.cmp.create(1, "pink")
-        leaf2 = obnam.cmp.create(2, "pretty")
-        c = obnam.cmp.create(3, [leaf1, leaf2])
+        leaf1 = obnam.cmp.Component(1, "pink")
+        leaf2 = obnam.cmp.Component(2, "pretty")
+        c = obnam.cmp.Component(3, [leaf1, leaf2])
         self.failUnlessEqual(c.get_kind(), 3)
         self.failUnlessEqual(c.is_composite(), True)
         self.failUnlessEqual(c.get_subcomponents(), [leaf1, leaf2])
@@ -89,7 +89,7 @@ class CreateComponentTests(unittest.TestCase):
 class ComponentEncodingDecodingTests(unittest.TestCase):
 
     def doit(self, c_kind, data):
-        c = obnam.cmp.create(c_kind, data)
+        c = obnam.cmp.Component(c_kind, data)
         encoded = c.encode()
         (c2, pos) = obnam.cmp.decode(encoded, 0)
         encoded2 = c2.encode()
@@ -112,8 +112,8 @@ class ComponentEncodingDecodingTests(unittest.TestCase):
         self.doit(obnam.cmp.OBJECT, [])
 
     def testNonemptyComposite(self):
-        c1 = obnam.cmp.create(1, "pink")
-        c2 = obnam.cmp.create(2, "pretty")
+        c1 = obnam.cmp.Component(1, "pink")
+        c2 = obnam.cmp.Component(2, "pretty")
         self.doit(obnam.cmp.OBJECT, [c1, c2])
 
 
@@ -125,8 +125,8 @@ class ComponentDecodeAllTests(unittest.TestCase):
         del list[0]
 
     def testDecodeAll(self):
-        c1 = obnam.cmp.create(1, "pink")
-        c2 = obnam.cmp.create(2, "pretty")
+        c1 = obnam.cmp.Component(1, "pink")
+        c2 = obnam.cmp.Component(2, "pretty")
         e1 = c1.encode()
         e2 = c2.encode()
         e = e1 + e2
@@ -140,7 +140,7 @@ class FindTests(unittest.TestCase):
 
     def setUp(self):
         self.list = [(1, "pink"), (2, "pretty"), (3, "black"), (3, "box")]
-        self.list = [obnam.cmp.create(a, b) for a, b in self.list]
+        self.list = [obnam.cmp.Component(a, b) for a, b in self.list]
 
     def tearDown(self):
         del self.list
@@ -227,7 +227,7 @@ class FindTests(unittest.TestCase):
 class GetVarintVAlueTest(unittest.TestCase):
 
     def test(self):
-        c = obnam.cmp.create(1, obnam.varint.encode(12765))
+        c = obnam.cmp.Component(1, obnam.varint.encode(12765))
         self.failUnlessEqual(c.get_varint_value(), 12765)
 
 
@@ -237,7 +237,7 @@ class FindVarintTests(unittest.TestCase):
         list = []
         for i in range(1024):
             encoded = obnam.varint.encode(i)
-            c = obnam.cmp.create(i, encoded)
+            c = obnam.cmp.Component(i, encoded)
             list.append(c)
 
         for i in range(1024):

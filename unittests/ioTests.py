@@ -141,7 +141,7 @@ class GetObjectTests(IoBase):
 
     def testGetObject(self):
         id = "pink"
-        component = obnam.cmp.create(42, "pretty")
+        component = obnam.cmp.Component(42, "pretty")
         object = obnam.obj.create(id, 0)
         obnam.obj.add(object, component)
         object = obnam.obj.encode(object)
@@ -389,7 +389,7 @@ class ReachabilityTests(IoBase):
 
     def testDataAndMap(self):
         o = obnam.obj.create("rouge", obnam.obj.FILEPART)
-        c = obnam.cmp.create(obnam.cmp.FILECHUNK, "moulin")
+        c = obnam.cmp.Component(obnam.cmp.FILECHUNK, "moulin")
         obnam.obj.add(o, c)
         encoded_o = obnam.obj.encode(o)
         

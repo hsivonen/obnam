@@ -34,18 +34,18 @@ def create_file_component_from_stat(pathname, st, contref, sigref, deltaref):
     """Create a FILE component given pathname, stat results, etc"""
     subs = []
     
-    subs.append(obnam.cmp.create(obnam.cmp.FILENAME, pathname))
+    subs.append(obnam.cmp.Component(obnam.cmp.FILENAME, pathname))
     
     subs.append(obnam.cmp.create_stat_component(st))
 
     if contref:
-        subs.append(obnam.cmp.create(obnam.cmp.CONTREF, contref))
+        subs.append(obnam.cmp.Component(obnam.cmp.CONTREF, contref))
     if sigref:
-        subs.append(obnam.cmp.create(obnam.cmp.SIGREF, sigref))
+        subs.append(obnam.cmp.Component(obnam.cmp.SIGREF, sigref))
     if deltaref:
-        subs.append(obnam.cmp.create(obnam.cmp.DELTAREF, deltaref))
+        subs.append(obnam.cmp.Component(obnam.cmp.DELTAREF, deltaref))
 
-    return obnam.cmp.create(obnam.cmp.FILE, subs)
+    return obnam.cmp.Component(obnam.cmp.FILE, subs)
 
 
 def create():

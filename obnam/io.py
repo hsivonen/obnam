@@ -243,7 +243,7 @@ def create_file_contents_object(context, filename):
         data = f.stdout.read(block_size)
         if not data:
             break
-        c = obnam.cmp.create(obnam.cmp.FILECHUNK, data)
+        c = obnam.cmp.Component(obnam.cmp.FILECHUNK, data)
         part_id = obnam.obj.object_id_new()
         o = obnam.obj.create(part_id, obnam.obj.FILEPART)
         obnam.obj.add(o, c)
@@ -254,7 +254,7 @@ def create_file_contents_object(context, filename):
 
     o = obnam.obj.create(object_id, obnam.obj.FILECONTENTS)
     for part_id in part_ids:
-        c = obnam.cmp.create(obnam.cmp.FILEPARTREF, part_id)
+        c = obnam.cmp.Component(obnam.cmp.FILEPARTREF, part_id)
         obnam.obj.add(o, c)
     o = obnam.obj.encode(o)
     enqueue_object(context, context.oq, context.map, object_id, o)

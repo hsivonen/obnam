@@ -148,8 +148,8 @@ def first_varint_by_kind(o, wanted_kind):
 
 def encode(o):
     """Encode an object as a string"""
-    id = obnam.cmp.create(obnam.cmp.OBJID, o.id)
-    kind = obnam.cmp.create(obnam.cmp.OBJKIND, 
+    id = obnam.cmp.Component(obnam.cmp.OBJID, o.id)
+    kind = obnam.cmp.Component(obnam.cmp.OBJKIND, 
                                      obnam.varint.encode(o.kind))
     list = [id, kind] + get_components(o)
     list = [c.encode() for c in list]
@@ -221,8 +221,8 @@ def queue_ids(oq):
 def block_create_from_object_queue(blkid, oq):
     """Create a block from an object queue"""
     logging.debug("Creating block %s" % blkid)
-    blkid = obnam.cmp.create(obnam.cmp.BLKID, blkid)
-    objects = [obnam.cmp.create(obnam.cmp.OBJECT, x[1]) for x in oq.queue]
+    blkid = obnam.cmp.Component(obnam.cmp.BLKID, blkid)
+    objects = [obnam.cmp.Component(obnam.cmp.OBJECT, x[1]) for x in oq.queue]
     return "".join([BLOCK_COOKIE] + 
                    [c.encode() for c in [blkid] + objects])
 
@@ -238,7 +238,7 @@ def block_decode(block):
     
 def signature_object_encode(objid, sigdata):
     """Encode a SIG object"""
-    c = obnam.cmp.create(obnam.cmp.SIGDATA, sigdata)
+    c = obnam.cmp.Component(obnam.cmp.SIGDATA, sigdata)
     o = create(objid, SIG)
     add(o, c)
     return encode(o)
@@ -248,11 +248,11 @@ def delta_object_encode(objid, deltapart_refs, cont_ref, delta_ref):
     """Encode a DELTA object"""
     o = create(objid, DELTA)
     for deltapart_ref in deltapart_refs:
-        add(o, obnam.cmp.create(obnam.cmp.DELTAPARTREF, deltapart_ref))
+        add(o, obnam.cmp.Component(obnam.cmp.DELTAPARTREF, deltapart_ref))
     if cont_ref:
-        c = obnam.cmp.create(obnam.cmp.CONTREF, cont_ref)
+        c = obnam.cmp.Component(obnam.cmp.CONTREF, cont_ref)
     else:
-        c = obnam.cmp.create(obnam.cmp.DELTAREF, delta_ref)
+        c = obnam.cmp.Component(obnam.cmp.DELTAREF, delta_ref)
     add(o, c)
     return encode(o)
 
@@ -260,10 +260,10 @@ def delta_object_encode(objid, deltapart_refs, cont_ref, delta_ref):
 def generation_object_encode(objid, filelist_id, start_time, end_time):
     """Encode a generation object, from list of filename, inode_id pairs"""
     o = create(objid, GEN)
-    add(o, obnam.cmp.create(obnam.cmp.FILELISTREF, filelist_id))
-    add(o, obnam.cmp.create(obnam.cmp.GENSTART, 
+    add(o, obnam.cmp.Component(obnam.cmp.FILELISTREF, filelist_id))
+    add(o, obnam.cmp.Component(obnam.cmp.GENSTART, 
                             obnam.varint.encode(start_time)))
-    add(o, obnam.cmp.create(obnam.cmp.GENEND, obnam.varint.encode(end_time)))
+    add(o, obnam.cmp.Component(obnam.cmp.GENEND, obnam.varint.encode(end_time)))
     return encode(o)
 
 
@@ -280,19 +280,19 @@ def host_block_encode(host_id, gen_ids, map_block_ids, contmap_block_ids):
     """Encode a new block with a host object"""
     o = create(host_id, HOST)
     
-    c = obnam.cmp.create(obnam.cmp.FORMATVERSION, FORMAT_VERSION)
+    c = obnam.cmp.Component(obnam.cmp.FORMATVERSION, FORMAT_VERSION)
     add(o, c)
 
     for gen_id in gen_ids:
-        c = obnam.cmp.create(obnam.cmp.GENREF, gen_id)
+        c = obnam.cmp.Component(obnam.cmp.GENREF, gen_id)
         add(o, c)
     
     for map_block_id in map_block_ids:
-        c = obnam.cmp.create(obnam.cmp.MAPREF, map_block_id)
+        c = obnam.cmp.Component(obnam.cmp.MAPREF, map_block_id)
         add(o, c)
     
     for map_block_id in contmap_block_ids:
-        c = obnam.cmp.create(obnam.cmp.CONTMAPREF, map_block_id)
+        c = obnam.cmp.Component(obnam.cmp.CONTMAPREF, map_block_id)
         add(o, c)
 
     oq = queue_create()

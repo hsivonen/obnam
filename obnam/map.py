@@ -79,10 +79,10 @@ def encode_new(mapping):
             dict[block_id] = [object_id]
     for block_id in dict:
         object_ids = dict[block_id]
-        object_ids = [obnam.cmp.create(obnam.cmp.OBJREF, x)
+        object_ids = [obnam.cmp.Component(obnam.cmp.OBJREF, x)
                       for x in object_ids]
-        block_id = obnam.cmp.create(obnam.cmp.BLOCKREF, block_id)
-        c = obnam.cmp.create(obnam.cmp.OBJMAP, 
+        block_id = obnam.cmp.Component(obnam.cmp.BLOCKREF, block_id)
+        c = obnam.cmp.Component(obnam.cmp.OBJMAP, 
                                 [block_id] + object_ids)
         list.append(c.encode())
     return list
@@ -90,7 +90,7 @@ def encode_new(mapping):
 
 def encode_new_to_block(mapping, block_id):
     """Encode new mappings into a block"""
-    c = obnam.cmp.create(obnam.cmp.BLKID, block_id)
+    c = obnam.cmp.Component(obnam.cmp.BLKID, block_id)
     list = encode_new(mapping)
     block = "".join([obnam.obj.BLOCK_COOKIE, c.encode()] + list)
     return block
