@@ -117,8 +117,7 @@ def find_strings_by_kind(o, wanted_kind):
 
 def find_varints_by_kind(o, wanted_kind):
     """Find all components of a desired kind, return their varint values"""
-    return [obnam.cmp.get_varint_value(c) 
-                for c in find_by_kind(o, wanted_kind)]
+    return [c.get_varint_value() for c in find_by_kind(o, wanted_kind)]
 
 
 def first_by_kind(o, wanted_kind):
@@ -142,7 +141,7 @@ def first_varint_by_kind(o, wanted_kind):
     """Find string value of first component of a desired kind"""
     c = first_by_kind(o, wanted_kind)
     if c:
-        return obnam.cmp.get_varint_value(c)
+        return c.get_varint_value()
     else:
         return None
 

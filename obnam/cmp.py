@@ -155,12 +155,9 @@ class Component:
         return obnam.varint.encode(len(encoded)) + \
                obnam.varint.encode(self.kind) + encoded
 
+
 def create(component_kind, value):
     return Component(component_kind, value)
-
-
-def get_varint_value(c):
-    return c.get_varint_value()
 
 
 def get_subcomponents(c):
@@ -232,7 +229,7 @@ def first_varint_by_kind(components, wanted_kind):
     """Find first component by kind, return its integer value"""
     c = first_by_kind(components, wanted_kind)
     if c:
-        return get_varint_value(c)
+        return c.get_varint_value()
     else:
         return None
 

@@ -231,7 +231,7 @@ class GetVarintVAlueTest(unittest.TestCase):
 
     def test(self):
         c = obnam.cmp.create(1, obnam.varint.encode(12765))
-        self.failUnlessEqual(obnam.cmp.get_varint_value(c), 12765)
+        self.failUnlessEqual(c.get_varint_value(), 12765)
 
 
 class FindVarintTests(unittest.TestCase):
