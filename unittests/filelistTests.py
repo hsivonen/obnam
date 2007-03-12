@@ -108,7 +108,7 @@ class FilelistTests(unittest.TestCase):
         obnam.filelist.add(fl, ".", "pretty", None, None)
         o = obnam.filelist.to_object(fl, "pink")
         self.failUnlessEqual(o.get_kind(), obnam.obj.FILELIST)
-        self.failUnlessEqual(obnam.obj.get_id(o), "pink")
+        self.failUnlessEqual(o.get_id(), "pink")
         
         fl2 = obnam.filelist.from_object(o)
         self.failIfEqual(fl2, None)

@@ -140,7 +140,7 @@ class ObjectCache:
             self.mru.remove(object_id)
         
     def put(self, object):
-        object_id = obnam.obj.get_id(object)
+        object_id = object.get_id()
         self.forget(object_id)
         self.objects[object_id] = object
         self.mru.insert(0, object_id)
@@ -196,7 +196,7 @@ def get_object(context, object_id):
         o = create_object_from_component_list(subs)
         if o.get_kind() != obnam.obj.FILEPART:
             _object_cache.put(o)
-        if obnam.obj.get_id(o) == object_id:
+        if o.get_id() == object_id:
             the_one = o
 
     logging.debug("Returning desired object")    
@@ -317,7 +317,7 @@ def reconstruct_file_contents(context, fd, delta_id):
     while stack:
         delta = stack[-1]
         stack = stack[:-1]
-        logging.debug("Applying DELTA %s" % obnam.obj.get_id(delta))
+        logging.debug("Applying DELTA %s" % delta.get_id())
         
         deltapart_ids = obnam.obj.find_strings_by_kind(delta, 
                                                        obnam.cmp.DELTAPARTREF)

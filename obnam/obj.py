@@ -83,17 +83,15 @@ class Object:
     def get_kind(self):
         """Return the kind of an object"""
         return self.kind
+
+    def get_id(self):
+        """Return the identifier for an object"""
+        return self.id
     
         
 def create(id, kind):
     """Create a new backup object"""
     return Object(id, kind)
-
-
-def get_id(o):
-    """Return the identifier for an object"""
-    return o.id
-    
     
 def get_components(o):
     """Return list of all components in an object"""

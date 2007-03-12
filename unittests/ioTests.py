@@ -148,7 +148,7 @@ class GetObjectTests(IoBase):
         self.upload_object(id, object)
         o = obnam.io.get_object(self.context, id)
 
-        self.failUnlessEqual(obnam.obj.get_id(o), id)
+        self.failUnlessEqual(o.get_id(), id)
         self.failUnlessEqual(o.get_kind(), 0)
         list = obnam.obj.get_components(o)
         self.failUnlessEqual(len(list), 1)

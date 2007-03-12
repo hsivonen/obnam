@@ -44,7 +44,7 @@ class ObjectCreateTests(unittest.TestCase):
 
     def testCreate(self):
         o = obnam.obj.create("pink", 1)
-        self.failUnlessEqual(obnam.obj.get_id(o), "pink")
+        self.failUnlessEqual(o.get_id(), "pink")
         self.failUnlessEqual(o.get_kind(), 1)
         self.failUnlessEqual(obnam.obj.get_components(o), [])
 
@@ -164,7 +164,7 @@ class ObjectTests(unittest.TestCase):
         sig = obnam.rsync.compute_signature(context, "Makefile")
         encoded = signature_object_encode(id, sig)
         o = obnam.obj.decode(encoded, 0)
-        self.failUnlessEqual(obnam.obj.get_id(o), "pink")
+        self.failUnlessEqual(o.get_id(), "pink")
         self.failUnlessEqual(o.get_kind(), obnam.obj.SIG)
         self.failUnlessEqual(len(obnam.obj.get_components(o)), 1)
         self.failUnlessEqual(
@@ -176,7 +176,7 @@ class ObjectTests(unittest.TestCase):
         deltapart_ref = "xyzzy"
         encoded = delta_object_encode(id, [deltapart_ref], "pretty", None)
         o = obnam.obj.decode(encoded, 0)
-        self.failUnlessEqual(obnam.obj.get_id(o), "pink")
+        self.failUnlessEqual(o.get_id(), "pink")
         self.failUnlessEqual(o.get_kind(), obnam.obj.DELTA)
         self.failUnlessEqual(len(obnam.obj.get_components(o)), 2)
         self.failUnlessEqual(
@@ -191,7 +191,7 @@ class ObjectTests(unittest.TestCase):
         deltapart_ref = "xyzzy"
         encoded = delta_object_encode(id, [deltapart_ref], None, "pretty")
         o = obnam.obj.decode(encoded, 0)
-        self.failUnlessEqual(obnam.obj.get_id(o), "pink")
+        self.failUnlessEqual(o.get_id(), "pink")
         self.failUnlessEqual(o.get_kind(), obnam.obj.DELTA)
         self.failUnlessEqual(len(obnam.obj.get_components(o)), 2)
         self.failUnlessEqual(
