@@ -247,7 +247,7 @@ def create_file_contents_object(context, filename):
         part_id = obnam.obj.object_id_new()
         o = obnam.obj.Object(part_id, obnam.obj.FILEPART)
         o.add(c)
-        o = obnam.obj.encode(o)
+        o = o.encode()
         enqueue_object(context, context.content_oq, context.contmap, 
                        part_id, o)
         part_ids.append(part_id)
@@ -256,7 +256,7 @@ def create_file_contents_object(context, filename):
     for part_id in part_ids:
         c = obnam.cmp.Component(obnam.cmp.FILEPARTREF, part_id)
         o.add(c)
-    o = obnam.obj.encode(o)
+    o = o.encode()
     enqueue_object(context, context.oq, context.map, object_id, o)
 
     return object_id

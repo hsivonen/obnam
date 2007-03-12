@@ -64,9 +64,9 @@ class ObjectEncodingDecodingTests(unittest.TestCase):
         o.add(c1)
         o.add(c2)
         
-        encoded = obnam.obj.encode(o)
+        encoded = o.encode()
         o2 = obnam.obj.decode(encoded, 0)
-        encoded2 = obnam.obj.encode(o2)
+        encoded2 = o2.encode()
         
         self.failUnlessEqual(encoded, encoded2)
 
@@ -122,7 +122,7 @@ class BlockCreateTests(unittest.TestCase):
         o = obnam.obj.Object("pink", 1)
         o.add(obnam.cmp.Component(2, "pretty"))
         oq = queue_create()
-        queue_add(oq, "pink", obnam.obj.encode(o))
+        queue_add(oq, "pink", o.encode())
         block = block_create_from_object_queue("blkid", oq)
 
         list = obnam.obj.block_decode(block)

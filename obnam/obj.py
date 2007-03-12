@@ -128,14 +128,14 @@ class Object:
         else:
             return None
 
-def encode(o):
-    """Encode an object as a string"""
-    id = obnam.cmp.Component(obnam.cmp.OBJID, o.id)
-    kind = obnam.cmp.Component(obnam.cmp.OBJKIND, 
-                                     obnam.varint.encode(o.kind))
-    list = [id, kind] + o.get_components()
-    list = [c.encode() for c in list]
-    return "".join(list)
+    def encode(self):
+        """Encode an object as a string"""
+        id = obnam.cmp.Component(obnam.cmp.OBJID, self.id)
+        kind = obnam.cmp.Component(obnam.cmp.OBJKIND, 
+                                   obnam.varint.encode(self.kind))
+        list = [id, kind] + self.get_components()
+        list = [c.encode() for c in list]
+        return "".join(list)
 
 
 def decode(encoded, pos):
@@ -222,7 +222,7 @@ def signature_object_encode(objid, sigdata):
     c = obnam.cmp.Component(obnam.cmp.SIGDATA, sigdata)
     o = Object(objid, SIG)
     o.add(c)
-    return encode(o)
+    return o.encode()
 
 
 def delta_object_encode(objid, deltapart_refs, cont_ref, delta_ref):
@@ -235,7 +235,7 @@ def delta_object_encode(objid, deltapart_refs, cont_ref, delta_ref):
     else:
         c = obnam.cmp.Component(obnam.cmp.DELTAREF, delta_ref)
     o.add(c)
-    return encode(o)
+    return o.encode()
 
 
 def generation_object_encode(objid, filelist_id, start_time, end_time):
@@ -246,7 +246,7 @@ def generation_object_encode(objid, filelist_id, start_time, end_time):
                               obnam.varint.encode(start_time)))
     o.add(obnam.cmp.Component(obnam.cmp.GENEND, 
                               obnam.varint.encode(end_time)))
-    return encode(o)
+    return o.encode()
 
 
 def generation_object_decode(gen):
@@ -278,7 +278,7 @@ def host_block_encode(host_id, gen_ids, map_block_ids, contmap_block_ids):
         o.add(c)
 
     oq = queue_create()
-    queue_add(oq, host_id, encode(o))
+    queue_add(oq, host_id, o.encode())
     block = block_create_from_object_queue(host_id, oq)
     return block
 

@@ -144,7 +144,7 @@ class GetObjectTests(IoBase):
         component = obnam.cmp.Component(42, "pretty")
         object = obnam.obj.Object(id, 0)
         object.add(component)
-        object = obnam.obj.encode(object)
+        object = object.encode()
         self.upload_object(id, object)
         o = obnam.io.get_object(self.context, id)
 
@@ -391,7 +391,7 @@ class ReachabilityTests(IoBase):
         o = obnam.obj.Object("rouge", obnam.obj.FILEPART)
         c = obnam.cmp.Component(obnam.cmp.FILECHUNK, "moulin")
         o.add(c)
-        encoded_o = obnam.obj.encode(o)
+        encoded_o = o.encode()
         
         block_id = "pink"
         oq = obnam.obj.queue_create()

@@ -69,7 +69,7 @@ def compute_delta(context, signature, filename):
         id = obnam.obj.object_id_new()
         o = obnam.obj.Object(id, obnam.obj.DELTAPART)
         o.add(obnam.cmp.Component(obnam.cmp.DELTADATA, data))
-        o = obnam.obj.encode(o)
+        o = o.encode()
         obnam.io.enqueue_object(context, context.content_oq, 
                                 context.contmap, id, o)
         list.append(id)

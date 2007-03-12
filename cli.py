@@ -184,7 +184,7 @@ def backup(context, args):
     logging.info("Creating new file list object")    
     filelist_id = obnam.obj.object_id_new()
     filelist_obj = obnam.filelist.to_object(new_filelist, filelist_id)
-    filelist_obj = obnam.obj.encode(filelist_obj)
+    filelist_obj = filelist_obj.encode()
     obnam.io.enqueue_object(context, context.oq, context.map, 
                                filelist_id, filelist_obj)
     
