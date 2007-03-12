@@ -86,6 +86,47 @@ class CreateComponentTests(unittest.TestCase):
         self.failUnlessEqual(c.get_subcomponents(), [leaf1, leaf2])
 
 
+class ComponentParserTest(unittest.TestCase):
+
+    def testDecodeEmptyString(self):
+        parser = obnam.cmp.Parser("")
+        self.failUnlessEqual(parser.decode(), None)
+
+    def testDecodePlainComponent(self):
+        c = obnam.cmp.Component(obnam.cmp.OBJID, "pink")
+        encoded = c.encode()
+        parser = obnam.cmp.Parser(encoded)
+        c2 = parser.decode()
+        self.failUnlessEqual(parser.pos, len(encoded))
+        self.failUnlessEqual(encoded, c2.encode())
+
+    def testDecodeCompositeComponent(self):
+        subs = [obnam.cmp.Component(obnam.cmp.OBJID, str(i)) 
+                for i in range(100)]
+        c = obnam.cmp.Component(obnam.cmp.OBJECT, subs)
+        encoded = c.encode()
+        parser = obnam.cmp.Parser(encoded)
+        c2 = parser.decode()
+        self.failUnlessEqual(parser.pos, len(encoded))
+        self.failUnlessEqual(encoded, c2.encode())
+
+    def testDecodeAllEmptyString(self):
+        parser = obnam.cmp.Parser("")
+        self.failUnlessEqual(parser.decode_all(), [])
+
+    def testDecodeAllPlainComponents(self):
+        list = [obnam.cmp.Component(obnam.cmp.OBJID, str(i))
+                for i in range(100)]
+        encoded = "".join(c.encode() for c in list)
+
+        parser = obnam.cmp.Parser(encoded)
+        list2 = parser.decode_all()
+        self.failUnlessEqual(parser.pos, len(encoded))
+
+        encoded2 = "".join(c.encode() for c in list2)
+        self.failUnlessEqual(encoded, encoded2)
+
+
 class ComponentEncodingDecodingTests(unittest.TestCase):
 
     def doit(self, c_kind, data):

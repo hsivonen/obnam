@@ -156,29 +156,56 @@ class Component:
                obnam.varint.encode(self.kind) + encoded
 
 
+class Parser:
+
+    def __init__(self, encoded, pos=0, end=None):
+        self.encoded = encoded
+        self.pos = pos
+        if end is None or end > len(encoded):
+            self.end = len(encoded)
+        else:
+            self.end = end
+        
+    def decode(self):
+        """Parse one component, and its value if type is composite"""
+        if self.pos >= self.end:
+            return None
+
+        size, self.pos = obnam.varint.decode(self.encoded, self.pos)
+        kind, self.pos = obnam.varint.decode(self.encoded, self.pos)
+        
+        if kind_is_composite(kind):
+            parser = Parser(self.encoded, self.pos, self.pos + size)
+            value = parser.decode_all()
+        else:
+            value = self.encoded[self.pos:self.pos + size]
+
+        self.pos += size
+
+        return Component(kind, value)
+
+    def decode_all(self):
+        """Decode all remaining components and values"""
+        list = []
+        while True:
+            c = self.decode()
+            if c is None:
+                break
+            list.append(c)
+        return list
+
+
 def decode(encoded, pos):
     """Decode a component in a string, return component and pos after it"""
-    (size, pos) = obnam.varint.decode(encoded, pos)
-    (kind, pos) = obnam.varint.decode(encoded, pos)
-    if kind_is_composite(kind):
-        value = []
-        pos2 = pos
-        while pos2 < pos + size:
-            (sub, pos2) = decode(encoded, pos2)
-            value.append(sub)
-    else:
-        value = encoded[pos:pos+size]
-    return Component(kind, value), pos + size
+    parser = Parser(encoded, pos)
+    c = parser.decode()
+    return c, parser.pos
 
 
 def decode_all(encoded, pos):
     """Return list of all components in a string"""
-    list = []
-    len_encoded = len(encoded)
-    while pos < len_encoded:
-        (c, pos) = decode(encoded, pos)
-        list.append(c)
-    return list
+    parser = Parser(encoded, pos)
+    return parser.decode_all()
 
 
 def find_by_kind(components, wanted_kind):
