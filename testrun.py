@@ -21,8 +21,12 @@ import unittest
 import os
 import sys
 
+if sys.argv[1:]:
+    files = sys.argv[1:]
+else:
+    files = [py for py in os.listdir("unittests") if py.endswith("Tests.py")]
 suite = unittest.TestSuite()
-for py in [py for py in os.listdir("unittests") if py.endswith("Tests.py")]:
+for py in files:
     py = os.path.join("unittests", py)
     suite.addTest(unittest.defaultTestLoader.loadTestsFromName(py[:-3]))
 
