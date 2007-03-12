@@ -34,32 +34,6 @@ import fuse
 import obnam
 
 
-def make_stat_result(st_mode=0, st_ino=0, st_dev=0, st_nlink=0, st_uid=0,
-                     st_gid=0, st_size=0, st_atime=0, st_mtime=0, st_ctime=0,
-                     st_blocks=0, st_blksize=0, st_rdev=0):
-
-    dict = {
-        "st_mode": st_mode,
-        "st_ino": st_ino,
-        "st_dev": st_dev,
-        "st_nlink": st_nlink,
-        "st_uid": st_uid,
-        "st_gid": st_gid,
-        "st_size": st_size,
-        "st_atime": st_atime,
-        "st_mtime": st_mtime,
-        "st_ctime": st_ctime,
-        "st_blocks": st_blocks,
-        "st_blksize": st_blksize,
-        "st_rdev": st_rdev,
-    }
-    
-    tup = (st_mode, st_ino, st_dev, st_nlink, st_uid, st_gid, st_size,
-           st_atime, st_mtime, st_ctime)
-
-    return os.stat_result(tup, dict)
-
-
 def deduce_fake_dirs(paths):
     fakes = []
     
@@ -156,7 +130,7 @@ class ObnamFS(fuse.Fuse):
         fl = obnam.filelist.from_object(fl)
 
         for fake in deduce_fake_dirs(list):
-            st = make_stat_result(st_mode=stat.S_IFDIR | 0755)
+            st = obnam.utils.make_stat_result(st_mode=stat.S_IFDIR | 0755)
             c = obnam.filelist.create_file_component_from_stat(fake, st,
                                                                None, None, 
                                                                None)
@@ -173,15 +147,15 @@ class ObnamFS(fuse.Fuse):
         stat_component = obnam.cmp.first_by_kind(subs, obnam.cmp.STAT)
         if stat_component:
             st = obnam.cmp.parse_stat_component(stat_component)
-            return make_stat_result(st_mode=st.st_mode,
-                                    st_ino=st.st_ino,
-                                    st_nlink=st.st_nlink,
-                                    st_uid=st.st_uid,
-                                    st_gid=st.st_gid,
-                                    st_size=st.st_size,
-                                    st_atime=st.st_atime,
-                                    st_mtime=st.st_mtime,
-                                    st_ctime=st.st_ctime)
+            return obnam.utils.make_stat_result(st_mode=st.st_mode,
+                                                st_ino=st.st_ino,
+                                                st_nlink=st.st_nlink,
+                                                st_uid=st.st_uid,
+                                                st_gid=st.st_gid,
+                                                st_size=st.st_size,
+                                                st_atime=st.st_atime,
+                                                st_mtime=st.st_mtime,
+                                                st_ctime=st.st_ctime)
         else:
             return None
 
@@ -213,20 +187,23 @@ class ObnamFS(fuse.Fuse):
             logging.debug("FS: getattr: %s" % repr(path))
         first_part, relative_path = self.parse_pathname(path)
         if first_part is None:
-            return make_stat_result(st_mode=stat.S_IFDIR | 0700, st_nlink=2,
-                                    st_uid=os.getuid(), st_gid=os.getgid())
+            return obnam.utils.make_stat_result(st_mode=stat.S_IFDIR | 0700, 
+                                                st_nlink=2, 
+                                                st_uid=os.getuid(), 
+                                                st_gid=os.getgid())
         elif relative_path is None:
             logging.debug("FS: getattr: returning result for generation")
             gen_ids = self.generations()
             if path[1:] in gen_ids:
                 mtime = self.generation_mtime(path[1:])
-                return make_stat_result(st_mode=stat.S_IFDIR | 0700,
-                                        st_atime=mtime,
-                                        st_mtime=mtime,
-                                        st_ctime=mtime,
-                                        st_nlink=2,
-                                        st_uid=os.getuid(),
-                                        st_gid=os.getgid())
+                return obnam.utils.make_stat_result(st_mode=
+                                                      stat.S_IFDIR | 0700,
+                                                    st_atime=mtime,
+                                                    st_mtime=mtime,
+                                                    st_ctime=mtime,
+                                                    st_nlink=2,
+                                                    st_uid=os.getuid(),
+                                                    st_gid=os.getgid())
             else:
                 return -errno.ENOENT
         else:

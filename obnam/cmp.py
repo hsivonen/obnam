@@ -18,7 +18,7 @@
 """Obnam data components"""
 
 
-import obnam.varint
+import obnam
 
 
 # Constants for component kinds
@@ -236,28 +236,33 @@ def create_stat_component(st):
                      obnam.varint.encode(st.st_rdev))
 
 
-class FakeStatResult:
-
-    def __getattribute__(self, name):
-        return self.__dict__[name]
-        
-
 def parse_stat_component(stat_component):
     """Return an object like a stat result from a decoded stat_component"""
-    st = FakeStatResult()
     value = stat_component.get_string_value()
     pos = 0
-    (st.st_mode, pos) = obnam.varint.decode(value, pos)
-    (st.st_ino, pos) = obnam.varint.decode(value, pos)
-    (st.st_dev, pos) = obnam.varint.decode(value, pos)
-    (st.st_nlink, pos) = obnam.varint.decode(value, pos)
-    (st.st_uid, pos) = obnam.varint.decode(value, pos)
-    (st.st_gid, pos) = obnam.varint.decode(value, pos)
-    (st.st_size, pos) = obnam.varint.decode(value, pos)
-    (st.st_atime, pos) = obnam.varint.decode(value, pos)
-    (st.st_mtime, pos) = obnam.varint.decode(value, pos)
-    (st.st_ctime, pos) = obnam.varint.decode(value, pos)
-    (st.st_blocks, pos) = obnam.varint.decode(value, pos)
-    (st.st_blksize, pos) = obnam.varint.decode(value, pos)
-    (st.st_rdev, pos) = obnam.varint.decode(value, pos)
-    return st
+    st_mode, pos = obnam.varint.decode(value, pos)
+    st_ino, pos = obnam.varint.decode(value, pos)
+    st_dev, pos = obnam.varint.decode(value, pos)
+    st_nlink, pos = obnam.varint.decode(value, pos)
+    st_uid, pos = obnam.varint.decode(value, pos)
+    st_gid, pos = obnam.varint.decode(value, pos)
+    st_size, pos = obnam.varint.decode(value, pos)
+    st_atime, pos = obnam.varint.decode(value, pos)
+    st_mtime, pos = obnam.varint.decode(value, pos)
+    st_ctime, pos = obnam.varint.decode(value, pos)
+    st_blocks, pos = obnam.varint.decode(value, pos)
+    st_blksize, pos = obnam.varint.decode(value, pos)
+    st_rdev, pos = obnam.varint.decode(value, pos)
+    return obnam.utils.make_stat_result(st_mode=st_mode,
+                                        st_ino=st_ino,
+                                        st_dev=st_dev,
+                                        st_nlink=st_nlink,
+                                        st_uid=st_uid,
+                                        st_gid=st_gid,
+                                        st_size=st_size,
+                                        st_atime=st_atime,
+                                        st_mtime=st_mtime,
+                                        st_ctime=st_ctime,
+                                        st_blocks=st_blocks,
+                                        st_blksize=st_blksize,
+                                        st_rdev=st_rdev)
