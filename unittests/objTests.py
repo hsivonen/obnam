@@ -51,7 +51,7 @@ class ObjectCreateTests(unittest.TestCase):
     def testAdd(self):
         o = obnam.obj.create("pink", 1)
         c = obnam.cmp.Component(2, "pretty")
-        obnam.obj.add(o, c)
+        o.add(c)
         self.failUnlessEqual(obnam.obj.get_components(o), [c])
 
 
@@ -61,8 +61,8 @@ class ObjectEncodingDecodingTests(unittest.TestCase):
         c1 = obnam.cmp.Component(0xdeadbeef, "hello")
         c2 = obnam.cmp.Component(0xcafebabe, "world")
         o = obnam.obj.create("uuid", 0xdada)
-        obnam.obj.add(o, c1)
-        obnam.obj.add(o, c2)
+        o.add(c1)
+        o.add(c2)
         
         encoded = obnam.obj.encode(o)
         o2 = obnam.obj.decode(encoded, 0)
@@ -120,7 +120,7 @@ class BlockCreateTests(unittest.TestCase):
 
     def testObjectQueue(self):
         o = obnam.obj.create("pink", 1)
-        obnam.obj.add(o, obnam.cmp.Component(2, "pretty"))
+        o.add(obnam.cmp.Component(2, "pretty"))
         oq = queue_create()
         queue_add(oq, "pink", obnam.obj.encode(o))
         block = block_create_from_object_queue("blkid", oq)
@@ -235,10 +235,10 @@ class GetComponentTests(unittest.TestCase):
 
     def setUp(self):
         self.o = obnam.obj.create("uuid", 0)
-        obnam.obj.add(self.o, obnam.cmp.Component(1, "pink"))
-        obnam.obj.add(self.o, obnam.cmp.Component(2, "pretty"))
-        obnam.obj.add(self.o, obnam.cmp.Component(3, "red"))
-        obnam.obj.add(self.o, obnam.cmp.Component(3, "too"))
+        self.o.add(obnam.cmp.Component(1, "pink"))
+        self.o.add(obnam.cmp.Component(2, "pretty"))
+        self.o.add(obnam.cmp.Component(3, "red"))
+        self.o.add(obnam.cmp.Component(3, "too"))
 
     def testGetByKind(self):
         find = lambda t: \
@@ -281,7 +281,7 @@ class GetComponentTests(unittest.TestCase):
         o = obnam.obj.create("uuid", 0)
         for i in list:
             c = obnam.cmp.Component(0, obnam.varint.encode(i))
-            obnam.obj.add(o, c)
+            o.add(c)
 
         self.failUnlessEqual(obnam.obj.find_varints_by_kind(o, 0), list)
 
@@ -289,7 +289,7 @@ class GetComponentTests(unittest.TestCase):
         o = obnam.obj.create("uuid", 0)
         for i in range(1024):
             c = obnam.cmp.Component(i, obnam.varint.encode(i))
-            obnam.obj.add(o, c)
+            o.add(c)
 
         for i in range(1024):
             self.failUnlessEqual(obnam.obj.first_varint_by_kind(o, i), i)

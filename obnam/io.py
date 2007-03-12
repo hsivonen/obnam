@@ -110,7 +110,7 @@ def create_object_from_component_list(components):
     bad = (obnam.cmp.OBJID, obnam.cmp.OBJKIND)
     for c in components:
         if c.get_kind() not in bad:
-            obnam.obj.add(o, c)
+            o.add(c)
     return o
 
 
@@ -246,7 +246,7 @@ def create_file_contents_object(context, filename):
         c = obnam.cmp.Component(obnam.cmp.FILECHUNK, data)
         part_id = obnam.obj.object_id_new()
         o = obnam.obj.create(part_id, obnam.obj.FILEPART)
-        obnam.obj.add(o, c)
+        o.add(c)
         o = obnam.obj.encode(o)
         enqueue_object(context, context.content_oq, context.contmap, 
                        part_id, o)
@@ -255,7 +255,7 @@ def create_file_contents_object(context, filename):
     o = obnam.obj.create(object_id, obnam.obj.FILECONTENTS)
     for part_id in part_ids:
         c = obnam.cmp.Component(obnam.cmp.FILEPARTREF, part_id)
-        obnam.obj.add(o, c)
+        o.add(c)
     o = obnam.obj.encode(o)
     enqueue_object(context, context.oq, context.map, object_id, o)
 

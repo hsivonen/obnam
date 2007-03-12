@@ -71,23 +71,19 @@ def object_id_new():
 
 class Object:
 
-    def __init__(self):
-        self.id = None
-        self.kind = None
+    def __init__(self, id, kind):
+        self.id = id
+        self.kind = kind
         self.components = []
+
+    def add(self, c):
+        """Add a component"""
+        self.components.append(c)
         
         
 def create(id, kind):
     """Create a new backup object"""
-    o = Object()
-    o.id = id
-    o.kind = kind
-    return o
-
-
-def add(o, c):
-    """Add a component to an object"""
-    o.components.append(c)
+    return Object(id, kind)
 
 
 def get_kind(o):
@@ -168,7 +164,7 @@ def decode(encoded, pos):
             o.kind = c.get_string_value()
             (o.kind, _) = obnam.varint.decode(o.kind, 0)
         else:
-            add(o, c)
+            o.add(c)
     return o
 
 
@@ -239,7 +235,7 @@ def signature_object_encode(objid, sigdata):
     """Encode a SIG object"""
     c = obnam.cmp.Component(obnam.cmp.SIGDATA, sigdata)
     o = create(objid, SIG)
-    add(o, c)
+    o.add(c)
     return encode(o)
 
 
@@ -247,22 +243,23 @@ def delta_object_encode(objid, deltapart_refs, cont_ref, delta_ref):
     """Encode a DELTA object"""
     o = create(objid, DELTA)
     for deltapart_ref in deltapart_refs:
-        add(o, obnam.cmp.Component(obnam.cmp.DELTAPARTREF, deltapart_ref))
+        o.add(obnam.cmp.Component(obnam.cmp.DELTAPARTREF, deltapart_ref))
     if cont_ref:
         c = obnam.cmp.Component(obnam.cmp.CONTREF, cont_ref)
     else:
         c = obnam.cmp.Component(obnam.cmp.DELTAREF, delta_ref)
-    add(o, c)
+    o.add(c)
     return encode(o)
 
 
 def generation_object_encode(objid, filelist_id, start_time, end_time):
     """Encode a generation object, from list of filename, inode_id pairs"""
     o = create(objid, GEN)
-    add(o, obnam.cmp.Component(obnam.cmp.FILELISTREF, filelist_id))
-    add(o, obnam.cmp.Component(obnam.cmp.GENSTART, 
-                            obnam.varint.encode(start_time)))
-    add(o, obnam.cmp.Component(obnam.cmp.GENEND, obnam.varint.encode(end_time)))
+    o.add(obnam.cmp.Component(obnam.cmp.FILELISTREF, filelist_id))
+    o.add(obnam.cmp.Component(obnam.cmp.GENSTART, 
+                              obnam.varint.encode(start_time)))
+    o.add(obnam.cmp.Component(obnam.cmp.GENEND, 
+                              obnam.varint.encode(end_time)))
     return encode(o)
 
 
@@ -280,19 +277,19 @@ def host_block_encode(host_id, gen_ids, map_block_ids, contmap_block_ids):
     o = create(host_id, HOST)
     
     c = obnam.cmp.Component(obnam.cmp.FORMATVERSION, FORMAT_VERSION)
-    add(o, c)
+    o.add(c)
 
     for gen_id in gen_ids:
         c = obnam.cmp.Component(obnam.cmp.GENREF, gen_id)
-        add(o, c)
+        o.add(c)
     
     for map_block_id in map_block_ids:
         c = obnam.cmp.Component(obnam.cmp.MAPREF, map_block_id)
-        add(o, c)
+        o.add(c)
     
     for map_block_id in contmap_block_ids:
         c = obnam.cmp.Component(obnam.cmp.CONTMAPREF, map_block_id)
-        add(o, c)
+        o.add(c)
 
     oq = queue_create()
     queue_add(oq, host_id, encode(o))

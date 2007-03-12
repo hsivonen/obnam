@@ -143,7 +143,7 @@ class GetObjectTests(IoBase):
         id = "pink"
         component = obnam.cmp.Component(42, "pretty")
         object = obnam.obj.create(id, 0)
-        obnam.obj.add(object, component)
+        object.add(component)
         object = obnam.obj.encode(object)
         self.upload_object(id, object)
         o = obnam.io.get_object(self.context, id)
@@ -390,7 +390,7 @@ class ReachabilityTests(IoBase):
     def testDataAndMap(self):
         o = obnam.obj.create("rouge", obnam.obj.FILEPART)
         c = obnam.cmp.Component(obnam.cmp.FILECHUNK, "moulin")
-        obnam.obj.add(o, c)
+        o.add(c)
         encoded_o = obnam.obj.encode(o)
         
         block_id = "pink"
