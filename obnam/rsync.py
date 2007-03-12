@@ -67,7 +67,7 @@ def compute_delta(context, signature, filename):
         if not data:
             break
         id = obnam.obj.object_id_new()
-        o = obnam.obj.create(id, obnam.obj.DELTAPART)
+        o = obnam.obj.Object(id, obnam.obj.DELTAPART)
         o.add(obnam.cmp.Component(obnam.cmp.DELTADATA, data))
         o = obnam.obj.encode(o)
         obnam.io.enqueue_object(context, context.content_oq, 

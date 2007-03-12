@@ -112,7 +112,7 @@ def find_matching_inode(fl, pathname, stat_result):
 
 def to_object(fl, object_id):
     """Create an unencoded FILELIST object from a file list"""
-    o = obnam.obj.create(object_id, obnam.obj.FILELIST)
+    o = obnam.obj.Object(object_id, obnam.obj.FILELIST)
     for pathname in fl:
         o.add(fl[pathname])
     return o

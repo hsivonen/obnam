@@ -89,10 +89,6 @@ class Object:
         return self.id
     
         
-def create(id, kind):
-    """Create a new backup object"""
-    return Object(id, kind)
-    
 def get_components(o):
     """Return list of all components in an object"""
     return o.components
@@ -153,7 +149,7 @@ def decode(encoded, pos):
     """Decode an object from a string"""
     parser = obnam.cmp.Parser(encoded, pos)
     list = parser.decode_all()
-    o = create("", 0)
+    o = Object("", 0)
     for c in list:
         if c.kind == obnam.cmp.OBJID:
             o.id = c.get_string_value()
@@ -231,14 +227,14 @@ def block_decode(block):
 def signature_object_encode(objid, sigdata):
     """Encode a SIG object"""
     c = obnam.cmp.Component(obnam.cmp.SIGDATA, sigdata)
-    o = create(objid, SIG)
+    o = Object(objid, SIG)
     o.add(c)
     return encode(o)
 
 
 def delta_object_encode(objid, deltapart_refs, cont_ref, delta_ref):
     """Encode a DELTA object"""
-    o = create(objid, DELTA)
+    o = Object(objid, DELTA)
     for deltapart_ref in deltapart_refs:
         o.add(obnam.cmp.Component(obnam.cmp.DELTAPARTREF, deltapart_ref))
     if cont_ref:
@@ -251,7 +247,7 @@ def delta_object_encode(objid, deltapart_refs, cont_ref, delta_ref):
 
 def generation_object_encode(objid, filelist_id, start_time, end_time):
     """Encode a generation object, from list of filename, inode_id pairs"""
-    o = create(objid, GEN)
+    o = Object(objid, GEN)
     o.add(obnam.cmp.Component(obnam.cmp.FILELISTREF, filelist_id))
     o.add(obnam.cmp.Component(obnam.cmp.GENSTART, 
                               obnam.varint.encode(start_time)))
@@ -271,7 +267,7 @@ def generation_object_decode(gen):
 
 def host_block_encode(host_id, gen_ids, map_block_ids, contmap_block_ids):
     """Encode a new block with a host object"""
-    o = create(host_id, HOST)
+    o = Object(host_id, HOST)
     
     c = obnam.cmp.Component(obnam.cmp.FORMATVERSION, FORMAT_VERSION)
     o.add(c)

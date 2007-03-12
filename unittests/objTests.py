@@ -43,13 +43,13 @@ class ObjectKindNameTests(unittest.TestCase):
 class ObjectCreateTests(unittest.TestCase):
 
     def testCreate(self):
-        o = obnam.obj.create("pink", 1)
+        o = obnam.obj.Object("pink", 1)
         self.failUnlessEqual(o.get_id(), "pink")
         self.failUnlessEqual(o.get_kind(), 1)
         self.failUnlessEqual(obnam.obj.get_components(o), [])
 
     def testAdd(self):
-        o = obnam.obj.create("pink", 1)
+        o = obnam.obj.Object("pink", 1)
         c = obnam.cmp.Component(2, "pretty")
         o.add(c)
         self.failUnlessEqual(obnam.obj.get_components(o), [c])
@@ -60,7 +60,7 @@ class ObjectEncodingDecodingTests(unittest.TestCase):
     def test(self):
         c1 = obnam.cmp.Component(0xdeadbeef, "hello")
         c2 = obnam.cmp.Component(0xcafebabe, "world")
-        o = obnam.obj.create("uuid", 0xdada)
+        o = obnam.obj.Object("uuid", 0xdada)
         o.add(c1)
         o.add(c2)
         
@@ -119,7 +119,7 @@ class BlockCreateTests(unittest.TestCase):
         self.failUnlessEqual(queue_ids(oq), [])
 
     def testObjectQueue(self):
-        o = obnam.obj.create("pink", 1)
+        o = obnam.obj.Object("pink", 1)
         o.add(obnam.cmp.Component(2, "pretty"))
         oq = queue_create()
         queue_add(oq, "pink", obnam.obj.encode(o))
@@ -234,7 +234,7 @@ class HostBlockTests(unittest.TestCase):
 class GetComponentTests(unittest.TestCase):
 
     def setUp(self):
-        self.o = obnam.obj.create("uuid", 0)
+        self.o = obnam.obj.Object("uuid", 0)
         self.o.add(obnam.cmp.Component(1, "pink"))
         self.o.add(obnam.cmp.Component(2, "pretty"))
         self.o.add(obnam.cmp.Component(3, "red"))
@@ -278,7 +278,7 @@ class GetComponentTests(unittest.TestCase):
     def testGetVarintsByKind(self):
         list = range(1024)
 
-        o = obnam.obj.create("uuid", 0)
+        o = obnam.obj.Object("uuid", 0)
         for i in list:
             c = obnam.cmp.Component(0, obnam.varint.encode(i))
             o.add(c)
@@ -286,7 +286,7 @@ class GetComponentTests(unittest.TestCase):
         self.failUnlessEqual(obnam.obj.find_varints_by_kind(o, 0), list)
 
     def testGetFirstSVarintByKind(self):
-        o = obnam.obj.create("uuid", 0)
+        o = obnam.obj.Object("uuid", 0)
         for i in range(1024):
             c = obnam.cmp.Component(i, obnam.varint.encode(i))
             o.add(c)

@@ -142,7 +142,7 @@ class GetObjectTests(IoBase):
     def testGetObject(self):
         id = "pink"
         component = obnam.cmp.Component(42, "pretty")
-        object = obnam.obj.create(id, 0)
+        object = obnam.obj.Object(id, 0)
         object.add(component)
         object = obnam.obj.encode(object)
         self.upload_object(id, object)
@@ -304,9 +304,9 @@ class MetaDataTests(unittest.TestCase):
 class ObjectCacheTests(unittest.TestCase):
 
     def setUp(self):
-        self.object = obnam.obj.create("pink", 1)
-        self.object2 = obnam.obj.create("pretty", 1)
-        self.object3 = obnam.obj.create("beautiful", 1)
+        self.object = obnam.obj.Object("pink", 1)
+        self.object2 = obnam.obj.Object("pretty", 1)
+        self.object3 = obnam.obj.Object("beautiful", 1)
 
     def testCreate(self):
         context = obnam.context.create()
@@ -388,7 +388,7 @@ class ReachabilityTests(IoBase):
         self.failUnlessEqual(list, [])
 
     def testDataAndMap(self):
-        o = obnam.obj.create("rouge", obnam.obj.FILEPART)
+        o = obnam.obj.Object("rouge", obnam.obj.FILEPART)
         c = obnam.cmp.Component(obnam.cmp.FILECHUNK, "moulin")
         o.add(c)
         encoded_o = obnam.obj.encode(o)
@@ -466,10 +466,10 @@ class ObjectCacheRegressionTest(unittest.TestCase):
         context = obnam.context.create()
         context.config.set("backup", "object-cache-size", "3")
         oc = obnam.io.ObjectCache(context)
-        a = obnam.obj.create("a", 0)
-        b = obnam.obj.create("b", 0)
-        c = obnam.obj.create("c", 0)
-        d = obnam.obj.create("d", 0)
+        a = obnam.obj.Object("a", 0)
+        b = obnam.obj.Object("b", 0)
+        c = obnam.obj.Object("c", 0)
+        d = obnam.obj.Object("d", 0)
         oc.put(a)
         oc.put(b)
         oc.put(c)
