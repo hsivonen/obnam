@@ -138,9 +138,9 @@ class Object:
         return "".join(list)
 
 
-def decode(encoded, pos):
+def decode(encoded):
     """Decode an object from a string"""
-    parser = obnam.cmp.Parser(encoded, pos)
+    parser = obnam.cmp.Parser(encoded)
     list = parser.decode_all()
     o = Object("", 0)
     for c in list:
@@ -236,7 +236,7 @@ def generation_object_encode(objid, filelist_id, start_time, end_time):
 def generation_object_decode(gen):
     """Decode a generation object into objid, file list ref"""
 
-    o = decode(gen, 0)
+    o = decode(gen)
     return o.id, o.first_string_by_kind(obnam.cmp.FILELISTREF), \
            o.first_varint_by_kind(obnam.cmp.GENSTART), \
            o.first_varint_by_kind(obnam.cmp.GENEND)

@@ -65,7 +65,7 @@ class ObjectEncodingDecodingTests(unittest.TestCase):
         o.add(c2)
         
         encoded = o.encode()
-        o2 = obnam.obj.decode(encoded, 0)
+        o2 = obnam.obj.decode(encoded)
         encoded2 = o2.encode()
         
         self.failUnlessEqual(encoded, encoded2)
@@ -162,7 +162,7 @@ class ObjectTests(unittest.TestCase):
         id = "pink"
         sig = obnam.rsync.compute_signature(context, "Makefile")
         encoded = signature_object_encode(id, sig)
-        o = obnam.obj.decode(encoded, 0)
+        o = obnam.obj.decode(encoded)
         self.failUnlessEqual(o.get_id(), "pink")
         self.failUnlessEqual(o.get_kind(), obnam.obj.SIG)
         self.failUnlessEqual(len(o.get_components()), 1)
@@ -172,7 +172,7 @@ class ObjectTests(unittest.TestCase):
         id = "pink"
         deltapart_ref = "xyzzy"
         encoded = delta_object_encode(id, [deltapart_ref], "pretty", None)
-        o = obnam.obj.decode(encoded, 0)
+        o = obnam.obj.decode(encoded)
         self.failUnlessEqual(o.get_id(), "pink")
         self.failUnlessEqual(o.get_kind(), obnam.obj.DELTA)
         self.failUnlessEqual(len(o.get_components()), 2)
@@ -185,7 +185,7 @@ class ObjectTests(unittest.TestCase):
         id = "pink"
         deltapart_ref = "xyzzy"
         encoded = delta_object_encode(id, [deltapart_ref], None, "pretty")
-        o = obnam.obj.decode(encoded, 0)
+        o = obnam.obj.decode(encoded)
         self.failUnlessEqual(o.get_id(), "pink")
         self.failUnlessEqual(o.get_kind(), obnam.obj.DELTA)
         self.failUnlessEqual(len(o.get_components()), 2)
