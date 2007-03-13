@@ -50,7 +50,7 @@ def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
         sigdata = obnam.rsync.compute_signature(context, resolved)
         if sigdata:
             sig_id = obnam.obj.object_id_new()
-            sig = obnam.obj.signature_object_encode(sig_id, sigdata)
+            sig = obnam.obj.SignatureObject(sig_id, sigdata).encode()
             obnam.io.enqueue_object(context, context.oq, context.map, 
                                     sig_id, sig)
 

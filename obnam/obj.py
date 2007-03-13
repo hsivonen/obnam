@@ -201,13 +201,13 @@ def block_decode(block):
         logging.debug("xxx block does not start with cookie: %s" % repr(block))
         return None
 
-    
-def signature_object_encode(objid, sigdata):
-    """Encode a SIG object"""
-    c = obnam.cmp.Component(obnam.cmp.SIGDATA, sigdata)
-    o = Object(objid, SIG)
-    o.add(c)
-    return o.encode()
+
+class SignatureObject(Object):
+
+    def __init__(self, objid, sigdata):
+        Object.__init__(self, objid, SIG)
+        c = obnam.cmp.Component(obnam.cmp.SIGDATA, sigdata)
+        self.add(c)
 
 
 def delta_object_encode(objid, deltapart_refs, cont_ref, delta_ref):
