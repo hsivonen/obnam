@@ -103,18 +103,18 @@ class ObjectQueueFlushing(IoBase):
     def testEmptyQueue(self):
         obnam.io.flush_object_queue(self.context, self.context.oq, 
                                        self.context.map)
-        list = obnam.backend.list(self.context.be)
+        list = self.context.be.list()
         self.failUnlessEqual(list, [])
 
     def testFlushing(self):
         self.context.oq.add("pink", "pretty")
         
-        self.failUnlessEqual(obnam.backend.list(self.context.be), [])
+        self.failUnlessEqual(self.context.be.list(), [])
         
         obnam.io.flush_object_queue(self.context, self.context.oq,
                                        self.context.map)
 
-        list = obnam.backend.list(self.context.be)
+        list = self.context.be.list()
         self.failUnlessEqual(len(list), 1)
         
         b1 = os.path.basename(obnam.map.get(self.context.map, "pink"))
@@ -125,7 +125,7 @@ class ObjectQueueFlushing(IoBase):
         self.context.oq.add("pink", "pretty")
         self.context.content_oq.add("x", "y")
         obnam.io.flush_all_object_queues(self.context)
-        self.failUnlessEqual(len(obnam.backend.list(self.context.be)), 2)
+        self.failUnlessEqual(len(self.context.be.list()), 2)
         self.failUnless(self.context.oq.is_empty())
         self.failUnless(self.context.content_oq.is_empty())
 
@@ -363,14 +363,13 @@ class ReachabilityTests(IoBase):
         map_block_id = "box"
         map_block = obnam.map.encode_new_to_block(self.context.map,
                                                          map_block_id)
-        obnam.backend.upload(self.context.be, map_block_id, map_block)
+        self.context.be.upload(map_block_id, map_block)
 
         obnam.map.add(self.context.contmap, "black", "beautiful")
         contmap_block_id = "fiddly"
         contmap_block = obnam.map.encode_new_to_block(
                             self.context.contmap, contmap_block_id)
-        obnam.backend.upload(self.context.be, contmap_block_id, 
-                                contmap_block)
+        self.context.be.upload(contmap_block_id, contmap_block)
 
         host_id = self.context.config.get("backup", "host-id")
         host = obnam.obj.HostBlockObject(host_id, [], [map_block_id], 
@@ -391,13 +390,13 @@ class ReachabilityTests(IoBase):
         oq = obnam.obj.ObjectQueue()
         oq.add("rouge", encoded_o)
         block = oq.as_block(block_id)
-        obnam.backend.upload(self.context.be, block_id, block)
+        self.context.be.upload(block_id, block)
 
         obnam.map.add(self.context.contmap, "rouge", block_id)
         map_block_id = "pretty"
         map_block = obnam.map.encode_new_to_block(self.context.contmap,
                                                          map_block_id)
-        obnam.backend.upload(self.context.be, map_block_id, map_block)
+        self.context.be.upload(map_block_id, map_block)
 
         host_id = self.context.config.get("backup", "host-id")
         host = obnam.obj.HostBlockObject(host_id, [], [], [map_block_id])
@@ -416,14 +415,14 @@ class GarbageCollectionTests(IoBase):
         host = obnam.obj.HostBlockObject(host_id, [], [], []).encode()
         obnam.io.upload_host_block(self.context, host)
 
-        block_id = obnam.backend.generate_block_id(self.context.be)
-        obnam.backend.upload(self.context.be, block_id, "pink")
+        block_id = self.context.be.generate_block_id()
+        self.context.be.upload(block_id, "pink")
 
-        files = obnam.backend.list(self.context.be)
+        files = self.context.be.list()
         self.failUnlessEqual(files, [host_id, block_id])
 
         obnam.io.collect_garbage(self.context, host)
-        files = obnam.backend.list(self.context.be)
+        files = self.context.be.list()
         self.failUnlessEqual(files, [host_id])
 
 
@@ -479,9 +478,9 @@ class LoadMapTests(IoBase):
     def test(self):
         map = obnam.map.create()
         obnam.map.add(map, "pink", "pretty")
-        block_id = obnam.backend.generate_block_id(self.context.be)
+        block_id = self.context.be.generate_block_id()
         block = obnam.map.encode_new_to_block(map, block_id)
-        obnam.backend.upload(self.context.be, block_id, block)
+        self.context.be.upload(block_id, block)
         
         obnam.io.load_maps(self.context, self.context.map, [block_id])
         self.failUnlessEqual(obnam.map.get(self.context.map, "pink"),

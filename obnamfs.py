@@ -74,8 +74,7 @@ class ObnamFS(fuse.Fuse):
         self.context.cache = obnam.cache.init(self.context.config)
         self.context.be = obnam.backend.init(self.context.config, 
                                              self.context.cache)
-        obnam.backend.set_progress_reporter(self.context.be, 
-                                            self.context.progress)
+        self.context.be.set_progress_reporter(self.context.progress)
         obnam.log.setup(self.context.config)
 
         block = obnam.io.get_host_block(self.context)

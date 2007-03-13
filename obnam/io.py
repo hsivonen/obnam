@@ -54,10 +54,10 @@ def flush_object_queue(context, oq, map):
     """
     
     if not oq.is_empty():
-        block_id = obnam.backend.generate_block_id(context.be)
+        block_id = context.be.generate_block_id()
         logging.debug("Creating new object block %s" % block_id)
         block = oq.as_block(block_id)
-        obnam.backend.upload(context.be, block_id, block)
+        context.be.upload(block_id, block)
         for id in oq.ids():
             obnam.map.add(map, id, block_id)
         oq.clear()
@@ -73,14 +73,14 @@ def get_block(context, block_id):
     """Get a block from cache or by downloading it"""
     block = obnam.cache.get_block(context.cache, block_id)
     if not block:
-        result = obnam.backend.download(context.be, block_id)
+        result = context.be.download(block_id)
         if type(result) == type(""):
             block = result
         else:
             # it's an exception
             raise result
     # FIXME: the following is ugly
-    elif obnam.backend._use_gpg(context.be):
+    elif context.be.use_gpg():
         logging.debug("Decoding cached block %s before using it", block_id)
         decrypted = obnam.gpg.decrypt(context.config, block)
         if decrypted is None:
@@ -205,16 +205,15 @@ def get_object(context, object_id):
 
 def upload_host_block(context, host_block):
     """Upload a host block"""
-    return obnam.backend.upload(context.be, 
-                                   context.config.get("backup", "host-id"), 
-                                   host_block)
+    return context.be.upload(context.config.get("backup", "host-id"), 
+                             host_block)
 
 
 def get_host_block(context):
     """Return (and fetch, if needed) the host block, or None if not found"""
     host_id = context.config.get("backup", "host-id")
     logging.debug("Getting host block %s" % host_id)
-    result = obnam.backend.download(context.be, host_id)
+    result = context.be.download(host_id)
     if type(result) == type(""):
         return result
     else:
@@ -415,13 +414,13 @@ def collect_garbage(context, host_block):
     map_block_ids = find_map_blocks_in_use(context, host_block, 
                                            data_block_ids)
     logging.debug("GC: finding all files in store")
-    files = obnam.backend.list(context.be)
+    files = context.be.list()
     for id in [host_id] + data_block_ids + map_block_ids:
         if id in files:
             files.remove(id)
     for garbage in files:
         logging.debug("GC: Removing file %s" % garbage)
-        obnam.backend.remove(context.be, garbage)
+        context.be.remove(garbage)
     logging.debug("GC: done")
 
 

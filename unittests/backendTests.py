@@ -75,34 +75,42 @@ class ParseStoreUrlTests(unittest.TestCase):
 class DircountTests(unittest.TestCase):
 
     def testInit(self):
-        be = obnam.backend.BackendData()
+        config = obnam.config.default_config()
+        cache = obnam.cache.init(config)
+        be = obnam.backend.Backend(config, cache)
         self.failUnlessEqual(len(be.dircounts), obnam.backend.LEVELS)
         for i in range(obnam.backend.LEVELS):
             self.failUnlessEqual(be.dircounts[i], 0)
         
     def testIncrementOnce(self):
-        be = obnam.backend.BackendData()
-        obnam.backend.increment_dircounts(be)
+        config = obnam.config.default_config()
+        cache = obnam.cache.init(config)
+        be = obnam.backend.Backend(config, cache)
+        be.increment_dircounts()
         self.failUnlessEqual(be.dircounts, [0, 0, 1])
 
     def testIncrementMany(self):
-        be = obnam.backend.BackendData()
+        config = obnam.config.default_config()
+        cache = obnam.cache.init(config)
+        be = obnam.backend.Backend(config, cache)
         for i in range(obnam.backend.MAX_BLOCKS_PER_DIR):
-            obnam.backend.increment_dircounts(be)
+            be.increment_dircounts()
         self.failUnlessEqual(be.dircounts, 
                              [0, 0, obnam.backend.MAX_BLOCKS_PER_DIR])
 
-        obnam.backend.increment_dircounts(be)
+        be.increment_dircounts()
         self.failUnlessEqual(be.dircounts, [0, 1, 0])
 
-        obnam.backend.increment_dircounts(be)
+        be.increment_dircounts()
         self.failUnlessEqual(be.dircounts, [0, 1, 1])
 
     def testIncrementTop(self):
-        be = obnam.backend.BackendData()
+        config = obnam.config.default_config()
+        cache = obnam.cache.init(config)
+        be = obnam.backend.Backend(config, cache)
         be.dircounts = [0] + \
             [obnam.backend.MAX_BLOCKS_PER_DIR] * (obnam.backend.LEVELS -1)
-        obnam.backend.increment_dircounts(be)
+        be.increment_dircounts()
         self.failUnlessEqual(be.dircounts, [1, 0, 0])
 
 
@@ -146,9 +154,9 @@ class IdTests(LocalBackendBase):
     def testGenerateBlockId(self):
         be = obnam.backend.init(self.config, self.cache)
         self.failIfEqual(be.blockdir, None)
-        id = obnam.backend.generate_block_id(be)
+        id = be.generate_block_id()
         self.failUnless(id.startswith(be.blockdir))
-        id2 = obnam.backend.generate_block_id(be)
+        id2 = be.generate_block_id()
         self.failIfEqual(id, id2)
 
 
@@ -159,12 +167,12 @@ class UploadTests(LocalBackendBase):
         self.config.set("backup", "gpg-encrypt-to", "")
         self.config.set("backup", "gpg-sign-with", "")
         be = obnam.backend.init(self.config, self.cache)
-        id = obnam.backend.generate_block_id(be)
+        id = be.generate_block_id()
         block = "pink is pretty"
-        ret = obnam.backend.upload(be, id, block)
+        ret = be.upload(id, block)
         self.failUnlessEqual(ret, None)
-        self.failUnlessEqual(obnam.backend.get_bytes_read(be), 0)
-        self.failUnlessEqual(obnam.backend.get_bytes_written(be), len(block))
+        self.failUnlessEqual(be.get_bytes_read(), 0)
+        self.failUnlessEqual(be.get_bytes_written(), len(block))
         
         pathname = os.path.join(self.rootdir, id)
         self.failUnless(os.path.isfile(pathname))
@@ -183,19 +191,19 @@ class DownloadTests(LocalBackendBase):
         self.config.set("backup", "gpg-sign-with", "")
 
         be = obnam.backend.init(self.config, self.cache)
-        id = obnam.backend.generate_block_id(be)
+        id = be.generate_block_id()
         block = "pink is still pretty"
-        obnam.backend.upload(be, id, block)
+        be.upload(id, block)
         
-        success = obnam.backend.download(be, id)
+        success = be.download(id)
         self.failUnlessEqual(type(success), type(""))
-        self.failUnlessEqual(obnam.backend.get_bytes_read(be), len(block))
-        self.failUnlessEqual(obnam.backend.get_bytes_written(be), len(block))
+        self.failUnlessEqual(be.get_bytes_read(), len(block))
+        self.failUnlessEqual(be.get_bytes_written(), len(block))
         
     def testError(self):
         be = obnam.backend.init(self.config, self.cache)
-        id = obnam.backend.generate_block_id(be)
-        success = obnam.backend.download(be, id)
+        id = be.generate_block_id()
+        success = be.download(id)
         self.failIfEqual(success, True)
 
 
@@ -207,12 +215,12 @@ class FileListTests(LocalBackendBase):
         self.config.set("backup", "gpg-sign-with", "")
 
         be = obnam.backend.init(self.config, self.cache)
-        self.failUnlessEqual(obnam.backend.list(be), [])
+        self.failUnlessEqual(be.list(), [])
         
         id = "pink"
         block = "pretty"
-        obnam.backend.upload(be, id, block)
-        list = obnam.backend.list(be)
+        be.upload(id, block)
+        list = be.list()
         self.failUnlessEqual(list, [id])
 
         filename = os.path.join(self.rootdir, id)
@@ -226,11 +234,11 @@ class RemoveTests(LocalBackendBase):
 
     def test(self):
         be = obnam.backend.init(self.config, self.cache)
-        id = obnam.backend.generate_block_id(be)
+        id = be.generate_block_id()
         block = "pink is still pretty"
-        obnam.backend.upload(be, id, block)
+        be.upload(id, block)
 
-        self.failUnlessEqual(obnam.backend.list(be), [id])
+        self.failUnlessEqual(be.list(), [id])
         
-        obnam.backend.remove(be, id)
-        self.failUnlessEqual(obnam.backend.list(be), [])
+        be.remove(id)
+        self.failUnlessEqual(be.list(), [])

@@ -198,18 +198,18 @@ def backup(context, args):
 
     logging.info("Creating new mapping blocks")
     if obnam.map.get_new(context.map):
-        map_block_id = obnam.backend.generate_block_id(context.be)
+        map_block_id = context.be.generate_block_id()
         logging.debug("Creating normal mapping block %s" % map_block_id)
         map_block = obnam.map.encode_new_to_block(context.map, map_block_id)
-        obnam.backend.upload(context.be, map_block_id, map_block)
+        context.be.upload(map_block_id, map_block)
         map_block_ids.append(map_block_id)
 
     if obnam.map.get_new(context.contmap):
-        contmap_block_id = obnam.backend.generate_block_id(context.be)
+        contmap_block_id = context.be.generate_block_id()
         logging.debug("Creating content mapping block %s" % contmap_block_id)
         contmap_block = obnam.map.encode_new_to_block(context.contmap, 
                                                              contmap_block_id)
-        obnam.backend.upload(context.be, contmap_block_id, contmap_block)
+        context.be.upload(contmap_block_id, contmap_block)
         contmap_block_ids.append(contmap_block_id)
 
     logging.info("Creating new host block")
@@ -453,7 +453,7 @@ def main():
     args = obnam.config.parse_options(context.config, sys.argv[1:])
     context.cache = obnam.cache.init(context.config)
     context.be = obnam.backend.init(context.config, context.cache)
-    obnam.backend.set_progress_reporter(context.be, context.progress)
+    context.be.set_progress_reporter(context.progress)
 
     if not args:
         raise MissingCommandWord()
@@ -484,8 +484,8 @@ def main():
         raise UnknownCommandWord(command)
 
     logging.info("Store I/O: %d kB read, %d kB written" % 
-                 (obnam.backend.get_bytes_read(context.be) / 1024,
-                  obnam.backend.get_bytes_written(context.be) / 1024))
+                 (context.be.get_bytes_read() / 1024,
+                  context.be.get_bytes_written() / 1024))
     logging.info("Obnam finishing")
     context.progress.final_report()
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2006  Lars Wirzenius <liw@iki.fi>
+# Copyright (C) 2006, 2007  Lars Wirzenius <liw@iki.fi>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,11 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-"""Backup program backend for communicating with the backup server.
-
-This implementation only stores the stuff locally, however.
-
-"""
+"""Backup program backend for communicating with the backup server."""
 
 
 import logging
@@ -61,33 +57,6 @@ MAX_BLOCKS_PER_DIR = 256
 LEVELS = 3
 
 
-class BackendData:
-
-    def __init__(self):
-        self.config = None
-        self.url = None
-        self.user = None
-        self.host = None
-        self.port = None
-        self.path = None
-        self.cache = None
-        self.blockdir = None
-        self.dircounts = [0] * LEVELS
-        self.sftp_transport = None
-        self.sftp_client = None
-        self.bytes_read = 0
-        self.bytes_written = 0
-        self.progress = None
-
-
-def get_default_user():
-    """Return the username of the current user"""
-    if "LOGNAME" in os.environ:
-        return os.environ["LOGNAME"]
-    else:
-        return pwd.getpwuid(os.getuid())[0]
-
-
 def parse_store_url(url):
     """Parse a store url
     
@@ -126,236 +95,264 @@ def parse_store_url(url):
     return user, host, port, path
 
 
-def init(config, cache):
-    """Initialize the subsystem and return an opaque backend object"""
-    be = BackendData()
-    be.config = config
-    be.url = config.get("backup", "store")
-    (be.user, be.host, be.port, be.path) = parse_store_url(be.url)
-    if be.user is None:
-        be.user = get_default_user()
-    if be.port is None:
-        be.port = 22 # 22 is the default port for ssh
-    be.cache = cache
-    be.blockdir = str(uuid.uuid4())
-    return be
+class Backend:
 
+    def __init__(self, config, cache):
+        self.config = config
+        self.url = config.get("backup", "store")
 
-def set_progress_reporter(be, progress):
-    be.progress = progress
+        self.user, self.host, self.port, self.path = parse_store_url(self.url)
+        if self.user is None:
+            self.user = get_default_user()
+        if self.port is None:
+            self.port = 22 # 22 is the default port for ssh
 
+        self.blockdir = None
+        self.dircounts = [0] * LEVELS
+        self.sftp_transport = None
+        self.sftp_client = None
+        self.bytes_read = 0
+        self.bytes_written = 0
+        self.progress = None
+        self.cache = cache
+        self.blockdir = str(uuid.uuid4())
+    
+    def set_progress_reporter(self, progress):
+        """Set progress reporter to be used"""
+        self.progress = progress
+        
+    def get_bytes_read(self):
+        """Return number of bytes read from the store during this run"""
+        return self.bytes_read
+    
+    def get_bytes_written(self):
+        """Return number of bytes written to the store during this run"""
+        return self.bytes_written
 
-def get_bytes_read(be):
-    """Return number of bytes read from the store during this run"""
-    return be.bytes_read
+    def increment_dircounts(self):
+        """Increment the counter for lowest dir level, and more if need be"""
+        level = len(self.dircounts) - 1
+        while level >= 0:
+            self.dircounts[level] += 1
+            if self.dircounts[level] <= MAX_BLOCKS_PER_DIR:
+                break
+            self.dircounts[level] = 0
+            level -= 1
+        
+    def generate_block_id(self):
+        """Generate a new identifier for the block, when stored remotely"""
+        self.increment_dircounts()
+        id = self.blockdir
+        for i in self.dircounts:
+            id = os.path.join(id, "%d" % i)
+        return id
 
+    def block_remote_pathname(self, block_id):
+        """Return pathname on server for a given block id"""
+        return os.path.join(self.path, block_id)
 
-def get_bytes_written(be):
-    """Return number of bytes written to the store during this run"""
-    return be.bytes_written
+    def use_gpg(self):
+        """Should we use gpg to encrypt/decrypt blocks?"""
+        no_gpg = self.config.getboolean("backup", "no-gpg")
+        if no_gpg:
+            return False
+        encrypt_to = self.config.get("backup", "gpg-encrypt-to").strip()
+        return encrypt_to
+    
+    def upload(self, block_id, block):
+        logging.debug("Uploading block %s" % block_id)
+        if self.use_gpg():
+            logging.debug("Encrypting block %s before upload" % block_id)
+            encrypted = obnam.gpg.encrypt(self.config, block)
+            if encrypted is None:
+                logging.error("Can't encrypt block for upload, " +
+                              "not uploading it")
+                return None
+            block = encrypted
+        logging.debug("Uploading block %s (%d bytes)" % (block_id, len(block)))
+        self.really_upload(block_id, block)
+        self.bytes_written += len(block)
+        if self.progress:
+            self.progress.update_uploaded(self.bytes_written)
+        return None
 
+    def download(self, block_id):
+        """Download a block from the remote server
+        
+        Return the unparsed block (a string), or an exception for errors.
+        
+        """
+        
+        logging.debug("Downloading block %s" % block_id)
+        block = self.really_download(block_id)
+        if type(block) != type(""):
+            return block # it's an exception
 
-def increment_dircounts(be):
-    """Increment the counter for lowest directory level, and more if need be"""
-    level = len(be.dircounts) - 1
-    while level >= 0:
-        be.dircounts[level] += 1
-        if be.dircounts[level] <= MAX_BLOCKS_PER_DIR:
-            break
-        be.dircounts[level] = 0
-        level -= 1
-
-
-def generate_block_id(be):
-    """Generate a new identifier for the block, when stored remotely"""
-    increment_dircounts(be)
-    id = be.blockdir
-    for i in be.dircounts:
-        id = os.path.join(id, "%d" % i)
-    return id
-
-
-def _block_remote_pathname(be, block_id):
-    """Return pathname on server for a given block id"""
-    return os.path.join(be.path, block_id)
-
-
-def _use_sftp(be):
-    """Should we use sftp or local filesystem?"""
-    return be.host is not None
-
-
-def _connect_sftp(be):
-    """Connect to the server, unless already connected"""
-    if be.sftp_transport is None:
-        ssh_key_file = be.config.get("backup", "ssh-key")
-        logging.debug("Getting private key from %s" % ssh_key_file)
-        pkey = paramiko.DSSKey.from_private_key_file(ssh_key_file)
-
-        logging.debug("Connecting to sftp server: host=%s, port=%d" % 
-                        (be.host, be.port))
-        be.sftp_transport = paramiko.Transport((be.host, be.port))
-
-        logging.debug("Authenticating as user %s" % be.user)
-        be.sftp_transport.connect(username=be.user, pkey=pkey)
-
-        logging.debug("Opening sftp client")
-        be.sftp_client = be.sftp_transport.open_sftp_client()
-
-
-def sftp_makedirs(sftp, dirname, mode=0777):
-    """Create dirname, if it doesn't exist, and all its parents, too"""
-    stack = []
-    while dirname:
-        stack.append(dirname)
-        dirname2 = os.path.dirname(dirname)
-        if dirname2 == dirname:
-            dirname = None
-        else:
-            dirname = dirname2
-
-    while stack:
-        dirname, stack = stack[-1], stack[:-1]
+        self.bytes_read += len(block)
+        if self.progress:
+            self.progress.update_downloaded(self.bytes_read)
+        
+        if self.use_gpg():
+            logging.debug("Decoding downloaded block %s before using it" %
+                          block_id)
+            decrypted = obnam.gpg.decrypt(self.config, block)
+            if decrypted is None:
+                logging.error("Can't decrypt downloaded block, not using it")
+                return None
+            block = decrypted
+        
+        return block
+    
+    def remove(self, block_id):
+        """Remove a block from the remote server"""
+        pathname = self.block_remote_pathname(block_id)
         try:
-            sftp.lstat(dirname).st_mode
+            self.remove_pathname(pathname)
         except IOError:
-            exists = False
-        else:
-            exists = True
-        if not exists:
-            logging.debug("Creating remote directory %s" % dirname)
-            sftp.mkdir(dirname, mode=mode)
-
-
-def _use_gpg(be):
-    """Should we use gpg to encrypt/decrypt blocks?"""
-    no_gpg = be.config.getboolean("backup", "no-gpg")
-    if no_gpg:
-        return False
-    encrypt_to = be.config.get("backup", "gpg-encrypt-to").strip()
-    return encrypt_to
-
-
-def upload(be, block_id, block):
-    """Start the upload of a block to the remote server"""
+            # We ignore any errors in removing a file.
+            pass
     
-    logging.debug("Uploading block %s" % block_id)
-    if _use_gpg(be):
-        logging.debug("Encrypting block %s before upload" % block_id)
-        encrypted = obnam.gpg.encrypt(be.config, block)
-        if encrypted is None:
-            logging.error("Can't encrypt block for upload, not uploading it")
-            return None
-        block = encrypted
+
+class SftpBackend(Backend):
+
+    def connect_sftp(self):
+        """Connect to the server, unless already connected"""
+        if self.sftp_transport is None:
+            ssh_key_file = self.config.get("backup", "ssh-key")
+            logging.debug("Getting private key from %s" % ssh_key_file)
+            pkey = paramiko.DSSKey.from_private_key_file(ssh_key_file)
     
-    logging.debug("Uploading block %s (%d bytes)" % (block_id, len(block)))
-    if _use_sftp(be):
-        _connect_sftp(be)
-        pathname = _block_remote_pathname(be, block_id)
-        sftp_makedirs(be.sftp_client, os.path.dirname(pathname))
-        f = be.sftp_client.file(pathname, "w")
+            logging.debug("Connecting to sftp server: host=%s, port=%d" % 
+                          (self.host, self.port))
+            self.sftp_transport = paramiko.Transport((self.host, self.port))
+    
+            logging.debug("Authenticating as user %s" % self.user)
+            self.sftp_transport.connect(username=self.user, pkey=pkey)
+    
+            logging.debug("Opening sftp client")
+            self.sftp_client = self.sftp_transport.open_sftp_client()
+    
+    def sftp_makedirs(self, dirname, mode=0777):
+        """Create dirname, if it doesn't exist, and all its parents, too"""
+        stack = []
+        while dirname:
+            stack.append(dirname)
+            dirname2 = os.path.dirname(dirname)
+            if dirname2 == dirname:
+                dirname = None
+            else:
+                dirname = dirname2
+    
+        while stack:
+            dirname, stack = stack[-1], stack[:-1]
+            try:
+                self.sftp_client.lstat(dirname).st_mode
+            except IOError:
+                exists = False
+            else:
+                exists = True
+            if not exists:
+                logging.debug("Creating remote directory %s" % dirname)
+                self.sftp_client.mkdir(dirname, mode=mode)
+    
+    def really_upload(self, block_id, block):
+        self.connect_sftp()
+        pathname = self.block_remote_pathname(block_id)
+        self.sftp_makedirs(os.path.dirname(pathname))
+        f = self.sftp_client.file(pathname, "w")
         f.write(block)
         f.close()
-    else:
-        dir_full = os.path.join(be.path, os.path.dirname(block_id))
+    
+    def really_download(self, block_id):
+        try:
+            self.connect_sftp()
+            f = self.sftp_client.file(self.block_remote_pathname(block_id), 
+                                      "r")
+            block = f.read()
+            f.close()
+            if self.config.get("backup", "cache"):
+                obnam.cache.put_block(self.cache, block_id, block)
+        except IOError, e:
+            return e
+        return block
+    
+    def sftp_listdir_abs(self, dirname):
+        """Like SFTPClient's listdir_attr, but absolute pathnames"""
+        items = self.sftp_client.listdir_attr(dirname)
+        for item in items:
+            item.filename = os.path.join(dirname, item.filename)
+        return items
+    
+    def sftp_recursive_listdir(self, dirname="."):
+        """Similar to SFTPClient's listdir_attr, but recursively"""
+        list = []
+        logging.debug("sftp: listing files in %s" % dirname)
+        unprocessed = self.sftp_listdir_abs(dirname)
+        while unprocessed:
+            item, unprocessed = unprocessed[0], unprocessed[1:]
+            if stat.S_ISDIR(item.st_mode):
+                logging.debug("sftp: listing files in %s" % item.filename)
+                unprocessed += self.sftp_listdir_abs(item.filename)
+            elif stat.S_ISREG(item.st_mode):
+                list.append(item.filename)
+        return list
+    
+    def list(self):
+        """Return list of all files on the remote server"""
+        return self.sftp_recursive_listdir(self.path)
+    
+    def remove_pathname(self, pathname):
+        self.sftp_client.remove(pathname)
+
+
+class FileBackend(Backend):
+
+    def really_upload(self, block_id, block):
+        dir_full = os.path.join(self.path, os.path.dirname(block_id))
         if not os.path.isdir(dir_full):
             os.makedirs(dir_full, 0700)
-        f = file(_block_remote_pathname(be, block_id), "w")
+        f = file(self.block_remote_pathname(block_id), "w")
         f.write(block)
         f.close()
-    be.bytes_written += len(block)
-    if be.progress:
-        be.progress.update_uploaded(be.bytes_written)
-    return None
 
-
-def download(be, block_id):
-    """Download a block from the remote server
-    
-    Return the unparsed block (a string), or an exception for errors.
-    
-    """
-    
-    logging.debug("Downloading block %s" % block_id)
-    if _use_sftp(be):
+    def really_download(self, block_id):
         try:
-            _connect_sftp(be)
-            f = be.sftp_client.file(_block_remote_pathname(be, block_id), "r")
-            block = f.read()
-            f.close()
-            if be.config.get("backup", "cache"):
-                obnam.cache.put_block(be.cache, block_id, block)
-        except IOError, e:
-            return e
-    else:
-        try:
-            f = file(_block_remote_pathname(be, block_id), "r")
+            f = file(self.block_remote_pathname(block_id), "r")
             block = f.read()
             f.close()
         except IOError, e:
             return e
-    be.bytes_read += len(block)
-    if be.progress:
-        be.progress.update_downloaded(be.bytes_read)
+        return block
     
-    if _use_gpg(be):
-        logging.debug("Decoding downloaded block %s before using it", block_id)
-        decrypted = obnam.gpg.decrypt(be.config, block)
-        if decrypted is None:
-            logging.error("Can't decrypt downloaded block, not using it")
-            return None
-        block = decrypted
-    
-    return block
-
-
-def sftp_listdir_abs(sftp, dirname):
-    """Like SFTPClient's listdir_attr, but absolute pathnames"""
-    items = sftp.listdir_attr(dirname)
-    for item in items:
-        item.filename = os.path.join(dirname, item.filename)
-    return items
-
-
-def sftp_recursive_listdir(sftp, dirname="."):
-    """Similar to SFTPClient's listdir_attr, but recursively"""
-    list = []
-    logging.debug("sftp: listing files in %s" % dirname)
-    unprocessed = sftp_listdir_abs(sftp, dirname)
-    while unprocessed:
-        item, unprocessed = unprocessed[0], unprocessed[1:]
-        if stat.S_ISDIR(item.st_mode):
-            logging.debug("sftp: listing files in %s" % item.filename)
-            unprocessed += sftp_listdir_abs(sftp, item.filename)
-        elif stat.S_ISREG(item.st_mode):
-            list.append(item.filename)
-    return list
-
-
-def list(be):
-    """Return list of all files on the remote server"""
-    if _use_sftp(be):
-        return sftp_recursive_listdir(be.sftp_client, be.path)
-    else:
+    def list(self):
+        """Return list of all files on the remote server"""
         list = []
-        for dirpath, _, filenames in os.walk(be.path):
-            if dirpath.startswith(be.path):
-                dirpath = dirpath[len(be.path):]
+        for dirpath, _, filenames in os.walk(self.path):
+            if dirpath.startswith(self.path):
+                dirpath = dirpath[len(self.path):]
                 if dirpath.startswith(os.sep):
                     dirpath = dirpath[len(os.sep):]
             list += [os.path.join(dirpath, x) for x in filenames]
         return list
+    
+    def remove_pathname(self, pathname):
+        """Remove a block from the remote server"""
+        if os.path.exists(pathname):
+            os.remove(pathname)
+    
+        
+def get_default_user():
+    """Return the username of the current user"""
+    if "LOGNAME" in os.environ:
+        return os.environ["LOGNAME"]
+    else:
+        return pwd.getpwuid(os.getuid())[0]
 
 
-def remove(be, block_id):
-    """Remove a block from the remote server"""
-    pathname = _block_remote_pathname(be, block_id)
-    try:
-        if _use_sftp(be):
-            be.sftp_client.remove(pathname)
-        else:
-            if os.path.exists(pathname):
-                os.remove(pathname)
-    except IOError:
-        # We ignore any errors in removing a file.
-        pass
+def init(config, cache):
+    """Initialize the subsystem and return an opaque backend object"""
+    _, host, _, _ = parse_store_url(config.get("backup", "store"))
+    if host is None:
+        return FileBackend(config, cache)
+    else:
+        return SftpBackend(config, cache)
