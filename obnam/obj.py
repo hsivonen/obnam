@@ -224,17 +224,18 @@ class DeltaObject(Object):
         self.add(c)
 
 
-def generation_object_encode(objid, filelist_id, start_time, end_time):
-    """Encode a generation object, from list of filename, inode_id pairs"""
-    o = Object(objid, GEN)
-    o.add(obnam.cmp.Component(obnam.cmp.FILELISTREF, filelist_id))
-    o.add(obnam.cmp.Component(obnam.cmp.GENSTART, 
-                              obnam.varint.encode(start_time)))
-    o.add(obnam.cmp.Component(obnam.cmp.GENEND, 
-                              obnam.varint.encode(end_time)))
-    return o.encode()
+class GenerationObject(Object):
+
+    def __init__(self, objid, filelist_id, start_time, end_time):
+        Object.__init__(self, objid, GEN)
+        self.add(obnam.cmp.Component(obnam.cmp.FILELISTREF, filelist_id))
+        self.add(obnam.cmp.Component(obnam.cmp.GENSTART, 
+                                     obnam.varint.encode(start_time)))
+        self.add(obnam.cmp.Component(obnam.cmp.GENEND, 
+                                     obnam.varint.encode(end_time)))
 
 
+# This is used only by testing.
 def generation_object_decode(gen):
     """Decode a generation object into objid, file list ref"""
 

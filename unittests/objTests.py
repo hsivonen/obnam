@@ -142,7 +142,7 @@ class GenerationTests(unittest.TestCase):
         fl1 = "pretty"
         start1 = 12765
         end1 = 37337
-        gen = generation_object_encode(id1, fl1, start1, end1)
+        gen = obnam.obj.GenerationObject(id1, fl1, start1, end1).encode()
         (id2, fl2, start2, end2) = generation_object_decode(gen)
         self.failUnlessEqual(id1, id2)
         self.failUnlessEqual(fl1, fl2)

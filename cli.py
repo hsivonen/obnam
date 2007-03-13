@@ -189,8 +189,9 @@ def backup(context, args):
     
     gen_id = obnam.obj.object_id_new()
     logging.info("Creating new generation object %s" % gen_id)
-    gen = obnam.obj.generation_object_encode(gen_id, filelist_id, start_time,
-                                             end_time)
+    gen = obnam.obj.GenerationObject(gen_id, filelist_id, start_time, 
+                                     end_time)
+    gen = gen.encode()
     gen_ids.append(gen_id)
     obnam.io.enqueue_object(context, context.oq, context.map, gen_id, gen)
     obnam.io.flush_all_object_queues(context)
