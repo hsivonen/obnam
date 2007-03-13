@@ -205,8 +205,9 @@ class HostBlockTests(unittest.TestCase):
         gen_ids = ["pretty", "beautiful"]
         map_ids = ["black", "box"]
         contmap_ids = ["tilu", "lii"]
-        host = obnam.obj.host_block_encode(host_id, gen_ids, map_ids, 
-                                              contmap_ids)
+        host = obnam.obj.HostBlockObject(host_id, gen_ids, map_ids, 
+                                         contmap_ids)
+        host = host.encode()
         self.failUnless(host.startswith(obnam.obj.BLOCK_COOKIE))
         (host_id2, gen_ids2, map_ids2, contmap_ids2) = \
             obnam.obj.host_block_decode(host)
@@ -216,7 +217,7 @@ class HostBlockTests(unittest.TestCase):
         self.failUnlessEqual(contmap_ids, contmap_ids2)
         
     def testFormatVersion(self):
-        encoded = obnam.obj.host_block_encode("pink", [], [], [])
+        encoded = obnam.obj.HostBlockObject("pink", [], [], []).encode()
         decoded = obnam.obj.block_decode(encoded)
         c = obnam.cmp.first_by_kind(decoded, obnam.cmp.OBJECT)
         subs = c.get_subcomponents()

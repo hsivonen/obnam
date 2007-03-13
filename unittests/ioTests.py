@@ -158,9 +158,10 @@ class HostBlock(IoBase):
 
     def testFetchHostBlock(self):
         host_id = self.context.config.get("backup", "host-id")
-        host = obnam.obj.host_block_encode(host_id, ["gen1", "gen2"],
-                                                 ["map1", "map2"], 
-                                                 ["contmap1", "contmap2"])
+        host = obnam.obj.HostBlockObject(host_id, ["gen1", "gen2"],
+                                         ["map1", "map2"], 
+                                         ["contmap1", "contmap2"])
+        host = host.encode()
         be = obnam.backend.init(self.context.config, self.context.cache)
         
         obnam.io.upload_host_block(self.context, host)
@@ -348,7 +349,7 @@ class ReachabilityTests(IoBase):
 
     def testNoDataNoMaps(self):
         host_id = self.context.config.get("backup", "host-id")
-        host = obnam.obj.host_block_encode(host_id, [], [], [])
+        host = obnam.obj.HostBlockObject(host_id, [], [], []).encode()
         obnam.io.upload_host_block(self.context, host)
         
         list = obnam.io.find_reachable_data_blocks(self.context, host)
@@ -372,8 +373,9 @@ class ReachabilityTests(IoBase):
                                 contmap_block)
 
         host_id = self.context.config.get("backup", "host-id")
-        host = obnam.obj.host_block_encode(host_id, [], [map_block_id], 
-                                              [contmap_block_id])
+        host = obnam.obj.HostBlockObject(host_id, [], [map_block_id], 
+                                         [contmap_block_id])
+        host = host.encode()
         obnam.io.upload_host_block(self.context, host)
         
         list = obnam.io.find_map_blocks_in_use(self.context, host, [])
@@ -398,7 +400,8 @@ class ReachabilityTests(IoBase):
         obnam.backend.upload(self.context.be, map_block_id, map_block)
 
         host_id = self.context.config.get("backup", "host-id")
-        host = obnam.obj.host_block_encode(host_id, [], [], [map_block_id])
+        host = obnam.obj.HostBlockObject(host_id, [], [], [map_block_id])
+        host = host.encode()
         obnam.io.upload_host_block(self.context, host)
         
         list = obnam.io.find_map_blocks_in_use(self.context, host, 
@@ -410,7 +413,7 @@ class GarbageCollectionTests(IoBase):
 
     def testFindUnreachableFiles(self):
         host_id = self.context.config.get("backup", "host-id")
-        host = obnam.obj.host_block_encode(host_id, [], [], [])
+        host = obnam.obj.HostBlockObject(host_id, [], [], []).encode()
         obnam.io.upload_host_block(self.context, host)
 
         block_id = obnam.backend.generate_block_id(self.context.be)

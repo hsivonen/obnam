@@ -245,29 +245,30 @@ def generation_object_decode(gen):
            o.first_varint_by_kind(obnam.cmp.GENEND)
 
 
-def host_block_encode(host_id, gen_ids, map_block_ids, contmap_block_ids):
-    """Encode a new block with a host object"""
-    o = Object(host_id, HOST)
-    
-    c = obnam.cmp.Component(obnam.cmp.FORMATVERSION, FORMAT_VERSION)
-    o.add(c)
+class HostBlockObject(Object):
 
-    for gen_id in gen_ids:
-        c = obnam.cmp.Component(obnam.cmp.GENREF, gen_id)
-        o.add(c)
+    def __init__(self, host_id, gen_ids, map_block_ids, contmap_block_ids):
+        Object.__init__(self, host_id, HOST)
+        
+        c = obnam.cmp.Component(obnam.cmp.FORMATVERSION, FORMAT_VERSION)
+        self.add(c)
     
-    for map_block_id in map_block_ids:
-        c = obnam.cmp.Component(obnam.cmp.MAPREF, map_block_id)
-        o.add(c)
+        for gen_id in gen_ids:
+            c = obnam.cmp.Component(obnam.cmp.GENREF, gen_id)
+            self.add(c)
+        
+        for map_block_id in map_block_ids:
+            c = obnam.cmp.Component(obnam.cmp.MAPREF, map_block_id)
+            self.add(c)
+        
+        for map_block_id in contmap_block_ids:
+            c = obnam.cmp.Component(obnam.cmp.CONTMAPREF, map_block_id)
+            self.add(c)
     
-    for map_block_id in contmap_block_ids:
-        c = obnam.cmp.Component(obnam.cmp.CONTMAPREF, map_block_id)
-        o.add(c)
-
-    oq = ObjectQueue()
-    oq.add(host_id, o.encode())
-    block = oq.as_block(host_id)
-    return block
+    def encode(self):
+        oq = ObjectQueue()
+        oq.add(self.id, Object.encode(self))
+        return oq.as_block(self.id)
 
 
 def host_block_decode(block):

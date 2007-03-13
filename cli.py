@@ -214,8 +214,9 @@ def backup(context, args):
 
     logging.info("Creating new host block")
     host_id = context.config.get("backup", "host-id")
-    block = obnam.obj.host_block_encode(host_id, gen_ids, map_block_ids,
-                                           contmap_block_ids)
+    block = obnam.obj.HostBlockObject(host_id, gen_ids, map_block_ids,
+                                      contmap_block_ids)
+    block = block.encode()
     obnam.io.upload_host_block(context, block)
 
     logging.info("Backup done")
@@ -415,8 +416,9 @@ def forget(context, forgettable_ids):
             print "Warning: Generation", id, "is not known"
 
     host_id = context.config.get("backup", "host-id")
-    block = obnam.obj.host_block_encode(host_id, gen_ids, map_block_ids,
-                                           contmap_block_ids)
+    block = obnam.obj.HostBlockObject(host_id, gen_ids, map_block_ids,
+                                      contmap_block_ids)
+    block = block.encode()
     obnam.io.upload_host_block(context, block)
 
     obnam.io.collect_garbage(context, block)
