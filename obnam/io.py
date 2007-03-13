@@ -56,7 +56,7 @@ def flush_object_queue(context, oq, map):
     if not oq.is_empty():
         block_id = obnam.backend.generate_block_id(context.be)
         logging.debug("Creating new object block %s" % block_id)
-        block = obnam.obj.block_create_from_object_queue(block_id, oq)
+        block = oq.as_block(block_id)
         obnam.backend.upload(context.be, block_id, block)
         for id in oq.ids():
             obnam.map.add(map, id, block_id)

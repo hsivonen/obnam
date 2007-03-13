@@ -182,14 +182,14 @@ class ObjectQueue:
         """Return identifiers for all the objects in the object queue"""
         return [x[0] for x in self.queue]
 
-
-def block_create_from_object_queue(blkid, oq):
-    """Create a block from an object queue"""
-    logging.debug("Creating block %s" % blkid)
-    blkid = obnam.cmp.Component(obnam.cmp.BLKID, blkid)
-    objects = [obnam.cmp.Component(obnam.cmp.OBJECT, x[1]) for x in oq.queue]
-    return "".join([BLOCK_COOKIE] + 
-                   [c.encode() for c in [blkid] + objects])
+    def as_block(self, blkid):
+        """Create a block from an object queue"""
+        logging.debug("Creating block %s" % blkid)
+        blkid = obnam.cmp.Component(obnam.cmp.BLKID, blkid)
+        objects = [obnam.cmp.Component(obnam.cmp.OBJECT, x[1]) 
+                   for x in self.queue]
+        return "".join([BLOCK_COOKIE] + 
+                       [c.encode() for c in [blkid] + objects])
 
 
 def block_decode(block):
@@ -264,7 +264,7 @@ def host_block_encode(host_id, gen_ids, map_block_ids, contmap_block_ids):
 
     oq = ObjectQueue()
     oq.add(host_id, o.encode())
-    block = block_create_from_object_queue(host_id, oq)
+    block = oq.as_block(host_id)
     return block
 
 

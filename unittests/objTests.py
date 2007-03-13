@@ -110,7 +110,7 @@ class BlockCreateTests(unittest.TestCase):
 
     def testEmptyObjectQueue(self):
         oq = obnam.obj.ObjectQueue()
-        block = block_create_from_object_queue("blkid", oq)
+        block = oq.as_block("blkid")
         list = obnam.obj.block_decode(block)
         self.failUnlessEqual(
             obnam.cmp.first_string_by_kind(list, obnam.cmp.BLKID),
@@ -123,7 +123,7 @@ class BlockCreateTests(unittest.TestCase):
         o.add(obnam.cmp.Component(2, "pretty"))
         oq = obnam.obj.ObjectQueue()
         oq.add("pink", o.encode())
-        block = block_create_from_object_queue("blkid", oq)
+        block = oq.as_block("blkid")
 
         list = obnam.obj.block_decode(block)
         self.failUnlessEqual(

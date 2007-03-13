@@ -388,7 +388,7 @@ class ReachabilityTests(IoBase):
         block_id = "pink"
         oq = obnam.obj.ObjectQueue()
         oq.add("rouge", encoded_o)
-        block = obnam.obj.block_create_from_object_queue(block_id, oq)
+        block = oq.as_block(block_id)
         obnam.backend.upload(self.context.be, block_id, block)
 
         obnam.map.add(self.context.contmap, "rouge", block_id)
