@@ -210,17 +210,18 @@ class SignatureObject(Object):
         self.add(c)
 
 
-def delta_object_encode(objid, deltapart_refs, cont_ref, delta_ref):
-    """Encode a DELTA object"""
-    o = Object(objid, DELTA)
-    for deltapart_ref in deltapart_refs:
-        o.add(obnam.cmp.Component(obnam.cmp.DELTAPARTREF, deltapart_ref))
-    if cont_ref:
-        c = obnam.cmp.Component(obnam.cmp.CONTREF, cont_ref)
-    else:
-        c = obnam.cmp.Component(obnam.cmp.DELTAREF, delta_ref)
-    o.add(c)
-    return o.encode()
+class DeltaObject(Object):
+
+    def __init__(self, objid, deltapart_refs, cont_ref, delta_ref):
+        Object.__init__(self, objid, DELTA)
+        for deltapart_ref in deltapart_refs:
+            c = obnam.cmp.Component(obnam.cmp.DELTAPARTREF, deltapart_ref)
+            self.add(c)
+        if cont_ref:
+            c = obnam.cmp.Component(obnam.cmp.CONTREF, cont_ref)
+        else:
+            c = obnam.cmp.Component(obnam.cmp.DELTAREF, delta_ref)
+        self.add(c)
 
 
 def generation_object_encode(objid, filelist_id, start_time, end_time):

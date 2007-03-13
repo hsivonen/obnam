@@ -74,10 +74,9 @@ def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
                                                    prev_sigdata, resolved)
 
                         delta_id = obnam.obj.object_id_new()
-                        delta = obnam.obj.delta_object_encode(delta_id, 
-                                                              deltapart_ids,
-                                                              xcont_ref,
-                                                              xdelta_ref)
+                        delta = obnam.obj.DeltaObject(delta_id, deltapart_ids,
+                                                      xcont_ref, xdelta_ref)
+                        delta = delta.encode()
                         obnam.io.enqueue_object(context, context.oq, 
                                                 context.map, delta_id, delta)
 

@@ -172,7 +172,8 @@ class ObjectTests(unittest.TestCase):
     def testCreateDeltaObjectWithContRef(self):
         id = "pink"
         deltapart_ref = "xyzzy"
-        encoded = delta_object_encode(id, [deltapart_ref], "pretty", None)
+        do = obnam.obj.DeltaObject(id, [deltapart_ref], "pretty", None)
+        encoded = do.encode()
         o = obnam.obj.decode(encoded)
         self.failUnlessEqual(o.get_id(), "pink")
         self.failUnlessEqual(o.get_kind(), obnam.obj.DELTA)
@@ -185,7 +186,8 @@ class ObjectTests(unittest.TestCase):
     def testCreateDeltaObjectWithDeltaRef(self):
         id = "pink"
         deltapart_ref = "xyzzy"
-        encoded = delta_object_encode(id, [deltapart_ref], None, "pretty")
+        do = obnam.obj.DeltaObject(id, [deltapart_ref], None, "pretty")
+        encoded = do.encode()
         o = obnam.obj.decode(encoded)
         self.failUnlessEqual(o.get_id(), "pink")
         self.failUnlessEqual(o.get_kind(), obnam.obj.DELTA)
