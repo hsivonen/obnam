@@ -33,7 +33,7 @@ class RsyncTests(unittest.TestCase):
         (fd, empty_file) = tempfile.mkstemp()
         os.close(fd)
 
-        context = obnam.context.create()
+        context = obnam.context.Context()
         sig = obnam.rsync.compute_signature(context, empty_file)
         os.system("rdiff signature %s empty_file.sig.temp" % empty_file)
         f = file("empty_file.sig.temp")
@@ -47,7 +47,7 @@ class RsyncTests(unittest.TestCase):
         (fd, empty_file) = tempfile.mkstemp()
         os.close(fd)
     
-        context = obnam.context.create()
+        context = obnam.context.Context()
         context.cache = obnam.cache.Cache(context.config)
         context.be = obnam.backend.init(context.config, context.cache)
 
@@ -77,7 +77,7 @@ class RsyncTests(unittest.TestCase):
         return filename
 
     def testApplyDelta(self):
-        context = obnam.context.create()
+        context = obnam.context.Context()
         context.cache = obnam.cache.Cache(context.config)
         context.be = obnam.backend.init(context.config, context.cache)
         

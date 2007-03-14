@@ -68,7 +68,7 @@ class ObnamFS(fuse.Fuse):
     """A FUSE filesystem interface to backups made with Obnam"""
     
     def __init__(self, *args, **kw):
-        self.context = obnam.context.create()
+        self.context = obnam.context.Context()
         argv = obnam.config.parse_options(self.context.config, sys.argv[1:])
         sys.argv = [sys.argv[0]] + argv
         self.context.cache = obnam.cache.Cache(self.context.config)

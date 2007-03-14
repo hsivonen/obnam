@@ -27,7 +27,7 @@ import obnam
 class ContextCreateTests(unittest.TestCase):
 
     def test(self):
-        context = obnam.context.create()
+        context = obnam.context.Context()
         attrs = [x for x in dir(context) if not x.startswith("_")]
         attrs.sort()
         self.failUnlessEqual(attrs, 

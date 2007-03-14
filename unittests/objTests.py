@@ -158,7 +158,7 @@ class ObjectTests(unittest.TestCase):
         self.failUnlessEqual(type(id), type(""))
 
     def testCreateSignatureObject(self):
-        context = obnam.context.create()
+        context = obnam.context.Context()
         id = "pink"
         sig = obnam.rsync.compute_signature(context, "Makefile")
         sig_object = obnam.obj.SignatureObject(id, sig)

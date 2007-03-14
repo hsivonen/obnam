@@ -42,7 +42,7 @@ class ExceptionTests(unittest.TestCase):
 class ResolveTests(unittest.TestCase):
 
     def test(self):
-        context = obnam.context.create()
+        context = obnam.context.Context()
         # We don't need the fields that are usually initialized manually.
 
         facit = (
@@ -81,7 +81,7 @@ class IoBase(unittest.TestCase):
             ("backup", "store", self.rootdir)
         )
     
-        self.context = obnam.context.create()
+        self.context = obnam.context.Context()
     
         for section, item, value in config_list:
             self.context.config.set(section, item, value)
@@ -180,7 +180,7 @@ class ObjectQueuingTests(unittest.TestCase):
         return files
 
     def testEnqueue(self):
-        context = obnam.context.create()
+        context = obnam.context.Context()
         object_id = "pink"
         object = "pretty"
         context.config.set("backup", "block-size", "%d" % 128)
@@ -211,7 +211,7 @@ class ObjectQueuingTests(unittest.TestCase):
 class FileContentsTests(unittest.TestCase):
 
     def setUp(self):
-        self.context = obnam.context.create()
+        self.context = obnam.context.Context()
         self.context.cache = obnam.cache.Cache(self.context.config)
         self.context.be = obnam.backend.init(self.context.config, 
                                                 self.context.cache)
@@ -302,20 +302,20 @@ class ObjectCacheTests(unittest.TestCase):
         self.object3 = obnam.obj.Object("beautiful", 1)
 
     def testCreate(self):
-        context = obnam.context.create()
+        context = obnam.context.Context()
         oc = obnam.io.ObjectCache(context)
         self.failUnlessEqual(oc.size(), 0)
         self.failUnless(oc.MAX > 0)
         
     def testPut(self):
-        context = obnam.context.create()
+        context = obnam.context.Context()
         oc = obnam.io.ObjectCache(context)
         self.failUnlessEqual(oc.get("pink"), None)
         oc.put(self.object)
         self.failUnlessEqual(oc.get("pink"), self.object)
 
     def testPutWithOverflow(self):
-        context = obnam.context.create()
+        context = obnam.context.Context()
         oc = obnam.io.ObjectCache(context)
         oc.MAX = 1
         oc.put(self.object)
@@ -327,7 +327,7 @@ class ObjectCacheTests(unittest.TestCase):
         self.failUnlessEqual(oc.get("pretty"), self.object2)
 
     def testPutWithOverflowPart2(self):
-        context = obnam.context.create()
+        context = obnam.context.Context()
         oc = obnam.io.ObjectCache(context)
         oc.MAX = 2
 
@@ -457,7 +457,7 @@ class ObjectCacheRegressionTest(unittest.TestCase):
     # list.)
 
     def test(self):
-        context = obnam.context.create()
+        context = obnam.context.Context()
         context.config.set("backup", "object-cache-size", "3")
         oc = obnam.io.ObjectCache(context)
         a = obnam.obj.Object("a", 0)
