@@ -86,7 +86,7 @@ class IoBase(unittest.TestCase):
         for section, item, value in config_list:
             self.context.config.set(section, item, value)
 
-        self.context.cache = obnam.cache.init(self.context.config)
+        self.context.cache = obnam.cache.Cache(self.context.config)
         self.context.be = obnam.backend.init(self.context.config, 
                                                 self.context.cache)
 
@@ -184,7 +184,7 @@ class ObjectQueuingTests(unittest.TestCase):
         object_id = "pink"
         object = "pretty"
         context.config.set("backup", "block-size", "%d" % 128)
-        context.cache = obnam.cache.init(context.config)
+        context.cache = obnam.cache.Cache(context.config)
         context.be = obnam.backend.init(context.config, context.cache)
 
         self.failUnlessEqual(self.find_block_files(context.config), [])
@@ -212,7 +212,7 @@ class FileContentsTests(unittest.TestCase):
 
     def setUp(self):
         self.context = obnam.context.create()
-        self.context.cache = obnam.cache.init(self.context.config)
+        self.context.cache = obnam.cache.Cache(self.context.config)
         self.context.be = obnam.backend.init(self.context.config, 
                                                 self.context.cache)
 

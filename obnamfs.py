@@ -71,7 +71,7 @@ class ObnamFS(fuse.Fuse):
         self.context = obnam.context.create()
         argv = obnam.config.parse_options(self.context.config, sys.argv[1:])
         sys.argv = [sys.argv[0]] + argv
-        self.context.cache = obnam.cache.init(self.context.config)
+        self.context.cache = obnam.cache.Cache(self.context.config)
         self.context.be = obnam.backend.init(self.context.config, 
                                              self.context.cache)
         self.context.be.set_progress_reporter(self.context.progress)

@@ -71,7 +71,7 @@ def flush_all_object_queues(context):
 
 def get_block(context, block_id):
     """Get a block from cache or by downloading it"""
-    block = obnam.cache.get_block(context.cache, block_id)
+    block = context.cache.get_block(block_id)
     if not block:
         result = context.be.download(block_id)
         if type(result) == type(""):
@@ -217,7 +217,7 @@ def get_host_block(context):
     if type(result) == type(""):
         return result
     else:
-        return obnam.cache.get_block(context.cache, host_id)
+        return context.cache.get_block(host_id)
 
 
 def enqueue_object(context, oq, map, object_id, object):

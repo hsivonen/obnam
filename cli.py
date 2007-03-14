@@ -451,7 +451,7 @@ class UnknownCommandWord(obnam.exception.ExceptionBase):
 def main():
     context = obnam.context.create()
     args = obnam.config.parse_options(context.config, sys.argv[1:])
-    context.cache = obnam.cache.init(context.config)
+    context.cache = obnam.cache.Cache(context.config)
     context.be = obnam.backend.init(context.config, context.cache)
     context.be.set_progress_reporter(context.progress)
 

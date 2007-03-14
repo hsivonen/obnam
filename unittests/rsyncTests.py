@@ -48,7 +48,7 @@ class RsyncTests(unittest.TestCase):
         os.close(fd)
     
         context = obnam.context.create()
-        context.cache = obnam.cache.init(context.config)
+        context.cache = obnam.cache.Cache(context.config)
         context.be = obnam.backend.init(context.config, context.cache)
 
         sig = obnam.rsync.compute_signature(context, empty_file)
@@ -78,7 +78,7 @@ class RsyncTests(unittest.TestCase):
 
     def testApplyDelta(self):
         context = obnam.context.create()
-        context.cache = obnam.cache.init(context.config)
+        context.cache = obnam.cache.Cache(context.config)
         context.be = obnam.backend.init(context.config, context.cache)
         
         first = self.create_file("pink")

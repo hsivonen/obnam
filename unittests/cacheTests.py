@@ -50,17 +50,17 @@ class CacheBase(unittest.TestCase):
 class InitTests(CacheBase):
 
     def testInit(self):
-        cache = obnam.cache.init(self.config)
+        cache = obnam.cache.Cache(self.config)
         self.failIf(os.path.isdir(self.cachedir))
 
 
 class PutTests(CacheBase):
 
     def testPut(self):
-        cache = obnam.cache.init(self.config)
+        cache = obnam.cache.Cache(self.config)
         id = "pink"
         block = "pretty"
-        obnam.cache.put_block(cache, id, block)
+        cache.put_block(id, block)
         
         pathname = os.path.join(self.cachedir, id)
         self.failUnless(os.path.isfile(pathname))
@@ -72,10 +72,10 @@ class PutTests(CacheBase):
 class GetTests(CacheBase):
 
     def testGet(self):
-        cache = obnam.cache.init(self.config)
+        cache = obnam.cache.Cache(self.config)
         id = "pink"
         block = "pretty"
-        self.failUnlessEqual(obnam.cache.get_block(cache, id), None)
+        self.failUnlessEqual(cache.get_block(id), None)
 
-        obnam.cache.put_block(cache, id, block)
-        self.failUnlessEqual(obnam.cache.get_block(cache, id), block)
+        cache.put_block(id, block)
+        self.failUnlessEqual(cache.get_block(id), block)

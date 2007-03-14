@@ -76,7 +76,7 @@ class DircountTests(unittest.TestCase):
 
     def testInit(self):
         config = obnam.config.default_config()
-        cache = obnam.cache.init(config)
+        cache = obnam.cache.Cache(config)
         be = obnam.backend.Backend(config, cache)
         self.failUnlessEqual(len(be.dircounts), obnam.backend.LEVELS)
         for i in range(obnam.backend.LEVELS):
@@ -84,14 +84,14 @@ class DircountTests(unittest.TestCase):
         
     def testIncrementOnce(self):
         config = obnam.config.default_config()
-        cache = obnam.cache.init(config)
+        cache = obnam.cache.Cache(config)
         be = obnam.backend.Backend(config, cache)
         be.increment_dircounts()
         self.failUnlessEqual(be.dircounts, [0, 0, 1])
 
     def testIncrementMany(self):
         config = obnam.config.default_config()
-        cache = obnam.cache.init(config)
+        cache = obnam.cache.Cache(config)
         be = obnam.backend.Backend(config, cache)
         for i in range(obnam.backend.MAX_BLOCKS_PER_DIR):
             be.increment_dircounts()
@@ -106,7 +106,7 @@ class DircountTests(unittest.TestCase):
 
     def testIncrementTop(self):
         config = obnam.config.default_config()
-        cache = obnam.cache.init(config)
+        cache = obnam.cache.Cache(config)
         be = obnam.backend.Backend(config, cache)
         be.dircounts = [0] + \
             [obnam.backend.MAX_BLOCKS_PER_DIR] * (obnam.backend.LEVELS -1)
@@ -132,7 +132,7 @@ class LocalBackendBase(unittest.TestCase):
         for section, item, value in config_list:
             self.config.set(section, item, value)
 
-        self.cache = obnam.cache.init(self.config)
+        self.cache = obnam.cache.Cache(self.config)
 
     def tearDown(self):
         shutil.rmtree(self.cachedir)

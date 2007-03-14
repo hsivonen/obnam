@@ -271,7 +271,7 @@ class SftpBackend(Backend):
             block = f.read()
             f.close()
             if self.config.get("backup", "cache"):
-                obnam.cache.put_block(self.cache, block_id, block)
+                self.cache.put_block(block_id, block)
         except IOError, e:
             return e
         return block
