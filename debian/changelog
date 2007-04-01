@@ -1,3 +1,10 @@
+obnam (0.7-1) unstable; urgency=low
+
+  * New upstream version.
+  * obnamfs is now included in the package.
+
+ -- Lars Wirzenius <liw@iki.fi>  Sun,  1 Apr 2007 14:10:10 +0300
+
 obnam (0.6-1) unstable; urgency=low
 
   * New upstream version. Fixes odirect_read so it works under Linux
