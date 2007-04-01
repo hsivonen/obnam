@@ -66,6 +66,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
       <command>obnam restore</command>
       <arg choice="opt">options</arg>
       <arg choice="plain">generation-id</arg>
+      <arg choice="opt" rep="repeat">pathname</arg>
     </cmdsynopsis>
     <cmdsynopsis>
       <command>obnam forget</command>
@@ -368,19 +369,22 @@ obnam generations --generation-times</screen>
     is similar to the output of <command>ls -l</command>.
     </para>
   
-    <para>To restore files from the backup, you have to restore an entire
-    generation. Use the following command:
+    <para>To restore an entire generation from the, use the following
+    command:
     
 <screen>obnam restore <replaceable>GENERATION-ID</replaceable> --target=<replaceable>DIR</replaceable></screen>
 
-    It is not yet possible to restore an individual file. Here,
-    <replaceable>GENERATION-ID</replaceable> is again the UUID shown by
-    <command>obnam generations</command>, and 
+    To restore just a few files (or directories, including their files)
+    add them to the end of the command line:
+    
+<screen>obnam restore <replaceable>GENERATION-ID</replaceable> --target=<replaceable>DIR</replaceable> README src/main.c</screen>
+
+    Here, <replaceable>GENERATION-ID</replaceable> is again the UUID
+    shown by <command>obnam generations</command>, and
     <replaceable>DIR</replaceable> is the directory under which the
     restored files will be placed. To avoid problems with overwriting
-    files, it is best to choose a new directory as 
-    <replaceable>DIR</replaceable> if possible.
-    </para>
+    files, it is best to choose a new directory as
+    <replaceable>DIR</replaceable> if possible. </para>
   
     <para>To forget (remove) a generation, use the following command:
     
