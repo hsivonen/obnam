@@ -34,7 +34,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
       <firstname>Lars</firstname>
       <surname>Wirzenius</surname>
     </author>
-    <date>2007-02-18</date>
+    <date>2007-03-21</date>
   </refentryinfo>
   
   <refmeta>
@@ -66,6 +66,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
       <command>obnam restore</command>
       <arg choice="opt">options</arg>
       <arg choice="plain">generation-id</arg>
+      <arg choice="opt" rep="repeat">pathname</arg>
     </cmdsynopsis>
     <cmdsynopsis>
       <command>obnam forget</command>
@@ -329,6 +330,70 @@ exclude += third</programlisting>
     
     <para>The variables correspond to the options of the same names.</para>
     
+  </refsect1>
+
+
+  <refsect1>
+    <title>EXAMPLES</title>
+    
+    <para>The following examples assume you have configured
+    <command>obnam</command> using a configuration file so that it knows
+    where to store backups, and so on. This way, the sample command lines
+    are not burnened with unnecessary details.</para>
+  
+    <para>To back up your home directory use the following command:
+    
+<screen>obnam backup $HOME</screen>
+
+    This works for the initial generation and every new generation.
+    </para>
+  
+    <para>To list the generations that currently exist, use one of the
+    following commands:
+    
+<screen>obnam generations
+obnam generations --generation-times</screen>
+
+    The former is faster, and the latter shows the times when the generations
+    were made. The generations are shown in the order they were made, the
+    newest one being last. Each generation is identified by a Universally
+    Unique IDentifier, or UUID.
+    </para>
+  
+    <para>To see the files in a generation, use the following command:
+    
+<screen>obnam show-generations <replaceable>GENERATION-ID</replaceable></screen>
+
+    Here <replaceable>GENERATION-ID</replaceable> is one of the UUIDs that
+    the <command>obnam generations</command> command showed. The file list
+    is similar to the output of <command>ls -l</command>.
+    </para>
+  
+    <para>To restore an entire generation from the, use the following
+    command:
+    
+<screen>obnam restore <replaceable>GENERATION-ID</replaceable> --target=<replaceable>DIR</replaceable></screen>
+
+    To restore just a few files (or directories, including their files)
+    add them to the end of the command line:
+    
+<screen>obnam restore <replaceable>GENERATION-ID</replaceable> --target=<replaceable>DIR</replaceable> README src/main.c</screen>
+
+    Here, <replaceable>GENERATION-ID</replaceable> is again the UUID
+    shown by <command>obnam generations</command>, and
+    <replaceable>DIR</replaceable> is the directory under which the
+    restored files will be placed. To avoid problems with overwriting
+    files, it is best to choose a new directory as
+    <replaceable>DIR</replaceable> if possible. </para>
+  
+    <para>To forget (remove) a generation, use the following command:
+    
+<screen>obnam forget <replaceable>GENERATION-ID</replaceable></screen>
+
+    This will remove the generation (you can give several at once, if
+    you want). It will also <emphasis>remove any files in the store that
+    are not part of any non-forgotten generations</emphasis>. </para>
+  
   </refsect1>
   
   

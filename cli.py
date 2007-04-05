@@ -355,8 +355,34 @@ class UnknownGeneration(obnam.exception.ExceptionBase):
         self._msg = "Can't find generation %s" % gen_id
 
 
-def restore(context, gen_id):
+def restore_requested(files, pathname):
+    """Return True, if pathname should be restored"""
+    
+    # If there is no explicit file list, restore everything.
+    if not files:
+        return True
+        
+    # If the pathname is specified explicitly, restore it.
+    if pathname in files:
+        return True
+        
+    # Otherwise, if there's an explicitly specified filename that is a
+    # prefix of directory parts in the pathname, restore it. That is,
+    # if files is ["foo/bar"], then restore "foo/bar/baz", but not
+    # "foo/barbell".
+    for x in files:
+        if pathname.startswith(x) and x.endswith(os.sep):
+            return True
+        if pathname.startswith(x + os.sep):
+            return True
+            
+    # Nope, don't restore it.
+    return False
+
+
+def restore(context, gen_id, files):
     logging.debug("Restoring generation %s" % gen_id)
+    logging.debug("Restoring files: %s" % ", ".join(files))
 
     logging.debug("Fetching and decoding host block")
     host_block = obnam.io.get_host_block(context)
@@ -384,8 +410,14 @@ def restore(context, gen_id):
     hardlinks = {}
     for c in fl.find_by_kind(obnam.cmp.FILE):
         subs = c.get_subcomponents()
+    
         pathname = obnam.cmp.first_string_by_kind(subs,
                                                  obnam.cmp.FILENAME)
+
+        if not restore_requested(files, pathname):
+            logging.debug("Restore of %s not requested" % pathname)
+            continue
+
         logging.debug("Restoring %s" % pathname)
 
         if pathname.startswith(os.sep):
@@ -473,9 +505,7 @@ def main():
     elif command == "restore":
         if not args:
             raise RestoreNeedsGenerationId()
-        elif len(args) > 1:
-            raise RestoreOnlyNeedsGenerationId()
-        restore(context, args[0])
+        restore(context, args[0], args[1:])
     elif command == "forget":
         forget(context, args)
     elif command == "write-config":

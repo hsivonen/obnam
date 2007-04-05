@@ -4,6 +4,19 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
+Version 0.7, released 2007-04-01
+
+    * This is not an April Fool's joke.
+    
+    * "obnam restore" can now restore individual files or directories
+      (and all files and directories within those directories).
+    
+    * Log files are now opened so they're readable only by the owner. This
+      is better for security.
+      
+    * obnamfs now has a manual page. The main obnam manual page now includes
+      examples of usage.
+
 Version 0.6, released 2007-03-06
     
     * Manual page updates.
