@@ -61,7 +61,7 @@ coverage: all
 
 clean:
 	rm -rf *~ */*~ *.pyc *.pyo */*.pyc */*.pyo tmp.* *,cover */*,cover
-	rm -f obnam.1 odirect_read.1 odirect_read odirect_pipe.1
+	rm -f obnam.1 odirect_read.1 odirect_read odirect_pipe.1 obnamfs.1
 
 
 install: all

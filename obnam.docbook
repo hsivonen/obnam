@@ -339,7 +339,7 @@ exclude += third</programlisting>
     <para>The following examples assume you have configured
     <command>obnam</command> using a configuration file so that it knows
     where to store backups, and so on. This way, the sample command lines
-    are not burnened with unnecessary details.</para>
+    are not burdened with unnecessary details.</para>
   
     <para>To back up your home directory use the following command:
     
