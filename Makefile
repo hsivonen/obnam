@@ -51,6 +51,9 @@ check: all
 	python testrun.py
 	sh blackboxtests tests/*
 	./check-options
+	bzr ls --versioned --kind=file | \
+	    grep -Fxv -f check-license-exceptions | \
+	    xargs ./check-license
 
 coverage: all
 	rm -f .coverage
