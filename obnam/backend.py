@@ -186,6 +186,7 @@ class Backend:
         logging.debug("Downloading block %s" % block_id)
         block = self.really_download(block_id)
         if type(block) != type(""):
+            logging.warning("Download failed, returning exception")
             return block # it's an exception
 
         self.bytes_read += len(block)
@@ -273,6 +274,7 @@ class SftpBackend(Backend):
             if self.config.get("backup", "cache"):
                 self.cache.put_block(block_id, block)
         except IOError, e:
+            logging.warning("I/O error: %s" % str(e))
             return e
         return block
     

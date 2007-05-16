@@ -198,7 +198,7 @@ def block_decode(block):
         parser = obnam.cmp.Parser(block, len(BLOCK_COOKIE))
         return parser.decode_all()
     else:
-        logging.debug("xxx block does not start with cookie: %s" % repr(block))
+        logging.warning("Block does not start with cookie: %s" % repr(block))
         return None
 
 

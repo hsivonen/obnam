@@ -346,22 +346,29 @@ def set_inode(full_pathname, file_component):
 
 def _find_refs(components):
     """Return set of all references (recursively) in a list of components"""
+    logging.debug("Finding references in list of components")
     refs = set()
-    for c in components:
+    while components:
+        logging.debug("_find_refs: %d components remaining" % len(components))
+        c = components[0]
+        components = components[1:]
         kind = c.get_kind()
         if obnam.cmp.kind_is_reference(kind):
             refs.add(c.get_string_value())
         elif obnam.cmp.kind_is_composite(kind):
-            refs = refs.union(_find_refs(c.get_subcomponents()))
+            components = c.get_subcomponents() + components
     return refs
 
 
 def find_reachable_data_blocks(context, host_block):
     """Find all blocks with data that can be reached from host block"""
+    logging.debug("Finding reachable data")
     (_, gen_ids, _, _) = obnam.obj.host_block_decode(host_block)
     object_ids = set(gen_ids)
     reachable_block_ids = set()
     while object_ids:
+        logging.debug("find_reachable_data_blocks: %d remaining" % 
+                        len(object_ids))
         object_id = object_ids.pop()
         block_id = obnam.map.get(context.map, object_id)
         if not block_id:
@@ -369,10 +376,17 @@ def find_reachable_data_blocks(context, host_block):
         if not block_id:
             logging.warning("Can't find object %s in any block" % object_id)
         elif block_id not in reachable_block_ids:
+            logging.debug("Marking block as reachable: %s" % block_id)
             assert block_id is not None
             reachable_block_ids.add(block_id)
             block = get_block(context, block_id)
-            for ref in _find_refs(obnam.obj.block_decode(block)):
+            logging.debug("Finding references within block")
+            refs = _find_refs(obnam.obj.block_decode(block))
+            logging.debug("This block contains %d refs" % len(refs))
+            refs = [ref for ref in refs if ref not in reachable_block_ids]
+            logging.debug("This block contains %d refs not already reachable"
+                            % len(refs))
+            for ref in refs:
                 object_ids.add(ref)
     return [x for x in reachable_block_ids]
 
@@ -426,7 +440,10 @@ def collect_garbage(context, host_block):
 
 def load_maps(context, map, block_ids):
     """Load and parse mapping blocks, store results in map"""
-    for id in block_ids:
-        logging.debug("Loading map block %s" % id)
+    num_blocks = len(block_ids)
+    logging.debug("Loading %d maps" % num_blocks)
+    for i in range(num_blocks):
+        id = block_ids[i]
+        logging.debug("Loading map block %d/%d: %s" % (i+1, num_blocks, id))
         block = obnam.io.get_block(context, id)
         obnam.map.decode_block(map, block)

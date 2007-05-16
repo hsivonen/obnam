@@ -434,25 +434,35 @@ def restore(context, gen_id, files):
 
 
 def forget(context, forgettable_ids):
+    logging.debug("Forgetting generations: %s" % " ".join(forgettable_ids))
+
+    logging.debug("forget: Loading and decoding host block")
     host_block = obnam.io.get_host_block(context)
+    logging.debug("forget: host block: %s" % repr(host_block))
     (host_id, gen_ids, map_block_ids, contmap_block_ids) = \
         obnam.obj.host_block_decode(host_block)
 
+    logging.debug("forget: Loading non-content maps")
     obnam.io.load_maps(context, context.map, map_block_ids)
+
+    logging.debug("forget: Loading content maps")
     obnam.io.load_maps(context, context.contmap, contmap_block_ids)
 
+    logging.debug("forget: Forgetting each id")
     for id in forgettable_ids:
         if id in gen_ids:
             gen_ids.remove(id)
         else:
             print "Warning: Generation", id, "is not known"
 
+    logging.debug("forget: Uploading new host block")
     host_id = context.config.get("backup", "host-id")
     block = obnam.obj.HostBlockObject(host_id, gen_ids, map_block_ids,
                                       contmap_block_ids)
     block = block.encode()
     obnam.io.upload_host_block(context, block)
 
+    logging.debug("forget: Forgetting garbage")
     obnam.io.collect_garbage(context, block)
 
 
@@ -495,6 +505,8 @@ def main():
         
     command = args[0]
     args = args[1:]
+    
+    logging.debug("command=%s" % command)
     
     if command == "backup":
         backup(context, args)

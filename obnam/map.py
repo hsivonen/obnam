@@ -100,7 +100,6 @@ def decode_block(mapping, mapping_block):
     """Decode a block with mappings, add them to mapping object"""
     logging.debug("Decoding mapping block")
     list = obnam.obj.block_decode(mapping_block)
-    logging.debug("xxx list=%s" % repr(list))
     if not list:
         logging.debug("Mapping block is empty")
         return
