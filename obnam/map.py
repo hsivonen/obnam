@@ -96,23 +96,45 @@ def encode_new_to_block(mapping, block_id):
     return block
 
 
-def decode_block(mapping, mapping_block):
+# This function used to use the block and component parsing code in
+# obnam.obj and obnam.cmp, namely the obnam.obj.block_decode function.
+# However, it turned out to be pretty slow, and since we load maps at
+# the beginning of pretty much any backup run, the following version was
+# written, and measured with benchmarks to run in about a quarter of the
+# speed of the original. If the structure of blocks changes, this code
+# needs to change as well.
+
+def decode_block(mapping, block):
     """Decode a block with mappings, add them to mapping object"""
     logging.debug("Decoding mapping block")
-    list = obnam.obj.block_decode(mapping_block)
-    if not list:
-        logging.debug("Mapping block is empty")
+    
+    if not block.startswith(obnam.obj.BLOCK_COOKIE):
+        logging.warning("Block does not start with cookie: %s" % repr(block))
         return
-    maps = obnam.cmp.find_by_kind(list, obnam.cmp.OBJMAP)
-    logging.debug("Mapping block contains %d maps" % len(maps))
-    for map in maps:
-        subs = map.get_subcomponents()
-        block_id = obnam.cmp.first_string_by_kind(subs, 
-                                               obnam.cmp.BLOCKREF)
-        object_ids = obnam.cmp.find_strings_by_kind(subs, 
-                                               obnam.cmp.OBJREF)
-        logging.debug("Map contains %d objects" % len(object_ids))
-        if object_ids and block_id:
-            for object_id in object_ids:
-                logging.debug("Object %s in block %s" % (object_id, block_id))
-                _add_old(mapping, object_id, block_id)
+
+    pos = len(obnam.obj.BLOCK_COOKIE)
+    end = len(block)
+    
+    while pos < end:
+        size, pos = obnam.varint.decode(block, pos)
+        kind, pos = obnam.varint.decode(block, pos)
+
+        if kind == obnam.cmp.OBJMAP:
+            pos2 = pos
+            end2 = pos + size
+            block_id = None
+            object_ids = []
+            while pos2 < end2:
+                size2, pos2 = obnam.varint.decode(block, pos2)
+                kind2, pos2 = obnam.varint.decode(block, pos2)
+                data2 = block[pos2:pos2+size2]
+                pos2 += size2
+                if kind2 == obnam.cmp.BLOCKREF:
+                    block_id = data2
+                elif kind2 == obnam.cmp.OBJREF:
+                    object_ids.append(data2)
+            if object_ids and block_id:
+                for object_id in object_ids:
+                    _add_old(mapping, object_id, block_id)
+
+        pos += size
