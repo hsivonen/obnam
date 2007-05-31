@@ -507,29 +507,34 @@ def main():
     args = args[1:]
     
     logging.debug("command=%s" % command)
-    
-    if command == "backup":
-        backup(context, args)
-    elif command == "generations":
-        generations(context)
-    elif command == "show-generations":
-        show_generations(context, args)
-    elif command == "restore":
-        if not args:
-            raise RestoreNeedsGenerationId()
-        restore(context, args[0], args[1:])
-    elif command == "forget":
-        forget(context, args)
-    elif command == "write-config":
-        context.config.write(sys.stdout)
-    else:
-        raise UnknownCommandWord(command)
 
-    logging.info("Store I/O: %d kB read, %d kB written" % 
-                 (context.be.get_bytes_read() / 1024,
-                  context.be.get_bytes_written() / 1024))
-    logging.info("Obnam finishing")
-    context.progress.final_report()
+    try:
+        if command == "backup":
+            backup(context, args)
+        elif command == "generations":
+            generations(context)
+        elif command == "show-generations":
+            show_generations(context, args)
+        elif command == "restore":
+            if not args:
+                raise RestoreNeedsGenerationId()
+            restore(context, args[0], args[1:])
+        elif command == "forget":
+            forget(context, args)
+        elif command == "write-config":
+            context.config.write(sys.stdout)
+        else:
+            raise UnknownCommandWord(command)
+    
+        logging.info("Store I/O: %d kB read, %d kB written" % 
+                     (context.be.get_bytes_read() / 1024,
+                      context.be.get_bytes_written() / 1024))
+        logging.info("Obnam finishing")
+        context.progress.final_report()
+    except KeyboardInterrupt:
+        logging.warning("Obnam interrupted by Control-C, aborting.")
+        logging.warning("Note that backup has not been completed.")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
