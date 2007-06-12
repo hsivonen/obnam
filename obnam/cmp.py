@@ -98,7 +98,7 @@ def kind_is_composite(kind):
 
 
 def kind_is_reference(kind):
-    """Is a kind supposed to be composite?"""
+    """Is a kind a reference to an object?"""
     if kind & REF_FLAG:
         return True
     else:
