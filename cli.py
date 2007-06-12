@@ -438,7 +438,6 @@ def forget(context, forgettable_ids):
 
     logging.debug("forget: Loading and decoding host block")
     host_block = obnam.io.get_host_block(context)
-    logging.debug("forget: host block: %s" % repr(host_block))
     (host_id, gen_ids, map_block_ids, contmap_block_ids) = \
         obnam.obj.host_block_decode(host_block)
 
