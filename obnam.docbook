@@ -178,7 +178,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
       <varlistentry>
         <term><option>--host-id</option>=<replaceable>ID</replaceable></term>
         <listitem>
-          <para>Use <replaceable>ID</replaceable> to identify this host.</para>
+          <para>Use <replaceable>ID</replaceable> to identify the client
+          host. This can be any arbitrary string, but defaults to the
+          hostname. You usually don't need to set this, except when
+          viewing or restoring backups for another client host.</para>
         </listitem>
       </varlistentry>
     
