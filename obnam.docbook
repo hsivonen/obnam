@@ -87,6 +87,34 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <command>rsync</command> algorithm, for efficiency, and encrypts the
     backups before sending data over the network to be stored on a
     remote server, for security.</para>
+    
+    <para>Backups may be stored in a directory on the local file system
+    or remotely on an SFTP server. The server location is given as a URL,
+    of one of the the following formats:
+    <replaceable>sftp://user@host:port/absolute/path</replaceable> or 
+    <replaceable>sftp://user@host:port/~/path/relative/to/home/dir</replaceable>.
+    In either case, <replaceable>user</replaceable> is the username on the
+    remote host (can be left out if same as on local host), and
+    <replaceable>port</replaceable> is the numeric port number to connect to
+    (again, can be left out if default SSH/SFTP port is OK). Also, if the
+    remote home directory is used as storage, the path (in either form) can
+    be left out.</para>
+    
+    <para>In the following examples, the remote username is 
+    <literal>ulla</literal>, the host name is <literal>example.com</literal>,
+    and the remote directory is either <literal>/srv/backups/ulla</literal>
+    or <literal>safe</literal> in the remote home directory. The port is
+    always the default SSH and SFTP port.</para>
+    
+<programlisting>sftp://example.com/srv/backups/ulla
+sftp://ulla@example.com/srv/backups/ulla
+sftp://example.com/~/safe
+sftp://ulla@example.com/~/safe
+</programlisting>
+    
+    <para>In the examples, the first two lines refer to the same location
+    (assuming the local username is also <literal>ulla</literal>), and
+    so do the last two.</para>
 
   </refsect1>
   
@@ -262,10 +290,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
       </varlistentry>
     
       <varlistentry>
-        <term><option>--store</option>=<replaceable>DIR</replaceable></term>
+        <term><option>--store</option>=<replaceable>LOCATION</replaceable></term>
         <listitem>
-          <para>Use <replaceable>DIR</replaceable> for local block
-          storage (not caching).</para>
+          <para>Use <replaceable>LOCATION</replaceable> for storing the
+          backups. <replaceable>LOCATION</replaceable> is either a directory
+          name on the local file system, or an SFTP url. See above in
+          "DESCRIPTION" for an explanation.</para>
         </listitem>
       </varlistentry>
     
