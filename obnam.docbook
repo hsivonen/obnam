@@ -166,7 +166,8 @@ sftp://ulla@example.com/~/safe
         <term><option>--generation-times</option></term>
         <listitem>
           <para>With the <literal>generations</literal> command, 
-          show also the start and end times of each generation. Note
+          show also the start and end times of each generation (in
+          the UTC time zone, also known as GMT). Note
           that this means the operation runs slower, since it needs to
           download more data from the store.</para>
         </listitem>
