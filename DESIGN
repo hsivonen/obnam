@@ -122,9 +122,10 @@ Initializing the backup store for a host
 ----------------------------------------
 
 To initialize the backup store for a host, you create the host
-object/block. This requires creating a UUID that refers to the host, and
-filling in the fields in the objects, and then uploading it. You store
-the host object's UUID on the client.
+object/block. This requires creating a unique host identifier (hostname
+is used by default), and filling in the fields in the objects, and then
+uploading it. You store the host object's id on the client, in the
+host-id setting in the configuration file.
 
 In the case of a complete disaster, where the host UUID gets lost, you
 scan all blocks to find the host block that refers to the client you're
