@@ -30,6 +30,11 @@ import time
 import obnam
 
 
+class CommandLineUsageError(obnam.exception.ExceptionBase):
+
+    """Base class for command line usage error messages"""
+    
+
 def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
     logging.debug("Seeing if %s needs backing up" % pathname)
 
@@ -466,75 +471,80 @@ def forget(context, forgettable_ids):
     obnam.io.collect_garbage(context, block)
 
 
-class MissingCommandWord(obnam.exception.ExceptionBase):
+class MissingCommandWord(CommandLineUsageError):
 
     def __init__(self):
         self._msg = "No command word given on command line"
 
 
-class RestoreNeedsGenerationId(obnam.exception.ExceptionBase):
+class RestoreNeedsGenerationId(CommandLineUsageError):
 
     def __init__(self):
         self._msg = "The 'restore' operation needs id of generation to restore"
 
 
-class RestoreOnlyNeedsGenerationId(obnam.exception.ExceptionBase):
+class RestoreOnlyNeedsGenerationId(CommandLineUsageError):
 
     def __init__(self):
         self._msg = "The 'restore' operation only needs generation id"
 
 
-class UnknownCommandWord(obnam.exception.ExceptionBase):
+class UnknownCommandWord(CommandLineUsageError):
 
     def __init__(self, command):
         self._msg = "Unknown command '%s'" % command
 
 
 def main():
-    context = obnam.context.Context()
-    args = obnam.config.parse_options(context.config, sys.argv[1:])
-    context.cache = obnam.cache.Cache(context.config)
-    context.be = obnam.backend.init(context.config, context.cache)
-    context.be.set_progress_reporter(context.progress)
-
-    if not args:
-        raise MissingCommandWord()
-
-    obnam.log.setup(context.config)
-    logging.info("%s %s starting up" % (obnam.NAME, obnam.VERSION))
-        
-    command = args[0]
-    args = args[1:]
-    
-    logging.debug("command=%s" % command)
-
     try:
-        if command == "backup":
-            backup(context, args)
-        elif command == "generations":
-            generations(context)
-        elif command == "show-generations":
-            show_generations(context, args)
-        elif command == "restore":
-            if not args:
-                raise RestoreNeedsGenerationId()
-            restore(context, args[0], args[1:])
-        elif command == "forget":
-            forget(context, args)
-        elif command == "write-config":
-            context.config.write(sys.stdout)
-        else:
-            raise UnknownCommandWord(command)
+        context = obnam.context.Context()
+        args = obnam.config.parse_options(context.config, sys.argv[1:])
+        context.cache = obnam.cache.Cache(context.config)
+        context.be = obnam.backend.init(context.config, context.cache)
+        context.be.set_progress_reporter(context.progress)
     
-        logging.info("Store I/O: %d kB read, %d kB written" % 
-                     (context.be.get_bytes_read() / 1024,
-                      context.be.get_bytes_written() / 1024))
-        logging.info("Obnam finishing")
-        context.progress.final_report()
-    except KeyboardInterrupt:
-        logging.warning("Obnam interrupted by Control-C, aborting.")
-        logging.warning("Note that backup has not been completed.")
-        sys.exit(1)
+        obnam.log.setup(context.config)
+
+        if not args:
+            raise MissingCommandWord()
+    
+        logging.info("%s %s starting up" % (obnam.NAME, obnam.VERSION))
+            
+        command = args[0]
+        args = args[1:]
+        
+        logging.debug("command=%s" % command)
+    
+        try:
+            if command == "backup":
+                backup(context, args)
+            elif command == "generations":
+                generations(context)
+            elif command == "show-generations":
+                show_generations(context, args)
+            elif command == "restore":
+                if not args:
+                    raise RestoreNeedsGenerationId()
+                restore(context, args[0], args[1:])
+            elif command == "forget":
+                forget(context, args)
+            elif command == "write-config":
+                context.config.write(sys.stdout)
+            else:
+                raise UnknownCommandWord(command)
+        
+            logging.info("Store I/O: %d kB read, %d kB written" % 
+                         (context.be.get_bytes_read() / 1024,
+                          context.be.get_bytes_written() / 1024))
+            logging.info("Obnam finishing")
+            context.progress.final_report()
+        except KeyboardInterrupt:
+            logging.warning("Obnam interrupted by Control-C, aborting.")
+            logging.warning("Note that backup has not been completed.")
+            sys.exit(1)
+    except CommandLineUsageError, e:
+        logging.error("%s" % str(e))
+        logging.error("Use --help to get usage summary.")
 
 
 if __name__ == "__main__":
