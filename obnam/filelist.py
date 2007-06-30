@@ -87,15 +87,11 @@ def find_matching_inode(fl, pathname, stat_result):
         prev_st = obnam.cmp.parse_stat_component(prev_stat)
         fields = (
             "st_dev",
-            "st_ino",
             "st_mode",
             "st_nlink",
             "st_uid",
             "st_gid",
-            "st_rdev",
             "st_size",
-            "st_blksize",
-            "st_blocks",
             "st_mtime",
             # No atime or ctime, on purpose. They can be changed without
             # requiring a new backup.
