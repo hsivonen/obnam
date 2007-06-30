@@ -426,7 +426,10 @@ obnam generations --generation-times</screen>
 
     This will remove the generation (you can give several at once, if
     you want). It will also <emphasis>remove any files in the store that
-    are not part of any non-forgotten generations</emphasis>. </para>
+    are not part of any non-forgotten generations</emphasis>. Any parts
+    of incremental backups (rsync file deltas) from forgotten generations
+    that are needed to re-create remaining generations are kept even if
+    the rest of the generations are deleted.</para>
   
   </refsect1>
   
