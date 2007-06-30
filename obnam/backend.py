@@ -24,6 +24,12 @@ import pwd
 import stat
 import urlparse
 
+# Python define os.O_BINARY only on Windows, but since we want to be portable,
+# we want to use it every time. Thus, if it doesn't exist, we define it as
+# zero, which should not disturb anyone.
+if "O_BINARY" not in dir(os):
+    os.O_BINARY = 0
+
 import paramiko
 
 import uuid
@@ -260,6 +266,7 @@ class SftpBackend(Backend):
         self.connect_sftp()
         pathname = self.block_remote_pathname(block_id)
         self.sftp_makedirs(os.path.dirname(pathname))
+        self.sftp_client.chmod(pathname, 0600)
         f = self.sftp_client.file(pathname, "w")
         f.write(block)
         f.close()
@@ -313,7 +320,10 @@ class FileBackend(Backend):
         dir_full = os.path.join(self.path, os.path.dirname(block_id))
         if not os.path.isdir(dir_full):
             os.makedirs(dir_full, 0700)
-        f = file(self.block_remote_pathname(block_id), "w")
+        fd = os.open(self.block_remote_pathname(block_id), 
+                     os.O_WRONLY | os.O_CREAT | os.O_BINARY,
+                     0600)
+        f = os.fdopen(fd, "w")
         f.write(block)
         f.close()
 

@@ -21,6 +21,7 @@
 import os
 import pwd
 import shutil
+import stat
 import tempfile
 import unittest
 
@@ -176,6 +177,9 @@ class UploadTests(LocalBackendBase):
         
         pathname = os.path.join(self.rootdir, id)
         self.failUnless(os.path.isfile(pathname))
+        
+        st = os.lstat(pathname)
+        self.failUnlessEqual(stat.S_IMODE(st.st_mode), 0600)
         
         f = file(pathname, "r")
         data = f.read()
