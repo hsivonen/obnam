@@ -384,7 +384,10 @@ exclude += third</programlisting>
     that existed in the previous generation are backed up using the
     <command>rsync</command> algorithm, and only the changes since the
     previous generation are uploaded and stored. When restoring, this
-    distinction is, however, invisible to the user.
+    distinction is, however, invisible to the user. The changes from the
+    previous version are computed when a file with the same name exists
+    in the previous generation, and its size, change time (mtime), owner,
+    group, link count, or permissions have changed.
     </para>
   
     <para>To list the generations that currently exist, use one of the
