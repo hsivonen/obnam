@@ -379,7 +379,12 @@ exclude += third</programlisting>
     
 <screen>obnam backup $HOME</screen>
 
-    This works for the initial generation and every new generation.
+    This works for the initial generation and every new generation. Each
+    new generation is backed up as if it were a full backup, but files
+    that existed in the previous generation are backed up using the
+    <command>rsync</command> algorithm, and only the changes since the
+    previous generation are uploaded and stored. When restoring, this
+    distinction is, however, invisible to the user.
     </para>
   
     <para>To list the generations that currently exist, use one of the
