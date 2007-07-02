@@ -163,8 +163,9 @@ class Manifest:
 
     def add_item(self, key, fsys_object):
         for pattern in exclude:
-            if not pattern.search(key):
-                self.fsys_objects[key] = fsys_object
+            if pattern.search(key):
+                break
+        self.fsys_objects[key] = fsys_object
 
     def write(self, f):
         pathnames = self.fsys_objects.keys()

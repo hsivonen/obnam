@@ -102,16 +102,19 @@ do
         fi
     done
     
-    $CMD cli.py $CONFIG generations |
-    nl |
-    while read i genid
-    do
-        rm -rf "$tmp/root"
-        mkdir "$tmp/root"
-        python cli.py $CONFIG -C "$tmp/root" restore "$genid"
-        python manifest.py $MANIFESTOPTS "$tmp/root" > "$tmp/manifest2-$i"
-        diff -u -U 15 "$tmp/manifest-$i" "$tmp/manifest2-$i"
-    done
+    if [ ! -e "$dir/no-manifest" ]
+    then
+        $CMD cli.py $CONFIG generations |
+        nl |
+        while read i genid
+        do
+            rm -rf "$tmp/root"
+            mkdir "$tmp/root"
+            python cli.py $CONFIG -C "$tmp/root" restore "$genid"
+            python manifest.py $MANIFESTOPTS "$tmp/root" > "$tmp/manifest2-$i"
+            diff -u -U 15 "$tmp/manifest-$i" "$tmp/manifest2-$i"
+        done
+    fi
 done
 
 rm -rf "$tmp"
