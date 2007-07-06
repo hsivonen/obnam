@@ -81,7 +81,7 @@ def get_block(context, block_id):
             raise result
     # FIXME: the following is ugly
     elif context.be.use_gpg():
-        logging.debug("Decoding cached block %s before using it", block_id)
+        logging.debug("Decrypting cached block %s before using it", block_id)
         decrypted = obnam.gpg.decrypt(context.config, block)
         if decrypted is None:
             logging.error("Can't decrypt downloaded block, not using it")
@@ -344,19 +344,20 @@ def set_inode(full_pathname, file_component):
     os.chmod(full_pathname, stat.S_IMODE(st.st_mode))
 
 
-def _find_refs(components):
+_interesting = set([obnam.cmp.OBJECT, obnam.cmp.FILE])
+def _find_refs(components, refs=None):
     """Return set of all references (recursively) in a list of components"""
-    logging.debug("Finding references in list of components")
-    refs = set()
-    while components:
-        logging.debug("_find_refs: %d components remaining" % len(components))
-        c = components[0]
-        components = components[1:]
+    if refs is None:
+        refs = set()
+
+    for c in components:
         kind = c.get_kind()
         if obnam.cmp.kind_is_reference(kind):
             refs.add(c.get_string_value())
-        elif obnam.cmp.kind_is_composite(kind):
-            components = c.get_subcomponents() + components
+        elif kind in _interesting:
+            subs = c.get_subcomponents()
+            _find_refs_3(subs, refs)
+
     return refs
 
 
