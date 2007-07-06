@@ -200,7 +200,7 @@ class Backend:
             self.progress.update_downloaded(self.bytes_read)
         
         if self.use_gpg():
-            logging.debug("Decoding downloaded block %s before using it" %
+            logging.debug("Decrypting downloaded block %s before using it" %
                           block_id)
             decrypted = obnam.gpg.decrypt(self.config, block)
             if decrypted is None:

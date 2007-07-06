@@ -21,6 +21,7 @@ sample-gpg-home/secring.gpg
 sample-gpg-home/trustdb.gpg
 tests/excluded/gen01.tar.gz
 tests/excluded/post01.sh
+tests/excluded/no-manifest
 tests/hardlinks/gen01.tar.gz
 tests/movefile/gen01.tar.gz
 tests/movefile/gen02.tar.gz
