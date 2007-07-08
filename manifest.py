@@ -147,32 +147,40 @@ class FilesystemObject:
 class Manifest:
 
     def __init__(self):
-        self.fsys_objects = {}
+        self.roots = []
 
     def add(self, root):
-        if os.path.isdir(root):
-            self.fsys_objects["."] = FilesystemObject(root, ".")
-            for dirpath, dirnames, filenames in os.walk(root):
-                for x in dirnames + filenames:
-                    pathname = os.path.join(dirpath, x)
-                    assert pathname.startswith(root + os.sep)
-                    key = pathname[len(root + os.sep):]
-                    self.add_item(key, FilesystemObject(pathname, key))
-        else:
-            self.add_item(root, FilesystemObject(root, root))
-
-    def add_item(self, key, fsys_object):
-        for pattern in exclude:
-            if pattern.search(key):
-                break
-        self.fsys_objects[key] = fsys_object
+        self.roots.append(root)
 
     def write(self, f):
-        pathnames = self.fsys_objects.keys()
-        pathnames.sort()
-        for pathname in pathnames:
-            self.fsys_objects[pathname].write(f)
+        for root in sorted(self.roots):
+            if os.path.isdir(root):
+                self.write_dir(root, f, root, ".")
+            else:
+                self.write_one(f, root, root)
+
+    def excluded(self, key):
+        for pattern in exclude:
+            if pattern.search(key):
+                return True
+        return False
+
+    def write_one(self, f, pathname, key):
+        if not self.excluded(key):
+            fo = FilesystemObject(pathname, key)
+            fo.write(f)
             f.write("\n")
+
+    def write_dir(self, root, f, pathname, key):
+        self.write_one(f, pathname, key)
+        names = [os.path.join(pathname, x) 
+                    for x in sorted(os.listdir(pathname))]
+        for name in names:
+            key = name[len(root + os.sep):]
+            if os.path.isdir(name):
+                self.write_dir(root, f, name, key)
+            else:
+                self.write_one(f, name, key)
 
 
 def parse_command_line():
