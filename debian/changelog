@@ -1,3 +1,10 @@
+obnam (0.8-1) unstable; urgency=low
+
+  * New upstream version.
+  * debian/copyright now refers to the Debian copy of GPL-2.
+
+ -- Lars Wirzenius <liw@iki.fi>  Tue,  7 Aug 2007 15:54:10 +0300
+
 obnam (0.7-1) unstable; urgency=low
 
   * New upstream version.
