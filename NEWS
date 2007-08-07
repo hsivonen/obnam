@@ -4,6 +4,70 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
+Version 0.8, released 2007-08-07; a DEVELOPMENT release
+
+    NOTE:
+
+    This is a development release, for the purpose of testing. It is not
+    meant for production use. Do not rely on this version for any
+    backups that are important. However, if you are willing to take a
+    risk, any testing experiences would be most welcome.
+
+    BUG FIXES THAT CONCERN USERS:
+    
+    * The Obnam manual page typo fix ("burdened" was misspelt).
+    
+    * In some cases, when reporting a problem backing up a file, the name
+      of the file was not reported. Now it is. Thanks to Teemu Ikonen for
+      reporting the problem.
+    
+    OTHER CHANGES THAT CONCERN USERS:
+      
+    * Speedups in some operations, in some cases very large speedups.
+    
+    * Stopping obnam with Control-C now gives a warning message that makes
+      sense to those who aren't Python programmers.
+      
+    * The Obnam manual page clarifies what "host-id" is, and has an
+      explanation and examples of sftp addresses.
+      
+    * The Obnam manual page now documents that --generation-times timestamps
+      are in the UTC time zone. Thanks to Michael Greb.
+      
+    * Errors in command line usage now result in proper error messages,
+      rather than Python stack traces.
+      
+    * Clarified the Obnam manual page to say that the "forget" operation
+      keeps deltas from forgotten generations if they're still needed for
+      the remaining generations.
+      
+    * The manual page now clarifies that backups are incremental, but that
+      this is kept invisible to the user.
+      
+    * Uploaded block files now have a permission setting of 0600 instead
+      of 0666 modified by umask. Thanks to Tollef Fog Heen.
+    
+    * The inode number, device number, block size, and block counts are
+      now ignored when deciding whether a file needs backing up. Also, the
+      manual page now explains the rules for when a file does get backed
+      up. Thanks to Tollef Fog Heen.
+    
+    STUFF THAT MATTERS TO DEVELOPERS:
+    
+    * "make clean" removes obnamfs.1.
+    
+    * "make check" checks that every file under version conrol has a
+      copyright statement and refers to the GPL, or is mentioned in
+      check-license-exceptions.
+
+    * Various places have more logging.debug statements, for easier
+      debugging. Some places have less, when they were deemed unnecessary
+      and slowed things down.
+      
+    * manifest.py now (again) recurses into directories and is faster and
+      uses less memory.
+    
+
 Version 0.7, released 2007-04-01
 
     * This is not an April Fool's joke.
@@ -16,6 +80,7 @@ Version 0.7, released 2007-04-01
       
     * obnamfs now has a manual page. The main obnam manual page now includes
       examples of usage.
+
 
 Version 0.6, released 2007-03-06
     
@@ -34,15 +99,18 @@ Version 0.6, released 2007-03-06
       
     * A problem with caching combined with encryption was fixed.
 
+
 Version 0.5, released 2007-02-15
 
     * Debian packaging much improved.
+
 
 Version 0.4, released 2007-02-15
 
     * odirect_read now works over Samba and other network filesystems.
       It does not use O_DIRECT in those cases, since that won't work,
       but backups can be made, at the expense of some disk cache flushing.
+
 
 Version 0.3, released 2007-02-13
 
@@ -64,6 +132,7 @@ Version 0.3, released 2007-02-13
     * Optional progress indication.
     
     * Numerous other small improvements.
+
 
 Version 0.1, released 2006-11-12
 
