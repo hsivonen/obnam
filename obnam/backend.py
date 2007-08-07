@@ -266,8 +266,8 @@ class SftpBackend(Backend):
         self.connect_sftp()
         pathname = self.block_remote_pathname(block_id)
         self.sftp_makedirs(os.path.dirname(pathname))
-        self.sftp_client.chmod(pathname, 0600)
         f = self.sftp_client.file(pathname, "w")
+        self.sftp_client.chmod(pathname, 0600)
         f.write(block)
         f.close()
     
