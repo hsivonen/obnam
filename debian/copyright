@@ -1,7 +1,11 @@
 This is obnam, packaged as a .deb by Lars Wirzenius <liw@iki.fi>.
 Original author is also Lars Wirzenius.
 
-Upstream does not yet have a public source repository.
+Source code is downloaded from the upstream home page[1] and/or the
+upstream bzr repository[2].
+
+  [1] http://braawi.org/obnam.html
+  [2] http://bzr.braawi.org/obnam/trunk/
 
 Copyright (C) 2006, 2007  Lars Wirzenius <liw@iki.fi>
 
