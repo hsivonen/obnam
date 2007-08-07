@@ -1,3 +1,9 @@
+obnam (0.8.1-1) experimental; urgency=low
+
+  * New upstream version.
+
+ -- Lars Wirzenius <liw@iki.fi>  Tue, 07 Aug 2007 19:07:05 +0300
+
 obnam (0.8-1) experimental; urgency=low
 
   * New upstream version.
