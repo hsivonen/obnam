@@ -4,6 +4,23 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
+Version 0.8.1, released 2007-08-07; a DEVELOPMENT release
+
+    NOTE:
+
+    This is a development release, for the purpose of testing. It is not
+    meant for production use. Do not rely on this version for any
+    backups that are important. However, if you are willing to take a
+    risk, any testing experiences would be most welcome.
+
+    BUG FIXES THAT CONCERN USERS:
+
+    * The sftp transport now doesn't fail when uploading. It used to try
+      to adjust the permissions of files before they had been uploaded,
+      resulting in sub-optimal completion of backup task (read: a crash).
+
+    * Version is now reported correctly by --version.
+
 Version 0.8, released 2007-08-07; a DEVELOPMENT release
 
     NOTE:
