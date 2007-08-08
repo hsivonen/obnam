@@ -121,11 +121,25 @@ def backup_directory(context, new_filelist, dirname, prevgen_filelist):
                 try:
                     backup_single_item(context, pathname, new_filelist, 
                                        prevgen_filelist)
+                    if "OBNAM_YIKES" in os.environ:
+                        raise EnvironmentError(123, "yikes", pathname)
                 except EnvironmentError, e:
                     logging.warning("File disappeared or other error: " +
                                     "%s: %s" % (e.filename or 
                                                 (pathname + "(?)"), 
                                     e.strerror or str(e)))
+                    if e.filename or pathname:
+                        n = e.filename or pathname
+                        d = os.path.dirname(n) or "."
+                        logging.debug("os.path.exists(%s): %s" % 
+                                        (n, os.path.exists(n)))
+                        logging.debug("os.path.exists(%s): %s" % 
+                                        (d, os.path.exists(d)))
+                        logging.debug("os.path.isdir(%s): %s" % 
+                                        (d, os.path.isdir(d)))
+                        if os.path.isdir(d):
+                            logging.debug("os.listdir(%s): %s" %
+                                            (d, os.listdir(d)))
     context.progress.clear()
 
 
