@@ -1,3 +1,11 @@
+obnam (0.8.1-2) experimental; urgency=low
+
+  * UNRELEASED.
+  * debian/default (which gets installed as /etc/default/obnam): Added
+    /root and /usr/local into the default list of directories to back up.
+
+ -- Lars Wirzenius <liw@iki.fi>  Mon, 13 Aug 2007 13:38:08 +0300
+
 obnam (0.8.1-1) experimental; urgency=low
 
   * New upstream version.

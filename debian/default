@@ -3,4 +3,4 @@
 # for further configuration of obnam.
 
 ENABLE=no
-DIRS="/etc /home /var"
+DIRS="/etc /home /var /root /usr/local"
