@@ -165,7 +165,8 @@ class Backend:
         encrypt_to = self.config.get("backup", "gpg-encrypt-to").strip()
         return encrypt_to
     
-    def upload(self, block_id, block):
+    def upload(self, block_id, block, to_cache):
+        """Upload block to server, and possibly to cache as well."""
         logging.debug("Uploading block %s" % block_id)
         if self.use_gpg():
             logging.debug("Encrypting block %s before upload" % block_id)
@@ -177,6 +178,9 @@ class Backend:
             block = encrypted
         logging.debug("Uploading block %s (%d bytes)" % (block_id, len(block)))
         self.really_upload(block_id, block)
+        if to_cache and self.config.get("backup", "cache"):
+            logging.debug("Putting uploaded block to cache, as well")
+            self.cache.put_block(block_id, block)
         self.bytes_written += len(block)
         if self.progress:
             self.progress.update_uploaded(self.bytes_written)

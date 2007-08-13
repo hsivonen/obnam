@@ -57,7 +57,7 @@ def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
             sig_id = obnam.obj.object_id_new()
             sig = obnam.obj.SignatureObject(sig_id, sigdata).encode()
             obnam.io.enqueue_object(context, context.oq, context.map, 
-                                    sig_id, sig)
+                                    sig_id, sig, True)
 
         prev = obnam.filelist.find(prevgen_filelist, pathname)
         if prev:
@@ -83,7 +83,8 @@ def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
                                                       xcont_ref, xdelta_ref)
                         delta = delta.encode()
                         obnam.io.enqueue_object(context, context.oq, 
-                                                context.map, delta_id, delta)
+                                                context.map, delta_id, delta,
+                                                True)
 
         if not delta_id:
             cont_id = obnam.io.create_file_contents_object(context, pathname)
@@ -205,7 +206,7 @@ def backup(context, args):
     filelist_obj = obnam.filelist.to_object(new_filelist, filelist_id)
     filelist_obj = filelist_obj.encode()
     obnam.io.enqueue_object(context, context.oq, context.map, 
-                               filelist_id, filelist_obj)
+                               filelist_id, filelist_obj, True)
     
     gen_id = obnam.obj.object_id_new()
     logging.info("Creating new generation object %s" % gen_id)
@@ -213,7 +214,8 @@ def backup(context, args):
                                      end_time)
     gen = gen.encode()
     gen_ids.append(gen_id)
-    obnam.io.enqueue_object(context, context.oq, context.map, gen_id, gen)
+    obnam.io.enqueue_object(context, context.oq, context.map, gen_id, gen,
+                            True)
     obnam.io.flush_all_object_queues(context)
 
     logging.info("Creating new mapping blocks")
@@ -221,7 +223,7 @@ def backup(context, args):
         map_block_id = context.be.generate_block_id()
         logging.debug("Creating normal mapping block %s" % map_block_id)
         map_block = obnam.map.encode_new_to_block(context.map, map_block_id)
-        context.be.upload(map_block_id, map_block)
+        context.be.upload(map_block_id, map_block, True)
         map_block_ids.append(map_block_id)
 
     if obnam.map.get_new(context.contmap):
@@ -229,7 +231,7 @@ def backup(context, args):
         logging.debug("Creating content mapping block %s" % contmap_block_id)
         contmap_block = obnam.map.encode_new_to_block(context.contmap, 
                                                              contmap_block_id)
-        context.be.upload(contmap_block_id, contmap_block)
+        context.be.upload(contmap_block_id, contmap_block, False)
         contmap_block_ids.append(contmap_block_id)
 
     logging.info("Creating new host block")

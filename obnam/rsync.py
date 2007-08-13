@@ -71,7 +71,7 @@ def compute_delta(context, signature, filename):
         o.add(obnam.cmp.Component(obnam.cmp.DELTADATA, data))
         o = o.encode()
         obnam.io.enqueue_object(context, context.content_oq, 
-                                context.contmap, id, o)
+                                context.contmap, id, o, False)
         list.append(id)
     exit = p.wait()
     os.remove(tempname)

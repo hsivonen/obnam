@@ -102,7 +102,7 @@ class ObjectQueueFlushing(IoBase):
 
     def testEmptyQueue(self):
         obnam.io.flush_object_queue(self.context, self.context.oq, 
-                                       self.context.map)
+                                       self.context.map, False)
         list = self.context.be.list()
         self.failUnlessEqual(list, [])
 
@@ -112,7 +112,7 @@ class ObjectQueueFlushing(IoBase):
         self.failUnlessEqual(self.context.be.list(), [])
         
         obnam.io.flush_object_queue(self.context, self.context.oq,
-                                       self.context.map)
+                                       self.context.map, False)
 
         list = self.context.be.list()
         self.failUnlessEqual(len(list), 1)
@@ -135,7 +135,7 @@ class GetObjectTests(IoBase):
     def upload_object(self, object_id, object):
         self.context.oq.add(object_id, object)
         obnam.io.flush_object_queue(self.context, self.context.oq,
-                                       self.context.map)
+                                       self.context.map, False)
 
     def testGetObject(self):
         id = "pink"
@@ -190,7 +190,7 @@ class ObjectQueuingTests(unittest.TestCase):
         self.failUnlessEqual(self.find_block_files(context.config), [])
         
         obnam.io.enqueue_object(context, context.oq, context.map, 
-                                   object_id, object)
+                                   object_id, object, False)
         
         self.failUnlessEqual(self.find_block_files(context.config), [])
         self.failUnlessEqual(context.oq.combined_size(), len(object))
@@ -199,7 +199,7 @@ class ObjectQueuingTests(unittest.TestCase):
         object2 = "x" * 1024
 
         obnam.io.enqueue_object(context, context.oq, context.map, 
-                                   object_id2, object2)
+                                   object_id2, object2, False)
         
         self.failUnlessEqual(len(self.find_block_files(context.config)), 1)
         self.failUnlessEqual(context.oq.combined_size(), len(object2))
@@ -252,9 +252,9 @@ class FileContentsTests(unittest.TestCase):
         
         id = obnam.io.create_file_contents_object(self.context, filename)
         obnam.io.flush_object_queue(self.context, self.context.oq,
-                                       self.context.map)
+                                       self.context.map, False)
         obnam.io.flush_object_queue(self.context, self.context.content_oq,
-                                       self.context.contmap)
+                                       self.context.contmap, False)
         
         (fd, name) = tempfile.mkstemp()
         obnam.io.copy_file_contents(self.context, fd, id)
@@ -363,13 +363,13 @@ class ReachabilityTests(IoBase):
         map_block_id = "box"
         map_block = obnam.map.encode_new_to_block(self.context.map,
                                                          map_block_id)
-        self.context.be.upload(map_block_id, map_block)
+        self.context.be.upload(map_block_id, map_block, False)
 
         obnam.map.add(self.context.contmap, "black", "beautiful")
         contmap_block_id = "fiddly"
         contmap_block = obnam.map.encode_new_to_block(
                             self.context.contmap, contmap_block_id)
-        self.context.be.upload(contmap_block_id, contmap_block)
+        self.context.be.upload(contmap_block_id, contmap_block, False)
 
         host_id = self.context.config.get("backup", "host-id")
         host = obnam.obj.HostBlockObject(host_id, [], [map_block_id], 
@@ -390,13 +390,13 @@ class ReachabilityTests(IoBase):
         oq = obnam.obj.ObjectQueue()
         oq.add("rouge", encoded_o)
         block = oq.as_block(block_id)
-        self.context.be.upload(block_id, block)
+        self.context.be.upload(block_id, block, False)
 
         obnam.map.add(self.context.contmap, "rouge", block_id)
         map_block_id = "pretty"
         map_block = obnam.map.encode_new_to_block(self.context.contmap,
                                                          map_block_id)
-        self.context.be.upload(map_block_id, map_block)
+        self.context.be.upload(map_block_id, map_block, False)
 
         host_id = self.context.config.get("backup", "host-id")
         host = obnam.obj.HostBlockObject(host_id, [], [], [map_block_id])
@@ -416,7 +416,7 @@ class GarbageCollectionTests(IoBase):
         obnam.io.upload_host_block(self.context, host)
 
         block_id = self.context.be.generate_block_id()
-        self.context.be.upload(block_id, "pink")
+        self.context.be.upload(block_id, "pink", False)
 
         files = self.context.be.list()
         self.failUnlessEqual(files, [host_id, block_id])
@@ -480,7 +480,7 @@ class LoadMapTests(IoBase):
         obnam.map.add(map, "pink", "pretty")
         block_id = self.context.be.generate_block_id()
         block = obnam.map.encode_new_to_block(map, block_id)
-        self.context.be.upload(block_id, block)
+        self.context.be.upload(block_id, block, False)
         
         obnam.io.load_maps(self.context, self.context.map, [block_id])
         self.failUnlessEqual(obnam.map.get(self.context.map, "pink"),

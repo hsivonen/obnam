@@ -46,7 +46,7 @@ def unsolve(context, pathname):
         return pathname
 
 
-def flush_object_queue(context, oq, map):
+def flush_object_queue(context, oq, map, to_cache):
     """Put all objects in an object queue into a block and upload it
     
     Also put mappings into map. The queue is cleared (emptied) afterwards.
@@ -57,7 +57,7 @@ def flush_object_queue(context, oq, map):
         block_id = context.be.generate_block_id()
         logging.debug("Creating new object block %s" % block_id)
         block = oq.as_block(block_id)
-        context.be.upload(block_id, block)
+        context.be.upload(block_id, block, to_cache)
         for id in oq.ids():
             obnam.map.add(map, id, block_id)
         oq.clear()
@@ -65,8 +65,8 @@ def flush_object_queue(context, oq, map):
 
 def flush_all_object_queues(context):
     """Flush and clear all object queues in a given context"""
-    flush_object_queue(context, context.oq, context.map)
-    flush_object_queue(context, context.content_oq, context.contmap)
+    flush_object_queue(context, context.oq, context.map, True)
+    flush_object_queue(context, context.content_oq, context.contmap, False)
 
 
 def get_block(context, block_id):
@@ -206,7 +206,7 @@ def get_object(context, object_id):
 def upload_host_block(context, host_block):
     """Upload a host block"""
     return context.be.upload(context.config.get("backup", "host-id"), 
-                             host_block)
+                             host_block, False)
 
 
 def get_host_block(context):
@@ -220,12 +220,12 @@ def get_host_block(context):
         return context.cache.get_block(host_id)
 
 
-def enqueue_object(context, oq, map, object_id, object):
+def enqueue_object(context, oq, map, object_id, object, to_cache):
     """Put an object into the object queue, and flush queue if too big"""
     block_size = context.config.getint("backup", "block-size")
     cur_size = oq.combined_size()
     if len(object) + cur_size > block_size:
-        obnam.io.flush_object_queue(context, oq, map)
+        obnam.io.flush_object_queue(context, oq, map, to_cache)
         oq.clear()
     oq.add(object_id, object)
 
@@ -248,7 +248,7 @@ def create_file_contents_object(context, filename):
         o.add(c)
         o = o.encode()
         enqueue_object(context, context.content_oq, context.contmap, 
-                       part_id, o)
+                       part_id, o, False)
         part_ids.append(part_id)
 
     o = obnam.obj.Object(object_id, obnam.obj.FILECONTENTS)
@@ -256,7 +256,7 @@ def create_file_contents_object(context, filename):
         c = obnam.cmp.Component(obnam.cmp.FILEPARTREF, part_id)
         o.add(c)
     o = o.encode()
-    enqueue_object(context, context.oq, context.map, object_id, o)
+    enqueue_object(context, context.oq, context.map, object_id, o, True)
 
     return object_id
 
