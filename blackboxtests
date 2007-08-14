@@ -115,6 +115,31 @@ do
             diff -u -U 15 "$tmp/manifest-$i" "$tmp/manifest2-$i"
         done
     fi
+
+    if [ ! -e "$dir/no-manifest" ]
+    then
+        genlist="$(mktemp)"
+        $CMD cli.py $CONFIG generations | nl > "$genlist"
+
+        cat "$genlist" |
+        while read i genid
+        do
+            python cli.py $CONFIG forget "$genid"
+            
+            awk -vgen="$i" '$1 > gen' "$genlist" |
+            while read i2 genid2
+            do
+                rm -rf "$tmp/root"
+                mkdir "$tmp/root"
+                python cli.py $CONFIG -C "$tmp/root" restore "$genid2"
+                python manifest.py $MANIFESTOPTS "$tmp/root" \
+                    > "$tmp/manifest3-$i2"
+                diff -u -U 15 "$tmp/manifest-$i2" "$tmp/manifest3-$i2"
+            done
+        done
+        
+        rm -f "$genlist"
+    fi
 done
 
 rm -rf "$tmp"

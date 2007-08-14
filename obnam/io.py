@@ -356,7 +356,7 @@ def _find_refs(components, refs=None):
             refs.add(c.get_string_value())
         elif kind in _interesting:
             subs = c.get_subcomponents()
-            _find_refs_3(subs, refs)
+            _find_refs(subs, refs)
 
     return refs
 
@@ -399,7 +399,12 @@ def find_map_blocks_in_use(context, host_block, data_block_ids):
         obnam.obj.host_block_decode(host_block)
     used_map_block_ids = set()
     for map_block_id in map_block_ids + contmap_block_ids:
-        block = get_block(context, map_block_id)
+        try:
+            block = get_block(context, map_block_id)
+        except IOError, e:
+            logging.warning("Could not load map block %s: %d: %s" %
+                            (map_block_id, e.errno, e.strerror))
+            continue
         list = obnam.obj.block_decode(block)
         if list is None:
             logging.warning("Error decoding block %s" % map_block_id)
@@ -446,5 +451,10 @@ def load_maps(context, map, block_ids):
     for i in range(num_blocks):
         id = block_ids[i]
         logging.debug("Loading map block %d/%d: %s" % (i+1, num_blocks, id))
-        block = obnam.io.get_block(context, id)
-        obnam.map.decode_block(map, block)
+        try:
+            block = obnam.io.get_block(context, id)
+        except IOError, e:
+            logging.warning("Could not load map block %s: %d: %s" %
+                            (id, e.errno, e.strerror))
+        else:
+            obnam.map.decode_block(map, block)

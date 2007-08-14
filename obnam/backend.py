@@ -325,7 +325,7 @@ class FileBackend(Backend):
         if not os.path.isdir(dir_full):
             os.makedirs(dir_full, 0700)
         fd = os.open(self.block_remote_pathname(block_id), 
-                     os.O_WRONLY | os.O_CREAT | os.O_BINARY,
+                     os.O_WRONLY | os.O_TRUNC | os.O_CREAT | os.O_BINARY,
                      0600)
         f = os.fdopen(fd, "w")
         f.write(block)
