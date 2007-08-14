@@ -4,6 +4,35 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
+Version 0.8.2, released 2007-08-14; a DEVELOPMENT release
+
+    NOTE:
+
+    This is a development release, for the purpose of testing. It is not
+    meant for production use. Do not rely on this version for any
+    backups that are important. However, if you are willing to take a
+    risk, any testing experiences would be most welcome.
+    
+    BUG FIXES:
+    
+    * The "forget" feature that was sped up in 0.8 had some bugs (wrong
+      function name in one place), which was fixed.
+      
+    * In some cases, forgetting generations led to a corrupted host block.
+      Specifically, if the new host block was shorter than the new one,
+      there was corruption. Fixed now.
+      
+    * Also, sometimes forgetting leads to dangling block references
+      in map blocks, and obnam would crash on them during the next
+      forget run. Fixed now.
+    
+    NEW FEATURES:
+    
+    * Uploaded blocks of data are now put into the cache, so that the next
+      backup run doesn't need to download them again. This only happens
+      for meta data, such as file lists for generations, not actual file
+      data.
+
 Version 0.8.1, released 2007-08-07; a DEVELOPMENT release
 
     NOTE:
