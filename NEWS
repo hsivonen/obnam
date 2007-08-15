@@ -19,7 +19,7 @@ Version 0.8.2, released 2007-08-14; a DEVELOPMENT release
       function name in one place), which was fixed.
       
     * In some cases, forgetting generations led to a corrupted host block.
-      Specifically, if the new host block was shorter than the new one,
+      Specifically, if the new host block was shorter than the old one,
       there was corruption. Fixed now.
       
     * Also, sometimes forgetting leads to dangling block references
