@@ -257,6 +257,8 @@ def create_file_contents_object(context, filename):
         o.add(c)
     o = o.encode()
     enqueue_object(context, context.oq, context.map, object_id, o, True)
+    if context.progress:
+        context.progress.update_current_action(filename)
 
     return object_id
 

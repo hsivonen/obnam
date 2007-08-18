@@ -48,6 +48,7 @@ def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
         return
 
     logging.debug("Backing up %s" % pathname)
+    context.progress.update_current_action(pathname)
     sig_id = None
     delta_id = None
     cont_id = None
@@ -58,6 +59,7 @@ def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
             sig = obnam.obj.SignatureObject(sig_id, sigdata).encode()
             obnam.io.enqueue_object(context, context.oq, context.map, 
                                     sig_id, sig, True)
+            context.progress.update_current_action(pathname)
 
         prev = obnam.filelist.find(prevgen_filelist, pathname)
         if prev:
@@ -85,9 +87,11 @@ def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
                         obnam.io.enqueue_object(context, context.oq, 
                                                 context.map, delta_id, delta,
                                                 True)
+                        context.progress.update_current_action(pathname)
 
         if not delta_id:
             cont_id = obnam.io.create_file_contents_object(context, pathname)
+            context.progress.update_current_action(pathname)
 
     file_cmp = obnam.filelist.create_file_component_from_stat(pathname, st,
                                                               cont_id, sig_id,

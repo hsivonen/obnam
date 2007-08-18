@@ -168,8 +168,6 @@ class Backend:
     def upload(self, block_id, block, to_cache):
         """Upload block to server, and possibly to cache as well."""
         logging.debug("Uploading block %s" % block_id)
-        if self.progress:
-            self.progress.update_current_action("Uploading block")
         if self.use_gpg():
             logging.debug("Encrypting block %s before upload" % block_id)
             encrypted = obnam.gpg.encrypt(self.config, block)
@@ -179,6 +177,8 @@ class Backend:
                 return None
             block = encrypted
         logging.debug("Uploading block %s (%d bytes)" % (block_id, len(block)))
+        if self.progress:
+            self.progress.update_current_action("Uploading block")
         self.really_upload(block_id, block)
         if to_cache and self.config.get("backup", "cache"):
             logging.debug("Putting uploaded block to cache, as well")
@@ -194,7 +194,7 @@ class Backend:
         
         logging.debug("Downloading block %s" % block_id)
         if self.progress:
-            self.progress.update_current_action("Uploading block")
+            self.progress.update_current_action("Downloading block")
         block = self.really_download(block_id)
         if type(block) != type(""):
             logging.warning("Download failed, returning exception")
@@ -272,8 +272,9 @@ class SftpBackend(Backend):
         f = self.sftp_client.file(pathname, "w")
         self.sftp_client.chmod(pathname, 0600)
         for offset in range(0, len(block), self.io_size):
-            f.write(block[offset:offset+self.io_size])
-            self.bytes_written += len(block)
+            block_part = block[offset:offset+self.io_size]
+            f.write(block_part)
+            self.bytes_written += len(block_part)
             if self.progress:
                 self.progress.update_uploaded(self.bytes_written)
         f.close()
