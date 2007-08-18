@@ -181,7 +181,6 @@ class Backend:
         if to_cache and self.config.get("backup", "cache"):
             logging.debug("Putting uploaded block to cache, as well")
             self.cache.put_block(block_id, block)
-        self.bytes_written += len(block)
         if self.progress:
             self.progress.update_uploaded(self.bytes_written)
         return None
@@ -199,7 +198,6 @@ class Backend:
             logging.warning("Download failed, returning exception")
             return block # it's an exception
 
-        self.bytes_read += len(block)
         if self.progress:
             self.progress.update_downloaded(self.bytes_read)
         
@@ -225,6 +223,8 @@ class Backend:
     
 
 class SftpBackend(Backend):
+
+    io_size = 64 * 1024
 
     def connect_sftp(self):
         """Connect to the server, unless already connected"""
@@ -272,7 +272,11 @@ class SftpBackend(Backend):
         self.sftp_makedirs(os.path.dirname(pathname))
         f = self.sftp_client.file(pathname, "w")
         self.sftp_client.chmod(pathname, 0600)
-        f.write(block)
+        for offset in range(0, len(block), self.io_size):
+            f.write(block[offset:offset+self.io_size])
+            self.bytes_written += len(block)
+            if self.progress:
+                self.progress.update_uploaded(self.bytes_written)
         f.close()
     
     def really_download(self, block_id):
@@ -280,7 +284,16 @@ class SftpBackend(Backend):
             self.connect_sftp()
             f = self.sftp_client.file(self.block_remote_pathname(block_id), 
                                       "r")
-            block = f.read()
+            block_parts = []
+            while True:
+                block_part = f.read(self.io_size)
+                if not block_part:
+                    break
+                block_parts.append(block_part)
+                self.bytes_read += len(block_part)
+                if self.progress:
+                    self.progress.update_downloaded(self.bytes_read)
+            block = "".join(block_parts)
             f.close()
             if self.config.get("backup", "cache"):
                 self.cache.put_block(block_id, block)
@@ -329,12 +342,14 @@ class FileBackend(Backend):
                      0600)
         f = os.fdopen(fd, "w")
         f.write(block)
+        self.bytes_written += len(block)
         f.close()
 
     def really_download(self, block_id):
         try:
             f = file(self.block_remote_pathname(block_id), "r")
             block = f.read()
+            self.bytes_read += len(block)
             f.close()
         except IOError, e:
             return e
