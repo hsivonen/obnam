@@ -168,6 +168,8 @@ class Backend:
     def upload(self, block_id, block, to_cache):
         """Upload block to server, and possibly to cache as well."""
         logging.debug("Uploading block %s" % block_id)
+        if self.progress:
+            self.progress.update_current_action("Uploading block")
         if self.use_gpg():
             logging.debug("Encrypting block %s before upload" % block_id)
             encrypted = obnam.gpg.encrypt(self.config, block)
@@ -181,8 +183,6 @@ class Backend:
         if to_cache and self.config.get("backup", "cache"):
             logging.debug("Putting uploaded block to cache, as well")
             self.cache.put_block(block_id, block)
-        if self.progress:
-            self.progress.update_uploaded(self.bytes_written)
         return None
 
     def download(self, block_id):
@@ -193,14 +193,13 @@ class Backend:
         """
         
         logging.debug("Downloading block %s" % block_id)
+        if self.progress:
+            self.progress.update_current_action("Uploading block")
         block = self.really_download(block_id)
         if type(block) != type(""):
             logging.warning("Download failed, returning exception")
             return block # it's an exception
 
-        if self.progress:
-            self.progress.update_downloaded(self.bytes_read)
-        
         if self.use_gpg():
             logging.debug("Decrypting downloaded block %s before using it" %
                           block_id)

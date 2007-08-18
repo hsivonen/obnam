@@ -113,7 +113,7 @@ def backup_directory(context, new_filelist, dirname, prevgen_filelist):
             global num_files
             num_files += 1
             context.progress.update_total_files(num_files)
-            context.progress.update_current_file(pathname)
+            context.progress.update_current_action(pathname)
             for pattern in patterns:
                 if pattern.search(pathname):
                     logging.debug("Excluding %s" % pathname)

@@ -25,7 +25,7 @@ import time
 class ProgressReporter:
 
     initial_values = (("total_files", 0), ("uploaded", 0), ("downloaded", 0),
-                      ("current_file", None))
+                      ("current_action", None))
 
     def __init__(self, config):
         self.config = config
@@ -54,7 +54,7 @@ class ProgressReporter:
                              (self.dict["uploaded"] / 1024 / 1024))
                 parts.append("down: %d MB" % 
                              (self.dict["downloaded"] / 1024 / 1024))
-                current = self.dict["current_file"]
+                current = self.dict["current_action"]
                 if current:
                     parts.append("now:")
                     part_one = ", ".join(parts)
@@ -76,12 +76,12 @@ class ProgressReporter:
     def update_downloaded(self, downloaded):
         self.update("downloaded", downloaded)
 
-    def update_current_file(self, current_file):
-        self.update("current_file", current_file)
+    def update_current_action(self, current_action):
+        self.update("current_action", current_action)
 
     def final_report(self):
         self.timestamp = 0
-        self.update_current_file(None)
+        self.update_current_action(None)
         if self.reporting_is_allowed():
             sys.stdout.write("\n")
             sys.stdout.flush()
