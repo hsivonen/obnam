@@ -126,8 +126,6 @@ def backup_directory(context, new_filelist, dirname, prevgen_filelist):
                 try:
                     backup_single_item(context, pathname, new_filelist, 
                                        prevgen_filelist)
-                    if "OBNAM_YIKES" in os.environ:
-                        raise EnvironmentError(123, "yikes", pathname)
                 except EnvironmentError, e:
                     logging.warning("File disappeared or other error: " +
                                     "%s: %s" % (e.filename or 
