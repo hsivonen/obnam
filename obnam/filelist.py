@@ -48,53 +48,6 @@ def create_file_component_from_stat(pathname, st, contref, sigref, deltaref):
     return obnam.cmp.Component(obnam.cmp.FILE, subs)
 
 
-def create():
-    """Create a new, empty file list"""
-    return Filelist()
-
-
-def num_files(fl):
-    """Return the number of files in a file list"""
-    return fl.num_files()
-
-
-def list_files(fl):
-    """Return list of all file in the file list currently"""
-    return fl.list_files()
-
-
-def add(fl, pathname, contref, sigref, deltaref):
-    """Add a file (and its metadata) to a file list"""
-    fl.add(pathname, contref, sigref, deltaref)
-
-
-def add_file_component(fl, pathname, file_cmp):
-    """Add a file component to a file list"""
-    fl.add_file_component(pathname, file_cmp)
-
-
-def find(fl, pathname):
-    """Get the FILE component that corresponds to a pathname"""
-    return fl.find(pathname)
-
-
-def find_matching_inode(fl, pathname, stat_result):
-    """Find the FILE component that matches stat_result"""
-    return fl.find_matching_inode(pathname, stat_result)
-
-
-def to_object(fl, object_id):
-    """Create an unencoded FILELIST object from a file list"""
-    return fl.to_object(object_id)
-
-
-def from_object(o):
-    """Create a file list data structure from a backup object"""
-    fl = Filelist()
-    fl.from_object(o)
-    return fl
-
-
 class Filelist:
 
     """Handle the metadata for one generation of backups"""
