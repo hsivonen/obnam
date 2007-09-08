@@ -244,15 +244,16 @@ class GetVarintVAlueTest(unittest.TestCase):
 class FindVarintTests(unittest.TestCase):
 
     def test(self):
+        values = range(0, 1024, 17)
+
         list = []
-        for i in range(1024):
+        for i in values:
             encoded = obnam.varint.encode(i)
             c = obnam.cmp.Component(i, encoded)
             list.append(c)
 
-        for i in range(1024):
-            self.failUnlessEqual(obnam.cmp.first_varint_by_kind(list, i), 
-                                 i)
+        for i in values:
+            self.failUnlessEqual(obnam.cmp.first_varint_by_kind(list, i), i)
         self.failUnlessEqual(obnam.cmp.first_varint_by_kind(list, -1), None)
 
 
