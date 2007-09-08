@@ -227,7 +227,7 @@ def parse_options(config, argv):
     return args
 
 
-def write_defaultconfig(config):
+def write_defaultconfig(config, output=sys.stdout):
     """Write to stdout a new defaultconfig.py, using values from config"""
 
     items = []
@@ -236,7 +236,7 @@ def write_defaultconfig(config):
             items.append('  ("%s", "%s", "%s"),' % 
                             (section, key, config.get(section, key)))
 
-    sys.stdout.write("import socket\nitems = (\n%s\n)\n""" % "\n".join(items))
+    output.write("import socket\nitems = (\n%s\n)\n""" % "\n".join(items))
 
 
 # Allow unit tests to override default path list.

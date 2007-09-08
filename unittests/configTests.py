@@ -261,3 +261,14 @@ cache = pretty
         self.failUnlessEqual(configs,
                              ["/usr/share/obnam/obnam.conf",
                               "/home/pretty/.obnam/obnam.conf"])
+
+
+class WriteDefaultConfigTests(unittest.TestCase):
+
+    def test(self):
+        config = obnam.config.default_config()
+        f = StringIO.StringIO()
+        obnam.config.write_defaultconfig(config, output=f)
+        s = f.getvalue()
+        self.failUnless(s.startswith("import socket"))
+        self.failUnless("\nitems =" in s)
