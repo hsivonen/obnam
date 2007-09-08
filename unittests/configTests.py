@@ -272,3 +272,22 @@ class WriteDefaultConfigTests(unittest.TestCase):
         s = f.getvalue()
         self.failUnless(s.startswith("import socket"))
         self.failUnless("\nitems =" in s)
+
+
+class GetUidAndHomeTests(unittest.TestCase):
+
+    def testGetUid(self):
+        obnam.config.set_uid_and_home(None, None)
+        self.failIfEqual(obnam.config.get_uid(), None)
+
+    def testGetHome(self):
+        obnam.config.set_uid_and_home(None, None)
+        self.failIfEqual(obnam.config.get_home(), None)
+
+    def testGetUidFaked(self):
+        obnam.config.set_uid_and_home(42, "pretty")
+        self.failUnlessEqual(obnam.config.get_uid(), 42)
+
+    def testGetHomeFaked(self):
+        obnam.config.set_uid_and_home(42, "pink")
+        self.failUnlessEqual(obnam.config.get_home(), "pink")
