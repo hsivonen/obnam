@@ -84,6 +84,8 @@ class CoverageTestRunner:
             print str(error)
 
     def run(self):
+        start_time = time.time()
+        
         module_pairs = self._load_pairs()
         total_tests = sum(suite.countTestCases() 
                           for x, y, suite in module_pairs)
@@ -98,6 +100,8 @@ class CoverageTestRunner:
             filename, stmts, missed, missed_desc = coverage.analysis(module)
             if missed:
                 result.addCoverageMissed(filename, stmts, missed, missed_desc)
+
+        end_time = time.time()
 
         sys.stdout.write("\n\n")
         
@@ -126,5 +130,7 @@ class CoverageTestRunner:
         print "Slowest tests:"
         for secs, test in sorted(result.timings)[-10:]:
             print "  %5.1f s %s" % (secs, str(test)[:70])
+            
+        print "Time: %.1f s" % (end_time - start_time)
 
         return result
