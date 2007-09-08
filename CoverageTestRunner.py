@@ -21,7 +21,7 @@ class CoverageTestResult(unittest.TestResult):
         self.coverage_missed.append((filename, statements, missed_statements,
                                      missed_description))
 
-    def wasSuccessful(self):
+    def xxx_wasSuccessful(self):
         return (unittest.TestResult.wasSuccessful(self) and 
                 not self.coverage_missed)
         
