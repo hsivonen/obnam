@@ -283,11 +283,13 @@ class GetComponentTests(unittest.TestCase):
         self.failUnlessEqual(o.find_varints_by_kind(0), list)
 
     def testGetFirstSVarintByKind(self):
+        values = range(0, 1024, 17)
+
         o = obnam.obj.Object("uuid", 0)
-        for i in range(1024):
+        for i in values:
             c = obnam.cmp.Component(i, obnam.varint.encode(i))
             o.add(c)
 
-        for i in range(1024):
+        for i in values:
             self.failUnlessEqual(o.first_varint_by_kind(i), i)
         self.failUnlessEqual(o.first_varint_by_kind(-1), None)
