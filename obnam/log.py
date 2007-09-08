@@ -35,11 +35,10 @@ levels = {
 
 def setup(config):
     filename = config.get("backup", "log-file")
+    f = sys.stdout
     if filename:
         fd = os.open(filename, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0600)
         f = os.fdopen(fd, "a")
-    else:
-        f = sys.stdout
     level = config.get("backup", "log-level")
 
     formatter = logging.Formatter("%(asctime)s %(levelname)s: %(message)s",
