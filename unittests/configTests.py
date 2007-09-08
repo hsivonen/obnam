@@ -147,10 +147,6 @@ class CommandLineParsingTests(unittest.TestCase):
         obnam.config.parse_options(config, ["--no-gpg"])
         self.failUnlessEqual(config.get("backup", "no-gpg"), "true")
 
-    def testUsePsyco(self):
-        config = obnam.config.default_config()
-        obnam.config.parse_options(config, ["--use-psyco"])
-
     def testGenerationTimes(self):
         config = obnam.config.default_config()
         obnam.config.parse_options(config, ["--generation-times"])

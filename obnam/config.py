@@ -113,10 +113,6 @@ def build_parser():
     parser.add_option("--no-gpg", action="store_true",
                       help="don't use gpg at all")
     
-    parser.add_option("--use-psyco",
-                      action="store_true", default=False,
-                      help="use the psyco Python extension, if available")
-    
     parser.add_option("--exclude",
                       metavar="REGEXP", 
                       action="append",
@@ -227,12 +223,6 @@ def parse_options(config, argv):
         config.set("backup", "generation-times", "true")
     else:
         config.set("backup", "generation-times", "false")
-    if options.use_psyco:
-        try:
-            import psyco
-            psyco.profile()
-        except ImportError:
-            pass
 
     return args
 
