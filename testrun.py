@@ -24,11 +24,15 @@ import sys
 from CoverageTestRunner import CoverageTestRunner
 
 
-files = [x for x in os.listdir("unittests") if x.endswith("Tests.py")]
+if len(sys.argv) == 1:
+    files = [os.path.join("unittests", x) 
+             for x in os.listdir("unittests") if x.endswith("Tests.py")]
+else:
+    files = sys.argv[1:]
 runner = CoverageTestRunner()
-for test_py in files:
-    testpath = os.path.join("unittests", test_py)
-    codepath = os.path.join("obnam", test_py[:-len("Tests.py")] + ".py")
+for testpath in files:
+    basename = os.path.basename(testpath)
+    codepath = os.path.join("obnam", basename[:-len("Tests.py")] + ".py")
     runner.add_pair(codepath, testpath)
 
 result = runner.run()
