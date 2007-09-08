@@ -21,17 +21,17 @@ import unittest
 import os
 import sys
 
-if sys.argv[1:]:
-    files = sys.argv[1:]
-else:
-    files = [py for py in os.listdir("unittests") if py.endswith("Tests.py")]
-suite = unittest.TestSuite()
-for py in files:
-    py = os.path.join("unittests", py)
-    suite.addTest(unittest.defaultTestLoader.loadTestsFromName(py[:-3]))
+from CoverageTestRunner import CoverageTestRunner
 
-runner = unittest.TextTestRunner()
-result = runner.run(suite)
+
+files = [x for x in os.listdir("unittests") if x.endswith("Tests.py")]
+runner = CoverageTestRunner()
+for test_py in files:
+    testpath = os.path.join("unittests", test_py)
+    codepath = os.path.join("obnam", test_py[:-len("Tests.py")] + ".py")
+    runner.add_pair(codepath, testpath)
+
+result = runner.run()
 if result.wasSuccessful():
     sys.exit(0)
 else:
