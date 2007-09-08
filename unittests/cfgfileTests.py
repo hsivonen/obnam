@@ -24,6 +24,21 @@ import unittest
 import obnam
 
 
+class ParsingErrorTests(unittest.TestCase):
+
+    def testSaysUnnamedFileIfNameIsNone(self):
+        e = obnam.cfgfile.ParsingError(None, 42)
+        self.failUnless("unnamed file" in str(e))
+        
+    def testIncludesFilenameInMessage(self):
+        e = obnam.cfgfile.ParsingError("pink", 42)
+        self.failUnless("pink" in str(e))
+        
+    def testIncludesLineNumberInMessage(self):
+        e = obnam.cfgfile.ParsingError("pink", 42)
+        self.failUnless("42" in str(e))
+
+
 class SectionTests(unittest.TestCase):
 
     def setUp(self):
