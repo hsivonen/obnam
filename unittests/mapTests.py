@@ -26,6 +26,10 @@ import obnam
 
 class ObjectMappingTests(unittest.TestCase):
 
+    def testInvalidBlockReturnsNone(self):
+        m = obnam.map.create()
+        self.failUnlessEqual(obnam.map.decode_block(m, "pink"), None)
+
     def testEmpty(self):
         m = obnam.map.create()
         self.failUnlessEqual(obnam.map.count(m), 0)
