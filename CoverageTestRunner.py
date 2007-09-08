@@ -108,7 +108,7 @@ class CoverageTestRunner:
                 width = max(len(x[0]) for x in result.coverage_missed)
                 fmt = "  %-*s   %s"
                 print fmt % (width, "Module", "Missed statements")
-                for filename, stmts, missed, desc in result.coverage_missed:
+                for filename, _, _, desc in sorted(result.coverage_missed):
                     print fmt % (width, filename, desc)
 
             print "%d failures, %d errors" % (len(result.failures),
