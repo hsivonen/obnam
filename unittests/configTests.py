@@ -131,7 +131,18 @@ class CommandLineParsingTests(unittest.TestCase):
         obnam.config.parse_options(config, ["--gpg-sign-with=foo"])
         self.failUnlessEqual(config.get("backup", "gpg-sign-with"), "foo")
 
-    def testNoGpg(self):
+    def testNoGpgIsUnset(self):
+        config = obnam.config.default_config()
+        obnam.config.parse_options(config, [])
+        self.failUnlessEqual(config.get("backup", "no-gpg"), "false")
+
+    def testNoGpgIsUnsetButDefaultIsTrue(self):
+        config = obnam.config.default_config()
+        config.set("backup", "no-gpg", "true")
+        obnam.config.parse_options(config, [])
+        self.failUnlessEqual(config.get("backup", "no-gpg"), "true")
+
+    def testNoGpgIsSet(self):
         config = obnam.config.default_config()
         obnam.config.parse_options(config, ["--no-gpg"])
         self.failUnlessEqual(config.get("backup", "no-gpg"), "true")

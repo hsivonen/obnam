@@ -215,8 +215,6 @@ def parse_options(config, argv):
         config.set("backup", "gpg-sign-with", options.gpg_sign_with)
     if options.no_gpg is True:
         config.set("backup", "no-gpg", "true")
-    elif options.no_gpg is False:
-        config.set("backup", "no-gpg", "false")
     if options.exclude is not None:
         config.remove_option("backup", "exclude")
         for pattern in options.exclude:
