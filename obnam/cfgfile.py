@@ -102,7 +102,6 @@ class ConfigFile:
 
     def parse_string(self, str):
         """Parse a string as a configuration file"""
-        pass
 
     def sections(self):
         """Return all sections we know about"""
