@@ -50,75 +50,119 @@ def create_file_component_from_stat(pathname, st, contref, sigref, deltaref):
 
 def create():
     """Create a new, empty file list"""
-    return {}
+    return Filelist()
 
 
 def num_files(fl):
     """Return the number of files in a file list"""
-    return len(fl)
+    return fl.num_files()
 
 
 def list_files(fl):
     """Return list of all file in the file list currently"""
-    return fl.keys()
+    return fl.list_files()
 
 
 def add(fl, pathname, contref, sigref, deltaref):
     """Add a file (and its metadata) to a file list"""
-    fl[pathname] = create_file_component(pathname, contref, sigref, deltaref)
+    fl.add(pathname, contref, sigref, deltaref)
 
 
 def add_file_component(fl, pathname, file_cmp):
     """Add a file component to a file list"""
-    fl[pathname] = file_cmp
+    fl.add_file_component(pathname, file_cmp)
 
 
 def find(fl, pathname):
     """Get the FILE component that corresponds to a pathname"""
-    return fl.get(pathname, None)
+    return fl.find(pathname)
 
 
 def find_matching_inode(fl, pathname, stat_result):
     """Find the FILE component that matches stat_result"""
-    prev = find(fl, pathname)
-    if prev:
-        prev_subs = prev.get_subcomponents()
-        prev_stat = obnam.cmp.first_by_kind(prev_subs, obnam.cmp.STAT)
-        prev_st = obnam.cmp.parse_stat_component(prev_stat)
-        fields = (
-            "st_dev",
-            "st_mode",
-            "st_nlink",
-            "st_uid",
-            "st_gid",
-            "st_size",
-            "st_mtime",
-            # No atime or ctime, on purpose. They can be changed without
-            # requiring a new backup.
-        )
-        for field in fields:
-            a_value = stat_result.__getattribute__(field)
-            b_value = prev_st.__getattribute__(field)
-            if a_value != b_value:
-                return None
-        return prev
-    else:
-        return None
+    return fl.find_matching_inode(pathname, stat_result)
 
 
 def to_object(fl, object_id):
     """Create an unencoded FILELIST object from a file list"""
-    o = obnam.obj.Object(object_id, obnam.obj.FILELIST)
-    for pathname in fl:
-        o.add(fl[pathname])
-    return o
+    return fl.to_object(object_id)
 
 
 def from_object(o):
     """Create a file list data structure from a backup object"""
-    fl = create()
-    for file in o.find_by_kind(obnam.cmp.FILE):
-        subs = file.get_subcomponents()
-        pathname = obnam.cmp.first_string_by_kind(subs, obnam.cmp.FILENAME)
-        fl[pathname] = file
+    fl = Filelist()
+    fl.from_object(o)
     return fl
+
+
+class Filelist:
+
+    """Handle the metadata for one generation of backups"""
+
+    def __init__(self):
+        self.dict = {}
+
+    def num_files(self):
+        """Return the number of files in a file list"""
+        return len(self.dict)
+    
+    def list_files(self):
+        """Return list of all file in the file list currently"""
+        return self.dict.keys()
+
+    def add(self, pathname, contref, sigref, deltaref):
+        """Add a file (and its metadata) to a file list"""
+        self.dict[pathname] = create_file_component(pathname, 
+                                                    contref, 
+                                                    sigref, 
+                                                    deltaref)
+
+    def add_file_component(self, pathname, file_cmp):
+        """Add a file component to a file list"""
+        self.dict[pathname] = file_cmp
+
+    def find(self, pathname):
+        """Get the FILE component that corresponds to a pathname"""
+        return self.dict.get(pathname, None)
+
+    def find_matching_inode(self, pathname, stat_result):
+        """Find the FILE component that matches stat_result"""
+        prev = self.find(pathname)
+        if prev:
+            prev_subs = prev.get_subcomponents()
+            prev_stat = obnam.cmp.first_by_kind(prev_subs, obnam.cmp.STAT)
+            prev_st = obnam.cmp.parse_stat_component(prev_stat)
+            fields = (
+                "st_dev",
+                "st_mode",
+                "st_nlink",
+                "st_uid",
+                "st_gid",
+                "st_size",
+                "st_mtime",
+                # No atime or ctime, on purpose. They can be changed without
+                # requiring a new backup.
+            )
+            for field in fields:
+                a_value = stat_result.__getattribute__(field)
+                b_value = prev_st.__getattribute__(field)
+                if a_value != b_value:
+                    return None
+            return prev
+        else:
+            return None
+
+    def to_object(self, object_id):
+        """Create an unencoded FILELIST object from a file list"""
+        o = obnam.obj.Object(object_id, obnam.obj.FILELIST)
+        for pathname in self.dict:
+            o.add(self.dict[pathname])
+        return o
+
+    def from_object(self, o):
+        """Add to file list data from a backup object"""
+        for file in o.find_by_kind(obnam.cmp.FILE):
+            subs = file.get_subcomponents()
+            pathname = obnam.cmp.first_string_by_kind(subs, 
+                                                      obnam.cmp.FILENAME)
+            self.dict[pathname] = file
