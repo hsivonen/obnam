@@ -41,3 +41,20 @@ class GpgTests(unittest.TestCase):
         
         decrypted = obnam.gpg.decrypt(config, encrypted)
         self.failUnlessEqual(block, decrypted)
+
+    def testEncryptionWithInvalidKey(self):
+        block = "pink"
+        config = obnam.config.default_config()
+        config.set("backup", "gpg-home", "sample-gpg-home")
+        config.set("backup", "gpg-encrypt-to", "pretty")
+        
+        encrypted = obnam.gpg.encrypt(config, block)
+        self.failUnlessEqual(encrypted, None)
+
+    def testDecryptionWithInvalidData(self):
+        encrypted = "pink"
+        config = obnam.config.default_config()
+        config.set("backup", "gpg-home", "sample-gpg-home")
+        
+        decrypted = obnam.gpg.decrypt(config, encrypted)
+        self.failUnlessEqual(decrypted, None)
