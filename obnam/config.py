@@ -156,11 +156,8 @@ def get_config_file_log(): return _config_file_log[:]
 
 def read_config_file(config, filename):
     """Read a config file, if it exists"""
-    try:
+    if os.path.exists(filename):
         f = file(filename)
-    except IOError:
-        pass
-    else:
         config.readfp(f, filename)
         f.close()
         remember_config_file(filename)
