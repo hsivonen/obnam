@@ -227,6 +227,16 @@ def parse_options(config, argv):
     return args
 
 
+def print_option_names():
+    """Write to stdout a list of option names"""
+    # Note that this is ugly, since it uses undocumented underscored
+    # attributes, but it's the only way I could find to make it work.
+    parser = build_parser()
+    for option in parser.option_list:
+        for name in option._short_opts + option._long_opts:
+            print name
+
+
 def write_defaultconfig(config, output=sys.stdout):
     """Write to stdout a new defaultconfig.py, using values from config"""
 

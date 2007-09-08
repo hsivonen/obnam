@@ -301,13 +301,6 @@ sftp://ulla@example.com/~/safe
       </varlistentry>
     
       <varlistentry>
-        <term><option>--use-psyco</option></term>
-        <listitem>
-          <para>Use the psyco Python extension, if available.</para>
-        </listitem>
-      </varlistentry>
-    
-      <varlistentry>
         <term><option>--version</option></term>
         <listitem>
           <para>Print out name and version of program.</para>
