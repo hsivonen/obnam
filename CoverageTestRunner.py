@@ -126,7 +126,7 @@ class CoverageTestRunner:
             print "%d failures, %d errors" % (len(result.failures),
                                               len(result.errors))
 
-        if end_time - start_time > 5:
+        if end_time - start_time > 10:
             print
             print "Slowest tests:"
             for secs, test in sorted(result.timings)[-10:]:
