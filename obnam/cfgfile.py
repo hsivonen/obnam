@@ -294,8 +294,7 @@ class ConfigFile:
 
     def readfp(self, f, filename=None):
         """Read configuration file from open file"""
-        if filename is None and "filename" in dir(f):
-            filename = f.filename
+        filename = filename or getattr(f, "filename", None)
 
         lineno = 0
         section = None
