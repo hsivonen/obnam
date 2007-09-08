@@ -3,6 +3,7 @@ import unittest
 import os
 import imp
 import sys
+import time
 
 
 class CoverageTestResult(unittest.TestResult):
@@ -13,6 +14,7 @@ class CoverageTestResult(unittest.TestResult):
         self.total = total
         self.lastmsg = ""
         self.coverage_missed = []
+        self.timings = []
         
     def addCoverageMissed(self, filename, statements, missed_statements,
                           missed_description):
@@ -38,6 +40,12 @@ class CoverageTestResult(unittest.TestResult):
     def startTest(self, test):
         unittest.TestResult.startTest(self, test)
         self.write(test)
+        self.start_time = time.time()
+        
+    def stopTest(self, test):
+        end_time = time.time()
+        unittest.TestResult.stopTest(self, test)
+        self.timings.append((end_time - self.start_time, test))
 
 
 class CoverageTestRunner:
@@ -113,5 +121,10 @@ class CoverageTestRunner:
 
             print "%d failures, %d errors" % (len(result.failures),
                                               len(result.errors))
+
+        print
+        print "Slowest tests:"
+        for secs, test in sorted(result.timings)[-10:]:
+            print "  %5.1f s %s" % (secs, str(test)[:70])
 
         return result
