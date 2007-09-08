@@ -151,6 +151,11 @@ class CommandLineParsingTests(unittest.TestCase):
         config = obnam.config.default_config()
         obnam.config.parse_options(config, ["--use-psyco"])
 
+    def testGenerationTimes(self):
+        config = obnam.config.default_config()
+        obnam.config.parse_options(config, ["--generation-times"])
+        self.failUnlessEqual(config.get("backup", "generation-times"), "true")
+
     def testExclude(self):
         config = obnam.config.default_config()
         obnam.config.parse_options(config, ["--exclude=foo"])
