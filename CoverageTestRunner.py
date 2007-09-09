@@ -117,6 +117,7 @@ class CoverageTestRunner:
             filename, stmts, missed, missed_desc = coverage.analysis(module)
             if missed:
                 result.addCoverageMissed(filename, stmts, missed, missed_desc)
+            coverage.erase()
 
         end_time = time.time()
 
