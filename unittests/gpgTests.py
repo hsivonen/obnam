@@ -78,5 +78,5 @@ class GpgTests(unittest.TestCase):
         config = obnam.config.default_config()
         config.set("backup", "gpg-home", "sample-gpg-home")
         
-        decrypted = obnam.gpg.decrypt(config, encrypted)
-        self.failUnlessEqual(decrypted, None)
+        self.failUnlessRaises(obnam.gpg.GpgDecryptionFailure,
+                              obnam.gpg.decrypt, config, encrypted)

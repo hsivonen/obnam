@@ -101,8 +101,4 @@ def decrypt(config, data):
         logging.debug("Decryption OK")
         return decrypted
     else:
-        logging.warning("GPG failed to decrypt: exit code %d" % p.returncode)
-        if stderr_data:
-            logging.warning("GPG stderr output:\n%s" % 
-                            indent_string(stderr_data))
-        return None
+        raise GpgDecryptionFailure(p.returncode, stderr_data)
