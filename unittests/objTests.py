@@ -106,10 +106,7 @@ class ObjectQueueTests(unittest.TestCase):
 class BlockWithoutCookieTests(unittest.TestCase):
 
     def setUp(self):
-        self.e = obnam.obj.BlockWithoutCookie("pink", "\x01\x02\x03")
-
-    def testIncludesBlockIdInMessage(self):
-        self.failUnless("pink" in str(self.e))
+        self.e = obnam.obj.BlockWithoutCookie("\x01\x02\x03")
 
     def testIncludesBlockHexDumpInMessage(self):
         self.failUnless("01 02 03" in str(self.e))
@@ -118,7 +115,8 @@ class BlockWithoutCookieTests(unittest.TestCase):
 class BlockCreateTests(unittest.TestCase):
 
     def testDecodeInvalidObject(self):
-        self.failUnlessEqual(obnam.obj.block_decode("pink"), None)
+        self.failUnlessRaises(obnam.obj.BlockWithoutCookie,
+                              obnam.obj.block_decode, "pink")
 
     def testEmptyObjectQueue(self):
         oq = obnam.obj.ObjectQueue()

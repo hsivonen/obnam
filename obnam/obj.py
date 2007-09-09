@@ -194,10 +194,9 @@ class ObjectQueue:
 
 class BlockWithoutCookie(obnam.exception.ExceptionBase):
 
-    def __init__(self, block_id, block):
-        self._msg = ("Block %s does not start with cookie: %s" %
-                     (block_id, 
-                      " ".join("%02x" % ord(c) for c in block[:32])))
+    def __init__(self, block):
+        self._msg = ("Block does not start with cookie: %s" %
+                     " ".join("%02x" % ord(c) for c in block[:32]))
 
 
 def block_decode(block):
@@ -206,8 +205,7 @@ def block_decode(block):
         parser = obnam.cmp.Parser(block, len(BLOCK_COOKIE))
         return parser.decode_all()
     else:
-        logging.warning("Block does not start with cookie: %s" % repr(block))
-        return None
+        raise BlockWithoutCookie(block)
 
 
 class SignatureObject(Object):
