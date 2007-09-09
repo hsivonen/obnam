@@ -59,8 +59,8 @@ class GpgTests(unittest.TestCase):
         config.set("backup", "gpg-home", "sample-gpg-home")
         config.set("backup", "gpg-encrypt-to", "pretty")
         
-        encrypted = obnam.gpg.encrypt(config, block)
-        self.failUnlessEqual(encrypted, None)
+        self.failUnlessRaises(obnam.gpg.GpgEncryptionFailure,
+                              obnam.gpg.encrypt, config, block)
 
     def testDecryptionWithInvalidData(self):
         encrypted = "pink"

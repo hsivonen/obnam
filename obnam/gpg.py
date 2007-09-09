@@ -63,11 +63,7 @@ def encrypt(config, data):
         logging.debug("Encryption OK")    
         return encrypted
     else:
-        logging.warning("GPG failed to encrypt: exit code %d" % p.returncode)
-        if stderr_data:
-            logging.warning("GPG stderr output:\n%s" % 
-                            indent_string(stderr_data))
-        return None
+        raise GpgEncryptionFailure(p.returncode, stderr_data)
 
 
 def indent_string(str, indent=2):
