@@ -38,6 +38,17 @@ class GpgEncryptionFailureTests(unittest.TestCase):
         self.failUnless("pink" in str(e))
 
 
+class GpgDecryptionFailureTests(unittest.TestCase):
+
+    def testIncludesExitCodeInMessage(self):
+        e = obnam.gpg.GpgDecryptionFailure(42, "")
+        self.failUnless("42" in str(e))
+
+    def testIncludesStderrInMessage(self):
+        e = obnam.gpg.GpgDecryptionFailure(42, "pink")
+        self.failUnless("pink" in str(e))
+
+
 class GpgTests(unittest.TestCase):
 
     def test(self):
