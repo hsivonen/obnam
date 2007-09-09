@@ -27,6 +27,14 @@ import tempfile
 import obnam
 
 
+class GpgEncryptionFailure(obnam.exception.ExceptionBase):
+
+    def __init__(self, returncode, stderr):
+        self._msg = "GPG failed to encrypt: exit code %d" % returncode
+        if stderr:
+            self._msg += "\n%s" % indent_string(stderr)
+
+
 def encrypt(config, data):
     """Encrypt data according to config"""
 
