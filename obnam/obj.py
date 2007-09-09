@@ -192,6 +192,14 @@ class ObjectQueue:
                        [c.encode() for c in [blkid] + objects])
 
 
+class BlockWithoutCookie(obnam.exception.ExceptionBase):
+
+    def __init__(self, block_id, block):
+        self._msg = ("Block %s does not start with cookie: %s" %
+                     (block_id, 
+                      " ".join("%02x" % ord(c) for c in block[:32])))
+
+
 def block_decode(block):
     """Return list of decoded components in block, or None on error"""
     if block.startswith(BLOCK_COOKIE):
