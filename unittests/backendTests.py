@@ -30,24 +30,29 @@ import obnam
 
 class GetDefaultUserTest(unittest.TestCase):
 
+    def setUp(self):
+        self.orig = os.environ.get("LOGNAME", None)
+    
+    def tearDown(self):
+        if self.orig is not None:
+            os.environ["LOGNAME"] = self.orig
+        else:
+            del os.environ["LOGNAME"]
+
     def testLogname(self):
-        orig = os.environ.get("LOGNAME", None)
         os.environ["LOGNAME"] = "pink"
         self.failUnlessEqual(obnam.backend.get_default_user(), "pink")
+
+    def testLognameWhenItIsPink(self):
         # Just in case the user's name is "pink"...
         os.environ["LOGNAME"] = "pretty"
         self.failUnlessEqual(obnam.backend.get_default_user(), "pretty")
-        if orig is not None:
-            os.environ["LOGNAME"] = orig
 
     def testNoLogname(self):
-        orig = os.environ.get("LOGNAME", None)
         del os.environ["LOGNAME"]
         user = obnam.backend.get_default_user()
         uid = pwd.getpwnam(user)[2]
         self.failUnlessEqual(uid, os.getuid())
-        if orig is not None:
-            os.environ["LOGNAME"] = orig
 
 
 class ParseStoreUrlTests(unittest.TestCase):
