@@ -563,6 +563,10 @@ def main():
     except CommandLineUsageError, e:
         logging.error("%s" % str(e))
         logging.error("Use --help to get usage summary.")
+        sys.exit(1)
+    except obnam.exception.ExceptionBase, e:
+        logging.error("%s" % str(e))
+        sys.exit(1)
 
 
 if __name__ == "__main__":
