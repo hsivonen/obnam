@@ -1,4 +1,4 @@
 # GnuPG and SSH whine if their directories have too permissive permissions.
 # We therefore install them with 0700, and this makes lintian whine instead.
-obnam binary: non-standard-dir-perm etc/obnam/gpg/ 0700 != 0755
-obnam binary: non-standard-dir-perm etc/obnam/ssh/ 0700 != 0755
+obnam-experimental binary: non-standard-dir-perm etc/obnam/gpg/ 0700 != 0755
+obnam-experimental binary: non-standard-dir-perm etc/obnam/ssh/ 0700 != 0755
