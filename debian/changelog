@@ -1,3 +1,11 @@
+obnam (0.9.0-1) gutsy; urgency=low
+
+  * Experimental branch of Obnam, for developing and testing new storage
+    structure.
+  * Replace, conflict, and provide the obnam package.
+
+ -- Lars Wirzenius <liw@iki.fi>  Sun, 07 Oct 2007 21:54:19 +0300
+
 obnam (0.8.2-1) experimental; urgency=low
 
   * New upstream version.
