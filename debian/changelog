@@ -1,3 +1,10 @@
+obnam (0.8.3-1) unstable; urgency=low
+
+  * New upstream version. This is STABLE release (despite what the 
+    upload target says).
+
+ -- Lars Wirzenius <liw@iki.fi>  Tue, 23 Oct 2007 22:06:50 +0300
+
 obnam (0.8.2-1) experimental; urgency=low
 
   * New upstream version.
