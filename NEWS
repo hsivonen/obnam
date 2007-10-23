@@ -4,6 +4,15 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
+Version 0.8.3, released 2007-10-23; a STABLE release
+
+    IMPROVEMENTS:
+    
+    * Progress bar is updates every 64 kilobytes, instead of every block,
+      to make waiting less worrying on slow lines. Also, when blocks are
+      uploaded or downloaded, this is reported instead of the current
+      filename.
+
 Version 0.8.2, released 2007-08-14; a DEVELOPMENT release
 
     NOTE:

@@ -143,6 +143,7 @@ def backup_directory(context, new_filelist, dirname, prevgen_filelist):
                         if os.path.isdir(d):
                             logging.debug("os.listdir(%s): %s" %
                                             (d, os.listdir(d)))
+                    raise e
     context.progress.clear()
 
 
