@@ -35,16 +35,16 @@ version:
 odirect_read: odirect_read.c
 
 obnam.1: obnam.docbook
-	docbook2x-man obnam.docbook
+	docbook2x-man --encoding utf8 obnam.docbook
 
 obnamfs.1: obnamfs.docbook
-	docbook2x-man obnamfs.docbook
+	docbook2x-man --encoding utf8 obnamfs.docbook
 
 odirect_read.1: odirect_read.docbook
-	docbook2x-man odirect_read.docbook
+	docbook2x-man --encoding utf8 odirect_read.docbook
 
 odirect_pipe.1: odirect_pipe.docbook
-	docbook2x-man odirect_pipe.docbook
+	docbook2x-man --encoding utf8 odirect_pipe.docbook
 
 check: all
 	./test_odirect_read
