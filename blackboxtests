@@ -49,7 +49,7 @@ set -e
 # tmp="tmp"; rm -rf "$tmp"; mkdir "$tmp"
 tmp=$(mktemp -d)
 
-if [ "$1" == "--use-coverage" ]
+if [ "$1" = "--use-coverage" ]
 then
     shift
     CMD="coverage.py -x"
