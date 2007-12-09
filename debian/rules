@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
 
-P = obnam-experimental
+P = obnam
 
 build:
 	$(MAKE)

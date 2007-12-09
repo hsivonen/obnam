@@ -5,7 +5,7 @@ Priority: optional
 Standards-Version: 3.7.2
 Build-Depends: docbook2x, docbook-xml, python2.4, python-paramiko
 
-Package: obnam-experimental
+Package: obnam
 Architecture: any
 Conflicts: obnam
 Provides: obnam
