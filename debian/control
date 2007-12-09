@@ -7,9 +7,6 @@ Build-Depends: docbook2x, docbook-xml, python2.4, python-paramiko
 
 Package: obnam
 Architecture: any
-Conflicts: obnam
-Provides: obnam
-Replaces: obnam
 Depends: python2.4, python-paramiko, rdiff, gnupg
 Recommends: fuse-utils
 Description: online backup tool
