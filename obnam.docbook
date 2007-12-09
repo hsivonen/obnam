@@ -51,7 +51,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <cmdsynopsis>
       <command>obnam backup</command>
       <arg choice="opt">options</arg>
-      <arg choice="plain" rep="repeat">directory</arg>
+      <arg choice="plain">directory</arg>
     </cmdsynopsis>
     <cmdsynopsis>
       <command>obnam generations</command>
@@ -60,18 +60,18 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <cmdsynopsis>
       <command>obnam show-generations</command>
       <arg choice="opt">options</arg>
-      <arg choice="plain" rep="repeat">generation-id</arg>
+      <arg choice="plain">generation-id</arg>
     </cmdsynopsis>
     <cmdsynopsis>
       <command>obnam restore</command>
       <arg choice="opt">options</arg>
       <arg choice="plain">generation-id</arg>
-      <arg choice="opt" rep="repeat">pathname</arg>
+      <arg choice="opt">pathname</arg>
     </cmdsynopsis>
     <cmdsynopsis>
       <command>obnam forget</command>
       <arg choice="opt">options</arg>
-      <arg choice="plain" rep="repeat">generation-id</arg>
+      <arg choice="plain">generation-id</arg>
     </cmdsynopsis>
     <cmdsynopsis>
       <command>obnam write-config</command>
