@@ -51,7 +51,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <cmdsynopsis>
       <command>obnamfs</command>
       <arg choice="opt">options</arg>
-      <arg choice="plain" rep="repeat">mount-point</arg>
+      <arg choice="plain">mount-point</arg>
     </cmdsynopsis>
   </refsynopsisdiv>
   
