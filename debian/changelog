@@ -4,7 +4,7 @@ obnam (0.9.0-1) unstable; urgency=low
     structure.
   * Replace, conflict, and provide the obnam package.
 
- -- Lars Wirzenius <liw@iki.fi>  Sun, 07 Oct 2007 21:54:19 +0300
+ -- Lars Wirzenius <liw@iki.fi>  Sun, 09 Dec 2007 18:45:30 +0200
 
 obnam (0.8.3-1) unstable; urgency=low
 
