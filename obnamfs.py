@@ -126,20 +126,22 @@ class ObnamFS(fuse.Fuse):
                                                       obnam.cmp.FILENAME)
             list.append(filename)
 
-        fl = obnam.filelist.from_object(fl)
+        fl2 = obnam.filelist.Filelist()
+        fl2.from_object(fl)
+        fl = fl2
 
         for fake in deduce_fake_dirs(list):
             st = obnam.utils.make_stat_result(st_mode=stat.S_IFDIR | 0755)
             c = obnam.filelist.create_file_component_from_stat(fake, st,
                                                                None, None, 
                                                                None)
-            obnam.filelist.add_file_component(fl, fake, c)
+            fl.add_file_component(fake, c)
 
         self.fl_cache[gen_id] = fl
         return fl
 
     def get_stat(self, fl, path):
-        c = obnam.filelist.find(fl, path)
+        c = fl.find(path)
         if not c:
             return None
         subs = c.get_subcomponents()
@@ -165,7 +167,7 @@ class ObnamFS(fuse.Fuse):
             logging.debug("FS: generation_listing: no FILELIST")
             return []
 
-        list = obnam.filelist.list_files(fl)
+        list = fl.list_files()
         logging.debug("FS: generation_listing: returning %d items" % len(list))
         return list
 
@@ -243,7 +245,7 @@ class ObnamFS(fuse.Fuse):
                 logging.debug("FS: getdir: it's not a directory!")
                 return -errno.ENOTDIR
 
-            list = obnam.filelist.list_files(fl)
+            list = fl.list_files()
             prefix = relative_path + "/"
             if prefix in list:
                 # If the backup was made with "obnam backup foo/", the trailing
@@ -294,7 +296,7 @@ class ObnamFS(fuse.Fuse):
             os.remove(tempname)
 
             fl = self.generation_filelist(first_part)
-            c = obnam.filelist.find(fl, relative_path)
+            c = fl.find(relative_path)
             if not c:
                 logging.debug("FS: open: file not found: %s" % relative_path)
                 return -errno.ENOENT

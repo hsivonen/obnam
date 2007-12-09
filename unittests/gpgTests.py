@@ -27,6 +27,28 @@ import unittest
 import obnam
 
 
+class GpgEncryptionFailureTests(unittest.TestCase):
+
+    def testIncludesExitCodeInMessage(self):
+        e = obnam.gpg.GpgEncryptionFailure(42, "")
+        self.failUnless("42" in str(e))
+
+    def testIncludesStderrInMessage(self):
+        e = obnam.gpg.GpgEncryptionFailure(42, "pink")
+        self.failUnless("pink" in str(e))
+
+
+class GpgDecryptionFailureTests(unittest.TestCase):
+
+    def testIncludesExitCodeInMessage(self):
+        e = obnam.gpg.GpgDecryptionFailure(42, "")
+        self.failUnless("42" in str(e))
+
+    def testIncludesStderrInMessage(self):
+        e = obnam.gpg.GpgDecryptionFailure(42, "pink")
+        self.failUnless("pink" in str(e))
+
+
 class GpgTests(unittest.TestCase):
 
     def test(self):
@@ -41,3 +63,20 @@ class GpgTests(unittest.TestCase):
         
         decrypted = obnam.gpg.decrypt(config, encrypted)
         self.failUnlessEqual(block, decrypted)
+
+    def testEncryptionWithInvalidKey(self):
+        block = "pink"
+        config = obnam.config.default_config()
+        config.set("backup", "gpg-home", "sample-gpg-home")
+        config.set("backup", "gpg-encrypt-to", "pretty")
+        
+        self.failUnlessRaises(obnam.gpg.GpgEncryptionFailure,
+                              obnam.gpg.encrypt, config, block)
+
+    def testDecryptionWithInvalidData(self):
+        encrypted = "pink"
+        config = obnam.config.default_config()
+        config.set("backup", "gpg-home", "sample-gpg-home")
+        
+        self.failUnlessRaises(obnam.gpg.GpgDecryptionFailure,
+                              obnam.gpg.decrypt, config, encrypted)

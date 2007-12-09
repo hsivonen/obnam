@@ -131,14 +131,26 @@ class CommandLineParsingTests(unittest.TestCase):
         obnam.config.parse_options(config, ["--gpg-sign-with=foo"])
         self.failUnlessEqual(config.get("backup", "gpg-sign-with"), "foo")
 
-    def testNoGpg(self):
+    def testNoGpgIsUnset(self):
+        config = obnam.config.default_config()
+        obnam.config.parse_options(config, [])
+        self.failUnlessEqual(config.get("backup", "no-gpg"), "false")
+
+    def testNoGpgIsUnsetButDefaultIsTrue(self):
+        config = obnam.config.default_config()
+        config.set("backup", "no-gpg", "true")
+        obnam.config.parse_options(config, [])
+        self.failUnlessEqual(config.get("backup", "no-gpg"), "true")
+
+    def testNoGpgIsSet(self):
         config = obnam.config.default_config()
         obnam.config.parse_options(config, ["--no-gpg"])
         self.failUnlessEqual(config.get("backup", "no-gpg"), "true")
 
-    def testUsePsyco(self):
+    def testGenerationTimes(self):
         config = obnam.config.default_config()
-        obnam.config.parse_options(config, ["--use-psyco"])
+        obnam.config.parse_options(config, ["--generation-times"])
+        self.failUnlessEqual(config.get("backup", "generation-times"), "true")
 
     def testExclude(self):
         config = obnam.config.default_config()
@@ -249,3 +261,33 @@ cache = pretty
         self.failUnlessEqual(configs,
                              ["/usr/share/obnam/obnam.conf",
                               "/home/pretty/.obnam/obnam.conf"])
+
+
+class WriteDefaultConfigTests(unittest.TestCase):
+
+    def test(self):
+        config = obnam.config.default_config()
+        f = StringIO.StringIO()
+        obnam.config.write_defaultconfig(config, output=f)
+        s = f.getvalue()
+        self.failUnless(s.startswith("import socket"))
+        self.failUnless("\nitems =" in s)
+
+
+class GetUidAndHomeTests(unittest.TestCase):
+
+    def testGetUid(self):
+        obnam.config.set_uid_and_home(None, None)
+        self.failIfEqual(obnam.config.get_uid(), None)
+
+    def testGetHome(self):
+        obnam.config.set_uid_and_home(None, None)
+        self.failIfEqual(obnam.config.get_home(), None)
+
+    def testGetUidFaked(self):
+        obnam.config.set_uid_and_home(42, "pretty")
+        self.failUnlessEqual(obnam.config.get_uid(), 42)
+
+    def testGetHomeFaked(self):
+        obnam.config.set_uid_and_home(42, "pink")
+        self.failUnlessEqual(obnam.config.get_home(), "pink")

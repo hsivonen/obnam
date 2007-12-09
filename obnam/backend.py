@@ -197,7 +197,6 @@ class Backend:
             self.progress.update_current_action("Downloading block")
         block = self.really_download(block_id)
         if type(block) != type(""):
-            logging.warning("Download failed, returning exception")
             return block # it's an exception
 
         if self.use_gpg():

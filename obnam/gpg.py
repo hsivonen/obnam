@@ -27,6 +27,22 @@ import tempfile
 import obnam
 
 
+class GpgEncryptionFailure(obnam.exception.ExceptionBase):
+
+    def __init__(self, returncode, stderr):
+        self._msg = "GPG failed to encrypt: exit code %d" % returncode
+        if stderr:
+            self._msg += "\n%s" % indent_string(stderr)
+
+
+class GpgDecryptionFailure(obnam.exception.ExceptionBase):
+
+    def __init__(self, returncode, stderr):
+        self._msg = "GPG failed to decrypt: exit code %d" % returncode
+        if stderr:
+            self._msg += "\n%s" % indent_string(stderr)
+
+
 def encrypt(config, data):
     """Encrypt data according to config"""
 
@@ -55,11 +71,7 @@ def encrypt(config, data):
         logging.debug("Encryption OK")    
         return encrypted
     else:
-        logging.warning("GPG failed to encrypt: exit code %d" % p.returncode)
-        if stderr_data:
-            logging.warning("GPG stderr output:\n%s" % 
-                            indent_string(stderr_data))
-        return None
+        raise GpgEncryptionFailure(p.returncode, stderr_data)
 
 
 def indent_string(str, indent=2):
@@ -89,8 +101,4 @@ def decrypt(config, data):
         logging.debug("Decryption OK")
         return decrypted
     else:
-        logging.warning("GPG failed to decrypt: exit code %d" % p.returncode)
-        if stderr_data:
-            logging.warning("GPG stderr output:\n%s" % 
-                            indent_string(stderr_data))
-        return None
+        raise GpgDecryptionFailure(p.returncode, stderr_data)

@@ -113,10 +113,6 @@ def build_parser():
     parser.add_option("--no-gpg", action="store_true",
                       help="don't use gpg at all")
     
-    parser.add_option("--use-psyco",
-                      action="store_true", default=False,
-                      help="use the psyco Python extension, if available")
-    
     parser.add_option("--exclude",
                       metavar="REGEXP", 
                       action="append",
@@ -156,11 +152,8 @@ def get_config_file_log(): return _config_file_log[:]
 
 def read_config_file(config, filename):
     """Read a config file, if it exists"""
-    try:
+    if os.path.exists(filename):
         f = file(filename)
-    except IOError:
-        pass
-    else:
         config.readfp(f, filename)
         f.close()
         remember_config_file(filename)
@@ -218,8 +211,6 @@ def parse_options(config, argv):
         config.set("backup", "gpg-sign-with", options.gpg_sign_with)
     if options.no_gpg is True:
         config.set("backup", "no-gpg", "true")
-    elif options.no_gpg is False:
-        config.set("backup", "no-gpg", "false")
     if options.exclude is not None:
         config.remove_option("backup", "exclude")
         for pattern in options.exclude:
@@ -232,12 +223,6 @@ def parse_options(config, argv):
         config.set("backup", "generation-times", "true")
     else:
         config.set("backup", "generation-times", "false")
-    if options.use_psyco:
-        try:
-            import psyco
-            psyco.profile()
-        except ImportError:
-            pass
 
     return args
 
@@ -252,7 +237,7 @@ def print_option_names():
             print name
 
 
-def write_defaultconfig(config):
+def write_defaultconfig(config, output=sys.stdout):
     """Write to stdout a new defaultconfig.py, using values from config"""
 
     items = []
@@ -261,7 +246,7 @@ def write_defaultconfig(config):
             items.append('  ("%s", "%s", "%s"),' % 
                             (section, key, config.get(section, key)))
 
-    sys.stdout.write("import socket\nitems = (\n%s\n)\n""" % "\n".join(items))
+    output.write("import socket\nitems = (\n%s\n)\n""" % "\n".join(items))
 
 
 # Allow unit tests to override default path list.

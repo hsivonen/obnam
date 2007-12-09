@@ -103,10 +103,20 @@ class ObjectQueueTests(unittest.TestCase):
         self.failUnless(oq == oq_orig)
 
 
+class BlockWithoutCookieTests(unittest.TestCase):
+
+    def setUp(self):
+        self.e = obnam.obj.BlockWithoutCookie("\x01\x02\x03")
+
+    def testIncludesBlockHexDumpInMessage(self):
+        self.failUnless("01 02 03" in str(self.e))
+
+
 class BlockCreateTests(unittest.TestCase):
 
     def testDecodeInvalidObject(self):
-        self.failUnlessEqual(obnam.obj.block_decode("pink"), None)
+        self.failUnlessRaises(obnam.obj.BlockWithoutCookie,
+                              obnam.obj.block_decode, "pink")
 
     def testEmptyObjectQueue(self):
         oq = obnam.obj.ObjectQueue()
@@ -283,11 +293,13 @@ class GetComponentTests(unittest.TestCase):
         self.failUnlessEqual(o.find_varints_by_kind(0), list)
 
     def testGetFirstSVarintByKind(self):
+        values = range(0, 1024, 17)
+
         o = obnam.obj.Object("uuid", 0)
-        for i in range(1024):
+        for i in values:
             c = obnam.cmp.Component(i, obnam.varint.encode(i))
             o.add(c)
 
-        for i in range(1024):
+        for i in values:
             self.failUnlessEqual(o.first_varint_by_kind(i), i)
         self.failUnlessEqual(o.first_varint_by_kind(-1), None)

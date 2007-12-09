@@ -236,7 +236,7 @@ class FileContentsTests(unittest.TestCase):
         os.remove(filename)
 
     def testNonEmptyFile(self):
-        block_size = 16
+        block_size = 4096
         self.context.config.set("backup", "block-size", "%d" % block_size)
         filename = "Makefile"
         
@@ -246,7 +246,7 @@ class FileContentsTests(unittest.TestCase):
         self.failUnlessEqual(self.context.oq.ids(), [id])
 
     def testRestore(self):
-        block_size = 16
+        block_size = 4096
         self.context.config.set("backup", "block-size", "%d" % block_size)
         filename = "Makefile"
         

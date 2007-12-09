@@ -30,24 +30,29 @@ import obnam
 
 class GetDefaultUserTest(unittest.TestCase):
 
+    def setUp(self):
+        self.orig = os.environ.get("LOGNAME", None)
+    
+    def tearDown(self):
+        if self.orig is not None:
+            os.environ["LOGNAME"] = self.orig
+        else:
+            del os.environ["LOGNAME"]
+
     def testLogname(self):
-        orig = os.environ.get("LOGNAME", None)
         os.environ["LOGNAME"] = "pink"
         self.failUnlessEqual(obnam.backend.get_default_user(), "pink")
+
+    def testLognameWhenItIsPink(self):
         # Just in case the user's name is "pink"...
         os.environ["LOGNAME"] = "pretty"
         self.failUnlessEqual(obnam.backend.get_default_user(), "pretty")
-        if orig is not None:
-            os.environ["LOGNAME"] = orig
 
     def testNoLogname(self):
-        orig = os.environ.get("LOGNAME", None)
         del os.environ["LOGNAME"]
         user = obnam.backend.get_default_user()
         uid = pwd.getpwnam(user)[2]
         self.failUnlessEqual(uid, os.getuid())
-        if orig is not None:
-            os.environ["LOGNAME"] = orig
 
 
 class ParseStoreUrlTests(unittest.TestCase):
@@ -75,44 +80,37 @@ class ParseStoreUrlTests(unittest.TestCase):
 
 class DircountTests(unittest.TestCase):
 
+    def setUp(self):
+        self.config = obnam.config.default_config()
+        self.cache = obnam.cache.Cache(self.config)
+        self.be = obnam.backend.Backend(self.config, self.cache)
+
     def testInit(self):
-        config = obnam.config.default_config()
-        cache = obnam.cache.Cache(config)
-        be = obnam.backend.Backend(config, cache)
-        self.failUnlessEqual(len(be.dircounts), obnam.backend.LEVELS)
+        self.failUnlessEqual(len(self.be.dircounts), obnam.backend.LEVELS)
         for i in range(obnam.backend.LEVELS):
-            self.failUnlessEqual(be.dircounts[i], 0)
+            self.failUnlessEqual(self.be.dircounts[i], 0)
         
     def testIncrementOnce(self):
-        config = obnam.config.default_config()
-        cache = obnam.cache.Cache(config)
-        be = obnam.backend.Backend(config, cache)
-        be.increment_dircounts()
-        self.failUnlessEqual(be.dircounts, [0, 0, 1])
+        self.be.increment_dircounts()
+        self.failUnlessEqual(self.be.dircounts, [0, 0, 1])
 
     def testIncrementMany(self):
-        config = obnam.config.default_config()
-        cache = obnam.cache.Cache(config)
-        be = obnam.backend.Backend(config, cache)
         for i in range(obnam.backend.MAX_BLOCKS_PER_DIR):
-            be.increment_dircounts()
-        self.failUnlessEqual(be.dircounts, 
+            self.be.increment_dircounts()
+        self.failUnlessEqual(self.be.dircounts, 
                              [0, 0, obnam.backend.MAX_BLOCKS_PER_DIR])
 
-        be.increment_dircounts()
-        self.failUnlessEqual(be.dircounts, [0, 1, 0])
+        self.be.increment_dircounts()
+        self.failUnlessEqual(self.be.dircounts, [0, 1, 0])
 
-        be.increment_dircounts()
-        self.failUnlessEqual(be.dircounts, [0, 1, 1])
+        self.be.increment_dircounts()
+        self.failUnlessEqual(self.be.dircounts, [0, 1, 1])
 
     def testIncrementTop(self):
-        config = obnam.config.default_config()
-        cache = obnam.cache.Cache(config)
-        be = obnam.backend.Backend(config, cache)
-        be.dircounts = [0] + \
+        self.be.dircounts = [0] + \
             [obnam.backend.MAX_BLOCKS_PER_DIR] * (obnam.backend.LEVELS -1)
-        be.increment_dircounts()
-        self.failUnlessEqual(be.dircounts, [1, 0, 0])
+        self.be.increment_dircounts()
+        self.failUnlessEqual(self.be.dircounts, [1, 0, 0])
 
 
 class LocalBackendBase(unittest.TestCase):

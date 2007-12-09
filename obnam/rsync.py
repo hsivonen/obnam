@@ -27,6 +27,21 @@ import tempfile
 import obnam
 
 
+class UnknownCommand(obnam.exception.ExceptionBase):
+
+    def __init__(self, argv, errno):
+        self._msg = "Unknown command (error %d): %s" % (errno, " ".join(argv))
+
+
+class CommandFailure(obnam.exception.ExceptionBase):
+
+    def __init__(self, argv, returncode, stderr):
+        self._msg = "Command failed: %s\nError code: %d\n%s" % \
+                    (" ".join(argv), 
+                     returncode, 
+                     obnam.gpg.indent_string(stderr))
+
+
 def compute_signature(context, filename):
     """Compute an rsync signature for 'filename'"""
 
@@ -34,13 +49,17 @@ def compute_signature(context, filename):
             context.config.get("backup", "odirect-read"),
             filename,
             "rdiff", "--", "signature", "-", "-"]
-    p = subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    try:
+        p = subprocess.Popen(argv, stdout=subprocess.PIPE, 
+                             stderr=subprocess.PIPE)
+    except os.error, e:
+        raise UnknownCommand(argv, e.errno)
     stdout_data, stderr_data = p.communicate()
     
     if p.returncode == 0:
         return stdout_data
     else:
-        return False
+        raise CommandFailure(argv, p.returncode, stderr_data)
 
 
 def compute_delta(context, signature, filename):
@@ -58,7 +77,11 @@ def compute_delta(context, signature, filename):
             context.config.get("backup", "odirect-read"),
             filename,
             "rdiff", "--", "delta", tempname, "-", "-"]
-    p = subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    try:
+        p = subprocess.Popen(argv, stdout=subprocess.PIPE, 
+                             stderr=subprocess.PIPE)
+    except os.error, e:
+        raise UnknownCommand(argv, e.errno)
 
     list = []
     block_size = context.config.getint("backup", "block-size")
@@ -78,7 +101,7 @@ def compute_delta(context, signature, filename):
     if exit == 0:
         return list
     else:
-        return False
+        raise CommandFailure(argv, exit, "")
 
 
 def apply_delta(context, basis_filename, deltapart_ids, new_filename):
@@ -88,10 +111,13 @@ def apply_delta(context, basis_filename, deltapart_ids, new_filename):
     if devnull == -1:
         return False
 
-    p = subprocess.Popen(["rdiff", "--", "patch", basis_filename, "-",
-                          new_filename],
-                         stdin=subprocess.PIPE, stdout=devnull,
-                         stderr=subprocess.PIPE)
+    argv = ["rdiff", "--", "patch", basis_filename, "-", new_filename]
+    try:
+        p = subprocess.Popen(argv,
+                             stdin=subprocess.PIPE, stdout=devnull,
+                             stderr=subprocess.PIPE)
+    except os.error, e:
+        raise UnknownCommand(argv, e.errno)
 
     ret = True
     for id in deltapart_ids:
@@ -103,9 +129,9 @@ def apply_delta(context, basis_filename, deltapart_ids, new_filename):
             assert 0
             ret = False
 
-    p.communicate(input="")
+    stdout_data, stderr_data = p.communicate(input="")
     os.close(devnull)
-    if ret and p.returncode == 0:
-        return True
+    if p.returncode != 0:
+        raise CommandFailed(argv, p.returncode, stderr_data)
     else:
-        return False
+        return ret

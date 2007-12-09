@@ -49,18 +49,12 @@ odirect_pipe.1: odirect_pipe.docbook
 check: all
 	./test_odirect_read
 	python testrun.py
+	rm -f .coverage
 	sh blackboxtests tests/*
 	./check-options
 	bzr ls --versioned --kind=file | \
 	    grep -Fxv -f check-license-exceptions | \
 	    xargs ./check-license
-
-coverage: all
-	rm -f .coverage
-	coverage.py -x testrun.py
-	sh blackboxtests --use-coverage tests/*
-	coverage.py -r -o /usr,/var,$(HOME)/bin,uuid,testrun | \
-	awk '/%$$/ && $$(NF-2)!=$$(NF-1) {print $$0,"   ",$$(NF-2)-$$(NF-1)}'
 
 clean:
 	rm -rf *~ */*~ *.pyc *.pyo */*.pyc */*.pyo tmp.* *,cover */*,cover

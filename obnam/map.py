@@ -109,8 +109,7 @@ def decode_block(mapping, block):
     logging.debug("Decoding mapping block")
     
     if not block.startswith(obnam.obj.BLOCK_COOKIE):
-        logging.warning("Block does not start with cookie: %s" % repr(block))
-        return
+        raise obnam.obj.BlockWithoutCookie(block)
 
     pos = len(obnam.obj.BLOCK_COOKIE)
     end = len(block)

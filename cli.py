@@ -41,10 +41,9 @@ def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
     resolved = obnam.io.resolve(context, pathname)
     st = os.lstat(resolved)
     
-    file_cmp = obnam.filelist.find_matching_inode(prevgen_filelist,
-                                                  pathname, st)
+    file_cmp = prevgen_filelist.find_matching_inode(pathname, st)
     if file_cmp:
-        obnam.filelist.add_file_component(new_filelist, pathname, file_cmp)
+        new_filelist.add_file_component(pathname, file_cmp)
         return
 
     logging.debug("Backing up %s" % pathname)
@@ -61,7 +60,7 @@ def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
                                     sig_id, sig, True)
             context.progress.update_current_action(pathname)
 
-        prev = obnam.filelist.find(prevgen_filelist, pathname)
+        prev = prevgen_filelist.find(pathname)
         if prev:
             subs = prev.get_subcomponents()
             prev_sig_id = obnam.cmp.first_string_by_kind(subs, 
@@ -96,7 +95,7 @@ def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
     file_cmp = obnam.filelist.create_file_component_from_stat(pathname, st,
                                                               cont_id, sig_id,
                                                               delta_id)
-    obnam.filelist.add_file_component(new_filelist, pathname, file_cmp)
+    new_filelist.add_file_component(pathname, file_cmp)
 
 
 num_files = 0
@@ -143,7 +142,7 @@ def backup_directory(context, new_filelist, dirname, prevgen_filelist):
                         if os.path.isdir(d):
                             logging.debug("os.listdir(%s): %s" %
                                             (d, os.listdir(d)))
-                    raise e
+                    raise e # Want to catch this if it ever happens again.
     context.progress.clear()
 
 
@@ -163,7 +162,8 @@ def get_filelist_in_gen(context, gen_id):
     if not fl:
         raise Exception("wtf %s %s" % (ref, repr(fl)))
     logging.debug("Creating filelist object from components")
-    ret = obnam.filelist.from_object(fl)
+    ret = obnam.filelist.Filelist()
+    ret.from_object(fl)
     logging.debug("Got file list")
     return ret
 
@@ -192,10 +192,10 @@ def backup(context, args):
     else:
         prevgen_filelist = None
     if not prevgen_filelist:
-        prevgen_filelist = obnam.filelist.create()
+        prevgen_filelist = obnam.filelist.Filelist()
 
     start_time = int(time.time())
-    new_filelist = obnam.filelist.create()
+    new_filelist = obnam.filelist.Filelist()
     for name in args:
         if os.path.isdir(obnam.io.resolve(context, name)):
             backup_directory(context, new_filelist, name, prevgen_filelist)
@@ -206,7 +206,7 @@ def backup(context, args):
 
     logging.info("Creating new file list object")    
     filelist_id = obnam.obj.object_id_new()
-    filelist_obj = obnam.filelist.to_object(new_filelist, filelist_id)
+    filelist_obj = new_filelist.to_object(filelist_id)
     filelist_obj = filelist_obj.encode()
     obnam.io.enqueue_object(context, context.oq, context.map, 
                                filelist_id, filelist_obj, True)
@@ -564,6 +564,10 @@ def main():
     except CommandLineUsageError, e:
         logging.error("%s" % str(e))
         logging.error("Use --help to get usage summary.")
+        sys.exit(1)
+    except obnam.exception.ExceptionBase, e:
+        logging.error("%s" % str(e))
+        sys.exit(1)
 
 
 if __name__ == "__main__":

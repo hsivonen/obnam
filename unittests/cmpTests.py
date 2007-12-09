@@ -31,32 +31,38 @@ class ComponentKindNameTests(unittest.TestCase):
         t = obnam.cmp.kind_name
         c = obnam.cmp
         self.failUnlessEqual(t(-12765), "UNKNOWN")
-        self.failUnlessEqual(t(c.OBJID), "OBJID")
-        self.failUnlessEqual(t(c.OBJKIND), "OBJKIND")
-        self.failUnlessEqual(t(c.BLKID), "BLKID")
-        self.failUnlessEqual(t(c.FILECHUNK), "FILECHUNK")
-        self.failUnlessEqual(t(c.OBJECT), "OBJECT")
-        self.failUnlessEqual(t(c.OBJMAP), "OBJMAP")
-        self.failUnlessEqual(t(c.CONTREF), "CONTREF")
-        self.failUnlessEqual(t(c.NAMEIPAIR), "NAMEIPAIR")
-        self.failUnlessEqual(t(c.FILENAME), "FILENAME")
-        self.failUnlessEqual(t(c.SIGDATA), "SIGDATA")
-        self.failUnlessEqual(t(c.SIGREF), "SIGREF")
-        self.failUnlessEqual(t(c.GENREF), "GENREF")
-        self.failUnlessEqual(t(c.OBJREF), "OBJREF")
-        self.failUnlessEqual(t(c.BLOCKREF), "BLOCKREF")
-        self.failUnlessEqual(t(c.MAPREF), "MAPREF")
-        self.failUnlessEqual(t(c.FILEPARTREF), "FILEPARTREF")
-        self.failUnlessEqual(t(c.FORMATVERSION), "FORMATVERSION")
-        self.failUnlessEqual(t(c.FILE), "FILE")
-        self.failUnlessEqual(t(c.FILELISTREF), "FILELISTREF")
-        self.failUnlessEqual(t(c.CONTMAPREF), "CONTMAPREF")
-        self.failUnlessEqual(t(c.DELTAREF), "DELTAREF")
-        self.failUnlessEqual(t(c.DELTADATA), "DELTADATA")
-        self.failUnlessEqual(t(c.STAT), "STAT")
-        self.failUnlessEqual(t(c.GENSTART), "GENSTART")
-        self.failUnlessEqual(t(c.GENEND), "GENEND")
-        self.failUnlessEqual(t(c.DELTAPARTREF), "DELTAPARTREF")
+
+        names = (
+            "OBJID",
+            "OBJKIND",
+            "BLKID",
+            "FILECHUNK",
+            "OBJECT",
+            "OBJMAP",
+            "CONTREF",
+            "NAMEIPAIR",
+            "FILENAME",
+            "SIGDATA",
+            "SIGREF",
+            "GENREF",
+            "OBJREF",
+            "BLOCKREF",
+            "MAPREF",
+            "FILEPARTREF",
+            "FORMATVERSION",
+            "FILE",
+            "FILELISTREF",
+            "CONTMAPREF",
+            "DELTAREF",
+            "DELTADATA",
+            "STAT",
+            "GENSTART",
+            "GENEND",
+            "DELTAPARTREF",
+        )
+        
+        for name in names:
+            self.failUnlessEqual(t(getattr(c, name)), name)
 
 
 class RefComponentTests(unittest.TestCase):
@@ -244,15 +250,16 @@ class GetVarintVAlueTest(unittest.TestCase):
 class FindVarintTests(unittest.TestCase):
 
     def test(self):
+        values = range(0, 1024, 17)
+
         list = []
-        for i in range(1024):
+        for i in values:
             encoded = obnam.varint.encode(i)
             c = obnam.cmp.Component(i, encoded)
             list.append(c)
 
-        for i in range(1024):
-            self.failUnlessEqual(obnam.cmp.first_varint_by_kind(list, i), 
-                                 i)
+        for i in values:
+            self.failUnlessEqual(obnam.cmp.first_varint_by_kind(list, i), i)
         self.failUnlessEqual(obnam.cmp.first_varint_by_kind(list, -1), None)
 
 
