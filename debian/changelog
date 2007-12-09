@@ -1,8 +1,6 @@
-obnam (0.9.0-1) unstable; urgency=low
+obnam (0.9.0-1) experimental; urgency=low
 
-  * Experimental branch of Obnam, for developing and testing new storage
-    structure.
-  * Replace, conflict, and provide the obnam package.
+  * New upstream version. This is a DEVELOPMENT version.
 
  -- Lars Wirzenius <liw@iki.fi>  Sun, 09 Dec 2007 18:45:30 +0200
 
