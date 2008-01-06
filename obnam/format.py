@@ -71,15 +71,14 @@ def permissions(mode):
 
 def filetype(mode):
     """Return character to show the type of a file, like 'ls -l'"""
-    tests = (
-        (stat.S_ISDIR, "d"),
-        (stat.S_ISCHR, "c"),
-        (stat.S_ISBLK, "b"),
-        (stat.S_ISREG, "-"),
-        (stat.S_ISFIFO, "p"),
-        (stat.S_ISLNK, "l"),
-        (stat.S_ISSOCK, "s"),
-    )
+    tests = [(stat.S_ISDIR, "d"),
+             (stat.S_ISCHR, "c"),
+             (stat.S_ISBLK, "b"),
+             (stat.S_ISREG, "-"),
+             (stat.S_ISFIFO, "p"),
+             (stat.S_ISLNK, "l"),
+             (stat.S_ISSOCK, "s"),
+            ]
     for func, result in tests:
         if func(mode):
             return result
@@ -94,14 +93,13 @@ def filemode(mode):
 def inode_fields(file_component):
     format_integer = lambda x: "%d" % x
 
-    fields = (
-        ("st_mode", filemode),
-        ("st_nlink", format_integer),
-        ("st_uid", format_integer),
-        ("st_gid", format_integer),
-        ("st_size", format_integer),
-        ("st_mtime", timestamp),
-    )
+    fields = [("st_mode", filemode),
+              ("st_nlink", format_integer),
+              ("st_uid", format_integer),
+              ("st_gid", format_integer),
+              ("st_size", format_integer),
+              ("st_mtime", timestamp),
+             ]
 
     list = []
     subs = file_component.get_subcomponents()
