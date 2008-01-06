@@ -55,7 +55,8 @@ def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
         sigdata = obnam.rsync.compute_signature(context, resolved)
         if sigdata:
             sig_id = obnam.obj.object_id_new()
-            sig = obnam.obj.SignatureObject(sig_id, sigdata).encode()
+            sig = obnam.obj.SignatureObject(id=sig_id, 
+                                            sigdata=sigdata).encode()
             obnam.io.enqueue_object(context, context.oq, context.map, 
                                     sig_id, sig, True)
             context.progress.update_current_action(pathname)
@@ -80,8 +81,10 @@ def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
                                                    prev_sigdata, resolved)
 
                         delta_id = obnam.obj.object_id_new()
-                        delta = obnam.obj.DeltaObject(delta_id, deltapart_ids,
-                                                      xcont_ref, xdelta_ref)
+                        delta = obnam.obj.DeltaObject(id=delta_id, 
+                                        deltapart_refs=deltapart_ids,
+                                        cont_ref=xcont_ref, 
+                                        delta_ref=xdelta_ref)
                         delta = delta.encode()
                         obnam.io.enqueue_object(context, context.oq, 
                                                 context.map, delta_id, delta,
@@ -213,8 +216,8 @@ def backup(context, args):
     
     gen_id = obnam.obj.object_id_new()
     logging.info("Creating new generation object %s" % gen_id)
-    gen = obnam.obj.GenerationObject(gen_id, filelist_id, start_time, 
-                                     end_time)
+    gen = obnam.obj.GenerationObject(id=gen_id, filelist_id=filelist_id, 
+                                     start=start_time, end=end_time)
     gen = gen.encode()
     gen_ids.append(gen_id)
     obnam.io.enqueue_object(context, context.oq, context.map, gen_id, gen,
@@ -239,8 +242,9 @@ def backup(context, args):
 
     logging.info("Creating new host block")
     host_id = context.config.get("backup", "host-id")
-    block = obnam.obj.HostBlockObject(host_id, gen_ids, map_block_ids,
-                                      contmap_block_ids)
+    block = obnam.obj.HostBlockObject(host_id=host_id, gen_ids=gen_ids, 
+                                      map_block_ids=map_block_ids,
+                                      contmap_block_ids=contmap_block_ids)
     block = block.encode()
     obnam.io.upload_host_block(context, block)
 
@@ -481,8 +485,9 @@ def forget(context, forgettable_ids):
 
     logging.debug("forget: Uploading new host block")
     host_id = context.config.get("backup", "host-id")
-    block = obnam.obj.HostBlockObject(host_id, gen_ids, map_block_ids,
-                                      contmap_block_ids)
+    block = obnam.obj.HostBlockObject(host_id=host_id, gen_ids=gen_ids, 
+                                      map_block_ids=map_block_ids,
+                                      contmap_block_ids=contmap_block_ids)
     block = block.encode()
     obnam.io.upload_host_block(context, block)
 
