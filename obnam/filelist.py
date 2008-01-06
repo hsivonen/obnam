@@ -85,17 +85,13 @@ class Filelist:
             prev_subs = prev.get_subcomponents()
             prev_stat = obnam.cmp.first_by_kind(prev_subs, obnam.cmp.STAT)
             prev_st = obnam.cmp.parse_stat_component(prev_stat)
-            fields = (
-                "st_dev",
-                "st_mode",
-                "st_nlink",
-                "st_uid",
-                "st_gid",
-                "st_size",
-                "st_mtime",
-                # No atime or ctime, on purpose. They can be changed without
-                # requiring a new backup.
-            )
+            fields = ["st_dev",
+                      "st_mode",
+                      "st_nlink",
+                      "st_uid",
+                      "st_gid",
+                      "st_size",
+                      "st_mtime"]
             for field in fields:
                 a_value = stat_result.__getattribute__(field)
                 b_value = prev_st.__getattribute__(field)
