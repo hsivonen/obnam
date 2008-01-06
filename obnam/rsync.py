@@ -42,6 +42,15 @@ class CommandFailure(obnam.exception.ExceptionBase):
                      obnam.gpg.indent_string(stderr))
 
 
+def run_command(argv):
+    try:
+        p = subprocess.Popen(argv, stdout=subprocess.PIPE, 
+                             stderr=subprocess.PIPE)
+    except os.error, e:
+        raise UnknownCommand(argv, e.errno)
+    return p
+
+
 def compute_signature(context, filename):
     """Compute an rsync signature for 'filename'"""
 
@@ -49,11 +58,7 @@ def compute_signature(context, filename):
             context.config.get("backup", "odirect-read"),
             filename,
             "rdiff", "--", "signature", "-", "-"]
-    try:
-        p = subprocess.Popen(argv, stdout=subprocess.PIPE, 
-                             stderr=subprocess.PIPE)
-    except os.error, e:
-        raise UnknownCommand(argv, e.errno)
+    p = run_command(argv)
     stdout_data, stderr_data = p.communicate()
     
     if p.returncode == 0:
@@ -77,11 +82,7 @@ def compute_delta(context, signature, filename):
             context.config.get("backup", "odirect-read"),
             filename,
             "rdiff", "--", "delta", tempname, "-", "-"]
-    try:
-        p = subprocess.Popen(argv, stdout=subprocess.PIPE, 
-                             stderr=subprocess.PIPE)
-    except os.error, e:
-        raise UnknownCommand(argv, e.errno)
+    p = run_command(argv)
 
     list = []
     block_size = context.config.getint("backup", "block-size")
