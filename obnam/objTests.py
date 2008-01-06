@@ -418,12 +418,57 @@ class StorageObjectFactoryTests(unittest.TestCase):
         list.append(obnam.cmp.Component(obnam.cmp.OBJID, "objid"))
         list.append(obnam.cmp.Component(obnam.cmp.OBJKIND, 
                                         obnam.varint.encode(objkind)))
+
+
+        if objkind == obnam.obj.GEN:
+            list.append(obnam.cmp.Component(obnam.cmp.GENSTART,
+                                            obnam.varint.encode(1)))
+            list.append(obnam.cmp.Component(obnam.cmp.GENEND,
+                                            obnam.varint.encode(2)))
         
         return list
 
     def make_object(self, objkind):
         return self.factory.get_object(self.make_component(objkind))
 
+    def testCreatesFilePartObjectCorrectly(self):
+        o = self.make_object(obnam.obj.FILEPART)
+        self.failUnlessEqual(type(o), obnam.obj.FilePartObject)
+
+    def testCreatesGenerationObjectCorrectly(self):
+        o = self.make_object(obnam.obj.GEN)
+        self.failUnlessEqual(type(o), obnam.obj.GenerationObject)
+        self.failUnlessEqual(o.get_start_time(), 1)
+        self.failUnlessEqual(o.get_end_time(), 2)
+
     def testCreatesSignatureObjectCorrectly(self):
         o = self.make_object(obnam.obj.SIG)
         self.failUnlessEqual(type(o), obnam.obj.SignatureObject)
+
+    def testCreatesHostBlockObjectCorrectly(self):
+        o = self.make_object(obnam.obj.HOST)
+        self.failUnlessEqual(type(o), obnam.obj.HostBlockObject)
+
+    def testCreatesFileContentsObjectCorrectly(self):
+        o = self.make_object(obnam.obj.FILECONTENTS)
+        self.failUnlessEqual(type(o), obnam.obj.FileContentsObject)
+
+    def testCreatesFileListObjectCorrectly(self):
+        o = self.make_object(obnam.obj.FILELIST)
+        self.failUnlessEqual(type(o), obnam.obj.FileListObject)
+
+    def testCreatesDeltaObjectCorrectly(self):
+        o = self.make_object(obnam.obj.DELTA)
+        self.failUnlessEqual(type(o), obnam.obj.DeltaObject)
+
+    def testCreatesDeltaPartObjectCorrectly(self):
+        o = self.make_object(obnam.obj.DELTAPART)
+        self.failUnlessEqual(type(o), obnam.obj.DeltaPartObject)
+
+    def testCreatesDirObjectCorrectly(self):
+        o = self.make_object(obnam.obj.DIR)
+        self.failUnlessEqual(type(o), obnam.obj.DirObject)
+
+    def testCreatesFileGroupObjectCorrectly(self):
+        o = self.make_object(obnam.obj.FILEGROUP)
+        self.failUnlessEqual(type(o), obnam.obj.FileGroupObject)

@@ -248,12 +248,13 @@ class DeltaObject(StorageObject):
 
     kind = DELTA
 
-    def __init__(self, components=None, id=id, deltapart_refs=None, 
+    def __init__(self, components=None, id=None, deltapart_refs=None, 
                  cont_ref=None, delta_ref=None):
         StorageObject.__init__(self, components=components, id=id)
-        for deltapart_ref in deltapart_refs:
-            c = obnam.cmp.Component(obnam.cmp.DELTAPARTREF, deltapart_ref)
-            self.add(c)
+        if deltapart_refs:
+            for deltapart_ref in deltapart_refs:
+                c = obnam.cmp.Component(obnam.cmp.DELTAPARTREF, deltapart_ref)
+                self.add(c)
         if cont_ref:
             c = obnam.cmp.Component(obnam.cmp.CONTREF, cont_ref)
             self.add(c)
@@ -271,10 +272,12 @@ class GenerationObject(StorageObject):
         StorageObject.__init__(self, components=components, id=id)
         if filelist_id:
             self.add(obnam.cmp.Component(obnam.cmp.FILELISTREF, filelist_id))
-        for ref in dirrefs:
-            self.add(obnam.cmp.Component(obnam.cmp.DIRREF, ref))
-        for ref in filegrouprefs:
-            self.add(obnam.cmp.Component(obnam.cmp.FILEGROUPREF, ref))
+        if dirrefs:
+            for ref in dirrefs:
+                self.add(obnam.cmp.Component(obnam.cmp.DIRREF, ref))
+        if filegrouprefs:
+            for ref in filegrouprefs:
+                self.add(obnam.cmp.Component(obnam.cmp.FILEGROUPREF, ref))
         if start:
             self.add(obnam.cmp.Component(obnam.cmp.GENSTART, 
                                          obnam.varint.encode(start)))
