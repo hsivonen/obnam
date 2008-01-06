@@ -38,6 +38,8 @@ class ObjectKindNameTests(unittest.TestCase):
         self.failUnlessEqual(kind_name(FILELIST), "FILELIST")
         self.failUnlessEqual(kind_name(DELTA), "DELTA")
         self.failUnlessEqual(kind_name(DELTAPART), "DELTAPART")
+        self.failUnlessEqual(kind_name(DIR), "DIR")
+        self.failUnlessEqual(kind_name(FILEGROUP), "FILEGROUP")
 
 
 class ObjectCreateTests(unittest.TestCase):

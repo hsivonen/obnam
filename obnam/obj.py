@@ -46,15 +46,17 @@ def _define_kind(code, name):
     _object_kinds[code] = name
     return code
 
-FILEPART     = _define_kind(1, "FILEPART")
+FILEPART     = _define_kind( 1, "FILEPART")
 # object kind 2 used to be INODE, but it's been removed
-GEN          = _define_kind(3, "GEN")
-SIG          = _define_kind(4, "SIG")
-HOST         = _define_kind(5, "HOST")
-FILECONTENTS = _define_kind(6, "FILECONTENTS")
-FILELIST     = _define_kind(7, "FILELIST")
-DELTA        = _define_kind(8, "DELTA")
-DELTAPART    = _define_kind(9, "DELTAPART")
+GEN          = _define_kind( 3, "GEN")
+SIG          = _define_kind( 4, "SIG")
+HOST         = _define_kind( 5, "HOST")
+FILECONTENTS = _define_kind( 6, "FILECONTENTS")
+FILELIST     = _define_kind( 7, "FILELIST")
+DELTA        = _define_kind( 8, "DELTA")
+DELTAPART    = _define_kind( 9, "DELTAPART")
+DIR          = _define_kind(10, "DIR")
+FILEGROUP    = _define_kind(11, "FILEGROUP")
 
 
 def kind_name(kind):

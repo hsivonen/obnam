@@ -59,6 +59,8 @@ class ComponentKindNameTests(unittest.TestCase):
             "GENSTART",
             "GENEND",
             "DELTAPARTREF",
+            "DIRREF",
+            "FILEGROUPREF",
         )
         
         for name in names:

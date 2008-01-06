@@ -79,6 +79,8 @@ STAT          = _define_plain(      38, "STAT")
 GENSTART      = _define_plain(      39, "GENSTART")
 GENEND        = _define_plain(      40, "GENEND")
 DELTAPARTREF  = _define_ref(        41, "DELTAPARTREF")
+DIRREF        = _define_ref(        42, "DIRREF")
+FILEGROUPREF  = _define_ref(        43, "FILEGROUPREF")
 
 
 def kind_name(kind):
