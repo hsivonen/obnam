@@ -326,3 +326,20 @@ class DirObject(Object):
     def get_filegrouprefs(self):
         return [c.get_string_value() 
                 for c in self.find_by_kind(obnam.cmp.FILEGROUPREF)]
+
+
+class FileGroupObject(Object):
+
+    def __init__(self, objid):
+        Object.__init__(self, objid, FILEGROUP)
+
+    def add_file(self, name, stat, contref, sigref, deltaref):
+        c = obnam.filelist.create_file_component_from_stat(name, stat, 
+                                                           contref, sigref, 
+                                                           deltaref)
+        self.add(c)
+
+    def get_names(self):
+        return [obnam.cmp.first_string_by_kind(x.get_subcomponents(), 
+                                               obnam.cmp.FILENAME) 
+                for x in self.find_by_kind(obnam.cmp.FILE)]

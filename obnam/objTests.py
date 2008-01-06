@@ -327,3 +327,21 @@ class DirObjectTests(unittest.TestCase):
     def testSetsFilegrouprefsCorrectly(self):
         self.failUnlessEqual(sorted(self.dir.get_filegrouprefs()), 
                              sorted(["fg1", "fg2"]))
+
+
+class FileGroupObjectTests(unittest.TestCase):
+
+    def setUp(self):
+        stat = os.stat("README")
+        self.files = [
+            ("pink", stat, "pink_contref", "pink_sigref", None),
+            ("pretty", stat, "pretty_contref", "pretty_sigref", None),
+            ("black", stat, "black_contref", "black_sigref", None),
+        ]
+        self.names = [x[0] for x in self.files]
+        self.fg = FileGroupObject("objid")
+        for name, stat, contref, sigref, deltaref in self.files:
+            self.fg.add_file(name, stat, contref, sigref, deltaref)
+        
+    def testSetsNamesCorrectly(self):
+        self.failUnlessEqual(sorted(self.fg.get_names()), sorted(self.names))
