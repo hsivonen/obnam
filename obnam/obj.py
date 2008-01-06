@@ -470,7 +470,7 @@ class DeltaPartObject(StorageObject):
 
 
 
-class ObjectFactory:
+class StorageObjectFactory:
 
     """Create the right kind of Object subclass instance.
     

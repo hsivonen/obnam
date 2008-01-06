@@ -407,10 +407,10 @@ class FileGroupObjectTests(unittest.TestCase):
             self.failUnlessEqual(x[4], self.fg.get_deltaref(x[0]))
 
 
-class ObjectFactoryTests(unittest.TestCase):
+class StorageObjectFactoryTests(unittest.TestCase):
 
     def setUp(self):
-        self.factory = ObjectFactory()
+        self.factory = StorageObjectFactory()
 
     def make_component(self, objkind):
         list = []
