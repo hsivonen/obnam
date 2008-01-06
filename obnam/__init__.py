@@ -40,3 +40,4 @@ import progress
 import rsync
 import utils
 import varint
+import walk
