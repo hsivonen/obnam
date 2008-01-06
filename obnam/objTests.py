@@ -342,6 +342,13 @@ class FileGroupObjectTests(unittest.TestCase):
         self.fg = FileGroupObject("objid")
         for name, stat, contref, sigref, deltaref in self.files:
             self.fg.add_file(name, stat, contref, sigref, deltaref)
+
+    def testReturnsNoneIfSoughtFileNotFound(self):
+        self.failUnlessEqual(self.fg.get_file("xxx"), None)
         
     def testSetsNamesCorrectly(self):
         self.failUnlessEqual(sorted(self.fg.get_names()), sorted(self.names))
+
+    def testSetsStatCorrectly(self):
+        for x in self.files:
+            self.failUnlessEqual(x[1], self.fg.get_stat(x[0]))

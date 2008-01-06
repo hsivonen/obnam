@@ -339,7 +339,27 @@ class FileGroupObject(Object):
                                                            deltaref)
         self.add(c)
 
+    def get_files(self):
+        return self.find_by_kind(obnam.cmp.FILE)
+
+    def get_file(self, name):
+        for file in self.get_files():
+            fname = obnam.cmp.first_string_by_kind(file.get_subcomponents(),
+                                                   obnam.cmp.FILENAME)
+            if name == fname:
+                return file
+        return None
+
+    def get_filename_from_file(self, file):
+        return obnam.cmp.first_string_by_kind(file.get_subcomponents(),
+                                              obnam.cmp.FILENAME)
+
+    def get_stat_from_file(self, file):
+        c = obnam.cmp.first_by_kind(file.get_subcomponents(), obnam.cmp.STAT)
+        return obnam.cmp.parse_stat_component(c)
+
     def get_names(self):
-        return [obnam.cmp.first_string_by_kind(x.get_subcomponents(), 
-                                               obnam.cmp.FILENAME) 
-                for x in self.find_by_kind(obnam.cmp.FILE)]
+        return [self.get_filename_from_file(x) for x in self.get_files()]
+
+    def get_stat(self, filename):
+        return self.get_stat_from_file(self.get_file(filename))
