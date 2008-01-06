@@ -291,7 +291,7 @@ class ConfigFile:
 
         return section, option
 
-    def handle_comment(self, seciton, option, match):
+    def handle_comment(self, section, option, match):
         return section, option
 
     def readfp(self, f, filename=None):
