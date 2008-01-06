@@ -263,6 +263,14 @@ cache = pretty
                               "/home/pretty/.obnam/obnam.conf"])
 
 
+class PrintOptionsTests(unittest.TestCase):
+
+    def test(self):
+        f = StringIO.StringIO()
+        obnam.config.print_option_names(f=f)
+        self.failIfEqual(f.getvalue(), "")
+
+
 class WriteDefaultConfigTests(unittest.TestCase):
 
     def test(self):
