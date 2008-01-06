@@ -305,3 +305,12 @@ class GetComponentTests(unittest.TestCase):
         for i in values:
             self.failUnlessEqual(o.first_varint_by_kind(i), i)
         self.failUnlessEqual(o.first_varint_by_kind(-1), None)
+
+
+class DirObjectTests(unittest.TestCase):
+
+    def setUp(self):
+        self.dir = DirObject("pink", "name", None, None, None)
+
+    def testSetsNameCorrectly(self):
+        self.failUnlessEqual(self.dir.get_name(), "name")

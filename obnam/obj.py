@@ -299,3 +299,17 @@ def host_block_decode(block):
                                                       obnam.cmp.CONTMAPREF)
 
     return host_id, gen_ids, map_ids, contmap_ids
+
+
+class DirObject(Object):
+
+    def __init__(self, objid, basename, stat, dirrefs, filegrouprefs):
+        Object.__init__(self, objid, DIR)
+        self.add(obnam.cmp.Component(obnam.cmp.FILENAME, basename))
+
+    def get_name(self):
+        c = self.first_by_kind(obnam.cmp.FILENAME)
+        if c:
+            return c.get_string_value()
+        else:
+            return None
