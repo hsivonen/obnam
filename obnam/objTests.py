@@ -472,3 +472,7 @@ class StorageObjectFactoryTests(unittest.TestCase):
     def testCreatesFileGroupObjectCorrectly(self):
         o = self.make_object(obnam.obj.FILEGROUP)
         self.failUnlessEqual(type(o), obnam.obj.FileGroupObject)
+
+    def testReturnsNoneForUnknownObjectKind(self):
+        o = self.make_object(0xdeadbeef)
+        self.failUnlessEqual(o, None)
