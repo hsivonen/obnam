@@ -310,7 +310,11 @@ class GetComponentTests(unittest.TestCase):
 class DirObjectTests(unittest.TestCase):
 
     def setUp(self):
-        self.dir = DirObject("pink", "name", None, None, None)
+        self.dir = DirObject("pink", "name", None, ["dir2", "dir1"], None)
 
     def testSetsNameCorrectly(self):
         self.failUnlessEqual(self.dir.get_name(), "name")
+
+    def testSetsDirrefsCorrectly(self):
+        self.failUnlessEqual(sorted(self.dir.get_dirrefs()), 
+                             sorted(["dir1", "dir2"]))
