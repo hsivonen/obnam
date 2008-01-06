@@ -153,8 +153,9 @@ class Component:
             encoded = "".join(snippets)
         else:
             encoded = self.str
-        return obnam.varint.encode(len(encoded)) + \
-               obnam.varint.encode(self.kind) + encoded
+        return "%s%s%s" % (obnam.varint.encode(len(encoded)),
+                           obnam.varint.encode(self.kind),
+                           encoded)
 
 
 class Parser:
