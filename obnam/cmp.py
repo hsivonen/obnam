@@ -151,7 +151,6 @@ class Component:
             for sub in self.get_subcomponents():
                 snippets.append(sub.encode())
             encoded = "".join(snippets)
-            # FIXME: snippets = [sub.encode() for sub in self.get_subcomponents()]
         else:
             encoded = self.str
         return obnam.varint.encode(len(encoded)) + \
