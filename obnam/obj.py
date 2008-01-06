@@ -242,6 +242,15 @@ class GenerationObject(Object):
         self.add(obnam.cmp.Component(obnam.cmp.GENEND, 
                                      obnam.varint.encode(end_time)))
 
+    def get_filelistref(self):
+        return self.first_string_by_kind(obnam.cmp.FILELISTREF)
+
+    def get_start_time(self):
+        return self.first_varint_by_kind(obnam.cmp.GENSTART)
+
+    def get_end_time(self):
+        return self.first_varint_by_kind(obnam.cmp.GENEND)
+
 
 # This is used only by testing.
 def generation_object_decode(gen):

@@ -161,6 +161,18 @@ class GenerationTests(unittest.TestCase):
         self.failUnlessEqual(start1, start2)
         self.failUnlessEqual(end1, end2)
 
+    def setUp(self):
+        self.gen = GenerationObject("objid", "filelistref", 123, 456)
+
+    def testSetsFilelistRefCorrectly(self):
+        self.failUnlessEqual(self.gen.get_filelistref(), "filelistref")
+
+    def testSetsStartTimeCorrectly(self):
+        self.failUnlessEqual(self.gen.get_start_time(), 123)
+
+    def testSetsEndTimeCorrectly(self):
+        self.failUnlessEqual(self.gen.get_end_time(), 456)
+
 
 class ObjectTests(unittest.TestCase):
 
