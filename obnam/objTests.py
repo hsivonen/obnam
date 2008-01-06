@@ -421,7 +421,9 @@ class StorageObjectFactoryTests(unittest.TestCase):
         
         return list
 
+    def make_object(self, objkind):
+        return self.factory.get_object(self.make_component(objkind))
+
     def testCreatesSignatureObjectCorrectly(self):
-        list = self.make_component(obnam.obj.SIG)
-        o = self.factory.get_object(list)
+        o = self.make_object(obnam.obj.SIG)
         self.failUnlessEqual(type(o), obnam.obj.SignatureObject)
