@@ -306,6 +306,7 @@ class DirObject(Object):
     def __init__(self, objid, basename, stat, dirrefs, filegrouprefs):
         Object.__init__(self, objid, DIR)
         self.add(obnam.cmp.Component(obnam.cmp.FILENAME, basename))
+        self.add(obnam.cmp.create_stat_component(stat))
         for ref in dirrefs:
             self.add(obnam.cmp.Component(obnam.cmp.DIRREF, ref))
         for ref in filegrouprefs:
@@ -313,6 +314,10 @@ class DirObject(Object):
 
     def get_name(self):
         return self.first_by_kind(obnam.cmp.FILENAME).get_string_value()
+
+    def get_stat(self):
+        st = self.first_by_kind(obnam.cmp.STAT)
+        return obnam.cmp.parse_stat_component(st)
 
     def get_dirrefs(self):
         return [c.get_string_value() 
