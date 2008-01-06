@@ -55,7 +55,6 @@ class RsyncTests(unittest.TestCase):
 
         os.remove(empty_file)
 
-
     def testSignatureRaisesExceptionIfCommandFails(self):
         (fd, empty_file) = tempfile.mkstemp()
         os.close(fd)
@@ -65,6 +64,18 @@ class RsyncTests(unittest.TestCase):
         self.failUnlessRaises(obnam.rsync.CommandFailure,
                               obnam.rsync.compute_signature,
                               context, empty_file)
+
+        os.remove(empty_file)
+
+    def testDeltaRaisesExceptionIfCommandFails(self):
+        (fd, empty_file) = tempfile.mkstemp()
+        os.close(fd)
+
+        context = obnam.context.Context()
+        context.config.set("backup", "odirect-pipe", "false")
+        self.failUnlessRaises(obnam.rsync.CommandFailure,
+                              obnam.rsync.compute_delta,
+                              context, "pink", empty_file)
 
         os.remove(empty_file)
 
