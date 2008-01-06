@@ -43,6 +43,18 @@ class RsyncTests(unittest.TestCase):
         os.remove("empty_file.sig.temp")
         os.remove(empty_file)
 
+    def testSignatureRaisesExceptionIfCommandIsUnknown(self):
+        (fd, empty_file) = tempfile.mkstemp()
+        os.close(fd)
+
+        context = obnam.context.Context()
+        context.config.set("backup", "odirect-pipe", "/notexist")
+        self.failUnlessRaises(obnam.rsync.UnknownCommand,
+                              obnam.rsync.compute_signature,
+                              context, empty_file)
+
+        os.remove(empty_file)
+
     def testEmptyDelta(self):
         (fd, empty_file) = tempfile.mkstemp()
         os.close(fd)
