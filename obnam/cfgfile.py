@@ -292,6 +292,9 @@ class ConfigFile:
 
         return section, option
 
+    def handle_comment(self, seciton, option, match):
+        return section, option
+
     def readfp(self, f, filename=None):
         """Read configuration file from open file"""
         filename = filename or getattr(f, "filename", None)
@@ -301,8 +304,7 @@ class ConfigFile:
         option = None
 
         matchers = (
-            (self.comment_pattern, 
-             lambda section, option, match: (section, option)),
+            (self.comment_pattern, self.handle_comment),
             (self.section_pattern, self.handle_section),
             (self.option_line1_pattern, self.handle_option_line1),
             (self.option_line2_pattern, self.handle_option_line2),
