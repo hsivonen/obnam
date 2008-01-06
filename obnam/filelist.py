@@ -107,7 +107,7 @@ class Filelist:
 
     def to_object(self, object_id):
         """Create an unencoded FILELIST object from a file list"""
-        o = obnam.obj.Object(object_id, obnam.obj.FILELIST)
+        o = obnam.obj.FileListObject(id=object_id)
         for pathname in self.dict:
             o.add(self.dict[pathname])
         return o

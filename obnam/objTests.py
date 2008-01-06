@@ -42,35 +42,51 @@ class ObjectKindNameTests(unittest.TestCase):
         self.failUnlessEqual(kind_name(FILEGROUP), "FILEGROUP")
 
 
-class ObjectCreateTests(unittest.TestCase):
+class ObjectIdTests(unittest.TestCase):
 
-    def testCreate(self):
-        o = obnam.obj.Object("pink", 1)
+    def testHasCorrectProperties(self):
+        id = obnam.obj.object_id_new()
+        self.failUnlessEqual(type(id), type(""))
+
+
+class StorageObjectTests(unittest.TestCase):
+
+    components = [
+        obnam.cmp.Component(obnam.cmp.OBJID, "pink"),
+        obnam.cmp.Component(obnam.cmp.OBJKIND, 
+                            obnam.varint.encode(obnam.obj.HOST)),
+        obnam.cmp.Component(0xdeadbeef, "hello"),
+        obnam.cmp.Component(0xcafebabe, "world"),
+    ]
+    
+    def setUp(self):
+        self.o = obnam.obj.StorageObject(components=self.components)
+
+    def testInitializesComponentListCorrectlyFromComponents(self):
+        self.failUnlessEqual(len(self.o.get_components()),
+                             len(self.components))
+
+    def testInitalizesIdCorrectlyFromComponents(self):
+        self.failUnlessEqual(self.o.get_id(), "pink")
+
+    def testInitalizesKindCorrectlyFromComponents(self):
+        self.failUnlessEqual(self.o.get_kind(), obnam.obj.HOST)
+
+    def testInitializesIdCorrectlyFromArguments(self):
+        o = obnam.obj.StorageObject(id="pink")
         self.failUnlessEqual(o.get_id(), "pink")
-        self.failUnlessEqual(o.get_kind(), 1)
-        self.failUnlessEqual(o.get_components(), [])
 
-    def testAdd(self):
-        o = obnam.obj.Object("pink", 1)
-        c = obnam.cmp.Component(2, "pretty")
-        o.add(c)
-        self.failUnlessEqual(o.get_components(), [c])
-
-
-class ObjectEncodingDecodingTests(unittest.TestCase):
-
-    def test(self):
-        c1 = obnam.cmp.Component(0xdeadbeef, "hello")
-        c2 = obnam.cmp.Component(0xcafebabe, "world")
-        o = obnam.obj.Object("uuid", 0xdada)
-        o.add(c1)
-        o.add(c2)
-        
+    def testEncodesAndDecodesToIdenticalObject(self):
+        o = obnam.obj.StorageObject(components=self.components)
         encoded = o.encode()
         o2 = obnam.obj.decode(encoded)
         encoded2 = o2.encode()
-        
         self.failUnlessEqual(encoded, encoded2)
+
+    def testAddsComponentCorrectly(self):
+        c = obnam.cmp.Component(obnam.cmp.FILENAME, "pretty")
+        self.o.add(c)
+        self.failUnless(self.o.find_by_kind(obnam.cmp.FILENAME), [c])
 
 
 class ObjectQueueTests(unittest.TestCase):
@@ -131,7 +147,7 @@ class BlockCreateTests(unittest.TestCase):
         self.failUnlessEqual(oq.ids(), [])
 
     def testObjectQueue(self):
-        o = obnam.obj.Object("pink", 1)
+        o = obnam.obj.StorageObject(id="pink")
         o.add(obnam.cmp.Component(2, "pretty"))
         oq = obnam.obj.ObjectQueue()
         oq.add("pink", o.encode())
@@ -156,8 +172,9 @@ class GenerationTests(unittest.TestCase):
         fg1 = ["fg1", "fg2"]
         start1 = 12765
         end1 = 37337
-        gen = obnam.obj.GenerationObject(id1, fl1, dirs1, fg1, start1, 
-                                         end1).encode()
+        gen = obnam.obj.GenerationObject(id=id1, filelist_id=fl1, 
+                                         dirrefs=dirs1, filegrouprefs=fg1, 
+                                         start=start1, end=end1).encode()
         (id2, fl2, dirs2, fg2, start2, end2) = generation_object_decode(gen)
         self.failUnlessEqual(id1, id2)
         self.failUnlessEqual(fl1, fl2)
@@ -167,9 +184,10 @@ class GenerationTests(unittest.TestCase):
         self.failUnlessEqual(end1, end2)
 
     def setUp(self):
-        self.gen = GenerationObject("objid", "filelistref", 
-                                    ["dir2", "dir1"], ["fg2", "fg1"],
-                                    123, 456)
+        self.gen = GenerationObject(id="objid", filelist_id="filelistref", 
+                                    dirrefs=["dir2", "dir1"], 
+                                    filegrouprefs=["fg2", "fg1"],
+                                    start=123, end=456)
 
     def testSetsFilelistRefCorrectly(self):
         self.failUnlessEqual(self.gen.get_filelistref(), "filelistref")
@@ -189,34 +207,30 @@ class GenerationTests(unittest.TestCase):
         self.failUnlessEqual(self.gen.get_end_time(), 456)
 
 
-class ObjectTests(unittest.TestCase):
-
-    def testId(self):
-        id = obnam.obj.object_id_new()
-        self.failIfEqual(id, None)
-        self.failUnlessEqual(type(id), type(""))
+class OldStorageObjectTests(unittest.TestCase):
 
     def testCreateSignatureObject(self):
         context = obnam.context.Context()
         id = "pink"
         sig = obnam.rsync.compute_signature(context, "Makefile")
-        sig_object = obnam.obj.SignatureObject(id, sig)
+        sig_object = obnam.obj.SignatureObject(id=id, sigdata=sig)
         encoded = sig_object.encode()
         o = obnam.obj.decode(encoded)
         self.failUnlessEqual(o.get_id(), "pink")
         self.failUnlessEqual(o.get_kind(), obnam.obj.SIG)
-        self.failUnlessEqual(len(o.get_components()), 1)
+        self.failUnlessEqual(len(o.get_components()), 1+2)
         self.failUnlessEqual(o.first_string_by_kind(obnam.cmp.SIGDATA), sig)
 
     def testCreateDeltaObjectWithContRef(self):
         id = "pink"
         deltapart_ref = "xyzzy"
-        do = obnam.obj.DeltaObject(id, [deltapart_ref], "pretty", None)
+        do = obnam.obj.DeltaObject(id=id, deltapart_refs=[deltapart_ref], 
+                                   cont_ref="pretty")
         encoded = do.encode()
         o = obnam.obj.decode(encoded)
         self.failUnlessEqual(o.get_id(), "pink")
         self.failUnlessEqual(o.get_kind(), obnam.obj.DELTA)
-        self.failUnlessEqual(len(o.get_components()), 2)
+        self.failUnlessEqual(len(o.get_components()), 2+2)
         self.failUnlessEqual(o.first_string_by_kind(obnam.cmp.DELTAPARTREF),
                              deltapart_ref)
         self.failUnlessEqual(o.first_string_by_kind(obnam.cmp.CONTREF),
@@ -225,12 +239,13 @@ class ObjectTests(unittest.TestCase):
     def testCreateDeltaObjectWithDeltaRef(self):
         id = "pink"
         deltapart_ref = "xyzzy"
-        do = obnam.obj.DeltaObject(id, [deltapart_ref], None, "pretty")
+        do = obnam.obj.DeltaObject(id=id, deltapart_refs=[deltapart_ref], 
+                                   delta_ref="pretty")
         encoded = do.encode()
         o = obnam.obj.decode(encoded)
         self.failUnlessEqual(o.get_id(), "pink")
         self.failUnlessEqual(o.get_kind(), obnam.obj.DELTA)
-        self.failUnlessEqual(len(o.get_components()), 2)
+        self.failUnlessEqual(len(o.get_components()), 2+2)
         self.failUnlessEqual(o.first_string_by_kind(obnam.cmp.DELTAPARTREF),
                              deltapart_ref)
         self.failUnlessEqual(o.first_string_by_kind(obnam.cmp.DELTAREF),
@@ -244,8 +259,9 @@ class HostBlockTests(unittest.TestCase):
         gen_ids = ["pretty", "beautiful"]
         map_ids = ["black", "box"]
         contmap_ids = ["tilu", "lii"]
-        host = obnam.obj.HostBlockObject(host_id, gen_ids, map_ids, 
-                                         contmap_ids)
+        host = obnam.obj.HostBlockObject(host_id=host_id, gen_ids=gen_ids, 
+                                         map_block_ids=map_ids, 
+                                         contmap_block_ids=contmap_ids)
         host = host.encode()
         self.failUnless(host.startswith(obnam.obj.BLOCK_COOKIE))
         (host_id2, gen_ids2, map_ids2, contmap_ids2) = \
@@ -256,7 +272,9 @@ class HostBlockTests(unittest.TestCase):
         self.failUnlessEqual(contmap_ids, contmap_ids2)
         
     def testFormatVersion(self):
-        encoded = obnam.obj.HostBlockObject("pink", [], [], []).encode()
+        encoded = obnam.obj.HostBlockObject(host_id="pink", gen_ids=[], 
+                                            map_block_ids=[], 
+                                            contmap_block_ids=[]).encode()
         decoded = obnam.obj.block_decode(encoded)
         c = obnam.cmp.first_by_kind(decoded, obnam.cmp.OBJECT)
         subs = c.get_subcomponents()
@@ -270,11 +288,12 @@ class HostBlockTests(unittest.TestCase):
 class GetComponentTests(unittest.TestCase):
 
     def setUp(self):
-        self.o = obnam.obj.Object("uuid", 0)
-        self.o.add(obnam.cmp.Component(1, "pink"))
-        self.o.add(obnam.cmp.Component(2, "pretty"))
-        self.o.add(obnam.cmp.Component(3, "red"))
-        self.o.add(obnam.cmp.Component(3, "too"))
+        self.o = obnam.obj.StorageObject([
+            obnam.cmp.Component(1, "pink"),
+            obnam.cmp.Component(2, "pretty"),
+            obnam.cmp.Component(3, "red"),
+            obnam.cmp.Component(3, "too"),
+            ])
 
     def testGetByKind(self):
         find = lambda t: \
@@ -312,24 +331,18 @@ class GetComponentTests(unittest.TestCase):
         self.failUnlessEqual(find(0), None)
 
     def testGetVarintsByKind(self):
-        list = range(1024)
-
-        o = obnam.obj.Object("uuid", 0)
-        for i in list:
-            c = obnam.cmp.Component(0, obnam.varint.encode(i))
-            o.add(c)
-
-        self.failUnlessEqual(o.find_varints_by_kind(0), list)
+        numbers = range(1024)
+        components = [obnam.cmp.Component(0, obnam.varint.encode(i))
+                      for i in numbers]
+        o = obnam.obj.StorageObject(components=components)
+        self.failUnlessEqual(o.find_varints_by_kind(0), numbers)
 
     def testGetFirstSVarintByKind(self):
-        values = range(0, 1024, 17)
-
-        o = obnam.obj.Object("uuid", 0)
-        for i in values:
-            c = obnam.cmp.Component(i, obnam.varint.encode(i))
-            o.add(c)
-
-        for i in values:
+        numbers = range(0, 1024, 17)
+        components = [obnam.cmp.Component(i, obnam.varint.encode(i))
+                      for i in numbers]
+        o = obnam.obj.StorageObject(components=components)
+        for i in numbers:
             self.failUnlessEqual(o.first_varint_by_kind(i), i)
         self.failUnlessEqual(o.first_varint_by_kind(-1), None)
 
@@ -338,8 +351,9 @@ class DirObjectTests(unittest.TestCase):
 
     def setUp(self):
         self.stat = os.stat(".")
-        self.dir = DirObject("pink", "name", self.stat, ["dir2", "dir1"], 
-                             ["fg2", "fg1"])
+        self.dir = DirObject(id="pink", name="name", stat=self.stat, 
+                             dirrefs=["dir2", "dir1"], 
+                             filegrouprefs=["fg2", "fg1"])
 
     def testSetsNameCorrectly(self):
         self.failUnlessEqual(self.dir.get_name(), "name")
@@ -366,7 +380,7 @@ class FileGroupObjectTests(unittest.TestCase):
             ("black", stat, "black_contref", "black_sigref", None),
         ]
         self.names = [x[0] for x in self.files]
-        self.fg = FileGroupObject("objid")
+        self.fg = FileGroupObject(id="objid")
         for name, stat, contref, sigref, deltaref in self.files:
             self.fg.add_file(name, stat, contref, sigref, deltaref)
 
@@ -391,3 +405,23 @@ class FileGroupObjectTests(unittest.TestCase):
     def testSetsDeltaRefCorrectly(self):
         for x in self.files:
             self.failUnlessEqual(x[4], self.fg.get_deltaref(x[0]))
+
+
+class ObjectFactoryTests(unittest.TestCase):
+
+    def setUp(self):
+        self.factory = ObjectFactory()
+
+    def make_component(self, objkind):
+        list = []
+        
+        list.append(obnam.cmp.Component(obnam.cmp.OBJID, "objid"))
+        list.append(obnam.cmp.Component(obnam.cmp.OBJKIND, 
+                                        obnam.varint.encode(objkind)))
+        
+        return list
+
+    def testCreatesSignatureObjectCorrectly(self):
+        list = self.make_component(obnam.obj.SIG)
+        o = self.factory.get_object(list)
+        self.failUnlessEqual(type(o), obnam.obj.SignatureObject)

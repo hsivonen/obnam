@@ -99,19 +99,7 @@ class MissingBlock(obnam.exception.ExceptionBase):
 
 def create_object_from_component_list(components):
     """Create a new object from a list of components"""
-    list = obnam.cmp.find_by_kind(components, obnam.cmp.OBJID)
-    id = list[0].get_string_value()
-    
-    list = obnam.cmp.find_by_kind(components, obnam.cmp.OBJKIND)
-    kind = list[0].get_string_value()
-    (kind, _) = obnam.varint.decode(kind, 0)
-
-    o = obnam.obj.Object(id, kind)
-    bad = (obnam.cmp.OBJID, obnam.cmp.OBJKIND)
-    for c in components:
-        if c.get_kind() not in bad:
-            o.add(c)
-    return o
+    return obnam.obj.StorageObject(components)
 
 
 class ObjectCache:
@@ -244,14 +232,13 @@ def create_file_contents_object(context, filename):
             break
         c = obnam.cmp.Component(obnam.cmp.FILECHUNK, data)
         part_id = obnam.obj.object_id_new()
-        o = obnam.obj.Object(part_id, obnam.obj.FILEPART)
-        o.add(c)
+        o = obnam.obj.FilePartObject(id=part_id, components=[c])
         o = o.encode()
         enqueue_object(context, context.content_oq, context.contmap, 
                        part_id, o, False)
         part_ids.append(part_id)
 
-    o = obnam.obj.Object(object_id, obnam.obj.FILECONTENTS)
+    o = obnam.obj.FileContentsObject(id=object_id)
     for part_id in part_ids:
         c = obnam.cmp.Component(obnam.cmp.FILEPARTREF, part_id)
         o.add(c)
