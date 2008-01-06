@@ -350,16 +350,21 @@ class FileGroupObject(Object):
                 return file
         return None
 
-    def get_filename_from_file(self, file):
+    def get_string_from_file(self, file, kind):
         return obnam.cmp.first_string_by_kind(file.get_subcomponents(),
-                                              obnam.cmp.FILENAME)
+                                              kind)
 
     def get_stat_from_file(self, file):
         c = obnam.cmp.first_by_kind(file.get_subcomponents(), obnam.cmp.STAT)
         return obnam.cmp.parse_stat_component(c)
 
     def get_names(self):
-        return [self.get_filename_from_file(x) for x in self.get_files()]
+        return [self.get_string_from_file(x, obnam.cmp.FILENAME) 
+                for x in self.get_files()]
 
     def get_stat(self, filename):
         return self.get_stat_from_file(self.get_file(filename))
+
+    def get_contref(self, filename):
+        return self.get_string_from_file(self.get_file(filename),
+                                         obnam.cmp.CONTREF)

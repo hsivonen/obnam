@@ -352,3 +352,7 @@ class FileGroupObjectTests(unittest.TestCase):
     def testSetsStatCorrectly(self):
         for x in self.files:
             self.failUnlessEqual(x[1], self.fg.get_stat(x[0]))
+
+    def testSetsContentRefCorrectly(self):
+        for x in self.files:
+            self.failUnlessEqual(x[2], self.fg.get_contref(x[0]))
