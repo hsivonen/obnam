@@ -306,8 +306,10 @@ class DirObject(Object):
     def __init__(self, objid, basename, stat, dirrefs, filegrouprefs):
         Object.__init__(self, objid, DIR)
         self.add(obnam.cmp.Component(obnam.cmp.FILENAME, basename))
-        for dirref in dirrefs:
-            self.add(obnam.cmp.Component(obnam.cmp.DIRREF, dirref))
+        for ref in dirrefs:
+            self.add(obnam.cmp.Component(obnam.cmp.DIRREF, ref))
+        for ref in filegrouprefs:
+            self.add(obnam.cmp.Component(obnam.cmp.FILEGROUPREF, ref))
 
     def get_name(self):
         return self.first_by_kind(obnam.cmp.FILENAME).get_string_value()
@@ -315,3 +317,7 @@ class DirObject(Object):
     def get_dirrefs(self):
         return [c.get_string_value() 
                 for c in self.find_by_kind(obnam.cmp.DIRREF)]
+
+    def get_filegrouprefs(self):
+        return [c.get_string_value() 
+                for c in self.find_by_kind(obnam.cmp.FILEGROUPREF)]
