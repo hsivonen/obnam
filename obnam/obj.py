@@ -368,3 +368,11 @@ class FileGroupObject(Object):
     def get_contref(self, filename):
         return self.get_string_from_file(self.get_file(filename),
                                          obnam.cmp.CONTREF)
+
+    def get_sigref(self, filename):
+        return self.get_string_from_file(self.get_file(filename),
+                                         obnam.cmp.SIGREF)
+
+    def get_deltaref(self, filename):
+        return self.get_string_from_file(self.get_file(filename),
+                                         obnam.cmp.DELTAREF)

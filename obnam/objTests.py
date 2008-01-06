@@ -335,7 +335,7 @@ class FileGroupObjectTests(unittest.TestCase):
         stat = os.stat("README")
         self.files = [
             ("pink", stat, "pink_contref", "pink_sigref", None),
-            ("pretty", stat, "pretty_contref", "pretty_sigref", None),
+            ("pretty", stat, None, "pretty_sigref", "pretty_deltaref"),
             ("black", stat, "black_contref", "black_sigref", None),
         ]
         self.names = [x[0] for x in self.files]
@@ -356,3 +356,11 @@ class FileGroupObjectTests(unittest.TestCase):
     def testSetsContentRefCorrectly(self):
         for x in self.files:
             self.failUnlessEqual(x[2], self.fg.get_contref(x[0]))
+
+    def testSetsSigRefCorrectly(self):
+        for x in self.files:
+            self.failUnlessEqual(x[3], self.fg.get_sigref(x[0]))
+
+    def testSetsDeltaRefCorrectly(self):
+        for x in self.files:
+            self.failUnlessEqual(x[4], self.fg.get_deltaref(x[0]))
