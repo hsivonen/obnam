@@ -67,9 +67,8 @@ class NoSectionError(Error):
 class NoOptionError(Error):
 
     def __init__(self, section, option):
-        self._msg = (
-            "configuration file does not have option %s in section %s" % 
-                (option, section))
+        self._msg = ("configuration file does not have option %s "
+                     "in section %s" % (option, section))
 
 
 class ParsingError(Error):
