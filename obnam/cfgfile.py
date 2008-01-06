@@ -303,12 +303,11 @@ class ConfigFile:
         section = None
         option = None
 
-        matchers = (
-            (self.comment_pattern, self.handle_comment),
-            (self.section_pattern, self.handle_section),
-            (self.option_line1_pattern, self.handle_option_line1),
-            (self.option_line2_pattern, self.handle_option_line2),
-        )
+        matchers = ((self.comment_pattern, self.handle_comment),
+                    (self.section_pattern, self.handle_section),
+                    (self.option_line1_pattern, self.handle_option_line1),
+                    (self.option_line2_pattern, self.handle_option_line2),
+                   )
     
         while True:
             line = f.readline()
