@@ -152,20 +152,35 @@ class GenerationTests(unittest.TestCase):
     def testEncodeDecode(self):
         id1 = "pink"
         fl1 = "pretty"
+        dirs1 = ["dir1", "dir2"]
+        fg1 = ["fg1", "fg2"]
         start1 = 12765
         end1 = 37337
-        gen = obnam.obj.GenerationObject(id1, fl1, start1, end1).encode()
-        (id2, fl2, start2, end2) = generation_object_decode(gen)
+        gen = obnam.obj.GenerationObject(id1, fl1, dirs1, fg1, start1, 
+                                         end1).encode()
+        (id2, fl2, dirs2, fg2, start2, end2) = generation_object_decode(gen)
         self.failUnlessEqual(id1, id2)
         self.failUnlessEqual(fl1, fl2)
+        self.failUnlessEqual(dirs1, dirs2)
+        self.failUnlessEqual(fg1, fg2)
         self.failUnlessEqual(start1, start2)
         self.failUnlessEqual(end1, end2)
 
     def setUp(self):
-        self.gen = GenerationObject("objid", "filelistref", 123, 456)
+        self.gen = GenerationObject("objid", "filelistref", 
+                                    ["dir2", "dir1"], ["fg2", "fg1"],
+                                    123, 456)
 
     def testSetsFilelistRefCorrectly(self):
         self.failUnlessEqual(self.gen.get_filelistref(), "filelistref")
+
+    def testSetsDirRefsCorrectly(self):
+        self.failUnlessEqual(sorted(self.gen.get_dirrefs()), 
+                             sorted(["dir1", "dir2"]))
+
+    def testSetsFileGroupRefsCorrectly(self):
+        self.failUnlessEqual(sorted(self.gen.get_filegrouprefs()), 
+                             sorted(["fg1", "fg2"]))
 
     def testSetsStartTimeCorrectly(self):
         self.failUnlessEqual(self.gen.get_start_time(), 123)

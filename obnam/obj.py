@@ -234,9 +234,15 @@ class DeltaObject(Object):
 
 class GenerationObject(Object):
 
-    def __init__(self, objid, filelist_id, start_time, end_time):
+    def __init__(self, objid, filelist_id, dirrefs, filegrouprefs,
+                 start_time, end_time):
         Object.__init__(self, objid, GEN)
-        self.add(obnam.cmp.Component(obnam.cmp.FILELISTREF, filelist_id))
+        if filelist_id:
+            self.add(obnam.cmp.Component(obnam.cmp.FILELISTREF, filelist_id))
+        for ref in dirrefs:
+            self.add(obnam.cmp.Component(obnam.cmp.DIRREF, ref))
+        for ref in filegrouprefs:
+            self.add(obnam.cmp.Component(obnam.cmp.FILEGROUPREF, ref))
         self.add(obnam.cmp.Component(obnam.cmp.GENSTART, 
                                      obnam.varint.encode(start_time)))
         self.add(obnam.cmp.Component(obnam.cmp.GENEND, 
@@ -244,6 +250,12 @@ class GenerationObject(Object):
 
     def get_filelistref(self):
         return self.first_string_by_kind(obnam.cmp.FILELISTREF)
+
+    def get_dirrefs(self):
+        return self.find_strings_by_kind(obnam.cmp.DIRREF)
+
+    def get_filegrouprefs(self):
+        return self.find_strings_by_kind(obnam.cmp.FILEGROUPREF)
 
     def get_start_time(self):
         return self.first_varint_by_kind(obnam.cmp.GENSTART)
@@ -258,6 +270,8 @@ def generation_object_decode(gen):
 
     o = decode(gen)
     return o.id, o.first_string_by_kind(obnam.cmp.FILELISTREF), \
+           o.find_strings_by_kind(obnam.cmp.DIRREF), \
+           o.find_strings_by_kind(obnam.cmp.FILEGROUPREF), \
            o.first_varint_by_kind(obnam.cmp.GENSTART), \
            o.first_varint_by_kind(obnam.cmp.GENEND)
 
