@@ -25,6 +25,12 @@ class Application:
 
     """Main program logic for Obnam, a backup application."""
 
+    def __init__(self):
+        self._roots = []
+
+    def add_root(self, root):
+        self._roots.append(root)
+
     def get_roots(self):
         """Return current set of roots to be backed up."""
-        return []    
+        return self._roots
