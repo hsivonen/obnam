@@ -41,26 +41,23 @@ class ApplicationTests(unittest.TestCase):
     def testReturnsEmptyExclusionListInitially(self):
         self.failUnlessEqual(self.app.get_exclusion_regexps(), [])
 
-    def testReturnsRightNumberOfExclusionPatterns(self):
+    def setup_excludes(self):
         config = self.app.get_context().config
         config.remove_option("backup", "exclude")
         config.append("backup", "exclude", "pink")
         config.append("backup", "exclude", "pretty")
+
+    def testReturnsRightNumberOfExclusionPatterns(self):
+        self.setup_excludes()
         self.failUnlessEqual(len(self.app.get_exclusion_regexps()), 2)
 
     def testReturnsRegexpObjects(self):
-        config = self.app.get_context().config
-        config.remove_option("backup", "exclude")
-        config.append("backup", "exclude", "pink")
-        config.append("backup", "exclude", "pretty")
+        self.setup_excludes()
         for item in self.app.get_exclusion_regexps():
             self.failUnlessEqual(type(item), type(re.compile(".")))
 
     def testPrunesMatchingFilenames(self):
-        config = self.app.get_context().config
-        config.remove_option("backup", "exclude")
-        config.append("backup", "exclude", "pink")
-        config.append("backup", "exclude", "pretty")
+        self.setup_excludes()
         dirname = "/dir"
         dirnames = ["subdir1", "subdir2"]
         filenames = ["filename", "pink", "file-is-pretty-indeed"]
