@@ -122,12 +122,8 @@ def apply_delta(context, basis_name, deltapart_ids, new_name, open=os.open):
     ret = True
     for id in deltapart_ids:
         deltapart = obnam.io.get_object(context, id)
-        if deltapart:
-            deltadata = deltapart.first_string_by_kind(obnam.cmp.DELTADATA)
-            p.stdin.write(deltadata)
-        else:
-            assert 0
-            ret = False
+        deltadata = deltapart.first_string_by_kind(obnam.cmp.DELTADATA)
+        p.stdin.write(deltadata)
 
     stdout_data, stderr_data = p.communicate(input="")
     os.close(devnull)
