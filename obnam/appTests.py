@@ -1,4 +1,4 @@
-# Copyright (C) 2006  Lars Wirzenius <liw@iki.fi>
+# Copyright (C) 2006, 2007  Lars Wirzenius <liw@iki.fi>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,31 +15,16 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-"""The init file for the obnam module."""
+"""Unit tests for app.py."""
 
 
-NAME = "obnam"
-VERSION = "0.9.0"
+import unittest
+
+import obnam
 
 
-import backend
-import cache
-import cfgfile
-import cmp
-import config
-import context
-import exception
-import filelist
-import format
-import gpg
-import io
-import log
-import map
-import obj
-import progress
-import rsync
-import utils
-import varint
-import walk
+class ApplicationTests(unittest.TestCase):
 
-from app import Application
+    def testHasEmptyListOfRootsInitially(self):
+        app = obnam.Application()
+        self.failUnlessEqual(app.get_roots(), [])
