@@ -18,6 +18,8 @@
 """Main program for Obnam."""
 
 
+import logging
+import os
 import re
 
 import obnam
@@ -34,9 +36,11 @@ class Application:
         self._exclusion_regexps = []
 
     def get_context(self):
+        """Get the context for the backup application."""
         return self._context
 
     def add_root(self, root):
+        """Add a file or directory to list of backup roots."""
         self._roots.append(root)
 
     def get_roots(self):
@@ -49,6 +53,37 @@ class Application:
         config = self.get_context().config
         strings = config.get("backup", "exclude")
         if self._exclusion_strings != strings:
-            self._exclusion_regexps = [re.compile(_) for _ in strings]
+            for string in strings:
+                logging.debug("Compiling exclusion pattern '%s'" % string)
+                self._exclusion_regexps.append(re.compile(string))
         
         return self._exclusion_regexps
+
+    def prune(self, dirname, dirnames, filenames):
+        """Remove excluded items from dirnames and filenames.
+        
+        Because this is called by obnam.walk.depth_first, the lists
+        are modified in place.
+        
+        """
+        
+        self._prune_one_list(dirname, dirnames)
+        self._prune_one_list(dirname, filenames)
+
+    def _prune_one_list(self, dirname, basenames):
+        """Prune one list of basenames based on exlusion list.
+        
+        Because this is called from self.prune, the list is modified
+        in place.
+        
+        """
+
+        i = 0
+        while i < len(basenames):
+            path = os.path.join(dirname, basenames[i])
+            for regexp in self.get_exclusion_regexps():
+                if regexp.search(path):
+                    del basenames[i]
+                    break
+            else:
+                i += 1

@@ -55,3 +55,14 @@ class ApplicationTests(unittest.TestCase):
         config.append("backup", "exclude", "pretty")
         for item in self.app.get_exclusion_regexps():
             self.failUnlessEqual(type(item), type(re.compile(".")))
+
+    def testPrunesMatchingFilenames(self):
+        config = self.app.get_context().config
+        config.remove_option("backup", "exclude")
+        config.append("backup", "exclude", "pink")
+        config.append("backup", "exclude", "pretty")
+        dirname = "/dir"
+        dirnames = ["subdir1", "subdir2"]
+        filenames = ["filename", "pink", "file-is-pretty-indeed"]
+        self.app.prune(dirname, dirnames, filenames)
+        self.failUnlessEqual(filenames, ["filename"])
