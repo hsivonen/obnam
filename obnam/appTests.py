@@ -63,3 +63,11 @@ class ApplicationTests(unittest.TestCase):
         filenames = ["filename", "pink", "file-is-pretty-indeed"]
         self.app.prune(dirname, dirnames, filenames)
         self.failUnlessEqual(filenames, ["filename"])
+
+    def testPrunesMatchingFilenames(self):
+        self.setup_excludes()
+        dirname = "/dir"
+        dirnames = ["subdir", "pink, dir-is-pretty-indeed"]
+        filenames = ["filename1", "filename2"]
+        self.app.prune(dirname, dirnames, filenames)
+        self.failUnlessEqual(dirnames, ["subdir"])
