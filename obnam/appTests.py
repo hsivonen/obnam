@@ -26,11 +26,16 @@ import obnam
 class ApplicationTests(unittest.TestCase):
 
     def testHasEmptyListOfRootsInitially(self):
-        app = obnam.Application()
+        app = obnam.Application(None)
         self.failUnlessEqual(app.get_roots(), [])
 
     def testKeepsListOfRootsCorrectly(self):
-        app = obnam.Application()
+        app = obnam.Application(None)
         app.add_root("pink")
         app.add_root("pretty")
         self.failUnlessEqual(app.get_roots(), ["pink", "pretty"])
+
+    def testReturnsEmptyExclusionListInitially(self):
+        context = obnam.context.Context()
+        app = obnam.Application(context)
+        self.failUnlessEqual(app.get_exclusion_regexps(), [])

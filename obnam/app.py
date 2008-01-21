@@ -25,7 +25,7 @@ class Application:
 
     """Main program logic for Obnam, a backup application."""
 
-    def __init__(self):
+    def __init__(self, context):
         self._roots = []
 
     def add_root(self, root):
@@ -34,3 +34,7 @@ class Application:
     def get_roots(self):
         """Return current set of roots to be backed up."""
         return self._roots
+
+    def get_exclusion_regexps(self):
+        """Return list of regexp to exclude things from backup."""
+        return []
