@@ -1,4 +1,4 @@
-# Copyright (C) 2006  Lars Wirzenius <liw@iki.fi>
+# Copyright (C) 2006, 2007, 2008  Lars Wirzenius <liw@iki.fi>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -110,17 +110,17 @@ def compute_delta(context, signature, filename):
         raise CommandFailure(argv, exit, "")
 
 
-def apply_delta(context, basis_name, deltapart_ids, new_name, open=os.open):
+def apply_delta(context, basis, deltaparts, new, open=os.open, cmd="rdiff"):
     """Apply an rsync delta for a file, to get a new version of it"""
     
     devnull = open("/dev/null", os.O_WRONLY)
 
-    argv = ["rdiff", "--", "patch", basis_name, "-", new_name]
+    argv = [cmd, "--", "patch", basis, "-", new]
 
     p = run_command(argv, stdin=subprocess.PIPE, stdout=devnull)
 
     ret = True
-    for id in deltapart_ids:
+    for id in deltaparts:
         deltapart = obnam.io.get_object(context, id)
         deltadata = deltapart.first_string_by_kind(obnam.cmp.DELTADATA)
         p.stdin.write(deltadata)
@@ -128,6 +128,6 @@ def apply_delta(context, basis_name, deltapart_ids, new_name, open=os.open):
     stdout_data, stderr_data = p.communicate(input="")
     os.close(devnull)
     if p.returncode != 0:
-        raise CommandFailed(argv, p.returncode, stderr_data)
+        raise CommandFailure(argv, p.returncode, stderr_data)
     else:
         return ret

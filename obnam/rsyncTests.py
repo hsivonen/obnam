@@ -143,3 +143,21 @@ class RsyncTests(unittest.TestCase):
                               obnam.rsync.apply_delta, 
                               None, None, None, None, 
                               open=self.raise_os_error)
+
+    def testApplyDeltaRaisesExceptionWhenCommandFails(self):
+        context = obnam.context.Context()
+        context.cache = obnam.cache.Cache(context.config)
+        context.be = obnam.backend.init(context.config, context.cache)
+        
+        first = self.create_file("pink")
+        second = self.create_file("pretty")
+        sig = obnam.rsync.compute_signature(context, first)
+        deltapart_ids = obnam.rsync.compute_delta(context, sig, second)
+        obnam.io.flush_all_object_queues(context)
+
+        self.failUnlessRaises(obnam.rsync.CommandFailure,
+                              obnam.rsync.apply_delta,
+                              context, first, deltapart_ids, "/dev/null",
+                              cmd="./badcat")
+
+        shutil.rmtree(context.config.get("backup", "store"))
