@@ -42,10 +42,15 @@ class CommandFailure(obnam.exception.ExceptionBase):
                      obnam.gpg.indent_string(stderr))
 
 
-def run_command(argv):
+def run_command(argv, stdin=None, stdout=None, stderr=None):
+    # We let stdin be None unless explicitly specified.
+    if stdout is None:
+        stdout = subprocess.PIPE
+    if stderr is None:
+        stderr = subprocess.PIPE
+
     try:
-        p = subprocess.Popen(argv, stdout=subprocess.PIPE, 
-                             stderr=subprocess.PIPE)
+        p = subprocess.Popen(argv, stdin=stdin, stdout=stdout, stderr=stderr)
     except os.error, e:
         raise UnknownCommand(argv, e.errno)
     return p
@@ -111,12 +116,8 @@ def apply_delta(context, basis_name, deltapart_ids, new_name, open=os.open):
     devnull = open("/dev/null", os.O_WRONLY)
 
     argv = ["rdiff", "--", "patch", basis_name, "-", new_name]
-    try:
-        p = subprocess.Popen(argv,
-                             stdin=subprocess.PIPE, stdout=devnull,
-                             stderr=subprocess.PIPE)
-    except os.error, e:
-        raise UnknownCommand(argv, e.errno)
+
+    p = run_command(argv, stdin=subprocess.PIPE, stdout=devnull)
 
     ret = True
     for id in deltapart_ids:

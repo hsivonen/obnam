@@ -142,4 +142,4 @@ class RsyncTests(unittest.TestCase):
         self.failUnlessRaises(os.error,
                               obnam.rsync.apply_delta, 
                               None, None, None, None, 
-                              os_open=self.raise_os_error)
+                              open=self.raise_os_error)
