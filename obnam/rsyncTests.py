@@ -134,3 +134,12 @@ class RsyncTests(unittest.TestCase):
         self.failUnlessEqual(third_data, "pretty")
         
         shutil.rmtree(context.config.get("backup", "store"))
+
+    def raise_os_error(self, *args):
+        raise os.error("foo")
+
+    def testApplyDeltaWithoutDevNull(self):
+        self.failUnlessRaises(os.error,
+                              obnam.rsync.apply_delta, 
+                              None, None, None, None, 
+                              os_open=self.raise_os_error)

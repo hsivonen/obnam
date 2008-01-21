@@ -105,12 +105,11 @@ def compute_delta(context, signature, filename):
         raise CommandFailure(argv, exit, "")
 
 
-def apply_delta(context, basis_filename, deltapart_ids, new_filename):
+def apply_delta(context, basis_filename, deltapart_ids, new_filename,
+                os_open=os.open):
     """Apply an rsync delta for a file, to get a new version of it"""
     
-    devnull = os.open("/dev/null", os.O_WRONLY)
-    if devnull == -1:
-        return False
+    devnull = os_open("/dev/null", os.O_WRONLY)
 
     argv = ["rdiff", "--", "patch", basis_filename, "-", new_filename]
     try:
