@@ -18,6 +18,8 @@
 """Main program for Obnam."""
 
 
+import re
+
 import obnam
 
 
@@ -27,6 +29,12 @@ class Application:
 
     def __init__(self, context):
         self._roots = []
+        self._context = context
+        self._exclusion_strings = []
+        self._exclusion_regexps = []
+
+    def get_context(self):
+        return self._context
 
     def add_root(self, root):
         self._roots.append(root)
@@ -37,4 +45,10 @@ class Application:
 
     def get_exclusion_regexps(self):
         """Return list of regexp to exclude things from backup."""
-        return []
+        
+        config = self.get_context().config
+        strings = config.get("backup", "exclude")
+        if self._exclusion_strings != strings:
+            self._exclusion_regexps = [re.compile(_) for _ in strings]
+        
+        return self._exclusion_regexps

@@ -18,6 +18,7 @@
 """Unit tests for app.py."""
 
 
+import re
 import unittest
 
 import obnam
@@ -39,3 +40,18 @@ class ApplicationTests(unittest.TestCase):
 
     def testReturnsEmptyExclusionListInitially(self):
         self.failUnlessEqual(self.app.get_exclusion_regexps(), [])
+
+    def testReturnsRightNumberOfExclusionPatterns(self):
+        config = self.app.get_context().config
+        config.remove_option("backup", "exclude")
+        config.append("backup", "exclude", "pink")
+        config.append("backup", "exclude", "pretty")
+        self.failUnlessEqual(len(self.app.get_exclusion_regexps()), 2)
+
+    def testReturnsRegexpObjects(self):
+        config = self.app.get_context().config
+        config.remove_option("backup", "exclude")
+        config.append("backup", "exclude", "pink")
+        config.append("backup", "exclude", "pretty")
+        for item in self.app.get_exclusion_regexps():
+            self.failUnlessEqual(type(item), type(re.compile(".")))
