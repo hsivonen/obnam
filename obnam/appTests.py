@@ -71,3 +71,6 @@ class ApplicationTests(unittest.TestCase):
         filenames = ["filename1", "filename2"]
         self.app.prune(dirname, dirnames, filenames)
         self.failUnlessEqual(dirnames, ["subdir"])
+
+    def testMakesNewFileGroupsRightForEmptyListOfFiles(self):
+        self.failUnlessEqual(self.app.make_filegroups([]), [])

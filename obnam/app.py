@@ -87,3 +87,12 @@ class Application:
                     break
             else:
                 i += 1
+
+    def make_filegroups(self, filenames):
+        """Make list of new FILEGROUP objects.
+        
+        Return list of object identifiers to the FILEGROUP objects.
+        
+        """
+        
+        return []
