@@ -22,13 +22,14 @@ NAME = "obnam"
 VERSION = "0.9.0"
 
 
+from exception import ObnamException
+
 import backend
 import cache
 import cfgfile
 import cmp
 import config
 import context
-import exception
 import filelist
 import format
 import gpg

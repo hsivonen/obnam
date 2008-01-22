@@ -27,13 +27,13 @@ import tempfile
 import obnam
 
 
-class UnknownCommand(obnam.exception.ExceptionBase):
+class UnknownCommand(obnam.ObnamException):
 
     def __init__(self, argv, errno):
         self._msg = "Unknown command (error %d): %s" % (errno, " ".join(argv))
 
 
-class CommandFailure(obnam.exception.ExceptionBase):
+class CommandFailure(obnam.ObnamException):
 
     def __init__(self, argv, returncode, stderr):
         self._msg = "Command failed: %s\nError code: %d\n%s" % \

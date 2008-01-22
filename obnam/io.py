@@ -90,7 +90,7 @@ def get_block(context, block_id):
     return block
 
 
-class MissingBlock(obnam.exception.ExceptionBase):
+class MissingBlock(obnam.ObnamException):
 
     def __init__(self, block_id, object_id):
         self._msg = "Block %s for object %s is missing" % \
@@ -250,7 +250,7 @@ def create_file_contents_object(context, filename):
     return object_id
 
 
-class FileContentsObjectMissing(obnam.exception.ExceptionBase):
+class FileContentsObjectMissing(obnam.ObnamException):
 
     def __init__(self, id):
         self._msg = "Missing file contents object: %s" % id

@@ -21,7 +21,6 @@ import logging
 
 import uuid
 
-from obnam.exception import ExceptionBase
 import obnam.cmp
 import obnam.varint
 
@@ -217,7 +216,7 @@ class ObjectQueue:
                        [c.encode() for c in [blkid] + objects])
 
 
-class BlockWithoutCookie(obnam.exception.ExceptionBase):
+class BlockWithoutCookie(obnam.ObnamException):
 
     def __init__(self, block):
         self._msg = ("Block does not start with cookie: %s" %

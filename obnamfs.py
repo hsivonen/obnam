@@ -56,7 +56,7 @@ def deduce_fake_dirs(paths):
     return sorted(fakes)
 
 
-class NoHostBlock(obnam.exception.ExceptionBase):
+class NoHostBlock(obnam.ObnamException):
 
     def __init__(self):
         self._msg = \

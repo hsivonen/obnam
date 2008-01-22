@@ -30,7 +30,7 @@ import time
 import obnam
 
 
-class CommandLineUsageError(obnam.exception.ExceptionBase):
+class CommandLineUsageError(obnam.ObnamException):
 
     """Base class for command line usage error messages"""
     
@@ -378,7 +378,7 @@ def create_filesystem_object(context, hardlinks, full_pathname, inode):
         os.close(fd)
 
 
-class UnknownGeneration(obnam.exception.ExceptionBase):
+class UnknownGeneration(obnam.ObnamException):
 
     def __init__(self, gen_id):
         self._msg = "Can't find generation %s" % gen_id
@@ -570,7 +570,7 @@ def main():
         logging.error("%s" % str(e))
         logging.error("Use --help to get usage summary.")
         sys.exit(1)
-    except obnam.exception.ExceptionBase, e:
+    except obnam.ObnamException, e:
         logging.error("%s" % str(e))
         sys.exit(1)
 

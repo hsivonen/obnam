@@ -18,7 +18,7 @@
 """Obnam exception"""
 
 
-class ExceptionBase(Exception):
+class ObnamException(Exception):
 
     def __str__(self):
         return self._msg

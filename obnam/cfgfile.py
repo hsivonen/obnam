@@ -47,7 +47,7 @@ import re
 import obnam
 
 
-class Error(obnam.exception.ExceptionBase):
+class Error(obnam.ObnamException):
 
     pass
     
