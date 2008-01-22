@@ -384,8 +384,8 @@ def find_reachable_data_blocks(context, host_block):
 def find_map_blocks_in_use(context, host_block, data_block_ids):
     """Given data blocks in use, return map blocks they're mentioned in"""
     data_block_ids = set(data_block_ids)
-    (_, _, map_block_ids, contmap_block_ids) = \
-        obnam.obj.host_block_decode(host_block)
+    _, _, map_block_ids, contmap_block_ids = obnam.obj.host_block_decode(
+                                                host_block)
     used_map_block_ids = set()
     for map_block_id in map_block_ids + contmap_block_ids:
         block = get_block(context, map_block_id)
