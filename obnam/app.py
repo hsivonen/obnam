@@ -34,6 +34,7 @@ class Application:
         self._context = context
         self._exclusion_strings = []
         self._exclusion_regexps = []
+        self._filelist = None
 
     def get_context(self):
         """Get the context for the backup application."""
@@ -87,6 +88,40 @@ class Application:
                     break
             else:
                 i += 1
+
+    def set_prevgen_filelist(self, filelist):
+        """Set the Filelist object from the previous generation.
+        
+        This is used when looking up files in previous generations. We
+        only look at one generation's Filelist, since they're big. Note
+        that Filelist objects are the _old_ way of storing file meta
+        data, and we will no use better ways that let us look further
+        back in history.
+        
+        """
+        
+        self._filelist = filelist
+
+    def find_file_by_name(self, filename):
+        """Find a backed up file given its filename.
+        
+        Return tuple (STAT, CONTREF, SIGREF, DELTAREF), where the
+        references may be None, or None instead of the entire tuple
+        if no file with the given name could be found.
+        
+        """
+        
+        if self._filelist:
+            fc = self._filelist.find(filename)
+            if fc != None:
+                subs = fc.get_subcomponents()
+                stat = obnam.cmp.first_by_kind(subs, obnam.cmp.STAT)
+                cont = obnam.cmp.first_string_by_kind(subs, obnam.cmp.CONTREF)
+                sig = obnam.cmp.first_string_by_kind(subs, obnam.cmp.SIGREF)
+                d = obnam.cmp.first_string_by_kind(subs, obnam.cmp.DELTAREF)
+                return obnam.cmp.parse_stat_component(stat), cont, sig, d
+        
+        return None
 
     def make_filegroups(self, filenames):
         """Make list of new FILEGROUP objects.

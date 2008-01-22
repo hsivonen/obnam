@@ -74,3 +74,20 @@ class ApplicationTests(unittest.TestCase):
 
     def testMakesNewFileGroupsRightForEmptyListOfFiles(self):
         self.failUnlessEqual(self.app.make_filegroups([]), [])
+
+    def testFindsFileInfoInFilelistFromPreviousGeneration(self):
+        stat = obnam.utils.make_stat_result()
+        fc = obnam.filelist.create_file_component_from_stat("pink", stat,
+                                                            "contref",
+                                                            "sigref",
+                                                            "deltaref")
+        filelist = obnam.filelist.Filelist()
+        filelist.add_file_component("pink", fc)
+        self.app.set_prevgen_filelist(filelist)
+        self.failUnlessEqual(self.app.find_file_by_name("pink"),
+                             (stat, "contref", "sigref", "deltaref"))
+
+    def testFindsNoFileInfoInFilelistForNonexistingFile(self):
+        filelist = obnam.filelist.Filelist()
+        self.app.set_prevgen_filelist(filelist)
+        self.failUnlessEqual(self.app.find_file_by_name("pink"), None)
