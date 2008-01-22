@@ -48,7 +48,7 @@ odirect_pipe.1: odirect_pipe.docbook
 
 check: all
 	./test_odirect_read
-	python -m CoverageTestRunner
+	python -m CoverageTestRunner --ignore-coverage
 	rm -f .coverage
 	sh blackboxtests tests/*
 	./check-options
