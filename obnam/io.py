@@ -388,12 +388,7 @@ def find_map_blocks_in_use(context, host_block, data_block_ids):
         obnam.obj.host_block_decode(host_block)
     used_map_block_ids = set()
     for map_block_id in map_block_ids + contmap_block_ids:
-        try:
-            block = get_block(context, map_block_id)
-        except IOError, e:
-            logging.warning("Could not load map block %s: %d: %s" %
-                            (map_block_id, e.errno, e.strerror))
-            continue
+        block = get_block(context, map_block_id)
         list = obnam.obj.block_decode(block)
         assert type(list) == type([])
         list = obnam.cmp.find_by_kind(list, obnam.cmp.OBJMAP)
