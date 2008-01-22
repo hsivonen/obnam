@@ -395,9 +395,6 @@ def find_map_blocks_in_use(context, host_block, data_block_ids):
                             (map_block_id, e.errno, e.strerror))
             continue
         list = obnam.obj.block_decode(block)
-        if list is None:
-            logging.warning("Error decoding block %s" % map_block_id)
-            continue
         assert type(list) == type([])
         list = obnam.cmp.find_by_kind(list, obnam.cmp.OBJMAP)
         for c in list:
