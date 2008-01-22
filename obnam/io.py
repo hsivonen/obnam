@@ -398,9 +398,7 @@ def find_map_blocks_in_use(context, host_block, data_block_ids):
         if list is None:
             logging.warning("Error decoding block %s" % map_block_id)
             continue
-        if type(list) != type([]):
-            print "list:", repr(list)
-            assert False
+        assert type(list) == type([])
         list = obnam.cmp.find_by_kind(list, obnam.cmp.OBJMAP)
         for c in list:
             subs = c.get_subcomponents()
