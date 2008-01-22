@@ -440,10 +440,5 @@ def load_maps(context, map, block_ids):
     for i in range(num_blocks):
         id = block_ids[i]
         logging.debug("Loading map block %d/%d: %s" % (i+1, num_blocks, id))
-        try:
-            block = obnam.io.get_block(context, id)
-        except IOError, e:
-            logging.warning("Could not load map block %s: %d: %s" %
-                            (id, e.errno, e.strerror))
-        else:
-            obnam.map.decode_block(map, block)
+        block = obnam.io.get_block(context, id)
+        obnam.map.decode_block(map, block)
