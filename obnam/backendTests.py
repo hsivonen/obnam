@@ -78,6 +78,27 @@ class ParseStoreUrlTests(unittest.TestCase):
             self.failUnlessEqual(path, case[4])
 
 
+class UseGpgTests(unittest.TestCase):
+
+    def setUp(self):
+        self.config = obnam.config.default_config()
+        self.config.set("backup", "gpg-encrypt-to", "")
+        self.cache = obnam.cache.Cache(self.config)
+        self.be = obnam.backend.Backend(self.config, self.cache)
+
+    def testDoNotUseByDefault(self):
+        self.failIf(self.be.use_gpg())
+
+    def testUseIfRequested(self):
+        self.config.set("backup", "gpg-encrypt-to", "pink")
+        self.failUnless(self.be.use_gpg())
+
+    def testDoNotUseEvenIfRequestedIfNoGpgIsSet(self):
+        self.config.set("backup", "gpg-encrypt-to", "pink")
+        self.config.set("backup", "no-gpg", "true")
+        self.failIf(self.be.use_gpg())
+
+
 class DircountTests(unittest.TestCase):
 
     def setUp(self):
