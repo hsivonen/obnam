@@ -32,7 +32,7 @@ binary-arch: build
 	install -d debian/tmp/usr/share/$P
 	install -m 0644 debian/default.conf debian/tmp/usr/share/$P/obnam.conf
 	gzip -9 debian/tmp/usr/share/man/man1/*
-	sed -i 's,^#!/usr/sbin/python$$,&2.4,' debian/tmp/usr/bin/obnam
+	sed -i 's,^#!/usr/sbin/python$$,&2.5,' debian/tmp/usr/bin/obnam
 	install -m 0644 debian/changelog \
 	    debian/tmp/usr/share/doc/$P/changelog.Debian
 	install -m 0644 NEWS debian/tmp/usr/share/doc/$P/changelog

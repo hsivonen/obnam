@@ -71,11 +71,6 @@ def parse_store_url(url):
     
     """
     
-    # urlparse in Python 2.4 doesn't know, by default, that sftp uses
-    # a netloc
-    if "sftp" not in urlparse.uses_netloc:
-        urlparse.uses_netloc.append("sftp")
-    
     user = host = port = path = None
     (scheme, netloc, path, query, fragment) = urlparse.urlsplit(url)
     

@@ -24,7 +24,7 @@ libdir = $(prefix)/lib
 sharedir = $(prefix)/share
 mandir = $(sharedir)/man
 man1dir = $(mandir)/man1
-pydir = $(libdir)/python2.4
+pydir = $(libdir)/python2.5
 sitedir = $(pydir)/site-packages
 
 all: odirect_read obnam.1 odirect_read.1 odirect_pipe.1 obnamfs.1
@@ -71,7 +71,7 @@ install: all
 	install -m 0644 *.1 $(man1dir)
 	install -d $(sitedir)/obnam
 	install -m 0644 obnam/*.py $(sitedir)/obnam
-	python2.4 fixup-defaults.py \
+	python2.5 fixup-defaults.py \
 	    --gpg-encrypt-to= \
 	    --gpg-home= \
 	    --gpg-sign-with= \
