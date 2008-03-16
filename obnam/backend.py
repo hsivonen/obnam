@@ -90,6 +90,16 @@ def parse_store_url(url):
     return user, host, port, path
 
 
+class DummyProgressReporter:
+
+    def nop(self, *args):
+        pass
+        
+    update_current_action = nop
+    update_uploaded = nop
+    update_downloaded = nop
+
+
 class Backend:
 
     def __init__(self, config, cache):
@@ -108,7 +118,7 @@ class Backend:
         self.sftp_client = None
         self.bytes_read = 0
         self.bytes_written = 0
-        self.set_progress_reporter(None)
+        self.set_progress_reporter(DummyProgressReporter())
         self.cache = cache
         self.blockdir = str(uuid.uuid4())
     
@@ -161,8 +171,7 @@ class Backend:
             logging.debug("Encrypting block %s before upload" % block_id)
             block = obnam.gpg.encrypt(self.config, block)
         logging.debug("Uploading block %s (%d bytes)" % (block_id, len(block)))
-        if self.progress:
-            self.progress.update_current_action("Uploading block")
+        self.progress.update_current_action("Uploading block")
         self.really_upload_block(block_id, block)
         if to_cache and self.config.get("backup", "cache"):
             logging.debug("Putting uploaded block to cache, as well")
@@ -176,8 +185,7 @@ class Backend:
         """
         
         logging.debug("Downloading block %s" % block_id)
-        if self.progress:
-            self.progress.update_current_action("Downloading block")
+        self.progress.update_current_action("Downloading block")
         block = self.really_download_block(block_id)
 
         if self.use_gpg():
@@ -251,8 +259,7 @@ class SftpBackend(Backend):
             block_part = block[offset:offset+self.io_size]
             f.write(block_part)
             self.bytes_written += len(block_part)
-            if self.progress:
-                self.progress.update_uploaded(self.bytes_written)
+            self.progress.update_uploaded(self.bytes_written)
         f.close()
     
     def really_download_block(self, block_id):
@@ -267,8 +274,7 @@ class SftpBackend(Backend):
                     break
                 block_parts.append(block_part)
                 self.bytes_read += len(block_part)
-                if self.progress:
-                    self.progress.update_downloaded(self.bytes_read)
+                self.progress.update_downloaded(self.bytes_read)
             block = "".join(block_parts)
             f.close()
             if self.config.get("backup", "cache"):
