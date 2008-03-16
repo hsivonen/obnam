@@ -77,11 +77,7 @@ def get_block(context, block_id):
     # FIXME: the following is ugly
     elif context.be.use_gpg():
         logging.debug("Decrypting cached block %s before using it", block_id)
-        decrypted = obnam.gpg.decrypt(context.config, block)
-        if decrypted is None:
-            logging.error("Can't decrypt downloaded block, not using it")
-            return None
-        block = decrypted
+        block = obnam.gpg.decrypt(context.config, block)
     return block
 
 
