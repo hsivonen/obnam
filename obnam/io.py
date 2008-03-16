@@ -133,18 +133,15 @@ class ObjectCache:
     def size(self):
         return len(self.mru)
 
-_object_cache = None
-
 
 def get_object(context, object_id):
     """Fetch an object"""
     
     logging.debug("Fetching object %s" % object_id)
     
-    global _object_cache
-    if _object_cache is None:
-        _object_cache = ObjectCache(context)
-    o = _object_cache.get(object_id)
+    if context.object_cache is None:
+        context.object_cache = ObjectCache(context)
+    o = context.object_cache.get(object_id)
     if o:
         logging.debug("Object is in cache, good")
         return o
@@ -178,7 +175,7 @@ def get_object(context, object_id):
         subs = component.get_subcomponents()
         o = create_object_from_component_list(subs)
         if o.get_kind() != obnam.obj.FILEPART:
-            _object_cache.put(o)
+            context.object_cache.put(o)
         if o.get_id() == object_id:
             the_one = o
 
