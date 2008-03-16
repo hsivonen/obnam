@@ -152,9 +152,6 @@ def get_object(context, object_id):
 
     logging.debug("Fetching block")
     block = get_block(context, block_id)
-    if not block:
-        logging.error("Block %s not found in store" % block_id)
-        raise MissingBlock(block_id, object_id)
 
     logging.debug("Decoding block")
     list = obnam.obj.block_decode(block)
