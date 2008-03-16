@@ -155,6 +155,17 @@ class GetObjectTests(IoBase):
         self.failUnlessEqual(list[0].get_kind(), 42)
         self.failUnlessEqual(list[0].get_string_value(), "pretty")
 
+    def testGetObjectTwice(self):
+        id = "pink"
+        component = obnam.cmp.Component(42, "pretty")
+        object = obnam.obj.FileContentsObject(id=id)
+        object.add(component)
+        object = object.encode()
+        self.upload_object(id, object)
+        o = obnam.io.get_object(self.context, id)
+        o2 = obnam.io.get_object(self.context, id)
+        self.failUnlessEqual(o, o2)
+
 
 class HostBlock(IoBase):
 
