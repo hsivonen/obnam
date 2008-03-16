@@ -186,6 +186,9 @@ class HostBlock(IoBase):
         host2 = obnam.io.get_host_block(self.context)
         self.failUnlessEqual(host, host2)
 
+    def testFetchNonexistingHostBlockReturnsNone(self):
+        self.failUnlessEqual(obnam.io.get_host_block(self.context), None)
+
 
 class ObjectQueuingTests(unittest.TestCase):
 
