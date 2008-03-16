@@ -218,9 +218,6 @@ class UploadTests(LocalBackendBase):
         id = be.generate_block_id()
         block = "pink is pretty"
         ret = be.upload_block(id, block, True)
-        print
-        print repr(os.listdir(cachedir))
-        print
         self.failIfEqual(os.listdir(cachedir), [])
 
 
