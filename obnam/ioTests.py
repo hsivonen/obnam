@@ -130,6 +130,24 @@ class ObjectQueueFlushing(IoBase):
         self.failUnless(self.context.content_oq.is_empty())
 
 
+class GetBlockTests(IoBase):
+        
+    def setup_pink_block(self, to_cache):
+        self.context.be.upload_block("pink", "pretty", to_cache)
+
+    def testRaisesIoErrorForNonExistentBlock(self):
+        self.failUnlessRaises(IOError, obnam.io.get_block, self.context, "pink")
+        
+    def testFindsBlockWhenNotInCache(self):
+        self.setup_pink_block(to_cache=False)
+        self.failUnless(obnam.io.get_block(self.context, "pink"))
+        
+    def testFindsBlockWhenInCache(self):
+        self.setup_pink_block(to_cache=True)
+        obnam.io.get_block(self.context, "pink")
+        self.failUnless(obnam.io.get_block(self.context, "pink"))
+
+
 class GetObjectTests(IoBase):
 
     def upload_object(self, object_id, object):
