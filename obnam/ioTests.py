@@ -166,6 +166,9 @@ class GetObjectTests(IoBase):
         o2 = obnam.io.get_object(self.context, id)
         self.failUnlessEqual(o, o2)
 
+    def testReturnsNoneForNonexistentObject(self):
+        self.failUnlessEqual(obnam.io.get_object(self.context, "pink"), None)
+
 
 class HostBlock(IoBase):
 
