@@ -24,7 +24,7 @@ import pwd
 import stat
 import urlparse
 
-# Python define os.O_BINARY only on Windows, but since we want to be portable,
+# Python defines os.O_BINARY only on Windows, but since we want to be portable,
 # we want to use it every time. Thus, if it doesn't exist, we define it as
 # zero, which should not disturb anyone.
 if "O_BINARY" not in dir(os):
