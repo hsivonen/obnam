@@ -147,7 +147,6 @@ def get_object(context, object_id):
     if not block_id:
         block_id = obnam.map.get(context.contmap, object_id)
     if not block_id:
-        logging.warning("No block found that contains object %s" % object_id)
         return None
 
     logging.debug("Fetching block")
