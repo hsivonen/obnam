@@ -292,6 +292,10 @@ class FileContentsTests(unittest.TestCase):
         
         self.failUnlessEqual(data1, data2)
 
+    def testRestoreNonexistingFile(self):
+        self.failUnlessRaises(obnam.io.FileContentsObjectMissing,
+                              obnam.io.copy_file_contents, self.context, None, "pink")
+
 
 class MetaDataTests(unittest.TestCase):
 
