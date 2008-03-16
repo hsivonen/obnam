@@ -159,12 +159,7 @@ class Backend:
         logging.debug("Uploading block %s" % block_id)
         if self.use_gpg():
             logging.debug("Encrypting block %s before upload" % block_id)
-            encrypted = obnam.gpg.encrypt(self.config, block)
-            if encrypted is None:
-                logging.error("Can't encrypt block for upload, " +
-                              "not uploading it")
-                return
-            block = encrypted
+            block = obnam.gpg.encrypt(self.config, block)
         logging.debug("Uploading block %s (%d bytes)" % (block_id, len(block)))
         if self.progress:
             self.progress.update_current_action("Uploading block")
