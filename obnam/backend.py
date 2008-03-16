@@ -108,7 +108,7 @@ class Backend:
         self.sftp_client = None
         self.bytes_read = 0
         self.bytes_written = 0
-        self.progress = None
+        self.set_progress_reporter(None)
         self.cache = cache
         self.blockdir = str(uuid.uuid4())
     
