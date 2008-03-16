@@ -205,6 +205,24 @@ class UploadTests(LocalBackendBase):
         f.close()
         self.failUnlessEqual(block, data)
 
+    def testUploadToCache(self):
+        cachedir = self.config.get("backup", "cache")
+        self.failUnlessEqual(os.listdir(cachedir), [])
+
+        self.config.set("backup", "gpg-home", "")
+        self.config.set("backup", "gpg-encrypt-to", "")
+        self.config.set("backup", "gpg-sign-with", "")
+        self.config.set("backup", "cache", cachedir)
+
+        be = obnam.backend.init(self.config, self.cache)
+        id = be.generate_block_id()
+        block = "pink is pretty"
+        ret = be.upload_block(id, block, True)
+        print
+        print repr(os.listdir(cachedir))
+        print
+        self.failIfEqual(os.listdir(cachedir), [])
+
 
 class DownloadTests(LocalBackendBase):
 
