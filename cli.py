@@ -229,7 +229,7 @@ def backup(context, args):
         map_block_id = context.be.generate_block_id()
         logging.debug("Creating normal mapping block %s" % map_block_id)
         map_block = obnam.map.encode_new_to_block(context.map, map_block_id)
-        context.be.upload(map_block_id, map_block, True)
+        context.be.upload_block(map_block_id, map_block, True)
         map_block_ids.append(map_block_id)
 
     if obnam.map.get_new(context.contmap):
@@ -237,7 +237,7 @@ def backup(context, args):
         logging.debug("Creating content mapping block %s" % contmap_block_id)
         contmap_block = obnam.map.encode_new_to_block(context.contmap, 
                                                              contmap_block_id)
-        context.be.upload(contmap_block_id, contmap_block, False)
+        context.be.upload_block(contmap_block_id, contmap_block, False)
         contmap_block_ids.append(contmap_block_id)
 
     logging.info("Creating new host block")

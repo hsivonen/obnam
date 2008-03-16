@@ -367,13 +367,13 @@ class ReachabilityTests(IoBase):
         map_block_id = "box"
         map_block = obnam.map.encode_new_to_block(self.context.map,
                                                          map_block_id)
-        self.context.be.upload(map_block_id, map_block, False)
+        self.context.be.upload_block(map_block_id, map_block, False)
 
         obnam.map.add(self.context.contmap, "black", "beautiful")
         contmap_block_id = "fiddly"
         contmap_block = obnam.map.encode_new_to_block(
                             self.context.contmap, contmap_block_id)
-        self.context.be.upload(contmap_block_id, contmap_block, False)
+        self.context.be.upload_block(contmap_block_id, contmap_block, False)
 
         host_id = self.context.config.get("backup", "host-id")
         host = obnam.obj.HostBlockObject(host_id=host_id, 
@@ -395,13 +395,13 @@ class ReachabilityTests(IoBase):
         oq = obnam.obj.ObjectQueue()
         oq.add("rouge", encoded_o)
         block = oq.as_block(block_id)
-        self.context.be.upload(block_id, block, False)
+        self.context.be.upload_block(block_id, block, False)
 
         obnam.map.add(self.context.contmap, "rouge", block_id)
         map_block_id = "pretty"
         map_block = obnam.map.encode_new_to_block(self.context.contmap,
                                                          map_block_id)
-        self.context.be.upload(map_block_id, map_block, False)
+        self.context.be.upload_block(map_block_id, map_block, False)
 
         host_id = self.context.config.get("backup", "host-id")
         host = obnam.obj.HostBlockObject(host_id=host_id,
@@ -422,7 +422,7 @@ class GarbageCollectionTests(IoBase):
         obnam.io.upload_host_block(self.context, host)
 
         block_id = self.context.be.generate_block_id()
-        self.context.be.upload(block_id, "pink", False)
+        self.context.be.upload_block(block_id, "pink", False)
 
         files = self.context.be.list()
         self.failUnlessEqual(files, [host_id, block_id])
@@ -486,7 +486,7 @@ class LoadMapTests(IoBase):
         obnam.map.add(map, "pink", "pretty")
         block_id = self.context.be.generate_block_id()
         block = obnam.map.encode_new_to_block(map, block_id)
-        self.context.be.upload(block_id, block, False)
+        self.context.be.upload_block(block_id, block, False)
         
         obnam.io.load_maps(self.context, self.context.map, [block_id])
         self.failUnlessEqual(obnam.map.get(self.context.map, "pink"),

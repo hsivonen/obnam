@@ -168,7 +168,7 @@ class UploadTests(LocalBackendBase):
         be = obnam.backend.init(self.config, self.cache)
         id = be.generate_block_id()
         block = "pink is pretty"
-        ret = be.upload(id, block, False)
+        ret = be.upload_block(id, block, False)
         self.failUnlessEqual(ret, None)
         self.failUnlessEqual(be.get_bytes_read(), 0)
         self.failUnlessEqual(be.get_bytes_written(), len(block))
@@ -195,9 +195,9 @@ class DownloadTests(LocalBackendBase):
         be = obnam.backend.init(self.config, self.cache)
         id = be.generate_block_id()
         block = "pink is still pretty"
-        be.upload(id, block, False)
+        be.upload_block(id, block, False)
         
-        success = be.download(id)
+        success = be.download_block(id)
         self.failUnlessEqual(type(success), type(""))
         self.failUnlessEqual(be.get_bytes_read(), len(block))
         self.failUnlessEqual(be.get_bytes_written(), len(block))
@@ -205,8 +205,7 @@ class DownloadTests(LocalBackendBase):
     def testError(self):
         be = obnam.backend.init(self.config, self.cache)
         id = be.generate_block_id()
-        success = be.download(id)
-        self.failIfEqual(success, True)
+        self.failUnlessRaises(IOError, be.download_block, id)
 
 
 class FileListTests(LocalBackendBase):
@@ -221,7 +220,7 @@ class FileListTests(LocalBackendBase):
         
         id = "pink"
         block = "pretty"
-        be.upload(id, block, False)
+        be.upload_block(id, block, False)
         list = be.list()
         self.failUnlessEqual(list, [id])
 
@@ -238,7 +237,7 @@ class RemoveTests(LocalBackendBase):
         be = obnam.backend.init(self.config, self.cache)
         id = be.generate_block_id()
         block = "pink is still pretty"
-        be.upload(id, block, False)
+        be.upload_block(id, block, False)
 
         self.failUnlessEqual(be.list(), [id])
         
