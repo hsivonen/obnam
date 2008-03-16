@@ -78,6 +78,27 @@ class ParseStoreUrlTests(unittest.TestCase):
             self.failUnlessEqual(path, case[4])
 
 
+class UseGpgTests(unittest.TestCase):
+
+    def setUp(self):
+        self.config = obnam.config.default_config()
+        self.config.set("backup", "gpg-encrypt-to", "")
+        self.cache = obnam.cache.Cache(self.config)
+        self.be = obnam.backend.Backend(self.config, self.cache)
+
+    def testDoNotUseByDefault(self):
+        self.failIf(self.be.use_gpg())
+
+    def testUseIfRequested(self):
+        self.config.set("backup", "gpg-encrypt-to", "pink")
+        self.failUnless(self.be.use_gpg())
+
+    def testDoNotUseEvenIfRequestedIfNoGpgIsSet(self):
+        self.config.set("backup", "gpg-encrypt-to", "pink")
+        self.config.set("backup", "no-gpg", "true")
+        self.failIf(self.be.use_gpg())
+
+
 class DircountTests(unittest.TestCase):
 
     def setUp(self):
@@ -168,7 +189,7 @@ class UploadTests(LocalBackendBase):
         be = obnam.backend.init(self.config, self.cache)
         id = be.generate_block_id()
         block = "pink is pretty"
-        ret = be.upload(id, block, False)
+        ret = be.upload_block(id, block, False)
         self.failUnlessEqual(ret, None)
         self.failUnlessEqual(be.get_bytes_read(), 0)
         self.failUnlessEqual(be.get_bytes_written(), len(block))
@@ -184,6 +205,21 @@ class UploadTests(LocalBackendBase):
         f.close()
         self.failUnlessEqual(block, data)
 
+    def testUploadToCache(self):
+        cachedir = self.config.get("backup", "cache")
+        self.failUnlessEqual(os.listdir(cachedir), [])
+
+        self.config.set("backup", "gpg-home", "")
+        self.config.set("backup", "gpg-encrypt-to", "")
+        self.config.set("backup", "gpg-sign-with", "")
+        self.config.set("backup", "cache", cachedir)
+
+        be = obnam.backend.init(self.config, self.cache)
+        id = be.generate_block_id()
+        block = "pink is pretty"
+        ret = be.upload_block(id, block, True)
+        self.failIfEqual(os.listdir(cachedir), [])
+
 
 class DownloadTests(LocalBackendBase):
 
@@ -195,9 +231,9 @@ class DownloadTests(LocalBackendBase):
         be = obnam.backend.init(self.config, self.cache)
         id = be.generate_block_id()
         block = "pink is still pretty"
-        be.upload(id, block, False)
+        be.upload_block(id, block, False)
         
-        success = be.download(id)
+        success = be.download_block(id)
         self.failUnlessEqual(type(success), type(""))
         self.failUnlessEqual(be.get_bytes_read(), len(block))
         self.failUnlessEqual(be.get_bytes_written(), len(block))
@@ -205,8 +241,7 @@ class DownloadTests(LocalBackendBase):
     def testError(self):
         be = obnam.backend.init(self.config, self.cache)
         id = be.generate_block_id()
-        success = be.download(id)
-        self.failIfEqual(success, True)
+        self.failUnlessRaises(IOError, be.download_block, id)
 
 
 class FileListTests(LocalBackendBase):
@@ -221,7 +256,7 @@ class FileListTests(LocalBackendBase):
         
         id = "pink"
         block = "pretty"
-        be.upload(id, block, False)
+        be.upload_block(id, block, False)
         list = be.list()
         self.failUnlessEqual(list, [id])
 
@@ -238,7 +273,7 @@ class RemoveTests(LocalBackendBase):
         be = obnam.backend.init(self.config, self.cache)
         id = be.generate_block_id()
         block = "pink is still pretty"
-        be.upload(id, block, False)
+        be.upload_block(id, block, False)
 
         self.failUnlessEqual(be.list(), [id])
         

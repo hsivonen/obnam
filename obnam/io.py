@@ -57,7 +57,7 @@ def flush_object_queue(context, oq, map, to_cache):
         block_id = context.be.generate_block_id()
         logging.debug("Creating new object block %s" % block_id)
         block = oq.as_block(block_id)
-        context.be.upload(block_id, block, to_cache)
+        context.be.upload_block(block_id, block, to_cache)
         for id in oq.ids():
             obnam.map.add(map, id, block_id)
         oq.clear()
@@ -73,20 +73,10 @@ def get_block(context, block_id):
     """Get a block from cache or by downloading it"""
     block = context.cache.get_block(block_id)
     if not block:
-        result = context.be.download(block_id)
-        if type(result) == type(""):
-            block = result
-        else:
-            # it's an exception
-            raise result
-    # FIXME: the following is ugly
+        block = context.be.download_block(block_id)
     elif context.be.use_gpg():
         logging.debug("Decrypting cached block %s before using it", block_id)
-        decrypted = obnam.gpg.decrypt(context.config, block)
-        if decrypted is None:
-            logging.error("Can't decrypt downloaded block, not using it")
-            return None
-        block = decrypted
+        block = obnam.gpg.decrypt(context.config, block)
     return block
 
 
@@ -138,18 +128,15 @@ class ObjectCache:
     def size(self):
         return len(self.mru)
 
-_object_cache = None
-
 
 def get_object(context, object_id):
     """Fetch an object"""
     
     logging.debug("Fetching object %s" % object_id)
     
-    global _object_cache
-    if _object_cache is None:
-        _object_cache = ObjectCache(context)
-    o = _object_cache.get(object_id)
+    if context.object_cache is None:
+        context.object_cache = ObjectCache(context)
+    o = context.object_cache.get(object_id)
     if o:
         logging.debug("Object is in cache, good")
         return o
@@ -159,20 +146,13 @@ def get_object(context, object_id):
     if not block_id:
         block_id = obnam.map.get(context.contmap, object_id)
     if not block_id:
-        logging.warning("No block found that contains object %s" % object_id)
         return None
 
     logging.debug("Fetching block")
     block = get_block(context, block_id)
-    if not block:
-        logging.error("Block %s not found in store" % block_id)
-        raise MissingBlock(block_id, object_id)
 
     logging.debug("Decoding block")
     list = obnam.obj.block_decode(block)
-    if not list:
-        logging.warning("Block %s decodes into nothing" % block_id)
-        return None
     
     logging.debug("Finding objects in block")
     list = obnam.cmp.find_by_kind(list, obnam.cmp.OBJECT)
@@ -183,7 +163,7 @@ def get_object(context, object_id):
         subs = component.get_subcomponents()
         o = create_object_from_component_list(subs)
         if o.get_kind() != obnam.obj.FILEPART:
-            _object_cache.put(o)
+            context.object_cache.put(o)
         if o.get_id() == object_id:
             the_one = o
 
@@ -193,19 +173,17 @@ def get_object(context, object_id):
 
 def upload_host_block(context, host_block):
     """Upload a host block"""
-    return context.be.upload(context.config.get("backup", "host-id"), 
-                             host_block, False)
+    context.be.upload_block(context.config.get("backup", "host-id"), host_block, False)
 
 
 def get_host_block(context):
     """Return (and fetch, if needed) the host block, or None if not found"""
     host_id = context.config.get("backup", "host-id")
     logging.debug("Getting host block %s" % host_id)
-    result = context.be.download(host_id)
-    if type(result) == type(""):
-        return result
-    else:
-        return context.cache.get_block(host_id)
+    try:
+        return context.be.download_block(host_id)
+    except IOError:
+        return None
 
 
 def enqueue_object(context, oq, map, object_id, object, to_cache):

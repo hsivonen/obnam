@@ -34,3 +34,4 @@ class Context:
         self.oq = obnam.obj.ObjectQueue()
         self.content_oq = obnam.obj.ObjectQueue()
         self.progress = obnam.progress.ProgressReporter(self.config)
+        self.object_cache = None

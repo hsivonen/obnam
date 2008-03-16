@@ -22,17 +22,6 @@ Legal stuff:
 
 A copy of the GPL version 2 is included in the file COPYING.
 
-The file uuid.py is a separate work, included here for convenience.
-A future version will be included in Python 2.5. It is licensed under
-the Python Software Foundation License used by Python itself. From
-the author:
-
-    uuid.py is now released in the Python Package Index (see python.org)
-    and will be included in Python 2.5, so it is under the Python
-    license like the rest of Python.
-
-Since Obnam supports Python 2.4, uuid.py is included here.
-
 
 ObnamFS: Backups as a read-only FUSE filesystem
 -----------------------------------------------

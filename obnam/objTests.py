@@ -136,6 +136,10 @@ class BlockCreateTests(unittest.TestCase):
         self.failUnlessRaises(obnam.obj.BlockWithoutCookie,
                               obnam.obj.block_decode, "pink")
 
+    def testDecodeEmptyBlock(self):
+        self.failUnlessRaises(obnam.obj.EmptyBlock,
+                              obnam.obj.block_decode, obnam.obj.BLOCK_COOKIE)
+
     def testEmptyObjectQueue(self):
         oq = obnam.obj.ObjectQueue()
         block = oq.as_block("blkid")

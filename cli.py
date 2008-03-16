@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 #
 # Copyright (C) 2006, 2007  Lars Wirzenius <liw@iki.fi>
 #
@@ -90,6 +90,8 @@ def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
                                                 context.map, delta_id, delta,
                                                 True)
                         context.progress.update_current_action(pathname)
+                else:
+                    logging.warning("Could not find object %s" % prev_sig_id)
 
         if not delta_id:
             cont_id = obnam.io.create_file_contents_object(context, pathname)
@@ -229,7 +231,7 @@ def backup(context, args):
         map_block_id = context.be.generate_block_id()
         logging.debug("Creating normal mapping block %s" % map_block_id)
         map_block = obnam.map.encode_new_to_block(context.map, map_block_id)
-        context.be.upload(map_block_id, map_block, True)
+        context.be.upload_block(map_block_id, map_block, True)
         map_block_ids.append(map_block_id)
 
     if obnam.map.get_new(context.contmap):
@@ -237,7 +239,7 @@ def backup(context, args):
         logging.debug("Creating content mapping block %s" % contmap_block_id)
         contmap_block = obnam.map.encode_new_to_block(context.contmap, 
                                                              contmap_block_id)
-        context.be.upload(contmap_block_id, contmap_block, False)
+        context.be.upload_block(contmap_block_id, contmap_block, False)
         contmap_block_ids.append(contmap_block_id)
 
     logging.info("Creating new host block")
@@ -304,12 +306,18 @@ def show_generations(context, gen_ids):
     pretty = True
     for gen_id in gen_ids:
         gen = obnam.io.get_object(context, gen_id)
+        if not gen:
+            logging.warning("Can't find generation %s" % gen_id)
+            continue
         start_time = gen.first_varint_by_kind(obnam.cmp.GENSTART)
         end_time = gen.first_varint_by_kind(obnam.cmp.GENEND)
         print "Generation: %s %s" % (gen_id, format_generation_period(gen))
 
         fl_id = gen.first_string_by_kind(obnam.cmp.FILELISTREF)
         fl = obnam.io.get_object(context, fl_id)
+        if not fl:
+            logging.warning("Can't find file list object %s" % fl_id)
+            continue
         list = []
         for c in fl.find_by_kind(obnam.cmp.FILE):
             subs = c.get_subcomponents()
@@ -433,6 +441,9 @@ def restore(context, gen_id, files):
     logging.debug("Getting list of files in generation")
     fl_id = gen.first_string_by_kind(obnam.cmp.FILELISTREF)
     fl = obnam.io.get_object(context, fl_id)
+    if not fl:
+        logging.warning("Cannot find file list object %s" % fl_id)
+        return
 
     logging.debug("Restoring files")
     list = []

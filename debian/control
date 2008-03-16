@@ -3,11 +3,11 @@ Maintainer: Lars Wirzenius <liw@iki.fi>
 Section: admin
 Priority: optional
 Standards-Version: 3.7.2
-Build-Depends: docbook2x, docbook-xml, python2.4, python-paramiko
+Build-Depends: docbook2x, docbook-xml, python2.5, python-paramiko
 
 Package: obnam
 Architecture: any
-Depends: python2.4, python-paramiko, rdiff, gnupg
+Depends: python (>= 2.5), python-paramiko, rdiff, gnupg
 Recommends: fuse-utils
 Description: online backup tool
  Obnam is a tool for making backups over a network to a remote computer.

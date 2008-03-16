@@ -24,12 +24,6 @@ import pwd
 import stat
 import urlparse
 
-# Python define os.O_BINARY only on Windows, but since we want to be portable,
-# we want to use it every time. Thus, if it doesn't exist, we define it as
-# zero, which should not disturb anyone.
-if "O_BINARY" not in dir(os):
-    os.O_BINARY = 0
-
 import paramiko
 
 import uuid
@@ -77,11 +71,6 @@ def parse_store_url(url):
     
     """
     
-    # urlparse in Python 2.4 doesn't know, by default, that sftp uses
-    # a netloc
-    if "sftp" not in urlparse.uses_netloc:
-        urlparse.uses_netloc.append("sftp")
-    
     user = host = port = path = None
     (scheme, netloc, path, query, fragment) = urlparse.urlsplit(url)
     
@@ -99,6 +88,16 @@ def parse_store_url(url):
         path = url
     
     return user, host, port, path
+
+
+class DummyProgressReporter:
+
+    def nop(self, *args):
+        pass
+        
+    update_current_action = nop
+    update_uploaded = nop
+    update_downloaded = nop
 
 
 class Backend:
@@ -119,7 +118,7 @@ class Backend:
         self.sftp_client = None
         self.bytes_read = 0
         self.bytes_written = 0
-        self.progress = None
+        self.set_progress_reporter(DummyProgressReporter())
         self.cache = cache
         self.blockdir = str(uuid.uuid4())
     
@@ -165,48 +164,34 @@ class Backend:
         encrypt_to = self.config.get("backup", "gpg-encrypt-to").strip()
         return encrypt_to
     
-    def upload(self, block_id, block, to_cache):
+    def upload_block(self, block_id, block, to_cache):
         """Upload block to server, and possibly to cache as well."""
         logging.debug("Uploading block %s" % block_id)
         if self.use_gpg():
             logging.debug("Encrypting block %s before upload" % block_id)
-            encrypted = obnam.gpg.encrypt(self.config, block)
-            if encrypted is None:
-                logging.error("Can't encrypt block for upload, " +
-                              "not uploading it")
-                return None
-            block = encrypted
+            block = obnam.gpg.encrypt(self.config, block)
         logging.debug("Uploading block %s (%d bytes)" % (block_id, len(block)))
-        if self.progress:
-            self.progress.update_current_action("Uploading block")
-        self.really_upload(block_id, block)
+        self.progress.update_current_action("Uploading block")
+        self.really_upload_block(block_id, block)
         if to_cache and self.config.get("backup", "cache"):
             logging.debug("Putting uploaded block to cache, as well")
             self.cache.put_block(block_id, block)
-        return None
 
-    def download(self, block_id):
+    def download_block(self, block_id):
         """Download a block from the remote server
         
-        Return the unparsed block (a string), or an exception for errors.
+        Return the unparsed block (a string), or raise an exception for errors.
         
         """
         
         logging.debug("Downloading block %s" % block_id)
-        if self.progress:
-            self.progress.update_current_action("Downloading block")
-        block = self.really_download(block_id)
-        if type(block) != type(""):
-            return block # it's an exception
+        self.progress.update_current_action("Downloading block")
+        block = self.really_download_block(block_id)
 
         if self.use_gpg():
             logging.debug("Decrypting downloaded block %s before using it" %
                           block_id)
-            decrypted = obnam.gpg.decrypt(self.config, block)
-            if decrypted is None:
-                logging.error("Can't decrypt downloaded block, not using it")
-                return None
-            block = decrypted
+            block = obnam.gpg.decrypt(self.config, block)
         
         return block
     
@@ -264,7 +249,7 @@ class SftpBackend(Backend):
                 logging.debug("Creating remote directory %s" % dirname)
                 self.sftp_client.mkdir(dirname, mode=mode)
     
-    def really_upload(self, block_id, block):
+    def really_upload_block(self, block_id, block):
         self.connect_sftp()
         pathname = self.block_remote_pathname(block_id)
         self.sftp_makedirs(os.path.dirname(pathname))
@@ -274,11 +259,10 @@ class SftpBackend(Backend):
             block_part = block[offset:offset+self.io_size]
             f.write(block_part)
             self.bytes_written += len(block_part)
-            if self.progress:
-                self.progress.update_uploaded(self.bytes_written)
+            self.progress.update_uploaded(self.bytes_written)
         f.close()
     
-    def really_download(self, block_id):
+    def really_download_block(self, block_id):
         try:
             self.connect_sftp()
             f = self.sftp_client.file(self.block_remote_pathname(block_id), 
@@ -290,15 +274,14 @@ class SftpBackend(Backend):
                     break
                 block_parts.append(block_part)
                 self.bytes_read += len(block_part)
-                if self.progress:
-                    self.progress.update_downloaded(self.bytes_read)
+                self.progress.update_downloaded(self.bytes_read)
             block = "".join(block_parts)
             f.close()
             if self.config.get("backup", "cache"):
                 self.cache.put_block(block_id, block)
         except IOError, e:
             logging.warning("I/O error: %s" % str(e))
-            return e
+            raise e
         return block
     
     def sftp_listdir_abs(self, dirname):
@@ -332,26 +315,26 @@ class SftpBackend(Backend):
 
 class FileBackend(Backend):
 
-    def really_upload(self, block_id, block):
+    def really_upload_block(self, block_id, block):
         dir_full = os.path.join(self.path, os.path.dirname(block_id))
         if not os.path.isdir(dir_full):
             os.makedirs(dir_full, 0700)
         fd = os.open(self.block_remote_pathname(block_id), 
-                     os.O_WRONLY | os.O_TRUNC | os.O_CREAT | os.O_BINARY,
+                     os.O_WRONLY | os.O_TRUNC | os.O_CREAT,
                      0600)
         f = os.fdopen(fd, "w")
         f.write(block)
         self.bytes_written += len(block)
         f.close()
 
-    def really_download(self, block_id):
+    def really_download_block(self, block_id):
         try:
             f = file(self.block_remote_pathname(block_id), "r")
             block = f.read()
             self.bytes_read += len(block)
             f.close()
         except IOError, e:
-            return e
+            raise e
         return block
     
     def list(self):
