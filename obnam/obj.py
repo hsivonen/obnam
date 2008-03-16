@@ -223,11 +223,20 @@ class BlockWithoutCookie(obnam.ObnamException):
                      " ".join("%02x" % ord(c) for c in block[:32]))
 
 
+class EmptyBlock(obnam.ObnamException):
+
+    def __init__(self):
+        self._msg = "Block has no components."
+
+
 def block_decode(block):
     """Return list of decoded components in block, or None on error"""
     if block.startswith(BLOCK_COOKIE):
         parser = obnam.cmp.Parser(block, len(BLOCK_COOKIE))
-        return parser.decode_all()
+        list = parser.decode_all()
+        if not list:
+            raise EmptyBlock()
+        return list
     else:
         raise BlockWithoutCookie(block)
 
