@@ -20,6 +20,7 @@
 
 import os
 import re
+import shutil
 import tempfile
 import unittest
 
@@ -31,29 +32,23 @@ class ApplicationTests(unittest.TestCase):
     def make_tempfiles(self, n):
         list = []
         for i in range(n):
+            fd, name = tempfile.mkstemp(dir=self.tempdir)
+            os.close(fd)
             if (i % 2) == 0:
-                list.append(tempfile.mkdtemp())
-            else:
-                fd, name = tempfile.mkstemp()
-                os.close(fd)
-                list.append(name)
-        return list
-
-    def remove_tempfiles(self, filenames):
-        for name in filenames:
-            if os.path.isdir(name):
-                os.rmdir(name)
-            else:
                 os.remove(name)
+                os.mkfifo(name)
+            list.append(name)
+        return list
 
     def setUp(self):
         context = obnam.context.Context()
         self.app = obnam.Application(context)
         
+        self.tempdir = tempfile.mkdtemp()
         self.tempfiles = self.make_tempfiles(obnam.app.MAX_PER_FILEGROUP + 1)
         
     def tearDown(self):
-        self.remove_tempfiles(self.tempfiles)
+        shutil.rmtree(self.tempdir)
 
     def testHasEmptyListOfRootsInitially(self):
         self.failUnlessEqual(self.app.get_roots(), [])
