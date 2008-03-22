@@ -18,7 +18,9 @@
 """Unit tests for app.py."""
 
 
+import os
 import re
+import tempfile
 import unittest
 
 import obnam
@@ -26,9 +28,24 @@ import obnam
 
 class ApplicationTests(unittest.TestCase):
 
+    def make_tempfiles(self, n):
+        list = []
+        for i in range(n):
+            list.append(tempfile.mkdtemp())
+        return list
+
+    def remove_tempfiles(self, filenames):
+        for dirname in filenames:
+            os.rmdir(dirname)
+
     def setUp(self):
         context = obnam.context.Context()
         self.app = obnam.Application(context)
+        
+        self.tempfiles = self.make_tempfiles(obnam.app.MAX_PER_FILEGROUP + 1)
+        
+    def tearDown(self):
+        self.remove_tempfiles(self.tempfiles)
 
     def testHasEmptyListOfRootsInitially(self):
         self.failUnlessEqual(self.app.get_roots(), [])
@@ -74,6 +91,18 @@ class ApplicationTests(unittest.TestCase):
 
     def testMakesNoFileGroupsForEmptyListOfFiles(self):
         self.failUnlessEqual(self.app.make_filegroups([]), [])
+
+    def testMakesOneFileGroupForOneFile(self):
+        filenames = self.tempfiles[:1]
+        self.failUnlessEqual(len(self.app.make_filegroups(filenames)), 1)
+
+    def testMakesOneFileGroupForMaxFilesPerGroup(self):
+        filenames = self.tempfiles[:obnam.app.MAX_PER_FILEGROUP]
+        self.failUnlessEqual(len(self.app.make_filegroups(filenames)), 1)
+
+    def testMakesTwoFileGroupsForMaxFilesPerGroupPlusOne(self):
+        filenames = self.tempfiles[:obnam.app.MAX_PER_FILEGROUP + 1]
+        self.failUnlessEqual(len(self.app.make_filegroups(filenames)), 2)
 
     def testFindsFileInfoInFilelistFromPreviousGeneration(self):
         stat = obnam.utils.make_stat_result()

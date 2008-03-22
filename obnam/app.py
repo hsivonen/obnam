@@ -25,6 +25,11 @@ import re
 import obnam
 
 
+
+# Maximum number of files per file group we create.
+MAX_PER_FILEGROUP = 16
+
+
 class Application:
 
     """Main program logic for Obnam, a backup application."""
@@ -129,5 +134,17 @@ class Application:
         Return list of object identifiers to the FILEGROUP objects.
         
         """
-        
-        return []
+
+        list = []
+        for filename in filenames:
+            if (not list or
+                len(list[-1].get_files()) >= MAX_PER_FILEGROUP):
+                id = obnam.obj.object_id_new()
+                list.append(obnam.obj.FileGroupObject(id=id))
+            stat = os.stat(filename)
+            contref = None
+            sigref = None
+            deltaref = None
+            list[-1].add_file(filename, stat, contref, sigref, deltaref)
+                
+        return list
