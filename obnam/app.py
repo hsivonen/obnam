@@ -175,3 +175,14 @@ class Application:
             self.add_to_filegroup(list[-1], filename)
                 
         return list
+
+    def backup_one_dir(self, dirname, dirnames, filenames):
+        """Back up non-recursively one directory.
+        
+        Return obnam.obj.DirObject that refers to the directory.
+
+        """
+
+        dir = obnam.obj.DirObject(id=obnam.obj.object_id_new(),
+                                  name=os.path.basename(dirname))
+        return dir

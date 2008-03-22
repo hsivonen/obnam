@@ -123,3 +123,18 @@ class ApplicationTests(unittest.TestCase):
         filelist = obnam.filelist.Filelist()
         self.app.set_prevgen_filelist(filelist)
         self.failUnlessEqual(self.app.find_file_by_name("pink"), None)
+
+
+class ApplicationBackupsOneDirectoryTests(unittest.TestCase):
+
+    def setUp(self):
+        context = obnam.context.Context()
+        self.app = obnam.Application(context)
+        self.dirname = tempfile.mkdtemp()
+        
+    def tearDown(self):
+        shutil.rmtree(self.dirname)
+
+    def testWithCorrectName(self):
+        dir = self.app.backup_one_dir(self.dirname, [], [])
+        self.failUnlessEqual(dir.get_name(), os.path.basename(self.dirname))
