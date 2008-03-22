@@ -213,3 +213,9 @@ class Application:
                                   filegrouprefs=filegrouprefs)
 
         return dir
+
+    def backup_one_root(self, root):
+        """Backup one root for the next generation."""
+        for tuple in obnam.walk.depth_first(root, prune=self.prune):
+            dirname, dirnames, filenames = tuple
+            self.backup_one_dir(dirname, [], filenames)

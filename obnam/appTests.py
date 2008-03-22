@@ -186,3 +186,49 @@ class ApplicationBackupsOneDirectoryTests(unittest.TestCase):
     def testWithCorrectNumberOfDirrefsWhenSomeAreGiven(self):
         dir = self.app.backup_one_dir(self.dirname, ["pink", "pretty"], [])
         self.failUnlessEqual(len(dir.get_dirrefs()), 2)
+
+
+class ApplicationBackupOneRootTests(unittest.TestCase):
+
+    _tree = (
+        "file0",
+        "pink/",
+        "pink/file1",
+        "pink/dir1/",
+        "pink/dir1/dir2/",
+        "pink/dir1/dir2/file2",
+    )
+
+    def abs(self, relative_name):
+        return os.path.join(self.dirname, relative_name)
+
+    def mktree(self, tree):
+        for name in tree:
+            if name.endswith("/"):
+                name = self.abs(name[:-1])
+                self.dirs.append(name)
+                os.mkdir(name)
+            else:
+                name = self.abs(name)
+                self.files.append(name)
+                file(name, "w").close()
+
+    def mock_backup_one_dir(self, dirname, dirrefs, filenames):
+        self.dirs_walked.append(dirname)
+
+    def setUp(self):
+        context = obnam.context.Context()
+        self.app = obnam.Application(context)
+        self.app.backup_one_dir = self.mock_backup_one_dir
+        self.dirs_walked = []
+        self.dirname = tempfile.mkdtemp()
+        self.dirs = [self.dirname]
+        self.files = []
+        self.mktree(self._tree)
+
+    def tearDown(self):
+        shutil.rmtree(self.dirname)
+
+    def testWalksToTheRightDirectories(self):
+        self.app.backup_one_root(self.dirname)
+        self.failUnlessEqual(sorted(self.dirs_walked), sorted(self.dirs))
