@@ -192,6 +192,7 @@ class Application:
 
         dir = obnam.obj.DirObject(id=obnam.obj.object_id_new(),
                                   name=os.path.basename(dirname),
+                                  stat=os.stat(dirname),
                                   filegrouprefs=filegrouprefs)
 
         return dir

@@ -153,6 +153,10 @@ class ApplicationBackupsOneDirectoryTests(unittest.TestCase):
         dir = self.app.backup_one_dir(self.dirname, [], [])
         self.failUnlessEqual(dir.get_name(), os.path.basename(self.dirname))
 
+    def testWithCorrectStat(self):
+        dir = self.app.backup_one_dir(self.dirname, [], [])
+        self.failUnlessEqual(dir.get_stat(), os.stat(self.dirname))
+
     def testWithCorrectNumberOfDirrefsWhenThereAreNoneGiven(self):
         dir = self.app.backup_one_dir(self.dirname, [], [])
         self.failUnlessEqual(dir.get_dirrefs(), [])
