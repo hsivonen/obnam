@@ -129,6 +129,7 @@ class ApplicationBackupsOneDirectoryTests(unittest.TestCase):
 
     _tree = (
         "file0",
+        "pretty/",
         "pink/",
         "pink/file1",
         "pink/dir1/",
@@ -145,6 +146,10 @@ class ApplicationBackupsOneDirectoryTests(unittest.TestCase):
                 os.mkdir(self.abs(name[:-1]))
             else:
                 file(self.abs(name), "w").close()
+
+    def make_dirobject(self, relative_name):
+        return obnam.obj.DirObject(id=obnam.obj.object_id_new(),
+                                   name=self.abs(relative_name))
 
     def setUp(self):
         context = obnam.context.Context()
@@ -184,7 +189,8 @@ class ApplicationBackupsOneDirectoryTests(unittest.TestCase):
 
 
     def testWithCorrectNumberOfDirrefsWhenSomeAreGiven(self):
-        dir = self.app.backup_one_dir(self.dirname, ["pink", "pretty"], [])
+        subdirs = [self.make_dirobject(_) for _ in ["pink", "pretty"]]
+        dir = self.app.backup_one_dir(self.dirname, subdirs, [])
         self.failUnlessEqual(len(dir.get_dirrefs()), 2)
 
 
@@ -213,14 +219,26 @@ class ApplicationBackupOneRootTests(unittest.TestCase):
                 self.files.append(name)
                 file(name, "w").close()
 
-    def mock_backup_one_dir(self, dirname, dirrefs, filenames):
+    def mock_backup_one_dir(self, dirname, subdirs, filenames):
         self.dirs_walked.append(dirname)
+        assert dirname not in self.subdirs_walked
+        self.subdirs_walked[dirname] = [os.path.join(dirname, x.get_name())
+                                        for x in subdirs]
+        return self.real_backup_one_dir(dirname, subdirs, filenames)
+
+    def find_subdirs(self):
+        dict = {}
+        for dirname, dirnames, filenames in os.walk(self.dirname):
+            dict[dirname] = [os.path.join(dirname, _) for _ in dirnames]
+        return dict
 
     def setUp(self):
         context = obnam.context.Context()
         self.app = obnam.Application(context)
+        self.real_backup_one_dir = self.app.backup_one_dir
         self.app.backup_one_dir = self.mock_backup_one_dir
         self.dirs_walked = []
+        self.subdirs_walked = {}
         self.dirname = tempfile.mkdtemp()
         self.dirs = [self.dirname]
         self.files = []
@@ -231,4 +249,8 @@ class ApplicationBackupOneRootTests(unittest.TestCase):
 
     def testWalksToTheRightDirectories(self):
         self.app.backup_one_root(self.dirname)
-        self.failUnlessEqual(sorted(self.dirs_walked), sorted(self.dirs))
+        self.failUnlessEqual(self.dirs_walked, list(reversed(self.dirs)))
+
+    def testFindsTheRightSubdirs(self):
+        self.app.backup_one_root(self.dirname)
+        self.failUnlessEqual(self.subdirs_walked, self.find_subdirs())

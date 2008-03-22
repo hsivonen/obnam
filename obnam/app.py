@@ -192,12 +192,12 @@ class Application:
     def _make_absolute(self, basename, relatives):
         return [os.path.join(basename, name) for name in relatives]
 
-    def backup_one_dir(self, dirname, dirrefs, filenames):
+    def backup_one_dir(self, dirname, subdirs, filenames):
         """Back up non-recursively one directory.
         
         Return obnam.obj.DirObject that refers to the directory.
         
-        dirrefs is the list of references to subdirectories for this
+        subdirs is the list of subdirectories (as DirObject) for this
         directory.
 
         """
@@ -205,6 +205,8 @@ class Application:
         filenames = self._make_absolute(dirname, filenames)
         filegroups = self.make_filegroups(filenames)
         filegrouprefs = [fg.get_id() for fg in filegroups]
+
+        dirrefs = [subdir.get_id() for subdir in subdirs]
 
         dir = obnam.obj.DirObject(id=obnam.obj.object_id_new(),
                                   name=os.path.basename(dirname),
@@ -216,6 +218,19 @@ class Application:
 
     def backup_one_root(self, root):
         """Backup one root for the next generation."""
+        subdirs_for_dir = {}
         for tuple in obnam.walk.depth_first(root, prune=self.prune):
             dirname, dirnames, filenames = tuple
-            self.backup_one_dir(dirname, [], filenames)
+
+            subdirs = subdirs_for_dir.get(dirname, [])
+            
+            dir = self.backup_one_dir(dirname, subdirs, filenames)
+
+            if dirname != root:
+                parent = os.path.dirname(dirname)
+                if parent not in subdirs_for_dir:
+                    subdirs_for_dir[parent] = []
+                subdirs_for_dir[parent].append(dir)
+
+            if dirname in subdirs_for_dir:
+                del subdirs_for_dir[dirname]
