@@ -268,12 +268,11 @@ class HostBlockTests(unittest.TestCase):
                                          contmap_block_ids=contmap_ids)
         host = host.encode()
         self.failUnless(host.startswith(obnam.obj.BLOCK_COOKIE))
-        (host_id2, gen_ids2, map_ids2, contmap_ids2) = \
-            obnam.obj.host_block_decode(host)
-        self.failUnlessEqual(host_id, host_id2)
-        self.failUnlessEqual(gen_ids, gen_ids2)
-        self.failUnlessEqual(map_ids, map_ids2)
-        self.failUnlessEqual(contmap_ids, contmap_ids2)
+        host2 = obnam.obj.create_host_from_block(host)
+        self.failUnlessEqual(host_id, host2.get_id())
+        self.failUnlessEqual(gen_ids, host2.get_generation_ids())
+        self.failUnlessEqual(map_ids, host2.get_map_block_ids())
+        self.failUnlessEqual(contmap_ids, host2.get_contmap_block_ids())
         
     def testFormatVersion(self):
         encoded = obnam.obj.HostBlockObject(host_id="pink", gen_ids=[], 

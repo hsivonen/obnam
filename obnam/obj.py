@@ -367,28 +367,6 @@ class HostBlockObject(StorageObject):
         return oq.as_block(self.get_id())
 
 
-def host_block_decode(block):
-    """Decode a host block"""
-    
-    list = block_decode(block)
-    
-    host_id = obnam.cmp.first_string_by_kind(list, obnam.cmp.BLKID)
-    
-    gen_ids = []
-    map_ids = []
-    contmap_ids = []
-
-    objparts = obnam.cmp.find_by_kind(list, obnam.cmp.OBJECT)
-    for objpart in objparts:
-        subs = objpart.get_subcomponents()
-        gen_ids += obnam.cmp.find_strings_by_kind(subs, obnam.cmp.GENREF)
-        map_ids += obnam.cmp.find_strings_by_kind(subs, obnam.cmp.MAPREF)
-        contmap_ids += obnam.cmp.find_strings_by_kind(subs, 
-                                                      obnam.cmp.CONTMAPREF)
-
-    return host_id, gen_ids, map_ids, contmap_ids
-
-
 def create_host_from_block(block):
     """Decode a host block into a HostBlockObject"""
     
