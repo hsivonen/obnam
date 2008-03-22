@@ -180,7 +180,6 @@ def backup(context, args):
     host_block = obnam.io.get_host_block(context)
     if host_block:
         host = obnam.obj.create_host_from_block(host_block)
-        host_id = host.get_id()
         gen_ids = host.get_generation_ids()
         map_block_ids = host.get_map_block_ids()
         contmap_block_ids = host.get_contmap_block_ids()
