@@ -273,4 +273,5 @@ class Application:
         dirrefs = [o.get_id() for o in root_objs]
         gen = obnam.obj.GenerationObject(id=obnam.obj.object_id_new(),
                                          dirrefs=dirrefs)
+        self.enqueue([gen])
         return gen
