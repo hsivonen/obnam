@@ -176,6 +176,9 @@ class Application:
                 
         return list
 
+    def _make_absolute(self, basename, relatives):
+        return [os.path.join(basename, name) for name in relatives]
+
     def backup_one_dir(self, dirname, dirnames, filenames):
         """Back up non-recursively one directory.
         
@@ -183,6 +186,12 @@ class Application:
 
         """
 
+        filenames = self._make_absolute(dirname, filenames)
+        filegroups = self.make_filegroups(filenames)
+        filegrouprefs = [fg.get_id() for fg in filegroups]
+
         dir = obnam.obj.DirObject(id=obnam.obj.object_id_new(),
-                                  name=os.path.basename(dirname))
+                                  name=os.path.basename(dirname),
+                                  filegrouprefs=filegrouprefs)
+
         return dir

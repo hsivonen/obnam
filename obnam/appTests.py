@@ -127,10 +127,24 @@ class ApplicationTests(unittest.TestCase):
 
 class ApplicationBackupsOneDirectoryTests(unittest.TestCase):
 
+    def mkdir(self, relname):
+        os.mkdir(os.path.join(self.dirname, relname))
+        self.subdirs.append(relname)
+
+    def mkfile(self, relname):
+        file(os.path.join(self.dirname, relname), "w").close()
+        self.files.append(relname)
+
     def setUp(self):
         context = obnam.context.Context()
         self.app = obnam.Application(context)
         self.dirname = tempfile.mkdtemp()
+        self.subdirs = []
+        self.files = []
+        self.mkdir("pinkdir")
+        self.mkdir("prettydir")
+        self.mkfile("pinkfile")
+        self.mkfile("prettyfile")
         
     def tearDown(self):
         shutil.rmtree(self.dirname)
@@ -138,3 +152,20 @@ class ApplicationBackupsOneDirectoryTests(unittest.TestCase):
     def testWithCorrectName(self):
         dir = self.app.backup_one_dir(self.dirname, [], [])
         self.failUnlessEqual(dir.get_name(), os.path.basename(self.dirname))
+
+    def testWithCorrectNumberOfDirrefsWhenThereAreNoneGiven(self):
+        dir = self.app.backup_one_dir(self.dirname, [], [])
+        self.failUnlessEqual(dir.get_dirrefs(), [])
+
+    def testWithCorrectNumberOfFilegrouprefsWhenThereAreNoneGiven(self):
+        dir = self.app.backup_one_dir(self.dirname, [], [])
+        self.failUnlessEqual(dir.get_filegrouprefs(), [])
+
+    def _filegroups(self, file_count):
+        max = obnam.app.MAX_PER_FILEGROUP
+        return (file_count + max - 1) / max
+
+    def testWithCorrectNumberOfFilegrouprefsWhenSomeAreGiven(self):
+        dir = self.app.backup_one_dir(self.dirname, [], self.files)
+        self.failUnlessEqual(len(dir.get_filegrouprefs()), 
+                                 self._filegroups(len(self.files)))
