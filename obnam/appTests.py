@@ -31,12 +31,20 @@ class ApplicationTests(unittest.TestCase):
     def make_tempfiles(self, n):
         list = []
         for i in range(n):
-            list.append(tempfile.mkdtemp())
+            if (i % 2) == 0:
+                list.append(tempfile.mkdtemp())
+            else:
+                fd, name = tempfile.mkstemp()
+                os.close(fd)
+                list.append(name)
         return list
 
     def remove_tempfiles(self, filenames):
-        for dirname in filenames:
-            os.rmdir(dirname)
+        for name in filenames:
+            if os.path.isdir(name):
+                os.rmdir(name)
+            else:
+                os.remove(name)
 
     def setUp(self):
         context = obnam.context.Context()

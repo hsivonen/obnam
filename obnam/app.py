@@ -21,6 +21,7 @@
 import logging
 import os
 import re
+import stat
 
 import obnam
 
@@ -128,6 +129,20 @@ class Application:
         
         return None
 
+    def add_to_filegroup(self, fg, filename):
+        """Add a file to a filegroup."""
+        st = os.stat(filename)
+        if stat.S_ISREG(st.st_mode):
+            contref = obnam.io.create_file_contents_object(self._context, 
+                                                           filename)
+            sigref = None
+            deltaref = None
+        else:
+            contref = None
+            sigref = None
+            deltaref = None
+        fg.add_file(filename, st, contref, sigref, deltaref)
+
     def make_filegroups(self, filenames):
         """Make list of new FILEGROUP objects.
         
@@ -141,10 +156,6 @@ class Application:
                 len(list[-1].get_files()) >= MAX_PER_FILEGROUP):
                 id = obnam.obj.object_id_new()
                 list.append(obnam.obj.FileGroupObject(id=id))
-            stat = os.stat(filename)
-            contref = None
-            sigref = None
-            deltaref = None
-            list[-1].add_file(filename, stat, contref, sigref, deltaref)
+            self.add_to_filegroup(list[-1], filename)
                 
         return list
