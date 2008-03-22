@@ -182,3 +182,7 @@ class ApplicationBackupsOneDirectoryTests(unittest.TestCase):
         self.failUnlessEqual(len(dir.get_filegrouprefs()), 
                                  self._filegroups(len(files)))
 
+
+    def testWithCorrectNumberOfDirrefsWhenSomeAreGiven(self):
+        dir = self.app.backup_one_dir(self.dirname, ["pink", "pretty"], [])
+        self.failUnlessEqual(len(dir.get_dirrefs()), 2)
