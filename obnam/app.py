@@ -129,13 +129,29 @@ class Application:
         
         return None
 
+    def compute_signature(self, filename):
+        """Compute rsync signature for a filename.
+        
+        Return the identifier. Put the signature object in the queue to
+        be uploaded.
+        
+        """
+
+        sigdata = obnam.rsync.compute_signature(self._context, filename)
+        id = obnam.obj.object_id_new()
+        sig = obnam.obj.SignatureObject(id=id, sigdata=sigdata)
+        obnam.io.enqueue_object(self._context, self._context.oq, 
+                                self._context.map, id, sig.encode(), True)
+        self._context.progress.update_current_action(filename)
+        return sig.get_id()
+
     def add_to_filegroup(self, fg, filename):
         """Add a file to a filegroup."""
         st = os.stat(filename)
         if stat.S_ISREG(st.st_mode):
             contref = obnam.io.create_file_contents_object(self._context, 
                                                            filename)
-            sigref = None
+            sigref = self.compute_signature(filename)
             deltaref = None
         else:
             contref = None
