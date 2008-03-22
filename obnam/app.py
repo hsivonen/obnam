@@ -256,3 +256,6 @@ class Application:
         """Backup all the roots."""
         for root in roots:
             self.backup_one_root(root)
+
+        gen = obnam.obj.GenerationObject(id=obnam.obj.object_id_new())
+        return gen

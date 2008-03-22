@@ -295,3 +295,11 @@ class ApplicationBackupTests(unittest.TestCase):
         app.backup_one_root = self.mock_backup_one_root
         app.backup(["/pink", "/pretty"])
         self.failUnlessEqual(self.roots_backed_up, ["/pink", "/pretty"])
+
+    def testReturnsGenerationObject(self):
+        self.roots_backed_up = []
+        context = obnam.context.Context()
+        app = obnam.Application(context)
+        app.backup_one_root = self.mock_backup_one_root
+        ret = app.backup(["/pink", "/pretty"])
+        self.failUnless(isinstance(ret, obnam.obj.GenerationObject))
