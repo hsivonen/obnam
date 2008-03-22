@@ -234,3 +234,8 @@ class Application:
 
             if dirname in subdirs_for_dir:
                 del subdirs_for_dir[dirname]
+
+    def backup(self):
+        """Backup all the roots."""
+        for root in self.get_roots():
+            self.backup_one_root(root)

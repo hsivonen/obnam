@@ -257,3 +257,19 @@ class ApplicationBackupOneRootTests(unittest.TestCase):
     def testFindsTheRightSubdirs(self):
         self.app.backup_one_root(self.dirname)
         self.failUnlessEqual(self.subdirs_walked, self.find_subdirs())
+
+
+class ApplicationMakeBackupTests(unittest.TestCase):
+
+    def mock_backup_one_root(self, root):
+        self.roots_backed_up.append(root)
+
+    def testCallsBackupOneRootForEachRoot(self):
+        self.roots_backed_up = []
+        context = obnam.context.Context()
+        app = obnam.Application(context)
+        app.backup_one_root = self.mock_backup_one_root
+        app.add_root("/pink")
+        app.add_root("/pretty")
+        app.backup()
+        self.failUnlessEqual(self.roots_backed_up, ["/pink", "/pretty"])
