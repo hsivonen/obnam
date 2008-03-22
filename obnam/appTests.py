@@ -72,7 +72,7 @@ class ApplicationTests(unittest.TestCase):
         self.app.prune(dirname, dirnames, filenames)
         self.failUnlessEqual(dirnames, ["subdir"])
 
-    def testMakesNewFileGroupsRightForEmptyListOfFiles(self):
+    def testMakesNoFileGroupsRightForEmptyListOfFiles(self):
         self.failUnlessEqual(self.app.make_filegroups([]), [])
 
     def testFindsFileInfoInFilelistFromPreviousGeneration(self):
