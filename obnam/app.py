@@ -41,6 +41,7 @@ class Application:
         self._exclusion_strings = []
         self._exclusion_regexps = []
         self._filelist = None
+        self._host = None
         
         # When we traverse the file system tree while making a backup,
         # we process children before the parent. This is necessary for
@@ -58,6 +59,21 @@ class Application:
     def get_context(self):
         """Get the context for the backup application."""
         return self._context
+
+    def get_host(self):
+        """Return currently active host object, or None if none is active."""
+        return self._host
+
+    def load_host(self):
+        """Load the host block into memory."""
+        if not self._host:
+            host_block = obnam.io.get_host_block(self._context)
+            if host_block:
+                self._host = obnam.obj.create_host_from_block(host_block)
+            else:
+                id = self._context.config.get("backup", "host-id")
+                self._host = obnam.obj.HostBlockObject(host_id=id)
+        return self._host
 
     def add_root(self, root):
         """Add a file or directory to list of backup roots."""

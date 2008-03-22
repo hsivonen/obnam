@@ -21,6 +21,7 @@
 import os
 import re
 import shutil
+import socket
 import tempfile
 import unittest
 
@@ -32,6 +33,9 @@ class ApplicationTests(unittest.TestCase):
     def setUp(self):
         context = obnam.context.Context()
         self.app = obnam.Application(context)
+
+    def testHasNoHostBlockInitially(self):
+        self.failUnlessEqual(self.app.get_host(), None)
 
     def testHasEmptyListOfRootsInitially(self):
         self.failUnlessEqual(self.app.get_roots(), [])
@@ -74,6 +78,34 @@ class ApplicationTests(unittest.TestCase):
         filenames = ["filename1", "filename2"]
         self.app.prune(dirname, dirnames, filenames)
         self.failUnlessEqual(dirnames, ["subdir"])
+
+
+class ApplicationLoadHostBlockTests(unittest.TestCase):
+
+    def setUp(self):
+        context = obnam.context.Context()
+        cache = obnam.cache.Cache(context.config)
+        context.be = obnam.backend.init(context.config, context.cache)
+        self.app = obnam.Application(context)
+
+    def testCreatesNewHostBlockWhenNoneExists(self):
+        host = self.app.load_host()
+        self.failUnlessEqual(host.get_id(), socket.gethostname())
+        self.failUnlessEqual(host.get_generation_ids(), [])
+        self.failUnlessEqual(host.get_map_block_ids(), [])
+        self.failUnlessEqual(host.get_contmap_block_ids(), [])
+
+    def testLoadsActualHostBlockWhenOneExists(self):
+        context = obnam.context.Context()
+        cache = obnam.cache.Cache(context.config)
+        context.be = obnam.backend.init(context.config, context.cache)
+        host_id = context.config.get("backup", "host-id")
+        temp = obnam.obj.HostBlockObject(host_id=host_id,
+                                         gen_ids=["pink", "pretty"])
+        obnam.io.upload_host_block(context, temp.encode())
+        
+        host = self.app.load_host()
+        self.failUnlessEqual(host.get_generation_ids(), ["pink", "pretty"])
 
 
 class ApplicationMakeFileGroupsTests(unittest.TestCase):
