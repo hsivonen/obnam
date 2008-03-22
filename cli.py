@@ -257,7 +257,9 @@ def backup(context, args):
 
 def generations(context):
     block = obnam.io.get_host_block(context)
-    (_, gen_ids, map_block_ids, _) = obnam.obj.host_block_decode(block)
+    host = obnam.obj.create_host_from_block(block)
+    gen_ids = host.get_generation_ids()
+    map_block_ids = host.get_map_block_ids()
     if context.config.getboolean("backup", "generation-times"):
         obnam.io.load_maps(context, context.map, map_block_ids)
     for id in gen_ids:
@@ -300,8 +302,9 @@ def format_generation_period(gen):
 
 def show_generations(context, gen_ids):
     host_block = obnam.io.get_host_block(context)
-    (host_id, _, map_block_ids, _) = \
-        obnam.obj.host_block_decode(host_block)
+    host = obnam.obj.create_host_from_block(host_block)
+    host_id = host.get_id()
+    map_block_ids = host.get_map_block_ids()
 
     obnam.io.load_maps(context, context.map, map_block_ids)
 
@@ -425,8 +428,10 @@ def restore(context, gen_id, files):
 
     logging.debug("Fetching and decoding host block")
     host_block = obnam.io.get_host_block(context)
-    (host_id, _, map_block_ids, contmap_block_ids) = \
-        obnam.obj.host_block_decode(host_block)
+    host = obnam.obj.create_host_from_block(host_block)
+    host_id = host.get_id()
+    map_block_ids = host.get_map_block_ids()
+    contmap_block_ids = host.get_contmap_block_ids()
 
     logging.debug("Decoding mapping blocks")
     obnam.io.load_maps(context, context.map, map_block_ids)
@@ -480,8 +485,11 @@ def forget(context, forgettable_ids):
 
     logging.debug("forget: Loading and decoding host block")
     host_block = obnam.io.get_host_block(context)
-    (host_id, gen_ids, map_block_ids, contmap_block_ids) = \
-        obnam.obj.host_block_decode(host_block)
+    host = obnam.obj.create_host_from_block(host_block)
+    host_id = host.get_id()
+    gen_ids = host.get_generation_ids()
+    map_block_ids = host.get_map_block_ids()    
+    contmap_block_ids = host.get_contmap_block_ids()    
 
     logging.debug("forget: Loading non-content maps")
     obnam.io.load_maps(context, context.map, map_block_ids)

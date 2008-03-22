@@ -80,8 +80,9 @@ class ObnamFS(fuse.Fuse):
         block = obnam.io.get_host_block(self.context)
         if block is None:
             raise NoHostBlock()
-        (_, gen_ids, map_block_ids, contmap_ids) = \
-            obnam.obj.host_block_decode(block)
+        gen_ids = host.get_generation_ids()
+        map_block_ids = host.get_map_block_ids()
+        contmap_block_ids = host.get_contmap_block_ids()
         self.gen_ids = gen_ids
         obnam.io.load_maps(self.context, self.context.map, map_block_ids)
         obnam.io.load_maps(self.context, self.context.contmap, 
