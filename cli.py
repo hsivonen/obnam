@@ -179,8 +179,11 @@ def backup(context, args):
     logging.info("Getting and decoding host block")
     host_block = obnam.io.get_host_block(context)
     if host_block:
-        (host_id, gen_ids, map_block_ids, contmap_block_ids) = \
-            obnam.obj.host_block_decode(host_block)
+        host = obnam.obj.create_host_from_block(host_block)
+        host_id = host.get_id()
+        gen_ids = host.get_generation_ids()
+        map_block_ids = host.get_map_block_ids()
+        contmap_block_ids = host.get_contmap_block_ids()
 
         logging.info("Decoding mapping blocks")
         obnam.io.load_maps(context, context.map, map_block_ids)

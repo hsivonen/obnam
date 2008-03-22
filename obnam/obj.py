@@ -349,6 +349,18 @@ class HostBlockObject(StorageObject):
                 c = obnam.cmp.Component(obnam.cmp.CONTMAPREF, map_block_id)
                 self.add(c)
     
+    def get_generation_ids(self):
+        """Return IDs of all generations for this host."""
+        return self.find_strings_by_kind(obnam.cmp.GENREF)
+    
+    def get_map_block_ids(self):
+        """Return IDs of all map blocks for this host."""
+        return self.find_strings_by_kind(obnam.cmp.MAPREF)
+    
+    def get_contmap_block_ids(self):
+        """Return IDs of all map blocks for this host."""
+        return self.find_strings_by_kind(obnam.cmp.CONTMAPREF)
+    
     def encode(self):
         oq = ObjectQueue()
         oq.add(self.get_id(), StorageObject.encode(self))
@@ -375,6 +387,30 @@ def host_block_decode(block):
                                                       obnam.cmp.CONTMAPREF)
 
     return host_id, gen_ids, map_ids, contmap_ids
+
+
+def create_host_from_block(block):
+    """Decode a host block into a HostBlockObject"""
+    
+    list = block_decode(block)
+    
+    host_id = obnam.cmp.first_string_by_kind(list, obnam.cmp.BLKID)
+    
+    gen_ids = []
+    map_ids = []
+    contmap_ids = []
+
+    objparts = obnam.cmp.find_by_kind(list, obnam.cmp.OBJECT)
+    for objpart in objparts:
+        subs = objpart.get_subcomponents()
+        gen_ids += obnam.cmp.find_strings_by_kind(subs, obnam.cmp.GENREF)
+        map_ids += obnam.cmp.find_strings_by_kind(subs, obnam.cmp.MAPREF)
+        contmap_ids += obnam.cmp.find_strings_by_kind(subs, 
+                                                      obnam.cmp.CONTMAPREF)
+
+    return HostBlockObject(host_id=host_id, gen_ids=gen_ids,
+                           map_block_ids=map_ids, 
+                           contmap_block_ids=contmap_ids)
 
 
 class DirObject(StorageObject):
@@ -480,6 +516,11 @@ class DeltaPartObject(StorageObject):
     kind = DELTAPART
 
 
+class UnknownStorageObjectKind(obnam.ObnamException):
+
+    def __init__(self, kind):
+        self._msg = "Unknown storage object kind %s" % kind
+
 
 class StorageObjectFactory:
 
@@ -503,4 +544,4 @@ class StorageObjectFactory:
         for klass in self._classes:
             if klass.kind == kind:
                 return klass(components=components)
-        return None
+        raise UnknownStorageObjectKind(kind)
