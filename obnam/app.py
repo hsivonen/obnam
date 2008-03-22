@@ -142,11 +142,12 @@ class Application:
         
         return None
 
-    def enqueue(self, obj):
-        """Push an object to the object queue."""
-        obnam.io.enqueue_object(self._context, self._context.oq,
-                                self._context.map, obj.get_id(), obj.encode(),
-                                True)
+    def enqueue(self, objs):
+        """Push objects to the object queue."""
+        for obj in objs:
+            obnam.io.enqueue_object(self._context, self._context.oq,
+                                    self._context.map, obj.get_id(), 
+                                    obj.encode(), True)
 
     def compute_signature(self, filename):
         """Compute rsync signature for a filename.
@@ -159,7 +160,7 @@ class Application:
         sigdata = obnam.rsync.compute_signature(self._context, filename)
         id = obnam.obj.object_id_new()
         sig = obnam.obj.SignatureObject(id=id, sigdata=sigdata)
-        self.enqueue(sig)
+        self.enqueue([sig])
         return sig
 
     def add_to_filegroup(self, fg, filename):
@@ -193,6 +194,7 @@ class Application:
                 list.append(obnam.obj.FileGroupObject(id=id))
             self.add_to_filegroup(list[-1], filename)
                 
+        self.enqueue(list)
         return list
 
     def _make_absolute(self, basename, relatives):
@@ -220,6 +222,8 @@ class Application:
                                   dirrefs=dirrefs,
                                   filegrouprefs=filegrouprefs)
 
+
+        self.enqueue([dir])
         return dir
 
     def backup_one_root(self, root):
