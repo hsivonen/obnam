@@ -41,6 +41,19 @@ class Application:
         self._exclusion_strings = []
         self._exclusion_regexps = []
         self._filelist = None
+        
+        # When we traverse the file system tree while making a backup,
+        # we process children before the parent. This is necessary for
+        # functional updates of trees. For every directory, we need
+        # to keep track of its children. This dict is used for that.
+        # It is indexed by the absolute path to the directory, and
+        # contains a list of the subdirectories in that directory.
+        # When we're done with a directory (i.e., we generate its
+        # DirObject), we remove the directory from this dict. This
+        # means that we need only data for one path from the root of
+        # the directory tree to the current directory, not for the
+        # entire directory tree.
+        self._subdirs = {}
 
     def get_context(self):
         """Get the context for the backup application."""
@@ -179,10 +192,13 @@ class Application:
     def _make_absolute(self, basename, relatives):
         return [os.path.join(basename, name) for name in relatives]
 
-    def backup_one_dir(self, dirname, dirnames, filenames):
+    def backup_one_dir(self, dirname, dirrefs, filenames):
         """Back up non-recursively one directory.
         
         Return obnam.obj.DirObject that refers to the directory.
+        
+        dirrefs is the list of references to subdirectories for this
+        directory.
 
         """
 
@@ -193,6 +209,7 @@ class Application:
         dir = obnam.obj.DirObject(id=obnam.obj.object_id_new(),
                                   name=os.path.basename(dirname),
                                   stat=os.stat(dirname),
+                                  dirrefs=dirrefs,
                                   filegrouprefs=filegrouprefs)
 
         return dir
