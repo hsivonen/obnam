@@ -29,26 +29,9 @@ import obnam
 
 class ApplicationTests(unittest.TestCase):
 
-    def make_tempfiles(self, n):
-        list = []
-        for i in range(n):
-            fd, name = tempfile.mkstemp(dir=self.tempdir)
-            os.close(fd)
-            if (i % 2) == 0:
-                os.remove(name)
-                os.mkfifo(name)
-            list.append(name)
-        return list
-
     def setUp(self):
         context = obnam.context.Context()
         self.app = obnam.Application(context)
-        
-        self.tempdir = tempfile.mkdtemp()
-        self.tempfiles = self.make_tempfiles(obnam.app.MAX_PER_FILEGROUP + 1)
-        
-    def tearDown(self):
-        shutil.rmtree(self.tempdir)
 
     def testHasEmptyListOfRootsInitially(self):
         self.failUnlessEqual(self.app.get_roots(), [])
@@ -92,20 +75,51 @@ class ApplicationTests(unittest.TestCase):
         self.app.prune(dirname, dirnames, filenames)
         self.failUnlessEqual(dirnames, ["subdir"])
 
-    def testMakesNoFileGroupsForEmptyListOfFiles(self):
+
+class ApplicationMakeFileGroupsTests(unittest.TestCase):
+
+    def make_tempfiles(self, n):
+        list = []
+        for i in range(n):
+            fd, name = tempfile.mkstemp(dir=self.tempdir)
+            os.close(fd)
+            if (i % 2) == 0:
+                os.remove(name)
+                os.mkfifo(name)
+            list.append(name)
+        return list
+
+    def setUp(self):
+        context = obnam.context.Context()
+        self.app = obnam.Application(context)
+        
+        self.tempdir = tempfile.mkdtemp()
+        self.tempfiles = self.make_tempfiles(obnam.app.MAX_PER_FILEGROUP + 1)
+        
+    def tearDown(self):
+        shutil.rmtree(self.tempdir)
+
+    def testReturnsNoFileGroupsForEmptyListOfFiles(self):
         self.failUnlessEqual(self.app.make_filegroups([]), [])
 
-    def testMakesOneFileGroupForOneFile(self):
+    def testReturnsOneFileGroupForOneFile(self):
         filenames = self.tempfiles[:1]
         self.failUnlessEqual(len(self.app.make_filegroups(filenames)), 1)
 
-    def testMakesOneFileGroupForMaxFilesPerGroup(self):
+    def testReturnsOneFileGroupForMaxFilesPerGroup(self):
         filenames = self.tempfiles[:obnam.app.MAX_PER_FILEGROUP]
         self.failUnlessEqual(len(self.app.make_filegroups(filenames)), 1)
 
-    def testMakesTwoFileGroupsForMaxFilesPerGroupPlusOne(self):
+    def testReturnsTwoFileGroupsForMaxFilesPerGroupPlusOne(self):
         filenames = self.tempfiles[:obnam.app.MAX_PER_FILEGROUP + 1]
         self.failUnlessEqual(len(self.app.make_filegroups(filenames)), 2)
+
+
+class ApplicationFindFileByNameTests(unittest.TestCase):
+
+    def setUp(self):
+        context = obnam.context.Context()
+        self.app = obnam.Application(context)
 
     def testFindsFileInfoInFilelistFromPreviousGeneration(self):
         stat = obnam.utils.make_stat_result()
