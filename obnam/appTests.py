@@ -127,25 +127,11 @@ class ApplicationTests(unittest.TestCase):
 
 class ApplicationBackupsOneDirectoryTests(unittest.TestCase):
 
-    _tree = (
-        "file0",
-        "pretty/",
-        "pink/",
-        "pink/file1",
-        "pink/dir1/",
-        "pink/dir1/dir2/",
-        "pink/dir1/dir2/file2",
-    )
-
     def abs(self, relative_name):
         return os.path.join(self.dirname, relative_name)
 
-    def mktree(self, tree):
-        for name in tree:
-            if name.endswith("/"):
-                os.mkdir(self.abs(name[:-1]))
-            else:
-                file(self.abs(name), "w").close()
+    def make_file(self, name):
+        file(self.abs(name), "w").close()
 
     def make_dirobject(self, relative_name):
         return obnam.obj.DirObject(id=obnam.obj.object_id_new(),
@@ -155,7 +141,6 @@ class ApplicationBackupsOneDirectoryTests(unittest.TestCase):
         context = obnam.context.Context()
         self.app = obnam.Application(context)
         self.dirname = tempfile.mkdtemp()
-        self.mktree(self._tree)
 
     def tearDown(self):
         shutil.rmtree(self.dirname)
@@ -181,6 +166,8 @@ class ApplicationBackupsOneDirectoryTests(unittest.TestCase):
         return (file_count + max - 1) / max
 
     def testWithCorrectNumberOfFilegrouprefsWhenSomeAreGiven(self):
+        self.make_file("pink")
+        self.make_file("pretty")
         files = os.listdir(self.dirname)
         files = [name for name in files if os.path.isfile(self.abs(name))]
         dir = self.app.backup_one_dir(self.dirname, [], files)
@@ -189,6 +176,8 @@ class ApplicationBackupsOneDirectoryTests(unittest.TestCase):
 
 
     def testWithCorrectNumberOfDirrefsWhenSomeAreGiven(self):
+        os.mkdir(self.abs("pink"))
+        os.mkdir(self.abs("pretty"))
         subdirs = [self.make_dirobject(_) for _ in ["pink", "pretty"]]
         dir = self.app.backup_one_dir(self.dirname, subdirs, [])
         self.failUnlessEqual(len(dir.get_dirrefs()), 2)
