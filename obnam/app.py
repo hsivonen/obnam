@@ -74,6 +74,18 @@ class Application:
                 self._host = obnam.obj.HostBlockObject(host_id=id)
         return self._host
 
+    def load_maps(self):
+        """Load non-content map blocks."""
+        ids = self._host.get_map_block_ids()
+        logging.info("Decoding %d mapping blocks" % len(ids))
+        obnam.io.load_maps(self._context, self._context.map, ids)
+
+    def load_content_maps(self):
+        """Load content map blocks."""
+        ids = self._host.get_contmap_block_ids()
+        logging.info("Decoding %d content mapping blocks" % len(ids))
+        obnam.io.load_maps(self._context, self._context.contmap, ids)
+
     def get_exclusion_regexps(self):
         """Return list of regexp to exclude things from backup."""
         

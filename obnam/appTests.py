@@ -341,3 +341,54 @@ class ApplicationBackupTests(unittest.TestCase):
     def testReturnsGenerationWithTheRightRootObjects(self):
         gen = self.app.backup([self.abs("pink"), self.abs("pretty")])
         self.failUnlessEqual(len(gen.get_dirrefs()), 2)
+
+
+class ApplicationMapTests(unittest.TestCase):
+
+    def setUp(self):
+        # First, set up two mappings.
+
+        context = obnam.context.Context()
+        context.cache = obnam.cache.Cache(context.config)
+        context.be = obnam.backend.init(context.config, context.cache)
+
+        obnam.map.add(context.map, "pink", "pretty")
+        obnam.map.add(context.contmap, "black", "beautiful")
+
+        map_id = context.be.generate_block_id()
+        map_block = obnam.map.encode_new_to_block(context.map, map_id)
+        context.be.upload_block(map_id, map_block, True)
+
+        contmap_id = context.be.generate_block_id()
+        contmap_block = obnam.map.encode_new_to_block(context.contmap, 
+                                                      contmap_id)
+        context.be.upload_block(contmap_id, contmap_block, True)
+
+        host_id = context.config.get("backup", "host-id")
+        host = obnam.obj.HostBlockObject(host_id=host_id,
+                                         map_block_ids=[map_id],
+                                         contmap_block_ids=[contmap_id])
+        obnam.io.upload_host_block(context, host.encode())
+
+        # Then set up the real context and app.
+
+        self.context = obnam.context.Context()
+        self.context.cache = obnam.cache.Cache(self.context.config)
+        self.context.be = obnam.backend.init(self.context.config, 
+                                             self.context.cache)
+        self.app = obnam.Application(self.context)
+        self.app.load_host()
+
+    def testHasNoMapsLoadedByDefault(self):
+        self.failUnlessEqual(obnam.map.count(self.context.map), 0)
+
+    def testHasNoContentMapsLoadedByDefault(self):
+        self.failUnlessEqual(obnam.map.count(self.context.contmap), 0)
+
+    def testLoadsMapsWhenRequested(self):
+        self.app.load_maps()
+        self.failUnlessEqual(obnam.map.count(self.context.map), 1)
+
+    def testLoadsContentMapsWhenRequested(self):
+        self.app.load_content_maps()
+        self.failUnlessEqual(obnam.map.count(self.context.contmap), 1)
