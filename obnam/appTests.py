@@ -37,14 +37,6 @@ class ApplicationTests(unittest.TestCase):
     def testHasNoHostBlockInitially(self):
         self.failUnlessEqual(self.app.get_host(), None)
 
-    def testHasEmptyListOfRootsInitially(self):
-        self.failUnlessEqual(self.app.get_roots(), [])
-
-    def testKeepsListOfRootsCorrectly(self):
-        self.app.add_root("pink")
-        self.app.add_root("pretty")
-        self.failUnlessEqual(self.app.get_roots(), ["pink", "pretty"])
-
     def testReturnsEmptyExclusionListInitially(self):
         self.failUnlessEqual(self.app.get_exclusion_regexps(), [])
 
@@ -291,7 +283,7 @@ class ApplicationBackupOneRootTests(unittest.TestCase):
         self.failUnlessEqual(self.subdirs_walked, self.find_subdirs())
 
 
-class ApplicationMakeBackupTests(unittest.TestCase):
+class ApplicationBackupTests(unittest.TestCase):
 
     def mock_backup_one_root(self, root):
         self.roots_backed_up.append(root)
@@ -301,7 +293,5 @@ class ApplicationMakeBackupTests(unittest.TestCase):
         context = obnam.context.Context()
         app = obnam.Application(context)
         app.backup_one_root = self.mock_backup_one_root
-        app.add_root("/pink")
-        app.add_root("/pretty")
-        app.backup()
+        app.backup(["/pink", "/pretty"])
         self.failUnlessEqual(self.roots_backed_up, ["/pink", "/pretty"])

@@ -36,7 +36,6 @@ class Application:
     """Main program logic for Obnam, a backup application."""
 
     def __init__(self, context):
-        self._roots = []
         self._context = context
         self._exclusion_strings = []
         self._exclusion_regexps = []
@@ -74,14 +73,6 @@ class Application:
                 id = self._context.config.get("backup", "host-id")
                 self._host = obnam.obj.HostBlockObject(host_id=id)
         return self._host
-
-    def add_root(self, root):
-        """Add a file or directory to list of backup roots."""
-        self._roots.append(root)
-
-    def get_roots(self):
-        """Return current set of roots to be backed up."""
-        return self._roots
 
     def get_exclusion_regexps(self):
         """Return list of regexp to exclude things from backup."""
@@ -261,7 +252,7 @@ class Application:
             if dirname in subdirs_for_dir:
                 del subdirs_for_dir[dirname]
 
-    def backup(self):
+    def backup(self, roots):
         """Backup all the roots."""
-        for root in self.get_roots():
+        for root in roots:
             self.backup_one_root(root)
