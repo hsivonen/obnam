@@ -235,7 +235,14 @@ class Application:
 
     def backup_one_root(self, root):
         """Backup one root for the next generation."""
+        
+        if not os.path.isdir(root):
+            raise obnam.ObnamException("Not a directory: %s" % root)
+            # FIXME: This needs to be able to handle non-directories, too!
+        
         subdirs_for_dir = {}
+        root_object = None
+        
         for tuple in obnam.walk.depth_first(root, prune=self.prune):
             dirname, dirnames, filenames = tuple
 
@@ -248,14 +255,22 @@ class Application:
                 if parent not in subdirs_for_dir:
                     subdirs_for_dir[parent] = []
                 subdirs_for_dir[parent].append(dir)
+            else:
+                root_object = dir
 
             if dirname in subdirs_for_dir:
                 del subdirs_for_dir[dirname]
 
+        return root_object
+
     def backup(self, roots):
         """Backup all the roots."""
-        for root in roots:
-            self.backup_one_root(root)
 
-        gen = obnam.obj.GenerationObject(id=obnam.obj.object_id_new())
+        root_objs = []
+        for root in roots:
+            root_objs.append(self.backup_one_root(root))
+
+        dirrefs = [o.get_id() for o in root_objs]
+        gen = obnam.obj.GenerationObject(id=obnam.obj.object_id_new(),
+                                         dirrefs=dirrefs)
         return gen

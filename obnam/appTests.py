@@ -274,6 +274,15 @@ class ApplicationBackupOneRootTests(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.dirname)
 
+    def testRaisesErrorForNonDirectory(self):
+        self.failUnlessRaises(obnam.ObnamException,
+                              self.app.backup_one_root,
+                              self.abs("file0"))
+
+    def testReturnsDirObject(self):
+        ret = self.app.backup_one_root(self.dirname)
+        self.failUnless(isinstance(ret, obnam.obj.DirObject))
+
     def testWalksToTheRightDirectories(self):
         self.app.backup_one_root(self.dirname)
         self.failUnlessEqual(self.dirs_walked, list(reversed(self.dirs)))
@@ -285,19 +294,50 @@ class ApplicationBackupOneRootTests(unittest.TestCase):
 
 class ApplicationBackupTests(unittest.TestCase):
 
+    _tree = (
+        "file0",
+        "pink/",
+        "pink/file1",
+        "pink/dir1/",
+        "pink/dir1/dir2/",
+        "pink/dir1/dir2/file2",
+        "pretty/",
+    )
+
+    def abs(self, relative_name):
+        return os.path.join(self.dirname, relative_name)
+
+    def mktree(self, tree):
+        for name in tree:
+            if name.endswith("/"):
+                name = self.abs(name[:-1])
+                os.mkdir(name)
+            else:
+                name = self.abs(name)
+                file(name, "w").close()
+
     def mock_backup_one_root(self, root):
         self.roots_backed_up.append(root)
+        return self.real_backup_one_root(root)
 
     def setUp(self):
+        self.dirname = tempfile.mkdtemp()
+        self.mktree(self._tree)
         self.roots_backed_up = []
         context = obnam.context.Context()
         self.app = obnam.Application(context)
+        self.real_backup_one_root = self.app.backup_one_root
         self.app.backup_one_root = self.mock_backup_one_root
 
     def testCallsBackupOneRootForEachRoot(self):
-        self.app.backup(["/pink", "/pretty"])
-        self.failUnlessEqual(self.roots_backed_up, ["/pink", "/pretty"])
+        dirs = [self.abs(x) for x in ["pink", "pretty"]]
+        self.app.backup(dirs)
+        self.failUnlessEqual(self.roots_backed_up, dirs)
 
     def testReturnsGenerationObject(self):
-        ret = self.app.backup(["/pink", "/pretty"])
+        ret = self.app.backup([self.abs("pink"), self.abs("pretty")])
         self.failUnless(isinstance(ret, obnam.obj.GenerationObject))
+
+    def testReturnsGenerationWithTheRightRootObjects(self):
+        gen = self.app.backup([self.abs("pink"), self.abs("pretty")])
+        self.failUnlessEqual(len(gen.get_dirrefs()), 2)
