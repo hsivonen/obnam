@@ -392,3 +392,21 @@ class ApplicationMapTests(unittest.TestCase):
     def testLoadsContentMapsWhenRequested(self):
         self.app.load_content_maps()
         self.failUnlessEqual(obnam.map.count(self.context.contmap), 1)
+
+    def testAddsNoNewMapsWhenNothingHasChanged(self):
+        self.app.update_maps()
+        self.failUnlessEqual(obnam.map.count(self.context.map), 0)
+
+    def testAddsANewMapsWhenSomethingHasChanged(self):
+        obnam.map.add(self.context.map, "pink", "pretty")
+        self.app.update_maps()
+        self.failUnlessEqual(obnam.map.count(self.context.map), 1)
+
+    def testAddsNoNewContentMapsWhenNothingHasChanged(self):
+        self.app.update_content_maps()
+        self.failUnlessEqual(obnam.map.count(self.context.contmap), 0)
+
+    def testAddsANewContentMapsWhenSomethingHasChanged(self):
+        obnam.map.add(self.context.contmap, "pink", "pretty")
+        self.app.update_content_maps()
+        self.failUnlessEqual(obnam.map.count(self.context.contmap), 1)

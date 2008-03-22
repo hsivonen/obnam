@@ -287,3 +287,23 @@ class Application:
                                          dirrefs=dirrefs)
         self.enqueue([gen])
         return gen
+
+    def _update_map_helper(self, map):
+        """Create new mapping blocks of a given kind, and upload them."""
+        if obnam.map.get_new(map):
+            id = self._context.be.generate_block_id()
+            logging.debug("Creating mapping block %s" % id)
+            block = obnam.map.encode_new_to_block(map, id)
+            self._context.be.upload_block(id, block, True)
+        else:
+            logging.debug("No new mappings, no new mapping block")
+
+    def update_maps(self):
+        """Create new object mapping blocks and upload them."""
+        logging.debug("Creating new mapping block for normal mappings")
+        self._update_map_helper(self._context.map)
+
+    def update_content_maps(self):
+        """Create new content object mapping blocks and upload them."""
+        logging.debug("Creating new mapping block for content mappings")
+        self._update_map_helper(self._context.contmap)
