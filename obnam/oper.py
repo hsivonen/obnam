@@ -86,9 +86,10 @@ class OperationFactory:
         self._app = app
 
     def find_operations(self):
-        """Find operations defined in this module."""
+        """Find operations defined in obnam."""
         list = []
-        for x in globals().values():
+        for name in dir(obnam):
+            x = getattr(obnam, name)
             if inspect.isclass(x) and issubclass(x, Operation):
                 list.append(x)
         return list
@@ -108,10 +109,3 @@ class OperationFactory:
                 return oper(self._app, args[1:])
 
         raise OperationNotFound(args[0])
-
-
-class Backup(Operation):
-
-    """Backup files the user specifies."""
-
-    name = "backup"
