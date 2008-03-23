@@ -87,11 +87,6 @@ class MissingBlock(obnam.ObnamException):
                         (block_id, object_id)
 
 
-def create_object_from_component_list(components):
-    """Create a new object from a list of components"""
-    return obnam.obj.StorageObject(components)
-
-
 class ObjectCache:
 
     def __init__(self, context):
