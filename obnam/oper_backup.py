@@ -18,6 +18,8 @@
 """A backup operation for Obnam."""
 
 
+import logging
+
 import obnam
 
 
@@ -36,7 +38,7 @@ class Backup(obnam.Operation):
         # We don't need to load in file data, therefore we don't load
         # the content map blocks.
     
-        gen = app.backup(self._roots)
+        gen = app.backup(roots)
         
         app.finish([gen])
     
