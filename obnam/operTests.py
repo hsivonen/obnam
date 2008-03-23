@@ -39,3 +39,14 @@ class OperationTests(unittest.TestCase):
 
     def testHasRightArgs(self):
         self.failUnlessEqual(self.op.get_args(), self.args)
+
+
+class OperationFactoryTests(unittest.TestCase):
+    
+    def setUp(self):
+        context = obnam.context.Context()
+        self.app = obnam.Application(context)
+        self.factory = obnam.OperationFactory(self.app)
+    
+    def testFindsOperations(self):
+        self.failUnless(self.factory.find_operations())

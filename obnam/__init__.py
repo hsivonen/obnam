@@ -44,4 +44,4 @@ import varint
 import walk
 
 from app import Application
-from oper import Operation
+from oper import Operation, OperationFactory

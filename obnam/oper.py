@@ -18,6 +18,8 @@
 """Obnam operations."""
 
 
+import inspect
+
 import obnam
 
 
@@ -61,3 +63,19 @@ class Operation:
         is actually useful. The default implementation does nothing.
         
         """
+
+
+class OperationFactory:
+
+    """Instantiate Operation subclasses based on command line arguments."""
+
+    def __init__(self, app):
+        self._app = app
+
+    def find_operations(self):
+        """Find operations defined in this module."""
+        list = []
+        for x in globals().values():
+            if inspect.isclass(x) and issubclass(x, Operation):
+                list.append(x)
+        return list
