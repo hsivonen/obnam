@@ -23,4 +23,8 @@ class Operation:
     name = None
 
     def __init__(self, app, args):
-        pass
+        self._app = app
+
+    def get_application(self):
+        """Return application this operation instance will use."""
+        return self._app

@@ -27,8 +27,12 @@ class OperationTests(unittest.TestCase):
 
     def setUp(self):
         context = obnam.context.Context()
-        app = obnam.Application(context)
-        self.op = obnam.Operation(app, ["pink", "pretty"])
+        self.app = obnam.Application(context)
+        self.args = ["pink", "pretty"]
+        self.op = obnam.Operation(self.app, self.args)
 
     def testNameIsNone(self):
         self.failUnlessEqual(self.op.name, None)
+
+    def testHasRightApplication(self):
+        self.failUnlessEqual(self.op.get_application(), self.app)
