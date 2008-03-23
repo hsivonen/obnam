@@ -380,11 +380,9 @@ def create_host_from_block(block):
 
     objparts = obnam.cmp.find_by_kind(list, obnam.cmp.OBJECT)
     for objpart in objparts:
-        subs = objpart.get_subcomponents()
-        gen_ids += obnam.cmp.find_strings_by_kind(subs, obnam.cmp.GENREF)
-        map_ids += obnam.cmp.find_strings_by_kind(subs, obnam.cmp.MAPREF)
-        contmap_ids += obnam.cmp.find_strings_by_kind(subs, 
-                                                      obnam.cmp.CONTMAPREF)
+        gen_ids += objpart.find_strings_by_kind(obnam.cmp.GENREF)
+        map_ids += objpart.find_strings_by_kind(obnam.cmp.MAPREF)
+        contmap_ids += objpart.find_strings_by_kind(obnam.cmp.CONTMAPREF)
 
     return HostBlockObject(host_id=host_id, gen_ids=gen_ids,
                            map_block_ids=map_ids, 
