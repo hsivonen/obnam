@@ -159,9 +159,10 @@ def get_object(context, object_id):
 
     logging.debug("Putting objects into object cache")
     the_one = None
+    factory = obnam.obj.StorageObjectFactory()
     for component in list:
         subs = component.get_subcomponents()
-        o = create_object_from_component_list(subs)
+        o = factory.get_object(subs)
         if o.get_kind() != obnam.obj.FILEPART:
             context.object_cache.put(o)
         if o.get_id() == object_id:
