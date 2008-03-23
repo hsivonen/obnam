@@ -24,7 +24,12 @@ class Operation:
 
     def __init__(self, app, args):
         self._app = app
+        self._args = args
 
     def get_application(self):
         """Return application this operation instance will use."""
         return self._app
+
+    def get_args(self):
+        """Return arguments this operation instance will use."""
+        return self._args

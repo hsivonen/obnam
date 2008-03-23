@@ -36,3 +36,6 @@ class OperationTests(unittest.TestCase):
 
     def testHasRightApplication(self):
         self.failUnlessEqual(self.op.get_application(), self.app)
+
+    def testHasRightArgs(self):
+        self.failUnlessEqual(self.op.get_args(), self.args)
