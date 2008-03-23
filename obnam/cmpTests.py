@@ -154,6 +154,101 @@ class ComponentDecodeAllTests(unittest.TestCase):
         self.failUnlessEqual(list, [])
 
 
+class ComponentFindTests(unittest.TestCase):
+
+    def setUp(self):
+        list = [(1, "pink"), (2, "pretty"), (3, "black"), (3, "box")]
+        list += [(4, obnam.varint.encode(4))]
+        list = [obnam.cmp.Component(a, b) for a, b in list]
+        self.c = obnam.cmp.Component(42, list)
+
+    def match(self, result, kind, value):
+        self.failUnless(len(result) > 0)
+        c = result[0]
+        self.failUnlessEqual(c.get_kind(), kind)
+        self.failUnlessEqual(c.get_string_value(), value)
+        del result[0]
+
+    def testFindAllOnes(self):
+        result = self.c.find_by_kind(1)
+        self.match(result, 1, "pink")
+        self.failUnlessEqual(result, [])
+
+    def testFindAllTwos(self):
+        result = self.c.find_by_kind(2)
+        self.match(result, 2, "pretty")
+        self.failUnlessEqual(result, [])
+
+    def testFindAllThrees(self):
+        result = self.c.find_by_kind(3)
+        self.match(result, 3, "black")
+        self.match(result, 3, "box")
+        self.failUnlessEqual(result, [])
+
+    def testFindAllNones(self):
+        result = self.c.find_by_kind(0)
+        self.failUnlessEqual(result, [])
+
+    def testFindFirstOne(self):
+        result = [self.c.first_by_kind(1)]
+        self.match(result, 1, "pink")
+        self.failUnlessEqual(result, [])
+
+    def testFindFirstTwo(self):
+        result = [self.c.first_by_kind(2)]
+        self.match(result, 2, "pretty")
+        self.failUnlessEqual(result, [])
+
+    def testFindFirstThree(self):
+        result = [self.c.first_by_kind(3)]
+        self.match(result, 3, "black")
+        self.failUnlessEqual(result, [])
+
+    def testFindFirstNone(self):
+        result = self.c.first_by_kind(0)
+        self.failUnlessEqual(result, None)
+
+    def testFindAllStringOnes(self):
+        result = self.c.find_strings_by_kind(1)
+        self.failUnlessEqual(result, ["pink"])
+
+    def testFindAllStringTwos(self):
+        result = self.c.find_strings_by_kind(2)
+        self.failUnlessEqual(result, ["pretty"])
+
+    def testFindAllStringThrees(self):
+        result = self.c.find_strings_by_kind(3)
+        self.failUnlessEqual(result, ["black", "box"])
+
+    def testFindAllStringNones(self):
+        result = self.c.find_strings_by_kind(0)
+        self.failUnlessEqual(result, [])
+
+    def testFindFirstStringOne(self):
+        result = self.c.first_string_by_kind(1)
+        self.failUnlessEqual(result, "pink")
+
+    def testFindFirstStringTwo(self):
+        result = self.c.first_string_by_kind(2)
+        self.failUnlessEqual(result, "pretty")
+
+    def testFindFirstStringThree(self):
+        result = self.c.first_string_by_kind(3)
+        self.failUnlessEqual(result, "black")
+
+    def testFindFirstStringNone(self):
+        result = self.c.first_string_by_kind(0)
+        self.failUnlessEqual(result, None)
+
+    def testFindFirstVarintByKind(self):
+        result = self.c.first_varint_by_kind(4)
+        self.failUnlessEqual(result, 4)
+
+    def testFindFirstVarintByKindWhenMissing(self):
+        result = self.c.first_varint_by_kind(0)
+        self.failUnlessEqual(result, None)
+
+
 class FindTests(unittest.TestCase):
 
     def setUp(self):
