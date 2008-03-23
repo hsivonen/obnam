@@ -22,6 +22,7 @@ import logging
 import os
 import re
 import stat
+import time
 
 import obnam
 
@@ -278,13 +279,16 @@ class Application:
     def backup(self, roots):
         """Backup all the roots."""
 
+        start = int(time.time())
         root_objs = []
         for root in roots:
             root_objs.append(self.backup_one_root(root))
+        end = int(time.time())
 
         dirrefs = [o.get_id() for o in root_objs]
         gen = obnam.obj.GenerationObject(id=obnam.obj.object_id_new(),
-                                         dirrefs=dirrefs)
+                                         dirrefs=dirrefs, start=start,
+                                         end=end)
         self.enqueue([gen])
         return gen
 

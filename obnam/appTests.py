@@ -342,6 +342,11 @@ class ApplicationBackupTests(unittest.TestCase):
         gen = self.app.backup([self.abs("pink"), self.abs("pretty")])
         self.failUnlessEqual(len(gen.get_dirrefs()), 2)
 
+    def testReturnsGenerationWithTimeStamps(self):
+        gen = self.app.backup([self.abs("pink"), self.abs("pretty")])
+        self.failIfEqual(gen.get_start_time(), None)
+        self.failIfEqual(gen.get_end_time(), None)
+
 
 class ApplicationMapTests(unittest.TestCase):
 
