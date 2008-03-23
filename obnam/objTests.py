@@ -280,11 +280,9 @@ class HostBlockTests(unittest.TestCase):
                                             contmap_block_ids=[]).encode()
         decoded = obnam.obj.block_decode(encoded)
         c = obnam.cmp.first_by_kind(decoded, obnam.cmp.OBJECT)
-        subs = c.get_subcomponents()
-        id = obnam.cmp.first_string_by_kind(subs, obnam.cmp.OBJID)
+        id = c.first_string_by_kind(obnam.cmp.OBJID)
         self.failUnlessEqual(id, "pink")
-        ver = obnam.cmp.first_string_by_kind(subs, 
-                                            obnam.cmp.FORMATVERSION)
+        ver = c.first_string_by_kind(obnam.cmp.FORMATVERSION)
         self.failUnlessEqual(ver, "1")
 
     def make_block(self, gen_ids=None, map_ids=None, contmap_ids=None):
