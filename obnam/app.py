@@ -153,11 +153,10 @@ class Application:
         if self._filelist:
             fc = self._filelist.find(filename)
             if fc != None:
-                subs = fc.get_subcomponents()
-                stat = obnam.cmp.first_by_kind(subs, obnam.cmp.STAT)
-                cont = obnam.cmp.first_string_by_kind(subs, obnam.cmp.CONTREF)
-                sig = obnam.cmp.first_string_by_kind(subs, obnam.cmp.SIGREF)
-                d = obnam.cmp.first_string_by_kind(subs, obnam.cmp.DELTAREF)
+                stat = fc.first_by_kind(obnam.cmp.STAT)
+                cont = fc.first_string_by_kind(obnam.cmp.CONTREF)
+                sig = fc.first_string_by_kind(obnam.cmp.SIGREF)
+                d = fc.first_string_by_kind(obnam.cmp.DELTAREF)
                 return obnam.cmp.parse_stat_component(stat), cont, sig, d
         
         return None

@@ -440,18 +440,16 @@ class FileGroupObject(StorageObject):
 
     def get_file(self, name):
         for file in self.get_files():
-            fname = obnam.cmp.first_string_by_kind(file.get_subcomponents(),
-                                                   obnam.cmp.FILENAME)
+            fname = file.first_string_by_kind(obnam.cmp.FILENAME)
             if name == fname:
                 return file
         return None
 
     def get_string_from_file(self, file, kind):
-        return obnam.cmp.first_string_by_kind(file.get_subcomponents(),
-                                              kind)
+        return file.first_string_by_kind(kind)
 
     def get_stat_from_file(self, file):
-        c = obnam.cmp.first_by_kind(file.get_subcomponents(), obnam.cmp.STAT)
+        c = file.first_by_kind(obnam.cmp.STAT)
         return obnam.cmp.parse_stat_component(c)
 
     def get_names(self):

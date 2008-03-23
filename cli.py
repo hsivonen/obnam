@@ -63,18 +63,16 @@ def backup_single_item(context, pathname, new_filelist, prevgen_filelist):
 
         prev = prevgen_filelist.find(pathname)
         if prev:
-            subs = prev.get_subcomponents()
-            prev_sig_id = obnam.cmp.first_string_by_kind(subs, 
-                                                         obnam.cmp.SIGREF)
+            prev_sig_id = prev.first_string_by_kind(obnam.cmp.SIGREF)
             if prev_sig_id:
                 prev_sig = obnam.io.get_object(context, prev_sig_id)
                 if prev_sig:
                     prev_sigdata = prev_sig.first_string_by_kind(
                                                         obnam.cmp.SIGDATA)
                     if prev_sigdata:
-                        xcont_ref = obnam.cmp.first_string_by_kind(subs,
+                        xcont_ref = prev.first_string_by_kind(
                                                         obnam.cmp.CONTREF)
-                        xdelta_ref = obnam.cmp.first_string_by_kind(subs,
+                        xdelta_ref = prev.first_string_by_kind(
                                                         obnam.cmp.DELTAREF)
                     
                         deltapart_ids = obnam.rsync.compute_delta(context,
@@ -325,9 +323,7 @@ def show_generations(context, gen_ids):
             continue
         list = []
         for c in fl.find_by_kind(obnam.cmp.FILE):
-            subs = c.get_subcomponents()
-            filename = obnam.cmp.first_string_by_kind(subs, 
-                                                 obnam.cmp.FILENAME)
+            filename = c.first_string_by_kind(obnam.cmp.FILENAME)
             if pretty:
                 list.append((obnam.format.inode_fields(c), filename))
             else:
@@ -359,8 +355,7 @@ def hardlink_key(st):
 
 def create_filesystem_object(context, hardlinks, full_pathname, inode):
     logging.debug("Creating filesystem object %s" % full_pathname)
-    subs = inode.get_subcomponents()
-    stat_component = obnam.cmp.first_by_kind(subs, obnam.cmp.STAT)
+    stat_component = inode.first_by_kind(obnam.cmp.STAT)
     st = obnam.cmp.parse_stat_component(stat_component)
     mode = st.st_mode
 
@@ -381,12 +376,11 @@ def create_filesystem_object(context, hardlinks, full_pathname, inode):
         if not os.path.exists(basedir):
             os.makedirs(basedir, 0700)
         fd = os.open(full_pathname, os.O_WRONLY | os.O_CREAT, 0)
-        cont_id = obnam.cmp.first_string_by_kind(subs, obnam.cmp.CONTREF)
+        cont_id = inode.first_string_by_kind(obnam.cmp.CONTREF)
         if cont_id:
             obnam.io.copy_file_contents(context, fd, cont_id)
         else:
-            delta_id = obnam.cmp.first_string_by_kind(subs, 
-                                                      obnam.cmp.DELTAREF)
+            delta_id = inode.first_string_by_kind(obnam.cmp.DELTAREF)
             obnam.io.reconstruct_file_contents(context, fd, delta_id)
         os.close(fd)
 
@@ -456,10 +450,7 @@ def restore(context, gen_id, files):
     list = []
     hardlinks = {}
     for c in fl.find_by_kind(obnam.cmp.FILE):
-        subs = c.get_subcomponents()
-    
-        pathname = obnam.cmp.first_string_by_kind(subs,
-                                                 obnam.cmp.FILENAME)
+        pathname = c.first_string_by_kind(obnam.cmp.FILENAME)
 
         if not restore_requested(files, pathname):
             logging.debug("Restore of %s not requested" % pathname)

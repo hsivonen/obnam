@@ -300,8 +300,7 @@ def reconstruct_file_contents(context, fd, delta_id):
 
 
 def set_inode(full_pathname, file_component):
-    subs = file_component.get_subcomponents()
-    stat_component = obnam.cmp.first_by_kind(subs, obnam.cmp.STAT)
+    stat_component = file_component.first_by_kind(obnam.cmp.STAT)
     st = obnam.cmp.parse_stat_component(stat_component)
     os.utime(full_pathname, (st.st_atime, st.st_mtime))
     os.chmod(full_pathname, stat.S_IMODE(st.st_mode))
@@ -369,9 +368,7 @@ def find_map_blocks_in_use(context, host_block, data_block_ids):
         assert type(list) == type([])
         list = obnam.cmp.find_by_kind(list, obnam.cmp.OBJMAP)
         for c in list:
-            subs = c.get_subcomponents()
-            id = obnam.cmp.first_string_by_kind(subs, 
-                                        obnam.cmp.BLOCKREF)
+            id = c.first_string_by_kind(obnam.cmp.BLOCKREF)
             if id in data_block_ids:
                 used_map_block_ids.add(map_block_id)
                 break # We already know this entire map block is used
