@@ -58,3 +58,6 @@ class OperationFactoryTests(unittest.TestCase):
     def testRaisesErrorForUnknownArgument(self):
         self.failUnlessRaises(obnam.ObnamException, 
                               self.factory.get_operation, ["pink"])
+
+    def testFindsBackupOperation(self):
+        self.failUnless(self.factory.get_operation(["backup"]))

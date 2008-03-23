@@ -103,4 +103,15 @@ class OperationFactory:
         if not args:
             raise NoArguments()
 
+        for oper in self.find_operations():
+            if oper.name == args[0]:
+                return oper(self._app, args[1:])
+
         raise OperationNotFound(args[0])
+
+
+class Backup(Operation):
+
+    """Backup files the user specifies."""
+
+    name = "backup"
