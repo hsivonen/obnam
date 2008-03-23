@@ -1,4 +1,4 @@
-# Copyright (C) 2006  Lars Wirzenius <liw@iki.fi>
+# Copyright (C) 2008  Lars Wirzenius <liw@iki.fi>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,34 +15,29 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-"""The init file for the obnam module."""
+"""A backup operation for Obnam."""
 
 
-NAME = "obnam"
-VERSION = "0.9.0"
+import obnam
 
 
-from exception import ObnamException
+class Backup(obnam.Operation):
 
-import backend
-import cache
-import cfgfile
-import cmp
-import config
-import context
-import filelist
-import format
-import gpg
-import io
-import log
-import map
-import obj
-import progress
-import rsync
-import utils
-import varint
-import walk
-
-from app import Application
-from oper import Operation, OperationFactory
-from oper_backup import Backup
+    """Backup files the user has specified."""
+    
+    name = "backup"
+    
+    def do_it(self, roots):
+        logging.info("Starting backup")
+        logging.info("Getting and decoding host block")
+        app = self.get_application()
+        host = app.load_host()
+        app.load_maps()
+        # We don't need to load in file data, therefore we don't load
+        # the content map blocks.
+    
+        gen = app.backup(self._roots)
+        
+        app.finish([gen])
+    
+        logging.info("Backup done")
