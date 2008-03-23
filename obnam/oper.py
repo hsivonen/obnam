@@ -18,7 +18,23 @@
 """Obnam operations."""
 
 
+import obnam
+
+
 class Operation:
+
+    """A user-visible operation for the Obnam backup program.
+    
+    User-visible operations are things like "make a backup", "restore
+    files from a backup", "list backup generations", and so on. This
+    base class abstracts the operations so that they can be easily
+    implemented. Associated with this is the OperationFactory class,
+    which will automatically instantiate the right Operation subclass
+    based on command line arguments. For this to work, subclasses
+    MUST set the 'name' attribute to the command word the user will
+    use on the command line.
+    
+    """
 
     name = None
 
@@ -33,3 +49,15 @@ class Operation:
     def get_args(self):
         """Return arguments this operation instance will use."""
         return self._args
+
+    def do_it(self, args):
+        """Do the operation.
+        
+        'args' will contain all command line arguments /except/ the
+        command word. There's no point in passing that to this class,
+        since we already know it must be our name.
+        
+        Subclasses should override this method with something that
+        is actually useful. The default implementation does nothing.
+        
+        """
