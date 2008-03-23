@@ -65,6 +65,19 @@ class Operation:
         """
 
 
+class NoArguments(obnam.ObnamException):
+
+    def __init__(self):
+        self._msg = ("Command line argument list is empty. " 
+                     "Need at least the operation name.")
+
+
+class OperationNotFound(obnam.ObnamException):
+
+    def __init__(self, name):
+        self._msg = "Unknown operation %s" % name
+
+
 class OperationFactory:
 
     """Instantiate Operation subclasses based on command line arguments."""
@@ -79,3 +92,15 @@ class OperationFactory:
             if inspect.isclass(x) and issubclass(x, Operation):
                 list.append(x)
         return list
+
+    def get_operation(self, args):
+        """Instantiate the right operation given the command line.
+        
+        If there is no corresponding operation, raise an error.
+        
+        """
+
+        if not args:
+            raise NoArguments()
+
+        raise OperationNotFound(args[0])
