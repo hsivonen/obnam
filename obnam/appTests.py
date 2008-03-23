@@ -415,3 +415,17 @@ class ApplicationMapTests(unittest.TestCase):
         obnam.map.add(self.context.contmap, "pink", "pretty")
         self.app.update_content_maps()
         self.failUnlessEqual(obnam.map.count(self.context.contmap), 1)
+
+
+class ApplicationFinishTests(unittest.TestCase):
+
+    def testRemovesHostObject(self):
+        self.context = obnam.context.Context()
+        self.context.cache = obnam.cache.Cache(self.context.config)
+        self.context.be = obnam.backend.init(self.context.config, 
+                                             self.context.cache)
+        self.app = obnam.Application(self.context)
+        self.app.load_host()
+
+        self.app.finish([])
+        self.failUnlessEqual(self.app.get_host(), None)

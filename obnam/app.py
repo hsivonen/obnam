@@ -318,3 +318,31 @@ class Application:
         """Create new content object mapping blocks and upload them."""
         logging.debug("Creating new mapping block for content mappings")
         return self._update_map_helper(self._context.contmap)
+
+    def finish(self, new_gens):
+        """Finish a backup operation by updating maps and uploading host block.
+        
+        This also removes the host block that has been load. In other
+        words, if you want to continue using the application for anything
+        that requires the host block, you have to call load_host again.
+        
+        """
+
+        obnam.io.flush_all_object_queues(self._context)
+    
+        logging.info("Creating new mapping blocks")
+        host = self.get_host()
+        map_ids = host.get_map_block_ids() + self.update_maps()
+        contmap_ids = (host.get_contmap_block_ids() + 
+                       self.update_content_maps())
+        
+        logging.info("Creating new host block")
+        gen_ids = (host.get_generation_ids() + 
+                   [gen.get_id() for gen in new_gens])
+        host2 = obnam.obj.HostBlockObject(host_id=host.get_id(), 
+                                          gen_ids=gen_ids, 
+                                          map_block_ids=map_ids,
+                                          contmap_block_ids=contmap_ids)
+        obnam.io.upload_host_block(self._context, host2.encode())
+        
+        self._host = None
