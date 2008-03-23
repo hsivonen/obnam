@@ -45,7 +45,10 @@ import walk
 
 from app import Application
 from oper import Operation, OperationFactory
+
 from oper_backup import Backup
+from oper_forget import Forget
 from oper_generations import ListGenerations
-from oper_show_generations import ShowGenerations
 from oper_restore import Restore
+from oper_show_generations import ShowGenerations
+
