@@ -97,10 +97,27 @@ class Restore(obnam.Operation):
         # Nope, don't restore it.
         return False
 
-    def restore_from_filelist(self, fl, files):
+    def restore_single_item(self, hardlinks, target, pathname, inode):
+        logging.debug("Restoring %s" % pathname)
+
+        if pathname.startswith(os.sep):
+            pathname = "." + pathname
+        full_pathname = os.path.join(target, pathname)
+
+        self.create_filesystem_object(hardlinks, full_pathname, inode)
+        return full_pathname
+
+    def fix_permissions(self, list):
+        logging.debug("Fixing permissions")
+        list.sort()
+        for full_pathname, inode in list:
+            obnam.io.set_inode(full_pathname, inode)
+
+    def restore_from_filelist(self, target, fl, files):
         logging.debug("Restoring files from FILELIST")
         list = []
         hardlinks = {}
+
         for c in fl.find_by_kind(obnam.cmp.FILE):
             pathname = c.first_string_by_kind(obnam.cmp.FILENAME)
     
@@ -108,19 +125,67 @@ class Restore(obnam.Operation):
                 logging.debug("Restore of %s not requested" % pathname)
                 continue
     
-            logging.debug("Restoring %s" % pathname)
-    
-            if pathname.startswith(os.sep):
-                pathname = "." + pathname
-            full_pathname = os.path.join(target, pathname)
-    
-            self.create_filesystem_object(hardlinks, full_pathname, c)
+            full_pathname = self.restore_single_item(hardlinks, target, 
+                                                     pathname, c)
             list.append((full_pathname, c))
-    
-        logging.debug("Fixing permissions")
-        list.sort()
-        for full_pathname, inode in list:
-            obnam.io.set_inode(full_pathname, inode)
+
+        self.fix_permissions(list)
+
+    def restore_from_filegroups(self, target, hardlinks, list, parent, 
+                                filegrouprefs, files):
+        for ref in filegrouprefs:
+            fg = obnam.io.get_object(self.app.get_context(), ref)
+            if not fg:
+                logging.warning("Cannot find FILEGROUP object %s" % ref)
+            else:
+                for name in fg.get_names():
+                    if parent:
+                        name2 = os.path.join(parent, name)
+                    if self.restore_requested(files, name2):
+                        file = fg.get_file(name)
+                        full_pathname = self.restore_single_item(hardlinks,
+                                            target, name2, file)
+                        list.append((full_pathname, file))
+                    else:
+                        logging.debug("Restore of %s not requested" % name2)
+
+    def restore_from_dirs(self, target, hardlinks, list, parent, dirrefs, 
+                          files):
+        for ref in dirrefs:
+            dir = obnam.io.get_object(self.app.get_context(), ref)
+            if not dir:
+                logging.warning("Cannot find DIR object %s" % ref)
+            else:
+                name = dir.get_name()
+                if parent:
+                    name = os.path.join(parent, name)
+                if self.restore_requested(files, name):
+                    st = dir.first_by_kind(obnam.cmp.STAT)
+                    st = obnam.cmp.parse_stat_component(st)
+                    file = \
+                        obnam.filelist.create_file_component_from_stat(
+                            dir.get_name(), st, None, None, None)
+                    full_pathname = self.restore_single_item(hardlinks,
+                                                             target, name,
+                                                             file)
+                    list.append((full_pathname, file))
+                    self.restore_from_filegroups(target, hardlinks, list, 
+                                                 name,
+                                                 dir.get_filegrouprefs(),
+                                                 files)
+                    self.restore_from_dirs(target, hardlinks, list, name,
+                                           dir.get_dirrefs(), files)
+                else:
+                    logging.debug("Restore of %s not requested" % name)
+
+    def restore_from_dirs_and_filegroups(self, target, gen, files):
+        hardlinks = {}
+        list = []
+        self.restore_from_filegroups(target, hardlinks, list, None, 
+                                     gen.get_filegrouprefs(), files)
+        self.restore_from_dirs(target, hardlinks, list, 
+                               None, gen.get_dirrefs(), files)
+        self.fix_permissions(list)
 
     def do_it(self, args):
         gen_id = args[0]
@@ -128,7 +193,7 @@ class Restore(obnam.Operation):
         logging.debug("Restoring generation %s" % gen_id)
         logging.debug("Restoring files: %s" % ", ".join(files))
     
-        app = self.get_application()
+        self.app = app = self.get_application()
         context = app.get_context()
         host = app.load_host()
     
@@ -150,6 +215,6 @@ class Restore(obnam.Operation):
             if not fl:
                 logging.warning("Cannot find file list object %s" % fl_id)
             else:
-                self.restore_from_filelist(fl, files)
+                self.restore_from_filelist(target, fl, files)
         else:
-            logging.warning("No file list in generation %s" % gen_id)
+            self.restore_from_dirs_and_filegroups(target, gen, files)
