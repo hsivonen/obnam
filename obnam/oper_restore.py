@@ -97,35 +97,8 @@ class Restore(obnam.Operation):
         # Nope, don't restore it.
         return False
 
-    def do_it(self, args):
-        gen_id = args[0]
-        files = args[1:]
-        logging.debug("Restoring generation %s" % gen_id)
-        logging.debug("Restoring files: %s" % ", ".join(files))
-    
-        app = self.get_application()
-        context = app.get_context()
-        host = app.load_host()
-    
-        app.load_maps()
-        app.load_content_maps()
-    
-        logging.debug("Getting generation object")    
-        gen = obnam.io.get_object(context, gen_id)
-        if gen is None:
-            raise UnknownGeneration(gen_id)
-        
-        target = context.config.get("backup", "target-dir")
-        logging.debug("Restoring files under %s" % target)
-    
-        logging.debug("Getting list of files in generation")
-        fl_id = gen.get_filelistref()
-        fl = obnam.io.get_object(context, fl_id)
-        if not fl:
-            logging.warning("Cannot find file list object %s" % fl_id)
-            return
-    
-        logging.debug("Restoring files")
+    def restore_from_filelist(self, fl, files):
+        logging.debug("Restoring files from FILELIST")
         list = []
         hardlinks = {}
         for c in fl.find_by_kind(obnam.cmp.FILE):
@@ -148,3 +121,35 @@ class Restore(obnam.Operation):
         list.sort()
         for full_pathname, inode in list:
             obnam.io.set_inode(full_pathname, inode)
+
+    def do_it(self, args):
+        gen_id = args[0]
+        files = args[1:]
+        logging.debug("Restoring generation %s" % gen_id)
+        logging.debug("Restoring files: %s" % ", ".join(files))
+    
+        app = self.get_application()
+        context = app.get_context()
+        host = app.load_host()
+    
+        app.load_maps()
+        app.load_content_maps()
+    
+        logging.debug("Getting generation object")    
+        gen = obnam.io.get_object(context, gen_id)
+        if gen is None:
+            raise UnknownGeneration(gen_id)
+        
+        target = context.config.get("backup", "target-dir")
+        logging.debug("Restoring files under %s" % target)
+    
+        fl_id = gen.get_filelistref()
+        if fl_id:
+            logging.debug("Getting list of files in generation")
+            fl = obnam.io.get_object(context, fl_id)
+            if not fl:
+                logging.warning("Cannot find file list object %s" % fl_id)
+            else:
+                self.restore_from_filelist(fl, files)
+        else:
+            logging.warning("No file list in generation %s" % gen_id)
