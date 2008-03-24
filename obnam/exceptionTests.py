@@ -23,7 +23,7 @@ import unittest
 import obnam
 
 
-class SampleException(obnam.exception.ExceptionBase):
+class SampleException(obnam.ObnamException):
 
     def __init__(self, msg):
         self._msg = msg

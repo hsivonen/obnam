@@ -1,4 +1,4 @@
-# Copyright (C) 2006  Lars Wirzenius <liw@iki.fi>
+# Copyright (C) 2008  Lars Wirzenius <liw@iki.fi>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,27 +15,31 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-"""Unit tests for obnam.context."""
+"""A backup operation for Obnam."""
 
 
-import unittest
-
+import logging
 
 import obnam
 
 
-class ContextCreateTests(unittest.TestCase):
+class Backup(obnam.Operation):
 
-    def test(self):
-        context = obnam.context.Context()
-        attrs = [x for x in dir(context) if not x.startswith("_")]
-        attrs.sort()
-        self.failUnlessEqual(attrs, 
-            ["be", "cache", "config", "content_oq", "contmap", "map", "oq",
-             "progress"])
-        self.failUnlessEqual(context.be, None)
-        self.failUnlessEqual(context.cache, None)
-        self.failIfEqual(context.config, None)
-        self.failIfEqual(context.map, None)
-        self.failIfEqual(context.oq, None)
-        self.failIfEqual(context.content_oq, None)
+    """Backup files the user has specified."""
+    
+    name = "backup"
+    
+    def do_it(self, roots):
+        logging.info("Starting backup")
+        logging.info("Getting and decoding host block")
+        app = self.get_application()
+        host = app.load_host()
+        app.load_maps()
+        # We don't need to load in file data, therefore we don't load
+        # the content map blocks.
+    
+        gen = app.backup(roots)
+        
+        app.finish([gen])
+    
+        logging.info("Backup done")

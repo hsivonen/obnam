@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 #
 # Copyright (C) 2007  Lars Wirzenius <liw@iki.fi>
 #
@@ -56,7 +56,7 @@ def deduce_fake_dirs(paths):
     return sorted(fakes)
 
 
-class NoHostBlock(obnam.exception.ExceptionBase):
+class NoHostBlock(obnam.ObnamException):
 
     def __init__(self):
         self._msg = \
@@ -80,8 +80,9 @@ class ObnamFS(fuse.Fuse):
         block = obnam.io.get_host_block(self.context)
         if block is None:
             raise NoHostBlock()
-        (_, gen_ids, map_block_ids, contmap_ids) = \
-            obnam.obj.host_block_decode(block)
+        gen_ids = host.get_generation_ids()
+        map_block_ids = host.get_map_block_ids()
+        contmap_block_ids = host.get_contmap_block_ids()
         self.gen_ids = gen_ids
         obnam.io.load_maps(self.context, self.context.map, map_block_ids)
         obnam.io.load_maps(self.context, self.context.contmap, 
@@ -121,9 +122,7 @@ class ObnamFS(fuse.Fuse):
 
         list = []
         for c in fl.find_by_kind(obnam.cmp.FILE):
-            subs = c.get_subcomponents()
-            filename = obnam.cmp.first_string_by_kind(subs, 
-                                                      obnam.cmp.FILENAME)
+            filename = c.first_string_by_kind(obnam.cmp.FILENAME)
             list.append(filename)
 
         fl2 = obnam.filelist.Filelist()
@@ -144,8 +143,7 @@ class ObnamFS(fuse.Fuse):
         c = fl.find(path)
         if not c:
             return None
-        subs = c.get_subcomponents()
-        stat_component = obnam.cmp.first_by_kind(subs, obnam.cmp.STAT)
+        stat_component = c.first_by_kind(obnam.cmp.STAT)
         if stat_component:
             st = obnam.cmp.parse_stat_component(stat_component)
             return obnam.utils.make_stat_result(st_mode=st.st_mode,
@@ -301,13 +299,11 @@ class ObnamFS(fuse.Fuse):
                 logging.debug("FS: open: file not found: %s" % relative_path)
                 return -errno.ENOENT
 
-            subs = c.get_subcomponents()
-            cont_id = obnam.cmp.first_string_by_kind(subs, obnam.cmp.CONTREF)
+            cont_id = c.first_string_by_kind(obnam.cmp.CONTREF)
             if cont_id:
                 obnam.io.copy_file_contents(self.context, fd, cont_id)
             else:
-                delta_id = obnam.cmp.first_string_by_kind(subs, 
-                                                          obnam.cmp.DELTAREF)
+                delta_id = c.first_string_by_kind(obnam.cmp.DELTAREF)
                 obnam.io.reconstruct_file_contents(self.context, fd, delta_id)
 
             self.handles[path] = (fd, 1)

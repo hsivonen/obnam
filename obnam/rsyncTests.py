@@ -43,6 +43,42 @@ class RsyncTests(unittest.TestCase):
         os.remove("empty_file.sig.temp")
         os.remove(empty_file)
 
+    def testSignatureRaisesExceptionIfCommandIsUnknown(self):
+        (fd, empty_file) = tempfile.mkstemp()
+        os.close(fd)
+
+        context = obnam.context.Context()
+        context.config.set("backup", "odirect-pipe", "/notexist")
+        self.failUnlessRaises(obnam.rsync.UnknownCommand,
+                              obnam.rsync.compute_signature,
+                              context, empty_file)
+
+        os.remove(empty_file)
+
+    def testSignatureRaisesExceptionIfCommandFails(self):
+        (fd, empty_file) = tempfile.mkstemp()
+        os.close(fd)
+
+        context = obnam.context.Context()
+        context.config.set("backup", "odirect-pipe", "false")
+        self.failUnlessRaises(obnam.rsync.CommandFailure,
+                              obnam.rsync.compute_signature,
+                              context, empty_file)
+
+        os.remove(empty_file)
+
+    def testDeltaRaisesExceptionIfCommandFails(self):
+        (fd, empty_file) = tempfile.mkstemp()
+        os.close(fd)
+
+        context = obnam.context.Context()
+        context.config.set("backup", "odirect-pipe", "false")
+        self.failUnlessRaises(obnam.rsync.CommandFailure,
+                              obnam.rsync.compute_delta,
+                              context, "pink", empty_file)
+
+        os.remove(empty_file)
+
     def testEmptyDelta(self):
         (fd, empty_file) = tempfile.mkstemp()
         os.close(fd)
@@ -97,4 +133,31 @@ class RsyncTests(unittest.TestCase):
 
         self.failUnlessEqual(third_data, "pretty")
         
+        shutil.rmtree(context.config.get("backup", "store"))
+
+    def raise_os_error(self, *args):
+        raise os.error("foo")
+
+    def testApplyDeltaWithoutDevNull(self):
+        self.failUnlessRaises(os.error,
+                              obnam.rsync.apply_delta, 
+                              None, None, None, None, 
+                              open=self.raise_os_error)
+
+    def testApplyDeltaRaisesExceptionWhenCommandFails(self):
+        context = obnam.context.Context()
+        context.cache = obnam.cache.Cache(context.config)
+        context.be = obnam.backend.init(context.config, context.cache)
+        
+        first = self.create_file("pink")
+        second = self.create_file("pretty")
+        sig = obnam.rsync.compute_signature(context, first)
+        deltapart_ids = obnam.rsync.compute_delta(context, sig, second)
+        obnam.io.flush_all_object_queues(context)
+
+        self.failUnlessRaises(obnam.rsync.CommandFailure,
+                              obnam.rsync.apply_delta,
+                              context, first, deltapart_ids, "/dev/null",
+                              cmd="./badcat")
+
         shutil.rmtree(context.config.get("backup", "store"))

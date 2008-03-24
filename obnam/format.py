@@ -18,6 +18,7 @@
 """Format data for presentation"""
 
 
+import os
 import stat
 import time
 
@@ -71,15 +72,14 @@ def permissions(mode):
 
 def filetype(mode):
     """Return character to show the type of a file, like 'ls -l'"""
-    tests = (
-        (stat.S_ISDIR, "d"),
-        (stat.S_ISCHR, "c"),
-        (stat.S_ISBLK, "b"),
-        (stat.S_ISREG, "-"),
-        (stat.S_ISFIFO, "p"),
-        (stat.S_ISLNK, "l"),
-        (stat.S_ISSOCK, "s"),
-    )
+    tests = [(stat.S_ISDIR, "d"),
+             (stat.S_ISCHR, "c"),
+             (stat.S_ISBLK, "b"),
+             (stat.S_ISREG, "-"),
+             (stat.S_ISFIFO, "p"),
+             (stat.S_ISLNK, "l"),
+             (stat.S_ISSOCK, "s"),
+            ]
     for func, result in tests:
         if func(mode):
             return result
@@ -94,18 +94,16 @@ def filemode(mode):
 def inode_fields(file_component):
     format_integer = lambda x: "%d" % x
 
-    fields = (
-        ("st_mode", filemode),
-        ("st_nlink", format_integer),
-        ("st_uid", format_integer),
-        ("st_gid", format_integer),
-        ("st_size", format_integer),
-        ("st_mtime", timestamp),
-    )
+    fields = [("st_mode", filemode),
+              ("st_nlink", format_integer),
+              ("st_uid", format_integer),
+              ("st_gid", format_integer),
+              ("st_size", format_integer),
+              ("st_mtime", timestamp),
+             ]
 
     list = []
-    subs = file_component.get_subcomponents()
-    stat_component = obnam.cmp.first_by_kind(subs, obnam.cmp.STAT)
+    stat_component = file_component.first_by_kind(obnam.cmp.STAT)
     st = obnam.cmp.parse_stat_component(stat_component)
     for kind, func in fields:
         list.append(func(st.__getattribute__(kind)))
@@ -115,3 +113,59 @@ def inode_fields(file_component):
 def timestamp(seconds):
     """Format a time stamp given in seconds since epoch"""
     return time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(seconds))
+
+
+class Listing:
+
+    """Format listings of contents of backups.
+    
+    The listings are formatted similar to the Unix 'ls -l' command.
+    
+    """
+    
+    def __init__(self, context, output_file):
+        self._context = context
+        self._output = output_file
+        self._get_object = obnam.io.get_object
+
+    def get_objects(self, refs):
+        list = []
+        for ref in refs:
+            o = self._get_object(self._context, ref)
+            if o:
+                list.append(o)
+        return list
+
+    def walk(self, dirs, filegroups, fullpath=None):
+        self.format(dirs, filegroups)
+        for dir in dirs:
+            dirrefs = dir.get_dirrefs()
+            fgrefs = dir.get_filegrouprefs()
+            if dirrefs or fgrefs:
+                name = dir.get_name()
+                if fullpath:
+                    name = os.path.join(fullpath, name)
+                self._output.write("\n%s:\n" % name)
+                self.walk(self.get_objects(dirrefs), self.get_objects(fgrefs),
+                          fullpath=name)
+        
+    def format(self, dirs, filegroups):
+        list = []
+
+        for dir in dirs:
+            list.append((dir.get_name(), dir.get_stat()))
+        for fg in filegroups:
+            for name in fg.get_names():
+                list.append((name, fg.get_stat(name)))
+
+        list.sort()
+
+        for name, stat in list:
+            self._output.write("%s %d %d %d %d %s %s\n" % 
+                               (filemode(stat.st_mode),
+                                stat.st_nlink,
+                                stat.st_uid,
+                                stat.st_gid,
+                                stat.st_size,
+                                timestamp(stat.st_mtime),
+                                name))

@@ -130,6 +130,24 @@ class ObjectQueueFlushing(IoBase):
         self.failUnless(self.context.content_oq.is_empty())
 
 
+class GetBlockTests(IoBase):
+        
+    def setup_pink_block(self, to_cache):
+        self.context.be.upload_block("pink", "pretty", to_cache)
+
+    def testRaisesIoErrorForNonExistentBlock(self):
+        self.failUnlessRaises(IOError, obnam.io.get_block, self.context, "pink")
+        
+    def testFindsBlockWhenNotInCache(self):
+        self.setup_pink_block(to_cache=False)
+        self.failUnless(obnam.io.get_block(self.context, "pink"))
+        
+    def testFindsBlockWhenInCache(self):
+        self.setup_pink_block(to_cache=True)
+        obnam.io.get_block(self.context, "pink")
+        self.failUnless(obnam.io.get_block(self.context, "pink"))
+
+
 class GetObjectTests(IoBase):
 
     def upload_object(self, object_id, object):
@@ -140,33 +158,54 @@ class GetObjectTests(IoBase):
     def testGetObject(self):
         id = "pink"
         component = obnam.cmp.Component(42, "pretty")
-        object = obnam.obj.Object(id, 0)
+        object = obnam.obj.FilePartObject(id=id)
         object.add(component)
         object = object.encode()
         self.upload_object(id, object)
         o = obnam.io.get_object(self.context, id)
 
         self.failUnlessEqual(o.get_id(), id)
-        self.failUnlessEqual(o.get_kind(), 0)
+        self.failUnlessEqual(o.get_kind(), obnam.obj.FILEPART)
         list = o.get_components()
+        list = [c for c in list if c.get_kind() not in [obnam.cmp.OBJID,
+                                                        obnam.cmp.OBJKIND]]
         self.failUnlessEqual(len(list), 1)
         self.failUnlessEqual(list[0].get_kind(), 42)
         self.failUnlessEqual(list[0].get_string_value(), "pretty")
+
+    def testGetObjectTwice(self):
+        id = "pink"
+        component = obnam.cmp.Component(42, "pretty")
+        object = obnam.obj.FileContentsObject(id=id)
+        object.add(component)
+        object = object.encode()
+        self.upload_object(id, object)
+        o = obnam.io.get_object(self.context, id)
+        o2 = obnam.io.get_object(self.context, id)
+        self.failUnlessEqual(o, o2)
+
+    def testReturnsNoneForNonexistentObject(self):
+        self.failUnlessEqual(obnam.io.get_object(self.context, "pink"), None)
 
 
 class HostBlock(IoBase):
 
     def testFetchHostBlock(self):
         host_id = self.context.config.get("backup", "host-id")
-        host = obnam.obj.HostBlockObject(host_id, ["gen1", "gen2"],
-                                         ["map1", "map2"], 
-                                         ["contmap1", "contmap2"])
+        host = obnam.obj.HostBlockObject(host_id=host_id, 
+                                         gen_ids=["gen1", "gen2"],
+                                         map_block_ids=["map1", "map2"], 
+                                         contmap_block_ids=["contmap1", 
+                                                            "contmap2"])
         host = host.encode()
         be = obnam.backend.init(self.context.config, self.context.cache)
         
         obnam.io.upload_host_block(self.context, host)
         host2 = obnam.io.get_host_block(self.context)
         self.failUnlessEqual(host, host2)
+
+    def testFetchNonexistingHostBlockReturnsNone(self):
+        self.failUnlessEqual(obnam.io.get_host_block(self.context), None)
 
 
 class ObjectQueuingTests(unittest.TestCase):
@@ -271,6 +310,10 @@ class FileContentsTests(unittest.TestCase):
         
         self.failUnlessEqual(data1, data2)
 
+    def testRestoreNonexistingFile(self):
+        self.failUnlessRaises(obnam.io.FileContentsObjectMissing,
+                              obnam.io.copy_file_contents, self.context, None, "pink")
+
 
 class MetaDataTests(unittest.TestCase):
 
@@ -297,9 +340,9 @@ class MetaDataTests(unittest.TestCase):
 class ObjectCacheTests(unittest.TestCase):
 
     def setUp(self):
-        self.object = obnam.obj.Object("pink", 1)
-        self.object2 = obnam.obj.Object("pretty", 1)
-        self.object3 = obnam.obj.Object("beautiful", 1)
+        self.object = obnam.obj.FilePartObject(id="pink")
+        self.object2 = obnam.obj.FilePartObject(id="pretty")
+        self.object3 = obnam.obj.FilePartObject(id="beautiful")
 
     def testCreate(self):
         context = obnam.context.Context()
@@ -349,7 +392,7 @@ class ReachabilityTests(IoBase):
 
     def testNoDataNoMaps(self):
         host_id = self.context.config.get("backup", "host-id")
-        host = obnam.obj.HostBlockObject(host_id, [], [], []).encode()
+        host = obnam.obj.HostBlockObject(host_id=host_id).encode()
         obnam.io.upload_host_block(self.context, host)
         
         list = obnam.io.find_reachable_data_blocks(self.context, host)
@@ -363,17 +406,18 @@ class ReachabilityTests(IoBase):
         map_block_id = "box"
         map_block = obnam.map.encode_new_to_block(self.context.map,
                                                          map_block_id)
-        self.context.be.upload(map_block_id, map_block, False)
+        self.context.be.upload_block(map_block_id, map_block, False)
 
         obnam.map.add(self.context.contmap, "black", "beautiful")
         contmap_block_id = "fiddly"
         contmap_block = obnam.map.encode_new_to_block(
                             self.context.contmap, contmap_block_id)
-        self.context.be.upload(contmap_block_id, contmap_block, False)
+        self.context.be.upload_block(contmap_block_id, contmap_block, False)
 
         host_id = self.context.config.get("backup", "host-id")
-        host = obnam.obj.HostBlockObject(host_id, [], [map_block_id], 
-                                         [contmap_block_id])
+        host = obnam.obj.HostBlockObject(host_id=host_id, 
+                                         map_block_ids=[map_block_id], 
+                                         contmap_block_ids=[contmap_block_id])
         host = host.encode()
         obnam.io.upload_host_block(self.context, host)
         
@@ -381,7 +425,7 @@ class ReachabilityTests(IoBase):
         self.failUnlessEqual(list, [])
 
     def testDataAndMap(self):
-        o = obnam.obj.Object("rouge", obnam.obj.FILEPART)
+        o = obnam.obj.FilePartObject(id="rouge")
         c = obnam.cmp.Component(obnam.cmp.FILECHUNK, "moulin")
         o.add(c)
         encoded_o = o.encode()
@@ -390,16 +434,17 @@ class ReachabilityTests(IoBase):
         oq = obnam.obj.ObjectQueue()
         oq.add("rouge", encoded_o)
         block = oq.as_block(block_id)
-        self.context.be.upload(block_id, block, False)
+        self.context.be.upload_block(block_id, block, False)
 
         obnam.map.add(self.context.contmap, "rouge", block_id)
         map_block_id = "pretty"
         map_block = obnam.map.encode_new_to_block(self.context.contmap,
                                                          map_block_id)
-        self.context.be.upload(map_block_id, map_block, False)
+        self.context.be.upload_block(map_block_id, map_block, False)
 
         host_id = self.context.config.get("backup", "host-id")
-        host = obnam.obj.HostBlockObject(host_id, [], [], [map_block_id])
+        host = obnam.obj.HostBlockObject(host_id=host_id,
+                                         map_block_ids=[map_block_id])
         host = host.encode()
         obnam.io.upload_host_block(self.context, host)
         
@@ -412,11 +457,11 @@ class GarbageCollectionTests(IoBase):
 
     def testFindUnreachableFiles(self):
         host_id = self.context.config.get("backup", "host-id")
-        host = obnam.obj.HostBlockObject(host_id, [], [], []).encode()
+        host = obnam.obj.HostBlockObject(host_id=host_id).encode()
         obnam.io.upload_host_block(self.context, host)
 
         block_id = self.context.be.generate_block_id()
-        self.context.be.upload(block_id, "pink", False)
+        self.context.be.upload_block(block_id, "pink", False)
 
         files = self.context.be.list()
         self.failUnlessEqual(files, [host_id, block_id])
@@ -460,10 +505,10 @@ class ObjectCacheRegressionTest(unittest.TestCase):
         context = obnam.context.Context()
         context.config.set("backup", "object-cache-size", "3")
         oc = obnam.io.ObjectCache(context)
-        a = obnam.obj.Object("a", 0)
-        b = obnam.obj.Object("b", 0)
-        c = obnam.obj.Object("c", 0)
-        d = obnam.obj.Object("d", 0)
+        a = obnam.obj.FilePartObject(id="a")
+        b = obnam.obj.FilePartObject(id="b")
+        c = obnam.obj.FilePartObject(id="c")
+        d = obnam.obj.FilePartObject(id="d")
         oc.put(a)
         oc.put(b)
         oc.put(c)
@@ -480,7 +525,7 @@ class LoadMapTests(IoBase):
         obnam.map.add(map, "pink", "pretty")
         block_id = self.context.be.generate_block_id()
         block = obnam.map.encode_new_to_block(map, block_id)
-        self.context.be.upload(block_id, block, False)
+        self.context.be.upload_block(block_id, block, False)
         
         obnam.io.load_maps(self.context, self.context.map, [block_id])
         self.failUnlessEqual(obnam.map.get(self.context.map, "pink"),

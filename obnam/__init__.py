@@ -22,13 +22,14 @@ NAME = "obnam"
 VERSION = "0.9.0"
 
 
+from exception import ObnamException
+
 import backend
 import cache
 import cfgfile
 import cmp
 import config
 import context
-import exception
 import filelist
 import format
 import gpg
@@ -40,3 +41,14 @@ import progress
 import rsync
 import utils
 import varint
+import walk
+
+from app import Application
+from oper import Operation, OperationFactory
+
+from oper_backup import Backup
+from oper_forget import Forget
+from oper_generations import ListGenerations
+from oper_restore import Restore
+from oper_show_generations import ShowGenerations
+

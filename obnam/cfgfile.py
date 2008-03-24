@@ -47,7 +47,7 @@ import re
 import obnam
 
 
-class Error(obnam.exception.ExceptionBase):
+class Error(obnam.ObnamException):
 
     pass
     
@@ -67,9 +67,8 @@ class NoSectionError(Error):
 class NoOptionError(Error):
 
     def __init__(self, section, option):
-        self._msg = (
-            "configuration file does not have option %s in section %s" % 
-                (option, section))
+        self._msg = ("configuration file does not have option %s "
+                     "in section %s" % (option, section))
 
 
 class ParsingError(Error):
@@ -192,6 +191,8 @@ class ConfigFile:
         
         """
         values = self.get(section, option)
+        if values == "":
+            return []
         if type(values) != type([]):
             values = [values]
         return values
@@ -292,6 +293,9 @@ class ConfigFile:
 
         return section, option
 
+    def handle_comment(self, section, option, match):
+        return section, option
+
     def readfp(self, f, filename=None):
         """Read configuration file from open file"""
         filename = filename or getattr(f, "filename", None)
@@ -300,13 +304,11 @@ class ConfigFile:
         section = None
         option = None
 
-        matchers = (
-            (self.comment_pattern, 
-             lambda section, option, match: (section, option)),
-            (self.section_pattern, self.handle_section),
-            (self.option_line1_pattern, self.handle_option_line1),
-            (self.option_line2_pattern, self.handle_option_line2),
-        )
+        matchers = ((self.comment_pattern, self.handle_comment),
+                    (self.section_pattern, self.handle_section),
+                    (self.option_line1_pattern, self.handle_option_line1),
+                    (self.option_line2_pattern, self.handle_option_line2),
+                   )
     
         while True:
             line = f.readline()

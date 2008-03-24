@@ -24,7 +24,7 @@ libdir = $(prefix)/lib
 sharedir = $(prefix)/share
 mandir = $(sharedir)/man
 man1dir = $(mandir)/man1
-pydir = $(libdir)/python2.4
+pydir = $(libdir)/python2.5
 sitedir = $(pydir)/site-packages
 
 all: odirect_read obnam.1 odirect_read.1 odirect_pipe.1 obnamfs.1
@@ -48,9 +48,10 @@ odirect_pipe.1: odirect_pipe.docbook
 
 check: all
 	./test_odirect_read
-	python testrun.py
+	python -m CoverageTestRunner --ignore-coverage
 	rm -f .coverage
 	sh blackboxtests tests/*
+	./xxx-restore-etc-old-style
 	./check-options
 	bzr ls --versioned --kind=file | \
 	    grep -Fxv -f check-license-exceptions | \
@@ -71,7 +72,7 @@ install: all
 	install -m 0644 *.1 $(man1dir)
 	install -d $(sitedir)/obnam
 	install -m 0644 obnam/*.py $(sitedir)/obnam
-	python2.4 fixup-defaults.py \
+	python2.5 fixup-defaults.py \
 	    --gpg-encrypt-to= \
 	    --gpg-home= \
 	    --gpg-sign-with= \

@@ -15,12 +15,28 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-"""Obnam exception"""
+"""Unit tests for obnam.context."""
 
 
-class ObnamException(Exception):
-
-    def __str__(self):
-        return self._msg
+import unittest
 
 
+import obnam
+
+
+class ContextCreateTests(unittest.TestCase):
+
+    def test(self):
+        context = obnam.context.Context()
+        attrs = [x for x in dir(context) if not x.startswith("_")]
+        attrs.sort()
+        self.failUnlessEqual(attrs, 
+            ["be", "cache", "config", "content_oq", "contmap", "map", "object_cache", 
+             "oq", "progress"])
+        self.failUnlessEqual(context.be, None)
+        self.failUnlessEqual(context.cache, None)
+        self.failIfEqual(context.config, None)
+        self.failIfEqual(context.map, None)
+        self.failIfEqual(context.oq, None)
+        self.failIfEqual(context.content_oq, None)
+        self.failUnlessEqual(context.object_cache, None)

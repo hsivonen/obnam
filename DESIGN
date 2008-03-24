@@ -2,7 +2,7 @@ Obnam Storage Design
 ====================
 
 :Author: Lars Wirzenius
-:Date: 2007-03-04
+:Date: 2008-01-06
 
 
 
@@ -33,11 +33,40 @@ The storage structure must fill the following requirements:
   become significant. The remote filesystem may have limits on maximum
   file size, and may have a large block size, meaning that a small file
   will still use up an entire block.
+
+* Avoid keeping lots of data in memory on the client. This is necessary
+  to support small-memory systems.
   
-It is clear from these requirements that the file size must be
-configurable, since no size is good for every situation.
+* Support snapshots of a current backup while it is in progress. When
+  a new generation (usually the first generation) is very big, it is
+  good to have a snapshot of the progress every now and then. This way,
+  if the backup run is terminated in the middle, all work is not lost.
+  The overhead of such a snapshot should be small.
+
+* Keep the per-generation overhead small. It should be proportional to
+  the delta from the previous generation: number of files affected and
+  the amount of data affected.
 
 
+Historical note
+---------------
+
+In version 0.9.x, we introduced a new way of storing the metadata of a
+file in a better way. Metadata includes filenames, and inode data, and
+basically everything except the contents of a file.
+
+In the old way, all the metadata for files belonging to a generation was
+stored in an object called FILELIST. In the new way, we build a tree
+mirroring the filesystem, using objects called DIR and FILEGROUP. We
+keep the ability to read FILELIST objects, but no longer include code
+to generate them.
+
+The point of the new way is to allow re-use of parts of the directory
+tree that are not changed in a new generation. This reduces the
+per-generation overhead drastically, allows efficient snapshotting in
+the middle of a backup run, and reducing the amount of data we keep in
+memory at a time.
+  
 
 Logical and physical structures
 -------------------------------
@@ -59,12 +88,42 @@ into a directed acyclic graph (DAG). The root of the DAG is a "host
 object", which is (in essence) a list of backup generations.
 
 Each generation is represented by its own "generation object", and
-consists of a list of pairs of pathnames and references to inodes
-(although this is implemented in a more complicated manner, for
-efficiency).
+consists of a set of references to files and directories (FILEGROUP and
+DIR objects). A DIR is a similar set. We thus get tree such as the
+following one:
 
-The pathname is just a string object, but the inode is a further object
-that consists of the file metadata in the filesystem inode, and a
+    HOST                            -- the root object, which contains
+        GEN                         -- one generation, which contains
+            FILEGROUP               -- two groups of files, plus...
+            FILEGROUP
+            DIR                     -- two directories, the first one
+                FILEGROUP           -- containing one group of files and
+                DIR                 -- three empty subdirectories
+                DIR
+                DIR
+            DIR                     -- and the other two groups of files
+                FILEGROUP
+                FILEGROUP
+                DIR                 -- and one subdirectory, with one
+                    FILEGROUP       -- group of files
+                    
+A FILEGROUP is just a list of basenames for non-directories (regular
+files, symlinks, device files, etc), plus their associated inode data
+(permissions, ownerships, etc). We group files into groups this way
+for efficiency: otherwise there would be a very large number of storage
+objects for them, and that would be an unbearable overhead. The grouping
+is arbitrary, except that all files in a group are assumed to be in the
+same directory. Hard links are stored once per link. The number of
+files in a group is determined (by guessing) to be large enough to keep
+the number of storage objects small, and small enough that there is no
+need to split them up very often.
+
+A DIR holds the name and other metadata for a directory, similar to
+files in a FILEGROUP, and sets of references to FILEGROUPs (for files
+in that directory) and other DIRs (for subdirectories).
+
+Filenames are just string objects, but the inode data is a further
+object that consists of the file metadata in the filesystem inode, and a
 reference to the rsync signature object, and finally either a reference
 to an object containing the entire contents of the file, or a reference
 to the delta object.
@@ -74,20 +133,6 @@ contents object contains the entire contents of the file. The delta
 object contains the rsync delta (all the changes from a previous version
 of the file), plus a reference to the delta or file contents object from
 which the delta was computed.
-
-    host
-    |   \
-    |    \
-    v     v
-    gen   gen
-    |   \
-    |    ------\
-    v           v
-    inode      inode
-    |  \        |   \
-    |   \       |    \
-    v    v      v     v
-    sig  delta  sig  filedata
 
 Note that multiple inodes may refer to the same signature, file
 contents, and delta objects. This way, we can store identical copies of
@@ -143,12 +188,6 @@ contents/delta, and if not, you create new ones. You create the list of
 files and inode references into a new generation. You put all the new
 objects into blocks and upload the blocks to the server, then update the
 host block and upload that.
-
-If the process fails before the transaction has completed (the new
-version of the host block has been successfully uploaded), you remember
-this at the client side, and retry at a suitable time. If the client
-loses its memory, the backup storage is going to contain a number of
-unaffiliated blocks that need to be discarded at some point.
 
 
 
@@ -219,11 +258,27 @@ significant.
     GEN object
         OBJID
         OBJKIND
-        FILELISTREF
+        FILELISTREF?        -- either exactly one FILELISTREF or
+        DIRREF*             -- at least one of DIRREF/FILEGROUPREF
+        FILEGROUPREF*       -- (but any number of those)
         GENSTART
         GENEND
 
     FILELIST
+        FILE*
+            FILENAME
+            STAT -- specially encoded component with struct stat fields
+            CONTREF? -- either this or DELTAREF must be there
+            SIGREF?
+            DELTAREF?
+
+    DIR
+        FILENAME
+        STAT
+        DIRREF*
+        FILEGROUPREF*
+        
+    FILEGROUP
         FILE*
             FILENAME
             STAT -- specially encoded component with struct stat fields
@@ -326,7 +381,7 @@ proved to be pretty slow.
 Legalese
 --------
 
-Copyright 2007 Lars Wirzenius
+Copyright 2007, 2008 Lars Wirzenius
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

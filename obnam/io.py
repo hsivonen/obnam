@@ -57,7 +57,7 @@ def flush_object_queue(context, oq, map, to_cache):
         block_id = context.be.generate_block_id()
         logging.debug("Creating new object block %s" % block_id)
         block = oq.as_block(block_id)
-        context.be.upload(block_id, block, to_cache)
+        context.be.upload_block(block_id, block, to_cache)
         for id in oq.ids():
             obnam.map.add(map, id, block_id)
         oq.clear()
@@ -73,45 +73,18 @@ def get_block(context, block_id):
     """Get a block from cache or by downloading it"""
     block = context.cache.get_block(block_id)
     if not block:
-        result = context.be.download(block_id)
-        if type(result) == type(""):
-            block = result
-        else:
-            # it's an exception
-            raise result
-    # FIXME: the following is ugly
+        block = context.be.download_block(block_id)
     elif context.be.use_gpg():
         logging.debug("Decrypting cached block %s before using it", block_id)
-        decrypted = obnam.gpg.decrypt(context.config, block)
-        if decrypted is None:
-            logging.error("Can't decrypt downloaded block, not using it")
-            return None
-        block = decrypted
+        block = obnam.gpg.decrypt(context.config, block)
     return block
 
 
-class MissingBlock(obnam.exception.ExceptionBase):
+class MissingBlock(obnam.ObnamException):
 
     def __init__(self, block_id, object_id):
         self._msg = "Block %s for object %s is missing" % \
                         (block_id, object_id)
-
-
-def create_object_from_component_list(components):
-    """Create a new object from a list of components"""
-    list = obnam.cmp.find_by_kind(components, obnam.cmp.OBJID)
-    id = list[0].get_string_value()
-    
-    list = obnam.cmp.find_by_kind(components, obnam.cmp.OBJKIND)
-    kind = list[0].get_string_value()
-    (kind, _) = obnam.varint.decode(kind, 0)
-
-    o = obnam.obj.Object(id, kind)
-    bad = (obnam.cmp.OBJID, obnam.cmp.OBJKIND)
-    for c in components:
-        if c.get_kind() not in bad:
-            o.add(c)
-    return o
 
 
 class ObjectCache:
@@ -150,18 +123,15 @@ class ObjectCache:
     def size(self):
         return len(self.mru)
 
-_object_cache = None
-
 
 def get_object(context, object_id):
     """Fetch an object"""
     
     logging.debug("Fetching object %s" % object_id)
     
-    global _object_cache
-    if _object_cache is None:
-        _object_cache = ObjectCache(context)
-    o = _object_cache.get(object_id)
+    if context.object_cache is None:
+        context.object_cache = ObjectCache(context)
+    o = context.object_cache.get(object_id)
     if o:
         logging.debug("Object is in cache, good")
         return o
@@ -171,31 +141,25 @@ def get_object(context, object_id):
     if not block_id:
         block_id = obnam.map.get(context.contmap, object_id)
     if not block_id:
-        logging.warning("No block found that contains object %s" % object_id)
         return None
 
     logging.debug("Fetching block")
     block = get_block(context, block_id)
-    if not block:
-        logging.error("Block %s not found in store" % block_id)
-        raise MissingBlock(block_id, object_id)
 
     logging.debug("Decoding block")
     list = obnam.obj.block_decode(block)
-    if not list:
-        logging.warning("Block %s decodes into nothing" % block_id)
-        return None
     
     logging.debug("Finding objects in block")
     list = obnam.cmp.find_by_kind(list, obnam.cmp.OBJECT)
 
     logging.debug("Putting objects into object cache")
     the_one = None
+    factory = obnam.obj.StorageObjectFactory()
     for component in list:
         subs = component.get_subcomponents()
-        o = create_object_from_component_list(subs)
+        o = factory.get_object(subs)
         if o.get_kind() != obnam.obj.FILEPART:
-            _object_cache.put(o)
+            context.object_cache.put(o)
         if o.get_id() == object_id:
             the_one = o
 
@@ -205,19 +169,17 @@ def get_object(context, object_id):
 
 def upload_host_block(context, host_block):
     """Upload a host block"""
-    return context.be.upload(context.config.get("backup", "host-id"), 
-                             host_block, False)
+    context.be.upload_block(context.config.get("backup", "host-id"), host_block, False)
 
 
 def get_host_block(context):
     """Return (and fetch, if needed) the host block, or None if not found"""
     host_id = context.config.get("backup", "host-id")
     logging.debug("Getting host block %s" % host_id)
-    result = context.be.download(host_id)
-    if type(result) == type(""):
-        return result
-    else:
-        return context.cache.get_block(host_id)
+    try:
+        return context.be.download_block(host_id)
+    except IOError:
+        return None
 
 
 def enqueue_object(context, oq, map, object_id, object, to_cache):
@@ -244,14 +206,13 @@ def create_file_contents_object(context, filename):
             break
         c = obnam.cmp.Component(obnam.cmp.FILECHUNK, data)
         part_id = obnam.obj.object_id_new()
-        o = obnam.obj.Object(part_id, obnam.obj.FILEPART)
-        o.add(c)
+        o = obnam.obj.FilePartObject(id=part_id, components=[c])
         o = o.encode()
         enqueue_object(context, context.content_oq, context.contmap, 
                        part_id, o, False)
         part_ids.append(part_id)
 
-    o = obnam.obj.Object(object_id, obnam.obj.FILECONTENTS)
+    o = obnam.obj.FileContentsObject(id=object_id)
     for part_id in part_ids:
         c = obnam.cmp.Component(obnam.cmp.FILEPARTREF, part_id)
         o.add(c)
@@ -263,7 +224,7 @@ def create_file_contents_object(context, filename):
     return object_id
 
 
-class FileContentsObjectMissing(obnam.exception.ExceptionBase):
+class FileContentsObjectMissing(obnam.ObnamException):
 
     def __init__(self, id):
         self._msg = "Missing file contents object: %s" % id
@@ -339,8 +300,7 @@ def reconstruct_file_contents(context, fd, delta_id):
 
 
 def set_inode(full_pathname, file_component):
-    subs = file_component.get_subcomponents()
-    stat_component = obnam.cmp.first_by_kind(subs, obnam.cmp.STAT)
+    stat_component = file_component.first_by_kind(obnam.cmp.STAT)
     st = obnam.cmp.parse_stat_component(stat_component)
     os.utime(full_pathname, (st.st_atime, st.st_mtime))
     os.chmod(full_pathname, stat.S_IMODE(st.st_mode))
@@ -366,7 +326,8 @@ def _find_refs(components, refs=None):
 def find_reachable_data_blocks(context, host_block):
     """Find all blocks with data that can be reached from host block"""
     logging.debug("Finding reachable data")
-    (_, gen_ids, _, _) = obnam.obj.host_block_decode(host_block)
+    host = obnam.obj.create_host_from_block(host_block)
+    gen_ids = host.get_generation_ids()
     object_ids = set(gen_ids)
     reachable_block_ids = set()
     while object_ids:
@@ -397,28 +358,17 @@ def find_reachable_data_blocks(context, host_block):
 def find_map_blocks_in_use(context, host_block, data_block_ids):
     """Given data blocks in use, return map blocks they're mentioned in"""
     data_block_ids = set(data_block_ids)
-    (_, _, map_block_ids, contmap_block_ids) = \
-        obnam.obj.host_block_decode(host_block)
+    host = obnam.obj.create_host_from_block(host_block)
+    map_block_ids = host.get_map_block_ids()
+    contmap_block_ids = host.get_contmap_block_ids()
     used_map_block_ids = set()
     for map_block_id in map_block_ids + contmap_block_ids:
-        try:
-            block = get_block(context, map_block_id)
-        except IOError, e:
-            logging.warning("Could not load map block %s: %d: %s" %
-                            (map_block_id, e.errno, e.strerror))
-            continue
+        block = get_block(context, map_block_id)
         list = obnam.obj.block_decode(block)
-        if list is None:
-            logging.warning("Error decoding block %s" % map_block_id)
-            continue
-        if type(list) != type([]):
-            print "list:", repr(list)
-            assert False
+        assert type(list) == type([])
         list = obnam.cmp.find_by_kind(list, obnam.cmp.OBJMAP)
         for c in list:
-            subs = c.get_subcomponents()
-            id = obnam.cmp.first_string_by_kind(subs, 
-                                        obnam.cmp.BLOCKREF)
+            id = c.first_string_by_kind(obnam.cmp.BLOCKREF)
             if id in data_block_ids:
                 used_map_block_ids.add(map_block_id)
                 break # We already know this entire map block is used
@@ -453,10 +403,5 @@ def load_maps(context, map, block_ids):
     for i in range(num_blocks):
         id = block_ids[i]
         logging.debug("Loading map block %d/%d: %s" % (i+1, num_blocks, id))
-        try:
-            block = obnam.io.get_block(context, id)
-        except IOError, e:
-            logging.warning("Could not load map block %s: %d: %s" %
-                            (id, e.errno, e.strerror))
-        else:
-            obnam.map.decode_block(map, block)
+        block = obnam.io.get_block(context, id)
+        obnam.map.decode_block(map, block)

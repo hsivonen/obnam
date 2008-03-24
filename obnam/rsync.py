@@ -1,4 +1,4 @@
-# Copyright (C) 2006  Lars Wirzenius <liw@iki.fi>
+# Copyright (C) 2006, 2007, 2008  Lars Wirzenius <liw@iki.fi>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,19 +27,33 @@ import tempfile
 import obnam
 
 
-class UnknownCommand(obnam.exception.ExceptionBase):
+class UnknownCommand(obnam.ObnamException):
 
     def __init__(self, argv, errno):
         self._msg = "Unknown command (error %d): %s" % (errno, " ".join(argv))
 
 
-class CommandFailure(obnam.exception.ExceptionBase):
+class CommandFailure(obnam.ObnamException):
 
     def __init__(self, argv, returncode, stderr):
         self._msg = "Command failed: %s\nError code: %d\n%s" % \
                     (" ".join(argv), 
                      returncode, 
                      obnam.gpg.indent_string(stderr))
+
+
+def run_command(argv, stdin=None, stdout=None, stderr=None):
+    # We let stdin be None unless explicitly specified.
+    if stdout is None:
+        stdout = subprocess.PIPE
+    if stderr is None:
+        stderr = subprocess.PIPE
+
+    try:
+        p = subprocess.Popen(argv, stdin=stdin, stdout=stdout, stderr=stderr)
+    except os.error, e:
+        raise UnknownCommand(argv, e.errno)
+    return p
 
 
 def compute_signature(context, filename):
@@ -49,11 +63,7 @@ def compute_signature(context, filename):
             context.config.get("backup", "odirect-read"),
             filename,
             "rdiff", "--", "signature", "-", "-"]
-    try:
-        p = subprocess.Popen(argv, stdout=subprocess.PIPE, 
-                             stderr=subprocess.PIPE)
-    except os.error, e:
-        raise UnknownCommand(argv, e.errno)
+    p = run_command(argv)
     stdout_data, stderr_data = p.communicate()
     
     if p.returncode == 0:
@@ -77,11 +87,7 @@ def compute_delta(context, signature, filename):
             context.config.get("backup", "odirect-read"),
             filename,
             "rdiff", "--", "delta", tempname, "-", "-"]
-    try:
-        p = subprocess.Popen(argv, stdout=subprocess.PIPE, 
-                             stderr=subprocess.PIPE)
-    except os.error, e:
-        raise UnknownCommand(argv, e.errno)
+    p = run_command(argv)
 
     list = []
     block_size = context.config.getint("backup", "block-size")
@@ -90,7 +96,7 @@ def compute_delta(context, signature, filename):
         if not data:
             break
         id = obnam.obj.object_id_new()
-        o = obnam.obj.Object(id, obnam.obj.DELTAPART)
+        o = obnam.obj.DeltaPartObject(id=id)
         o.add(obnam.cmp.Component(obnam.cmp.DELTADATA, data))
         o = o.encode()
         obnam.io.enqueue_object(context, context.content_oq, 
@@ -104,34 +110,24 @@ def compute_delta(context, signature, filename):
         raise CommandFailure(argv, exit, "")
 
 
-def apply_delta(context, basis_filename, deltapart_ids, new_filename):
+def apply_delta(context, basis, deltaparts, new, open=os.open, cmd="rdiff"):
     """Apply an rsync delta for a file, to get a new version of it"""
     
-    devnull = os.open("/dev/null", os.O_WRONLY)
-    if devnull == -1:
-        return False
+    devnull = open("/dev/null", os.O_WRONLY)
 
-    argv = ["rdiff", "--", "patch", basis_filename, "-", new_filename]
-    try:
-        p = subprocess.Popen(argv,
-                             stdin=subprocess.PIPE, stdout=devnull,
-                             stderr=subprocess.PIPE)
-    except os.error, e:
-        raise UnknownCommand(argv, e.errno)
+    argv = [cmd, "--", "patch", basis, "-", new]
+
+    p = run_command(argv, stdin=subprocess.PIPE, stdout=devnull)
 
     ret = True
-    for id in deltapart_ids:
+    for id in deltaparts:
         deltapart = obnam.io.get_object(context, id)
-        if deltapart:
-            deltadata = deltapart.first_string_by_kind(obnam.cmp.DELTADATA)
-            p.stdin.write(deltadata)
-        else:
-            assert 0
-            ret = False
+        deltadata = deltapart.first_string_by_kind(obnam.cmp.DELTADATA)
+        p.stdin.write(deltadata)
 
     stdout_data, stderr_data = p.communicate(input="")
     os.close(devnull)
     if p.returncode != 0:
-        raise CommandFailed(argv, p.returncode, stderr_data)
+        raise CommandFailure(argv, p.returncode, stderr_data)
     else:
         return ret
