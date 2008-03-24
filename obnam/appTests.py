@@ -138,6 +138,11 @@ class ApplicationMakeFileGroupsTests(unittest.TestCase):
         filenames = self.tempfiles[:obnam.app.MAX_PER_FILEGROUP + 1]
         self.failUnlessEqual(len(self.app.make_filegroups(filenames)), 2)
 
+    def testUsesJustBasenames(self):
+        list = self.app.make_filegroups(self.tempfiles[:1])
+        fg = list[0]
+        self.failIf("/" in fg.get_names()[0])
+
 
 class ApplicationFindFileByNameTests(unittest.TestCase):
 
@@ -211,7 +216,6 @@ class ApplicationBackupsOneDirectoryTests(unittest.TestCase):
         dir = self.app.backup_one_dir(self.dirname, [], files)
         self.failUnlessEqual(len(dir.get_filegrouprefs()), 
                                  self._filegroups(len(files)))
-
 
     def testWithCorrectNumberOfDirrefsWhenSomeAreGiven(self):
         os.mkdir(self.abs("pink"))

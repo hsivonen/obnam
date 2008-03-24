@@ -196,7 +196,7 @@ class Application:
             contref = None
             sigref = None
             deltaref = None
-        fg.add_file(filename, st, contref, sigref, deltaref)
+        fg.add_file(os.path.basename(filename), st, contref, sigref, deltaref)
 
     def make_filegroups(self, filenames):
         """Make list of new FILEGROUP objects.
