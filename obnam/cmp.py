@@ -144,6 +144,38 @@ class Component:
         """Is a component a leaf component or a composite one?"""
         return self.str is None
 
+    def find_by_kind(self, wanted_kind):
+        """Find subcomponents of a desired kind"""
+        return [c for c in self.subcomponents if c.get_kind() == wanted_kind]
+    
+    def first_by_kind(self, wanted_kind):
+        """Find first subcomponent of a desired kind"""
+        for c in self.subcomponents:
+            if c.get_kind() == wanted_kind:
+                return c
+        return None
+
+    def find_strings_by_kind(self, wanted_kind):
+        """Find subcomponents by kind, return their string values"""
+        return [c.get_string_value() 
+                for c in find_by_kind(self.subcomponents, wanted_kind)]
+
+    def first_string_by_kind(self, wanted_kind):
+        """Find first subcomponent by kind, return its string value"""
+        c = self.first_by_kind(wanted_kind)
+        if c:
+            return c.get_string_value()
+        else:
+            return None
+
+    def first_varint_by_kind(self, wanted_kind):
+        """Find first subcomponent by kind, return its integer value"""
+        c = self.first_by_kind(wanted_kind)
+        if c:
+            return c.get_varint_value()
+        else:
+            return None
+
     def encode(self):
         """Encode a component as a string"""
         if self.is_composite():

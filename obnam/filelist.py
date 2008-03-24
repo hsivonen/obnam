@@ -82,8 +82,7 @@ class Filelist:
         """Find the FILE component that matches stat_result"""
         prev = self.find(pathname)
         if prev:
-            prev_subs = prev.get_subcomponents()
-            prev_stat = obnam.cmp.first_by_kind(prev_subs, obnam.cmp.STAT)
+            prev_stat = prev.first_by_kind(obnam.cmp.STAT)
             prev_st = obnam.cmp.parse_stat_component(prev_stat)
             fields = ["st_dev",
                       "st_mode",
@@ -111,7 +110,5 @@ class Filelist:
     def from_object(self, o):
         """Add to file list data from a backup object"""
         for file in o.find_by_kind(obnam.cmp.FILE):
-            subs = file.get_subcomponents()
-            pathname = obnam.cmp.first_string_by_kind(subs, 
-                                                      obnam.cmp.FILENAME)
+            pathname = file.first_string_by_kind(obnam.cmp.FILENAME)
             self.dict[pathname] = file

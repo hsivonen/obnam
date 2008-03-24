@@ -43,12 +43,10 @@ class FileComponentTests(unittest.TestCase):
         
     def check(self, c):
         self.failIfEqual(c, None)
-        subs = c.get_subcomponents()
-        self.failUnlessEqual(
-          obnam.cmp.first_string_by_kind(subs, obnam.cmp.FILENAME),
-          self.filename)
+        self.failUnlessEqual(c.first_string_by_kind(obnam.cmp.FILENAME),
+                             self.filename)
 
-        c_stat = obnam.cmp.first_by_kind(subs, obnam.cmp.STAT)
+        c_stat = c.first_by_kind(obnam.cmp.STAT)
         c_st = obnam.cmp.parse_stat_component(c_stat)
 
         st = os.lstat(self.filename)
@@ -66,15 +64,12 @@ class FileComponentTests(unittest.TestCase):
         self.failUnlessEqual(c_st.st_blksize, st.st_blksize)
         self.failUnlessEqual(c_st.st_rdev, st.st_rdev)
 
-        self.failUnlessEqual(
-            obnam.cmp.first_string_by_kind(subs, obnam.cmp.CONTREF),
-            "pink")
-        self.failUnlessEqual(
-            obnam.cmp.first_string_by_kind(subs, obnam.cmp.SIGREF),
-            "pretty")
-        self.failUnlessEqual(
-            obnam.cmp.first_string_by_kind(subs, obnam.cmp.DELTAREF),
-            "black")
+        self.failUnlessEqual(c.first_string_by_kind(obnam.cmp.CONTREF),
+                             "pink")
+        self.failUnlessEqual(c.first_string_by_kind(obnam.cmp.SIGREF),
+                             "pretty")
+        self.failUnlessEqual(c.first_string_by_kind(obnam.cmp.DELTAREF),
+                             "black")
 
 
 class FilelistTests(unittest.TestCase):
@@ -129,8 +124,7 @@ class FindTests(unittest.TestCase):
         fl.add(pathname, "pink", None, None)
         st = os.lstat(pathname)
         c = fl.find_matching_inode(pathname, st)
-        subs = c.get_subcomponents()
-        stat = obnam.cmp.first_by_kind(subs, obnam.cmp.STAT)
+        stat = c.first_by_kind(obnam.cmp.STAT)
         st2 = obnam.cmp.parse_stat_component(stat)
         self.failUnlessEqual(st.st_mtime, st2.st_mtime)
 

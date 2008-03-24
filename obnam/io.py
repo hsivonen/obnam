@@ -87,11 +87,6 @@ class MissingBlock(obnam.ObnamException):
                         (block_id, object_id)
 
 
-def create_object_from_component_list(components):
-    """Create a new object from a list of components"""
-    return obnam.obj.StorageObject(components)
-
-
 class ObjectCache:
 
     def __init__(self, context):
@@ -159,9 +154,10 @@ def get_object(context, object_id):
 
     logging.debug("Putting objects into object cache")
     the_one = None
+    factory = obnam.obj.StorageObjectFactory()
     for component in list:
         subs = component.get_subcomponents()
-        o = create_object_from_component_list(subs)
+        o = factory.get_object(subs)
         if o.get_kind() != obnam.obj.FILEPART:
             context.object_cache.put(o)
         if o.get_id() == object_id:
@@ -304,8 +300,7 @@ def reconstruct_file_contents(context, fd, delta_id):
 
 
 def set_inode(full_pathname, file_component):
-    subs = file_component.get_subcomponents()
-    stat_component = obnam.cmp.first_by_kind(subs, obnam.cmp.STAT)
+    stat_component = file_component.first_by_kind(obnam.cmp.STAT)
     st = obnam.cmp.parse_stat_component(stat_component)
     os.utime(full_pathname, (st.st_atime, st.st_mtime))
     os.chmod(full_pathname, stat.S_IMODE(st.st_mode))
@@ -331,7 +326,8 @@ def _find_refs(components, refs=None):
 def find_reachable_data_blocks(context, host_block):
     """Find all blocks with data that can be reached from host block"""
     logging.debug("Finding reachable data")
-    (_, gen_ids, _, _) = obnam.obj.host_block_decode(host_block)
+    host = obnam.obj.create_host_from_block(host_block)
+    gen_ids = host.get_generation_ids()
     object_ids = set(gen_ids)
     reachable_block_ids = set()
     while object_ids:
@@ -362,8 +358,9 @@ def find_reachable_data_blocks(context, host_block):
 def find_map_blocks_in_use(context, host_block, data_block_ids):
     """Given data blocks in use, return map blocks they're mentioned in"""
     data_block_ids = set(data_block_ids)
-    _, _, map_block_ids, contmap_block_ids = obnam.obj.host_block_decode(
-                                                host_block)
+    host = obnam.obj.create_host_from_block(host_block)
+    map_block_ids = host.get_map_block_ids()
+    contmap_block_ids = host.get_contmap_block_ids()
     used_map_block_ids = set()
     for map_block_id in map_block_ids + contmap_block_ids:
         block = get_block(context, map_block_id)
@@ -371,9 +368,7 @@ def find_map_blocks_in_use(context, host_block, data_block_ids):
         assert type(list) == type([])
         list = obnam.cmp.find_by_kind(list, obnam.cmp.OBJMAP)
         for c in list:
-            subs = c.get_subcomponents()
-            id = obnam.cmp.first_string_by_kind(subs, 
-                                        obnam.cmp.BLOCKREF)
+            id = c.first_string_by_kind(obnam.cmp.BLOCKREF)
             if id in data_block_ids:
                 used_map_block_ids.add(map_block_id)
                 break # We already know this entire map block is used

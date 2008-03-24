@@ -349,14 +349,26 @@ class HostBlockObject(StorageObject):
                 c = obnam.cmp.Component(obnam.cmp.CONTMAPREF, map_block_id)
                 self.add(c)
     
+    def get_generation_ids(self):
+        """Return IDs of all generations for this host."""
+        return self.find_strings_by_kind(obnam.cmp.GENREF)
+    
+    def get_map_block_ids(self):
+        """Return IDs of all map blocks for this host."""
+        return self.find_strings_by_kind(obnam.cmp.MAPREF)
+    
+    def get_contmap_block_ids(self):
+        """Return IDs of all map blocks for this host."""
+        return self.find_strings_by_kind(obnam.cmp.CONTMAPREF)
+    
     def encode(self):
         oq = ObjectQueue()
         oq.add(self.get_id(), StorageObject.encode(self))
         return oq.as_block(self.get_id())
 
 
-def host_block_decode(block):
-    """Decode a host block"""
+def create_host_from_block(block):
+    """Decode a host block into a HostBlockObject"""
     
     list = block_decode(block)
     
@@ -368,13 +380,13 @@ def host_block_decode(block):
 
     objparts = obnam.cmp.find_by_kind(list, obnam.cmp.OBJECT)
     for objpart in objparts:
-        subs = objpart.get_subcomponents()
-        gen_ids += obnam.cmp.find_strings_by_kind(subs, obnam.cmp.GENREF)
-        map_ids += obnam.cmp.find_strings_by_kind(subs, obnam.cmp.MAPREF)
-        contmap_ids += obnam.cmp.find_strings_by_kind(subs, 
-                                                      obnam.cmp.CONTMAPREF)
+        gen_ids += objpart.find_strings_by_kind(obnam.cmp.GENREF)
+        map_ids += objpart.find_strings_by_kind(obnam.cmp.MAPREF)
+        contmap_ids += objpart.find_strings_by_kind(obnam.cmp.CONTMAPREF)
 
-    return host_id, gen_ids, map_ids, contmap_ids
+    return HostBlockObject(host_id=host_id, gen_ids=gen_ids,
+                           map_block_ids=map_ids, 
+                           contmap_block_ids=contmap_ids)
 
 
 class DirObject(StorageObject):
@@ -426,18 +438,16 @@ class FileGroupObject(StorageObject):
 
     def get_file(self, name):
         for file in self.get_files():
-            fname = obnam.cmp.first_string_by_kind(file.get_subcomponents(),
-                                                   obnam.cmp.FILENAME)
+            fname = file.first_string_by_kind(obnam.cmp.FILENAME)
             if name == fname:
                 return file
         return None
 
     def get_string_from_file(self, file, kind):
-        return obnam.cmp.first_string_by_kind(file.get_subcomponents(),
-                                              kind)
+        return file.first_string_by_kind(kind)
 
     def get_stat_from_file(self, file):
-        c = obnam.cmp.first_by_kind(file.get_subcomponents(), obnam.cmp.STAT)
+        c = file.first_by_kind(obnam.cmp.STAT)
         return obnam.cmp.parse_stat_component(c)
 
     def get_names(self):
@@ -480,6 +490,11 @@ class DeltaPartObject(StorageObject):
     kind = DELTAPART
 
 
+class UnknownStorageObjectKind(obnam.ObnamException):
+
+    def __init__(self, kind):
+        self._msg = "Unknown storage object kind %s" % kind
+
 
 class StorageObjectFactory:
 
@@ -503,4 +518,4 @@ class StorageObjectFactory:
         for klass in self._classes:
             if klass.kind == kind:
                 return klass(components=components)
-        return None
+        raise UnknownStorageObjectKind(kind)

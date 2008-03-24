@@ -1,0 +1,52 @@
+#!/bin/sh
+#
+# xxx-restore-etc-old-style - verify we can still restore old-style backups
+#
+# Copyright (C) 2008  Lars Wirzenius <liw@iki.fi>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+
+set -e
+
+die()
+{
+    echo "$@" 1>&2
+    exit 1
+}
+
+temp=$(mktemp -d)
+
+cmd="./cli.py --host-id=gytha --no-gpg --store=$temp/xxx.store"
+
+tar -C "$temp" -xf xxx-test-data-and-store.tar.gz
+
+gencount=$($cmd generations | wc -l)
+[ "$gencount" = 1 ] || die "Did not report exactly one generation: $gencount"
+
+genid=$($cmd generations | awk '{ print $1 }')
+
+numfiles=$($cmd show-generations $genid | grep -c '^   .*xxx.data')
+[ "$numfiles" = 4 ] || die "Did not get exactly 4 files: $numfiles"
+
+$cmd restore "$genid" --target="$temp/xxx.restored"
+diff -rq "$temp/xxx.data" "$temp/xxx.restored/xxx.data" || 
+    die "Restored files are not identical"
+
+$cmd forget "$genid"
+remaining=$(find "$temp/xxx.store" -type f | wc -l)
+[ "$remaining" = 1 ] || die "Forget did not remove all but host"
+
+rm -rf "$temp"

@@ -51,6 +51,7 @@ check: all
 	python -m CoverageTestRunner --ignore-coverage
 	rm -f .coverage
 	sh blackboxtests tests/*
+	./xxx-restore-etc-old-style
 	./check-options
 	bzr ls --versioned --kind=file | \
 	    grep -Fxv -f check-license-exceptions | \

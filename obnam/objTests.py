@@ -268,12 +268,11 @@ class HostBlockTests(unittest.TestCase):
                                          contmap_block_ids=contmap_ids)
         host = host.encode()
         self.failUnless(host.startswith(obnam.obj.BLOCK_COOKIE))
-        (host_id2, gen_ids2, map_ids2, contmap_ids2) = \
-            obnam.obj.host_block_decode(host)
-        self.failUnlessEqual(host_id, host_id2)
-        self.failUnlessEqual(gen_ids, gen_ids2)
-        self.failUnlessEqual(map_ids, map_ids2)
-        self.failUnlessEqual(contmap_ids, contmap_ids2)
+        host2 = obnam.obj.create_host_from_block(host)
+        self.failUnlessEqual(host_id, host2.get_id())
+        self.failUnlessEqual(gen_ids, host2.get_generation_ids())
+        self.failUnlessEqual(map_ids, host2.get_map_block_ids())
+        self.failUnlessEqual(contmap_ids, host2.get_contmap_block_ids())
         
     def testFormatVersion(self):
         encoded = obnam.obj.HostBlockObject(host_id="pink", gen_ids=[], 
@@ -281,12 +280,47 @@ class HostBlockTests(unittest.TestCase):
                                             contmap_block_ids=[]).encode()
         decoded = obnam.obj.block_decode(encoded)
         c = obnam.cmp.first_by_kind(decoded, obnam.cmp.OBJECT)
-        subs = c.get_subcomponents()
-        id = obnam.cmp.first_string_by_kind(subs, obnam.cmp.OBJID)
+        id = c.first_string_by_kind(obnam.cmp.OBJID)
         self.failUnlessEqual(id, "pink")
-        ver = obnam.cmp.first_string_by_kind(subs, 
-                                            obnam.cmp.FORMATVERSION)
+        ver = c.first_string_by_kind(obnam.cmp.FORMATVERSION)
         self.failUnlessEqual(ver, "1")
+
+    def make_block(self, gen_ids=None, map_ids=None, contmap_ids=None):
+        host = obnam.obj.HostBlockObject(host_id="pink", gen_ids=gen_ids,
+                                         map_block_ids=map_ids,
+                                         contmap_block_ids=contmap_ids)
+        return host.encode()
+
+    def testReturnsEmtpyListForBlockWithNoGenerations(self):
+        block = self.make_block()
+        host = obnam.obj.create_host_from_block(block)
+        self.failUnlessEqual(host.get_generation_ids(), [])
+
+    def testReturnsCorrectListForBlockWithSomeGenerations(self):
+        block = self.make_block(gen_ids=["pretty", "black"])
+        host = obnam.obj.create_host_from_block(block)
+        self.failUnlessEqual(host.get_generation_ids(), ["pretty", "black"])
+
+    def testReturnsEmtpyListForBlockWithNoMaps(self):
+        block = self.make_block()
+        host = obnam.obj.create_host_from_block(block)
+        self.failUnlessEqual(host.get_map_block_ids(), [])
+
+    def testReturnsCorrectListForBlockWithSomeMaps(self):
+        block = self.make_block(map_ids=["pretty", "black"])
+        host = obnam.obj.create_host_from_block(block)
+        self.failUnlessEqual(host.get_map_block_ids(), ["pretty", "black"])
+
+    def testReturnsEmtpyListForBlockWithNoContentMaps(self):
+        block = self.make_block()
+        host = obnam.obj.create_host_from_block(block)
+        self.failUnlessEqual(host.get_contmap_block_ids(), [])
+
+    def testReturnsCorrectListForBlockWithSomeContentMaps(self):
+        block = self.make_block(contmap_ids=["pretty", "black"])
+        host = obnam.obj.create_host_from_block(block)
+        self.failUnlessEqual(host.get_contmap_block_ids(), 
+                             ["pretty", "black"])
 
 
 class GetComponentTests(unittest.TestCase):
@@ -453,6 +487,12 @@ class StorageObjectFactoryTests(unittest.TestCase):
         o = self.make_object(obnam.obj.HOST)
         self.failUnlessEqual(type(o), obnam.obj.HostBlockObject)
 
+    def testCreatesHostBlockObjectCorrectlyFromParsedBlock(self):
+        host = obnam.obj.HostBlockObject(host_id="pink")
+        block = host.encode()
+        host2 = obnam.obj.create_host_from_block(block)
+        self.failUnlessEqual(host.get_id(), host2.get_id())
+
     def testCreatesFileContentsObjectCorrectly(self):
         o = self.make_object(obnam.obj.FILECONTENTS)
         self.failUnlessEqual(type(o), obnam.obj.FileContentsObject)
@@ -477,6 +517,6 @@ class StorageObjectFactoryTests(unittest.TestCase):
         o = self.make_object(obnam.obj.FILEGROUP)
         self.failUnlessEqual(type(o), obnam.obj.FileGroupObject)
 
-    def testReturnsNoneForUnknownObjectKind(self):
-        o = self.make_object(0xdeadbeef)
-        self.failUnlessEqual(o, None)
+    def testRaisesExceptionForUnknownObjectKind(self):
+        self.failUnlessRaises(obnam.ObnamException, 
+                              self.make_object, 0xdeadbeef)

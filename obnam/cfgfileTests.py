@@ -159,6 +159,11 @@ class OptionsTests(unittest.TestCase):
         self.failUnlessEqual(self.cf.getvalues("foo", "bar"), 
                              ["foobar", "baz"])
 
+    def testGetValuesForEmptyValueReturnsEmptyList(self):
+        self.cf.add_section("foo")
+        self.cf.append("foo", "bar", "")
+        self.failUnlessEqual(self.cf.getvalues("foo", "bar"), [])
+
     def testAppendNonExistingSection(self):
         self.failUnlessRaises(obnam.cfgfile.NoSectionError,
                               self.cf.append,

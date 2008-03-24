@@ -18,7 +18,9 @@
 """Unit tests for obnam.format."""
 
 
+import re
 import stat
+import StringIO
 import unittest
 
 
@@ -109,3 +111,67 @@ class FormatTimeTests(unittest.TestCase):
 
     def test(self):
         self.failUnlessEqual(obnam.format.timestamp(1), "1970-01-01 00:00:01")
+
+
+
+class ListingTests(unittest.TestCase):
+
+    dirpat = re.compile(r"^drwxrwxrwx 0 0 0 0 1970-01-01 00:00:00 pretty$")
+    filepat = re.compile(r"^-rw-rw-rw- 0 0 0 0 1970-01-01 00:00:00 pink$")
+
+    def make_filegroup(self, filenames):
+        fg = obnam.obj.FileGroupObject(id=obnam.obj.object_id_new())
+        mode = 0666 | stat.S_IFREG
+        st = obnam.utils.make_stat_result(st_mode=mode)
+        for filename in filenames:
+            fg.add_file(filename, st, None, None, None)
+
+        self.objects[fg.get_id()] = fg
+        return fg
+
+    def make_dir(self, name, dirs, filegroups):
+        mode = 0777 | stat.S_IFDIR
+        st = obnam.utils.make_stat_result(st_mode=mode)
+        dir = obnam.obj.DirObject(id=obnam.obj.object_id_new(),
+                                  name=name,
+                                  stat=st,
+                                  dirrefs=[x.get_id() for x in dirs],
+                                  filegrouprefs=[x.get_id() 
+                                                 for x in filegroups])
+        self.objects[dir.get_id()] = dir
+        return dir
+
+    def mock_get_object(self, context, objid):
+        return self.objects.get(objid)
+
+    def setUp(self):
+        self.objects = {}
+        self.file = StringIO.StringIO()
+        self.listing = obnam.format.Listing(None, self.file)
+        self.listing._get_object = self.mock_get_object
+
+    def testWritesNothingForNothing(self):
+        self.listing.walk([], [])
+        self.failUnlessEqual(self.file.getvalue(), "")
+
+    def testWritesAFileLineForOneFile(self):
+        fg = self.make_filegroup(["pink"])
+        self.listing.walk([], [fg])
+        self.failUnless(self.filepat.match(self.file.getvalue()))
+
+    def testWritesADirLineForOneDir(self):
+        dir = self.make_dir("pretty", [], [])
+        self.listing.walk([dir], [])
+        self.failUnless(self.dirpat.match(self.file.getvalue()))
+
+    def testWritesFileInSubdirectoryCorrectly(self):
+        fg = self.make_filegroup(["pink"])
+        dir = self.make_dir("pretty", [], [fg])
+        self.listing.walk([dir], [])
+        s = self.file.getvalue()
+        lines = s.splitlines()
+        self.failUnlessEqual(len(lines), 4)
+        self.failUnless(self.dirpat.match(lines[0]))
+        self.failUnlessEqual(lines[1], "")
+        self.failUnlessEqual(lines[2], "pretty:")
+        self.failUnless(self.filepat.match(lines[3]))
