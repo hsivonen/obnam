@@ -24,6 +24,15 @@ Version 0.9.1, released 2008-03-24; a DEVELOPMENT release
       This version has not been extensively tested yet. That is the
       purpose of develpoment releases. Be very careful when using
       this version: there may be bugs that make you lose data.
+
+    * A particular problem with this development version of Obnam is that
+      it currently does not re-use old data. Every file is backed up
+      every time, even if it existed in the backup store in a previous
+      generation. This will make your store size explode.
+      
+      That probably means you don't want to use this except to
+      play with it to see if anything at all works. (This is also
+      why we won't publish a .deb.)
       
     CHANGES TO INTERNALS:
     
