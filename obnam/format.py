@@ -18,6 +18,7 @@
 """Format data for presentation"""
 
 
+import os
 import stat
 import time
 
@@ -135,14 +136,18 @@ class Listing:
                 list.append(o)
         return list
 
-    def walk(self, dirs, filegroups):
+    def walk(self, dirs, filegroups, fullpath=None):
         self.format(dirs, filegroups)
         for dir in dirs:
             dirrefs = dir.get_dirrefs()
             fgrefs = dir.get_filegrouprefs()
             if dirrefs or fgrefs:
-                self._output.write("\n%s:\n" % dir.get_name())
-                self.walk(self.get_objects(dirrefs), self.get_objects(fgrefs))
+                name = dir.get_name()
+                if fullpath:
+                    name = os.path.join(fullpath, name)
+                self._output.write("\n%s:\n" % name)
+                self.walk(self.get_objects(dirrefs), self.get_objects(fgrefs),
+                          fullpath=name)
         
     def format(self, dirs, filegroups):
         list = []

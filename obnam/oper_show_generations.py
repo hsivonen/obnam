@@ -19,6 +19,7 @@
 
 
 import logging
+import sys
 import time
 
 import obnam
@@ -79,6 +80,11 @@ class ShowGenerations(obnam.Operation):
                         x = ""
                     cols.append("%*s" % (widths[i], x))
                 print "  ", " ".join(cols), filename
+
+    def show_dirs_and_filegroups(self, context, gen):
+        listing = obnam.format.Listing(context, sys.stdout)
+        listing.walk(listing.get_objects(gen.get_dirrefs()), 
+                     listing.get_objects(gen.get_filegrouprefs()))
     
     def do_it(self, gen_ids):
         app = self.get_application()
@@ -102,5 +108,4 @@ class ShowGenerations(obnam.Operation):
                 else:
                     logging.warning("Can't find file list %s" % fl_id)
             else:
-                logging.warning("Can't find contents for generation %s" % 
-                                gen_id)
+                self.show_dirs_and_filegroups(context, gen)
