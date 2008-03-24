@@ -91,7 +91,7 @@ class Application:
         """Return list of regexp to exclude things from backup."""
         
         config = self.get_context().config
-        strings = config.get("backup", "exclude")
+        strings = config.getvalues("backup", "exclude")
         if self._exclusion_strings != strings:
             for string in strings:
                 logging.debug("Compiling exclusion pattern '%s'" % string)
@@ -118,11 +118,15 @@ class Application:
         
         """
 
+        dirname = obnam.io.unsolve(self._context, dirname)
+
         i = 0
         while i < len(basenames):
             path = os.path.join(dirname, basenames[i])
             for regexp in self.get_exclusion_regexps():
                 if regexp.search(path):
+                    logging.debug("Excluding %s" % path)
+                    logging.debug("  based on %s" % regexp.pattern)
                     del basenames[i]
                     break
             else:
@@ -247,22 +251,30 @@ class Application:
 
     def backup_one_root(self, root):
         """Backup one root for the next generation."""
+
+        logging.debug("Backing up root %s" % root)
         
-        if not os.path.isdir(root):
+        resolved = obnam.io.resolve(self._context, root)
+        logging.debug("Root resolves to %s" % resolved)
+        
+        if not os.path.isdir(resolved):
             raise obnam.ObnamException("Not a directory: %s" % root)
             # FIXME: This needs to be able to handle non-directories, too!
         
         subdirs_for_dir = {}
         root_object = None
         
-        for tuple in obnam.walk.depth_first(root, prune=self.prune):
+        for tuple in obnam.walk.depth_first(resolved, prune=self.prune):
             dirname, dirnames, filenames = tuple
+            logging.debug("Walked to directory %s" % dirname)
+            logging.debug("  with dirnames: %s" % dirnames)
+            logging.debug("  and filenames: %s" % filenames)
 
             subdirs = subdirs_for_dir.get(dirname, [])
             
             dir = self.backup_one_dir(dirname, subdirs, filenames)
 
-            if dirname != root:
+            if obnam.io.unsolve(self._context, dirname) != root:
                 parent = os.path.dirname(dirname)
                 if parent not in subdirs_for_dir:
                     subdirs_for_dir[parent] = []

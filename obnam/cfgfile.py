@@ -191,6 +191,8 @@ class ConfigFile:
         
         """
         values = self.get(section, option)
+        if values == "":
+            return []
         if type(values) != type([]):
             values = [values]
         return values
