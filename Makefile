@@ -83,4 +83,3 @@ install: all
 	    --host-id= \
 	    --cache= \
 	    > $(sitedir)/obnam/defaultconfig.py
-	install -m 0644 uuid.py $(sitedir)
