@@ -51,6 +51,34 @@ class ShowGenerations(obnam.Operation):
         start_time = gen.get_start_time()
         end_time = gen.get_end_time()
         return self.format_period(start_time, end_time)
+
+    def show_filelist(self, fl):
+        pretty = True
+        list = []
+        for c in fl.find_by_kind(obnam.cmp.FILE):
+            filename = c.first_string_by_kind(obnam.cmp.FILENAME)
+            if pretty:
+                list.append((obnam.format.inode_fields(c), filename))
+            else:
+                print " ".join(obnam.format.inode_fields(c)), filename
+
+        if pretty:
+            widths = []
+            for fields, _ in list:
+                for i in range(len(fields)):
+                    if i >= len(widths):
+                        widths.append(0)
+                    widths[i] = max(widths[i], len(fields[i]))
+    
+            for fields, filename in list:
+                cols = []
+                for i in range(len(widths)):
+                    if i < len(fields):
+                        x = fields[i]
+                    else:
+                        x = ""
+                    cols.append("%*s" % (widths[i], x))
+                print "  ", " ".join(cols), filename
     
     def do_it(self, gen_ids):
         app = self.get_application()
@@ -58,7 +86,6 @@ class ShowGenerations(obnam.Operation):
         host = app.load_host()
         app.load_maps()
     
-        pretty = True
         for gen_id in gen_ids:
             gen = obnam.io.get_object(context, gen_id)
             if not gen:
@@ -68,32 +95,12 @@ class ShowGenerations(obnam.Operation):
                                          self.format_generation_period(gen))
     
             fl_id = gen.get_filelistref()
-            fl = obnam.io.get_object(context, fl_id)
-            if not fl:
-                logging.warning("Can't find file list object %s" % fl_id)
-                continue
-            list = []
-            for c in fl.find_by_kind(obnam.cmp.FILE):
-                filename = c.first_string_by_kind(obnam.cmp.FILENAME)
-                if pretty:
-                    list.append((obnam.format.inode_fields(c), filename))
+            if fl_id:
+                fl = obnam.io.get_object(context, fl_id)
+                if fl:
+                    self.show_filelist(fl)
                 else:
-                    print " ".join(obnam.format.inode_fields(c)), filename
-    
-            if pretty:
-                widths = []
-                for fields, _ in list:
-                    for i in range(len(fields)):
-                        if i >= len(widths):
-                            widths.append(0)
-                        widths[i] = max(widths[i], len(fields[i]))
-        
-                for fields, filename in list:
-                    cols = []
-                    for i in range(len(widths)):
-                        if i < len(fields):
-                            x = fields[i]
-                        else:
-                            x = ""
-                        cols.append("%*s" % (widths[i], x))
-                    print "  ", " ".join(cols), filename
+                    logging.warning("Can't find file list %s" % fl_id)
+            else:
+                logging.warning("Can't find contents for generation %s" % 
+                                gen_id)
