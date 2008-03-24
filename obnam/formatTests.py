@@ -19,6 +19,7 @@
 
 
 import stat
+import StringIO
 import unittest
 
 
@@ -109,3 +110,15 @@ class FormatTimeTests(unittest.TestCase):
 
     def test(self):
         self.failUnlessEqual(obnam.format.timestamp(1), "1970-01-01 00:00:01")
+
+
+
+class ListingTests(unittest.TestCase):
+
+    def setUp(self):
+        self.file = StringIO.StringIO()
+        self.listing = obnam.format.Listing(self.file)
+
+    def testReturnsNothingForNothing(self):
+        self.listing.walk([], [])
+        self.failUnlessEqual(self.file.getvalue(), "")

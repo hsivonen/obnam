@@ -112,3 +112,18 @@ def inode_fields(file_component):
 def timestamp(seconds):
     """Format a time stamp given in seconds since epoch"""
     return time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(seconds))
+
+
+class Listing:
+
+    """Format listings of contents of backups.
+    
+    The listings are formatted similar to the Unix 'ls -l' command.
+    
+    """
+    
+    def __init__(self, output_file):
+        self._output = output_file
+
+    def walk(self, dirs, filegroups):
+        pass
