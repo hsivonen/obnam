@@ -18,6 +18,7 @@
 """Unit tests for obnam.format."""
 
 
+import re
 import stat
 import StringIO
 import unittest
@@ -115,10 +116,40 @@ class FormatTimeTests(unittest.TestCase):
 
 class ListingTests(unittest.TestCase):
 
+    dirpat = re.compile(r"^drwxrwxrwx 0 0 0 0 1970-01-01 00:00:00 pretty$")
+    filepat = re.compile(r"^-rw-rw-rw- 0 0 0 0 1970-01-01 00:00:00 pink$")
+
+    def make_filegroup(self, filenames):
+        fg = obnam.obj.FileGroupObject(id=obnam.obj.object_id_new())
+        mode = 0666 | stat.S_IFREG
+        st = obnam.utils.make_stat_result(st_mode=mode)
+        for filename in filenames:
+            fg.add_file(filename, st, None, None, None)
+
+        return fg
+
+    def make_dir(self, name):
+        mode = 0777 | stat.S_IFDIR
+        st = obnam.utils.make_stat_result(st_mode=mode)
+        dir = obnam.obj.DirObject(id=obnam.obj.object_id_new(),
+                                  name=name,
+                                  stat=st)
+        return dir
+
     def setUp(self):
         self.file = StringIO.StringIO()
         self.listing = obnam.format.Listing(self.file)
 
-    def testReturnsNothingForNothing(self):
+    def testWritesNothingForNothing(self):
         self.listing.walk([], [])
         self.failUnlessEqual(self.file.getvalue(), "")
+
+    def testWritesAFileLineForOneFile(self):
+        fg = self.make_filegroup(["pink"])
+        self.listing.walk([], [fg])
+        self.failUnless(self.filepat.match(self.file.getvalue()))
+
+    def testWritesADirLineForOneDir(self):
+        dir = self.make_dir("pretty")
+        self.listing.walk([dir], [])
+        self.failUnless(self.dirpat.match(self.file.getvalue()))

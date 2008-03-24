@@ -126,4 +126,25 @@ class Listing:
         self._output = output_file
 
     def walk(self, dirs, filegroups):
-        pass
+        self.format(dirs, filegroups)
+        
+    def format(self, dirs, filegroups):
+        list = []
+
+        for dir in dirs:
+            list.append((dir.get_name(), dir.get_stat()))
+        for fg in filegroups:
+            for name in fg.get_names():
+                list.append((name, fg.get_stat(name)))
+
+        list.sort()
+
+        for name, stat in list:
+            self._output.write("%s %d %d %d %d %s %s\n" % 
+                               (filemode(stat.st_mode),
+                                stat.st_nlink,
+                                stat.st_uid,
+                                stat.st_gid,
+                                stat.st_size,
+                                timestamp(stat.st_mtime),
+                                name))
