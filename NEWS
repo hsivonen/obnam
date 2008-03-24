@@ -4,6 +4,33 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
+Version 0.9.1, released 2008-03-24; a DEVELOPMENT release
+
+    NOTE:
+
+    This is a development release, for the purpose of testing. It is not
+    meant for production use. Do not rely on this version for any
+    backups that are important. However, if you are willing to take a
+    risk, any testing experiences would be most welcome.
+    
+    IMPORTANT CHANGES:
+    
+    * This release changes the way how file meta data (names, permissions,
+      etc) are store. The new way should be much more efficient than the
+      old way, and all old backups can still be restored with the new
+      version. New backups made with the new version cannot be handled
+      by the old version, however.
+      
+      This version has not been extensively tested yet. That is the
+      purpose of develpoment releases. Be very careful when using
+      this version: there may be bugs that make you lose data.
+      
+    CHANGES TO INTERNALS:
+    
+    * Most of the code has been touched, to simplify things and to
+      introduce new internal abstractions. As a result, the code base
+      should be quite a bit cleaner now.
+
 Version 0.9.0, released 2007-12-09; a DEVELOPMENT release
 
     NOTE:
