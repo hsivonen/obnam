@@ -122,11 +122,27 @@ class Listing:
     
     """
     
-    def __init__(self, output_file):
+    def __init__(self, context, output_file):
+        self._context = context
         self._output = output_file
+        self._get_object = obnam.io.get_object
+
+    def get_objects(self, refs):
+        list = []
+        for ref in refs:
+            o = self._get_object(self._context, ref)
+            if o:
+                list.append(o)
+        return list
 
     def walk(self, dirs, filegroups):
         self.format(dirs, filegroups)
+        for dir in dirs:
+            dirrefs = dir.get_dirrefs()
+            fgrefs = dir.get_filegrouprefs()
+            if dirrefs or fgrefs:
+                self._output.write("\n%s:\n" % dir.get_name())
+                self.walk(self.get_objects(dirrefs), self.get_objects(fgrefs))
         
     def format(self, dirs, filegroups):
         list = []
