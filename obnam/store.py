@@ -1,4 +1,4 @@
-# Copyright (C) 2006  Lars Wirzenius <liw@iki.fi>
+# Copyright (C) 2008  Lars Wirzenius <liw@iki.fi>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,41 +15,17 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-"""The init file for the obnam module."""
+"""Abstraction for storing backup data, for Obnam."""
 
 
-NAME = "obnam"
-VERSION = "0.9.0"
+import obnam
 
 
-from exception import ObnamException
+class Store:
 
-import backend
-import cache
-import cfgfile
-import cmp
-import config
-import context
-import filelist
-import format
-import gpg
-import io
-import log
-import map
-import obj
-import progress
-import rsync
-import utils
-import varint
-import walk
+    def __init__(self, context):
+        self._context = context
 
-from app import Application
-from oper import Operation, OperationFactory
-from store import Store
-
-from oper_backup import Backup
-from oper_forget import Forget
-from oper_generations import ListGenerations
-from oper_restore import Restore
-from oper_show_generations import ShowGenerations
-
+    def get_host_block(self):
+        """Return host block from the store, or None if it doesn't exist."""
+        return None

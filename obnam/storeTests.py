@@ -1,4 +1,4 @@
-# Copyright (C) 2006  Lars Wirzenius <liw@iki.fi>
+# Copyright (C) 2008  Lars Wirzenius <liw@iki.fi>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,41 +15,20 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-"""The init file for the obnam module."""
+"""Unit tests for abstraction for storing backup data, for Obnam."""
 
 
-NAME = "obnam"
-VERSION = "0.9.0"
+import unittest
+
+import obnam
 
 
-from exception import ObnamException
+class StoreTests(unittest.TestCase):
 
-import backend
-import cache
-import cfgfile
-import cmp
-import config
-import context
-import filelist
-import format
-import gpg
-import io
-import log
-import map
-import obj
-import progress
-import rsync
-import utils
-import varint
-import walk
+    def setUp(self):
+        context = obnam.context.Context()
+        context.be = obnam.backend.init(context.config, context.cache)
+        self.store = obnam.Store(context)
 
-from app import Application
-from oper import Operation, OperationFactory
-from store import Store
-
-from oper_backup import Backup
-from oper_forget import Forget
-from oper_generations import ListGenerations
-from oper_restore import Restore
-from oper_show_generations import ShowGenerations
-
+    def testReturnsNoneWhenNoHostBlockExists(self):
+        self.failUnlessEqual(self.store.get_host_block(), None)
