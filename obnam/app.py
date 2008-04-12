@@ -133,7 +133,7 @@ class Application:
                 i += 1
 
     def file_is_unchanged(self, stat1, stat2):
-        """Has a file changed?
+        """Is a file unchanged from the previous generation?
         
         Given the stat results from the previous generation and the
         current file, return True if the file is identical from the
