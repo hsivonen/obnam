@@ -171,6 +171,20 @@ class Application:
 
         return True             # everything seems to be as before
 
+    def dir_is_unchanged(self, old, new):
+        """Has a directory changed since the previous generation?
+        
+        Return True if a directory, or its files or subdirectories,
+        has changed since the previous generation.
+        
+        """
+        
+        return (old.get_name() == new.get_name() and
+                self.file_is_unchanged(old.get_stat(), new.get_stat()) and
+                sorted(old.get_dirrefs()) == sorted(new.get_dirrefs()) and
+                sorted(old.get_filegrouprefs()) == 
+                    sorted(new.get_filegrouprefs()))
+
     def set_prevgen_filelist(self, filelist):
         """Set the Filelist object from the previous generation.
         

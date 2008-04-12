@@ -239,6 +239,105 @@ class ApplicationUnchangedFileGroupTests(unittest.TestCase):
                                                         stat=self.mock_stat))
 
 
+
+class ApplicationUnchangedDirTests(unittest.TestCase):
+
+    def setUp(self):
+        context = obnam.context.Context()
+        self.app = obnam.Application(context)
+
+    def make_dir(self, name, dirrefs, filegrouprefs, stat=None):
+        if stat is None:
+            stat = obnam.utils.make_stat_result()
+        return obnam.obj.DirObject(id=obnam.obj.object_id_new(),
+                                   name=name,
+                                   stat=stat,
+                                   dirrefs=dirrefs,
+                                   filegrouprefs=filegrouprefs)
+
+    def testSameDirWhenNothingHasChanged(self):
+        dir = self.make_dir("name", [], ["pink", "pretty"])
+        self.failUnless(self.app.dir_is_unchanged(dir, dir))
+
+    def testChangedDirWhenFileGroupHasBeenRemoved(self):
+        dir1 = self.make_dir("name", [], ["pink", "pretty"])
+        dir2 = self.make_dir("name", [], ["pink"])
+        self.failIf(self.app.dir_is_unchanged(dir1, dir2))
+
+    def testChangedDirWhenFileGroupHasBeenAdded(self):
+        dir1 = self.make_dir("name", [], ["pink"])
+        dir2 = self.make_dir("name", [], ["pink", "pretty"])
+        self.failIf(self.app.dir_is_unchanged(dir1, dir2))
+
+    def testChangedDirWhenDirHasBeenRemoved(self):
+        dir1 = self.make_dir("name", ["pink", "pretty"], [])
+        dir2 = self.make_dir("name", ["pink"], [])
+        self.failIf(self.app.dir_is_unchanged(dir1, dir2))
+
+    def testChangedDirWhenDirHasBeenAdded(self):
+        dir1 = self.make_dir("name", ["pink"], [])
+        dir2 = self.make_dir("name", ["pink", "pretty"], [])
+        self.failIf(self.app.dir_is_unchanged(dir1, dir2))
+
+    def testChangedDirWhenNameHasChanged(self):
+        dir1 = self.make_dir("name1", [], [])
+        dir2 = self.make_dir("name2", [], [])
+        self.failIf(self.app.dir_is_unchanged(dir1, dir2))
+
+    def testSameDirWhenIrrelevantStatFieldsHaveChanged(self):
+        stat = obnam.utils.make_stat_result(st_ino=42,
+                                            st_atime=42,
+                                            st_blocks=42,
+                                            st_blksize=42,
+                                            st_rdev=42)
+
+        dir1 = self.make_dir("name", [], [])
+        dir2 = self.make_dir("name", [], [], stat=stat)
+        self.failUnless(self.app.dir_is_unchanged(dir1, dir2))
+
+    def testChangedDirWhenDevHasChanged(self):
+        dir1 = self.make_dir("name1", [], [])
+        dir2 = self.make_dir("name2", [], [],
+                             stat=obnam.utils.make_stat_result(st_dev=105))
+        self.failIf(self.app.dir_is_unchanged(dir1, dir2))
+
+    def testChangedDirWhenModeHasChanged(self):
+        dir1 = self.make_dir("name1", [], [])
+        dir2 = self.make_dir("name2", [], [],
+                             stat=obnam.utils.make_stat_result(st_mode=105))
+        self.failIf(self.app.dir_is_unchanged(dir1, dir2))
+
+    def testChangedDirWhenNlinkHasChanged(self):
+        dir1 = self.make_dir("name1", [], [])
+        dir2 = self.make_dir("name2", [], [],
+                             stat=obnam.utils.make_stat_result(st_nlink=105))
+        self.failIf(self.app.dir_is_unchanged(dir1, dir2))
+
+    def testChangedDirWhenUidHasChanged(self):
+        dir1 = self.make_dir("name1", [], [])
+        dir2 = self.make_dir("name2", [], [],
+                             stat=obnam.utils.make_stat_result(st_uid=105))
+        self.failIf(self.app.dir_is_unchanged(dir1, dir2))
+
+    def testChangedDirWhenGidHasChanged(self):
+        dir1 = self.make_dir("name1", [], [])
+        dir2 = self.make_dir("name2", [], [],
+                             stat=obnam.utils.make_stat_result(st_gid=105))
+        self.failIf(self.app.dir_is_unchanged(dir1, dir2))
+
+    def testChangedDirWhenSizeHasChanged(self):
+        dir1 = self.make_dir("name1", [], [])
+        dir2 = self.make_dir("name2", [], [],
+                             stat=obnam.utils.make_stat_result(st_size=105))
+        self.failIf(self.app.dir_is_unchanged(dir1, dir2))
+
+    def testChangedDirWhenMtimeHasChanged(self):
+        dir1 = self.make_dir("name1", [], [])
+        dir2 = self.make_dir("name2", [], [],
+                             stat=obnam.utils.make_stat_result(st_mtime=105))
+        self.failIf(self.app.dir_is_unchanged(dir1, dir2))
+
+
 class ApplicationFindFileByNameTests(unittest.TestCase):
 
     def setUp(self):
