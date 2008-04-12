@@ -199,6 +199,46 @@ class ApplicationUnchangedFileRecognitionTests(unittest.TestCase):
         self.failIf(self.app.file_is_unchanged(st1, st2))
 
 
+class ApplicationUnchangedFileGroupTests(unittest.TestCase):
+
+    def setUp(self):
+        context = obnam.context.Context()
+        self.app = obnam.Application(context)
+        self.stats = {
+            "pink": obnam.utils.make_stat_result(st_mtime=42),
+            "pretty": obnam.utils.make_stat_result(st_mtime=105),
+        }
+
+    def mock_stat(self, filename):
+        return self.stats[filename]
+
+    def mock_filegroup(self, filenames):
+        fg = obnam.obj.FileGroupObject(id=obnam.obj.object_id_new())
+        for filename in filenames:
+            st = self.mock_stat(filename)
+            fg.add_file(filename, st, None, None, None)
+        return fg
+
+    def testSameFileGroupWhenAllFilesAreIdentical(self):
+        filenames = ["pink", "pretty"]
+        fg = self.mock_filegroup(filenames)
+        self.failUnless(self.app.filegroup_is_unchanged(fg, filenames,
+                                                        stat=self.mock_stat))
+
+    def testChangedFileGroupWhenFileHasChanged(self):
+        filenames = ["pink", "pretty"]
+        fg = self.mock_filegroup(filenames)
+        self.stats["pink"] = obnam.utils.make_stat_result(st_mtime=1)
+        self.failIf(self.app.filegroup_is_unchanged(fg, filenames,
+                                                        stat=self.mock_stat))
+
+    def testChangedFileGroupWhenFileHasBeenRemoved(self):
+        filenames = ["pink", "pretty"]
+        fg = self.mock_filegroup(filenames)
+        self.failIf(self.app.filegroup_is_unchanged(fg, filenames[:1],
+                                                        stat=self.mock_stat))
+
+
 class ApplicationFindFileByNameTests(unittest.TestCase):
 
     def setUp(self):

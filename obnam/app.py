@@ -148,6 +148,29 @@ class Application:
                 return False
         return True
 
+    def filegroup_is_unchanged(self, fg, filenames, stat=os.stat):
+        """Is a filegroup unchanged from the previous generation?
+        
+        Given a filegroup and a list of files in the current directory,
+        return True if all files in the filegroup are unchanged from
+        the previous generation.
+        
+        The optional stat argument can be used by unit tests to
+        override the use of os.stat.
+        
+        """
+        
+        for old_name in fg.get_names():
+            if old_name not in filenames:
+                return False    # file has been deleted
+
+            old_stat = fg.get_stat(old_name)
+            new_stat = stat(old_name)
+            if not self.file_is_unchanged(old_stat, new_stat):
+                return False    # file has changed
+
+        return True             # everything seems to be as before
+
     def set_prevgen_filelist(self, filelist):
         """Set the Filelist object from the previous generation.
         
