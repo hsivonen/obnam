@@ -144,6 +144,61 @@ class ApplicationMakeFileGroupsTests(unittest.TestCase):
         self.failIf("/" in fg.get_names()[0])
 
 
+class ApplicationUnchangedFileRecognitionTests(unittest.TestCase):
+
+    def setUp(self):
+        context = obnam.context.Context()
+        self.app = obnam.Application(context)
+
+    def testSameFileWhenStatIsIdentical(self):
+        st = obnam.utils.make_stat_result()
+        self.failUnless(self.app.file_is_unchanged(st, st))
+
+    def testSameFileWhenIrrelevantFieldsChange(self):
+        st1 = obnam.utils.make_stat_result()
+        st2 = obnam.utils.make_stat_result(st_ino=42,
+                                           st_atime=42,
+                                           st_blocks=42,
+                                           st_blksize=42,
+                                           st_rdev=42)
+        self.failUnless(self.app.file_is_unchanged(st1, st2))
+
+    def testChangedFileWhenDevChanges(self):
+        st1 = obnam.utils.make_stat_result()
+        st2 = obnam.utils.make_stat_result(st_dev=42)
+        self.failIf(self.app.file_is_unchanged(st1, st2))
+
+    def testChangedFileWhenModeChanges(self):
+        st1 = obnam.utils.make_stat_result()
+        st2 = obnam.utils.make_stat_result(st_mode=42)
+        self.failIf(self.app.file_is_unchanged(st1, st2))
+
+    def testChangedFileWhenNlinkChanges(self):
+        st1 = obnam.utils.make_stat_result()
+        st2 = obnam.utils.make_stat_result(st_nlink=42)
+        self.failIf(self.app.file_is_unchanged(st1, st2))
+
+    def testChangedFileWhenUidChanges(self):
+        st1 = obnam.utils.make_stat_result()
+        st2 = obnam.utils.make_stat_result(st_uid=42)
+        self.failIf(self.app.file_is_unchanged(st1, st2))
+
+    def testChangedFileWhenGidChanges(self):
+        st1 = obnam.utils.make_stat_result()
+        st2 = obnam.utils.make_stat_result(st_gid=42)
+        self.failIf(self.app.file_is_unchanged(st1, st2))
+
+    def testChangedFileWhenSizeChanges(self):
+        st1 = obnam.utils.make_stat_result()
+        st2 = obnam.utils.make_stat_result(st_size=42)
+        self.failIf(self.app.file_is_unchanged(st1, st2))
+
+    def testChangedFileWhenMtimeChanges(self):
+        st1 = obnam.utils.make_stat_result()
+        st2 = obnam.utils.make_stat_result(st_mtime=42)
+        self.failIf(self.app.file_is_unchanged(st1, st2))
+
+
 class ApplicationFindFileByNameTests(unittest.TestCase):
 
     def setUp(self):

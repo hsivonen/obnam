@@ -132,6 +132,22 @@ class Application:
             else:
                 i += 1
 
+    def file_is_unchanged(self, stat1, stat2):
+        """Has a file changed?
+        
+        Given the stat results from the previous generation and the
+        current file, return True if the file is identical from the
+        previous generation (i.e., no new data to back up).
+        
+        """
+        
+        fields = ("mode", "dev", "nlink", "uid", "gid", "size", "mtime")
+        for field in fields:
+            field = "st_" + field
+            if getattr(stat1, field) != getattr(stat2, field):
+                return False
+        return True
+
     def set_prevgen_filelist(self, filelist):
         """Set the Filelist object from the previous generation.
         
