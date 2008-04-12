@@ -32,3 +32,19 @@ class StoreTests(unittest.TestCase):
 
     def testReturnsNoneWhenNoHostBlockExists(self):
         self.failUnlessEqual(self.store.get_host_block(), None)
+
+    def testReturnsAnActualHostBlockAfterFetch(self):
+        self.store.fetch_host_block()
+        host = self.store.get_host_block()
+        self.failUnless(isinstance(host, obnam.obj.HostBlockObject))
+
+    def testReturnsActualHostBlockWhenOneExists(self):
+        self.store.fetch_host_block()
+        self.store.commit_host_block()
+        
+        context = obnam.context.Context()
+        context.be = obnam.backend.init(context.config, context.cache)
+        store = obnam.Store(context)
+        store.fetch_host_block()
+        host = store.get_host_block()
+        self.failUnless(isinstance(host, obnam.obj.HostBlockObject))

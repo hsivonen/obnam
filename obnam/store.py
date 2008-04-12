@@ -25,7 +25,34 @@ class Store:
 
     def __init__(self, context):
         self._context = context
+        self._host = None
 
     def get_host_block(self):
-        """Return host block from the store, or None if it doesn't exist."""
-        return None
+        """Return current host block, or None if one is not known.
+        
+        You must call fetch_host_block to fetch the host block first.
+        
+        """
+
+        return self._host
+
+    def fetch_host_block(self):
+        """Fetch host block from store, if one exists.
+        
+        If a host block does not exist, it is not an error. A new
+        host block is then created.
+        
+        """
+        
+        host_id = self._context.config.get("backup", "host-id")
+        self._host = obnam.obj.HostBlockObject(host_id=host_id)
+
+    def commit_host_block(self):
+        """Commit the current host block to the store.
+        
+        If no host block exists, create one. If one already exists,
+        update it with new info.
+        
+        """
+        
+        pass
