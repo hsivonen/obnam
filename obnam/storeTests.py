@@ -18,8 +18,10 @@
 """Unit tests for abstraction for storing backup data, for Obnam."""
 
 
+import os
 import shutil
 import socket
+import tempfile
 import unittest
 
 import obnam
@@ -187,3 +189,85 @@ class StoreMapTests(unittest.TestCase):
         obnam.map.add(self.context.contmap, "pink", "pretty")
         self.store.update_content_maps()
         self.failUnlessEqual(obnam.map.count(self.context.contmap), 1)
+
+
+class StorePathnameParserTests(unittest.TestCase):
+
+    def setUp(self):
+        context = obnam.context.Context()
+        self.store = obnam.Store(context)
+
+    def testReturnsRootForRoot(self):
+        self.failUnlessEqual(self.store.parse_pathname("/"), ["/"])
+
+    def testReturnsDotForDot(self):
+        self.failUnlessEqual(self.store.parse_pathname("."), ["."])
+
+    def testReturnsItselfForSingleElement(self):
+        self.failUnlessEqual(self.store.parse_pathname("foo"), ["foo"])
+
+    def testReturnsListOfPartsForMultipleElements(self):
+        self.failUnlessEqual(self.store.parse_pathname("foo/bar"), 
+                             ["foo", "bar"])
+
+    def testReturnsListOfPartsFromRootForAbsolutePathname(self):
+        self.failUnlessEqual(self.store.parse_pathname("/foo/bar"), 
+                             ["/", "foo", "bar"])
+
+    def testIgnoredTrailingSlashIfNotRoot(self):
+        self.failUnlessEqual(self.store.parse_pathname("foo/bar/"), 
+                             ["foo", "bar"])
+
+
+class StoreLookupTests(unittest.TestCase):
+
+    def create_data_dir(self):
+        dirname = tempfile.mkdtemp()
+        file(os.path.join(dirname, "file"), "w").close()
+        os.mkdir(os.path.join(dirname, "dir1"))
+        os.mkdir(os.path.join(dirname, "dir1", "dir2"))
+        file(os.path.join(dirname, "dir1", "dir2", "file"), "w").close()
+        return dirname
+
+    def create_context(self):
+        context = obnam.context.Context()
+        context.cache = obnam.cache.Cache(context.config)
+        context.be = obnam.backend.init(context.config, context.cache)
+        return context
+
+    def setUp(self):
+        self.datadir = self.create_data_dir()
+        self.dirbasename = os.path.basename(self.datadir)
+
+        app = obnam.Application(self.create_context())
+        app.load_host()
+        gen = app.backup([self.datadir])
+        app.get_store().commit_host_block([gen])
+        
+        self.store = obnam.Store(self.create_context())
+        self.store.fetch_host_block()
+        self.store.load_maps()
+        gen_ids = self.store.get_host_block().get_generation_ids()
+        self.gen = self.store.get_object(gen_ids[0])
+
+    def tearDown(self):
+        shutil.rmtree(self.datadir)
+        shutil.rmtree(self.store._context.config.get("backup", "store"))
+
+    def testFindsBackupRoot(self):
+        dir = self.store.lookup_dir(self.gen, self.dirbasename)
+        self.failUnless(dir.get_name(), self.dirbasename)
+
+    def testFindsFirstSubdir(self):
+        pathname = os.path.join(self.dirbasename, "dir1")
+        dir = self.store.lookup_dir(self.gen, pathname)
+        self.failUnless(dir.get_name(), "dir1")
+
+    def testFindsSecondSubdir(self):
+        pathname = os.path.join(self.dirbasename, "dir1", "dir2")
+        dir = self.store.lookup_dir(self.gen, pathname)
+        self.failUnless(dir.get_name(), "dir2")
+
+    def testDoesNotFindNonExistentDir(self):
+        self.failUnlessEqual(self.store.lookup_dir(self.gen, "notexist"),
+                             None)

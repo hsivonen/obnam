@@ -19,6 +19,7 @@
 
 
 import logging
+import os
 
 import obnam
 
@@ -165,3 +166,42 @@ class Store:
         if object:
             return object
         raise ObjectNotFoundInStore(id)
+
+    def parse_pathname(self, pathname):
+        """Return list of components in pathname."""
+
+        list = []
+        while pathname:
+            dirname = os.path.dirname(pathname)
+            basename = os.path.basename(pathname)
+            if basename:
+                list.insert(0, basename)
+            elif dirname == os.sep:
+                list.insert(0, "/")
+                dirname = ""
+            pathname = dirname
+
+        return list
+
+    def _lookup_dir_from_refs(self, dirrefs, parts):
+        for ref in dirrefs:
+            dir = self.get_object(ref)
+            if dir.get_name() == parts[0]:
+                parts = parts[1:]
+                if parts:
+                    dirrefs = dir.get_dirrefs()
+                    return self._lookup_dir_from_refs(dirrefs, parts)
+                else:
+                    return dir
+        return None
+
+    def lookup_dir(self, generation, pathname):
+        """Return a DirObject that corresponds to pathname in a generation.
+        
+        Look up the directory in the generation. If it does not exist,
+        return None.
+        
+        """
+
+        parts = self.parse_pathname(pathname)
+        return self._lookup_dir_from_refs(generation.get_dirrefs(), parts)
