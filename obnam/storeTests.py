@@ -271,3 +271,7 @@ class StoreLookupTests(unittest.TestCase):
     def testDoesNotFindNonExistentDir(self):
         self.failUnlessEqual(self.store.lookup_dir(self.gen, "notexist"),
                              None)
+
+    def testDoesNotFindNonExistentFile(self):
+        self.failUnlessEqual(self.store.lookup_file(self.gen, "notexist"),
+                             None)

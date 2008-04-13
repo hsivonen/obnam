@@ -205,3 +205,13 @@ class Store:
 
         parts = self.parse_pathname(pathname)
         return self._lookup_dir_from_refs(generation.get_dirrefs(), parts)
+
+    def lookup_file(self, generation, pathname):
+        """Find a non-directory thingy in a generation.
+        
+        Return a FILE component that corresponds to the filesystem entity
+        in question. If not found, return None.
+        
+        """
+        
+        return None
