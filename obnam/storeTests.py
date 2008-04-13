@@ -223,10 +223,10 @@ class StoreLookupTests(unittest.TestCase):
 
     def create_data_dir(self):
         dirname = tempfile.mkdtemp()
-        file(os.path.join(dirname, "file"), "w").close()
+        file(os.path.join(dirname, "file1"), "w").close()
         os.mkdir(os.path.join(dirname, "dir1"))
         os.mkdir(os.path.join(dirname, "dir1", "dir2"))
-        file(os.path.join(dirname, "dir1", "dir2", "file"), "w").close()
+        file(os.path.join(dirname, "dir1", "dir2", "file2"), "w").close()
         return dirname
 
     def create_context(self):
@@ -272,6 +272,30 @@ class StoreLookupTests(unittest.TestCase):
         self.failUnlessEqual(self.store.lookup_dir(self.gen, "notexist"),
                              None)
 
-    def testDoesNotFindNonExistentFile(self):
-        self.failUnlessEqual(self.store.lookup_file(self.gen, "notexist"),
-                             None)
+    def testDoesNotFindNonExistentFileInSubDirectory(self):
+        pathname = os.path.join(self.dirbasename, "dir1", "notexist")
+        file = self.store.lookup_file(self.gen, pathname)
+        self.failUnlessEqual(file, None)
+
+    def testDoesNotFindNonExistentFileInSubSubDirectory(self):
+        pathname = os.path.join(self.dirbasename, "dir1", "dir2", "notexist")
+        file = self.store.lookup_file(self.gen, pathname)
+        self.failUnlessEqual(file, None)
+
+    def testDoesNotFindNonExistentFileInRoot(self):
+        pathname = os.path.join(self.dirbasename, "notexist")
+        file = self.store.lookup_file(self.gen, pathname)
+        self.failUnlessEqual(file, None)
+
+    def filename(self, file):
+        return file.first_string_by_kind(obnam.cmp.FILENAME)
+
+    def testFindsFileInRootDirectory(self):
+        pathname = os.path.join(self.dirbasename, "file1")
+        file = self.store.lookup_file(self.gen, pathname)
+        self.failUnlessEqual(self.filename(file), "file1")
+
+    def testFindsFileInSubDirectory(self):
+        pathname = os.path.join(self.dirbasename, "dir1", "dir2", "file2")
+        file = self.store.lookup_file(self.gen, pathname)
+        self.failUnlessEqual(self.filename(file), "file2")

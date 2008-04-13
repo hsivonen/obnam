@@ -213,5 +213,16 @@ class Store:
         in question. If not found, return None.
         
         """
+
+        dirname = os.path.dirname(pathname)
+        if dirname:
+            dir = self.lookup_dir(generation, dirname)
+            if dir:
+                basename = os.path.basename(pathname)
+                for id in dir.get_filegrouprefs():
+                    fg = self.get_object(id)
+                    file = fg.get_file(basename)
+                    if file:
+                        return file
         
         return None
