@@ -91,12 +91,12 @@ class Store:
             logging.debug("No new mappings, no new mapping block")
             return []
 
-    def _update_maps(self):
+    def update_maps(self):
         """Create new object mapping blocks and upload them."""
         logging.debug("Creating new mapping block for normal mappings")
         return self._update_map_helper(self._context.map)
 
-    def _update_content_maps(self):
+    def update_content_maps(self):
         """Create new content object mapping blocks and upload them."""
         logging.debug("Creating new mapping block for content mappings")
         return self._update_map_helper(self._context.contmap)
@@ -116,9 +116,9 @@ class Store:
     
         logging.info("Creating new mapping blocks")
         host = self.get_host_block()
-        map_ids = host.get_map_block_ids() + self._update_maps()
+        map_ids = host.get_map_block_ids() + self.update_maps()
         contmap_ids = (host.get_contmap_block_ids() + 
-                       self._update_content_maps())
+                       self.update_content_maps())
         
         logging.info("Creating new host block")
         gen_ids = host.get_generation_ids()
