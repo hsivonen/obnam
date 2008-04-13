@@ -69,14 +69,6 @@ class Application:
         self.get_store().fetch_host_block()
         return self.get_store().get_host_block()
 
-    def load_maps(self):
-        """Load non-content map blocks."""
-        self.get_store().load_maps()
-
-    def load_content_maps(self):
-        """Load content map blocks."""
-        self.get_store().load_content_maps()
-
     def get_exclusion_regexps(self):
         """Return list of regexp to exclude things from backup."""
         
@@ -285,11 +277,3 @@ class Application:
                                          end=end)
         self.get_store().queue_object(gen)
         return gen
-
-    def update_maps(self):
-        """Create new object mapping blocks and upload them."""
-        self.get_store().update_maps()
-
-    def update_content_maps(self):
-        """Create new content object mapping blocks and upload them."""
-        self.get_store().update_content_maps()

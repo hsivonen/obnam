@@ -197,8 +197,8 @@ class Restore(obnam.Operation):
         context = app.get_context()
         host = app.load_host()
     
-        app.load_maps()
-        app.load_content_maps()
+        app.get_store().load_maps()
+        app.get_store().load_content_maps()
     
         logging.debug("Getting generation object")    
         gen = obnam.io.get_object(context, gen_id)

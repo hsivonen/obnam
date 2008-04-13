@@ -90,7 +90,7 @@ class ShowGenerations(obnam.Operation):
         app = self.get_application()
         context = app.get_context()
         host = app.load_host()
-        app.load_maps()
+        app.get_store().load_maps()
     
         for gen_id in gen_ids:
             gen = obnam.io.get_object(context, gen_id)
