@@ -293,14 +293,3 @@ class Application:
     def update_content_maps(self):
         """Create new content object mapping blocks and upload them."""
         self.get_store().update_content_maps()
-
-    def finish(self, new_gens):
-        """Finish a backup operation by updating maps and uploading host block.
-        
-        This also removes the host block that has been load. In other
-        words, if you want to continue using the application for anything
-        that requires the host block, you have to call load_host again.
-        
-        """
-        
-        self.get_store().commit_host_block(new_gens)

@@ -40,6 +40,6 @@ class Backup(obnam.Operation):
     
         gen = app.backup(roots)
         
-        app.finish([gen])
+        app.get_store().commit_host_block([gen])
     
         logging.info("Backup done")
