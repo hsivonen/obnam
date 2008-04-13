@@ -103,6 +103,16 @@ class StoreTests(unittest.TestCase):
         store2.load_maps()
         self.failUnless(store2.get_object(o.get_id()))
 
+    def mock_queue_object(self, object):
+        self.queued_objects.append(object)
+        
+    def testAddsSeveralObjectsToStore(self):
+        objs = [None, True, False]
+        self.queued_objects = []
+        self.store.queue_object = self.mock_queue_object
+        self.store.queue_objects(objs)
+        self.failUnlessEqual(objs, self.queued_objects)
+
 
 class StoreMapTests(unittest.TestCase):
 

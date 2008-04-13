@@ -144,6 +144,16 @@ class Store:
                                 self._context.map, object.get_id(), 
                                 object.encode(), True)
 
+    def queue_objects(self, objects):
+        """Queue a list of objects for upload to the store.
+        
+        See queue_object for information about what queuing means.
+        
+        """
+        
+        for object in objects:
+            self.queue_object(object)
+
     def get_object(self, id):
         """Get an object from the store.
         
