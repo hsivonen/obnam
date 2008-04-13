@@ -49,7 +49,7 @@ class StoreTests(unittest.TestCase):
 
     def testReturnsActualHostBlockWhenOneExists(self):
         self.store.fetch_host_block()
-        self.store.commit_host_block()
+        self.store.commit_host_block([])
         
         context = obnam.context.Context()
         context.be = obnam.backend.init(context.config, context.cache)
@@ -57,6 +57,12 @@ class StoreTests(unittest.TestCase):
         store.fetch_host_block()
         host = store.get_host_block()
         self.failUnless(isinstance(host, obnam.obj.HostBlockObject))
+
+    def testReplacesHostObjectInMemory(self):
+        self.store.fetch_host_block()
+        host = self.store.get_host_block()
+        self.store.commit_host_block([])
+        self.failIfEqual(self.store.get_host_block(), host)
 
     def testCreatesNewHostBlockWhenNoneExists(self):
         self.store.fetch_host_block()
@@ -87,7 +93,7 @@ class StoreTests(unittest.TestCase):
         o = obnam.obj.GenerationObject(id="pink")
         self.store.fetch_host_block()
         self.store.queue_object(o)
-        self.store.commit_host_block()
+        self.store.commit_host_block([])
         
         context2 = obnam.context.Context()
         context2.cache = obnam.cache.Cache(context2.config)

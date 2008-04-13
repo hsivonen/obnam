@@ -101,7 +101,7 @@ class Store:
         logging.debug("Creating new mapping block for content mappings")
         return self._update_map_helper(self._context.contmap)
 
-    def commit_host_block(self):
+    def commit_host_block(self, new_generations):
         """Commit the current host block to the store.
         
         If no host block exists, create one. If one already exists,
@@ -121,7 +121,8 @@ class Store:
                        self.update_content_maps())
         
         logging.info("Creating new host block")
-        gen_ids = host.get_generation_ids()
+        gen_ids = (host.get_generation_ids() + 
+                   [gen.get_id() for gen in new_generations])
         host2 = obnam.obj.HostBlockObject(host_id=host.get_id(), 
                                           gen_ids=gen_ids, 
                                           map_block_ids=map_ids,
