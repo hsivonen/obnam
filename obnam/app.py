@@ -64,14 +64,10 @@ class Application:
         """Get the Store for the backup application."""
         return self._store
 
-    def get_host(self):
-        """Return currently active host object, or None if none is active."""
-        return self._store.get_host_block()
-
     def load_host(self):
         """Load the host block into memory."""
         self.get_store().fetch_host_block()
-        return self.get_host()
+        return self.get_store().get_host_block()
 
     def load_maps(self):
         """Load non-content map blocks."""

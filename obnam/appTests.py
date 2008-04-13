@@ -34,9 +34,6 @@ class ApplicationTests(unittest.TestCase):
         context = obnam.context.Context()
         self.app = obnam.Application(context)
 
-    def testHasNoHostBlockInitially(self):
-        self.failUnlessEqual(self.app.get_host(), None)
-
     def testReturnsEmptyExclusionListInitially(self):
         self.failUnlessEqual(self.app.get_exclusion_regexps(), [])
 
