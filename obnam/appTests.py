@@ -84,6 +84,12 @@ class ApplicationLoadHostBlockTests(unittest.TestCase):
         context.be = obnam.backend.init(context.config, context.cache)
         self.app = obnam.Application(context)
 
+    def tearDown(self):
+        for x in ["cache", "store"]:
+            dirname = self.app._context.config.get("backup", x)
+            if os.path.isdir(dirname):
+                shutil.rmtree(dirname)
+
     def testCreatesNewHostBlockWhenNoneExists(self):
         host = self.app.load_host()
         self.failUnlessEqual(host.get_id(), socket.gethostname())
