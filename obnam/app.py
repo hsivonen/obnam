@@ -249,16 +249,39 @@ class Application:
         else:
             return None
 
+    def _reuse_existing(self, old_file):
+        return (old_file.first_string_by_kind(obnam.cmp.CONTREF),
+                old_file.first_string_by_kind(obnam.cmp.SIGREF),
+                old_file.first_string_by_kind(obnam.cmp.DELTAREF))
+
+    def _compute_delta(self, filename):
+        # FIXME: This should compute a delta.
+        return self._backup_new(filename)
+
+    def _backup_new(self, filename):
+        contref = obnam.io.create_file_contents_object(self._context, 
+                                                       filename)
+        sig = self.compute_signature(filename)
+        sigref = sig.get_id()
+        deltaref = None
+        return contref, sigref, deltaref
+
     def add_to_filegroup(self, fg, filename):
         """Add a file to a filegroup."""
         self._context.progress.update_current_action(filename)
         st = os.stat(filename)
         if stat.S_ISREG(st.st_mode):
-            contref = obnam.io.create_file_contents_object(self._context, 
-                                                           filename)
-            sig = self.compute_signature(filename)
-            sigref = sig.get_id()
-            deltaref = None
+            unsolved = obnam.io.unsolve(self.get_context(), filename)
+            old_file = self.get_file_in_previous_generation(unsolved)
+            if old_file:
+                old_st = old_file.first_by_kind(obnam.cmp.STAT)
+                old_st = obnam.cmp.parse_stat_component(old_st)
+                if self.file_is_unchanged(old_st, st):
+                    contref, sigref, deltaref = self._reuse_existing(old_file)
+                else:
+                    contref, sigref, deltaref = self._compute_delta(filename)
+            else:
+                contref, sigref, deltaref = self._backup_new(filename)
         else:
             contref = None
             sigref = None

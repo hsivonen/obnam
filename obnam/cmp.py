@@ -111,7 +111,8 @@ class Component:
 
     def __init__(self, kind, value):
         self.kind = kind
-        assert type(value) in [type(""), type([])]
+        assert type(value) in [type(""), type([])], \
+               "Value type is %s instead of string or list" % type(value)
         if type(value) == type(""):
             self.str = value
             self.subcomponents = []
