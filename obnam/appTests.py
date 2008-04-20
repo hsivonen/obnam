@@ -409,6 +409,7 @@ class ApplicationGetDirInPreviousGenerationTests(unittest.TestCase):
         context = obnam.context.Context()
         self.app = obnam.Application(context)
         self.app._store = self.MockStore()
+        self.app.set_previous_generation("prevgen")
 
     def testReturnsNoneIfDirectoryDidNotExist(self):
         self.failUnlessEqual(self.app.get_dir_in_previous_generation("xx"),
@@ -417,6 +418,78 @@ class ApplicationGetDirInPreviousGenerationTests(unittest.TestCase):
     def testReturnsDirObjectIfDirectoryDidExist(self):
         dir = self.app.get_dir_in_previous_generation("pink")
         self.failUnlessEqual(dir.get_name(), "pink")
+
+
+class ApplicationSelectFilesToBackUpTests(unittest.TestCase):
+
+    class MockStore:
+    
+        def __init__(self, objs):
+            self._objs = objs
+    
+        def get_object(self, id):
+            for obj in self._objs:
+                if obj.get_id() == id:
+                    return obj
+            return None
+
+    def setUp(self):
+        self.stats = {
+            "pink": obnam.utils.make_stat_result(st_mtime=42),
+            "pretty": obnam.utils.make_stat_result(st_mtime=105),
+        }
+        self.names = ["pink", "pretty"]
+        self.pink = self.mock_filegroup(["pink"])
+        self.pretty = self.mock_filegroup(["pretty"])
+        self.groups = [self.pink, self.pretty]
+
+        self.dirname = "dirname"
+        self.dir = obnam.obj.DirObject(id="id", name=self.dirname,
+                                       filegrouprefs=[x.get_id() 
+                                                      for x in self.groups])
+
+        store = self.MockStore(self.groups + [self.dir])
+
+        context = obnam.context.Context()
+        self.app = obnam.Application(context)
+        self.app._store = store
+        self.app.get_dir_in_previous_generation = self.mock_get_dir_in_prevgen
+
+    def mock_get_dir_in_prevgen(self, dirname):
+        if dirname == self.dirname:
+            return self.dir
+        else:
+            return None
+
+    def mock_filegroup(self, filenames):
+        fg = obnam.obj.FileGroupObject(id=obnam.obj.object_id_new())
+        for filename in filenames:
+            st = self.mock_stat(filename)
+            fg.add_file(filename, st, None, None, None)
+        return fg
+
+    def mock_stat(self, filename):
+        return self.stats[filename]
+
+    def select(self):
+        return self.app.select_files_to_back_up(self.dirname, self.names,
+                                                stat=self.mock_stat)
+
+    def testReturnsNoOldGroupsIfDirectoryDidNotExist(self):
+        self.dir = None
+        self.failUnlessEqual(self.select(), ([], self.names))
+
+    def testReturnsNoOldGroupsIfEverythingIsChanged(self):
+        self.stats["pink"] = obnam.utils.make_stat_result()
+        self.stats["pretty"] = obnam.utils.make_stat_result()
+        self.failUnlessEqual(self.select(), ([], self.names))
+
+    def testReturnsOneGroupAndOneFileWhenJustOneIsChanged(self):
+        self.stats["pink"] = obnam.utils.make_stat_result()
+        self.failUnlessEqual(self.select(), ([self.pretty], ["pink"]))
+
+    def testReturnsBothGroupsWhenNothingIsChanged(self):
+        self.failUnlessEqual(self.select(), (self.groups, []))
 
 
 class ApplicationFindFileByNameTests(unittest.TestCase):

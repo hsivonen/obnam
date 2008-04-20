@@ -279,7 +279,37 @@ class Application:
     def get_dir_in_previous_generation(self, dirname):
         """Return directory in previous generation, or None."""
         gen = self.get_previous_generation()
-        return self.get_store().lookup_dir(gen, dirname)
+        if gen:
+            return self.get_store().lookup_dir(gen, dirname)
+        else:
+            return None
+
+    def select_files_to_back_up(self, dirname, filenames, stat=os.stat):
+        """Select files to backup in a directory, compared to previous gen.
+        
+        Look up the directory in the previous generation, and see which
+        files need backing up compared to that generation.
+        
+        Return list of unchanged filegroups, plus list of filenames
+        that need backing up.
+        
+        """
+        
+        filenames = filenames[:]
+        old_dir = self.get_dir_in_previous_generation(dirname)
+        if old_dir:
+            old_groups = [self.get_store().get_object(id)
+                          for id in old_dir.get_filegrouprefs()]
+            filegroups = self.find_unchanged_filegroups(old_groups,
+                                                        filenames,
+                                                        stat=stat)
+            for fg in filegroups:
+                for name in fg.get_names():
+                    filenames.remove(name)
+    
+            return filegroups, filenames
+        else:
+            return [], filenames
 
     def backup_one_dir(self, dirname, subdirs, filenames):
         """Back up non-recursively one directory.
@@ -292,7 +322,11 @@ class Application:
         """
         
         filenames = self._make_absolute(dirname, filenames)
-        filegroups = self.make_filegroups(filenames)
+        filegroups, filenames = self.select_files_to_back_up(dirname, 
+                                                             filenames)
+
+        
+        filegroups += self.make_filegroups(filenames)
         filegrouprefs = [fg.get_id() for fg in filegroups]
 
         dirrefs = [subdir.get_id() for subdir in subdirs]
@@ -302,7 +336,6 @@ class Application:
                                   stat=os.stat(dirname),
                                   dirrefs=dirrefs,
                                   filegrouprefs=filegrouprefs)
-
 
         self.get_store().queue_object(dir)
         return dir
