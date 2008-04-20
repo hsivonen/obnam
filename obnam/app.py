@@ -214,6 +214,22 @@ class Application:
         self.get_store().queue_object(sig)
         return sig
 
+    def find_unchanged_filegroups(self, filegroups, filenames, stat=os.stat):
+        """Return list of filegroups that are unchanged.
+        
+        The filenames and stat arguments have the same meaning as 
+        for the filegroup_is_unchanged method.
+        
+        """
+        
+        unchanged = []
+        
+        for filegroup in filegroups:
+            if self.filegroup_is_unchanged(filegroup, filenames, stat=stat):
+                unchanged.append(filegroup)
+        
+        return unchanged
+
     def add_to_filegroup(self, fg, filename):
         """Add a file to a filegroup."""
         self._context.progress.update_current_action(filename)

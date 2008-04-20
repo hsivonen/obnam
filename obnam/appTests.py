@@ -335,6 +335,58 @@ class ApplicationUnchangedDirTests(unittest.TestCase):
         self.failIf(self.app.dir_is_unchanged(dir1, dir2))
 
 
+class ApplicationFindUnchangedFilegroupsTests(unittest.TestCase):
+
+    def setUp(self):
+        context = obnam.context.Context()
+        self.app = obnam.Application(context)
+        self.stats = {
+            "pink": obnam.utils.make_stat_result(st_mtime=42),
+            "pretty": obnam.utils.make_stat_result(st_mtime=105),
+        }
+        self.names = ["pink", "pretty"]
+        self.pink = self.mock_filegroup(["pink"])
+        self.pretty = self.mock_filegroup(["pretty"])
+        self.groups = [self.pink, self.pretty]
+
+    def mock_filegroup(self, filenames):
+        fg = obnam.obj.FileGroupObject(id=obnam.obj.object_id_new())
+        for filename in filenames:
+            st = self.mock_stat(filename)
+            fg.add_file(filename, st, None, None, None)
+        return fg
+
+    def mock_stat(self, filename):
+        return self.stats[filename]
+
+    def find(self, filegroups, filenames):
+        return self.app.find_unchanged_filegroups(filegroups, filenames,
+                                                  stat=self.mock_stat)
+
+    def testReturnsEmptyListForEmptyListOfGroups(self):
+        self.failUnlessEqual(self.find([], self.names), [])
+
+    def testReturnsEmptyListForEmptyListOfFilenames(self):
+        self.failUnlessEqual(self.find(self.groups, []), [])
+
+    def testReturnsPinkGroupWhenPrettyIsChanged(self):
+        self.stats["pretty"] = obnam.utils.make_stat_result()
+        self.failUnlessEqual(self.find(self.groups, self.names), [self.pink])
+
+    def testReturnsPrettyGroupWhenPinkIsChanged(self):
+        self.stats["pink"] = obnam.utils.make_stat_result()
+        self.failUnlessEqual(self.find(self.groups, self.names), [self.pretty])
+
+    def testReturnsPinkAndPrettyWhenBothAreUnchanged(self):
+        self.failUnlessEqual(set(self.find(self.groups, self.names)),
+                             set(self.groups))
+
+    def testReturnsEmptyListWhenEverythingIsChanged(self):
+        self.stats["pink"] = obnam.utils.make_stat_result()
+        self.stats["pretty"] = obnam.utils.make_stat_result()
+        self.failUnlessEqual(self.find(self.groups, self.names), [])
+
+
 class ApplicationFindFileByNameTests(unittest.TestCase):
 
     def setUp(self):
