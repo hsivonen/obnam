@@ -276,6 +276,11 @@ class Application:
     def _make_absolute(self, basename, relatives):
         return [os.path.join(basename, name) for name in relatives]
 
+    def get_dir_in_previous_generation(self, dirname):
+        """Return directory in previous generation, or None."""
+        gen = self.get_previous_generation()
+        return self.get_store().lookup_dir(gen, dirname)
+
     def backup_one_dir(self, dirname, subdirs, filenames):
         """Back up non-recursively one directory.
         

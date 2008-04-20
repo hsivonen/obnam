@@ -243,7 +243,6 @@ class ApplicationUnchangedFileGroupTests(unittest.TestCase):
                                                         stat=self.mock_stat))
 
 
-
 class ApplicationUnchangedDirTests(unittest.TestCase):
 
     def setUp(self):
@@ -392,6 +391,32 @@ class ApplicationFindUnchangedFilegroupsTests(unittest.TestCase):
         self.stats["pink"] = obnam.utils.make_stat_result()
         self.stats["pretty"] = obnam.utils.make_stat_result()
         self.failUnlessEqual(self.find(self.groups, self.names), [])
+
+
+class ApplicationGetDirInPreviousGenerationTests(unittest.TestCase):
+
+    class MockStore:
+    
+        def __init__(self):
+            self.dict = {
+                "pink": obnam.obj.DirObject(id="id", name="pink"),
+            }
+    
+        def lookup_dir(self, gen, pathname):
+            return self.dict.get(pathname, None)
+
+    def setUp(self):
+        context = obnam.context.Context()
+        self.app = obnam.Application(context)
+        self.app._store = self.MockStore()
+
+    def testReturnsNoneIfDirectoryDidNotExist(self):
+        self.failUnlessEqual(self.app.get_dir_in_previous_generation("xx"),
+                             None)
+
+    def testReturnsDirObjectIfDirectoryDidExist(self):
+        dir = self.app.get_dir_in_previous_generation("pink")
+        self.failUnlessEqual(dir.get_name(), "pink")
 
 
 class ApplicationFindFileByNameTests(unittest.TestCase):
