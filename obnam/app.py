@@ -241,6 +241,14 @@ class Application:
         
         return unchanged
 
+    def get_file_in_previous_generation(self, pathname):
+        """Return non-directory file in previous generation, or None."""
+        gen = self.get_previous_generation()
+        if gen:
+            return self.get_store().lookup_file(gen, pathname)
+        else:
+            return None
+
     def add_to_filegroup(self, fg, filename):
         """Add a file to a filegroup."""
         self._context.progress.update_current_action(filename)

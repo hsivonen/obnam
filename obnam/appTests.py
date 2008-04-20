@@ -426,6 +426,38 @@ class ApplicationGetDirInPreviousGenerationTests(unittest.TestCase):
         self.failUnlessEqual(dir.get_name(), "pink")
 
 
+class ApplicationGetFileInPreviousGenerationTests(unittest.TestCase):
+
+    class MockStore:
+    
+        def __init__(self):
+            self.dict = {
+                "pink": obnam.cmp.Component(obnam.cmp.FILE, [])
+            }
+    
+        def lookup_file(self, gen, pathname):
+            return self.dict.get(pathname, None)
+
+    def setUp(self):
+        context = obnam.context.Context()
+        self.app = obnam.Application(context)
+        self.app._store = self.MockStore()
+        self.app.set_previous_generation("prevgen")
+
+    def testReturnsNoneIfPreviousGenerationIsUnset(self):
+        self.app.set_previous_generation(None)
+        self.failUnlessEqual(self.app.get_file_in_previous_generation("xx"),
+                             None)
+
+    def testReturnsNoneIfFileDidNotExist(self):
+        self.failUnlessEqual(self.app.get_file_in_previous_generation("xx"),
+                             None)
+
+    def testReturnsFileComponentIfFileDidExist(self):
+        cmp = self.app.get_file_in_previous_generation("pink")
+        self.failUnlessEqual(cmp.get_kind(), obnam.cmp.FILE)
+
+
 class ApplicationSelectFilesToBackUpTests(unittest.TestCase):
 
     class MockStore:
