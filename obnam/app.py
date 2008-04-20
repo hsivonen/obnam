@@ -325,7 +325,6 @@ class Application:
         filegroups, filenames = self.select_files_to_back_up(dirname, 
                                                              filenames)
 
-        
         filegroups += self.make_filegroups(filenames)
         filegrouprefs = [fg.get_id() for fg in filegroups]
 
