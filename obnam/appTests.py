@@ -208,39 +208,43 @@ class ApplicationUnchangedFileGroupTests(unittest.TestCase):
     def setUp(self):
         context = obnam.context.Context()
         self.app = obnam.Application(context)
+        self.dir = "dirname"
         self.stats = {
-            "pink": obnam.utils.make_stat_result(st_mtime=42),
-            "pretty": obnam.utils.make_stat_result(st_mtime=105),
+            "dirname/pink": obnam.utils.make_stat_result(st_mtime=42),
+            "dirname/pretty": obnam.utils.make_stat_result(st_mtime=105),
         }
 
     def mock_stat(self, filename):
+        self.failUnless(filename.startswith(self.dir))
         return self.stats[filename]
 
     def mock_filegroup(self, filenames):
         fg = obnam.obj.FileGroupObject(id=obnam.obj.object_id_new())
         for filename in filenames:
-            st = self.mock_stat(filename)
+            st = self.mock_stat(os.path.join(self.dir, filename))
             fg.add_file(filename, st, None, None, None)
         return fg
 
     def testSameFileGroupWhenAllFilesAreIdentical(self):
         filenames = ["pink", "pretty"]
         fg = self.mock_filegroup(filenames)
-        self.failUnless(self.app.filegroup_is_unchanged(fg, filenames,
+        self.failUnless(self.app.filegroup_is_unchanged(self.dir, fg, 
+                                                        filenames,
                                                         stat=self.mock_stat))
 
     def testChangedFileGroupWhenFileHasChanged(self):
         filenames = ["pink", "pretty"]
         fg = self.mock_filegroup(filenames)
-        self.stats["pink"] = obnam.utils.make_stat_result(st_mtime=1)
-        self.failIf(self.app.filegroup_is_unchanged(fg, filenames,
-                                                        stat=self.mock_stat))
+        self.stats["dirname/pink"] = obnam.utils.make_stat_result(st_mtime=1)
+        self.failIf(self.app.filegroup_is_unchanged(self.dir, fg, filenames,
+                                                    stat=self.mock_stat))
 
     def testChangedFileGroupWhenFileHasBeenRemoved(self):
         filenames = ["pink", "pretty"]
         fg = self.mock_filegroup(filenames)
-        self.failIf(self.app.filegroup_is_unchanged(fg, filenames[:1],
-                                                        stat=self.mock_stat))
+        self.failIf(self.app.filegroup_is_unchanged(self.dir, fg, 
+                                                    filenames[:1],
+                                                    stat=self.mock_stat))
 
 
 class ApplicationUnchangedDirTests(unittest.TestCase):
@@ -346,9 +350,10 @@ class ApplicationFindUnchangedFilegroupsTests(unittest.TestCase):
     def setUp(self):
         context = obnam.context.Context()
         self.app = obnam.Application(context)
+        self.dirname = "dirname"
         self.stats = {
-            "pink": obnam.utils.make_stat_result(st_mtime=42),
-            "pretty": obnam.utils.make_stat_result(st_mtime=105),
+            "dirname/pink": obnam.utils.make_stat_result(st_mtime=42),
+            "dirname/pretty": obnam.utils.make_stat_result(st_mtime=105),
         }
         self.names = ["pink", "pretty"]
         self.pink = self.mock_filegroup(["pink"])
@@ -358,7 +363,7 @@ class ApplicationFindUnchangedFilegroupsTests(unittest.TestCase):
     def mock_filegroup(self, filenames):
         fg = obnam.obj.FileGroupObject(id=obnam.obj.object_id_new())
         for filename in filenames:
-            st = self.mock_stat(filename)
+            st = self.mock_stat(os.path.join(self.dirname, filename))
             fg.add_file(filename, st, None, None, None)
         return fg
 
@@ -366,7 +371,8 @@ class ApplicationFindUnchangedFilegroupsTests(unittest.TestCase):
         return self.stats[filename]
 
     def find(self, filegroups, filenames):
-        return self.app.find_unchanged_filegroups(filegroups, filenames,
+        return self.app.find_unchanged_filegroups(self.dirname, filegroups, 
+                                                  filenames,
                                                   stat=self.mock_stat)
 
     def testReturnsEmptyListForEmptyListOfGroups(self):
@@ -376,11 +382,11 @@ class ApplicationFindUnchangedFilegroupsTests(unittest.TestCase):
         self.failUnlessEqual(self.find(self.groups, []), [])
 
     def testReturnsPinkGroupWhenPrettyIsChanged(self):
-        self.stats["pretty"] = obnam.utils.make_stat_result()
+        self.stats["dirname/pretty"] = obnam.utils.make_stat_result()
         self.failUnlessEqual(self.find(self.groups, self.names), [self.pink])
 
     def testReturnsPrettyGroupWhenPinkIsChanged(self):
-        self.stats["pink"] = obnam.utils.make_stat_result()
+        self.stats["dirname/pink"] = obnam.utils.make_stat_result()
         self.failUnlessEqual(self.find(self.groups, self.names), [self.pretty])
 
     def testReturnsPinkAndPrettyWhenBothAreUnchanged(self):
@@ -388,8 +394,8 @@ class ApplicationFindUnchangedFilegroupsTests(unittest.TestCase):
                              set(self.groups))
 
     def testReturnsEmptyListWhenEverythingIsChanged(self):
-        self.stats["pink"] = obnam.utils.make_stat_result()
-        self.stats["pretty"] = obnam.utils.make_stat_result()
+        self.stats["dirname/pink"] = obnam.utils.make_stat_result()
+        self.stats["dirname/pretty"] = obnam.utils.make_stat_result()
         self.failUnlessEqual(self.find(self.groups, self.names), [])
 
 
@@ -434,16 +440,16 @@ class ApplicationSelectFilesToBackUpTests(unittest.TestCase):
             return None
 
     def setUp(self):
+        self.dirname = "dirname"
         self.stats = {
-            "pink": obnam.utils.make_stat_result(st_mtime=42),
-            "pretty": obnam.utils.make_stat_result(st_mtime=105),
+            "dirname/pink": obnam.utils.make_stat_result(st_mtime=42),
+            "dirname/pretty": obnam.utils.make_stat_result(st_mtime=105),
         }
         self.names = ["pink", "pretty"]
         self.pink = self.mock_filegroup(["pink"])
         self.pretty = self.mock_filegroup(["pretty"])
         self.groups = [self.pink, self.pretty]
 
-        self.dirname = "dirname"
         self.dir = obnam.obj.DirObject(id="id", name=self.dirname,
                                        filegrouprefs=[x.get_id() 
                                                       for x in self.groups])
@@ -464,7 +470,7 @@ class ApplicationSelectFilesToBackUpTests(unittest.TestCase):
     def mock_filegroup(self, filenames):
         fg = obnam.obj.FileGroupObject(id=obnam.obj.object_id_new())
         for filename in filenames:
-            st = self.mock_stat(filename)
+            st = self.mock_stat(os.path.join(self.dirname, filename))
             fg.add_file(filename, st, None, None, None)
         return fg
 
@@ -480,12 +486,12 @@ class ApplicationSelectFilesToBackUpTests(unittest.TestCase):
         self.failUnlessEqual(self.select(), ([], self.names))
 
     def testReturnsNoOldGroupsIfEverythingIsChanged(self):
-        self.stats["pink"] = obnam.utils.make_stat_result()
-        self.stats["pretty"] = obnam.utils.make_stat_result()
+        self.stats["dirname/pink"] = obnam.utils.make_stat_result()
+        self.stats["dirname/pretty"] = obnam.utils.make_stat_result()
         self.failUnlessEqual(self.select(), ([], self.names))
 
     def testReturnsOneGroupAndOneFileWhenJustOneIsChanged(self):
-        self.stats["pink"] = obnam.utils.make_stat_result()
+        self.stats["dirname/pink"] = obnam.utils.make_stat_result()
         self.failUnlessEqual(self.select(), ([self.pretty], ["pink"]))
 
     def testReturnsBothGroupsWhenNothingIsChanged(self):

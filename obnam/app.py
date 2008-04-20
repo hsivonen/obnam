@@ -131,10 +131,10 @@ class Application:
                 return False
         return True
 
-    def filegroup_is_unchanged(self, fg, filenames, stat=os.stat):
+    def filegroup_is_unchanged(self, dirname, fg, filenames, stat=os.stat):
         """Is a filegroup unchanged from the previous generation?
         
-        Given a filegroup and a list of files in the current directory,
+        Given a filegroup and a list of files in the given directory,
         return True if all files in the filegroup are unchanged from
         the previous generation.
         
@@ -148,7 +148,7 @@ class Application:
                 return False    # file has been deleted
 
             old_stat = fg.get_stat(old_name)
-            new_stat = stat(old_name)
+            new_stat = stat(os.path.join(dirname, old_name))
             if not self.file_is_unchanged(old_stat, new_stat):
                 return False    # file has changed
 
@@ -223,7 +223,8 @@ class Application:
         self.get_store().queue_object(sig)
         return sig
 
-    def find_unchanged_filegroups(self, filegroups, filenames, stat=os.stat):
+    def find_unchanged_filegroups(self, dirname, filegroups, filenames, 
+                                  stat=os.stat):
         """Return list of filegroups that are unchanged.
         
         The filenames and stat arguments have the same meaning as 
@@ -234,7 +235,8 @@ class Application:
         unchanged = []
         
         for filegroup in filegroups:
-            if self.filegroup_is_unchanged(filegroup, filenames, stat=stat):
+            if self.filegroup_is_unchanged(dirname, filegroup, filenames, 
+                                           stat=stat):
                 unchanged.append(filegroup)
         
         return unchanged
@@ -300,7 +302,7 @@ class Application:
         if old_dir:
             old_groups = [self.get_store().get_object(id)
                           for id in old_dir.get_filegrouprefs()]
-            filegroups = self.find_unchanged_filegroups(old_groups,
+            filegroups = self.find_unchanged_filegroups(dirname, old_groups,
                                                         filenames,
                                                         stat=stat)
             for fg in filegroups:
