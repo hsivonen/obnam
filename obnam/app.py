@@ -254,9 +254,34 @@ class Application:
                 old_file.first_string_by_kind(obnam.cmp.SIGREF),
                 old_file.first_string_by_kind(obnam.cmp.DELTAREF))
 
-    def _compute_delta(self, filename):
-        # FIXME: This should compute a delta.
-        return self._backup_new(filename)
+    def _get_old_sig(self, old_file):
+        old_sigref = old_file.first_string_by_kind(obnam.cmp.SIGREF)
+        if not old_sigref:
+            return None
+        old_sig = self.get_store().get_object(old_sigref)
+        if not old_sig:
+            return None
+        return old_sig.first_string_by_kind(obnam.cmp.SIGDATA)
+
+    def _compute_delta(self, old_file, filename):
+        old_sig_data = self._get_old_sig(old_file)
+        if old_sig_data:
+            old_contref = old_file.first_string_by_kind(obnam.cmp.CONTREF)
+            old_deltaref = old_file.first_string_by_kind(obnam.cmp.DELTAREF)
+            deltapart_ids = obnam.rsync.compute_delta(self.get_context(),
+                                                      old_sig_data, filename)
+            delta_id = obnam.obj.object_id_new()
+            delta = obnam.obj.DeltaObject(id=delta_id, 
+                                          deltapart_refs=deltapart_ids, 
+                                          cont_ref=old_contref, 
+                                          delta_ref=old_deltaref)
+            self.get_store().queue_object(delta)
+            
+            sig = self.compute_signature(filename)
+
+            return None, sig.get_id(), delta.get_id()
+        else:
+            return self._backup_new(filename)
 
     def _backup_new(self, filename):
         contref = obnam.io.create_file_contents_object(self._context, 
@@ -279,7 +304,8 @@ class Application:
                 if self.file_is_unchanged(old_st, st):
                     contref, sigref, deltaref = self._reuse_existing(old_file)
                 else:
-                    contref, sigref, deltaref = self._compute_delta(filename)
+                    contref, sigref, deltaref = self._compute_delta(old_file,
+                                                                    filename)
             else:
                 contref, sigref, deltaref = self._backup_new(filename)
         else:
