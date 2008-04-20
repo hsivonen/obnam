@@ -296,10 +296,15 @@ class Application:
         that need backing up.
         
         """
-        
+
+        unsolved = obnam.io.unsolve(self.get_context(), dirname)
+        logging.debug("Selecting files to backup in %s (unsolved)" % unsolved)
+        logging.debug("There are %d filenames currently" % len(filenames)) 
+               
         filenames = filenames[:]
-        old_dir = self.get_dir_in_previous_generation(dirname)
+        old_dir = self.get_dir_in_previous_generation(unsolved)
         if old_dir:
+            logging.debug("Found directory in previous generation")
             old_groups = [self.get_store().get_object(id)
                           for id in old_dir.get_filegrouprefs()]
             filegroups = self.find_unchanged_filegroups(dirname, old_groups,
@@ -311,6 +316,7 @@ class Application:
     
             return filegroups, filenames
         else:
+            logging.debug("Did not find directory in previous generation")
             return [], filenames
 
     def backup_one_dir(self, dirname, subdirs, filenames):
@@ -323,9 +329,12 @@ class Application:
 
         """
         
-        filenames = self._make_absolute(dirname, filenames)
+        logging.debug("Backing up non-recursively: %s" % dirname)
         filegroups, filenames = self.select_files_to_back_up(dirname, 
                                                              filenames)
+        logging.debug("Selected %d existing file groups, %d filenames" %
+                      (len(filegroups), len(filenames)))
+        filenames = self._make_absolute(dirname, filenames)
 
         filegroups += self.make_filegroups(filenames)
         filegrouprefs = [fg.get_id() for fg in filegroups]
