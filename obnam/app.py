@@ -41,7 +41,7 @@ class Application:
         self._exclusion_strings = []
         self._exclusion_regexps = []
         self._filelist = None
-        self._host = None
+        self._store = obnam.Store(self._context)
         
         # When we traverse the file system tree while making a backup,
         # we process children before the parent. This is necessary for
@@ -60,32 +60,14 @@ class Application:
         """Get the context for the backup application."""
         return self._context
 
-    def get_host(self):
-        """Return currently active host object, or None if none is active."""
-        return self._host
+    def get_store(self):
+        """Get the Store for the backup application."""
+        return self._store
 
     def load_host(self):
         """Load the host block into memory."""
-        if not self._host:
-            host_block = obnam.io.get_host_block(self._context)
-            if host_block:
-                self._host = obnam.obj.create_host_from_block(host_block)
-            else:
-                id = self._context.config.get("backup", "host-id")
-                self._host = obnam.obj.HostBlockObject(host_id=id)
-        return self._host
-
-    def load_maps(self):
-        """Load non-content map blocks."""
-        ids = self._host.get_map_block_ids()
-        logging.info("Decoding %d mapping blocks" % len(ids))
-        obnam.io.load_maps(self._context, self._context.map, ids)
-
-    def load_content_maps(self):
-        """Load content map blocks."""
-        ids = self._host.get_contmap_block_ids()
-        logging.info("Decoding %d content mapping blocks" % len(ids))
-        obnam.io.load_maps(self._context, self._context.contmap, ids)
+        self.get_store().fetch_host_block()
+        return self.get_store().get_host_block()
 
     def get_exclusion_regexps(self):
         """Return list of regexp to exclude things from backup."""
@@ -218,13 +200,6 @@ class Application:
         
         return None
 
-    def enqueue(self, objs):
-        """Push objects to the object queue."""
-        for obj in objs:
-            obnam.io.enqueue_object(self._context, self._context.oq,
-                                    self._context.map, obj.get_id(), 
-                                    obj.encode(), True)
-
     def compute_signature(self, filename):
         """Compute rsync signature for a filename.
         
@@ -236,7 +211,7 @@ class Application:
         sigdata = obnam.rsync.compute_signature(self._context, filename)
         id = obnam.obj.object_id_new()
         sig = obnam.obj.SignatureObject(id=id, sigdata=sigdata)
-        self.enqueue([sig])
+        self.get_store().queue_object(sig)
         return sig
 
     def add_to_filegroup(self, fg, filename):
@@ -270,7 +245,7 @@ class Application:
                 list.append(obnam.obj.FileGroupObject(id=id))
             self.add_to_filegroup(list[-1], filename)
                 
-        self.enqueue(list)
+        self.get_store().queue_objects(list)
         return list
 
     def _make_absolute(self, basename, relatives):
@@ -299,7 +274,7 @@ class Application:
                                   filegrouprefs=filegrouprefs)
 
 
-        self.enqueue([dir])
+        self.get_store().queue_object(dir)
         return dir
 
     def backup_one_root(self, root):
@@ -353,60 +328,5 @@ class Application:
         gen = obnam.obj.GenerationObject(id=obnam.obj.object_id_new(),
                                          dirrefs=dirrefs, start=start,
                                          end=end)
-        self.enqueue([gen])
+        self.get_store().queue_object(gen)
         return gen
-
-    def _update_map_helper(self, map):
-        """Create new mapping blocks of a given kind, and upload them.
-        
-        Return list of block ids for the new blocks.
-
-        """
-
-        if obnam.map.get_new(map):
-            id = self._context.be.generate_block_id()
-            logging.debug("Creating mapping block %s" % id)
-            block = obnam.map.encode_new_to_block(map, id)
-            self._context.be.upload_block(id, block, True)
-            return [id]
-        else:
-            logging.debug("No new mappings, no new mapping block")
-            return []
-
-    def update_maps(self):
-        """Create new object mapping blocks and upload them."""
-        logging.debug("Creating new mapping block for normal mappings")
-        return self._update_map_helper(self._context.map)
-
-    def update_content_maps(self):
-        """Create new content object mapping blocks and upload them."""
-        logging.debug("Creating new mapping block for content mappings")
-        return self._update_map_helper(self._context.contmap)
-
-    def finish(self, new_gens):
-        """Finish a backup operation by updating maps and uploading host block.
-        
-        This also removes the host block that has been load. In other
-        words, if you want to continue using the application for anything
-        that requires the host block, you have to call load_host again.
-        
-        """
-
-        obnam.io.flush_all_object_queues(self._context)
-    
-        logging.info("Creating new mapping blocks")
-        host = self.get_host()
-        map_ids = host.get_map_block_ids() + self.update_maps()
-        contmap_ids = (host.get_contmap_block_ids() + 
-                       self.update_content_maps())
-        
-        logging.info("Creating new host block")
-        gen_ids = (host.get_generation_ids() + 
-                   [gen.get_id() for gen in new_gens])
-        host2 = obnam.obj.HostBlockObject(host_id=host.get_id(), 
-                                          gen_ids=gen_ids, 
-                                          map_block_ids=map_ids,
-                                          contmap_block_ids=contmap_ids)
-        obnam.io.upload_host_block(self._context, host2.encode())
-        
-        self._host = None

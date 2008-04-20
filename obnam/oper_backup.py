@@ -34,12 +34,12 @@ class Backup(obnam.Operation):
         logging.info("Getting and decoding host block")
         app = self.get_application()
         host = app.load_host()
-        app.load_maps()
+        app.get_store().load_maps()
         # We don't need to load in file data, therefore we don't load
         # the content map blocks.
     
         gen = app.backup(roots)
         
-        app.finish([gen])
+        app.get_store().commit_host_block([gen])
     
         logging.info("Backup done")
