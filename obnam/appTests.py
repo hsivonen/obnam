@@ -34,9 +34,6 @@ class ApplicationTests(unittest.TestCase):
         context = obnam.context.Context()
         self.app = obnam.Application(context)
 
-    def testHasNoHostBlockInitially(self):
-        self.failUnlessEqual(self.app.get_host(), None)
-
     def testReturnsEmptyExclusionListInitially(self):
         self.failUnlessEqual(self.app.get_exclusion_regexps(), [])
 
@@ -70,6 +67,13 @@ class ApplicationTests(unittest.TestCase):
         filenames = ["filename1", "filename2"]
         self.app.prune(dirname, dirnames, filenames)
         self.failUnlessEqual(dirnames, ["subdir"])
+
+    def testSetsPreviousGenerationToNoneInitially(self):
+        self.failUnlessEqual(self.app.get_previous_generation(), None)
+
+    def testSetsPreviousGenerationCorrectly(self):
+        self.app.set_previous_generation("pink")
+        self.failUnlessEqual(self.app.get_previous_generation(), "pink")
 
 
 class ApplicationLoadHostBlockTests(unittest.TestCase):
@@ -142,6 +146,388 @@ class ApplicationMakeFileGroupsTests(unittest.TestCase):
         list = self.app.make_filegroups(self.tempfiles[:1])
         fg = list[0]
         self.failIf("/" in fg.get_names()[0])
+
+
+class ApplicationUnchangedFileRecognitionTests(unittest.TestCase):
+
+    def setUp(self):
+        context = obnam.context.Context()
+        self.app = obnam.Application(context)
+
+    def testSameFileWhenStatIsIdentical(self):
+        st = obnam.utils.make_stat_result()
+        self.failUnless(self.app.file_is_unchanged(st, st))
+
+    def testSameFileWhenIrrelevantFieldsChange(self):
+        st1 = obnam.utils.make_stat_result()
+        st2 = obnam.utils.make_stat_result(st_ino=42,
+                                           st_atime=42,
+                                           st_blocks=42,
+                                           st_blksize=42,
+                                           st_rdev=42)
+        self.failUnless(self.app.file_is_unchanged(st1, st2))
+
+    def testChangedFileWhenDevChanges(self):
+        st1 = obnam.utils.make_stat_result()
+        st2 = obnam.utils.make_stat_result(st_dev=42)
+        self.failIf(self.app.file_is_unchanged(st1, st2))
+
+    def testChangedFileWhenModeChanges(self):
+        st1 = obnam.utils.make_stat_result()
+        st2 = obnam.utils.make_stat_result(st_mode=42)
+        self.failIf(self.app.file_is_unchanged(st1, st2))
+
+    def testChangedFileWhenNlinkChanges(self):
+        st1 = obnam.utils.make_stat_result()
+        st2 = obnam.utils.make_stat_result(st_nlink=42)
+        self.failIf(self.app.file_is_unchanged(st1, st2))
+
+    def testChangedFileWhenUidChanges(self):
+        st1 = obnam.utils.make_stat_result()
+        st2 = obnam.utils.make_stat_result(st_uid=42)
+        self.failIf(self.app.file_is_unchanged(st1, st2))
+
+    def testChangedFileWhenGidChanges(self):
+        st1 = obnam.utils.make_stat_result()
+        st2 = obnam.utils.make_stat_result(st_gid=42)
+        self.failIf(self.app.file_is_unchanged(st1, st2))
+
+    def testChangedFileWhenSizeChanges(self):
+        st1 = obnam.utils.make_stat_result()
+        st2 = obnam.utils.make_stat_result(st_size=42)
+        self.failIf(self.app.file_is_unchanged(st1, st2))
+
+    def testChangedFileWhenMtimeChanges(self):
+        st1 = obnam.utils.make_stat_result()
+        st2 = obnam.utils.make_stat_result(st_mtime=42)
+        self.failIf(self.app.file_is_unchanged(st1, st2))
+
+
+class ApplicationUnchangedFileGroupTests(unittest.TestCase):
+
+    def setUp(self):
+        context = obnam.context.Context()
+        self.app = obnam.Application(context)
+        self.dir = "dirname"
+        self.stats = {
+            "dirname/pink": obnam.utils.make_stat_result(st_mtime=42),
+            "dirname/pretty": obnam.utils.make_stat_result(st_mtime=105),
+        }
+
+    def mock_stat(self, filename):
+        self.failUnless(filename.startswith(self.dir))
+        return self.stats[filename]
+
+    def mock_filegroup(self, filenames):
+        fg = obnam.obj.FileGroupObject(id=obnam.obj.object_id_new())
+        for filename in filenames:
+            st = self.mock_stat(os.path.join(self.dir, filename))
+            fg.add_file(filename, st, None, None, None)
+        return fg
+
+    def testSameFileGroupWhenAllFilesAreIdentical(self):
+        filenames = ["pink", "pretty"]
+        fg = self.mock_filegroup(filenames)
+        self.failUnless(self.app.filegroup_is_unchanged(self.dir, fg, 
+                                                        filenames,
+                                                        stat=self.mock_stat))
+
+    def testChangedFileGroupWhenFileHasChanged(self):
+        filenames = ["pink", "pretty"]
+        fg = self.mock_filegroup(filenames)
+        self.stats["dirname/pink"] = obnam.utils.make_stat_result(st_mtime=1)
+        self.failIf(self.app.filegroup_is_unchanged(self.dir, fg, filenames,
+                                                    stat=self.mock_stat))
+
+    def testChangedFileGroupWhenFileHasBeenRemoved(self):
+        filenames = ["pink", "pretty"]
+        fg = self.mock_filegroup(filenames)
+        self.failIf(self.app.filegroup_is_unchanged(self.dir, fg, 
+                                                    filenames[:1],
+                                                    stat=self.mock_stat))
+
+
+class ApplicationUnchangedDirTests(unittest.TestCase):
+
+    def setUp(self):
+        context = obnam.context.Context()
+        self.app = obnam.Application(context)
+
+    def make_dir(self, name, dirrefs, filegrouprefs, stat=None):
+        if stat is None:
+            stat = obnam.utils.make_stat_result()
+        return obnam.obj.DirObject(id=obnam.obj.object_id_new(),
+                                   name=name,
+                                   stat=stat,
+                                   dirrefs=dirrefs,
+                                   filegrouprefs=filegrouprefs)
+
+    def testSameDirWhenNothingHasChanged(self):
+        dir = self.make_dir("name", [], ["pink", "pretty"])
+        self.failUnless(self.app.dir_is_unchanged(dir, dir))
+
+    def testChangedDirWhenFileGroupHasBeenRemoved(self):
+        dir1 = self.make_dir("name", [], ["pink", "pretty"])
+        dir2 = self.make_dir("name", [], ["pink"])
+        self.failIf(self.app.dir_is_unchanged(dir1, dir2))
+
+    def testChangedDirWhenFileGroupHasBeenAdded(self):
+        dir1 = self.make_dir("name", [], ["pink"])
+        dir2 = self.make_dir("name", [], ["pink", "pretty"])
+        self.failIf(self.app.dir_is_unchanged(dir1, dir2))
+
+    def testChangedDirWhenDirHasBeenRemoved(self):
+        dir1 = self.make_dir("name", ["pink", "pretty"], [])
+        dir2 = self.make_dir("name", ["pink"], [])
+        self.failIf(self.app.dir_is_unchanged(dir1, dir2))
+
+    def testChangedDirWhenDirHasBeenAdded(self):
+        dir1 = self.make_dir("name", ["pink"], [])
+        dir2 = self.make_dir("name", ["pink", "pretty"], [])
+        self.failIf(self.app.dir_is_unchanged(dir1, dir2))
+
+    def testChangedDirWhenNameHasChanged(self):
+        dir1 = self.make_dir("name1", [], [])
+        dir2 = self.make_dir("name2", [], [])
+        self.failIf(self.app.dir_is_unchanged(dir1, dir2))
+
+    def testSameDirWhenIrrelevantStatFieldsHaveChanged(self):
+        stat = obnam.utils.make_stat_result(st_ino=42,
+                                            st_atime=42,
+                                            st_blocks=42,
+                                            st_blksize=42,
+                                            st_rdev=42)
+
+        dir1 = self.make_dir("name", [], [])
+        dir2 = self.make_dir("name", [], [], stat=stat)
+        self.failUnless(self.app.dir_is_unchanged(dir1, dir2))
+
+    def testChangedDirWhenDevHasChanged(self):
+        dir1 = self.make_dir("name1", [], [])
+        dir2 = self.make_dir("name2", [], [],
+                             stat=obnam.utils.make_stat_result(st_dev=105))
+        self.failIf(self.app.dir_is_unchanged(dir1, dir2))
+
+    def testChangedDirWhenModeHasChanged(self):
+        dir1 = self.make_dir("name1", [], [])
+        dir2 = self.make_dir("name2", [], [],
+                             stat=obnam.utils.make_stat_result(st_mode=105))
+        self.failIf(self.app.dir_is_unchanged(dir1, dir2))
+
+    def testChangedDirWhenNlinkHasChanged(self):
+        dir1 = self.make_dir("name1", [], [])
+        dir2 = self.make_dir("name2", [], [],
+                             stat=obnam.utils.make_stat_result(st_nlink=105))
+        self.failIf(self.app.dir_is_unchanged(dir1, dir2))
+
+    def testChangedDirWhenUidHasChanged(self):
+        dir1 = self.make_dir("name1", [], [])
+        dir2 = self.make_dir("name2", [], [],
+                             stat=obnam.utils.make_stat_result(st_uid=105))
+        self.failIf(self.app.dir_is_unchanged(dir1, dir2))
+
+    def testChangedDirWhenGidHasChanged(self):
+        dir1 = self.make_dir("name1", [], [])
+        dir2 = self.make_dir("name2", [], [],
+                             stat=obnam.utils.make_stat_result(st_gid=105))
+        self.failIf(self.app.dir_is_unchanged(dir1, dir2))
+
+    def testChangedDirWhenSizeHasChanged(self):
+        dir1 = self.make_dir("name1", [], [])
+        dir2 = self.make_dir("name2", [], [],
+                             stat=obnam.utils.make_stat_result(st_size=105))
+        self.failIf(self.app.dir_is_unchanged(dir1, dir2))
+
+    def testChangedDirWhenMtimeHasChanged(self):
+        dir1 = self.make_dir("name1", [], [])
+        dir2 = self.make_dir("name2", [], [],
+                             stat=obnam.utils.make_stat_result(st_mtime=105))
+        self.failIf(self.app.dir_is_unchanged(dir1, dir2))
+
+
+class ApplicationFindUnchangedFilegroupsTests(unittest.TestCase):
+
+    def setUp(self):
+        context = obnam.context.Context()
+        self.app = obnam.Application(context)
+        self.dirname = "dirname"
+        self.stats = {
+            "dirname/pink": obnam.utils.make_stat_result(st_mtime=42),
+            "dirname/pretty": obnam.utils.make_stat_result(st_mtime=105),
+        }
+        self.names = ["pink", "pretty"]
+        self.pink = self.mock_filegroup(["pink"])
+        self.pretty = self.mock_filegroup(["pretty"])
+        self.groups = [self.pink, self.pretty]
+
+    def mock_filegroup(self, filenames):
+        fg = obnam.obj.FileGroupObject(id=obnam.obj.object_id_new())
+        for filename in filenames:
+            st = self.mock_stat(os.path.join(self.dirname, filename))
+            fg.add_file(filename, st, None, None, None)
+        return fg
+
+    def mock_stat(self, filename):
+        return self.stats[filename]
+
+    def find(self, filegroups, filenames):
+        return self.app.find_unchanged_filegroups(self.dirname, filegroups, 
+                                                  filenames,
+                                                  stat=self.mock_stat)
+
+    def testReturnsEmptyListForEmptyListOfGroups(self):
+        self.failUnlessEqual(self.find([], self.names), [])
+
+    def testReturnsEmptyListForEmptyListOfFilenames(self):
+        self.failUnlessEqual(self.find(self.groups, []), [])
+
+    def testReturnsPinkGroupWhenPrettyIsChanged(self):
+        self.stats["dirname/pretty"] = obnam.utils.make_stat_result()
+        self.failUnlessEqual(self.find(self.groups, self.names), [self.pink])
+
+    def testReturnsPrettyGroupWhenPinkIsChanged(self):
+        self.stats["dirname/pink"] = obnam.utils.make_stat_result()
+        self.failUnlessEqual(self.find(self.groups, self.names), [self.pretty])
+
+    def testReturnsPinkAndPrettyWhenBothAreUnchanged(self):
+        self.failUnlessEqual(set(self.find(self.groups, self.names)),
+                             set(self.groups))
+
+    def testReturnsEmptyListWhenEverythingIsChanged(self):
+        self.stats["dirname/pink"] = obnam.utils.make_stat_result()
+        self.stats["dirname/pretty"] = obnam.utils.make_stat_result()
+        self.failUnlessEqual(self.find(self.groups, self.names), [])
+
+
+class ApplicationGetDirInPreviousGenerationTests(unittest.TestCase):
+
+    class MockStore:
+    
+        def __init__(self):
+            self.dict = {
+                "pink": obnam.obj.DirObject(id="id", name="pink"),
+            }
+    
+        def lookup_dir(self, gen, pathname):
+            return self.dict.get(pathname, None)
+
+    def setUp(self):
+        context = obnam.context.Context()
+        self.app = obnam.Application(context)
+        self.app._store = self.MockStore()
+        self.app.set_previous_generation("prevgen")
+
+    def testReturnsNoneIfDirectoryDidNotExist(self):
+        self.failUnlessEqual(self.app.get_dir_in_previous_generation("xx"),
+                             None)
+
+    def testReturnsDirObjectIfDirectoryDidExist(self):
+        dir = self.app.get_dir_in_previous_generation("pink")
+        self.failUnlessEqual(dir.get_name(), "pink")
+
+
+class ApplicationGetFileInPreviousGenerationTests(unittest.TestCase):
+
+    class MockStore:
+    
+        def __init__(self):
+            self.dict = {
+                "pink": obnam.cmp.Component(obnam.cmp.FILE, [])
+            }
+    
+        def lookup_file(self, gen, pathname):
+            return self.dict.get(pathname, None)
+
+    def setUp(self):
+        context = obnam.context.Context()
+        self.app = obnam.Application(context)
+        self.app._store = self.MockStore()
+        self.app.set_previous_generation("prevgen")
+
+    def testReturnsNoneIfPreviousGenerationIsUnset(self):
+        self.app.set_previous_generation(None)
+        self.failUnlessEqual(self.app.get_file_in_previous_generation("xx"),
+                             None)
+
+    def testReturnsNoneIfFileDidNotExist(self):
+        self.failUnlessEqual(self.app.get_file_in_previous_generation("xx"),
+                             None)
+
+    def testReturnsFileComponentIfFileDidExist(self):
+        cmp = self.app.get_file_in_previous_generation("pink")
+        self.failUnlessEqual(cmp.get_kind(), obnam.cmp.FILE)
+
+
+class ApplicationSelectFilesToBackUpTests(unittest.TestCase):
+
+    class MockStore:
+    
+        def __init__(self, objs):
+            self._objs = objs
+    
+        def get_object(self, id):
+            for obj in self._objs:
+                if obj.get_id() == id:
+                    return obj
+            return None
+
+    def setUp(self):
+        self.dirname = "dirname"
+        self.stats = {
+            "dirname/pink": obnam.utils.make_stat_result(st_mtime=42),
+            "dirname/pretty": obnam.utils.make_stat_result(st_mtime=105),
+        }
+        self.names = ["pink", "pretty"]
+        self.pink = self.mock_filegroup(["pink"])
+        self.pretty = self.mock_filegroup(["pretty"])
+        self.groups = [self.pink, self.pretty]
+
+        self.dir = obnam.obj.DirObject(id="id", name=self.dirname,
+                                       filegrouprefs=[x.get_id() 
+                                                      for x in self.groups])
+
+        store = self.MockStore(self.groups + [self.dir])
+
+        context = obnam.context.Context()
+        self.app = obnam.Application(context)
+        self.app._store = store
+        self.app.get_dir_in_previous_generation = self.mock_get_dir_in_prevgen
+
+    def mock_get_dir_in_prevgen(self, dirname):
+        if dirname == self.dirname:
+            return self.dir
+        else:
+            return None
+
+    def mock_filegroup(self, filenames):
+        fg = obnam.obj.FileGroupObject(id=obnam.obj.object_id_new())
+        for filename in filenames:
+            st = self.mock_stat(os.path.join(self.dirname, filename))
+            fg.add_file(filename, st, None, None, None)
+        return fg
+
+    def mock_stat(self, filename):
+        return self.stats[filename]
+
+    def select(self):
+        return self.app.select_files_to_back_up(self.dirname, self.names,
+                                                stat=self.mock_stat)
+
+    def testReturnsNoOldGroupsIfDirectoryDidNotExist(self):
+        self.dir = None
+        self.failUnlessEqual(self.select(), ([], self.names))
+
+    def testReturnsNoOldGroupsIfEverythingIsChanged(self):
+        self.stats["dirname/pink"] = obnam.utils.make_stat_result()
+        self.stats["dirname/pretty"] = obnam.utils.make_stat_result()
+        self.failUnlessEqual(self.select(), ([], self.names))
+
+    def testReturnsOneGroupAndOneFileWhenJustOneIsChanged(self):
+        self.stats["dirname/pink"] = obnam.utils.make_stat_result()
+        self.failUnlessEqual(self.select(), ([self.pretty], ["pink"]))
+
+    def testReturnsBothGroupsWhenNothingIsChanged(self):
+        self.failUnlessEqual(self.select(), (self.groups, []))
 
 
 class ApplicationFindFileByNameTests(unittest.TestCase):
@@ -350,86 +736,3 @@ class ApplicationBackupTests(unittest.TestCase):
         gen = self.app.backup([self.abs("pink"), self.abs("pretty")])
         self.failIfEqual(gen.get_start_time(), None)
         self.failIfEqual(gen.get_end_time(), None)
-
-
-class ApplicationMapTests(unittest.TestCase):
-
-    def setUp(self):
-        # First, set up two mappings.
-
-        context = obnam.context.Context()
-        context.cache = obnam.cache.Cache(context.config)
-        context.be = obnam.backend.init(context.config, context.cache)
-
-        obnam.map.add(context.map, "pink", "pretty")
-        obnam.map.add(context.contmap, "black", "beautiful")
-
-        map_id = context.be.generate_block_id()
-        map_block = obnam.map.encode_new_to_block(context.map, map_id)
-        context.be.upload_block(map_id, map_block, True)
-
-        contmap_id = context.be.generate_block_id()
-        contmap_block = obnam.map.encode_new_to_block(context.contmap, 
-                                                      contmap_id)
-        context.be.upload_block(contmap_id, contmap_block, True)
-
-        host_id = context.config.get("backup", "host-id")
-        host = obnam.obj.HostBlockObject(host_id=host_id,
-                                         map_block_ids=[map_id],
-                                         contmap_block_ids=[contmap_id])
-        obnam.io.upload_host_block(context, host.encode())
-
-        # Then set up the real context and app.
-
-        self.context = obnam.context.Context()
-        self.context.cache = obnam.cache.Cache(self.context.config)
-        self.context.be = obnam.backend.init(self.context.config, 
-                                             self.context.cache)
-        self.app = obnam.Application(self.context)
-        self.app.load_host()
-
-    def testHasNoMapsLoadedByDefault(self):
-        self.failUnlessEqual(obnam.map.count(self.context.map), 0)
-
-    def testHasNoContentMapsLoadedByDefault(self):
-        self.failUnlessEqual(obnam.map.count(self.context.contmap), 0)
-
-    def testLoadsMapsWhenRequested(self):
-        self.app.load_maps()
-        self.failUnlessEqual(obnam.map.count(self.context.map), 1)
-
-    def testLoadsContentMapsWhenRequested(self):
-        self.app.load_content_maps()
-        self.failUnlessEqual(obnam.map.count(self.context.contmap), 1)
-
-    def testAddsNoNewMapsWhenNothingHasChanged(self):
-        self.app.update_maps()
-        self.failUnlessEqual(obnam.map.count(self.context.map), 0)
-
-    def testAddsANewMapsWhenSomethingHasChanged(self):
-        obnam.map.add(self.context.map, "pink", "pretty")
-        self.app.update_maps()
-        self.failUnlessEqual(obnam.map.count(self.context.map), 1)
-
-    def testAddsNoNewContentMapsWhenNothingHasChanged(self):
-        self.app.update_content_maps()
-        self.failUnlessEqual(obnam.map.count(self.context.contmap), 0)
-
-    def testAddsANewContentMapsWhenSomethingHasChanged(self):
-        obnam.map.add(self.context.contmap, "pink", "pretty")
-        self.app.update_content_maps()
-        self.failUnlessEqual(obnam.map.count(self.context.contmap), 1)
-
-
-class ApplicationFinishTests(unittest.TestCase):
-
-    def testRemovesHostObject(self):
-        self.context = obnam.context.Context()
-        self.context.cache = obnam.cache.Cache(self.context.config)
-        self.context.be = obnam.backend.init(self.context.config, 
-                                             self.context.cache)
-        self.app = obnam.Application(self.context)
-        self.app.load_host()
-
-        self.app.finish([])
-        self.failUnlessEqual(self.app.get_host(), None)

@@ -40,8 +40,8 @@ class Forget(obnam.Operation):
         map_block_ids = host.get_map_block_ids()    
         contmap_block_ids = host.get_contmap_block_ids()    
     
-        app.load_maps()
-        app.load_content_maps()
+        app.get_store().load_maps()
+        app.get_store().load_content_maps()
     
         logging.debug("forget: Forgetting each id")
         for id in forgettable_ids:

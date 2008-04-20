@@ -45,6 +45,7 @@ import walk
 
 from app import Application
 from oper import Operation, OperationFactory
+from store import Store
 
 from oper_backup import Backup
 from oper_forget import Forget

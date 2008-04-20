@@ -41,7 +41,8 @@ class Application:
         self._exclusion_strings = []
         self._exclusion_regexps = []
         self._filelist = None
-        self._host = None
+        self._prev_gen = None
+        self._store = obnam.Store(self._context)
         
         # When we traverse the file system tree while making a backup,
         # we process children before the parent. This is necessary for
@@ -60,32 +61,14 @@ class Application:
         """Get the context for the backup application."""
         return self._context
 
-    def get_host(self):
-        """Return currently active host object, or None if none is active."""
-        return self._host
+    def get_store(self):
+        """Get the Store for the backup application."""
+        return self._store
 
     def load_host(self):
         """Load the host block into memory."""
-        if not self._host:
-            host_block = obnam.io.get_host_block(self._context)
-            if host_block:
-                self._host = obnam.obj.create_host_from_block(host_block)
-            else:
-                id = self._context.config.get("backup", "host-id")
-                self._host = obnam.obj.HostBlockObject(host_id=id)
-        return self._host
-
-    def load_maps(self):
-        """Load non-content map blocks."""
-        ids = self._host.get_map_block_ids()
-        logging.info("Decoding %d mapping blocks" % len(ids))
-        obnam.io.load_maps(self._context, self._context.map, ids)
-
-    def load_content_maps(self):
-        """Load content map blocks."""
-        ids = self._host.get_contmap_block_ids()
-        logging.info("Decoding %d content mapping blocks" % len(ids))
-        obnam.io.load_maps(self._context, self._context.contmap, ids)
+        self.get_store().fetch_host_block()
+        return self.get_store().get_host_block()
 
     def get_exclusion_regexps(self):
         """Return list of regexp to exclude things from backup."""
@@ -132,6 +115,59 @@ class Application:
             else:
                 i += 1
 
+    def file_is_unchanged(self, stat1, stat2):
+        """Is a file unchanged from the previous generation?
+        
+        Given the stat results from the previous generation and the
+        current file, return True if the file is identical from the
+        previous generation (i.e., no new data to back up).
+        
+        """
+        
+        fields = ("mode", "dev", "nlink", "uid", "gid", "size", "mtime")
+        for field in fields:
+            field = "st_" + field
+            if getattr(stat1, field) != getattr(stat2, field):
+                return False
+        return True
+
+    def filegroup_is_unchanged(self, dirname, fg, filenames, stat=os.stat):
+        """Is a filegroup unchanged from the previous generation?
+        
+        Given a filegroup and a list of files in the given directory,
+        return True if all files in the filegroup are unchanged from
+        the previous generation.
+        
+        The optional stat argument can be used by unit tests to
+        override the use of os.stat.
+        
+        """
+        
+        for old_name in fg.get_names():
+            if old_name not in filenames:
+                return False    # file has been deleted
+
+            old_stat = fg.get_stat(old_name)
+            new_stat = stat(os.path.join(dirname, old_name))
+            if not self.file_is_unchanged(old_stat, new_stat):
+                return False    # file has changed
+
+        return True             # everything seems to be as before
+
+    def dir_is_unchanged(self, old, new):
+        """Has a directory changed since the previous generation?
+        
+        Return True if a directory, or its files or subdirectories,
+        has changed since the previous generation.
+        
+        """
+        
+        return (old.get_name() == new.get_name() and
+                self.file_is_unchanged(old.get_stat(), new.get_stat()) and
+                sorted(old.get_dirrefs()) == sorted(new.get_dirrefs()) and
+                sorted(old.get_filegrouprefs()) == 
+                    sorted(new.get_filegrouprefs()))
+
     def set_prevgen_filelist(self, filelist):
         """Set the Filelist object from the previous generation.
         
@@ -144,6 +180,14 @@ class Application:
         """
         
         self._filelist = filelist
+
+    def get_previous_generation(self):
+        """Get the previous generation for a backup run."""
+        return self._prev_gen
+
+    def set_previous_generation(self, gen):
+        """Set the previous generation for a backup run."""
+        self._prev_gen = gen
 
     def find_file_by_name(self, filename):
         """Find a backed up file given its filename.
@@ -165,13 +209,6 @@ class Application:
         
         return None
 
-    def enqueue(self, objs):
-        """Push objects to the object queue."""
-        for obj in objs:
-            obnam.io.enqueue_object(self._context, self._context.oq,
-                                    self._context.map, obj.get_id(), 
-                                    obj.encode(), True)
-
     def compute_signature(self, filename):
         """Compute rsync signature for a filename.
         
@@ -183,19 +220,94 @@ class Application:
         sigdata = obnam.rsync.compute_signature(self._context, filename)
         id = obnam.obj.object_id_new()
         sig = obnam.obj.SignatureObject(id=id, sigdata=sigdata)
-        self.enqueue([sig])
+        self.get_store().queue_object(sig)
         return sig
+
+    def find_unchanged_filegroups(self, dirname, filegroups, filenames, 
+                                  stat=os.stat):
+        """Return list of filegroups that are unchanged.
+        
+        The filenames and stat arguments have the same meaning as 
+        for the filegroup_is_unchanged method.
+        
+        """
+        
+        unchanged = []
+        
+        for filegroup in filegroups:
+            if self.filegroup_is_unchanged(dirname, filegroup, filenames, 
+                                           stat=stat):
+                unchanged.append(filegroup)
+        
+        return unchanged
+
+    def get_file_in_previous_generation(self, pathname):
+        """Return non-directory file in previous generation, or None."""
+        gen = self.get_previous_generation()
+        if gen:
+            return self.get_store().lookup_file(gen, pathname)
+        else:
+            return None
+
+    def _reuse_existing(self, old_file):
+        return (old_file.first_string_by_kind(obnam.cmp.CONTREF),
+                old_file.first_string_by_kind(obnam.cmp.SIGREF),
+                old_file.first_string_by_kind(obnam.cmp.DELTAREF))
+
+    def _get_old_sig(self, old_file):
+        old_sigref = old_file.first_string_by_kind(obnam.cmp.SIGREF)
+        if not old_sigref:
+            return None
+        old_sig = self.get_store().get_object(old_sigref)
+        if not old_sig:
+            return None
+        return old_sig.first_string_by_kind(obnam.cmp.SIGDATA)
+
+    def _compute_delta(self, old_file, filename):
+        old_sig_data = self._get_old_sig(old_file)
+        if old_sig_data:
+            old_contref = old_file.first_string_by_kind(obnam.cmp.CONTREF)
+            old_deltaref = old_file.first_string_by_kind(obnam.cmp.DELTAREF)
+            deltapart_ids = obnam.rsync.compute_delta(self.get_context(),
+                                                      old_sig_data, filename)
+            delta_id = obnam.obj.object_id_new()
+            delta = obnam.obj.DeltaObject(id=delta_id, 
+                                          deltapart_refs=deltapart_ids, 
+                                          cont_ref=old_contref, 
+                                          delta_ref=old_deltaref)
+            self.get_store().queue_object(delta)
+            
+            sig = self.compute_signature(filename)
+
+            return None, sig.get_id(), delta.get_id()
+        else:
+            return self._backup_new(filename)
+
+    def _backup_new(self, filename):
+        contref = obnam.io.create_file_contents_object(self._context, 
+                                                       filename)
+        sig = self.compute_signature(filename)
+        sigref = sig.get_id()
+        deltaref = None
+        return contref, sigref, deltaref
 
     def add_to_filegroup(self, fg, filename):
         """Add a file to a filegroup."""
         self._context.progress.update_current_action(filename)
         st = os.stat(filename)
         if stat.S_ISREG(st.st_mode):
-            contref = obnam.io.create_file_contents_object(self._context, 
-                                                           filename)
-            sig = self.compute_signature(filename)
-            sigref = sig.get_id()
-            deltaref = None
+            unsolved = obnam.io.unsolve(self.get_context(), filename)
+            old_file = self.get_file_in_previous_generation(unsolved)
+            if old_file:
+                old_st = old_file.first_by_kind(obnam.cmp.STAT)
+                old_st = obnam.cmp.parse_stat_component(old_st)
+                if self.file_is_unchanged(old_st, st):
+                    contref, sigref, deltaref = self._reuse_existing(old_file)
+                else:
+                    contref, sigref, deltaref = self._compute_delta(old_file,
+                                                                    filename)
+            else:
+                contref, sigref, deltaref = self._backup_new(filename)
         else:
             contref = None
             sigref = None
@@ -217,11 +329,52 @@ class Application:
                 list.append(obnam.obj.FileGroupObject(id=id))
             self.add_to_filegroup(list[-1], filename)
                 
-        self.enqueue(list)
+        self.get_store().queue_objects(list)
         return list
 
     def _make_absolute(self, basename, relatives):
         return [os.path.join(basename, name) for name in relatives]
+
+    def get_dir_in_previous_generation(self, dirname):
+        """Return directory in previous generation, or None."""
+        gen = self.get_previous_generation()
+        if gen:
+            return self.get_store().lookup_dir(gen, dirname)
+        else:
+            return None
+
+    def select_files_to_back_up(self, dirname, filenames, stat=os.stat):
+        """Select files to backup in a directory, compared to previous gen.
+        
+        Look up the directory in the previous generation, and see which
+        files need backing up compared to that generation.
+        
+        Return list of unchanged filegroups, plus list of filenames
+        that need backing up.
+        
+        """
+
+        unsolved = obnam.io.unsolve(self.get_context(), dirname)
+        logging.debug("Selecting files to backup in %s (unsolved)" % unsolved)
+        logging.debug("There are %d filenames currently" % len(filenames)) 
+               
+        filenames = filenames[:]
+        old_dir = self.get_dir_in_previous_generation(unsolved)
+        if old_dir:
+            logging.debug("Found directory in previous generation")
+            old_groups = [self.get_store().get_object(id)
+                          for id in old_dir.get_filegrouprefs()]
+            filegroups = self.find_unchanged_filegroups(dirname, old_groups,
+                                                        filenames,
+                                                        stat=stat)
+            for fg in filegroups:
+                for name in fg.get_names():
+                    filenames.remove(name)
+    
+            return filegroups, filenames
+        else:
+            logging.debug("Did not find directory in previous generation")
+            return [], filenames
 
     def backup_one_dir(self, dirname, subdirs, filenames):
         """Back up non-recursively one directory.
@@ -232,9 +385,15 @@ class Application:
         directory.
 
         """
-
+        
+        logging.debug("Backing up non-recursively: %s" % dirname)
+        filegroups, filenames = self.select_files_to_back_up(dirname, 
+                                                             filenames)
+        logging.debug("Selected %d existing file groups, %d filenames" %
+                      (len(filegroups), len(filenames)))
         filenames = self._make_absolute(dirname, filenames)
-        filegroups = self.make_filegroups(filenames)
+
+        filegroups += self.make_filegroups(filenames)
         filegrouprefs = [fg.get_id() for fg in filegroups]
 
         dirrefs = [subdir.get_id() for subdir in subdirs]
@@ -245,9 +404,15 @@ class Application:
                                   dirrefs=dirrefs,
                                   filegrouprefs=filegrouprefs)
 
-
-        self.enqueue([dir])
-        return dir
+        unsolved = obnam.io.unsolve(self.get_context(), dirname)
+        old_dir = self.get_dir_in_previous_generation(unsolved)
+        if old_dir and self.dir_is_unchanged(old_dir, dir):
+            logging.debug("Dir is unchanged: %s" % dirname)
+            return old_dir
+        else:
+            logging.debug("Dir has changed: %s" % dirname)
+            self.get_store().queue_object(dir)
+            return dir
 
     def backup_one_root(self, root):
         """Backup one root for the next generation."""
@@ -300,60 +465,5 @@ class Application:
         gen = obnam.obj.GenerationObject(id=obnam.obj.object_id_new(),
                                          dirrefs=dirrefs, start=start,
                                          end=end)
-        self.enqueue([gen])
+        self.get_store().queue_object(gen)
         return gen
-
-    def _update_map_helper(self, map):
-        """Create new mapping blocks of a given kind, and upload them.
-        
-        Return list of block ids for the new blocks.
-
-        """
-
-        if obnam.map.get_new(map):
-            id = self._context.be.generate_block_id()
-            logging.debug("Creating mapping block %s" % id)
-            block = obnam.map.encode_new_to_block(map, id)
-            self._context.be.upload_block(id, block, True)
-            return [id]
-        else:
-            logging.debug("No new mappings, no new mapping block")
-            return []
-
-    def update_maps(self):
-        """Create new object mapping blocks and upload them."""
-        logging.debug("Creating new mapping block for normal mappings")
-        return self._update_map_helper(self._context.map)
-
-    def update_content_maps(self):
-        """Create new content object mapping blocks and upload them."""
-        logging.debug("Creating new mapping block for content mappings")
-        return self._update_map_helper(self._context.contmap)
-
-    def finish(self, new_gens):
-        """Finish a backup operation by updating maps and uploading host block.
-        
-        This also removes the host block that has been load. In other
-        words, if you want to continue using the application for anything
-        that requires the host block, you have to call load_host again.
-        
-        """
-
-        obnam.io.flush_all_object_queues(self._context)
-    
-        logging.info("Creating new mapping blocks")
-        host = self.get_host()
-        map_ids = host.get_map_block_ids() + self.update_maps()
-        contmap_ids = (host.get_contmap_block_ids() + 
-                       self.update_content_maps())
-        
-        logging.info("Creating new host block")
-        gen_ids = (host.get_generation_ids() + 
-                   [gen.get_id() for gen in new_gens])
-        host2 = obnam.obj.HostBlockObject(host_id=host.get_id(), 
-                                          gen_ids=gen_ids, 
-                                          map_block_ids=map_ids,
-                                          contmap_block_ids=contmap_ids)
-        obnam.io.upload_host_block(self._context, host2.encode())
-        
-        self._host = None
