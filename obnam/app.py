@@ -41,6 +41,7 @@ class Application:
         self._exclusion_strings = []
         self._exclusion_regexps = []
         self._filelist = None
+        self._prev_gen = None
         self._store = obnam.Store(self._context)
         
         # When we traverse the file system tree while making a backup,
@@ -180,6 +181,14 @@ class Application:
         
         self._filelist = filelist
 
+    def get_previous_generation(self):
+        """Get the previous generation for a backup run."""
+        return self._prev_gen
+
+    def set_previous_generation(self, gen):
+        """Set the previous generation for a backup run."""
+        self._prev_gen = gen
+
     def find_file_by_name(self, filename):
         """Find a backed up file given its filename.
         
@@ -276,7 +285,7 @@ class Application:
         directory.
 
         """
-
+        
         filenames = self._make_absolute(dirname, filenames)
         filegroups = self.make_filegroups(filenames)
         filegrouprefs = [fg.get_id() for fg in filegroups]

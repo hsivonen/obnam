@@ -68,6 +68,13 @@ class ApplicationTests(unittest.TestCase):
         self.app.prune(dirname, dirnames, filenames)
         self.failUnlessEqual(dirnames, ["subdir"])
 
+    def testSetsPreviousGenerationToNoneInitially(self):
+        self.failUnlessEqual(self.app.get_previous_generation(), None)
+
+    def testSetsPreviousGenerationCorrectly(self):
+        self.app.set_previous_generation("pink")
+        self.failUnlessEqual(self.app.get_previous_generation(), "pink")
+
 
 class ApplicationLoadHostBlockTests(unittest.TestCase):
 
