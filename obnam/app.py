@@ -347,8 +347,15 @@ class Application:
                                   dirrefs=dirrefs,
                                   filegrouprefs=filegrouprefs)
 
-        self.get_store().queue_object(dir)
-        return dir
+        unsolved = obnam.io.unsolve(self.get_context(), dirname)
+        old_dir = self.get_dir_in_previous_generation(unsolved)
+        if old_dir and self.dir_is_unchanged(old_dir, dir):
+            logging.debug("Dir is unchanged: %s" % dirname)
+            return old_dir
+        else:
+            logging.debug("Dir has changed: %s" % dirname)
+            self.get_store().queue_object(dir)
+            return dir
 
     def backup_one_root(self, root):
         """Backup one root for the next generation."""
