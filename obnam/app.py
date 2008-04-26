@@ -77,8 +77,9 @@ class Application:
         strings = config.getvalues("backup", "exclude")
         if self._exclusion_strings != strings:
             for string in strings:
-                logging.debug("Compiling exclusion pattern '%s'" % string)
-                self._exclusion_regexps.append(re.compile(string))
+                if string:
+                    logging.debug("Compiling exclusion pattern '%s'" % string)
+                    self._exclusion_regexps.append(re.compile(string))
         
         return self._exclusion_regexps
 
