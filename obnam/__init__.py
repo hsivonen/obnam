@@ -19,7 +19,7 @@
 
 
 NAME = "obnam"
-VERSION = "0.9.0"
+VERSION = "0.9.2"
 
 
 from exception import ObnamException

@@ -1,3 +1,9 @@
+obnam (0.9.2-1) experimental; urgency=low
+
+  * New upstream version. This is a DEVELOPMENT version.
+
+ -- Lars Wirzenius <liw@iki.fi>  Sat, 26 Apr 2008 20:45:56 +0300
+
 obnam (0.9.1-1) experimental; urgency=low
 
   * New upstream version. This is a DEVELOPMENT version.

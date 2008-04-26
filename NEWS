@@ -4,6 +4,24 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
+Version 0.9.2, released 2008-04-26; a DEVELOPMENT release
+
+    NOTE:
+
+    This is a development release, for the purpose of testing. It is not
+    meant for production use. Do not rely on this version for any
+    backups that are important. However, if you are willing to take a
+    risk, any testing experiences would be most welcome.
+    
+    IMPORTANT CHANGES:
+    
+    * Data that has been backed up is now re-used instead of backed up
+      again. Obviously this is what should be done, but the previous
+      release was pushed out anyway, without this feature. Now that this
+      works again, running obnam on a data set that has not changed only
+      creates a new generation object, a new host block, and a new map
+      block, no other data is uploaded.
+
 Version 0.9.1, released 2008-03-24; a DEVELOPMENT release
 
     NOTE:
