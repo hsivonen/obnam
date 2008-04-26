@@ -63,7 +63,7 @@ def main():
             app.get_store().close()
         sys.exit(1)
     except BaseException, e:
-        logging.error("%s" % str(e))
+        logging.error("%s" % repr(e))
         if app.get_store():
             app.get_store().close()
         sys.exit(1)
