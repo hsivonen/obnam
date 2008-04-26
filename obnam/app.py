@@ -192,20 +192,15 @@ class Application:
     def find_file_by_name(self, filename):
         """Find a backed up file given its filename.
         
-        Return tuple (STAT, CONTREF, SIGREF, DELTAREF), where the
-        references may be None, or None instead of the entire tuple
-        if no file with the given name could be found.
+        Return FILE component, or None if no file with the given name
+        could be found.
         
         """
         
         if self._filelist:
             fc = self._filelist.find(filename)
             if fc != None:
-                stat = fc.first_by_kind(obnam.cmp.STAT)
-                cont = fc.first_string_by_kind(obnam.cmp.CONTREF)
-                sig = fc.first_string_by_kind(obnam.cmp.SIGREF)
-                d = fc.first_string_by_kind(obnam.cmp.DELTAREF)
-                return obnam.cmp.parse_stat_component(stat), cont, sig, d
+                return fc
         
         return None
 
@@ -243,6 +238,9 @@ class Application:
 
     def get_file_in_previous_generation(self, pathname):
         """Return non-directory file in previous generation, or None."""
+        file = self.find_file_by_name(pathname)
+        if file:
+            return file
         gen = self.get_previous_generation()
         if gen:
             return self.get_store().lookup_file(gen, pathname)
