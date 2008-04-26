@@ -551,8 +551,17 @@ class ApplicationFindFileByNameTests(unittest.TestCase):
         filelist = obnam.filelist.Filelist()
         filelist.add_file_component("pink", fc)
         self.app.set_prevgen_filelist(filelist)
-        self.failUnlessEqual(self.app.find_file_by_name("pink"),
-                             (stat, "contref", "sigref", "deltaref"))
+        file = self.app.find_file_by_name("pink")
+        self.failUnlessEqual(
+            obnam.cmp.parse_stat_component(
+                file.first_by_kind(obnam.cmp.STAT)), 
+            stat)
+        self.failUnlessEqual(file.first_string_by_kind(obnam.cmp.CONTREF),
+                             "contref")
+        self.failUnlessEqual(file.first_string_by_kind(obnam.cmp.SIGREF),
+                             "sigref")
+        self.failUnlessEqual(file.first_string_by_kind(obnam.cmp.DELTAREF),
+                             "deltaref")
 
     def testFindsNoFileInfoInFilelistForNonexistingFile(self):
         filelist = obnam.filelist.Filelist()
