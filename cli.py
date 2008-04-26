@@ -54,9 +54,13 @@ def main():
         except KeyboardInterrupt:
             logging.warning("Obnam interrupted by Control-C, aborting.")
             logging.warning("Note that backup has not been completed.")
+            if app.get_store():
+                app.get_store().close()
             sys.exit(1)
     except obnam.ObnamException, e:
         logging.error("%s" % str(e))
+        if app.get_store():
+            app.get_store().close()
         sys.exit(1)
 
 
