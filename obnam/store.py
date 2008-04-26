@@ -36,6 +36,16 @@ class Store:
         self._context = context
         self._host = None
 
+    def close(self):
+        """Close connection to the store.
+        
+        You must not use this store instance for anything after
+        closing it.
+        
+        """
+        
+        self._context.be.close()
+
     def get_host_block(self):
         """Return current host block, or None if one is not known.
         

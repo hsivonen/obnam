@@ -226,6 +226,11 @@ class SftpBackend(Backend):
             logging.debug("Opening sftp client")
             self.sftp_client = self.sftp_transport.open_sftp_client()
     
+    def close(self):
+        """Close the connection, if any."""
+        if self.sftp_transport:
+            self.sftp_transport.close()
+    
     def sftp_makedirs(self, dirname, mode=0777):
         """Create dirname, if it doesn't exist, and all its parents, too"""
         stack = []
@@ -314,6 +319,9 @@ class SftpBackend(Backend):
 
 
 class FileBackend(Backend):
+
+    def close(self):
+        pass
 
     def really_upload_block(self, block_id, block):
         dir_full = os.path.join(self.path, os.path.dirname(block_id))

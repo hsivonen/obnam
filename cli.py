@@ -49,6 +49,8 @@ def main():
                           context.be.get_bytes_written() / 1024))
             logging.info("Obnam finishing")
             context.progress.final_report()
+            if app.get_store():
+                app.get_store().close()
         except KeyboardInterrupt:
             logging.warning("Obnam interrupted by Control-C, aborting.")
             logging.warning("Note that backup has not been completed.")
