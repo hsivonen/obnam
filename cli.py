@@ -22,6 +22,7 @@
 
 import logging
 import sys
+import traceback
 
 import obnam
 
@@ -64,6 +65,7 @@ def main():
         sys.exit(1)
     except BaseException, e:
         logging.error("%s" % repr(e))
+        logging.error("%s" % traceback.format_exc())
         if app.get_store():
             app.get_store().close()
         sys.exit(1)
