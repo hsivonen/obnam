@@ -62,6 +62,11 @@ def main():
         if app.get_store():
             app.get_store().close()
         sys.exit(1)
+    except BaseException, e:
+        logging.error("%s" % str(e))
+        if app.get_store():
+            app.get_store().close()
+        sys.exit(1)
 
 
 if __name__ == "__main__":
