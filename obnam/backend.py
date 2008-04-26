@@ -333,6 +333,7 @@ class FileBackend(Backend):
         f = os.fdopen(fd, "w")
         f.write(block)
         self.bytes_written += len(block)
+        self.progress.update_uploaded(self.bytes_written)
         f.close()
 
     def really_download_block(self, block_id):
@@ -340,6 +341,7 @@ class FileBackend(Backend):
             f = file(self.block_remote_pathname(block_id), "r")
             block = f.read()
             self.bytes_read += len(block)
+            self.progress.update_uploaded(self.bytes_read)
             f.close()
         except IOError, e:
             raise e
