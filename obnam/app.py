@@ -75,11 +75,13 @@ class Application:
         
         config = self.get_context().config
         strings = config.getvalues("backup", "exclude")
+        strings = [s.strip() for s in strings if s.strip()]
         if self._exclusion_strings != strings:
+            self._exclusion_strings = strings
+            self._exclusion_regexps = []
             for string in strings:
-                if string:
-                    logging.debug("Compiling exclusion pattern '%s'" % string)
-                    self._exclusion_regexps.append(re.compile(string))
+                logging.debug("Compiling exclusion pattern '%s'" % string)
+                self._exclusion_regexps.append(re.compile(string))
         
         return self._exclusion_regexps
 
