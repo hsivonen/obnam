@@ -238,6 +238,9 @@ class Application:
 
     def get_file_in_previous_generation(self, pathname):
         """Return non-directory file in previous generation, or None."""
+        file = self.find_file_by_name(pathname)
+        if file:
+            return file
         gen = self.get_previous_generation()
         if gen:
             return self.get_store().lookup_file(gen, pathname)

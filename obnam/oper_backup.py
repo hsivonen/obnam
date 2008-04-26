@@ -42,6 +42,12 @@ class Backup(obnam.Operation):
         if old_gen_ids:
             prev_gen = app.get_store().get_object(old_gen_ids[-1])
             app.set_previous_generation(prev_gen)
+            filelist_id = prev_gen.get_filelistref()
+            if filelist_id:
+                filelist = obnam.filelist.Filelist()
+                o = app.get_store().get_object(filelist_id)
+                filelist.from_object(o)
+                app.set_prevgen_filelist(filelist)
                 
         gen = app.backup(roots)
         
