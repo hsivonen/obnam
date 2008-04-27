@@ -43,6 +43,7 @@ class Application:
         self._filelist = None
         self._prev_gen = None
         self._store = obnam.Store(self._context)
+        self._total = 0
         
         # When we traverse the file system tree while making a backup,
         # we process children before the parent. This is necessary for
@@ -134,7 +135,7 @@ class Application:
                 return False
         return True
 
-    def filegroup_is_unchanged(self, dirname, fg, filenames, stat=os.stat):
+    def filegroup_is_unchanged(self, dirname, fg, filenames, stat=os.lstat):
         """Is a filegroup unchanged from the previous generation?
         
         Given a filegroup and a list of files in the given directory,
@@ -142,7 +143,7 @@ class Application:
         the previous generation.
         
         The optional stat argument can be used by unit tests to
-        override the use of os.stat.
+        override the use of os.lstat.
         
         """
         
@@ -182,6 +183,7 @@ class Application:
         
         """
         
+        logging.debug("Setting previous generation FILELIST.")
         self._filelist = filelist
 
     def get_previous_generation(self):
@@ -215,6 +217,7 @@ class Application:
         
         """
 
+        logging.debug("Computing rsync signature for %s" % filename)
         sigdata = obnam.rsync.compute_signature(self._context, filename)
         id = obnam.obj.object_id_new()
         sig = obnam.obj.SignatureObject(id=id, sigdata=sigdata)
@@ -222,7 +225,7 @@ class Application:
         return sig
 
     def find_unchanged_filegroups(self, dirname, filegroups, filenames, 
-                                  stat=os.stat):
+                                  stat=os.lstat):
         """Return list of filegroups that are unchanged.
         
         The filenames and stat arguments have the same meaning as 
@@ -236,21 +239,34 @@ class Application:
             if self.filegroup_is_unchanged(dirname, filegroup, filenames, 
                                            stat=stat):
                 unchanged.append(filegroup)
-        
+
+        logging.debug("There are %d unchanged filegroups in %s" %
+                      (len(unchanged), dirname))
         return unchanged
 
     def get_file_in_previous_generation(self, pathname):
         """Return non-directory file in previous generation, or None."""
-        file = self.find_file_by_name(pathname)
-        if file:
-            return file
+        if self._filelist:
+            logging.debug("Have FILELIST, searching it for %s" % pathname)
+            file = self.find_file_by_name(pathname)
+            if file:
+                logging.debug("Found in prevgen FILELIST: %s" % pathname)
+                return file
+            else:
+                logging.debug("Not found in FILELIST.")
+        else:
+            logging.debug("No FILELIST for previous generation.")
         gen = self.get_previous_generation()
         if gen:
+            logging.debug("Looking up file in previous gen: %s" % pathname)
             return self.get_store().lookup_file(gen, pathname)
         else:
+            logging.debug("No previous gen in which to find %s" % pathname)
             return None
 
     def _reuse_existing(self, old_file):
+        logging.debug("Re-using existing file contents: %s" %
+                      old_file.first_string_by_kind(obnam.cmp.FILENAME))
         return (old_file.first_string_by_kind(obnam.cmp.CONTREF),
                 old_file.first_string_by_kind(obnam.cmp.SIGREF),
                 old_file.first_string_by_kind(obnam.cmp.DELTAREF))
@@ -267,6 +283,7 @@ class Application:
     def _compute_delta(self, old_file, filename):
         old_sig_data = self._get_old_sig(old_file)
         if old_sig_data:
+            logging.debug("Computing delta for %s" % filename)
             old_contref = old_file.first_string_by_kind(obnam.cmp.CONTREF)
             old_deltaref = old_file.first_string_by_kind(obnam.cmp.DELTAREF)
             deltapart_ids = obnam.rsync.compute_delta(self.get_context(),
@@ -282,9 +299,12 @@ class Application:
 
             return None, sig.get_id(), delta.get_id()
         else:
+            logging.debug("Signature for previous version not found for %s" %
+                          filename)
             return self._backup_new(filename)
 
     def _backup_new(self, filename):
+        logging.debug("Storing new file %s" % filename)
         contref = obnam.io.create_file_contents_object(self._context, 
                                                        filename)
         sig = self.compute_signature(filename)
@@ -294,8 +314,9 @@ class Application:
 
     def add_to_filegroup(self, fg, filename):
         """Add a file to a filegroup."""
+        logging.debug("Backing up %s" % filename)
         self._context.progress.update_current_action(filename)
-        st = os.stat(filename)
+        st = os.lstat(filename)
         if stat.S_ISREG(st.st_mode):
             unsolved = obnam.io.unsolve(self.get_context(), filename)
             old_file = self.get_file_in_previous_generation(unsolved)
@@ -340,11 +361,13 @@ class Application:
         """Return directory in previous generation, or None."""
         gen = self.get_previous_generation()
         if gen:
+            logging.debug("Looking up in previous generation: %s" % dirname)
             return self.get_store().lookup_dir(gen, dirname)
         else:
+            logging.debug("No previous generation to search for %s" % dirname)
             return None
 
-    def select_files_to_back_up(self, dirname, filenames, stat=os.stat):
+    def select_files_to_back_up(self, dirname, filenames, stat=os.lstat):
         """Select files to backup in a directory, compared to previous gen.
         
         Look up the directory in the previous generation, and see which
@@ -401,7 +424,7 @@ class Application:
 
         dir = obnam.obj.DirObject(id=obnam.obj.object_id_new(),
                                   name=os.path.basename(dirname),
-                                  stat=os.stat(dirname),
+                                  stat=os.lstat(dirname),
                                   dirrefs=dirrefs,
                                   filegrouprefs=filegrouprefs)
 
@@ -432,9 +455,11 @@ class Application:
         
         for tuple in obnam.walk.depth_first(resolved, prune=self.prune):
             dirname, dirnames, filenames = tuple
+            filenames.sort()
             logging.debug("Walked to directory %s" % dirname)
             logging.debug("  with dirnames: %s" % dirnames)
             logging.debug("  and filenames: %s" % filenames)
+            self.get_context().progress.update_current_action(dirname)
 
             subdirs = subdirs_for_dir.get(dirname, [])
             
@@ -451,6 +476,9 @@ class Application:
             if dirname in subdirs_for_dir:
                 del subdirs_for_dir[dirname]
 
+            self._total += 1 + len(filenames)
+            self.get_context().progress.update_total_files(self._total)
+
         return root_object
 
     def backup(self, roots):
@@ -458,6 +486,7 @@ class Application:
 
         start = int(time.time())
         root_objs = []
+        self._total = 0
         for root in roots:
             root_objs.append(self.backup_one_root(root))
         end = int(time.time())
