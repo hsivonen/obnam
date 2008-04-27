@@ -422,8 +422,13 @@ class Application:
 
         dirrefs = [subdir.get_id() for subdir in subdirs]
 
+        basename = os.path.basename(dirname)
+        if not basename and dirname.endswith(os.sep):
+            basename = os.path.basename(dirname[:-len(os.sep)])
+        assert basename
+        logging.debug("Creating DirObject, basename: %s" % basename)
         dir = obnam.obj.DirObject(id=obnam.obj.object_id_new(),
-                                  name=os.path.basename(dirname),
+                                  name=basename,
                                   stat=os.lstat(dirname),
                                   dirrefs=dirrefs,
                                   filegrouprefs=filegrouprefs)
