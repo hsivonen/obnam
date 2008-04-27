@@ -237,7 +237,6 @@ class StoreLookupTests(unittest.TestCase):
 
     def setUp(self):
         self.datadir = self.create_data_dir()
-        self.dirbasename = os.path.basename(self.datadir)
 
         app = obnam.Application(self.create_context())
         app.load_host()
@@ -255,16 +254,16 @@ class StoreLookupTests(unittest.TestCase):
         shutil.rmtree(self.store._context.config.get("backup", "store"))
 
     def testFindsBackupRoot(self):
-        dir = self.store.lookup_dir(self.gen, self.dirbasename)
-        self.failUnless(dir.get_name(), self.dirbasename)
+        dir = self.store.lookup_dir(self.gen, self.datadir)
+        self.failUnless(dir.get_name(), self.datadir)
 
     def testFindsFirstSubdir(self):
-        pathname = os.path.join(self.dirbasename, "dir1")
+        pathname = os.path.join(self.datadir, "dir1")
         dir = self.store.lookup_dir(self.gen, pathname)
         self.failUnless(dir.get_name(), "dir1")
 
     def testFindsSecondSubdir(self):
-        pathname = os.path.join(self.dirbasename, "dir1", "dir2")
+        pathname = os.path.join(self.datadir, "dir1", "dir2")
         dir = self.store.lookup_dir(self.gen, pathname)
         self.failUnless(dir.get_name(), "dir2")
 
@@ -273,17 +272,17 @@ class StoreLookupTests(unittest.TestCase):
                              None)
 
     def testDoesNotFindNonExistentFileInSubDirectory(self):
-        pathname = os.path.join(self.dirbasename, "dir1", "notexist")
+        pathname = os.path.join(self.datadir, "dir1", "notexist")
         file = self.store.lookup_file(self.gen, pathname)
         self.failUnlessEqual(file, None)
 
     def testDoesNotFindNonExistentFileInSubSubDirectory(self):
-        pathname = os.path.join(self.dirbasename, "dir1", "dir2", "notexist")
+        pathname = os.path.join(self.datadir, "dir1", "dir2", "notexist")
         file = self.store.lookup_file(self.gen, pathname)
         self.failUnlessEqual(file, None)
 
     def testDoesNotFindNonExistentFileInRoot(self):
-        pathname = os.path.join(self.dirbasename, "notexist")
+        pathname = os.path.join(self.datadir, "notexist")
         file = self.store.lookup_file(self.gen, pathname)
         self.failUnlessEqual(file, None)
 
@@ -291,11 +290,11 @@ class StoreLookupTests(unittest.TestCase):
         return file.first_string_by_kind(obnam.cmp.FILENAME)
 
     def testFindsFileInRootDirectory(self):
-        pathname = os.path.join(self.dirbasename, "file1")
+        pathname = os.path.join(self.datadir, "file1")
         file = self.store.lookup_file(self.gen, pathname)
         self.failUnlessEqual(self.filename(file), "file1")
 
     def testFindsFileInSubDirectory(self):
-        pathname = os.path.join(self.dirbasename, "dir1", "dir2", "file2")
+        pathname = os.path.join(self.datadir, "dir1", "dir2", "file2")
         file = self.store.lookup_file(self.gen, pathname)
         self.failUnlessEqual(self.filename(file), "file2")

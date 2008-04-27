@@ -213,8 +213,24 @@ class Store:
         
         """
 
+        dirrefs = generation.get_dirrefs()
         parts = self.parse_pathname(pathname)
-        return self._lookup_dir_from_refs(generation.get_dirrefs(), parts)
+        
+        for dirref in dirrefs:
+            dir = self.get_object(dirref)
+            name = dir.get_name()
+            if name == pathname:
+                return dir
+            else:
+                if not name.endswith(os.sep):
+                    name += os.sep
+                if pathname.startswith(name):
+                    subpath = pathname[len(name):]
+                    subparts = self.parse_pathname(subpath)
+                    return self._lookup_dir_from_refs(dir.get_dirrefs(),
+                                                      subparts)
+
+        return self._lookup_dir_from_refs(dirrefs, parts)
 
     def lookup_file(self, generation, pathname):
         """Find a non-directory thingy in a generation.

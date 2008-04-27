@@ -400,7 +400,7 @@ class Application:
             logging.debug("Did not find directory in previous generation")
             return [], filenames
 
-    def backup_one_dir(self, dirname, subdirs, filenames):
+    def backup_one_dir(self, dirname, subdirs, filenames, is_root=False):
         """Back up non-recursively one directory.
         
         Return obnam.obj.DirObject that refers to the directory.
@@ -427,8 +427,12 @@ class Application:
             basename = os.path.basename(dirname[:-len(os.sep)])
         assert basename
         logging.debug("Creating DirObject, basename: %s" % basename)
+        if is_root:
+            name = obnam.io.unsolve(self.get_context(), dirname)
+        else:
+            name = basename
         dir = obnam.obj.DirObject(id=obnam.obj.object_id_new(),
-                                  name=basename,
+                                  name=name,
                                   stat=os.lstat(dirname),
                                   dirrefs=dirrefs,
                                   filegrouprefs=filegrouprefs)
@@ -468,9 +472,12 @@ class Application:
 
             subdirs = subdirs_for_dir.get(dirname, [])
             
-            dir = self.backup_one_dir(dirname, subdirs, filenames)
+            is_root = (dirname == resolved)
+            
+            dir = self.backup_one_dir(dirname, subdirs, filenames, 
+                                      is_root=is_root)
 
-            if obnam.io.unsolve(self._context, dirname) != root:
+            if not is_root:
                 parent = os.path.dirname(dirname)
                 if parent not in subdirs_for_dir:
                     subdirs_for_dir[parent] = []

@@ -590,8 +590,8 @@ class ApplicationBackupsOneDirectoryTests(unittest.TestCase):
         shutil.rmtree(self.dirname)
 
     def testWithCorrectName(self):
-        dir = self.app.backup_one_dir(self.dirname, [], [])
-        self.failUnlessEqual(dir.get_name(), os.path.basename(self.dirname))
+        dir = self.app.backup_one_dir(self.dirname, [], [], is_root=True)
+        self.failUnlessEqual(dir.get_name(), self.dirname)
 
     def testWithCorrectStat(self):
         dir = self.app.backup_one_dir(self.dirname, [], [])
@@ -651,12 +651,13 @@ class ApplicationBackupOneRootTests(unittest.TestCase):
                 self.files.append(name)
                 file(name, "w").close()
 
-    def mock_backup_one_dir(self, dirname, subdirs, filenames):
+    def mock_backup_one_dir(self, dirname, subdirs, filenames, is_root=False):
         self.dirs_walked.append(dirname)
         assert dirname not in self.subdirs_walked
         self.subdirs_walked[dirname] = [os.path.join(dirname, x.get_name())
                                         for x in subdirs]
-        return self.real_backup_one_dir(dirname, subdirs, filenames)
+        return self.real_backup_one_dir(dirname, subdirs, filenames,
+                                        is_root=is_root)
 
     def find_subdirs(self):
         dict = {}
