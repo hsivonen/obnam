@@ -1,6 +1,0 @@
-# Configure the /etc/cron.daily/obnam script.
-# See also /etc/obnam/obnam.conf (if it exists) and /usr/share/obnam/obnam.conf
-# for further configuration of obnam.
-
-ENABLE=no
-DIRS="/etc /home /var /root /usr/local"
