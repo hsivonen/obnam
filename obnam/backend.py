@@ -208,13 +208,20 @@ class Backend:
 class SftpBackend(Backend):
 
     io_size = 64 * 1024
+    
+    def load_key(self, filename):
+        """Load an SSH private key from a file."""
+        try:
+            return paramiko.DSSKey.from_private_key_file(filename)
+        except paramiko.SSHException:
+            return paramiko.RSAKey.from_private_key_file(filename)
 
     def connect_sftp(self):
         """Connect to the server, unless already connected"""
         if self.sftp_transport is None:
             ssh_key_file = self.config.get("backup", "ssh-key")
             logging.debug("Getting private key from %s" % ssh_key_file)
-            pkey = paramiko.DSSKey.from_private_key_file(ssh_key_file)
+            pkey = self.load_key(ssh_key_file)
     
             logging.debug("Connecting to sftp server: host=%s, port=%d" % 
                           (self.host, self.port))
