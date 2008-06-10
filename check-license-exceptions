@@ -40,3 +40,4 @@ tests/twogen/pre02.sh
 uuid.py
 xxx-test-data-and-store.tar.gz
 MANIFEST.in
+setup.py
