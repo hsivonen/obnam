@@ -39,3 +39,4 @@ tests/twogen/post02.sh
 tests/twogen/pre02.sh
 uuid.py
 xxx-test-data-and-store.tar.gz
+MANIFEST.in
