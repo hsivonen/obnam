@@ -30,7 +30,7 @@ sitedir = $(pydir)/site-packages
 all: odirect_read obnam.1 odirect_read.1 odirect_pipe.1 obnamfs.1
 
 version:
-	./cli.py --version
+	./obnam --version
 
 odirect_read: odirect_read.c
 
@@ -65,7 +65,7 @@ clean:
 
 install: all
 	install -d $(bindir)
-	install cli.py $(bindir)/obnam
+	install obnam $(bindir)/obnam
 	install obnamfs.py $(bindir)/obnamfs
 	install odirect_read odirect_pipe $(bindir)
 	install -d $(man1dir)

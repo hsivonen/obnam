@@ -93,7 +93,7 @@ do
             exit 1
         fi
 
-        $CMD cli.py $CONFIG -C "$tmp/root" backup .
+        $CMD obnam $CONFIG -C "$tmp/root" backup .
 
         if [ -e "$post" ] && ! sh "$post" "$tmp"
         then
@@ -104,13 +104,13 @@ do
     
     if [ ! -e "$dir/no-manifest" ]
     then
-        $CMD cli.py $CONFIG generations |
+        $CMD obnam $CONFIG generations |
         nl |
         while read i genid
         do
             rm -rf "$tmp/root"
             mkdir "$tmp/root"
-            python cli.py $CONFIG -C "$tmp/root" restore "$genid"
+            python obnam $CONFIG -C "$tmp/root" restore "$genid"
             python manifest.py $MANIFESTOPTS "$tmp/root" > "$tmp/manifest2-$i"
             diff -u -U 15 "$tmp/manifest-$i" "$tmp/manifest2-$i"
         done
@@ -119,19 +119,19 @@ do
     if [ ! -e "$dir/no-manifest" ]
     then
         genlist="$(mktemp)"
-        $CMD cli.py $CONFIG generations | nl > "$genlist"
+        $CMD obnam $CONFIG generations | nl > "$genlist"
 
         cat "$genlist" |
         while read i genid
         do
-            python cli.py $CONFIG forget "$genid"
+            python obnam $CONFIG forget "$genid"
             
             awk -vgen="$i" '$1 > gen' "$genlist" |
             while read i2 genid2
             do
                 rm -rf "$tmp/root"
                 mkdir "$tmp/root"
-                python cli.py $CONFIG -C "$tmp/root" restore "$genid2"
+                python obnam $CONFIG -C "$tmp/root" restore "$genid2"
                 python manifest.py $MANIFESTOPTS "$tmp/root" \
                     > "$tmp/manifest3-$i2"
                 diff -u -U 15 "$tmp/manifest-$i2" "$tmp/manifest3-$i2"

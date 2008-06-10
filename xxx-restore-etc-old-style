@@ -29,7 +29,7 @@ die()
 
 temp=$(mktemp -d)
 
-cmd="./cli.py --host-id=gytha --no-gpg --store=$temp/xxx.store"
+cmd="./obnam --host-id=gytha --no-gpg --store=$temp/xxx.store"
 
 tar -C "$temp" -xf xxx-test-data-and-store.tar.gz
 

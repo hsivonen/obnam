@@ -14,7 +14,7 @@ debian/prerm
 debian/rules
 HACKING
 NEWS
-obnam/defaultconfig.py
+obnamlib/defaultconfig.py
 odirect_pipe
 sample-gpg-home/pubring.gpg
 sample-gpg-home/secring.gpg
@@ -39,3 +39,5 @@ tests/twogen/post02.sh
 tests/twogen/pre02.sh
 uuid.py
 xxx-test-data-and-store.tar.gz
+MANIFEST.in
+setup.py
