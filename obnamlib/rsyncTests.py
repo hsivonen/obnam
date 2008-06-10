@@ -48,10 +48,9 @@ class RsyncTests(unittest.TestCase):
         os.close(fd)
 
         context = obnamlib.context.Context()
-        context.config.set("backup", "odirect-pipe", "/notexist")
         self.failUnlessRaises(obnamlib.rsync.UnknownCommand,
                               obnamlib.rsync.compute_signature,
-                              context, empty_file)
+                              context, empty_file, rdiff="unknown_command")
 
         os.remove(empty_file)
 
@@ -60,10 +59,9 @@ class RsyncTests(unittest.TestCase):
         os.close(fd)
 
         context = obnamlib.context.Context()
-        context.config.set("backup", "odirect-pipe", "false")
         self.failUnlessRaises(obnamlib.rsync.CommandFailure,
                               obnamlib.rsync.compute_signature,
-                              context, empty_file)
+                              context, empty_file, rdiff="false")
 
         os.remove(empty_file)
 
@@ -72,7 +70,6 @@ class RsyncTests(unittest.TestCase):
         os.close(fd)
 
         context = obnamlib.context.Context()
-        context.config.set("backup", "odirect-pipe", "false")
         self.failUnlessRaises(obnamlib.rsync.CommandFailure,
                               obnamlib.rsync.compute_delta,
                               context, "pink", empty_file)

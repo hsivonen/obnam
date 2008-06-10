@@ -86,16 +86,6 @@ def build_parser():
                       help="read ssh private key from FILE (and public key " +
                            "from FILE.pub)")
     
-    parser.add_option("--odirect-read",
-                      metavar="PROGRAM",
-                      help="use PROGRAM to read contents of plain files " +
-                           "(default is helper that avoids buffer cache)")
-    
-    parser.add_option("--odirect-pipe",
-                      metavar="PROGRAM",
-                      help="use PROGRAM as the odirect_pipe program " +
-                           "(default is helper that avoids buffer cache)")
-    
     parser.add_option("--gpg-home",
                       metavar="DIR",
                       help="use DIR as the location for GnuPG keyrings and " +
@@ -197,10 +187,6 @@ def parse_options(config, argv):
         config.set("backup", "log-level", options.log_level)
     if options.ssh_key is not None:
         config.set("backup", "ssh-key", options.ssh_key)
-    if options.odirect_read is not None:
-        config.set("backup", "odirect-read", options.odirect_read)
-    if options.odirect_pipe is not None:
-        config.set("backup", "odirect-pipe", options.odirect_pipe)
     if options.gpg_home is not None:
         config.set("backup", "gpg-home", options.gpg_home)
     if options.gpg_encrypt_to is not None:

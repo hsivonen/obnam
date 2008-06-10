@@ -196,7 +196,7 @@ def create_file_contents_object(context, filename):
     """Create and queue objects to hold a file's contents"""
     object_id = obnamlib.obj.object_id_new()
     part_ids = []
-    odirect_read = context.config.get("backup", "odirect-read")
+    odirect_read = "cat"
     block_size = context.config.getint("backup", "block-size")
     f = subprocess.Popen([odirect_read, resolve(context, filename)], 
                          stdout=subprocess.PIPE)

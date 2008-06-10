@@ -56,13 +56,10 @@ def run_command(argv, stdin=None, stdout=None, stderr=None):
     return p
 
 
-def compute_signature(context, filename):
+def compute_signature(context, filename, rdiff="rdiff"):
     """Compute an rsync signature for 'filename'"""
 
-    argv = [context.config.get("backup", "odirect-pipe"),
-            context.config.get("backup", "odirect-read"),
-            filename,
-            "rdiff", "--", "signature", "-", "-"]
+    argv = [rdiff, "--", "signature", filename, "-"]
     p = run_command(argv)
     stdout_data, stderr_data = p.communicate()
     
@@ -83,10 +80,7 @@ def compute_delta(context, signature, filename):
     os.write(fd, signature)
     os.close(fd)
 
-    argv = [context.config.get("backup", "odirect-pipe"),
-            context.config.get("backup", "odirect-read"),
-            filename,
-            "rdiff", "--", "delta", tempname, "-", "-"]
+    argv = ["rdiff", "--", "delta", tempname, filename, "-"]
     p = run_command(argv)
 
     list = []

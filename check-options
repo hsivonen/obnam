@@ -29,7 +29,7 @@ from_manpage()
 
 from_code()
 {
-    python -c 'import obnam; obnam.config.print_option_names()' |
+    python -c 'import obnamlib; obnamlib.config.print_option_names()' |
     sort
 }
 
