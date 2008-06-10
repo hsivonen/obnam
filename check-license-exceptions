@@ -14,7 +14,7 @@ debian/prerm
 debian/rules
 HACKING
 NEWS
-obnam/defaultconfig.py
+obnamlib/defaultconfig.py
 odirect_pipe
 sample-gpg-home/pubring.gpg
 sample-gpg-home/secring.gpg
