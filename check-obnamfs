@@ -33,7 +33,7 @@ file_mtime()
 # mtime for a generation (last timestamp)
 gen_mtime()
 {
-    ./cli.py --store="$store" --generation-times generations |
+    ./obnam --store="$store" --generation-times generations |
     sed -n "/$1/s/.* -- //p" |
     tr -d ' '
 }
@@ -50,7 +50,7 @@ echo "Mount point: $mount"
 
 # Create a backup.
 echo "Creating backup."
-./cli.py --store="$store" backup obnam
+./obnam --store="$store" backup obnam
 
 # Mount it.
 echo "Mounting."
@@ -67,7 +67,7 @@ done
 [ $(stat -c %a "$mount/.") = 700 ] || die "permissions are wrong"
 
 # Check that there is a sub-directory named after each generation.
-for gen in $(./cli.py --store="$store" generations)
+for gen in $(./obnam --store="$store" generations)
 do
     [ -d "$mount/$gen" ] || die "Generation $gen not listed"
     [ $(file_mtime "$mount/$gen") = $(gen_mtime "$gen") ] || \
