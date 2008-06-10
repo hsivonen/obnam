@@ -19,7 +19,7 @@
 
 import logging
 
-import obnam.cmp
+import obnamlib
 
 
 class Mappings:
@@ -79,10 +79,10 @@ def encode_new(mapping):
             dict[block_id] = [object_id]
     for block_id in dict:
         object_ids = dict[block_id]
-        object_ids = [obnam.cmp.Component(obnam.cmp.OBJREF, x)
+        object_ids = [obnamlib.cmp.Component(obnamlib.cmp.OBJREF, x)
                       for x in object_ids]
-        block_id = obnam.cmp.Component(obnam.cmp.BLOCKREF, block_id)
-        c = obnam.cmp.Component(obnam.cmp.OBJMAP, 
+        block_id = obnamlib.cmp.Component(obnamlib.cmp.BLOCKREF, block_id)
+        c = obnamlib.cmp.Component(obnamlib.cmp.OBJMAP, 
                                 [block_id] + object_ids)
         list.append(c.encode())
     return list
@@ -90,14 +90,14 @@ def encode_new(mapping):
 
 def encode_new_to_block(mapping, block_id):
     """Encode new mappings into a block"""
-    c = obnam.cmp.Component(obnam.cmp.BLKID, block_id)
+    c = obnamlib.cmp.Component(obnamlib.cmp.BLKID, block_id)
     list = encode_new(mapping)
-    block = "".join([obnam.obj.BLOCK_COOKIE, c.encode()] + list)
+    block = "".join([obnamlib.obj.BLOCK_COOKIE, c.encode()] + list)
     return block
 
 
 # This function used to use the block and component parsing code in
-# obnam.obj and obnam.cmp, namely the obnam.obj.block_decode function.
+# obnamlib.obj and obnamlib.cmp, namely the obnamlib.obj.block_decode function.
 # However, it turned out to be pretty slow, and since we load maps at
 # the beginning of pretty much any backup run, the following version was
 # written, and measured with benchmarks to run in about a quarter of the
@@ -108,29 +108,29 @@ def decode_block(mapping, block):
     """Decode a block with mappings, add them to mapping object"""
     logging.debug("Decoding mapping block")
     
-    if not block.startswith(obnam.obj.BLOCK_COOKIE):
-        raise obnam.obj.BlockWithoutCookie(block)
+    if not block.startswith(obnamlib.obj.BLOCK_COOKIE):
+        raise obnamlib.obj.BlockWithoutCookie(block)
 
-    pos = len(obnam.obj.BLOCK_COOKIE)
+    pos = len(obnamlib.obj.BLOCK_COOKIE)
     end = len(block)
     
     while pos < end:
-        size, pos = obnam.varint.decode(block, pos)
-        kind, pos = obnam.varint.decode(block, pos)
+        size, pos = obnamlib.varint.decode(block, pos)
+        kind, pos = obnamlib.varint.decode(block, pos)
 
-        if kind == obnam.cmp.OBJMAP:
+        if kind == obnamlib.cmp.OBJMAP:
             pos2 = pos
             end2 = pos + size
             block_id = None
             object_ids = []
             while pos2 < end2:
-                size2, pos2 = obnam.varint.decode(block, pos2)
-                kind2, pos2 = obnam.varint.decode(block, pos2)
+                size2, pos2 = obnamlib.varint.decode(block, pos2)
+                kind2, pos2 = obnamlib.varint.decode(block, pos2)
                 data2 = block[pos2:pos2+size2]
                 pos2 += size2
-                if kind2 == obnam.cmp.BLOCKREF:
+                if kind2 == obnamlib.cmp.BLOCKREF:
                     block_id = data2
-                elif kind2 == obnam.cmp.OBJREF:
+                elif kind2 == obnamlib.cmp.OBJREF:
                     object_ids.append(data2)
             if object_ids and block_id:
                 for object_id in object_ids:

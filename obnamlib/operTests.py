@@ -15,21 +15,21 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-"""Tests for obnam.oper."""
+"""Tests for obnamlib.oper."""
 
 
 import unittest
 
-import obnam
+import obnamlib
 
 
 class OperationTests(unittest.TestCase):
 
     def setUp(self):
-        context = obnam.context.Context()
-        self.app = obnam.Application(context)
+        context = obnamlib.context.Context()
+        self.app = obnamlib.Application(context)
         self.args = ["pink", "pretty"]
-        self.op = obnam.Operation(self.app, self.args)
+        self.op = obnamlib.Operation(self.app, self.args)
 
     def testNameIsNone(self):
         self.failUnlessEqual(self.op.name, None)
@@ -44,19 +44,19 @@ class OperationTests(unittest.TestCase):
 class OperationFactoryTests(unittest.TestCase):
     
     def setUp(self):
-        context = obnam.context.Context()
-        self.app = obnam.Application(context)
-        self.factory = obnam.OperationFactory(self.app)
+        context = obnamlib.context.Context()
+        self.app = obnamlib.Application(context)
+        self.factory = obnamlib.OperationFactory(self.app)
     
     def testFindsOperations(self):
         self.failUnless(self.factory.find_operations())
 
     def testRaisesErrorForNoArguments(self):
-        self.failUnlessRaises(obnam.ObnamException, 
+        self.failUnlessRaises(obnamlib.ObnamException, 
                               self.factory.get_operation, [])
 
     def testRaisesErrorForUnknownArgument(self):
-        self.failUnlessRaises(obnam.ObnamException, 
+        self.failUnlessRaises(obnamlib.ObnamException, 
                               self.factory.get_operation, ["pink"])
 
     def testFindsBackupOperation(self):

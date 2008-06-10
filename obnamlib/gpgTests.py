@@ -15,7 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-"""Unit tests for obnam.gpg."""
+"""Unit tests for obnamlib.gpg."""
 
 
 import os
@@ -24,28 +24,28 @@ import tempfile
 import unittest
 
 
-import obnam
+import obnamlib
 
 
 class GpgEncryptionFailureTests(unittest.TestCase):
 
     def testIncludesExitCodeInMessage(self):
-        e = obnam.gpg.GpgEncryptionFailure(42, "")
+        e = obnamlib.gpg.GpgEncryptionFailure(42, "")
         self.failUnless("42" in str(e))
 
     def testIncludesStderrInMessage(self):
-        e = obnam.gpg.GpgEncryptionFailure(42, "pink")
+        e = obnamlib.gpg.GpgEncryptionFailure(42, "pink")
         self.failUnless("pink" in str(e))
 
 
 class GpgDecryptionFailureTests(unittest.TestCase):
 
     def testIncludesExitCodeInMessage(self):
-        e = obnam.gpg.GpgDecryptionFailure(42, "")
+        e = obnamlib.gpg.GpgDecryptionFailure(42, "")
         self.failUnless("42" in str(e))
 
     def testIncludesStderrInMessage(self):
-        e = obnam.gpg.GpgDecryptionFailure(42, "pink")
+        e = obnamlib.gpg.GpgDecryptionFailure(42, "pink")
         self.failUnless("pink" in str(e))
 
 
@@ -53,30 +53,30 @@ class GpgTests(unittest.TestCase):
 
     def test(self):
         block = "pink"
-        config = obnam.config.default_config()
+        config = obnamlib.config.default_config()
         config.set("backup", "gpg-home", "sample-gpg-home")
         config.set("backup", "gpg-encrypt-to", "490C9ED1")
         config.set("backup", "gpg-sign-with", "490C9ED1")
         
-        encrypted = obnam.gpg.encrypt(config, block)
+        encrypted = obnamlib.gpg.encrypt(config, block)
         self.failIf(block in encrypted)
         
-        decrypted = obnam.gpg.decrypt(config, encrypted)
+        decrypted = obnamlib.gpg.decrypt(config, encrypted)
         self.failUnlessEqual(block, decrypted)
 
     def testEncryptionWithInvalidKey(self):
         block = "pink"
-        config = obnam.config.default_config()
+        config = obnamlib.config.default_config()
         config.set("backup", "gpg-home", "sample-gpg-home")
         config.set("backup", "gpg-encrypt-to", "pretty")
         
-        self.failUnlessRaises(obnam.gpg.GpgEncryptionFailure,
-                              obnam.gpg.encrypt, config, block)
+        self.failUnlessRaises(obnamlib.gpg.GpgEncryptionFailure,
+                              obnamlib.gpg.encrypt, config, block)
 
     def testDecryptionWithInvalidData(self):
         encrypted = "pink"
-        config = obnam.config.default_config()
+        config = obnamlib.config.default_config()
         config.set("backup", "gpg-home", "sample-gpg-home")
         
-        self.failUnlessRaises(obnam.gpg.GpgDecryptionFailure,
-                              obnam.gpg.decrypt, config, encrypted)
+        self.failUnlessRaises(obnamlib.gpg.GpgDecryptionFailure,
+                              obnamlib.gpg.decrypt, config, encrypted)

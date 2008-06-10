@@ -15,16 +15,16 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-"""Abstraction for storing backup data, for Obnam."""
+"""Abstraction for storing backup data, for obnamlib."""
 
 
 import logging
 import os
 
-import obnam
+import obnamlib
 
 
-class ObjectNotFoundInStore(obnam.exception.ObnamException):
+class ObjectNotFoundInStore(obnamlib.exception.ObnamException):
 
     def __init__(self, id):
         self._msg = "Object %s not found in store" % id
@@ -64,12 +64,12 @@ class Store:
         """
         
         if not self._host:
-            host_block = obnam.io.get_host_block(self._context)
+            host_block = obnamlib.io.get_host_block(self._context)
             if host_block:
-                self._host = obnam.obj.create_host_from_block(host_block)
+                self._host = obnamlib.obj.create_host_from_block(host_block)
             else:
                 id = self._context.config.get("backup", "host-id")
-                self._host = obnam.obj.HostBlockObject(host_id=id)
+                self._host = obnamlib.obj.HostBlockObject(host_id=id)
         return self._host
 
 
@@ -77,13 +77,13 @@ class Store:
         """Load non-content map blocks."""
         ids = self._host.get_map_block_ids()
         logging.info("Decoding %d mapping blocks" % len(ids))
-        obnam.io.load_maps(self._context, self._context.map, ids)
+        obnamlib.io.load_maps(self._context, self._context.map, ids)
 
     def load_content_maps(self):
         """Load content map blocks."""
         ids = self._host.get_contmap_block_ids()
         logging.info("Decoding %d content mapping blocks" % len(ids))
-        obnam.io.load_maps(self._context, self._context.contmap, ids)
+        obnamlib.io.load_maps(self._context, self._context.contmap, ids)
 
     def _update_map_helper(self, map):
         """Create new mapping blocks of a given kind, and upload them.
@@ -92,10 +92,10 @@ class Store:
 
         """
 
-        if obnam.map.get_new(map):
+        if obnamlib.map.get_new(map):
             id = self._context.be.generate_block_id()
             logging.debug("Creating mapping block %s" % id)
-            block = obnam.map.encode_new_to_block(map, id)
+            block = obnamlib.map.encode_new_to_block(map, id)
             self._context.be.upload_block(id, block, True)
             return [id]
         else:
@@ -123,7 +123,7 @@ class Store:
         
         """
 
-        obnam.io.flush_all_object_queues(self._context)
+        obnamlib.io.flush_all_object_queues(self._context)
     
         logging.info("Creating new mapping blocks")
         host = self.get_host_block()
@@ -134,11 +134,11 @@ class Store:
         logging.info("Creating new host block")
         gen_ids = (host.get_generation_ids() + 
                    [gen.get_id() for gen in new_generations])
-        host2 = obnam.obj.HostBlockObject(host_id=host.get_id(), 
+        host2 = obnamlib.obj.HostBlockObject(host_id=host.get_id(), 
                                           gen_ids=gen_ids, 
                                           map_block_ids=map_ids,
                                           contmap_block_ids=contmap_ids)
-        obnam.io.upload_host_block(self._context, host2.encode())
+        obnamlib.io.upload_host_block(self._context, host2.encode())
 
         self._host = host2
 
@@ -151,7 +151,7 @@ class Store:
         
         """
         
-        obnam.io.enqueue_object(self._context, self._context.oq,
+        obnamlib.io.enqueue_object(self._context, self._context.oq,
                                 self._context.map, object.get_id(), 
                                 object.encode(), True)
 
@@ -172,7 +172,7 @@ class Store:
         
         """
 
-        object = obnam.io.get_object(self._context, id)
+        object = obnamlib.io.get_object(self._context, id)
         if object:
             return object
         raise ObjectNotFoundInStore(id)

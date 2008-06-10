@@ -15,15 +15,15 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-"""Unit tests for obnam.obj."""
+"""Unit tests for obnamlib.obj."""
 
 
 import os
 import unittest
 
 
-from obnam.obj import *
-import obnam
+from obnamlib.obj import *
+import obnamlib
 
 
 class ObjectKindNameTests(unittest.TestCase):
@@ -45,22 +45,22 @@ class ObjectKindNameTests(unittest.TestCase):
 class ObjectIdTests(unittest.TestCase):
 
     def testHasCorrectProperties(self):
-        id = obnam.obj.object_id_new()
+        id = obnamlib.obj.object_id_new()
         self.failUnlessEqual(type(id), type(""))
 
 
 class StorageObjectTests(unittest.TestCase):
 
     components = [
-        obnam.cmp.Component(obnam.cmp.OBJID, "pink"),
-        obnam.cmp.Component(obnam.cmp.OBJKIND, 
-                            obnam.varint.encode(obnam.obj.HOST)),
-        obnam.cmp.Component(0xdeadbeef, "hello"),
-        obnam.cmp.Component(0xcafebabe, "world"),
+        obnamlib.cmp.Component(obnamlib.cmp.OBJID, "pink"),
+        obnamlib.cmp.Component(obnamlib.cmp.OBJKIND, 
+                            obnamlib.varint.encode(obnamlib.obj.HOST)),
+        obnamlib.cmp.Component(0xdeadbeef, "hello"),
+        obnamlib.cmp.Component(0xcafebabe, "world"),
     ]
     
     def setUp(self):
-        self.o = obnam.obj.StorageObject(components=self.components)
+        self.o = obnamlib.obj.StorageObject(components=self.components)
 
     def testInitializesComponentListCorrectlyFromComponents(self):
         self.failUnlessEqual(len(self.o.get_components()),
@@ -70,38 +70,38 @@ class StorageObjectTests(unittest.TestCase):
         self.failUnlessEqual(self.o.get_id(), "pink")
 
     def testInitalizesKindCorrectlyFromComponents(self):
-        self.failUnlessEqual(self.o.get_kind(), obnam.obj.HOST)
+        self.failUnlessEqual(self.o.get_kind(), obnamlib.obj.HOST)
 
     def testInitializesIdCorrectlyFromArguments(self):
-        o = obnam.obj.StorageObject(id="pink")
+        o = obnamlib.obj.StorageObject(id="pink")
         self.failUnlessEqual(o.get_id(), "pink")
 
     def testEncodesAndDecodesToIdenticalObject(self):
-        o = obnam.obj.StorageObject(components=self.components)
+        o = obnamlib.obj.StorageObject(components=self.components)
         encoded = o.encode()
-        o2 = obnam.obj.decode(encoded)
+        o2 = obnamlib.obj.decode(encoded)
         encoded2 = o2.encode()
         self.failUnlessEqual(encoded, encoded2)
 
     def testAddsComponentCorrectly(self):
-        c = obnam.cmp.Component(obnam.cmp.FILENAME, "pretty")
+        c = obnamlib.cmp.Component(obnamlib.cmp.FILENAME, "pretty")
         self.o.add(c)
-        self.failUnless(self.o.find_by_kind(obnam.cmp.FILENAME), [c])
+        self.failUnless(self.o.find_by_kind(obnamlib.cmp.FILENAME), [c])
 
 
 class ObjectQueueTests(unittest.TestCase):
 
     def testCreate(self):
-        oq = obnam.obj.ObjectQueue()
+        oq = obnamlib.obj.ObjectQueue()
         self.failUnlessEqual(oq.combined_size(), 0)
 
     def testAdd(self):
-        oq = obnam.obj.ObjectQueue()
+        oq = obnamlib.obj.ObjectQueue()
         oq.add("xx", "abc")
         self.failUnlessEqual(oq.combined_size(), 3)
 
     def testSize(self):
-        oq = obnam.obj.ObjectQueue()
+        oq = obnamlib.obj.ObjectQueue()
         self.failUnless(oq.is_empty())
         oq.add("xx", "abc")
         self.failUnlessEqual(oq.combined_size(), 3)
@@ -109,7 +109,7 @@ class ObjectQueueTests(unittest.TestCase):
         self.failUnlessEqual(oq.combined_size(), 6)
 
     def testClear(self):
-        oq = obnam.obj.ObjectQueue()
+        oq = obnamlib.obj.ObjectQueue()
         oq_orig = oq
         self.failUnless(oq.is_empty())
         oq.clear()
@@ -124,7 +124,7 @@ class ObjectQueueTests(unittest.TestCase):
 class BlockWithoutCookieTests(unittest.TestCase):
 
     def setUp(self):
-        self.e = obnam.obj.BlockWithoutCookie("\x01\x02\x03")
+        self.e = obnamlib.obj.BlockWithoutCookie("\x01\x02\x03")
 
     def testIncludesBlockHexDumpInMessage(self):
         self.failUnless("01 02 03" in str(self.e))
@@ -133,36 +133,36 @@ class BlockWithoutCookieTests(unittest.TestCase):
 class BlockCreateTests(unittest.TestCase):
 
     def testDecodeInvalidObject(self):
-        self.failUnlessRaises(obnam.obj.BlockWithoutCookie,
-                              obnam.obj.block_decode, "pink")
+        self.failUnlessRaises(obnamlib.obj.BlockWithoutCookie,
+                              obnamlib.obj.block_decode, "pink")
 
     def testDecodeEmptyBlock(self):
-        self.failUnlessRaises(obnam.obj.EmptyBlock,
-                              obnam.obj.block_decode, obnam.obj.BLOCK_COOKIE)
+        self.failUnlessRaises(obnamlib.obj.EmptyBlock,
+                              obnamlib.obj.block_decode, obnamlib.obj.BLOCK_COOKIE)
 
     def testEmptyObjectQueue(self):
-        oq = obnam.obj.ObjectQueue()
+        oq = obnamlib.obj.ObjectQueue()
         block = oq.as_block("blkid")
-        list = obnam.obj.block_decode(block)
+        list = obnamlib.obj.block_decode(block)
         self.failUnlessEqual(
-            obnam.cmp.first_string_by_kind(list, obnam.cmp.BLKID),
+            obnamlib.cmp.first_string_by_kind(list, obnamlib.cmp.BLKID),
             "blkid")
         self.failUnlessEqual(len(list), 1)
         self.failUnlessEqual(oq.ids(), [])
 
     def testObjectQueue(self):
-        o = obnam.obj.StorageObject(id="pink")
-        o.add(obnam.cmp.Component(2, "pretty"))
-        oq = obnam.obj.ObjectQueue()
+        o = obnamlib.obj.StorageObject(id="pink")
+        o.add(obnamlib.cmp.Component(2, "pretty"))
+        oq = obnamlib.obj.ObjectQueue()
         oq.add("pink", o.encode())
         block = oq.as_block("blkid")
 
-        list = obnam.obj.block_decode(block)
+        list = obnamlib.obj.block_decode(block)
         self.failUnlessEqual(
-            obnam.cmp.first_string_by_kind(list, obnam.cmp.BLKID),
+            obnamlib.cmp.first_string_by_kind(list, obnamlib.cmp.BLKID),
             "blkid")
         self.failUnlessEqual(len(list), 2)
-        o2 = obnam.cmp.first_by_kind(list, obnam.cmp.OBJECT)
+        o2 = obnamlib.cmp.first_by_kind(list, obnamlib.cmp.OBJECT)
         self.failUnlessEqual(o.first_string_by_kind(2), "pretty")
         self.failUnlessEqual(oq.ids(), ["pink"])
 
@@ -176,7 +176,7 @@ class GenerationTests(unittest.TestCase):
         fg1 = ["fg1", "fg2"]
         start1 = 12765
         end1 = 37337
-        gen = obnam.obj.GenerationObject(id=id1, filelist_id=fl1, 
+        gen = obnamlib.obj.GenerationObject(id=id1, filelist_id=fl1, 
                                          dirrefs=dirs1, filegrouprefs=fg1, 
                                          start=start1, end=end1).encode()
         (id2, fl2, dirs2, fg2, start2, end2) = generation_object_decode(gen)
@@ -214,45 +214,45 @@ class GenerationTests(unittest.TestCase):
 class OldStorageObjectTests(unittest.TestCase):
 
     def testCreateSignatureObject(self):
-        context = obnam.context.Context()
+        context = obnamlib.context.Context()
         id = "pink"
-        sig = obnam.rsync.compute_signature(context, "Makefile")
-        sig_object = obnam.obj.SignatureObject(id=id, sigdata=sig)
+        sig = obnamlib.rsync.compute_signature(context, "Makefile")
+        sig_object = obnamlib.obj.SignatureObject(id=id, sigdata=sig)
         encoded = sig_object.encode()
-        o = obnam.obj.decode(encoded)
+        o = obnamlib.obj.decode(encoded)
         self.failUnlessEqual(o.get_id(), "pink")
-        self.failUnlessEqual(o.get_kind(), obnam.obj.SIG)
+        self.failUnlessEqual(o.get_kind(), obnamlib.obj.SIG)
         self.failUnlessEqual(len(o.get_components()), 1+2)
-        self.failUnlessEqual(o.first_string_by_kind(obnam.cmp.SIGDATA), sig)
+        self.failUnlessEqual(o.first_string_by_kind(obnamlib.cmp.SIGDATA), sig)
 
     def testCreateDeltaObjectWithContRef(self):
         id = "pink"
         deltapart_ref = "xyzzy"
-        do = obnam.obj.DeltaObject(id=id, deltapart_refs=[deltapart_ref], 
+        do = obnamlib.obj.DeltaObject(id=id, deltapart_refs=[deltapart_ref], 
                                    cont_ref="pretty")
         encoded = do.encode()
-        o = obnam.obj.decode(encoded)
+        o = obnamlib.obj.decode(encoded)
         self.failUnlessEqual(o.get_id(), "pink")
-        self.failUnlessEqual(o.get_kind(), obnam.obj.DELTA)
+        self.failUnlessEqual(o.get_kind(), obnamlib.obj.DELTA)
         self.failUnlessEqual(len(o.get_components()), 2+2)
-        self.failUnlessEqual(o.first_string_by_kind(obnam.cmp.DELTAPARTREF),
+        self.failUnlessEqual(o.first_string_by_kind(obnamlib.cmp.DELTAPARTREF),
                              deltapart_ref)
-        self.failUnlessEqual(o.first_string_by_kind(obnam.cmp.CONTREF),
+        self.failUnlessEqual(o.first_string_by_kind(obnamlib.cmp.CONTREF),
                              "pretty")
 
     def testCreateDeltaObjectWithDeltaRef(self):
         id = "pink"
         deltapart_ref = "xyzzy"
-        do = obnam.obj.DeltaObject(id=id, deltapart_refs=[deltapart_ref], 
+        do = obnamlib.obj.DeltaObject(id=id, deltapart_refs=[deltapart_ref], 
                                    delta_ref="pretty")
         encoded = do.encode()
-        o = obnam.obj.decode(encoded)
+        o = obnamlib.obj.decode(encoded)
         self.failUnlessEqual(o.get_id(), "pink")
-        self.failUnlessEqual(o.get_kind(), obnam.obj.DELTA)
+        self.failUnlessEqual(o.get_kind(), obnamlib.obj.DELTA)
         self.failUnlessEqual(len(o.get_components()), 2+2)
-        self.failUnlessEqual(o.first_string_by_kind(obnam.cmp.DELTAPARTREF),
+        self.failUnlessEqual(o.first_string_by_kind(obnamlib.cmp.DELTAPARTREF),
                              deltapart_ref)
-        self.failUnlessEqual(o.first_string_by_kind(obnam.cmp.DELTAREF),
+        self.failUnlessEqual(o.first_string_by_kind(obnamlib.cmp.DELTAREF),
                              "pretty")
 
 
@@ -263,62 +263,62 @@ class HostBlockTests(unittest.TestCase):
         gen_ids = ["pretty", "beautiful"]
         map_ids = ["black", "box"]
         contmap_ids = ["tilu", "lii"]
-        host = obnam.obj.HostBlockObject(host_id=host_id, gen_ids=gen_ids, 
+        host = obnamlib.obj.HostBlockObject(host_id=host_id, gen_ids=gen_ids, 
                                          map_block_ids=map_ids, 
                                          contmap_block_ids=contmap_ids)
         host = host.encode()
-        self.failUnless(host.startswith(obnam.obj.BLOCK_COOKIE))
-        host2 = obnam.obj.create_host_from_block(host)
+        self.failUnless(host.startswith(obnamlib.obj.BLOCK_COOKIE))
+        host2 = obnamlib.obj.create_host_from_block(host)
         self.failUnlessEqual(host_id, host2.get_id())
         self.failUnlessEqual(gen_ids, host2.get_generation_ids())
         self.failUnlessEqual(map_ids, host2.get_map_block_ids())
         self.failUnlessEqual(contmap_ids, host2.get_contmap_block_ids())
         
     def testFormatVersion(self):
-        encoded = obnam.obj.HostBlockObject(host_id="pink", gen_ids=[], 
+        encoded = obnamlib.obj.HostBlockObject(host_id="pink", gen_ids=[], 
                                             map_block_ids=[], 
                                             contmap_block_ids=[]).encode()
-        decoded = obnam.obj.block_decode(encoded)
-        c = obnam.cmp.first_by_kind(decoded, obnam.cmp.OBJECT)
-        id = c.first_string_by_kind(obnam.cmp.OBJID)
+        decoded = obnamlib.obj.block_decode(encoded)
+        c = obnamlib.cmp.first_by_kind(decoded, obnamlib.cmp.OBJECT)
+        id = c.first_string_by_kind(obnamlib.cmp.OBJID)
         self.failUnlessEqual(id, "pink")
-        ver = c.first_string_by_kind(obnam.cmp.FORMATVERSION)
+        ver = c.first_string_by_kind(obnamlib.cmp.FORMATVERSION)
         self.failUnlessEqual(ver, "1")
 
     def make_block(self, gen_ids=None, map_ids=None, contmap_ids=None):
-        host = obnam.obj.HostBlockObject(host_id="pink", gen_ids=gen_ids,
+        host = obnamlib.obj.HostBlockObject(host_id="pink", gen_ids=gen_ids,
                                          map_block_ids=map_ids,
                                          contmap_block_ids=contmap_ids)
         return host.encode()
 
     def testReturnsEmtpyListForBlockWithNoGenerations(self):
         block = self.make_block()
-        host = obnam.obj.create_host_from_block(block)
+        host = obnamlib.obj.create_host_from_block(block)
         self.failUnlessEqual(host.get_generation_ids(), [])
 
     def testReturnsCorrectListForBlockWithSomeGenerations(self):
         block = self.make_block(gen_ids=["pretty", "black"])
-        host = obnam.obj.create_host_from_block(block)
+        host = obnamlib.obj.create_host_from_block(block)
         self.failUnlessEqual(host.get_generation_ids(), ["pretty", "black"])
 
     def testReturnsEmtpyListForBlockWithNoMaps(self):
         block = self.make_block()
-        host = obnam.obj.create_host_from_block(block)
+        host = obnamlib.obj.create_host_from_block(block)
         self.failUnlessEqual(host.get_map_block_ids(), [])
 
     def testReturnsCorrectListForBlockWithSomeMaps(self):
         block = self.make_block(map_ids=["pretty", "black"])
-        host = obnam.obj.create_host_from_block(block)
+        host = obnamlib.obj.create_host_from_block(block)
         self.failUnlessEqual(host.get_map_block_ids(), ["pretty", "black"])
 
     def testReturnsEmtpyListForBlockWithNoContentMaps(self):
         block = self.make_block()
-        host = obnam.obj.create_host_from_block(block)
+        host = obnamlib.obj.create_host_from_block(block)
         self.failUnlessEqual(host.get_contmap_block_ids(), [])
 
     def testReturnsCorrectListForBlockWithSomeContentMaps(self):
         block = self.make_block(contmap_ids=["pretty", "black"])
-        host = obnam.obj.create_host_from_block(block)
+        host = obnamlib.obj.create_host_from_block(block)
         self.failUnlessEqual(host.get_contmap_block_ids(), 
                              ["pretty", "black"])
 
@@ -326,11 +326,11 @@ class HostBlockTests(unittest.TestCase):
 class GetComponentTests(unittest.TestCase):
 
     def setUp(self):
-        self.o = obnam.obj.StorageObject([
-            obnam.cmp.Component(1, "pink"),
-            obnam.cmp.Component(2, "pretty"),
-            obnam.cmp.Component(3, "red"),
-            obnam.cmp.Component(3, "too"),
+        self.o = obnamlib.obj.StorageObject([
+            obnamlib.cmp.Component(1, "pink"),
+            obnamlib.cmp.Component(2, "pretty"),
+            obnamlib.cmp.Component(3, "red"),
+            obnamlib.cmp.Component(3, "too"),
             ])
 
     def testGetByKind(self):
@@ -370,16 +370,16 @@ class GetComponentTests(unittest.TestCase):
 
     def testGetVarintsByKind(self):
         numbers = range(1024)
-        components = [obnam.cmp.Component(0, obnam.varint.encode(i))
+        components = [obnamlib.cmp.Component(0, obnamlib.varint.encode(i))
                       for i in numbers]
-        o = obnam.obj.StorageObject(components=components)
+        o = obnamlib.obj.StorageObject(components=components)
         self.failUnlessEqual(o.find_varints_by_kind(0), numbers)
 
     def testGetFirstSVarintByKind(self):
         numbers = range(0, 1024, 17)
-        components = [obnam.cmp.Component(i, obnam.varint.encode(i))
+        components = [obnamlib.cmp.Component(i, obnamlib.varint.encode(i))
                       for i in numbers]
-        o = obnam.obj.StorageObject(components=components)
+        o = obnamlib.obj.StorageObject(components=components)
         for i in numbers:
             self.failUnlessEqual(o.first_varint_by_kind(i), i)
         self.failUnlessEqual(o.first_varint_by_kind(-1), None)
@@ -453,16 +453,16 @@ class StorageObjectFactoryTests(unittest.TestCase):
     def make_component(self, objkind):
         list = []
         
-        list.append(obnam.cmp.Component(obnam.cmp.OBJID, "objid"))
-        list.append(obnam.cmp.Component(obnam.cmp.OBJKIND, 
-                                        obnam.varint.encode(objkind)))
+        list.append(obnamlib.cmp.Component(obnamlib.cmp.OBJID, "objid"))
+        list.append(obnamlib.cmp.Component(obnamlib.cmp.OBJKIND, 
+                                        obnamlib.varint.encode(objkind)))
 
 
-        if objkind == obnam.obj.GEN:
-            list.append(obnam.cmp.Component(obnam.cmp.GENSTART,
-                                            obnam.varint.encode(1)))
-            list.append(obnam.cmp.Component(obnam.cmp.GENEND,
-                                            obnam.varint.encode(2)))
+        if objkind == obnamlib.obj.GEN:
+            list.append(obnamlib.cmp.Component(obnamlib.cmp.GENSTART,
+                                            obnamlib.varint.encode(1)))
+            list.append(obnamlib.cmp.Component(obnamlib.cmp.GENEND,
+                                            obnamlib.varint.encode(2)))
         
         return list
 
@@ -470,53 +470,53 @@ class StorageObjectFactoryTests(unittest.TestCase):
         return self.factory.get_object(self.make_component(objkind))
 
     def testCreatesFilePartObjectCorrectly(self):
-        o = self.make_object(obnam.obj.FILEPART)
-        self.failUnlessEqual(type(o), obnam.obj.FilePartObject)
+        o = self.make_object(obnamlib.obj.FILEPART)
+        self.failUnlessEqual(type(o), obnamlib.obj.FilePartObject)
 
     def testCreatesGenerationObjectCorrectly(self):
-        o = self.make_object(obnam.obj.GEN)
-        self.failUnlessEqual(type(o), obnam.obj.GenerationObject)
+        o = self.make_object(obnamlib.obj.GEN)
+        self.failUnlessEqual(type(o), obnamlib.obj.GenerationObject)
         self.failUnlessEqual(o.get_start_time(), 1)
         self.failUnlessEqual(o.get_end_time(), 2)
 
     def testCreatesSignatureObjectCorrectly(self):
-        o = self.make_object(obnam.obj.SIG)
-        self.failUnlessEqual(type(o), obnam.obj.SignatureObject)
+        o = self.make_object(obnamlib.obj.SIG)
+        self.failUnlessEqual(type(o), obnamlib.obj.SignatureObject)
 
     def testCreatesHostBlockObjectCorrectly(self):
-        o = self.make_object(obnam.obj.HOST)
-        self.failUnlessEqual(type(o), obnam.obj.HostBlockObject)
+        o = self.make_object(obnamlib.obj.HOST)
+        self.failUnlessEqual(type(o), obnamlib.obj.HostBlockObject)
 
     def testCreatesHostBlockObjectCorrectlyFromParsedBlock(self):
-        host = obnam.obj.HostBlockObject(host_id="pink")
+        host = obnamlib.obj.HostBlockObject(host_id="pink")
         block = host.encode()
-        host2 = obnam.obj.create_host_from_block(block)
+        host2 = obnamlib.obj.create_host_from_block(block)
         self.failUnlessEqual(host.get_id(), host2.get_id())
 
     def testCreatesFileContentsObjectCorrectly(self):
-        o = self.make_object(obnam.obj.FILECONTENTS)
-        self.failUnlessEqual(type(o), obnam.obj.FileContentsObject)
+        o = self.make_object(obnamlib.obj.FILECONTENTS)
+        self.failUnlessEqual(type(o), obnamlib.obj.FileContentsObject)
 
     def testCreatesFileListObjectCorrectly(self):
-        o = self.make_object(obnam.obj.FILELIST)
-        self.failUnlessEqual(type(o), obnam.obj.FileListObject)
+        o = self.make_object(obnamlib.obj.FILELIST)
+        self.failUnlessEqual(type(o), obnamlib.obj.FileListObject)
 
     def testCreatesDeltaObjectCorrectly(self):
-        o = self.make_object(obnam.obj.DELTA)
-        self.failUnlessEqual(type(o), obnam.obj.DeltaObject)
+        o = self.make_object(obnamlib.obj.DELTA)
+        self.failUnlessEqual(type(o), obnamlib.obj.DeltaObject)
 
     def testCreatesDeltaPartObjectCorrectly(self):
-        o = self.make_object(obnam.obj.DELTAPART)
-        self.failUnlessEqual(type(o), obnam.obj.DeltaPartObject)
+        o = self.make_object(obnamlib.obj.DELTAPART)
+        self.failUnlessEqual(type(o), obnamlib.obj.DeltaPartObject)
 
     def testCreatesDirObjectCorrectly(self):
-        o = self.make_object(obnam.obj.DIR)
-        self.failUnlessEqual(type(o), obnam.obj.DirObject)
+        o = self.make_object(obnamlib.obj.DIR)
+        self.failUnlessEqual(type(o), obnamlib.obj.DirObject)
 
     def testCreatesFileGroupObjectCorrectly(self):
-        o = self.make_object(obnam.obj.FILEGROUP)
-        self.failUnlessEqual(type(o), obnam.obj.FileGroupObject)
+        o = self.make_object(obnamlib.obj.FILEGROUP)
+        self.failUnlessEqual(type(o), obnamlib.obj.FileGroupObject)
 
     def testRaisesExceptionForUnknownObjectKind(self):
-        self.failUnlessRaises(obnam.ObnamException, 
+        self.failUnlessRaises(obnamlib.ObnamException, 
                               self.make_object, 0xdeadbeef)

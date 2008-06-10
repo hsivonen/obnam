@@ -20,10 +20,10 @@
 
 import logging
 
-import obnam
+import obnamlib
 
 
-class ListGenerations(obnam.Operation):
+class ListGenerations(obnamlib.Operation):
 
     """List generations in the store."""
     
@@ -40,13 +40,13 @@ class ListGenerations(obnam.Operation):
         gen_ids = host.get_generation_ids()
         for id in gen_ids:
             if gentimes:
-                gen = obnam.io.get_object(context, id)
+                gen = obnamlib.io.get_object(context, id)
                 if not gen:
                     logging.warning("Can't find info about generation %s" % id)
                 else:
                     start = gen.get_start_time()
                     end = gen.get_end_time()
-                    print id, obnam.format.timestamp(start), "--", \
-                        obnam.format.timestamp(end)
+                    print id, obnamlib.format.timestamp(start), "--", \
+                        obnamlib.format.timestamp(end)
             else:
                 print id

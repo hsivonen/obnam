@@ -15,19 +15,19 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-"""Unit tests for obnam.context."""
+"""Unit tests for obnamlib.context."""
 
 
 import unittest
 
 
-import obnam
+import obnamlib
 
 
 class ContextCreateTests(unittest.TestCase):
 
     def test(self):
-        context = obnam.context.Context()
+        context = obnamlib.context.Context()
         attrs = [x for x in dir(context) if not x.startswith("_")]
         attrs.sort()
         self.failUnlessEqual(attrs, 

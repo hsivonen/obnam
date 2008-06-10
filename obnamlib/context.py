@@ -18,20 +18,18 @@
 """Processing context for Obnam"""
 
 
-import obnam.config
-import obnam.map
-import obnam.obj
+import obnamlib
 
 
 class Context:
 
     def __init__(self):
-        self.config = obnam.config.default_config()
+        self.config = obnamlib.config.default_config()
         self.cache = None
         self.be = None
-        self.map = obnam.map.create()
-        self.contmap = obnam.map.create()
-        self.oq = obnam.obj.ObjectQueue()
-        self.content_oq = obnam.obj.ObjectQueue()
-        self.progress = obnam.progress.ProgressReporter(self.config)
+        self.map = obnamlib.map.create()
+        self.contmap = obnamlib.map.create()
+        self.oq = obnamlib.obj.ObjectQueue()
+        self.content_oq = obnamlib.obj.ObjectQueue()
+        self.progress = obnamlib.progress.ProgressReporter(self.config)
         self.object_cache = None

@@ -21,7 +21,7 @@
 import os
 
 
-import obnam
+import obnamlib
 
 
 def create_file_component(pathname, contref, sigref, deltaref):
@@ -34,18 +34,18 @@ def create_file_component_from_stat(pathname, st, contref, sigref, deltaref):
     """Create a FILE component given pathname, stat results, etc"""
     subs = []
     
-    subs.append(obnam.cmp.Component(obnam.cmp.FILENAME, pathname))
+    subs.append(obnamlib.cmp.Component(obnamlib.cmp.FILENAME, pathname))
     
-    subs.append(obnam.cmp.create_stat_component(st))
+    subs.append(obnamlib.cmp.create_stat_component(st))
 
     if contref:
-        subs.append(obnam.cmp.Component(obnam.cmp.CONTREF, contref))
+        subs.append(obnamlib.cmp.Component(obnamlib.cmp.CONTREF, contref))
     if sigref:
-        subs.append(obnam.cmp.Component(obnam.cmp.SIGREF, sigref))
+        subs.append(obnamlib.cmp.Component(obnamlib.cmp.SIGREF, sigref))
     if deltaref:
-        subs.append(obnam.cmp.Component(obnam.cmp.DELTAREF, deltaref))
+        subs.append(obnamlib.cmp.Component(obnamlib.cmp.DELTAREF, deltaref))
 
-    return obnam.cmp.Component(obnam.cmp.FILE, subs)
+    return obnamlib.cmp.Component(obnamlib.cmp.FILE, subs)
 
 
 class Filelist:
@@ -82,8 +82,8 @@ class Filelist:
         """Find the FILE component that matches stat_result"""
         prev = self.find(pathname)
         if prev:
-            prev_stat = prev.first_by_kind(obnam.cmp.STAT)
-            prev_st = obnam.cmp.parse_stat_component(prev_stat)
+            prev_stat = prev.first_by_kind(obnamlib.cmp.STAT)
+            prev_st = obnamlib.cmp.parse_stat_component(prev_stat)
             fields = ["st_dev",
                       "st_mode",
                       "st_nlink",
@@ -102,13 +102,13 @@ class Filelist:
 
     def to_object(self, object_id):
         """Create an unencoded FILELIST object from a file list"""
-        o = obnam.obj.FileListObject(id=object_id)
+        o = obnamlib.obj.FileListObject(id=object_id)
         for pathname in self.dict:
             o.add(self.dict[pathname])
         return o
 
     def from_object(self, o):
         """Add to file list data from a backup object"""
-        for file in o.find_by_kind(obnam.cmp.FILE):
-            pathname = file.first_string_by_kind(obnam.cmp.FILENAME)
+        for file in o.find_by_kind(obnamlib.cmp.FILE):
+            pathname = file.first_string_by_kind(obnamlib.cmp.FILENAME)
             self.dict[pathname] = file

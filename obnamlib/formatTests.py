@@ -15,7 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-"""Unit tests for obnam.format."""
+"""Unit tests for obnamlib.format."""
 
 
 import re
@@ -24,7 +24,7 @@ import StringIO
 import unittest
 
 
-import obnam
+import obnamlib
 
 
 class Fake:
@@ -54,7 +54,7 @@ class FormatPermissionsTests(unittest.TestCase):
             (04000, "--S------"),   # Set user id (upper case since no x)
         )
         for mode, correct in facit:
-            self.failUnlessEqual(obnam.format.permissions(mode), correct)
+            self.failUnlessEqual(obnamlib.format.permissions(mode), correct)
 
 
 class FormatFileTypeTests(unittest.TestCase):
@@ -71,13 +71,13 @@ class FormatFileTypeTests(unittest.TestCase):
             (stat.S_IFIFO, "p"),    # FIFO
         )
         for mode, correct in facit:
-            self.failUnlessEqual(obnam.format.filetype(mode), correct)
+            self.failUnlessEqual(obnamlib.format.filetype(mode), correct)
 
 
 class FormatFileModeTest(unittest.TestCase):
 
     def test(self):
-        self.failUnlessEqual(obnam.format.filemode(0100777), "-rwxrwxrwx")
+        self.failUnlessEqual(obnamlib.format.filemode(0100777), "-rwxrwxrwx")
 
 
 class FormatInodeFieldsTest(unittest.TestCase):
@@ -98,10 +98,10 @@ class FormatInodeFieldsTest(unittest.TestCase):
         st.st_blksize = 1
         st.st_rdev = 1
         file_component = \
-            obnam.filelist.create_file_component_from_stat("Makefile", st, 
+            obnamlib.filelist.create_file_component_from_stat("Makefile", st, 
                                                            None, None, None)
 
-        list = obnam.format.inode_fields(file_component)
+        list = obnamlib.format.inode_fields(file_component)
         
         self.failUnlessEqual(list, ["?--------x"] + ["1"] * 4 +
                                    ["1970-01-01 00:00:01"])
@@ -110,7 +110,7 @@ class FormatInodeFieldsTest(unittest.TestCase):
 class FormatTimeTests(unittest.TestCase):
 
     def test(self):
-        self.failUnlessEqual(obnam.format.timestamp(1), "1970-01-01 00:00:01")
+        self.failUnlessEqual(obnamlib.format.timestamp(1), "1970-01-01 00:00:01")
 
 
 
@@ -120,9 +120,9 @@ class ListingTests(unittest.TestCase):
     filepat = re.compile(r"^-rw-rw-rw- 0 0 0 0 1970-01-01 00:00:00 pink$")
 
     def make_filegroup(self, filenames):
-        fg = obnam.obj.FileGroupObject(id=obnam.obj.object_id_new())
+        fg = obnamlib.obj.FileGroupObject(id=obnamlib.obj.object_id_new())
         mode = 0666 | stat.S_IFREG
-        st = obnam.utils.make_stat_result(st_mode=mode)
+        st = obnamlib.utils.make_stat_result(st_mode=mode)
         for filename in filenames:
             fg.add_file(filename, st, None, None, None)
 
@@ -131,8 +131,8 @@ class ListingTests(unittest.TestCase):
 
     def make_dir(self, name, dirs, filegroups):
         mode = 0777 | stat.S_IFDIR
-        st = obnam.utils.make_stat_result(st_mode=mode)
-        dir = obnam.obj.DirObject(id=obnam.obj.object_id_new(),
+        st = obnamlib.utils.make_stat_result(st_mode=mode)
+        dir = obnamlib.obj.DirObject(id=obnamlib.obj.object_id_new(),
                                   name=name,
                                   stat=st,
                                   dirrefs=[x.get_id() for x in dirs],
@@ -147,7 +147,7 @@ class ListingTests(unittest.TestCase):
     def setUp(self):
         self.objects = {}
         self.file = StringIO.StringIO()
-        self.listing = obnam.format.Listing(None, self.file)
+        self.listing = obnamlib.format.Listing(None, self.file)
         self.listing._get_object = self.mock_get_object
 
     def testWritesNothingForNothing(self):

@@ -22,10 +22,10 @@ import logging
 import sys
 import time
 
-import obnam
+import obnamlib
 
 
-class ShowGenerations(obnam.Operation):
+class ShowGenerations(obnamlib.Operation):
 
     """Show contents of generations specified by user."""
     
@@ -56,12 +56,12 @@ class ShowGenerations(obnam.Operation):
     def show_filelist(self, fl):
         pretty = True
         list = []
-        for c in fl.find_by_kind(obnam.cmp.FILE):
-            filename = c.first_string_by_kind(obnam.cmp.FILENAME)
+        for c in fl.find_by_kind(obnamlib.cmp.FILE):
+            filename = c.first_string_by_kind(obnamlib.cmp.FILENAME)
             if pretty:
-                list.append((obnam.format.inode_fields(c), filename))
+                list.append((obnamlib.format.inode_fields(c), filename))
             else:
-                print " ".join(obnam.format.inode_fields(c)), filename
+                print " ".join(obnamlib.format.inode_fields(c)), filename
 
         if pretty:
             widths = []
@@ -82,7 +82,7 @@ class ShowGenerations(obnam.Operation):
                 print "  ", " ".join(cols), filename
 
     def show_dirs_and_filegroups(self, context, gen):
-        listing = obnam.format.Listing(context, sys.stdout)
+        listing = obnamlib.format.Listing(context, sys.stdout)
         listing.walk(listing.get_objects(gen.get_dirrefs()), 
                      listing.get_objects(gen.get_filegrouprefs()))
     
@@ -93,7 +93,7 @@ class ShowGenerations(obnam.Operation):
         app.get_store().load_maps()
     
         for gen_id in gen_ids:
-            gen = obnam.io.get_object(context, gen_id)
+            gen = obnamlib.io.get_object(context, gen_id)
             if not gen:
                 logging.warning("Can't find generation %s" % gen_id)
                 continue
@@ -102,7 +102,7 @@ class ShowGenerations(obnam.Operation):
     
             fl_id = gen.get_filelistref()
             if fl_id:
-                fl = obnam.io.get_object(context, fl_id)
+                fl = obnamlib.io.get_object(context, fl_id)
                 if fl:
                     self.show_filelist(fl)
                 else:

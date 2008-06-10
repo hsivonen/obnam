@@ -20,10 +20,10 @@
 
 import logging
 
-import obnam
+import obnamlib
 
 
-class Forget(obnam.Operation):
+class Forget(obnamlib.Operation):
 
     """Forget specified generations."""
     
@@ -52,11 +52,11 @@ class Forget(obnam.Operation):
     
         logging.debug("forget: Uploading new host block")
         host_id = context.config.get("backup", "host-id")
-        host2 = obnam.obj.HostBlockObject(host_id=host_id, gen_ids=gen_ids, 
+        host2 = obnamlib.obj.HostBlockObject(host_id=host_id, gen_ids=gen_ids, 
                                           map_block_ids=map_block_ids,
                                           contmap_block_ids=contmap_block_ids)
         block = host2.encode()
-        obnam.io.upload_host_block(context, block)
+        obnamlib.io.upload_host_block(context, block)
     
         logging.debug("forget: Forgetting garbage")
-        obnam.io.collect_garbage(context, block)
+        obnamlib.io.collect_garbage(context, block)

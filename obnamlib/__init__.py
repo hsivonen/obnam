@@ -24,6 +24,7 @@ VERSION = "0.9.2"
 
 from exception import ObnamException
 
+import defaultconfig
 import backend
 import cache
 import cfgfile

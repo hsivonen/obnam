@@ -25,14 +25,14 @@ import socket
 import tempfile
 import unittest
 
-import obnam
+import obnamlib
 
 
 class ApplicationTests(unittest.TestCase):
 
     def setUp(self):
-        context = obnam.context.Context()
-        self.app = obnam.Application(context)
+        context = obnamlib.context.Context()
+        self.app = obnamlib.Application(context)
 
     def testReturnsEmptyExclusionListInitially(self):
         self.failUnlessEqual(self.app.get_exclusion_regexps(), [])
@@ -79,10 +79,10 @@ class ApplicationTests(unittest.TestCase):
 class ApplicationLoadHostBlockTests(unittest.TestCase):
 
     def setUp(self):
-        context = obnam.context.Context()
-        cache = obnam.cache.Cache(context.config)
-        context.be = obnam.backend.init(context.config, context.cache)
-        self.app = obnam.Application(context)
+        context = obnamlib.context.Context()
+        cache = obnamlib.cache.Cache(context.config)
+        context.be = obnamlib.backend.init(context.config, context.cache)
+        self.app = obnamlib.Application(context)
 
     def tearDown(self):
         for x in ["cache", "store"]:
@@ -98,13 +98,13 @@ class ApplicationLoadHostBlockTests(unittest.TestCase):
         self.failUnlessEqual(host.get_contmap_block_ids(), [])
 
     def testLoadsActualHostBlockWhenOneExists(self):
-        context = obnam.context.Context()
-        cache = obnam.cache.Cache(context.config)
-        context.be = obnam.backend.init(context.config, context.cache)
+        context = obnamlib.context.Context()
+        cache = obnamlib.cache.Cache(context.config)
+        context.be = obnamlib.backend.init(context.config, context.cache)
         host_id = context.config.get("backup", "host-id")
-        temp = obnam.obj.HostBlockObject(host_id=host_id,
+        temp = obnamlib.obj.HostBlockObject(host_id=host_id,
                                          gen_ids=["pink", "pretty"])
-        obnam.io.upload_host_block(context, temp.encode())
+        obnamlib.io.upload_host_block(context, temp.encode())
         
         host = self.app.load_host()
         self.failUnlessEqual(host.get_generation_ids(), ["pink", "pretty"])
@@ -124,11 +124,11 @@ class ApplicationMakeFileGroupsTests(unittest.TestCase):
         return list
 
     def setUp(self):
-        context = obnam.context.Context()
-        self.app = obnam.Application(context)
+        context = obnamlib.context.Context()
+        self.app = obnamlib.Application(context)
         
         self.tempdir = tempfile.mkdtemp()
-        self.tempfiles = self.make_tempfiles(obnam.app.MAX_PER_FILEGROUP + 1)
+        self.tempfiles = self.make_tempfiles(obnamlib.app.MAX_PER_FILEGROUP + 1)
         
     def tearDown(self):
         shutil.rmtree(self.tempdir)
@@ -141,11 +141,11 @@ class ApplicationMakeFileGroupsTests(unittest.TestCase):
         self.failUnlessEqual(len(self.app.make_filegroups(filenames)), 1)
 
     def testReturnsOneFileGroupForMaxFilesPerGroup(self):
-        filenames = self.tempfiles[:obnam.app.MAX_PER_FILEGROUP]
+        filenames = self.tempfiles[:obnamlib.app.MAX_PER_FILEGROUP]
         self.failUnlessEqual(len(self.app.make_filegroups(filenames)), 1)
 
     def testReturnsTwoFileGroupsForMaxFilesPerGroupPlusOne(self):
-        filenames = self.tempfiles[:obnam.app.MAX_PER_FILEGROUP + 1]
+        filenames = self.tempfiles[:obnamlib.app.MAX_PER_FILEGROUP + 1]
         self.failUnlessEqual(len(self.app.make_filegroups(filenames)), 2)
 
     def testUsesJustBasenames(self):
@@ -157,16 +157,16 @@ class ApplicationMakeFileGroupsTests(unittest.TestCase):
 class ApplicationUnchangedFileRecognitionTests(unittest.TestCase):
 
     def setUp(self):
-        context = obnam.context.Context()
-        self.app = obnam.Application(context)
+        context = obnamlib.context.Context()
+        self.app = obnamlib.Application(context)
 
     def testSameFileWhenStatIsIdentical(self):
-        st = obnam.utils.make_stat_result()
+        st = obnamlib.utils.make_stat_result()
         self.failUnless(self.app.file_is_unchanged(st, st))
 
     def testSameFileWhenIrrelevantFieldsChange(self):
-        st1 = obnam.utils.make_stat_result()
-        st2 = obnam.utils.make_stat_result(st_ino=42,
+        st1 = obnamlib.utils.make_stat_result()
+        st2 = obnamlib.utils.make_stat_result(st_ino=42,
                                            st_atime=42,
                                            st_blocks=42,
                                            st_blksize=42,
@@ -174,50 +174,50 @@ class ApplicationUnchangedFileRecognitionTests(unittest.TestCase):
         self.failUnless(self.app.file_is_unchanged(st1, st2))
 
     def testChangedFileWhenDevChanges(self):
-        st1 = obnam.utils.make_stat_result()
-        st2 = obnam.utils.make_stat_result(st_dev=42)
+        st1 = obnamlib.utils.make_stat_result()
+        st2 = obnamlib.utils.make_stat_result(st_dev=42)
         self.failIf(self.app.file_is_unchanged(st1, st2))
 
     def testChangedFileWhenModeChanges(self):
-        st1 = obnam.utils.make_stat_result()
-        st2 = obnam.utils.make_stat_result(st_mode=42)
+        st1 = obnamlib.utils.make_stat_result()
+        st2 = obnamlib.utils.make_stat_result(st_mode=42)
         self.failIf(self.app.file_is_unchanged(st1, st2))
 
     def testChangedFileWhenNlinkChanges(self):
-        st1 = obnam.utils.make_stat_result()
-        st2 = obnam.utils.make_stat_result(st_nlink=42)
+        st1 = obnamlib.utils.make_stat_result()
+        st2 = obnamlib.utils.make_stat_result(st_nlink=42)
         self.failIf(self.app.file_is_unchanged(st1, st2))
 
     def testChangedFileWhenUidChanges(self):
-        st1 = obnam.utils.make_stat_result()
-        st2 = obnam.utils.make_stat_result(st_uid=42)
+        st1 = obnamlib.utils.make_stat_result()
+        st2 = obnamlib.utils.make_stat_result(st_uid=42)
         self.failIf(self.app.file_is_unchanged(st1, st2))
 
     def testChangedFileWhenGidChanges(self):
-        st1 = obnam.utils.make_stat_result()
-        st2 = obnam.utils.make_stat_result(st_gid=42)
+        st1 = obnamlib.utils.make_stat_result()
+        st2 = obnamlib.utils.make_stat_result(st_gid=42)
         self.failIf(self.app.file_is_unchanged(st1, st2))
 
     def testChangedFileWhenSizeChanges(self):
-        st1 = obnam.utils.make_stat_result()
-        st2 = obnam.utils.make_stat_result(st_size=42)
+        st1 = obnamlib.utils.make_stat_result()
+        st2 = obnamlib.utils.make_stat_result(st_size=42)
         self.failIf(self.app.file_is_unchanged(st1, st2))
 
     def testChangedFileWhenMtimeChanges(self):
-        st1 = obnam.utils.make_stat_result()
-        st2 = obnam.utils.make_stat_result(st_mtime=42)
+        st1 = obnamlib.utils.make_stat_result()
+        st2 = obnamlib.utils.make_stat_result(st_mtime=42)
         self.failIf(self.app.file_is_unchanged(st1, st2))
 
 
 class ApplicationUnchangedFileGroupTests(unittest.TestCase):
 
     def setUp(self):
-        context = obnam.context.Context()
-        self.app = obnam.Application(context)
+        context = obnamlib.context.Context()
+        self.app = obnamlib.Application(context)
         self.dir = "dirname"
         self.stats = {
-            "dirname/pink": obnam.utils.make_stat_result(st_mtime=42),
-            "dirname/pretty": obnam.utils.make_stat_result(st_mtime=105),
+            "dirname/pink": obnamlib.utils.make_stat_result(st_mtime=42),
+            "dirname/pretty": obnamlib.utils.make_stat_result(st_mtime=105),
         }
 
     def mock_stat(self, filename):
@@ -225,7 +225,7 @@ class ApplicationUnchangedFileGroupTests(unittest.TestCase):
         return self.stats[filename]
 
     def mock_filegroup(self, filenames):
-        fg = obnam.obj.FileGroupObject(id=obnam.obj.object_id_new())
+        fg = obnamlib.obj.FileGroupObject(id=obnamlib.obj.object_id_new())
         for filename in filenames:
             st = self.mock_stat(os.path.join(self.dir, filename))
             fg.add_file(filename, st, None, None, None)
@@ -241,7 +241,7 @@ class ApplicationUnchangedFileGroupTests(unittest.TestCase):
     def testChangedFileGroupWhenFileHasChanged(self):
         filenames = ["pink", "pretty"]
         fg = self.mock_filegroup(filenames)
-        self.stats["dirname/pink"] = obnam.utils.make_stat_result(st_mtime=1)
+        self.stats["dirname/pink"] = obnamlib.utils.make_stat_result(st_mtime=1)
         self.failIf(self.app.filegroup_is_unchanged(self.dir, fg, filenames,
                                                     stat=self.mock_stat))
 
@@ -256,13 +256,13 @@ class ApplicationUnchangedFileGroupTests(unittest.TestCase):
 class ApplicationUnchangedDirTests(unittest.TestCase):
 
     def setUp(self):
-        context = obnam.context.Context()
-        self.app = obnam.Application(context)
+        context = obnamlib.context.Context()
+        self.app = obnamlib.Application(context)
 
     def make_dir(self, name, dirrefs, filegrouprefs, stat=None):
         if stat is None:
-            stat = obnam.utils.make_stat_result()
-        return obnam.obj.DirObject(id=obnam.obj.object_id_new(),
+            stat = obnamlib.utils.make_stat_result()
+        return obnamlib.obj.DirObject(id=obnamlib.obj.object_id_new(),
                                    name=name,
                                    stat=stat,
                                    dirrefs=dirrefs,
@@ -298,7 +298,7 @@ class ApplicationUnchangedDirTests(unittest.TestCase):
         self.failIf(self.app.dir_is_unchanged(dir1, dir2))
 
     def testSameDirWhenIrrelevantStatFieldsHaveChanged(self):
-        stat = obnam.utils.make_stat_result(st_ino=42,
+        stat = obnamlib.utils.make_stat_result(st_ino=42,
                                             st_atime=42,
                                             st_blocks=42,
                                             st_blksize=42,
@@ -311,55 +311,55 @@ class ApplicationUnchangedDirTests(unittest.TestCase):
     def testChangedDirWhenDevHasChanged(self):
         dir1 = self.make_dir("name1", [], [])
         dir2 = self.make_dir("name2", [], [],
-                             stat=obnam.utils.make_stat_result(st_dev=105))
+                             stat=obnamlib.utils.make_stat_result(st_dev=105))
         self.failIf(self.app.dir_is_unchanged(dir1, dir2))
 
     def testChangedDirWhenModeHasChanged(self):
         dir1 = self.make_dir("name1", [], [])
         dir2 = self.make_dir("name2", [], [],
-                             stat=obnam.utils.make_stat_result(st_mode=105))
+                             stat=obnamlib.utils.make_stat_result(st_mode=105))
         self.failIf(self.app.dir_is_unchanged(dir1, dir2))
 
     def testChangedDirWhenNlinkHasChanged(self):
         dir1 = self.make_dir("name1", [], [])
         dir2 = self.make_dir("name2", [], [],
-                             stat=obnam.utils.make_stat_result(st_nlink=105))
+                             stat=obnamlib.utils.make_stat_result(st_nlink=105))
         self.failIf(self.app.dir_is_unchanged(dir1, dir2))
 
     def testChangedDirWhenUidHasChanged(self):
         dir1 = self.make_dir("name1", [], [])
         dir2 = self.make_dir("name2", [], [],
-                             stat=obnam.utils.make_stat_result(st_uid=105))
+                             stat=obnamlib.utils.make_stat_result(st_uid=105))
         self.failIf(self.app.dir_is_unchanged(dir1, dir2))
 
     def testChangedDirWhenGidHasChanged(self):
         dir1 = self.make_dir("name1", [], [])
         dir2 = self.make_dir("name2", [], [],
-                             stat=obnam.utils.make_stat_result(st_gid=105))
+                             stat=obnamlib.utils.make_stat_result(st_gid=105))
         self.failIf(self.app.dir_is_unchanged(dir1, dir2))
 
     def testChangedDirWhenSizeHasChanged(self):
         dir1 = self.make_dir("name1", [], [])
         dir2 = self.make_dir("name2", [], [],
-                             stat=obnam.utils.make_stat_result(st_size=105))
+                             stat=obnamlib.utils.make_stat_result(st_size=105))
         self.failIf(self.app.dir_is_unchanged(dir1, dir2))
 
     def testChangedDirWhenMtimeHasChanged(self):
         dir1 = self.make_dir("name1", [], [])
         dir2 = self.make_dir("name2", [], [],
-                             stat=obnam.utils.make_stat_result(st_mtime=105))
+                             stat=obnamlib.utils.make_stat_result(st_mtime=105))
         self.failIf(self.app.dir_is_unchanged(dir1, dir2))
 
 
 class ApplicationFindUnchangedFilegroupsTests(unittest.TestCase):
 
     def setUp(self):
-        context = obnam.context.Context()
-        self.app = obnam.Application(context)
+        context = obnamlib.context.Context()
+        self.app = obnamlib.Application(context)
         self.dirname = "dirname"
         self.stats = {
-            "dirname/pink": obnam.utils.make_stat_result(st_mtime=42),
-            "dirname/pretty": obnam.utils.make_stat_result(st_mtime=105),
+            "dirname/pink": obnamlib.utils.make_stat_result(st_mtime=42),
+            "dirname/pretty": obnamlib.utils.make_stat_result(st_mtime=105),
         }
         self.names = ["pink", "pretty"]
         self.pink = self.mock_filegroup(["pink"])
@@ -367,7 +367,7 @@ class ApplicationFindUnchangedFilegroupsTests(unittest.TestCase):
         self.groups = [self.pink, self.pretty]
 
     def mock_filegroup(self, filenames):
-        fg = obnam.obj.FileGroupObject(id=obnam.obj.object_id_new())
+        fg = obnamlib.obj.FileGroupObject(id=obnamlib.obj.object_id_new())
         for filename in filenames:
             st = self.mock_stat(os.path.join(self.dirname, filename))
             fg.add_file(filename, st, None, None, None)
@@ -388,11 +388,11 @@ class ApplicationFindUnchangedFilegroupsTests(unittest.TestCase):
         self.failUnlessEqual(self.find(self.groups, []), [])
 
     def testReturnsPinkGroupWhenPrettyIsChanged(self):
-        self.stats["dirname/pretty"] = obnam.utils.make_stat_result()
+        self.stats["dirname/pretty"] = obnamlib.utils.make_stat_result()
         self.failUnlessEqual(self.find(self.groups, self.names), [self.pink])
 
     def testReturnsPrettyGroupWhenPinkIsChanged(self):
-        self.stats["dirname/pink"] = obnam.utils.make_stat_result()
+        self.stats["dirname/pink"] = obnamlib.utils.make_stat_result()
         self.failUnlessEqual(self.find(self.groups, self.names), [self.pretty])
 
     def testReturnsPinkAndPrettyWhenBothAreUnchanged(self):
@@ -400,8 +400,8 @@ class ApplicationFindUnchangedFilegroupsTests(unittest.TestCase):
                              set(self.groups))
 
     def testReturnsEmptyListWhenEverythingIsChanged(self):
-        self.stats["dirname/pink"] = obnam.utils.make_stat_result()
-        self.stats["dirname/pretty"] = obnam.utils.make_stat_result()
+        self.stats["dirname/pink"] = obnamlib.utils.make_stat_result()
+        self.stats["dirname/pretty"] = obnamlib.utils.make_stat_result()
         self.failUnlessEqual(self.find(self.groups, self.names), [])
 
 
@@ -411,15 +411,15 @@ class ApplicationGetDirInPreviousGenerationTests(unittest.TestCase):
     
         def __init__(self):
             self.dict = {
-                "pink": obnam.obj.DirObject(id="id", name="pink"),
+                "pink": obnamlib.obj.DirObject(id="id", name="pink"),
             }
     
         def lookup_dir(self, gen, pathname):
             return self.dict.get(pathname, None)
 
     def setUp(self):
-        context = obnam.context.Context()
-        self.app = obnam.Application(context)
+        context = obnamlib.context.Context()
+        self.app = obnamlib.Application(context)
         self.app._store = self.MockStore()
         self.app.set_previous_generation("prevgen")
 
@@ -438,15 +438,15 @@ class ApplicationGetFileInPreviousGenerationTests(unittest.TestCase):
     
         def __init__(self):
             self.dict = {
-                "pink": obnam.cmp.Component(obnam.cmp.FILE, [])
+                "pink": obnamlib.cmp.Component(obnamlib.cmp.FILE, [])
             }
     
         def lookup_file(self, gen, pathname):
             return self.dict.get(pathname, None)
 
     def setUp(self):
-        context = obnam.context.Context()
-        self.app = obnam.Application(context)
+        context = obnamlib.context.Context()
+        self.app = obnamlib.Application(context)
         self.app._store = self.MockStore()
         self.app.set_previous_generation("prevgen")
 
@@ -461,7 +461,7 @@ class ApplicationGetFileInPreviousGenerationTests(unittest.TestCase):
 
     def testReturnsFileComponentIfFileDidExist(self):
         cmp = self.app.get_file_in_previous_generation("pink")
-        self.failUnlessEqual(cmp.get_kind(), obnam.cmp.FILE)
+        self.failUnlessEqual(cmp.get_kind(), obnamlib.cmp.FILE)
 
 
 class ApplicationSelectFilesToBackUpTests(unittest.TestCase):
@@ -480,22 +480,22 @@ class ApplicationSelectFilesToBackUpTests(unittest.TestCase):
     def setUp(self):
         self.dirname = "dirname"
         self.stats = {
-            "dirname/pink": obnam.utils.make_stat_result(st_mtime=42),
-            "dirname/pretty": obnam.utils.make_stat_result(st_mtime=105),
+            "dirname/pink": obnamlib.utils.make_stat_result(st_mtime=42),
+            "dirname/pretty": obnamlib.utils.make_stat_result(st_mtime=105),
         }
         self.names = ["pink", "pretty"]
         self.pink = self.mock_filegroup(["pink"])
         self.pretty = self.mock_filegroup(["pretty"])
         self.groups = [self.pink, self.pretty]
 
-        self.dir = obnam.obj.DirObject(id="id", name=self.dirname,
+        self.dir = obnamlib.obj.DirObject(id="id", name=self.dirname,
                                        filegrouprefs=[x.get_id() 
                                                       for x in self.groups])
 
         store = self.MockStore(self.groups + [self.dir])
 
-        context = obnam.context.Context()
-        self.app = obnam.Application(context)
+        context = obnamlib.context.Context()
+        self.app = obnamlib.Application(context)
         self.app._store = store
         self.app.get_dir_in_previous_generation = self.mock_get_dir_in_prevgen
 
@@ -506,7 +506,7 @@ class ApplicationSelectFilesToBackUpTests(unittest.TestCase):
             return None
 
     def mock_filegroup(self, filenames):
-        fg = obnam.obj.FileGroupObject(id=obnam.obj.object_id_new())
+        fg = obnamlib.obj.FileGroupObject(id=obnamlib.obj.object_id_new())
         for filename in filenames:
             st = self.mock_stat(os.path.join(self.dirname, filename))
             fg.add_file(filename, st, None, None, None)
@@ -524,12 +524,12 @@ class ApplicationSelectFilesToBackUpTests(unittest.TestCase):
         self.failUnlessEqual(self.select(), ([], self.names))
 
     def testReturnsNoOldGroupsIfEverythingIsChanged(self):
-        self.stats["dirname/pink"] = obnam.utils.make_stat_result()
-        self.stats["dirname/pretty"] = obnam.utils.make_stat_result()
+        self.stats["dirname/pink"] = obnamlib.utils.make_stat_result()
+        self.stats["dirname/pretty"] = obnamlib.utils.make_stat_result()
         self.failUnlessEqual(self.select(), ([], self.names))
 
     def testReturnsOneGroupAndOneFileWhenJustOneIsChanged(self):
-        self.stats["dirname/pink"] = obnam.utils.make_stat_result()
+        self.stats["dirname/pink"] = obnamlib.utils.make_stat_result()
         self.failUnlessEqual(self.select(), ([self.pretty], ["pink"]))
 
     def testReturnsBothGroupsWhenNothingIsChanged(self):
@@ -539,32 +539,32 @@ class ApplicationSelectFilesToBackUpTests(unittest.TestCase):
 class ApplicationFindFileByNameTests(unittest.TestCase):
 
     def setUp(self):
-        context = obnam.context.Context()
-        self.app = obnam.Application(context)
+        context = obnamlib.context.Context()
+        self.app = obnamlib.Application(context)
 
     def testFindsFileInfoInFilelistFromPreviousGeneration(self):
-        stat = obnam.utils.make_stat_result()
-        fc = obnam.filelist.create_file_component_from_stat("pink", stat,
+        stat = obnamlib.utils.make_stat_result()
+        fc = obnamlib.filelist.create_file_component_from_stat("pink", stat,
                                                             "contref",
                                                             "sigref",
                                                             "deltaref")
-        filelist = obnam.filelist.Filelist()
+        filelist = obnamlib.filelist.Filelist()
         filelist.add_file_component("pink", fc)
         self.app.set_prevgen_filelist(filelist)
         file = self.app.find_file_by_name("pink")
         self.failUnlessEqual(
-            obnam.cmp.parse_stat_component(
-                file.first_by_kind(obnam.cmp.STAT)), 
+            obnamlib.cmp.parse_stat_component(
+                file.first_by_kind(obnamlib.cmp.STAT)), 
             stat)
-        self.failUnlessEqual(file.first_string_by_kind(obnam.cmp.CONTREF),
+        self.failUnlessEqual(file.first_string_by_kind(obnamlib.cmp.CONTREF),
                              "contref")
-        self.failUnlessEqual(file.first_string_by_kind(obnam.cmp.SIGREF),
+        self.failUnlessEqual(file.first_string_by_kind(obnamlib.cmp.SIGREF),
                              "sigref")
-        self.failUnlessEqual(file.first_string_by_kind(obnam.cmp.DELTAREF),
+        self.failUnlessEqual(file.first_string_by_kind(obnamlib.cmp.DELTAREF),
                              "deltaref")
 
     def testFindsNoFileInfoInFilelistForNonexistingFile(self):
-        filelist = obnam.filelist.Filelist()
+        filelist = obnamlib.filelist.Filelist()
         self.app.set_prevgen_filelist(filelist)
         self.failUnlessEqual(self.app.find_file_by_name("pink"), None)
 
@@ -578,12 +578,12 @@ class ApplicationBackupsOneDirectoryTests(unittest.TestCase):
         file(self.abs(name), "w").close()
 
     def make_dirobject(self, relative_name):
-        return obnam.obj.DirObject(id=obnam.obj.object_id_new(),
+        return obnamlib.obj.DirObject(id=obnamlib.obj.object_id_new(),
                                    name=self.abs(relative_name))
 
     def setUp(self):
-        context = obnam.context.Context()
-        self.app = obnam.Application(context)
+        context = obnamlib.context.Context()
+        self.app = obnamlib.Application(context)
         self.dirname = tempfile.mkdtemp()
 
     def tearDown(self):
@@ -606,7 +606,7 @@ class ApplicationBackupsOneDirectoryTests(unittest.TestCase):
         self.failUnlessEqual(dir.get_filegrouprefs(), [])
 
     def _filegroups(self, file_count):
-        max = obnam.app.MAX_PER_FILEGROUP
+        max = obnamlib.app.MAX_PER_FILEGROUP
         return (file_count + max - 1) / max
 
     def testWithCorrectNumberOfFilegrouprefsWhenSomeAreGiven(self):
@@ -666,8 +666,8 @@ class ApplicationBackupOneRootTests(unittest.TestCase):
         return dict
 
     def setUp(self):
-        context = obnam.context.Context()
-        self.app = obnam.Application(context)
+        context = obnamlib.context.Context()
+        self.app = obnamlib.Application(context)
         self.real_backup_one_dir = self.app.backup_one_dir
         self.app.backup_one_dir = self.mock_backup_one_dir
         self.dirs_walked = []
@@ -681,13 +681,13 @@ class ApplicationBackupOneRootTests(unittest.TestCase):
         shutil.rmtree(self.dirname)
 
     def testRaisesErrorForNonDirectory(self):
-        self.failUnlessRaises(obnam.ObnamException,
+        self.failUnlessRaises(obnamlib.ObnamException,
                               self.app.backup_one_root,
                               self.abs("file0"))
 
     def testReturnsDirObject(self):
         ret = self.app.backup_one_root(self.dirname)
-        self.failUnless(isinstance(ret, obnam.obj.DirObject))
+        self.failUnless(isinstance(ret, obnamlib.obj.DirObject))
 
     def testWalksToTheRightDirectories(self):
         self.app.backup_one_root(self.dirname)
@@ -730,8 +730,8 @@ class ApplicationBackupTests(unittest.TestCase):
         self.dirname = tempfile.mkdtemp()
         self.mktree(self._tree)
         self.roots_backed_up = []
-        context = obnam.context.Context()
-        self.app = obnam.Application(context)
+        context = obnamlib.context.Context()
+        self.app = obnamlib.Application(context)
         self.real_backup_one_root = self.app.backup_one_root
         self.app.backup_one_root = self.mock_backup_one_root
 
@@ -742,7 +742,7 @@ class ApplicationBackupTests(unittest.TestCase):
 
     def testReturnsGenerationObject(self):
         ret = self.app.backup([self.abs("pink"), self.abs("pretty")])
-        self.failUnless(isinstance(ret, obnam.obj.GenerationObject))
+        self.failUnless(isinstance(ret, obnamlib.obj.GenerationObject))
 
     def testReturnsGenerationWithTheRightRootObjects(self):
         gen = self.app.backup([self.abs("pink"), self.abs("pretty")])

@@ -24,7 +24,7 @@ import re
 import stat
 import time
 
-import obnam
+import obnamlib
 
 
 
@@ -42,7 +42,7 @@ class Application:
         self._exclusion_regexps = []
         self._filelist = None
         self._prev_gen = None
-        self._store = obnam.Store(self._context)
+        self._store = obnamlib.Store(self._context)
         self._total = 0
         
         # When we traverse the file system tree while making a backup,
@@ -89,7 +89,7 @@ class Application:
     def prune(self, dirname, dirnames, filenames):
         """Remove excluded items from dirnames and filenames.
         
-        Because this is called by obnam.walk.depth_first, the lists
+        Because this is called by obnamlib.walk.depth_first, the lists
         are modified in place.
         
         """
@@ -105,7 +105,7 @@ class Application:
         
         """
 
-        dirname = obnam.io.unsolve(self._context, dirname)
+        dirname = obnamlib.io.unsolve(self._context, dirname)
 
         i = 0
         while i < len(basenames):
@@ -218,9 +218,9 @@ class Application:
         """
 
         logging.debug("Computing rsync signature for %s" % filename)
-        sigdata = obnam.rsync.compute_signature(self._context, filename)
-        id = obnam.obj.object_id_new()
-        sig = obnam.obj.SignatureObject(id=id, sigdata=sigdata)
+        sigdata = obnamlib.rsync.compute_signature(self._context, filename)
+        id = obnamlib.obj.object_id_new()
+        sig = obnamlib.obj.SignatureObject(id=id, sigdata=sigdata)
         self.get_store().queue_object(sig)
         return sig
 
@@ -266,30 +266,30 @@ class Application:
 
     def _reuse_existing(self, old_file):
         logging.debug("Re-using existing file contents: %s" %
-                      old_file.first_string_by_kind(obnam.cmp.FILENAME))
-        return (old_file.first_string_by_kind(obnam.cmp.CONTREF),
-                old_file.first_string_by_kind(obnam.cmp.SIGREF),
-                old_file.first_string_by_kind(obnam.cmp.DELTAREF))
+                      old_file.first_string_by_kind(obnamlib.cmp.FILENAME))
+        return (old_file.first_string_by_kind(obnamlib.cmp.CONTREF),
+                old_file.first_string_by_kind(obnamlib.cmp.SIGREF),
+                old_file.first_string_by_kind(obnamlib.cmp.DELTAREF))
 
     def _get_old_sig(self, old_file):
-        old_sigref = old_file.first_string_by_kind(obnam.cmp.SIGREF)
+        old_sigref = old_file.first_string_by_kind(obnamlib.cmp.SIGREF)
         if not old_sigref:
             return None
         old_sig = self.get_store().get_object(old_sigref)
         if not old_sig:
             return None
-        return old_sig.first_string_by_kind(obnam.cmp.SIGDATA)
+        return old_sig.first_string_by_kind(obnamlib.cmp.SIGDATA)
 
     def _compute_delta(self, old_file, filename):
         old_sig_data = self._get_old_sig(old_file)
         if old_sig_data:
             logging.debug("Computing delta for %s" % filename)
-            old_contref = old_file.first_string_by_kind(obnam.cmp.CONTREF)
-            old_deltaref = old_file.first_string_by_kind(obnam.cmp.DELTAREF)
-            deltapart_ids = obnam.rsync.compute_delta(self.get_context(),
+            old_contref = old_file.first_string_by_kind(obnamlib.cmp.CONTREF)
+            old_deltaref = old_file.first_string_by_kind(obnamlib.cmp.DELTAREF)
+            deltapart_ids = obnamlib.rsync.compute_delta(self.get_context(),
                                                       old_sig_data, filename)
-            delta_id = obnam.obj.object_id_new()
-            delta = obnam.obj.DeltaObject(id=delta_id, 
+            delta_id = obnamlib.obj.object_id_new()
+            delta = obnamlib.obj.DeltaObject(id=delta_id, 
                                           deltapart_refs=deltapart_ids, 
                                           cont_ref=old_contref, 
                                           delta_ref=old_deltaref)
@@ -305,7 +305,7 @@ class Application:
 
     def _backup_new(self, filename):
         logging.debug("Storing new file %s" % filename)
-        contref = obnam.io.create_file_contents_object(self._context, 
+        contref = obnamlib.io.create_file_contents_object(self._context, 
                                                        filename)
         sig = self.compute_signature(filename)
         sigref = sig.get_id()
@@ -318,11 +318,11 @@ class Application:
         self._context.progress.update_current_action(filename)
         st = os.lstat(filename)
         if stat.S_ISREG(st.st_mode):
-            unsolved = obnam.io.unsolve(self.get_context(), filename)
+            unsolved = obnamlib.io.unsolve(self.get_context(), filename)
             old_file = self.get_file_in_previous_generation(unsolved)
             if old_file:
-                old_st = old_file.first_by_kind(obnam.cmp.STAT)
-                old_st = obnam.cmp.parse_stat_component(old_st)
+                old_st = old_file.first_by_kind(obnamlib.cmp.STAT)
+                old_st = obnamlib.cmp.parse_stat_component(old_st)
                 if self.file_is_unchanged(old_st, st):
                     contref, sigref, deltaref = self._reuse_existing(old_file)
                 else:
@@ -347,8 +347,8 @@ class Application:
         for filename in filenames:
             if (not list or
                 len(list[-1].get_files()) >= MAX_PER_FILEGROUP):
-                id = obnam.obj.object_id_new()
-                list.append(obnam.obj.FileGroupObject(id=id))
+                id = obnamlib.obj.object_id_new()
+                list.append(obnamlib.obj.FileGroupObject(id=id))
             self.add_to_filegroup(list[-1], filename)
                 
         self.get_store().queue_objects(list)
@@ -378,7 +378,7 @@ class Application:
         
         """
 
-        unsolved = obnam.io.unsolve(self.get_context(), dirname)
+        unsolved = obnamlib.io.unsolve(self.get_context(), dirname)
         logging.debug("Selecting files to backup in %s (unsolved)" % unsolved)
         logging.debug("There are %d filenames currently" % len(filenames)) 
                
@@ -403,7 +403,7 @@ class Application:
     def backup_one_dir(self, dirname, subdirs, filenames, is_root=False):
         """Back up non-recursively one directory.
         
-        Return obnam.obj.DirObject that refers to the directory.
+        Return obnamlib.obj.DirObject that refers to the directory.
         
         subdirs is the list of subdirectories (as DirObject) for this
         directory.
@@ -428,16 +428,16 @@ class Application:
         assert basename
         logging.debug("Creating DirObject, basename: %s" % basename)
         if is_root:
-            name = obnam.io.unsolve(self.get_context(), dirname)
+            name = obnamlib.io.unsolve(self.get_context(), dirname)
         else:
             name = basename
-        dir = obnam.obj.DirObject(id=obnam.obj.object_id_new(),
+        dir = obnamlib.obj.DirObject(id=obnamlib.obj.object_id_new(),
                                   name=name,
                                   stat=os.lstat(dirname),
                                   dirrefs=dirrefs,
                                   filegrouprefs=filegrouprefs)
 
-        unsolved = obnam.io.unsolve(self.get_context(), dirname)
+        unsolved = obnamlib.io.unsolve(self.get_context(), dirname)
         old_dir = self.get_dir_in_previous_generation(unsolved)
         if old_dir and self.dir_is_unchanged(old_dir, dir):
             logging.debug("Dir is unchanged: %s" % dirname)
@@ -452,17 +452,17 @@ class Application:
 
         logging.debug("Backing up root %s" % root)
         
-        resolved = obnam.io.resolve(self._context, root)
+        resolved = obnamlib.io.resolve(self._context, root)
         logging.debug("Root resolves to %s" % resolved)
         
         if not os.path.isdir(resolved):
-            raise obnam.ObnamException("Not a directory: %s" % root)
+            raise obnamlib.ObnamException("Not a directory: %s" % root)
             # FIXME: This needs to be able to handle non-directories, too!
         
         subdirs_for_dir = {}
         root_object = None
         
-        for tuple in obnam.walk.depth_first(resolved, prune=self.prune):
+        for tuple in obnamlib.walk.depth_first(resolved, prune=self.prune):
             dirname, dirnames, filenames = tuple
             filenames.sort()
             logging.debug("Walked to directory %s" % dirname)
@@ -504,7 +504,7 @@ class Application:
         end = int(time.time())
 
         dirrefs = [o.get_id() for o in root_objs]
-        gen = obnam.obj.GenerationObject(id=obnam.obj.object_id_new(),
+        gen = obnamlib.obj.GenerationObject(id=obnamlib.obj.object_id_new(),
                                          dirrefs=dirrefs, start=start,
                                          end=end)
         self.get_store().queue_object(gen)

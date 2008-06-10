@@ -15,7 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-"""Unit tests for obnam.walk."""
+"""Unit tests for obnamlib.walk."""
 
 
 import os
@@ -23,7 +23,7 @@ import shutil
 import tempfile
 import unittest
 
-import obnam
+import obnamlib
 
 
 class DepthFirstTests(unittest.TestCase):
@@ -40,7 +40,7 @@ class DepthFirstTests(unittest.TestCase):
         shutil.rmtree(self.root)
 
     def testFindsAllDirs(self):
-        dirs = [x[0] for x in obnam.walk.depth_first(self.root)]
+        dirs = [x[0] for x in obnamlib.walk.depth_first(self.root)]
         self.failUnlessEqual(sorted(dirs), sorted(self.dirs))
 
     def prune(self, dirname, dirnames, filenames):
@@ -52,5 +52,5 @@ class DepthFirstTests(unittest.TestCase):
                    for x in self.dirs 
                     if not x.endswith("/foo") and not "/foo/" in x]
         dirs = [x[0] 
-                for x in obnam.walk.depth_first(self.root, prune=self.prune)]
+                for x in obnamlib.walk.depth_first(self.root, prune=self.prune)]
         self.failUnlessEqual(sorted(dirs), sorted(correct))

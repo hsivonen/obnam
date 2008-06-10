@@ -23,7 +23,7 @@ import stat
 import time
 
 
-import obnam
+import obnamlib
 
 
 def permissions(mode):
@@ -103,8 +103,8 @@ def inode_fields(file_component):
              ]
 
     list = []
-    stat_component = file_component.first_by_kind(obnam.cmp.STAT)
-    st = obnam.cmp.parse_stat_component(stat_component)
+    stat_component = file_component.first_by_kind(obnamlib.cmp.STAT)
+    st = obnamlib.cmp.parse_stat_component(stat_component)
     for kind, func in fields:
         list.append(func(st.__getattribute__(kind)))
     return list
@@ -126,7 +126,7 @@ class Listing:
     def __init__(self, context, output_file):
         self._context = context
         self._output = output_file
-        self._get_object = obnam.io.get_object
+        self._get_object = obnamlib.io.get_object
 
     def get_objects(self, refs):
         list = []

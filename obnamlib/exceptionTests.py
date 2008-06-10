@@ -15,15 +15,15 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-"""Unit tests for obnam.exception"""
+"""Unit tests for obnamlib.exception"""
 
 
 import unittest
 
-import obnam
+import obnamlib
 
 
-class SampleException(obnam.ObnamException):
+class SampleException(obnamlib.ObnamException):
 
     def __init__(self, msg):
         self._msg = msg

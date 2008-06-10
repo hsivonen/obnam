@@ -24,10 +24,10 @@ import subprocess
 import tempfile
 
 
-import obnam
+import obnamlib
 
 
-class GpgEncryptionFailure(obnam.ObnamException):
+class GpgEncryptionFailure(obnamlib.ObnamException):
 
     def __init__(self, returncode, stderr):
         self._msg = "GPG failed to encrypt: exit code %d" % returncode
@@ -35,7 +35,7 @@ class GpgEncryptionFailure(obnam.ObnamException):
             self._msg += "\n%s" % indent_string(stderr)
 
 
-class GpgDecryptionFailure(obnam.ObnamException):
+class GpgDecryptionFailure(obnamlib.ObnamException):
 
     def __init__(self, returncode, stderr):
         self._msg = "GPG failed to decrypt: exit code %d" % returncode

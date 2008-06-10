@@ -15,15 +15,15 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-"""A backup operation for Obnam."""
+"""A backup operation for obnamlib."""
 
 
 import logging
 
-import obnam
+import obnamlib
 
 
-class Backup(obnam.Operation):
+class Backup(obnamlib.Operation):
 
     """Backup files the user has specified."""
     
@@ -44,7 +44,7 @@ class Backup(obnam.Operation):
             app.set_previous_generation(prev_gen)
             filelist_id = prev_gen.get_filelistref()
             if filelist_id:
-                filelist = obnam.filelist.Filelist()
+                filelist = obnamlib.filelist.Filelist()
                 o = app.get_store().get_object(filelist_id)
                 filelist.from_object(o)
                 app.set_prevgen_filelist(filelist)

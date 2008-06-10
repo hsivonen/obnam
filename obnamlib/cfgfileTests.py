@@ -15,34 +15,34 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-"""Unit tests for obnam.cfgfile."""
+"""Unit tests for obnamlib.cfgfile."""
 
 
 import StringIO
 import unittest
 
-import obnam
+import obnamlib
 
 
 class ParsingErrorTests(unittest.TestCase):
 
     def testSaysUnnamedFileIfNameIsNone(self):
-        e = obnam.cfgfile.ParsingError(None, 42)
+        e = obnamlib.cfgfile.ParsingError(None, 42)
         self.failUnless("unnamed file" in str(e))
         
     def testIncludesFilenameInMessage(self):
-        e = obnam.cfgfile.ParsingError("pink", 42)
+        e = obnamlib.cfgfile.ParsingError("pink", 42)
         self.failUnless("pink" in str(e))
         
     def testIncludesLineNumberInMessage(self):
-        e = obnam.cfgfile.ParsingError("pink", 42)
+        e = obnamlib.cfgfile.ParsingError("pink", 42)
         self.failUnless("42" in str(e))
 
 
 class SectionTests(unittest.TestCase):
 
     def setUp(self):
-        self.cf = obnam.cfgfile.ConfigFile()
+        self.cf = obnamlib.cfgfile.ConfigFile()
         
     def tearDown(self):
         self.cf = None
@@ -56,7 +56,7 @@ class SectionTests(unittest.TestCase):
         
     def testAddSectionExisting(self):
         self.cf.add_section("foo")
-        self.failUnlessRaises(obnam.cfgfile.DuplicationError,
+        self.failUnlessRaises(obnamlib.cfgfile.DuplicationError,
                               self.cf.add_section,
                               "foo")
 
@@ -91,13 +91,13 @@ class SectionTests(unittest.TestCase):
 class OptionsTests(unittest.TestCase):
 
     def setUp(self):
-        self.cf = obnam.cfgfile.ConfigFile()
+        self.cf = obnamlib.cfgfile.ConfigFile()
         
     def tearDown(self):
         self.cf = None
         
     def testOptionsNonExistentSection(self):
-        self.failUnlessRaises(obnam.cfgfile.NoSectionError,
+        self.failUnlessRaises(obnamlib.cfgfile.NoSectionError,
                               self.cf.options,
                               "foo")
 
@@ -113,7 +113,7 @@ class OptionsTests(unittest.TestCase):
         self.failUnlessEqual(self.cf.options("foo"), sorted(options))
 
     def testHasOptionNonExistingSection(self):
-        self.failUnlessRaises(obnam.cfgfile.NoSectionError,
+        self.failUnlessRaises(obnamlib.cfgfile.NoSectionError,
                               self.cf.has_option,
                               "foo", "bar")
 
@@ -127,18 +127,18 @@ class OptionsTests(unittest.TestCase):
         self.failUnless(self.cf.has_option("foo", "bar"))
 
     def testGetNonExistingSection(self):
-        self.failUnlessRaises(obnam.cfgfile.NoSectionError,
+        self.failUnlessRaises(obnamlib.cfgfile.NoSectionError,
                               self.cf.get,
                               "foo", "bar")
 
     def testGetNonExistingOption(self):
         self.cf.add_section("foo")
-        self.failUnlessRaises(obnam.cfgfile.NoOptionError,
+        self.failUnlessRaises(obnamlib.cfgfile.NoOptionError,
                               self.cf.get,
                               "foo", "bar")
 
     def testSetNonExistingSection(self):
-        self.failUnlessRaises(obnam.cfgfile.NoSectionError,
+        self.failUnlessRaises(obnamlib.cfgfile.NoSectionError,
                               self.cf.set,
                               "foo", "bar", "foobar")
 
@@ -165,7 +165,7 @@ class OptionsTests(unittest.TestCase):
         self.failUnlessEqual(self.cf.getvalues("foo", "bar"), [])
 
     def testAppendNonExistingSection(self):
-        self.failUnlessRaises(obnam.cfgfile.NoSectionError,
+        self.failUnlessRaises(obnamlib.cfgfile.NoSectionError,
                               self.cf.append,
                               "foo", "bar", "foobar")
 
@@ -241,7 +241,7 @@ class OptionsTests(unittest.TestCase):
             self.failUnlessEqual(self.cf.getboolean("foo", "bar"), False)
 
     def testItemsNonExistentSection(self):
-        self.failUnlessRaises(obnam.cfgfile.NoSectionError,
+        self.failUnlessRaises(obnamlib.cfgfile.NoSectionError,
                               self.cf.items,
                               "foo")
 
@@ -262,7 +262,7 @@ class OptionsTests(unittest.TestCase):
                               ("3", ["3", "3"])])
 
     def testRemoveOptionNonExistentSection(self):
-        self.failUnlessRaises(obnam.cfgfile.NoSectionError,
+        self.failUnlessRaises(obnamlib.cfgfile.NoSectionError,
                               self.cf.remove_option,
                               "foo", "bar")
 
@@ -280,7 +280,7 @@ class OptionsTests(unittest.TestCase):
 class WriteTests(unittest.TestCase):
 
     def testSingleValue(self):
-        cf = obnam.cfgfile.ConfigFile()
+        cf = obnamlib.cfgfile.ConfigFile()
         cf.add_section("foo")
         cf.set("foo", "bar", "foobar")
         f = StringIO.StringIO()
@@ -291,7 +291,7 @@ bar = foobar
 """)
 
     def testMultiValue(self):
-        cf = obnam.cfgfile.ConfigFile()
+        cf = obnamlib.cfgfile.ConfigFile()
         cf.add_section("foo")
         cf.append("foo", "bar", "foobar")
         cf.append("foo", "bar", "baz")
@@ -307,7 +307,7 @@ bar += baz
 class ReadTests(unittest.TestCase):
 
     def parse(self, file_contents):
-        cf = obnam.cfgfile.ConfigFile()
+        cf = obnamlib.cfgfile.ConfigFile()
         f = StringIO.StringIO(file_contents)
         cf.readfp(f)
         return cf
@@ -325,7 +325,7 @@ class ReadTests(unittest.TestCase):
         self.failUnlessEqual(cf.sections(), ["bar", "foo"])
 
     def testParsingError(self):
-        self.failUnlessRaises(obnam.cfgfile.ParsingError,
+        self.failUnlessRaises(obnamlib.cfgfile.ParsingError,
                               self.parse, "xxxx")
 
     def testComment(self):
@@ -357,7 +357,7 @@ store = pink
 [backup]
 cache = pretty
 """)
-        cf = obnam.cfgfile.ConfigFile()
+        cf = obnamlib.cfgfile.ConfigFile()
         cf.readfp(f1)
         cf.readfp(f2)
         self.failUnlessEqual(cf.get("backup", "store"), "pink")
@@ -367,14 +367,14 @@ cache = pretty
 class ReadWriteTest(unittest.TestCase):
 
     def test(self):
-        cf = obnam.cfgfile.ConfigFile()
+        cf = obnamlib.cfgfile.ConfigFile()
         cf.add_section("foo")
         cf.append("foo", "bar", "foobar")
         cf.append("foo", "bar", "baz")
         f = StringIO.StringIO()
         cf.write(f)
         f.seek(0, 0)
-        cf2 = obnam.cfgfile.ConfigFile()
+        cf2 = obnamlib.cfgfile.ConfigFile()
         cf2.readfp(f)
         self.failUnlessEqual(cf2.sections(), ["foo"])
         self.failUnlessEqual(cf2.items("foo"), [("bar", ["foobar", "baz"])])

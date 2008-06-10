@@ -20,7 +20,7 @@
 
 import inspect
 
-import obnam
+import obnamlib
 
 
 class Operation:
@@ -65,14 +65,14 @@ class Operation:
         """
 
 
-class NoArguments(obnam.ObnamException):
+class NoArguments(obnamlib.ObnamException):
 
     def __init__(self):
         self._msg = ("Command line argument list is empty. " 
                      "Need at least the operation name.")
 
 
-class OperationNotFound(obnam.ObnamException):
+class OperationNotFound(obnamlib.ObnamException):
 
     def __init__(self, name):
         self._msg = "Unknown operation %s" % name
@@ -86,10 +86,10 @@ class OperationFactory:
         self._app = app
 
     def find_operations(self):
-        """Find operations defined in obnam."""
+        """Find operations defined in obnamlib."""
         list = []
-        for name in dir(obnam):
-            x = getattr(obnam, name)
+        for name in dir(obnamlib):
+            x = getattr(obnamlib, name)
             if inspect.isclass(x) and issubclass(x, Operation):
                 list.append(x)
         return list

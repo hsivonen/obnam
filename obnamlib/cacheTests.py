@@ -15,14 +15,14 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-"""Unit tests for obnam.cache"""
+"""Unit tests for obnamlib.cache"""
 
 
 import os
 import shutil
 import unittest
 
-import obnam
+import obnamlib
 
 
 class CacheBase(unittest.TestCase):
@@ -34,7 +34,7 @@ class CacheBase(unittest.TestCase):
             ("backup", "cache", self.cachedir),
         )
     
-        self.config = obnam.cfgfile.ConfigFile()
+        self.config = obnamlib.cfgfile.ConfigFile()
         for section, item, value in config_list:
             if not self.config.has_section(section):
                 self.config.add_section(section)
@@ -50,14 +50,14 @@ class CacheBase(unittest.TestCase):
 class InitTests(CacheBase):
 
     def testInit(self):
-        cache = obnam.cache.Cache(self.config)
+        cache = obnamlib.cache.Cache(self.config)
         self.failIf(os.path.isdir(self.cachedir))
 
 
 class PutTests(CacheBase):
 
     def testPut(self):
-        cache = obnam.cache.Cache(self.config)
+        cache = obnamlib.cache.Cache(self.config)
         id = "pink"
         block = "pretty"
         cache.put_block(id, block)
@@ -72,7 +72,7 @@ class PutTests(CacheBase):
 class GetTests(CacheBase):
 
     def testGet(self):
-        cache = obnam.cache.Cache(self.config)
+        cache = obnamlib.cache.Cache(self.config)
         id = "pink"
         block = "pretty"
         self.failUnlessEqual(cache.get_block(id), None)

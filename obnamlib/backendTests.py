@@ -15,7 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-"""Unit tests for obnam.backend"""
+"""Unit tests for obnamlib.backend"""
 
 
 import os
@@ -25,7 +25,7 @@ import stat
 import tempfile
 import unittest
 
-import obnam
+import obnamlib
 
 
 class GetDefaultUserTest(unittest.TestCase):
@@ -41,16 +41,16 @@ class GetDefaultUserTest(unittest.TestCase):
 
     def testLogname(self):
         os.environ["LOGNAME"] = "pink"
-        self.failUnlessEqual(obnam.backend.get_default_user(), "pink")
+        self.failUnlessEqual(obnamlib.backend.get_default_user(), "pink")
 
     def testLognameWhenItIsPink(self):
         # Just in case the user's name is "pink"...
         os.environ["LOGNAME"] = "pretty"
-        self.failUnlessEqual(obnam.backend.get_default_user(), "pretty")
+        self.failUnlessEqual(obnamlib.backend.get_default_user(), "pretty")
 
     def testNoLogname(self):
         del os.environ["LOGNAME"]
-        user = obnam.backend.get_default_user()
+        user = obnamlib.backend.get_default_user()
         uid = pwd.getpwnam(user)[2]
         self.failUnlessEqual(uid, os.getuid())
 
@@ -71,7 +71,7 @@ class ParseStoreUrlTests(unittest.TestCase):
             ("sftp://host/~/foo", None, "host", None, "foo"),
         )
         for case in cases:
-            user, host, port, path = obnam.backend.parse_store_url(case[0])
+            user, host, port, path = obnamlib.backend.parse_store_url(case[0])
             self.failUnlessEqual(user, case[1])
             self.failUnlessEqual(host, case[2])
             self.failUnlessEqual(port, case[3])
@@ -81,10 +81,10 @@ class ParseStoreUrlTests(unittest.TestCase):
 class UseGpgTests(unittest.TestCase):
 
     def setUp(self):
-        self.config = obnam.config.default_config()
+        self.config = obnamlib.config.default_config()
         self.config.set("backup", "gpg-encrypt-to", "")
-        self.cache = obnam.cache.Cache(self.config)
-        self.be = obnam.backend.Backend(self.config, self.cache)
+        self.cache = obnamlib.cache.Cache(self.config)
+        self.be = obnamlib.backend.Backend(self.config, self.cache)
 
     def testDoNotUseByDefault(self):
         self.failIf(self.be.use_gpg())
@@ -102,13 +102,13 @@ class UseGpgTests(unittest.TestCase):
 class DircountTests(unittest.TestCase):
 
     def setUp(self):
-        self.config = obnam.config.default_config()
-        self.cache = obnam.cache.Cache(self.config)
-        self.be = obnam.backend.Backend(self.config, self.cache)
+        self.config = obnamlib.config.default_config()
+        self.cache = obnamlib.cache.Cache(self.config)
+        self.be = obnamlib.backend.Backend(self.config, self.cache)
 
     def testInit(self):
-        self.failUnlessEqual(len(self.be.dircounts), obnam.backend.LEVELS)
-        for i in range(obnam.backend.LEVELS):
+        self.failUnlessEqual(len(self.be.dircounts), obnamlib.backend.LEVELS)
+        for i in range(obnamlib.backend.LEVELS):
             self.failUnlessEqual(self.be.dircounts[i], 0)
         
     def testIncrementOnce(self):
@@ -116,10 +116,10 @@ class DircountTests(unittest.TestCase):
         self.failUnlessEqual(self.be.dircounts, [0, 0, 1])
 
     def testIncrementMany(self):
-        for i in range(obnam.backend.MAX_BLOCKS_PER_DIR):
+        for i in range(obnamlib.backend.MAX_BLOCKS_PER_DIR):
             self.be.increment_dircounts()
         self.failUnlessEqual(self.be.dircounts, 
-                             [0, 0, obnam.backend.MAX_BLOCKS_PER_DIR])
+                             [0, 0, obnamlib.backend.MAX_BLOCKS_PER_DIR])
 
         self.be.increment_dircounts()
         self.failUnlessEqual(self.be.dircounts, [0, 1, 0])
@@ -129,7 +129,7 @@ class DircountTests(unittest.TestCase):
 
     def testIncrementTop(self):
         self.be.dircounts = [0] + \
-            [obnam.backend.MAX_BLOCKS_PER_DIR] * (obnam.backend.LEVELS -1)
+            [obnamlib.backend.MAX_BLOCKS_PER_DIR] * (obnamlib.backend.LEVELS -1)
         self.be.increment_dircounts()
         self.failUnlessEqual(self.be.dircounts, [1, 0, 0])
 
@@ -148,11 +148,11 @@ class LocalBackendBase(unittest.TestCase):
             ("backup", "store", self.rootdir)
         )
     
-        self.config = obnam.config.default_config()
+        self.config = obnamlib.config.default_config()
         for section, item, value in config_list:
             self.config.set(section, item, value)
 
-        self.cache = obnam.cache.Cache(self.config)
+        self.cache = obnamlib.cache.Cache(self.config)
 
     def tearDown(self):
         shutil.rmtree(self.cachedir)
@@ -165,14 +165,14 @@ class LocalBackendBase(unittest.TestCase):
 class InitTests(LocalBackendBase):
 
     def testInit(self):
-        be = obnam.backend.init(self.config, self.cache)
+        be = obnamlib.backend.init(self.config, self.cache)
         self.failUnlessEqual(be.url, self.rootdir)
 
 
 class IdTests(LocalBackendBase):
 
     def testGenerateBlockId(self):
-        be = obnam.backend.init(self.config, self.cache)
+        be = obnamlib.backend.init(self.config, self.cache)
         self.failIfEqual(be.blockdir, None)
         id = be.generate_block_id()
         self.failUnless(id.startswith(be.blockdir))
@@ -186,7 +186,7 @@ class UploadTests(LocalBackendBase):
         self.config.set("backup", "gpg-home", "")
         self.config.set("backup", "gpg-encrypt-to", "")
         self.config.set("backup", "gpg-sign-with", "")
-        be = obnam.backend.init(self.config, self.cache)
+        be = obnamlib.backend.init(self.config, self.cache)
         id = be.generate_block_id()
         block = "pink is pretty"
         ret = be.upload_block(id, block, False)
@@ -214,7 +214,7 @@ class UploadTests(LocalBackendBase):
         self.config.set("backup", "gpg-sign-with", "")
         self.config.set("backup", "cache", cachedir)
 
-        be = obnam.backend.init(self.config, self.cache)
+        be = obnamlib.backend.init(self.config, self.cache)
         id = be.generate_block_id()
         block = "pink is pretty"
         ret = be.upload_block(id, block, True)
@@ -228,7 +228,7 @@ class DownloadTests(LocalBackendBase):
         self.config.set("backup", "gpg-encrypt-to", "")
         self.config.set("backup", "gpg-sign-with", "")
 
-        be = obnam.backend.init(self.config, self.cache)
+        be = obnamlib.backend.init(self.config, self.cache)
         id = be.generate_block_id()
         block = "pink is still pretty"
         be.upload_block(id, block, False)
@@ -239,7 +239,7 @@ class DownloadTests(LocalBackendBase):
         self.failUnlessEqual(be.get_bytes_written(), len(block))
         
     def testError(self):
-        be = obnam.backend.init(self.config, self.cache)
+        be = obnamlib.backend.init(self.config, self.cache)
         id = be.generate_block_id()
         self.failUnlessRaises(IOError, be.download_block, id)
 
@@ -251,7 +251,7 @@ class FileListTests(LocalBackendBase):
         self.config.set("backup", "gpg-encrypt-to", "")
         self.config.set("backup", "gpg-sign-with", "")
 
-        be = obnam.backend.init(self.config, self.cache)
+        be = obnamlib.backend.init(self.config, self.cache)
         self.failUnlessEqual(be.list(), [])
         
         id = "pink"
@@ -270,7 +270,7 @@ class FileListTests(LocalBackendBase):
 class RemoveTests(LocalBackendBase):
 
     def test(self):
-        be = obnam.backend.init(self.config, self.cache)
+        be = obnamlib.backend.init(self.config, self.cache)
         id = be.generate_block_id()
         block = "pink is still pretty"
         be.upload_block(id, block, False)

@@ -22,16 +22,16 @@ import logging
 import os
 import stat
 
-import obnam
+import obnamlib
 
 
-class UnknownGeneration(obnam.ObnamException):
+class UnknownGeneration(obnamlib.ObnamException):
 
     def __init__(self, gen_id):
         self._msg = "Can't find generation %s" % gen_id
 
 
-class Restore(obnam.Operation):
+class Restore(obnamlib.Operation):
 
     """Restore specified files (or all) from a specified generation."""
     
@@ -44,8 +44,8 @@ class Restore(obnam.Operation):
     def create_filesystem_object(self, hardlinks, full_pathname, inode):
         context = self.get_application().get_context()
         logging.debug("Creating filesystem object %s" % full_pathname)
-        stat_component = inode.first_by_kind(obnam.cmp.STAT)
-        st = obnam.cmp.parse_stat_component(stat_component)
+        stat_component = inode.first_by_kind(obnamlib.cmp.STAT)
+        st = obnamlib.cmp.parse_stat_component(stat_component)
         mode = st.st_mode
     
         if st.st_nlink > 1 and not stat.S_ISDIR(mode):
@@ -65,12 +65,12 @@ class Restore(obnam.Operation):
             if not os.path.exists(basedir):
                 os.makedirs(basedir, 0700)
             fd = os.open(full_pathname, os.O_WRONLY | os.O_CREAT, 0)
-            cont_id = inode.first_string_by_kind(obnam.cmp.CONTREF)
+            cont_id = inode.first_string_by_kind(obnamlib.cmp.CONTREF)
             if cont_id:
-                obnam.io.copy_file_contents(context, fd, cont_id)
+                obnamlib.io.copy_file_contents(context, fd, cont_id)
             else:
-                delta_id = inode.first_string_by_kind(obnam.cmp.DELTAREF)
-                obnam.io.reconstruct_file_contents(context, fd, delta_id)
+                delta_id = inode.first_string_by_kind(obnamlib.cmp.DELTAREF)
+                obnamlib.io.reconstruct_file_contents(context, fd, delta_id)
             os.close(fd)
 
     def restore_requested(self, files, pathname):
@@ -111,15 +111,15 @@ class Restore(obnam.Operation):
         logging.debug("Fixing permissions")
         list.sort()
         for full_pathname, inode in list:
-            obnam.io.set_inode(full_pathname, inode)
+            obnamlib.io.set_inode(full_pathname, inode)
 
     def restore_from_filelist(self, target, fl, files):
         logging.debug("Restoring files from FILELIST")
         list = []
         hardlinks = {}
 
-        for c in fl.find_by_kind(obnam.cmp.FILE):
-            pathname = c.first_string_by_kind(obnam.cmp.FILENAME)
+        for c in fl.find_by_kind(obnamlib.cmp.FILE):
+            pathname = c.first_string_by_kind(obnamlib.cmp.FILENAME)
     
             if not self.restore_requested(files, pathname):
                 logging.debug("Restore of %s not requested" % pathname)
@@ -134,7 +134,7 @@ class Restore(obnam.Operation):
     def restore_from_filegroups(self, target, hardlinks, list, parent, 
                                 filegrouprefs, files):
         for ref in filegrouprefs:
-            fg = obnam.io.get_object(self.app.get_context(), ref)
+            fg = obnamlib.io.get_object(self.app.get_context(), ref)
             if not fg:
                 logging.warning("Cannot find FILEGROUP object %s" % ref)
             else:
@@ -152,7 +152,7 @@ class Restore(obnam.Operation):
     def restore_from_dirs(self, target, hardlinks, list, parent, dirrefs, 
                           files):
         for ref in dirrefs:
-            dir = obnam.io.get_object(self.app.get_context(), ref)
+            dir = obnamlib.io.get_object(self.app.get_context(), ref)
             if not dir:
                 logging.warning("Cannot find DIR object %s" % ref)
             else:
@@ -160,10 +160,10 @@ class Restore(obnam.Operation):
                 if parent:
                     name = os.path.join(parent, name)
                 if self.restore_requested(files, name):
-                    st = dir.first_by_kind(obnam.cmp.STAT)
-                    st = obnam.cmp.parse_stat_component(st)
+                    st = dir.first_by_kind(obnamlib.cmp.STAT)
+                    st = obnamlib.cmp.parse_stat_component(st)
                     file = \
-                        obnam.filelist.create_file_component_from_stat(
+                        obnamlib.filelist.create_file_component_from_stat(
                             dir.get_name(), st, None, None, None)
                     full_pathname = self.restore_single_item(hardlinks,
                                                              target, name,
@@ -201,7 +201,7 @@ class Restore(obnam.Operation):
         app.get_store().load_content_maps()
     
         logging.debug("Getting generation object")    
-        gen = obnam.io.get_object(context, gen_id)
+        gen = obnamlib.io.get_object(context, gen_id)
         if gen is None:
             raise UnknownGeneration(gen_id)
         
@@ -211,7 +211,7 @@ class Restore(obnam.Operation):
         fl_id = gen.get_filelistref()
         if fl_id:
             logging.debug("Getting list of files in generation")
-            fl = obnam.io.get_object(context, fl_id)
+            fl = obnamlib.io.get_object(context, fl_id)
             if not fl:
                 logging.warning("Cannot find file list object %s" % fl_id)
             else:

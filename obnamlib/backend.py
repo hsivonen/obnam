@@ -27,10 +27,7 @@ import urlparse
 import paramiko
 
 import uuid
-import obnam.cache
-import obnam.cmp
-import obnam.map
-import obnam.obj
+import obnamlib
 
 
 # Block filenames are created using the following scheme:
@@ -169,7 +166,7 @@ class Backend:
         logging.debug("Uploading block %s" % block_id)
         if self.use_gpg():
             logging.debug("Encrypting block %s before upload" % block_id)
-            block = obnam.gpg.encrypt(self.config, block)
+            block = obnamlib.gpg.encrypt(self.config, block)
         logging.debug("Uploading block %s (%d bytes)" % (block_id, len(block)))
         self.progress.update_current_action("Uploading block")
         self.really_upload_block(block_id, block)
@@ -191,7 +188,7 @@ class Backend:
         if self.use_gpg():
             logging.debug("Decrypting downloaded block %s before using it" %
                           block_id)
-            block = obnam.gpg.decrypt(self.config, block)
+            block = obnamlib.gpg.decrypt(self.config, block)
         
         return block
     

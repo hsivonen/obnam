@@ -44,10 +44,10 @@ of ConfigParser. It should otherwise be compatible.
 
 import re
 
-import obnam
+import obnamlib
 
 
-class Error(obnam.ObnamException):
+class Error(obnamlib.ObnamException):
 
     pass
     

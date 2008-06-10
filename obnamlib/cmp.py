@@ -18,7 +18,7 @@
 """Obnam data components"""
 
 
-import obnam
+import obnamlib
 
 
 # Constants for component kinds
@@ -134,7 +134,7 @@ class Component:
     def get_varint_value(self):
         """Return integer value of leaf component"""
         assert self.str is not None
-        return obnam.varint.decode(self.str, 0)[0]
+        return obnamlib.varint.decode(self.str, 0)[0]
 
     def get_subcomponents(self):
         """Return list of subcomponents of composite component"""
@@ -186,8 +186,8 @@ class Component:
             encoded = "".join(snippets)
         else:
             encoded = self.str
-        return "%s%s%s" % (obnam.varint.encode(len(encoded)),
-                           obnam.varint.encode(self.kind),
+        return "%s%s%s" % (obnamlib.varint.encode(len(encoded)),
+                           obnamlib.varint.encode(self.kind),
                            encoded)
 
 
@@ -206,8 +206,8 @@ class Parser:
         if self.pos >= self.end:
             return None
 
-        size, self.pos = obnam.varint.decode(self.encoded, self.pos)
-        kind, self.pos = obnam.varint.decode(self.encoded, self.pos)
+        size, self.pos = obnamlib.varint.decode(self.encoded, self.pos)
+        kind, self.pos = obnamlib.varint.decode(self.encoded, self.pos)
         
         if kind_is_composite(kind):
             parser = Parser(self.encoded, self.pos, self.pos + size)
@@ -269,40 +269,40 @@ def first_varint_by_kind(components, wanted_kind):
 
 def create_stat_component(st):
     """Create a STAT component, given a stat result"""
-    return Component(obnam.cmp.STAT,
-                     obnam.varint.encode(st.st_mode) +
-                     obnam.varint.encode(st.st_ino) +
-                     obnam.varint.encode(st.st_dev) +
-                     obnam.varint.encode(st.st_nlink) +
-                     obnam.varint.encode(st.st_uid) +
-                     obnam.varint.encode(st.st_gid) +
-                     obnam.varint.encode(st.st_size) +
-                     obnam.varint.encode(st.st_atime) +
-                     obnam.varint.encode(st.st_mtime) +
-                     obnam.varint.encode(st.st_ctime) +
-                     obnam.varint.encode(st.st_blocks) +
-                     obnam.varint.encode(st.st_blksize) +
-                     obnam.varint.encode(st.st_rdev))
+    return Component(obnamlib.cmp.STAT,
+                     obnamlib.varint.encode(st.st_mode) +
+                     obnamlib.varint.encode(st.st_ino) +
+                     obnamlib.varint.encode(st.st_dev) +
+                     obnamlib.varint.encode(st.st_nlink) +
+                     obnamlib.varint.encode(st.st_uid) +
+                     obnamlib.varint.encode(st.st_gid) +
+                     obnamlib.varint.encode(st.st_size) +
+                     obnamlib.varint.encode(st.st_atime) +
+                     obnamlib.varint.encode(st.st_mtime) +
+                     obnamlib.varint.encode(st.st_ctime) +
+                     obnamlib.varint.encode(st.st_blocks) +
+                     obnamlib.varint.encode(st.st_blksize) +
+                     obnamlib.varint.encode(st.st_rdev))
 
 
 def parse_stat_component(stat_component):
     """Return an object like a stat result from a decoded stat_component"""
     value = stat_component.get_string_value()
     pos = 0
-    st_mode, pos = obnam.varint.decode(value, pos)
-    st_ino, pos = obnam.varint.decode(value, pos)
-    st_dev, pos = obnam.varint.decode(value, pos)
-    st_nlink, pos = obnam.varint.decode(value, pos)
-    st_uid, pos = obnam.varint.decode(value, pos)
-    st_gid, pos = obnam.varint.decode(value, pos)
-    st_size, pos = obnam.varint.decode(value, pos)
-    st_atime, pos = obnam.varint.decode(value, pos)
-    st_mtime, pos = obnam.varint.decode(value, pos)
-    st_ctime, pos = obnam.varint.decode(value, pos)
-    st_blocks, pos = obnam.varint.decode(value, pos)
-    st_blksize, pos = obnam.varint.decode(value, pos)
-    st_rdev, pos = obnam.varint.decode(value, pos)
-    return obnam.utils.make_stat_result(st_mode=st_mode,
+    st_mode, pos = obnamlib.varint.decode(value, pos)
+    st_ino, pos = obnamlib.varint.decode(value, pos)
+    st_dev, pos = obnamlib.varint.decode(value, pos)
+    st_nlink, pos = obnamlib.varint.decode(value, pos)
+    st_uid, pos = obnamlib.varint.decode(value, pos)
+    st_gid, pos = obnamlib.varint.decode(value, pos)
+    st_size, pos = obnamlib.varint.decode(value, pos)
+    st_atime, pos = obnamlib.varint.decode(value, pos)
+    st_mtime, pos = obnamlib.varint.decode(value, pos)
+    st_ctime, pos = obnamlib.varint.decode(value, pos)
+    st_blocks, pos = obnamlib.varint.decode(value, pos)
+    st_blksize, pos = obnamlib.varint.decode(value, pos)
+    st_rdev, pos = obnamlib.varint.decode(value, pos)
+    return obnamlib.utils.make_stat_result(st_mode=st_mode,
                                         st_ino=st_ino,
                                         st_dev=st_dev,
                                         st_nlink=st_nlink,

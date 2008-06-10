@@ -21,8 +21,7 @@ import logging
 
 import uuid
 
-import obnam.cmp
-import obnam.varint
+import obnamlib
 
 
 # Magic cookie at the beginning of every block
@@ -96,9 +95,9 @@ class StorageObject(object):
 
         if id:
             self.set_id(id)
-        if self.first_varint_by_kind(obnam.cmp.OBJKIND) is None and self.kind:
-            self.add(obnam.cmp.Component(obnam.cmp.OBJKIND,
-                                         obnam.varint.encode(self.kind)))
+        if self.first_varint_by_kind(obnamlib.cmp.OBJKIND) is None and self.kind:
+            self.add(obnamlib.cmp.Component(obnamlib.cmp.OBJKIND,
+                                         obnamlib.varint.encode(self.kind)))
 
     def remove(self, kind):
         """Remove all components of a given kind."""
@@ -116,15 +115,15 @@ class StorageObject(object):
 
     def get_kind(self):
         """Return the kind of an object"""
-        return self.first_varint_by_kind(obnam.cmp.OBJKIND)
+        return self.first_varint_by_kind(obnamlib.cmp.OBJKIND)
 
     def get_id(self):
         """Return the identifier for an object"""
-        return self.first_string_by_kind(obnam.cmp.OBJID)
+        return self.first_string_by_kind(obnamlib.cmp.OBJID)
 
     def set_id(self, id):
         """Set the identifier for this object."""
-        self.replace(obnam.cmp.Component(obnam.cmp.OBJID, id))
+        self.replace(obnamlib.cmp.Component(obnamlib.cmp.OBJID, id))
             
     def get_components(self):
         """Return list of all components in an object"""
@@ -174,7 +173,7 @@ class StorageObject(object):
 # This function is only used during testing.
 def decode(encoded):
     """Decode an object from a string"""
-    parser = obnam.cmp.Parser(encoded)
+    parser = obnamlib.cmp.Parser(encoded)
     list = parser.decode_all()
     return StorageObject(components=list)
 
@@ -209,21 +208,21 @@ class ObjectQueue:
     def as_block(self, blkid):
         """Create a block from an object queue"""
         logging.debug("Creating block %s" % blkid)
-        blkid = obnam.cmp.Component(obnam.cmp.BLKID, blkid)
-        objects = [obnam.cmp.Component(obnam.cmp.OBJECT, x[1]) 
+        blkid = obnamlib.cmp.Component(obnamlib.cmp.BLKID, blkid)
+        objects = [obnamlib.cmp.Component(obnamlib.cmp.OBJECT, x[1]) 
                    for x in self.queue]
         return "".join([BLOCK_COOKIE] + 
                        [c.encode() for c in [blkid] + objects])
 
 
-class BlockWithoutCookie(obnam.ObnamException):
+class BlockWithoutCookie(obnamlib.ObnamException):
 
     def __init__(self, block):
         self._msg = ("Block does not start with cookie: %s" %
                      " ".join("%02x" % ord(c) for c in block[:32]))
 
 
-class EmptyBlock(obnam.ObnamException):
+class EmptyBlock(obnamlib.ObnamException):
 
     def __init__(self):
         self._msg = "Block has no components."
@@ -232,7 +231,7 @@ class EmptyBlock(obnam.ObnamException):
 def block_decode(block):
     """Return list of decoded components in block, or None on error"""
     if block.startswith(BLOCK_COOKIE):
-        parser = obnam.cmp.Parser(block, len(BLOCK_COOKIE))
+        parser = obnamlib.cmp.Parser(block, len(BLOCK_COOKIE))
         list = parser.decode_all()
         if not list:
             raise EmptyBlock()
@@ -248,7 +247,7 @@ class SignatureObject(StorageObject):
     def __init__(self, components=None, id=None, sigdata=None):
         StorageObject.__init__(self, components=components, id=id)
         if sigdata:
-            c = obnam.cmp.Component(obnam.cmp.SIGDATA, sigdata)
+            c = obnamlib.cmp.Component(obnamlib.cmp.SIGDATA, sigdata)
             self.add(c)
 
 
@@ -261,13 +260,13 @@ class DeltaObject(StorageObject):
         StorageObject.__init__(self, components=components, id=id)
         if deltapart_refs:
             for deltapart_ref in deltapart_refs:
-                c = obnam.cmp.Component(obnam.cmp.DELTAPARTREF, deltapart_ref)
+                c = obnamlib.cmp.Component(obnamlib.cmp.DELTAPARTREF, deltapart_ref)
                 self.add(c)
         if cont_ref:
-            c = obnam.cmp.Component(obnam.cmp.CONTREF, cont_ref)
+            c = obnamlib.cmp.Component(obnamlib.cmp.CONTREF, cont_ref)
             self.add(c)
         elif delta_ref:
-            c = obnam.cmp.Component(obnam.cmp.DELTAREF, delta_ref)
+            c = obnamlib.cmp.Component(obnamlib.cmp.DELTAREF, delta_ref)
             self.add(c)
 
 
@@ -279,34 +278,34 @@ class GenerationObject(StorageObject):
                  dirrefs=None, filegrouprefs=None, start=None, end=None):
         StorageObject.__init__(self, components=components, id=id)
         if filelist_id:
-            self.add(obnam.cmp.Component(obnam.cmp.FILELISTREF, filelist_id))
+            self.add(obnamlib.cmp.Component(obnamlib.cmp.FILELISTREF, filelist_id))
         if dirrefs:
             for ref in dirrefs:
-                self.add(obnam.cmp.Component(obnam.cmp.DIRREF, ref))
+                self.add(obnamlib.cmp.Component(obnamlib.cmp.DIRREF, ref))
         if filegrouprefs:
             for ref in filegrouprefs:
-                self.add(obnam.cmp.Component(obnam.cmp.FILEGROUPREF, ref))
+                self.add(obnamlib.cmp.Component(obnamlib.cmp.FILEGROUPREF, ref))
         if start:
-            self.add(obnam.cmp.Component(obnam.cmp.GENSTART, 
-                                         obnam.varint.encode(start)))
+            self.add(obnamlib.cmp.Component(obnamlib.cmp.GENSTART, 
+                                         obnamlib.varint.encode(start)))
         if end:
-            self.add(obnam.cmp.Component(obnam.cmp.GENEND, 
-                                         obnam.varint.encode(end)))
+            self.add(obnamlib.cmp.Component(obnamlib.cmp.GENEND, 
+                                         obnamlib.varint.encode(end)))
 
     def get_filelistref(self):
-        return self.first_string_by_kind(obnam.cmp.FILELISTREF)
+        return self.first_string_by_kind(obnamlib.cmp.FILELISTREF)
 
     def get_dirrefs(self):
-        return self.find_strings_by_kind(obnam.cmp.DIRREF)
+        return self.find_strings_by_kind(obnamlib.cmp.DIRREF)
 
     def get_filegrouprefs(self):
-        return self.find_strings_by_kind(obnam.cmp.FILEGROUPREF)
+        return self.find_strings_by_kind(obnamlib.cmp.FILEGROUPREF)
 
     def get_start_time(self):
-        return self.first_varint_by_kind(obnam.cmp.GENSTART)
+        return self.first_varint_by_kind(obnamlib.cmp.GENSTART)
 
     def get_end_time(self):
-        return self.first_varint_by_kind(obnam.cmp.GENEND)
+        return self.first_varint_by_kind(obnamlib.cmp.GENEND)
 
 
 # This is used only by testing.
@@ -315,11 +314,11 @@ def generation_object_decode(gen):
 
     o = decode(gen)
     return o.get_id(), \
-           o.first_string_by_kind(obnam.cmp.FILELISTREF), \
-           o.find_strings_by_kind(obnam.cmp.DIRREF), \
-           o.find_strings_by_kind(obnam.cmp.FILEGROUPREF), \
-           o.first_varint_by_kind(obnam.cmp.GENSTART), \
-           o.first_varint_by_kind(obnam.cmp.GENEND)
+           o.first_string_by_kind(obnamlib.cmp.FILELISTREF), \
+           o.find_strings_by_kind(obnamlib.cmp.DIRREF), \
+           o.find_strings_by_kind(obnamlib.cmp.FILEGROUPREF), \
+           o.first_varint_by_kind(obnamlib.cmp.GENSTART), \
+           o.first_varint_by_kind(obnamlib.cmp.GENEND)
 
 
 class HostBlockObject(StorageObject):
@@ -331,35 +330,35 @@ class HostBlockObject(StorageObject):
         StorageObject.__init__(self, components=components, id=host_id)
         
         if components is None:
-            c = obnam.cmp.Component(obnam.cmp.FORMATVERSION, FORMAT_VERSION)
+            c = obnamlib.cmp.Component(obnamlib.cmp.FORMATVERSION, FORMAT_VERSION)
             self.add(c)
     
         if gen_ids:
             for gen_id in gen_ids:
-                c = obnam.cmp.Component(obnam.cmp.GENREF, gen_id)
+                c = obnamlib.cmp.Component(obnamlib.cmp.GENREF, gen_id)
                 self.add(c)
     
         if map_block_ids:
             for map_block_id in map_block_ids:
-                c = obnam.cmp.Component(obnam.cmp.MAPREF, map_block_id)
+                c = obnamlib.cmp.Component(obnamlib.cmp.MAPREF, map_block_id)
                 self.add(c)
         
         if contmap_block_ids:
             for map_block_id in contmap_block_ids:
-                c = obnam.cmp.Component(obnam.cmp.CONTMAPREF, map_block_id)
+                c = obnamlib.cmp.Component(obnamlib.cmp.CONTMAPREF, map_block_id)
                 self.add(c)
     
     def get_generation_ids(self):
         """Return IDs of all generations for this host."""
-        return self.find_strings_by_kind(obnam.cmp.GENREF)
+        return self.find_strings_by_kind(obnamlib.cmp.GENREF)
     
     def get_map_block_ids(self):
         """Return IDs of all map blocks for this host."""
-        return self.find_strings_by_kind(obnam.cmp.MAPREF)
+        return self.find_strings_by_kind(obnamlib.cmp.MAPREF)
     
     def get_contmap_block_ids(self):
         """Return IDs of all map blocks for this host."""
-        return self.find_strings_by_kind(obnam.cmp.CONTMAPREF)
+        return self.find_strings_by_kind(obnamlib.cmp.CONTMAPREF)
     
     def encode(self):
         oq = ObjectQueue()
@@ -372,17 +371,17 @@ def create_host_from_block(block):
     
     list = block_decode(block)
     
-    host_id = obnam.cmp.first_string_by_kind(list, obnam.cmp.BLKID)
+    host_id = obnamlib.cmp.first_string_by_kind(list, obnamlib.cmp.BLKID)
     
     gen_ids = []
     map_ids = []
     contmap_ids = []
 
-    objparts = obnam.cmp.find_by_kind(list, obnam.cmp.OBJECT)
+    objparts = obnamlib.cmp.find_by_kind(list, obnamlib.cmp.OBJECT)
     for objpart in objparts:
-        gen_ids += objpart.find_strings_by_kind(obnam.cmp.GENREF)
-        map_ids += objpart.find_strings_by_kind(obnam.cmp.MAPREF)
-        contmap_ids += objpart.find_strings_by_kind(obnam.cmp.CONTMAPREF)
+        gen_ids += objpart.find_strings_by_kind(obnamlib.cmp.GENREF)
+        map_ids += objpart.find_strings_by_kind(obnamlib.cmp.MAPREF)
+        contmap_ids += objpart.find_strings_by_kind(obnamlib.cmp.CONTMAPREF)
 
     return HostBlockObject(host_id=host_id, gen_ids=gen_ids,
                            map_block_ids=map_ids, 
@@ -397,30 +396,30 @@ class DirObject(StorageObject):
                  dirrefs=None, filegrouprefs=None):
         StorageObject.__init__(self, components=components, id=id)
         if name:
-            self.add(obnam.cmp.Component(obnam.cmp.FILENAME, name))
+            self.add(obnamlib.cmp.Component(obnamlib.cmp.FILENAME, name))
         if stat:
-            self.add(obnam.cmp.create_stat_component(stat))
+            self.add(obnamlib.cmp.create_stat_component(stat))
         if dirrefs:
             for ref in dirrefs:
-                self.add(obnam.cmp.Component(obnam.cmp.DIRREF, ref))
+                self.add(obnamlib.cmp.Component(obnamlib.cmp.DIRREF, ref))
         if filegrouprefs:
             for ref in filegrouprefs:
-                self.add(obnam.cmp.Component(obnam.cmp.FILEGROUPREF, ref))
+                self.add(obnamlib.cmp.Component(obnamlib.cmp.FILEGROUPREF, ref))
 
     def get_name(self):
-        return self.first_by_kind(obnam.cmp.FILENAME).get_string_value()
+        return self.first_by_kind(obnamlib.cmp.FILENAME).get_string_value()
 
     def get_stat(self):
-        st = self.first_by_kind(obnam.cmp.STAT)
-        return obnam.cmp.parse_stat_component(st)
+        st = self.first_by_kind(obnamlib.cmp.STAT)
+        return obnamlib.cmp.parse_stat_component(st)
 
     def get_dirrefs(self):
         return [c.get_string_value() 
-                for c in self.find_by_kind(obnam.cmp.DIRREF)]
+                for c in self.find_by_kind(obnamlib.cmp.DIRREF)]
 
     def get_filegrouprefs(self):
         return [c.get_string_value() 
-                for c in self.find_by_kind(obnam.cmp.FILEGROUPREF)]
+                for c in self.find_by_kind(obnamlib.cmp.FILEGROUPREF)]
 
 
 class FileGroupObject(StorageObject):
@@ -428,17 +427,17 @@ class FileGroupObject(StorageObject):
     kind = FILEGROUP
 
     def add_file(self, name, stat, contref, sigref, deltaref):
-        c = obnam.filelist.create_file_component_from_stat(name, stat, 
+        c = obnamlib.filelist.create_file_component_from_stat(name, stat, 
                                                            contref, sigref, 
                                                            deltaref)
         self.add(c)
 
     def get_files(self):
-        return self.find_by_kind(obnam.cmp.FILE)
+        return self.find_by_kind(obnamlib.cmp.FILE)
 
     def get_file(self, name):
         for file in self.get_files():
-            fname = file.first_string_by_kind(obnam.cmp.FILENAME)
+            fname = file.first_string_by_kind(obnamlib.cmp.FILENAME)
             if name == fname:
                 return file
         return None
@@ -447,11 +446,11 @@ class FileGroupObject(StorageObject):
         return file.first_string_by_kind(kind)
 
     def get_stat_from_file(self, file):
-        c = file.first_by_kind(obnam.cmp.STAT)
-        return obnam.cmp.parse_stat_component(c)
+        c = file.first_by_kind(obnamlib.cmp.STAT)
+        return obnamlib.cmp.parse_stat_component(c)
 
     def get_names(self):
-        return [self.get_string_from_file(x, obnam.cmp.FILENAME) 
+        return [self.get_string_from_file(x, obnamlib.cmp.FILENAME) 
                 for x in self.get_files()]
 
     def get_stat(self, filename):
@@ -459,15 +458,15 @@ class FileGroupObject(StorageObject):
 
     def get_contref(self, filename):
         return self.get_string_from_file(self.get_file(filename),
-                                         obnam.cmp.CONTREF)
+                                         obnamlib.cmp.CONTREF)
 
     def get_sigref(self, filename):
         return self.get_string_from_file(self.get_file(filename),
-                                         obnam.cmp.SIGREF)
+                                         obnamlib.cmp.SIGREF)
 
     def get_deltaref(self, filename):
         return self.get_string_from_file(self.get_file(filename),
-                                         obnam.cmp.DELTAREF)
+                                         obnamlib.cmp.DELTAREF)
 
 
 class FileListObject(StorageObject):
@@ -490,7 +489,7 @@ class DeltaPartObject(StorageObject):
     kind = DELTAPART
 
 
-class UnknownStorageObjectKind(obnam.ObnamException):
+class UnknownStorageObjectKind(obnamlib.ObnamException):
 
     def __init__(self, kind):
         self._msg = "Unknown storage object kind %s" % kind
@@ -514,7 +513,7 @@ class StorageObjectFactory:
                 self._classes.append(klass)
     
     def get_object(self, components):
-        kind = obnam.cmp.first_varint_by_kind(components, obnam.cmp.OBJKIND)
+        kind = obnamlib.cmp.first_varint_by_kind(components, obnamlib.cmp.OBJKIND)
         for klass in self._classes:
             if klass.kind == kind:
                 return klass(components=components)

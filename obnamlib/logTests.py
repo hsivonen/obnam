@@ -15,14 +15,14 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-"""Unit tests for obnam.log"""
+"""Unit tests for obnamlib.log"""
 
 
 import os
 import stat
 import unittest
 
-import obnam
+import obnamlib
 
 
 class LogTests(unittest.TestCase):
@@ -38,10 +38,10 @@ class LogTests(unittest.TestCase):
     def testCreateNew(self):
         self.failIf(os.path.exists(self.filename))
 
-        config = obnam.config.default_config()
+        config = obnamlib.config.default_config()
         config.set("backup", "log-file", self.filename)
 
-        obnam.log.setup(config)
+        obnamlib.log.setup(config)
         self.failUnless(os.path.exists(self.filename))
         
         st = os.stat(self.filename)
