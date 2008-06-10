@@ -258,23 +258,6 @@ sftp://ulla@example.com/~/safe
       </varlistentry>
     
       <varlistentry>
-        <term><option>--odirect-pipe</option>=<replaceable>DIR</replaceable></term>
-        <listitem>
-          <para>Use <replaceable>DIR</replaceable> as the odirect_pipe
-          program (default is helper that avoids buffer cache).</para>
-        </listitem>
-      </varlistentry>
-    
-      <varlistentry>
-        <term><option>--odirect-read</option>=<replaceable>PROGRAM</replaceable></term>
-        <listitem>
-          <para>Use <replaceable>PROGRAM</replaceable> to read contents
-          of plain files (default is helper that avoids buffer
-          cache).</para>
-        </listitem>
-      </varlistentry>
-    
-      <varlistentry>
         <term><option>--progress</option></term>
         <listitem>
           <para>Report progress of backups as they're made.</para>
@@ -338,8 +321,6 @@ host-id = dorfl
 log-file =
 log-level = warning
 no-gpg = false
-odirect-pipe = ./odirect_pipe
-odirect-read = ./odirect_read
 ssh-key = ssh-key
 store = tmp.store</programlisting>
 

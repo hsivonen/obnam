@@ -15,7 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-"""Unit tests for obnam.rsync."""
+"""Unit tests for obnamlib.rsync."""
 
 
 import os
@@ -24,7 +24,7 @@ import tempfile
 import unittest
 
 
-import obnam
+import obnamlib
 
 
 class RsyncTests(unittest.TestCase):
@@ -33,8 +33,8 @@ class RsyncTests(unittest.TestCase):
         (fd, empty_file) = tempfile.mkstemp()
         os.close(fd)
 
-        context = obnam.context.Context()
-        sig = obnam.rsync.compute_signature(context, empty_file)
+        context = obnamlib.context.Context()
+        sig = obnamlib.rsync.compute_signature(context, empty_file)
         os.system("rdiff signature %s empty_file.sig.temp" % empty_file)
         f = file("empty_file.sig.temp")
         data = f.read()
@@ -47,11 +47,10 @@ class RsyncTests(unittest.TestCase):
         (fd, empty_file) = tempfile.mkstemp()
         os.close(fd)
 
-        context = obnam.context.Context()
-        context.config.set("backup", "odirect-pipe", "/notexist")
-        self.failUnlessRaises(obnam.rsync.UnknownCommand,
-                              obnam.rsync.compute_signature,
-                              context, empty_file)
+        context = obnamlib.context.Context()
+        self.failUnlessRaises(obnamlib.rsync.UnknownCommand,
+                              obnamlib.rsync.compute_signature,
+                              context, empty_file, rdiff="unknown_command")
 
         os.remove(empty_file)
 
@@ -59,11 +58,10 @@ class RsyncTests(unittest.TestCase):
         (fd, empty_file) = tempfile.mkstemp()
         os.close(fd)
 
-        context = obnam.context.Context()
-        context.config.set("backup", "odirect-pipe", "false")
-        self.failUnlessRaises(obnam.rsync.CommandFailure,
-                              obnam.rsync.compute_signature,
-                              context, empty_file)
+        context = obnamlib.context.Context()
+        self.failUnlessRaises(obnamlib.rsync.CommandFailure,
+                              obnamlib.rsync.compute_signature,
+                              context, empty_file, rdiff="false")
 
         os.remove(empty_file)
 
@@ -71,10 +69,9 @@ class RsyncTests(unittest.TestCase):
         (fd, empty_file) = tempfile.mkstemp()
         os.close(fd)
 
-        context = obnam.context.Context()
-        context.config.set("backup", "odirect-pipe", "false")
-        self.failUnlessRaises(obnam.rsync.CommandFailure,
-                              obnam.rsync.compute_delta,
+        context = obnamlib.context.Context()
+        self.failUnlessRaises(obnamlib.rsync.CommandFailure,
+                              obnamlib.rsync.compute_delta,
                               context, "pink", empty_file)
 
         os.remove(empty_file)
@@ -83,20 +80,20 @@ class RsyncTests(unittest.TestCase):
         (fd, empty_file) = tempfile.mkstemp()
         os.close(fd)
     
-        context = obnam.context.Context()
-        context.cache = obnam.cache.Cache(context.config)
-        context.be = obnam.backend.init(context.config, context.cache)
+        context = obnamlib.context.Context()
+        context.cache = obnamlib.cache.Cache(context.config)
+        context.be = obnamlib.backend.init(context.config, context.cache)
 
-        sig = obnam.rsync.compute_signature(context, empty_file)
-        deltapart_ids = obnam.rsync.compute_delta(context, sig, empty_file)
+        sig = obnamlib.rsync.compute_signature(context, empty_file)
+        deltapart_ids = obnamlib.rsync.compute_delta(context, sig, empty_file)
 
         os.remove(empty_file)
         self.failUnlessEqual(len(deltapart_ids), 1)
 
-        obnam.io.flush_all_object_queues(context)
-        delta = obnam.io.get_object(context, deltapart_ids[0])
+        obnamlib.io.flush_all_object_queues(context)
+        delta = obnamlib.io.get_object(context, deltapart_ids[0])
         self.failIfEqual(delta, None)
-        delta = delta.first_string_by_kind(obnam.cmp.DELTADATA)
+        delta = delta.first_string_by_kind(obnamlib.cmp.DELTADATA)
 
         # The hex string below is what rdiff outputs. I've no idea what
         # the format is, and the empty delta is expressed differently
@@ -113,19 +110,19 @@ class RsyncTests(unittest.TestCase):
         return filename
 
     def testApplyDelta(self):
-        context = obnam.context.Context()
-        context.cache = obnam.cache.Cache(context.config)
-        context.be = obnam.backend.init(context.config, context.cache)
+        context = obnamlib.context.Context()
+        context.cache = obnamlib.cache.Cache(context.config)
+        context.be = obnamlib.backend.init(context.config, context.cache)
         
         first = self.create_file("pink")
         second = self.create_file("pretty")
-        sig = obnam.rsync.compute_signature(context, first)
-        deltapart_ids = obnam.rsync.compute_delta(context, sig, second)
-        obnam.io.flush_all_object_queues(context)
+        sig = obnamlib.rsync.compute_signature(context, first)
+        deltapart_ids = obnamlib.rsync.compute_delta(context, sig, second)
+        obnamlib.io.flush_all_object_queues(context)
 
         (fd, third) = tempfile.mkstemp()
         os.close(fd)
-        obnam.rsync.apply_delta(context, first, deltapart_ids, third)
+        obnamlib.rsync.apply_delta(context, first, deltapart_ids, third)
         
         f = file(third, "r")
         third_data = f.read()
@@ -140,23 +137,23 @@ class RsyncTests(unittest.TestCase):
 
     def testApplyDeltaWithoutDevNull(self):
         self.failUnlessRaises(os.error,
-                              obnam.rsync.apply_delta, 
+                              obnamlib.rsync.apply_delta, 
                               None, None, None, None, 
                               open=self.raise_os_error)
 
     def testApplyDeltaRaisesExceptionWhenCommandFails(self):
-        context = obnam.context.Context()
-        context.cache = obnam.cache.Cache(context.config)
-        context.be = obnam.backend.init(context.config, context.cache)
+        context = obnamlib.context.Context()
+        context.cache = obnamlib.cache.Cache(context.config)
+        context.be = obnamlib.backend.init(context.config, context.cache)
         
         first = self.create_file("pink")
         second = self.create_file("pretty")
-        sig = obnam.rsync.compute_signature(context, first)
-        deltapart_ids = obnam.rsync.compute_delta(context, sig, second)
-        obnam.io.flush_all_object_queues(context)
+        sig = obnamlib.rsync.compute_signature(context, first)
+        deltapart_ids = obnamlib.rsync.compute_delta(context, sig, second)
+        obnamlib.io.flush_all_object_queues(context)
 
-        self.failUnlessRaises(obnam.rsync.CommandFailure,
-                              obnam.rsync.apply_delta,
+        self.failUnlessRaises(obnamlib.rsync.CommandFailure,
+                              obnamlib.rsync.apply_delta,
                               context, first, deltapart_ids, "/dev/null",
                               cmd="./badcat")
 

@@ -15,7 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-"""Unit tests for obnam.config."""
+"""Unit tests for obnamlib.config."""
 
 
 import os
@@ -24,16 +24,16 @@ import StringIO
 import unittest
 
 
-import obnam
+import obnamlib
 
 
 class CommandLineParsingTests(unittest.TestCase):
 
     def setUp(self):
-        obnam.config.set_default_paths([])
+        obnamlib.config.set_default_paths([])
         
     def tearDown(self):
-        obnam.config.set_default_paths(None)
+        obnamlib.config.set_default_paths(None)
 
     def config_as_string(self, config):
         f = StringIO.StringIO()
@@ -41,12 +41,12 @@ class CommandLineParsingTests(unittest.TestCase):
         return f.getvalue()
 
     def testDefaultConfig(self):
-        config = obnam.config.default_config()
+        config = obnamlib.config.default_config()
         self.failUnless(config.has_section("backup"))
         needed = ["block-size", "cache", "store", "target-dir",
                   "host-id", "object-cache-size", "log-level", "ssh-key",
-                  "odirect-read", "log-file", "gpg-home", "gpg-encrypt-to",
-                  "gpg-sign-with", "no-gpg", "exclude", "odirect-pipe",
+                  "log-file", "gpg-home", "gpg-encrypt-to",
+                  "gpg-sign-with", "no-gpg", "exclude",
                   "report-progress", "generation-times"]
         needed.sort()
         actual = config.options("backup")
@@ -54,124 +54,114 @@ class CommandLineParsingTests(unittest.TestCase):
         self.failUnlessEqual(actual, needed)
 
     def testEmpty(self):
-        config = obnam.config.default_config()
-        obnam.config.parse_options(config, [])
+        config = obnamlib.config.default_config()
+        obnamlib.config.parse_options(config, [])
         self.failUnlessEqual(self.config_as_string(config), 
-                     self.config_as_string(obnam.config.default_config()))
+                     self.config_as_string(obnamlib.config.default_config()))
 
     def testHostId(self):
-        config = obnam.config.default_config()
-        obnam.config.parse_options(config, ["--host-id=pink"])
+        config = obnamlib.config.default_config()
+        obnamlib.config.parse_options(config, ["--host-id=pink"])
         self.failUnlessEqual(config.get("backup", "host-id"), "pink")
 
     def testBlockSize(self):
-        config = obnam.config.default_config()
-        obnam.config.parse_options(config, ["--block-size=12765"])
+        config = obnamlib.config.default_config()
+        obnamlib.config.parse_options(config, ["--block-size=12765"])
         self.failUnlessEqual(config.getint("backup", "block-size"), 12765)
-        obnam.config.parse_options(config, ["--block-size=42"])
+        obnamlib.config.parse_options(config, ["--block-size=42"])
         self.failUnlessEqual(config.getint("backup", "block-size"), 42)
 
     def testCacheDir(self):
-        config = obnam.config.default_config()
-        obnam.config.parse_options(config, ["--cache=/tmp/foo"])
+        config = obnamlib.config.default_config()
+        obnamlib.config.parse_options(config, ["--cache=/tmp/foo"])
         self.failUnlessEqual(config.get("backup", "cache"), "/tmp/foo")
 
     def testLocalStore(self):
-        config = obnam.config.default_config()
-        obnam.config.parse_options(config, ["--store=/tmp/foo"])
+        config = obnamlib.config.default_config()
+        obnamlib.config.parse_options(config, ["--store=/tmp/foo"])
         self.failUnlessEqual(config.get("backup", "store"), "/tmp/foo")
 
     def testTargetDir(self):
-        config = obnam.config.default_config()
-        obnam.config.parse_options(config, ["--target=/tmp/foo"])
+        config = obnamlib.config.default_config()
+        obnamlib.config.parse_options(config, ["--target=/tmp/foo"])
         self.failUnlessEqual(config.get("backup", "target-dir"), "/tmp/foo")
 
     def testObjectCacheSize(self):
-        config = obnam.config.default_config()
-        obnam.config.parse_options(config, ["--object-cache-size=42"])
+        config = obnamlib.config.default_config()
+        obnamlib.config.parse_options(config, ["--object-cache-size=42"])
         self.failUnlessEqual(config.get("backup", "object-cache-size"), "42")
 
-    def testOdirectRead(self):
-        config = obnam.config.default_config()
-        obnam.config.parse_options(config, ["--odirect-read=x"])
-        self.failUnlessEqual(config.get("backup", "odirect-read"), "x")
-
-    def testOdirectPipe(self):
-        config = obnam.config.default_config()
-        obnam.config.parse_options(config, ["--odirect-pipe=x"])
-        self.failUnlessEqual(config.get("backup", "odirect-pipe"), "x")
-
     def testLogFile(self):
-        config = obnam.config.default_config()
-        obnam.config.parse_options(config, ["--log-file=x"])
+        config = obnamlib.config.default_config()
+        obnamlib.config.parse_options(config, ["--log-file=x"])
         self.failUnlessEqual(config.get("backup", "log-file"), "x")
 
     def testLogLevel(self):
-        config = obnam.config.default_config()
-        obnam.config.parse_options(config, ["--log-level=info"])
+        config = obnamlib.config.default_config()
+        obnamlib.config.parse_options(config, ["--log-level=info"])
         self.failUnlessEqual(config.get("backup", "log-level"), "info")
 
     def testSshKey(self):
-        config = obnam.config.default_config()
-        obnam.config.parse_options(config, ["--ssh-key=foo"])
+        config = obnamlib.config.default_config()
+        obnamlib.config.parse_options(config, ["--ssh-key=foo"])
         self.failUnlessEqual(config.get("backup", "ssh-key"), "foo")
 
     def testGpgHome(self):
-        config = obnam.config.default_config()
-        obnam.config.parse_options(config, ["--gpg-home=foo"])
+        config = obnamlib.config.default_config()
+        obnamlib.config.parse_options(config, ["--gpg-home=foo"])
         self.failUnlessEqual(config.get("backup", "gpg-home"), "foo")
 
     def testGpgEncryptTo(self):
-        config = obnam.config.default_config()
-        obnam.config.parse_options(config, ["--gpg-encrypt-to=foo"])
+        config = obnamlib.config.default_config()
+        obnamlib.config.parse_options(config, ["--gpg-encrypt-to=foo"])
         self.failUnlessEqual(config.get("backup", "gpg-encrypt-to"), "foo")
 
     def testGpgSignWith(self):
-        config = obnam.config.default_config()
-        obnam.config.parse_options(config, ["--gpg-sign-with=foo"])
+        config = obnamlib.config.default_config()
+        obnamlib.config.parse_options(config, ["--gpg-sign-with=foo"])
         self.failUnlessEqual(config.get("backup", "gpg-sign-with"), "foo")
 
     def testNoGpgIsUnset(self):
-        config = obnam.config.default_config()
-        obnam.config.parse_options(config, [])
+        config = obnamlib.config.default_config()
+        obnamlib.config.parse_options(config, [])
         self.failUnlessEqual(config.get("backup", "no-gpg"), "false")
 
     def testNoGpgIsUnsetButDefaultIsTrue(self):
-        config = obnam.config.default_config()
+        config = obnamlib.config.default_config()
         config.set("backup", "no-gpg", "true")
-        obnam.config.parse_options(config, [])
+        obnamlib.config.parse_options(config, [])
         self.failUnlessEqual(config.get("backup", "no-gpg"), "true")
 
     def testNoGpgIsSet(self):
-        config = obnam.config.default_config()
-        obnam.config.parse_options(config, ["--no-gpg"])
+        config = obnamlib.config.default_config()
+        obnamlib.config.parse_options(config, ["--no-gpg"])
         self.failUnlessEqual(config.get("backup", "no-gpg"), "true")
 
     def testGenerationTimes(self):
-        config = obnam.config.default_config()
-        obnam.config.parse_options(config, ["--generation-times"])
+        config = obnamlib.config.default_config()
+        obnamlib.config.parse_options(config, ["--generation-times"])
         self.failUnlessEqual(config.get("backup", "generation-times"), "true")
 
     def testExclude(self):
-        config = obnam.config.default_config()
-        obnam.config.parse_options(config, ["--exclude=foo"])
+        config = obnamlib.config.default_config()
+        obnamlib.config.parse_options(config, ["--exclude=foo"])
         self.failUnlessEqual(config.get("backup", "exclude"), "foo")
 
     def testReportProgress(self):
-        config = obnam.config.default_config()
+        config = obnamlib.config.default_config()
         self.failIf(config.getboolean("backup", "report-progress"))
-        obnam.config.parse_options(config, ["--progress"])
+        obnamlib.config.parse_options(config, ["--progress"])
         self.failUnless(config.getboolean("backup", "report-progress"))
 
     def testNoConfigs(self):
-        parser = obnam.config.build_parser()
+        parser = obnamlib.config.build_parser()
         options, args = parser.parse_args([])
         self.failUnlessEqual(options.no_configs, False)
         options, args = parser.parse_args(["--no-configs"])
         self.failUnlessEqual(options.no_configs, True)
 
     def testConfig(self):
-        parser = obnam.config.build_parser()
+        parser = obnamlib.config.build_parser()
         options, args = parser.parse_args([])
         self.failUnlessEqual(options.configs, None)
         options, args = parser.parse_args(["--config=pink"])
@@ -183,45 +173,45 @@ class ConfigReadingOptionsTests(unittest.TestCase):
     names = ["tmp.1.conf", "tmp.2.conf", "tmp.3.conf"]
 
     def setUp(self):
-        obnam.config.forget_config_file_log()
+        obnamlib.config.forget_config_file_log()
         for name in self.names:
             f = file(name, "w")
             f.write("[backup]\nblock-size = 1024\n")
             f.close()
-        obnam.config.set_default_paths(self.names)
+        obnamlib.config.set_default_paths(self.names)
 
     def tearDown(self):
-        obnam.config.set_default_paths(None)
+        obnamlib.config.set_default_paths(None)
         for name in self.names:
             if os.path.exists(name):
                 os.remove(name)
 
     def testNoDefaults(self):
-        obnam.config.set_default_paths([])
-        config = obnam.config.default_config()
-        obnam.config.parse_options(config, [])
-        self.failUnlessEqual(obnam.config.get_config_file_log(), [])
+        obnamlib.config.set_default_paths([])
+        config = obnamlib.config.default_config()
+        obnamlib.config.parse_options(config, [])
+        self.failUnlessEqual(obnamlib.config.get_config_file_log(), [])
 
     def testDefaults(self):
-        config = obnam.config.default_config()
-        obnam.config.parse_options(config, [])
-        self.failUnlessEqual(obnam.config.get_config_file_log(), self.names)
+        config = obnamlib.config.default_config()
+        obnamlib.config.parse_options(config, [])
+        self.failUnlessEqual(obnamlib.config.get_config_file_log(), self.names)
 
     def testNoConfigsOption(self):
-        config = obnam.config.default_config()
-        obnam.config.parse_options(config, ["--no-configs"])
-        self.failUnlessEqual(obnam.config.get_config_file_log(), [])
+        config = obnamlib.config.default_config()
+        obnamlib.config.parse_options(config, ["--no-configs"])
+        self.failUnlessEqual(obnamlib.config.get_config_file_log(), [])
 
     def testNoConfigsOptionPlusConfigOption(self):
-        config = obnam.config.default_config()
-        obnam.config.parse_options(config, ["--no-configs"] +
+        config = obnamlib.config.default_config()
+        obnamlib.config.parse_options(config, ["--no-configs"] +
                         ["--config=%s" % x for x in self.names])
-        self.failUnlessEqual(obnam.config.get_config_file_log(), self.names)
+        self.failUnlessEqual(obnamlib.config.get_config_file_log(), self.names)
 
     def testDefaultsPlusConfigOption(self):
-        config = obnam.config.default_config()
-        obnam.config.parse_options(config, ["--config=/dev/null"])
-        self.failUnlessEqual(obnam.config.get_config_file_log(), 
+        config = obnamlib.config.default_config()
+        obnamlib.config.parse_options(config, ["--config=/dev/null"])
+        self.failUnlessEqual(obnamlib.config.get_config_file_log(), 
                              self.names + ["/dev/null"])
 
 
@@ -241,23 +231,23 @@ cache = pretty
         os.remove(self.filename)
     
     def testReadConfigFile(self):
-        config = obnam.config.default_config()
-        obnam.config.read_config_file(config, self.filename)
+        config = obnamlib.config.default_config()
+        obnamlib.config.read_config_file(config, self.filename)
         self.failUnlessEqual(config.get("backup", "store"), "pink")
         self.failUnlessEqual(config.get("backup", "cache"), "pretty")
 
     def testDefaultConfigsForRoot(self):
-        config = obnam.config.default_config()
-        obnam.config.set_uid_and_home(0, "/root")
-        configs = obnam.config.get_default_paths()
+        config = obnamlib.config.default_config()
+        obnamlib.config.set_uid_and_home(0, "/root")
+        configs = obnamlib.config.get_default_paths()
         self.failUnlessEqual(configs,
                              ["/usr/share/obnam/obnam.conf",
                               "/etc/obnam/obnam.conf"])
 
     def testDefaultConfigsForUser(self):
-        config = obnam.config.default_config()
-        obnam.config.set_uid_and_home(12765, "/home/pretty")
-        configs = obnam.config.get_default_paths()
+        config = obnamlib.config.default_config()
+        obnamlib.config.set_uid_and_home(12765, "/home/pretty")
+        configs = obnamlib.config.get_default_paths()
         self.failUnlessEqual(configs,
                              ["/usr/share/obnam/obnam.conf",
                               "/home/pretty/.obnam/obnam.conf"])
@@ -267,16 +257,16 @@ class PrintOptionsTests(unittest.TestCase):
 
     def test(self):
         f = StringIO.StringIO()
-        obnam.config.print_option_names(f=f)
+        obnamlib.config.print_option_names(f=f)
         self.failIfEqual(f.getvalue(), "")
 
 
 class WriteDefaultConfigTests(unittest.TestCase):
 
     def test(self):
-        config = obnam.config.default_config()
+        config = obnamlib.config.default_config()
         f = StringIO.StringIO()
-        obnam.config.write_defaultconfig(config, output=f)
+        obnamlib.config.write_defaultconfig(config, output=f)
         s = f.getvalue()
         self.failUnless(s.startswith("import socket"))
         self.failUnless("\nitems =" in s)
@@ -285,17 +275,17 @@ class WriteDefaultConfigTests(unittest.TestCase):
 class GetUidAndHomeTests(unittest.TestCase):
 
     def testGetUid(self):
-        obnam.config.set_uid_and_home(None, None)
-        self.failIfEqual(obnam.config.get_uid(), None)
+        obnamlib.config.set_uid_and_home(None, None)
+        self.failIfEqual(obnamlib.config.get_uid(), None)
 
     def testGetHome(self):
-        obnam.config.set_uid_and_home(None, None)
-        self.failIfEqual(obnam.config.get_home(), None)
+        obnamlib.config.set_uid_and_home(None, None)
+        self.failIfEqual(obnamlib.config.get_home(), None)
 
     def testGetUidFaked(self):
-        obnam.config.set_uid_and_home(42, "pretty")
-        self.failUnlessEqual(obnam.config.get_uid(), 42)
+        obnamlib.config.set_uid_and_home(42, "pretty")
+        self.failUnlessEqual(obnamlib.config.get_uid(), 42)
 
     def testGetHomeFaked(self):
-        obnam.config.set_uid_and_home(42, "pink")
-        self.failUnlessEqual(obnam.config.get_home(), "pink")
+        obnamlib.config.set_uid_and_home(42, "pink")
+        self.failUnlessEqual(obnamlib.config.get_home(), "pink")

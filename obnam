@@ -24,24 +24,24 @@ import logging
 import sys
 import traceback
 
-import obnam
+import obnamlib
 
 
 def main():
     try:
-        context = obnam.context.Context()
-        args = obnam.config.parse_options(context.config, sys.argv[1:])
-        context.cache = obnam.cache.Cache(context.config)
-        context.be = obnam.backend.init(context.config, context.cache)
+        context = obnamlib.context.Context()
+        args = obnamlib.config.parse_options(context.config, sys.argv[1:])
+        context.cache = obnamlib.cache.Cache(context.config)
+        context.be = obnamlib.backend.init(context.config, context.cache)
         context.be.set_progress_reporter(context.progress)
-        app = obnam.Application(context)
+        app = obnamlib.Application(context)
     
-        obnam.log.setup(context.config)
+        obnamlib.log.setup(context.config)
 
-        logging.info("%s %s starting up" % (obnam.NAME, obnam.VERSION))
+        logging.info("%s %s starting up" % (obnamlib.NAME, obnamlib.VERSION))
 
         try:
-            factory = obnam.OperationFactory(app)
+            factory = obnamlib.OperationFactory(app)
             oper = factory.get_operation(args)
             oper.do_it(args[1:])
         
@@ -60,7 +60,7 @@ def main():
             if app.get_store():
                 app.get_store().close()
             sys.exit(1)
-    except obnam.ObnamException, e:
+    except obnamlib.ObnamException, e:
         logging.error("%s" % str(e))
         sys.stderr.write("%s\n" % str(e))
         if app.get_store():

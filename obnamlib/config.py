@@ -24,13 +24,13 @@ import pwd
 import socket
 import sys
 
-import obnam.defaultconfig
+import obnamlib
 
 
 def default_config():
-    """Return a obnam.cfgfile.ConfigFile with the default builtin config"""
-    config = obnam.cfgfile.ConfigFile()
-    for section, item, value in obnam.defaultconfig.items:
+    """Return a obnamlib.cfgfile.ConfigFile with the default builtin config"""
+    config = obnamlib.cfgfile.ConfigFile()
+    for section, item, value in obnamlib.defaultconfig.items:
         if not config.has_section(section):
             config.add_section(section)
         config.set(section, item, value)
@@ -44,7 +44,7 @@ def default_config():
 def build_parser():
     """Create command line parser"""
     parser = optparse.OptionParser(version="%s %s" % 
-                                            (obnam.NAME, obnam.VERSION))
+                                            (obnamlib.NAME, obnamlib.VERSION))
     
     parser.add_option("--host-id",
                       metavar="ID",
@@ -85,16 +85,6 @@ def build_parser():
                       metavar="FILE",
                       help="read ssh private key from FILE (and public key " +
                            "from FILE.pub)")
-    
-    parser.add_option("--odirect-read",
-                      metavar="PROGRAM",
-                      help="use PROGRAM to read contents of plain files " +
-                           "(default is helper that avoids buffer cache)")
-    
-    parser.add_option("--odirect-pipe",
-                      metavar="PROGRAM",
-                      help="use PROGRAM as the odirect_pipe program " +
-                           "(default is helper that avoids buffer cache)")
     
     parser.add_option("--gpg-home",
                       metavar="DIR",
@@ -197,10 +187,6 @@ def parse_options(config, argv):
         config.set("backup", "log-level", options.log_level)
     if options.ssh_key is not None:
         config.set("backup", "ssh-key", options.ssh_key)
-    if options.odirect_read is not None:
-        config.set("backup", "odirect-read", options.odirect_read)
-    if options.odirect_pipe is not None:
-        config.set("backup", "odirect-pipe", options.odirect_pipe)
     if options.gpg_home is not None:
         config.set("backup", "gpg-home", options.gpg_home)
     if options.gpg_encrypt_to is not None:
@@ -252,8 +238,8 @@ def write_defaultconfig(config, output=sys.stdout):
 # Allow unit tests to override default path list.
 
 _default_paths = None
-if "default_paths" in dir(obnam.defaultconfig):
-    _default_paths = obnam.defaultconfig.default_paths
+if "default_paths" in dir(obnamlib.defaultconfig):
+    _default_paths = obnamlib.defaultconfig.default_paths
 
 def set_default_paths(default_paths):
     global _default_paths

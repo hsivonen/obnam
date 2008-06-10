@@ -15,7 +15,6 @@ debian/rules
 HACKING
 NEWS
 obnamlib/defaultconfig.py
-odirect_pipe
 sample-gpg-home/pubring.gpg
 sample-gpg-home/secring.gpg
 sample-gpg-home/trustdb.gpg

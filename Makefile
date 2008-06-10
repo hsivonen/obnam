@@ -27,12 +27,10 @@ man1dir = $(mandir)/man1
 pydir = $(libdir)/python2.5
 sitedir = $(pydir)/site-packages
 
-all: odirect_read obnam.1 odirect_read.1 odirect_pipe.1 obnamfs.1
+all: obnam.1 obnamfs.1
 
 version:
 	./obnam --version
-
-odirect_read: odirect_read.c
 
 obnam.1: obnam.docbook
 	docbook2x-man --encoding utf8 obnam.docbook
@@ -40,14 +38,7 @@ obnam.1: obnam.docbook
 obnamfs.1: obnamfs.docbook
 	docbook2x-man --encoding utf8 obnamfs.docbook
 
-odirect_read.1: odirect_read.docbook
-	docbook2x-man --encoding utf8 odirect_read.docbook
-
-odirect_pipe.1: odirect_pipe.docbook
-	docbook2x-man --encoding utf8 odirect_pipe.docbook
-
 check: all
-	./test_odirect_read
 	python -m CoverageTestRunner --ignore-coverage
 	rm -f .coverage
 	sh blackboxtests tests/*
@@ -59,7 +50,7 @@ check: all
 
 clean:
 	rm -rf *~ */*~ *.pyc *.pyo */*.pyc */*.pyo tmp.* *,cover */*,cover
-	rm -f obnam.1 odirect_read.1 odirect_read odirect_pipe.1 obnamfs.1
+	rm -f obnam.1 obnamfs.1
 	rm -f .coverage
 
 
@@ -67,7 +58,6 @@ install: all
 	install -d $(bindir)
 	install obnam $(bindir)/obnam
 	install obnamfs.py $(bindir)/obnamfs
-	install odirect_read odirect_pipe $(bindir)
 	install -d $(man1dir)
 	install -m 0644 *.1 $(man1dir)
 	install -d $(sitedir)/obnam
@@ -76,8 +66,6 @@ install: all
 	    --gpg-encrypt-to= \
 	    --gpg-home= \
 	    --gpg-sign-with= \
-	    --odirect-read=odirect_read \
-	    --odirect-pipe=odirect_pipe \
 	    --ssh-key= \
 	    --store= \
 	    --host-id= \

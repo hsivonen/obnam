@@ -24,22 +24,22 @@ import subprocess
 import tempfile
 
 
-import obnam
+import obnamlib
 
 
-class UnknownCommand(obnam.ObnamException):
+class UnknownCommand(obnamlib.ObnamException):
 
     def __init__(self, argv, errno):
         self._msg = "Unknown command (error %d): %s" % (errno, " ".join(argv))
 
 
-class CommandFailure(obnam.ObnamException):
+class CommandFailure(obnamlib.ObnamException):
 
     def __init__(self, argv, returncode, stderr):
         self._msg = "Command failed: %s\nError code: %d\n%s" % \
                     (" ".join(argv), 
                      returncode, 
-                     obnam.gpg.indent_string(stderr))
+                     obnamlib.gpg.indent_string(stderr))
 
 
 def run_command(argv, stdin=None, stdout=None, stderr=None):
@@ -56,13 +56,10 @@ def run_command(argv, stdin=None, stdout=None, stderr=None):
     return p
 
 
-def compute_signature(context, filename):
+def compute_signature(context, filename, rdiff="rdiff"):
     """Compute an rsync signature for 'filename'"""
 
-    argv = [context.config.get("backup", "odirect-pipe"),
-            context.config.get("backup", "odirect-read"),
-            filename,
-            "rdiff", "--", "signature", "-", "-"]
+    argv = [rdiff, "--", "signature", filename, "-"]
     p = run_command(argv)
     stdout_data, stderr_data = p.communicate()
     
@@ -83,10 +80,7 @@ def compute_delta(context, signature, filename):
     os.write(fd, signature)
     os.close(fd)
 
-    argv = [context.config.get("backup", "odirect-pipe"),
-            context.config.get("backup", "odirect-read"),
-            filename,
-            "rdiff", "--", "delta", tempname, "-", "-"]
+    argv = ["rdiff", "--", "delta", tempname, filename, "-"]
     p = run_command(argv)
 
     list = []
@@ -95,11 +89,11 @@ def compute_delta(context, signature, filename):
         data = p.stdout.read(block_size)
         if not data:
             break
-        id = obnam.obj.object_id_new()
-        o = obnam.obj.DeltaPartObject(id=id)
-        o.add(obnam.cmp.Component(obnam.cmp.DELTADATA, data))
+        id = obnamlib.obj.object_id_new()
+        o = obnamlib.obj.DeltaPartObject(id=id)
+        o.add(obnamlib.cmp.Component(obnamlib.cmp.DELTADATA, data))
         o = o.encode()
-        obnam.io.enqueue_object(context, context.content_oq, 
+        obnamlib.io.enqueue_object(context, context.content_oq, 
                                 context.contmap, id, o, False)
         list.append(id)
     exit = p.wait()
@@ -121,8 +115,8 @@ def apply_delta(context, basis, deltaparts, new, open=os.open, cmd="rdiff"):
 
     ret = True
     for id in deltaparts:
-        deltapart = obnam.io.get_object(context, id)
-        deltadata = deltapart.first_string_by_kind(obnam.cmp.DELTADATA)
+        deltapart = obnamlib.io.get_object(context, id)
+        deltadata = deltapart.first_string_by_kind(obnamlib.cmp.DELTADATA)
         p.stdin.write(deltadata)
 
     stdout_data, stderr_data = p.communicate(input="")
