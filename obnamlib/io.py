@@ -26,6 +26,7 @@ import tempfile
 
 
 import obnamlib
+import fadvise
 
 
 def resolve(context, pathname):
@@ -196,14 +197,23 @@ def create_file_contents_object(context, filename):
     """Create and queue objects to hold a file's contents"""
     object_id = obnamlib.obj.object_id_new()
     part_ids = []
-    odirect_read = "cat"
+
+    resolved = resolve(context, filename)
+    fd = os.open(resolved, os.O_RDONLY)
     block_size = context.config.getint("backup", "block-size")
-    f = subprocess.Popen([odirect_read, resolve(context, filename)], 
-                         stdout=subprocess.PIPE)
+
+    ret = 0
     while True:
-        data = f.stdout.read(block_size)
+        pos = os.lseek(fd, 0, 1)
+        data = os.read(fd, block_size)
         if not data:
             break
+        if ret == 0:
+            ret = fadvise.fadvise_dontneed(fd, pos, len(data))
+            if ret != 0:
+                logging.warning("Failed to set POSIX_FADV_DONTNEED on "
+                                "%s: %s" % (resolved, os.strerror(ret)))
+
         c = obnamlib.cmp.Component(obnamlib.cmp.FILECHUNK, data)
         part_id = obnamlib.obj.object_id_new()
         o = obnamlib.obj.FilePartObject(id=part_id, components=[c])
@@ -211,6 +221,8 @@ def create_file_contents_object(context, filename):
         enqueue_object(context, context.content_oq, context.contmap, 
                        part_id, o, False)
         part_ids.append(part_id)
+
+    os.close(fd)
 
     o = obnamlib.obj.FileContentsObject(id=object_id)
     for part_id in part_ids:
