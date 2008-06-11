@@ -128,6 +128,10 @@ class ObjectCache:
 def get_object(context, object_id):
     """Fetch an object"""
     
+    UNCACHEABLE = [obnamlib.obj.FILEPART, 
+                   obnamlib.obj.SIG, 
+                   obnamlib.obj.FILECONTENTS]
+
     logging.debug("Fetching object %s" % object_id)
     
     if context.object_cache is None:
@@ -159,7 +163,7 @@ def get_object(context, object_id):
     for component in list:
         subs = component.get_subcomponents()
         o = factory.get_object(subs)
-        if o.get_kind() != obnamlib.obj.FILEPART:
+        if o.get_kind() not in UNCACHEABLE:
             context.object_cache.put(o)
         if o.get_id() == object_id:
             the_one = o
