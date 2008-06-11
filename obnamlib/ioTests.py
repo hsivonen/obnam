@@ -176,7 +176,7 @@ class GetObjectTests(IoBase):
     def testGetObjectTwice(self):
         id = "pink"
         component = obnamlib.cmp.Component(42, "pretty")
-        object = obnamlib.obj.FileContentsObject(id=id)
+        object = obnamlib.obj.FileListObject(id=id)
         object.add(component)
         object = object.encode()
         self.upload_object(id, object)
