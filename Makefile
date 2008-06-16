@@ -27,7 +27,7 @@ man1dir = $(mandir)/man1
 pydir = $(libdir)/python2.5
 sitedir = $(pydir)/site-packages
 
-all: obnam.1 obnamfs.1
+all: obnam.1 obnamfs.1 fadvisemodule.so
 
 version:
 	./obnam --version
@@ -37,6 +37,10 @@ obnam.1: obnam.docbook
 
 obnamfs.1: obnamfs.docbook
 	docbook2x-man --encoding utf8 obnamfs.docbook
+
+fadvisemodule.so:
+	python setup.py build
+	cp build/lib*/fadvise.so .
 
 check: all
 	python -m CoverageTestRunner --ignore-coverage
