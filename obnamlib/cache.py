@@ -20,6 +20,8 @@
 
 import os
 
+import obnamlib
+
 
 class Cache:
 
@@ -29,7 +31,6 @@ class Cache:
     def cache_pathname(self, block_id):
         """Return pathname in local block cache for a given block id"""
         return os.path.join(self.cachedir, block_id)
-    
     
     def create_new_cache_file(self, block_id):
         """Create a new file in the local block cache, open for writing"""
@@ -54,9 +55,7 @@ class Cache:
     def get_block(self, block_id):
         """Return the contents of a block in the block cache, or None"""
         try:
-            f = file(self.cache_pathname(block_id), "r")
-            block = f.read()
-            f.close()
+            return obnamlib.read_file(self.cache_pathname(block_id))
         except IOError, e:
             return None
-        return block
+

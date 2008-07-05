@@ -20,62 +20,46 @@
 
 import os
 import shutil
+import tempfile
 import unittest
 
 import obnamlib
 
 
-class CacheBase(unittest.TestCase):
+class CacheTests(unittest.TestCase):
 
     def setUp(self):
-        self.cachedir = "tmp.cachedir"
-        
-        config_list = (
-            ("backup", "cache", self.cachedir),
-        )
-    
-        self.config = obnamlib.cfgfile.ConfigFile()
-        for section, item, value in config_list:
-            if not self.config.has_section(section):
-                self.config.add_section(section)
-            self.config.set(section, item, value)
+        self.cachedir = tempfile.mkdtemp()
+        self.config = obnamlib.config.default_config()
+        self.config.set("backup", "cache", self.cachedir)
+        self.cache = obnamlib.cache.Cache(self.config)
 
     def tearDown(self):
         if os.path.exists(self.cachedir):
             shutil.rmtree(self.cachedir)
-        del self.cachedir
-        del self.config
 
+    def testGetsNameOfBlockInCacheRight(self):
+        self.failUnlessEqual(self.cache.cache_pathname("pink/pretty"),
+                             os.path.join(self.cachedir, "pink/pretty"))
 
-class InitTests(CacheBase):
-
-    def testInit(self):
-        cache = obnamlib.cache.Cache(self.config)
-        self.failIf(os.path.isdir(self.cachedir))
-
-
-class PutTests(CacheBase):
-
-    def testPut(self):
-        cache = obnamlib.cache.Cache(self.config)
-        id = "pink"
-        block = "pretty"
-        cache.put_block(id, block)
+    def testPutsBlockIntoCacheWithRightName(self):
+        self.cache.put_block("pink", "pretty")
+        self.failUnless(os.path.isfile(self.cache.cache_pathname("pink")))
         
-        pathname = os.path.join(self.cachedir, id)
+    def testPutsBlockIntoCacheWithRightContents(self):
+        self.cache.put_block("pink", "pretty")
+        pathname = self.cache.cache_pathname("pink")
+        self.failUnlessEqual(obnamlib.read_file(pathname), "pretty")
+
+    def testPutsBlockIntoCacheWhenIdHasSubdirs(self):
+        self.cache.put_block("pink/pretty", "")
+        pathname = self.cache.cache_pathname("pink/pretty")
         self.failUnless(os.path.isfile(pathname))
-        f = file(pathname, "r")
-        self.failUnlessEqual(f.read(), block)
-        f.close()
 
+    def testReturnsNoneWhenReadingNonexistingBlock(self):
+        self.failUnlessEqual(self.cache.get_block("pink"), None)
 
-class GetTests(CacheBase):
+    def testReturnsBlockContentsWhenRequested(self):
+        self.cache.put_block("pink", "pretty")
+        self.failUnlessEqual(self.cache.get_block("pink"), "pretty")
 
-    def testGet(self):
-        cache = obnamlib.cache.Cache(self.config)
-        id = "pink"
-        block = "pretty"
-        self.failUnlessEqual(cache.get_block(id), None)
-
-        cache.put_block(id, block)
-        self.failUnlessEqual(cache.get_block(id), block)
