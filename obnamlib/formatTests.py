@@ -114,7 +114,6 @@ class FormatTimeTests(unittest.TestCase):
                              "1970-01-01 00:00:01")
 
 
-
 class ListingTests(unittest.TestCase):
 
     dirpat = re.compile(r"^drwxrwxrwx 0 0 0 0 1970-01-01 00:00:00 pretty$")
