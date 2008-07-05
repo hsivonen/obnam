@@ -245,7 +245,7 @@ class Application:
 
     def get_file_in_previous_generation(self, pathname):
         """Return non-directory file in previous generation, or None."""
-        if self._filelist:
+        if self._filelist: #pragma: no cover
             logging.debug("Have FILELIST, searching it for %s" % pathname)
             file = self.find_file_by_name(pathname)
             if file:
