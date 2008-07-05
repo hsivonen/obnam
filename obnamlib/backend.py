@@ -381,5 +381,5 @@ def init(config, cache):
     _, host, _, _ = parse_store_url(config.get("backup", "store"))
     if host is None:
         return FileBackend(config, cache)
-    else:
+    else: #pragma: no cover
         return SftpBackend(config, cache)
