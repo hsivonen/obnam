@@ -110,7 +110,8 @@ class FormatInodeFieldsTest(unittest.TestCase):
 class FormatTimeTests(unittest.TestCase):
 
     def test(self):
-        self.failUnlessEqual(obnamlib.format.timestamp(1), "1970-01-01 00:00:01")
+        self.failUnlessEqual(obnamlib.format.timestamp(1), 
+                             "1970-01-01 00:00:01")
 
 
 
