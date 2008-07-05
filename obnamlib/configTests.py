@@ -48,10 +48,8 @@ class CommandLineParsingTests(unittest.TestCase):
                   "log-file", "gpg-home", "gpg-encrypt-to",
                   "gpg-sign-with", "no-gpg", "exclude",
                   "report-progress", "generation-times"]
-        needed.sort()
         actual = config.options("backup")
-        actual.sort()
-        self.failUnlessEqual(actual, needed)
+        self.failUnlessEqual(sorted(actual), sorted(needed))
 
     def testEmpty(self):
         config = obnamlib.config.default_config()
