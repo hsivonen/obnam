@@ -42,6 +42,10 @@ class RsyncTests(unittest.TestCase):
             if os.path.exists(filename):
                 os.remove(filename)
 
+        dirname = self.context.config.get("backup", "store")    
+        if os.path.exists(dirname):
+            shutil.rmtree(dirname)
+
     def create_temporary_file(self, contents):
         (fd, filename) = tempfile.mkstemp()
         os.close(fd)
@@ -90,8 +94,6 @@ class RsyncTests(unittest.TestCase):
         # and then this should become clearer. --liw, 2006-09-24
         self.failUnlessEqual(delta, "rs\x026\x00")
         
-        shutil.rmtree(self.context.config.get("backup", "store"))
-        
     def testApplyDelta(self):
         first = self.create_temporary_file("pink")
         second = self.create_temporary_file("pretty")
@@ -105,8 +107,6 @@ class RsyncTests(unittest.TestCase):
         third_data = obnamlib.read_file(third)
 
         self.failUnlessEqual(third_data, "pretty")
-        
-        shutil.rmtree(self.context.config.get("backup", "store"))
 
     def raise_os_error(self, *args):
         raise os.error("foo")
@@ -129,4 +129,3 @@ class RsyncTests(unittest.TestCase):
                               self.context, first, deltapart_ids, "/dev/null",
                               cmd="./badcat")
 
-        shutil.rmtree(self.context.config.get("backup", "store"))
