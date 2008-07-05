@@ -592,6 +592,10 @@ class ApplicationBackupsOneDirectoryTests(unittest.TestCase):
         dir = self.app.backup_one_dir(self.dirname, [], [], is_root=True)
         self.failUnlessEqual(dir.get_name(), self.dirname)
 
+    def testWithCorrectNameWhenNameEndsInSlash(self):
+        dir = self.app.backup_one_dir(self.dirname + os.sep, [], [])
+        self.failUnlessEqual(dir.get_name(), os.path.basename(self.dirname))
+
     def testWithCorrectStat(self):
         dir = self.app.backup_one_dir(self.dirname, [], [])
         self.failUnlessEqual(dir.get_stat(), os.stat(self.dirname))
