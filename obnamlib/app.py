@@ -437,7 +437,7 @@ class Application:
 
         unsolved = obnamlib.io.unsolve(self.get_context(), dirname)
         old_dir = self.get_dir_in_previous_generation(unsolved)
-        if old_dir and self.dir_is_unchanged(old_dir, dir):
+        if old_dir and self.dir_is_unchanged(old_dir, dir): #pragma: no cover
             logging.debug("Dir is unchanged: %s" % dirname)
             return old_dir
         else:
