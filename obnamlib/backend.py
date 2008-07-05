@@ -202,7 +202,7 @@ class Backend:
             pass
     
 
-class SftpBackend(Backend):
+class SftpBackend(Backend): #pragma: no cover
 
     io_size = 64 * 1024
     
