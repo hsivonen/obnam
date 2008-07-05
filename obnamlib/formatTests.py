@@ -37,15 +37,15 @@ class FormatPermissionsTests(unittest.TestCase):
     def testFormatPermissions(self):
         facit = (
             (00000, "---------"),   # No permissions for anyone
-            (00100, "--x------"),   # Execute for owner
-            (00200, "-w-------"),   # Write for owner
-            (00400, "r--------"),   # Read for owner
-            (00010, "-----x---"),   # Execute for group
-            (00020, "----w----"),   # Write for group
-            (00040, "---r-----"),   # Read for group
             (00001, "--------x"),   # Execute for others
             (00002, "-------w-"),   # Write for others
             (00004, "------r--"),   # Read for others
+            (00010, "-----x---"),   # Execute for group
+            (00020, "----w----"),   # Write for group
+            (00040, "---r-----"),   # Read for group
+            (00100, "--x------"),   # Execute for owner
+            (00200, "-w-------"),   # Write for owner
+            (00400, "r--------"),   # Read for owner
             (01001, "--------t"),   # Sticky bit
             (01000, "--------T"),   # Sticky bit (upper case since no x)
             (02010, "-----s---"),   # Set group id
@@ -116,8 +116,13 @@ class FormatTimeTests(unittest.TestCase):
 
 class ListingTests(unittest.TestCase):
 
-    dirpat = re.compile(r"^drwxrwxrwx 0 0 0 0 1970-01-01 00:00:00 pretty$")
-    filepat = re.compile(r"^-rw-rw-rw- 0 0 0 0 1970-01-01 00:00:00 pink$")
+    def filepat(self, name):
+        return re.compile(r"^-rw-rw-rw- 0 0 0 0 1970-01-01 00:00:00 %s$" %
+                          name)
+    
+    def dirpat(self, name):
+        return re.compile(r"^drwxrwxrwx 0 0 0 0 1970-01-01 00:00:00 %s$" % 
+                          name)
 
     def make_filegroup(self, filenames):
         fg = obnamlib.obj.FileGroupObject(id=obnamlib.obj.object_id_new())
@@ -157,21 +162,22 @@ class ListingTests(unittest.TestCase):
     def testWritesAFileLineForOneFile(self):
         fg = self.make_filegroup(["pink"])
         self.listing.walk([], [fg])
-        self.failUnless(self.filepat.match(self.file.getvalue()))
+        self.failUnless(self.filepat("pink").match(self.file.getvalue()))
 
     def testWritesADirLineForOneDir(self):
         dir = self.make_dir("pretty", [], [])
         self.listing.walk([dir], [])
-        self.failUnless(self.dirpat.match(self.file.getvalue()))
+        self.failUnless(self.dirpat("pretty").match(self.file.getvalue()))
 
     def testWritesFileInSubdirectoryCorrectly(self):
         fg = self.make_filegroup(["pink"])
         dir = self.make_dir("pretty", [], [fg])
-        self.listing.walk([dir], [])
+        self.listing.walk([dir], [], fullpath="/tmp")
         s = self.file.getvalue()
         lines = s.splitlines()
         self.failUnlessEqual(len(lines), 4)
-        self.failUnless(self.dirpat.match(lines[0]))
+        self.failUnless(self.dirpat("pretty").match(lines[0]))
         self.failUnlessEqual(lines[1], "")
-        self.failUnlessEqual(lines[2], "pretty:")
-        self.failUnless(self.filepat.match(lines[3]))
+        self.failUnlessEqual(lines[2], "/tmp/pretty:")
+        self.failUnless(self.filepat("pink").match(lines[3]))
+
