@@ -27,6 +27,18 @@ import unittest
 import obnamlib
 
 
+class MockFadviseModule:
+
+    def fadvise_dontneed(self, fd, pos, length):
+        return -1
+
+
+class MockLoggingModule:
+
+    def warning(self, msg):
+        pass
+
+
 class ExceptionTests(unittest.TestCase):
 
     def testMissingBlock(self):
@@ -279,7 +291,11 @@ class FileContentsTests(unittest.TestCase):
         self.context.config.set("backup", "block-size", "%d" % block_size)
         filename = "Makefile"
         
-        id = obnamlib.io.create_file_contents_object(self.context, filename)
+        mock_fadvise = MockFadviseModule()
+        mock_logging = MockLoggingModule()
+        id = obnamlib.io.create_file_contents_object(self.context, filename,
+                                                     fadvise=mock_fadvise,
+                                                     logging=mock_logging)
 
         self.failIfEqual(id, None)
         self.failUnlessEqual(self.context.oq.ids(), [id])

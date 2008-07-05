@@ -197,7 +197,8 @@ def enqueue_object(context, oq, map, object_id, object, to_cache):
     oq.add(object_id, object)
 
 
-def create_file_contents_object(context, filename):
+def create_file_contents_object(context, filename, fadvise=fadvise, 
+                                logging=logging):
     """Create and queue objects to hold a file's contents"""
     object_id = obnamlib.obj.object_id_new()
     part_ids = []
