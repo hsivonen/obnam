@@ -27,7 +27,7 @@ man1dir = $(mandir)/man1
 pydir = $(libdir)/python2.5
 sitedir = $(pydir)/site-packages
 
-all: obnam.1 obnamfs.1 fadvisemodule.so
+all: obnam.1 obnamfs.1 fadvise.so
 
 version:
 	./obnam --version
@@ -38,9 +38,10 @@ obnam.1: obnam.docbook
 obnamfs.1: obnamfs.docbook
 	docbook2x-man --encoding utf8 obnamfs.docbook
 
-fadvisemodule.so:
+fadvise.so: fadvisemodule.c
 	python setup.py build
 	cp build/lib*/fadvise.so .
+	rm -rf build
 
 check: all
 	python -m CoverageTestRunner --ignore-coverage
@@ -53,9 +54,8 @@ check: all
 	    xargs ./check-license
 
 clean:
-	rm -rf *~ */*~ *.pyc *.pyo */*.pyc */*.pyo tmp.* *,cover */*,cover
-	rm -f obnam.1 obnamfs.1
-	rm -f .coverage
+	rm -rf *~ */*~ *.pyc *.pyo */*.pyc */*.pyo tmp.* *,cover */*,cover build
+	rm -f obnam.1 obnamfs.1 .coverage fadvise.so
 
 
 install: all
