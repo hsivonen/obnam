@@ -45,3 +45,16 @@ def make_stat_result(st_mode=0, st_ino=0, st_dev=0, st_nlink=0, st_uid=0,
            st_atime, st_mtime, st_ctime)
 
     return os.stat_result(tup, dict)
+
+
+def create_file(filename, contents):
+    """Create a new file with the given contents.
+    
+    If the file already exists, the existing contents are overwritten.
+    
+    """
+    
+    f = file(filename, "w")
+    f.write(contents)
+    f.close
+
