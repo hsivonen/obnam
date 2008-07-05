@@ -29,8 +29,7 @@ class ContextCreateTests(unittest.TestCase):
     def test(self):
         context = obnamlib.context.Context()
         attrs = [x for x in dir(context) if not x.startswith("_")]
-        attrs.sort()
-        self.failUnlessEqual(attrs, 
+        self.failUnlessEqual(sorted(attrs), 
             ["be", "cache", "config", "content_oq", "contmap", "map", "object_cache", 
              "oq", "progress"])
         self.failUnlessEqual(context.be, None)
