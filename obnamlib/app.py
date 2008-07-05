@@ -263,14 +263,14 @@ class Application:
             logging.debug("No previous gen in which to find %s" % pathname)
             return None
 
-    def _reuse_existing(self, old_file):
+    def _reuse_existing(self, old_file): #pragma: no cover
         logging.debug("Re-using existing file contents: %s" %
                       old_file.first_string_by_kind(obnamlib.cmp.FILENAME))
         return (old_file.first_string_by_kind(obnamlib.cmp.CONTREF),
                 old_file.first_string_by_kind(obnamlib.cmp.SIGREF),
                 old_file.first_string_by_kind(obnamlib.cmp.DELTAREF))
 
-    def _get_old_sig(self, old_file):
+    def _get_old_sig(self, old_file): #pragma: no cover
         old_sigref = old_file.first_string_by_kind(obnamlib.cmp.SIGREF)
         if not old_sigref:
             return None
@@ -279,7 +279,7 @@ class Application:
             return None
         return old_sig.first_string_by_kind(obnamlib.cmp.SIGDATA)
 
-    def _compute_delta(self, old_file, filename):
+    def _compute_delta(self, old_file, filename): #pragma: no cover
         old_sig_data = self._get_old_sig(old_file)
         if old_sig_data:
             logging.debug("Computing delta for %s" % filename)
@@ -319,7 +319,7 @@ class Application:
         if stat.S_ISREG(st.st_mode):
             unsolved = obnamlib.io.unsolve(self.get_context(), filename)
             old_file = self.get_file_in_previous_generation(unsolved)
-            if old_file:
+            if old_file: #pragma: no cover
                 old_st = old_file.first_by_kind(obnamlib.cmp.STAT)
                 old_st = obnamlib.cmp.parse_stat_component(old_st)
                 if self.file_is_unchanged(old_st, st):
