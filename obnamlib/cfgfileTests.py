@@ -44,9 +44,6 @@ class SectionTests(unittest.TestCase):
     def setUp(self):
         self.cf = obnamlib.cfgfile.ConfigFile()
         
-    def tearDown(self):
-        self.cf = None
-
     def testEmptySections(self):
         self.failUnlessEqual(self.cf.sections(), [])
         
