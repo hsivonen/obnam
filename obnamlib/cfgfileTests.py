@@ -90,9 +90,6 @@ class OptionsTests(unittest.TestCase):
     def setUp(self):
         self.cf = obnamlib.cfgfile.ConfigFile()
         
-    def tearDown(self):
-        self.cf = None
-        
     def testOptionsNonExistentSection(self):
         self.failUnlessRaises(obnamlib.cfgfile.NoSectionError,
                               self.cf.options,
