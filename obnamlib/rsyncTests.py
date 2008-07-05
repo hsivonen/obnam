@@ -33,6 +33,9 @@ class RsyncTests(unittest.TestCase):
         self.tempfiles = []
         self.empty = self.create_temporary_file("")
         self.context = obnamlib.context.Context()
+        self.context.cache = obnamlib.cache.Cache(self.context.config)
+        self.context.be = obnamlib.backend.init(self.context.config, 
+                                                self.context.cache)
         
     def tearDown(self):
         for filename in self.tempfiles:
@@ -70,10 +73,6 @@ class RsyncTests(unittest.TestCase):
                               self.context, "pink", self.empty)
 
     def testEmptyDelta(self):
-        self.context.cache = obnamlib.cache.Cache(self.context.config)
-        self.context.be = obnamlib.backend.init(self.context.config, 
-                                                self.context.cache)
-
         sig = obnamlib.rsync.compute_signature(self.context, self.empty)
         deltapart_ids = obnamlib.rsync.compute_delta(self.context, sig, 
                                                      self.empty)
@@ -94,10 +93,6 @@ class RsyncTests(unittest.TestCase):
         shutil.rmtree(self.context.config.get("backup", "store"))
         
     def testApplyDelta(self):
-        self.context.cache = obnamlib.cache.Cache(self.context.config)
-        self.context.be = obnamlib.backend.init(self.context.config, 
-                                                self.context.cache)
-        
         first = self.create_temporary_file("pink")
         second = self.create_temporary_file("pretty")
         sig = obnamlib.rsync.compute_signature(self.context, first)
@@ -123,10 +118,6 @@ class RsyncTests(unittest.TestCase):
                               open=self.raise_os_error)
 
     def testApplyDeltaRaisesExceptionWhenCommandFails(self):
-        self.context.cache = obnamlib.cache.Cache(self.context.config)
-        self.context.be = obnamlib.backend.init(self.context.config, 
-                                                self.context.cache)
-        
         first = self.create_temporary_file("pink")
         second = self.create_temporary_file("pretty")
         sig = obnamlib.rsync.compute_signature(self.context, first)
