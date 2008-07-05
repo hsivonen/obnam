@@ -44,7 +44,7 @@ fadvise.so: fadvisemodule.c
 	rm -rf build
 
 check: all
-	python -m CoverageTestRunner --ignore-coverage
+	python -m CoverageTestRunner
 	rm -f .coverage
 	sh blackboxtests tests/*
 	./xxx-restore-etc-old-style
