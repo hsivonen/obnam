@@ -324,7 +324,7 @@ def set_inode(full_pathname, file_component):
 
 
 _interesting = set([obnamlib.cmp.OBJECT, obnamlib.cmp.FILE])
-def _find_refs(components, refs=None):
+def _find_refs(components, refs=None): #pragma: no cover
     """Return set of all references (recursively) in a list of components"""
     if refs is None:
         refs = set()
@@ -340,7 +340,7 @@ def _find_refs(components, refs=None):
     return refs
 
 
-def find_reachable_data_blocks(context, host_block):
+def find_reachable_data_blocks(context, host_block): #pragma: no cover
     """Find all blocks with data that can be reached from host block"""
     logging.debug("Finding reachable data")
     host = obnamlib.obj.create_host_from_block(host_block)
