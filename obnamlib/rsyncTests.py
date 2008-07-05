@@ -31,6 +31,7 @@ class RsyncTests(unittest.TestCase):
 
     def setUp(self):
         self.tempfiles = []
+        self.empty = self.create_temporary_file("")
         
     def tearDown(self):
         for filename in self.tempfiles:
@@ -45,45 +46,38 @@ class RsyncTests(unittest.TestCase):
         return filename
 
     def testSignature(self):
-        empty_file = self.create_temporary_file("")
-
+        empty_sig = self.create_temporary_file("")
         context = obnamlib.context.Context()
-        sig = obnamlib.rsync.compute_signature(context, empty_file)
-        os.system("rdiff signature %s empty_file.sig.temp" % empty_file)
-        data = obnamlib.read_file("empty_file.sig.temp")
+        sig = obnamlib.rsync.compute_signature(context, self.empty)
+        os.system("rdiff signature %s %s" % (self.empty, empty_sig))
+        data = obnamlib.read_file(empty_sig)
         self.failUnlessEqual(sig, data)
-        os.remove("empty_file.sig.temp")
 
     def testSignatureRaisesExceptionIfCommandIsUnknown(self):
-        empty_file = self.create_temporary_file("")
         context = obnamlib.context.Context()
         self.failUnlessRaises(obnamlib.rsync.UnknownCommand,
                               obnamlib.rsync.compute_signature,
-                              context, empty_file, rdiff="unknown_command")
+                              context, self.empty, rdiff="unknown_command")
 
     def testSignatureRaisesExceptionIfCommandFails(self):
-        empty_file = self.create_temporary_file("")
         context = obnamlib.context.Context()
         self.failUnlessRaises(obnamlib.rsync.CommandFailure,
                               obnamlib.rsync.compute_signature,
-                              context, empty_file, rdiff="false")
+                              context, self.empty, rdiff="false")
 
     def testDeltaRaisesExceptionIfCommandFails(self):
-        empty_file = self.create_temporary_file("")
         context = obnamlib.context.Context()
         self.failUnlessRaises(obnamlib.rsync.CommandFailure,
                               obnamlib.rsync.compute_delta,
-                              context, "pink", empty_file)
+                              context, "pink", self.empty)
 
     def testEmptyDelta(self):
-        empty_file = self.create_temporary_file("")
-
         context = obnamlib.context.Context()
         context.cache = obnamlib.cache.Cache(context.config)
         context.be = obnamlib.backend.init(context.config, context.cache)
 
-        sig = obnamlib.rsync.compute_signature(context, empty_file)
-        deltapart_ids = obnamlib.rsync.compute_delta(context, sig, empty_file)
+        sig = obnamlib.rsync.compute_signature(context, self.empty)
+        deltapart_ids = obnamlib.rsync.compute_delta(context, sig, self.empty)
 
         self.failUnlessEqual(len(deltapart_ids), 1)
 
