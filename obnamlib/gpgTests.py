@@ -52,27 +52,23 @@ class GpgDecryptionFailureTests(unittest.TestCase):
 class GpgTests(unittest.TestCase):
 
     def setUp(self):
+        self.block = "pink"
         self.config = obnamlib.config.default_config()
         self.config.set("backup", "gpg-home", "sample-gpg-home")
         self.config.set("backup", "gpg-encrypt-to", "490C9ED1")
         self.config.set("backup", "gpg-sign-with", "490C9ED1")
 
     def testRoundTrip(self):
-        block = "pink"
-        
-        encrypted = obnamlib.gpg.encrypt(self.config, block)
-        self.failIf(block in encrypted)
-        
+        encrypted = obnamlib.gpg.encrypt(self.config, self.block)
+        self.failIf(self.block in encrypted)
         decrypted = obnamlib.gpg.decrypt(self.config, encrypted)
-        self.failUnlessEqual(block, decrypted)
+        self.failUnlessEqual(self.block, decrypted)
 
     def testEncryptionWithInvalidKey(self):
-        block = "pink"
         self.config.set("backup", "gpg-encrypt-to", "pretty")
         self.failUnlessRaises(obnamlib.gpg.GpgEncryptionFailure,
-                              obnamlib.gpg.encrypt, self.config, block)
+                              obnamlib.gpg.encrypt, self.config, "")
 
     def testDecryptionWithInvalidData(self):
-        encrypted = "pink"
         self.failUnlessRaises(obnamlib.gpg.GpgDecryptionFailure,
-                              obnamlib.gpg.decrypt, self.config, encrypted)
+                              obnamlib.gpg.decrypt, self.config, "pink")
