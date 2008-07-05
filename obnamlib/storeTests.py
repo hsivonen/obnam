@@ -250,6 +250,7 @@ class StoreLookupTests(unittest.TestCase):
         self.gen = self.store.get_object(gen_ids[0])
 
     def tearDown(self):
+        self.store.close()
         shutil.rmtree(self.datadir)
         shutil.rmtree(self.store._context.config.get("backup", "store"))
 
