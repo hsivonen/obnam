@@ -75,3 +75,12 @@ class CreateFileTests(unittest.TestCase):
         obnamlib.create_file(self.filename, "foobar")
         self.failUnlessEqual(self.cat(self.filename), "foobar")
 
+
+class ReadFileTests(unittest.TestCase):
+
+    def testReturnsTheCorrectContents(self):
+        (fd, filename) = tempfile.mkstemp()
+        os.write(fd, "foo")
+        os.close(fd)
+        self.failUnlessEqual(obnamlib.read_file(filename), "foo")
+

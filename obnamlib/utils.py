@@ -58,3 +58,11 @@ def create_file(filename, contents):
     f.write(contents)
     f.close
 
+
+def read_file(filename):
+    """Return the contents of a file."""
+    f = file(filename)
+    contents = f.read()
+    f.close()
+    return contents
+
