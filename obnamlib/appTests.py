@@ -377,9 +377,8 @@ class ApplicationFindUnchangedFilegroupsTests(unittest.TestCase):
         return self.stats[filename]
 
     def find(self, filegroups, filenames):
-        return self.app.find_unchanged_filegroups(self.dirname, filegroups, 
-                                                  filenames,
-                                                  stat=self.mock_stat)
+        return self.app.unchanged_groups(self.dirname, filegroups,  filenames, 
+                                         stat=self.mock_stat)
 
     def testReturnsEmptyListForEmptyListOfGroups(self):
         self.failUnlessEqual(self.find([], self.names), [])

@@ -224,8 +224,7 @@ class Application:
         self.get_store().queue_object(sig)
         return sig
 
-    def find_unchanged_filegroups(self, dirname, filegroups, filenames, 
-                                  stat=os.lstat):
+    def unchanged_groups(self, dirname, filegroups,filenames, stat=os.lstat):
         """Return list of filegroups that are unchanged.
         
         The filenames and stat arguments have the same meaning as 
@@ -388,9 +387,8 @@ class Application:
             logging.debug("Found directory in previous generation")
             old_groups = [self.get_store().get_object(id)
                           for id in old_dir.get_filegrouprefs()]
-            filegroups = self.find_unchanged_filegroups(dirname, old_groups,
-                                                        filenames,
-                                                        stat=stat)
+            filegroups = self.unchanged_groups(dirname, old_groups, filenames, 
+                                               stat=stat)
             for fg in filegroups:
                 for name in fg.get_names():
                     filenames.remove(name)
