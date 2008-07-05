@@ -83,7 +83,7 @@ class UseGpgTests(unittest.TestCase):
     def setUp(self):
         self.config = obnamlib.config.default_config()
         self.config.set("backup", "gpg-encrypt-to", "")
-        self.cache = obnamlib.cache.Cache(self.config)
+        self.cache = obnamlib.Cache(self.config)
         self.be = obnamlib.backend.Backend(self.config, self.cache)
 
     def testDoNotUseByDefault(self):
@@ -103,7 +103,7 @@ class DircountTests(unittest.TestCase):
 
     def setUp(self):
         self.config = obnamlib.config.default_config()
-        self.cache = obnamlib.cache.Cache(self.config)
+        self.cache = obnamlib.Cache(self.config)
         self.be = obnamlib.backend.Backend(self.config, self.cache)
 
     def testInit(self):
@@ -152,7 +152,7 @@ class LocalBackendBase(unittest.TestCase):
         for section, item, value in config_list:
             self.config.set(section, item, value)
 
-        self.cache = obnamlib.cache.Cache(self.config)
+        self.cache = obnamlib.Cache(self.config)
 
     def tearDown(self):
         shutil.rmtree(self.cachedir)

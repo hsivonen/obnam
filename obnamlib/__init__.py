@@ -26,7 +26,6 @@ from exception import ObnamException
 
 import defaultconfig
 import backend
-import cache
 import cfgfile
 import cmp
 import config
@@ -45,6 +44,7 @@ import varint
 import walk
 
 from app import Application
+from cache import Cache
 from oper import Operation, OperationFactory
 from store import Store
 from utils import make_stat_result, create_file, read_file

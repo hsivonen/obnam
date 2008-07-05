@@ -31,7 +31,7 @@ class StoreTests(unittest.TestCase):
 
     def setUp(self):
         context = obnamlib.context.Context()
-        context.cache = obnamlib.cache.Cache(context.config)
+        context.cache = obnamlib.Cache(context.config)
         context.be = obnamlib.backend.init(context.config, context.cache)
         self.store = obnamlib.Store(context)
 
@@ -76,7 +76,7 @@ class StoreTests(unittest.TestCase):
 
     def testLoadsActualHostBlockWhenOneExists(self):
         context = obnamlib.context.Context()
-        cache = obnamlib.cache.Cache(context.config)
+        cache = obnamlib.Cache(context.config)
         context.be = obnamlib.backend.init(context.config, context.cache)
         host_id = context.config.get("backup", "host-id")
         temp = obnamlib.obj.HostBlockObject(host_id=host_id,
@@ -98,7 +98,7 @@ class StoreTests(unittest.TestCase):
         self.store.commit_host_block([])
         
         context2 = obnamlib.context.Context()
-        context2.cache = obnamlib.cache.Cache(context2.config)
+        context2.cache = obnamlib.Cache(context2.config)
         context2.be = obnamlib.backend.init(context2.config, context2.cache)
         store2 = obnamlib.Store(context2)
         store2.fetch_host_block()
@@ -122,7 +122,7 @@ class StoreMapTests(unittest.TestCase):
         # First, set up two mappings.
 
         context = obnamlib.context.Context()
-        context.cache = obnamlib.cache.Cache(context.config)
+        context.cache = obnamlib.Cache(context.config)
         context.be = obnamlib.backend.init(context.config, context.cache)
 
         obnamlib.map.add(context.map, "pink", "pretty")
@@ -146,7 +146,7 @@ class StoreMapTests(unittest.TestCase):
         # Then set up the real context and app.
 
         self.context = obnamlib.context.Context()
-        self.context.cache = obnamlib.cache.Cache(self.context.config)
+        self.context.cache = obnamlib.Cache(self.context.config)
         self.context.be = obnamlib.backend.init(self.context.config, 
                                              self.context.cache)
         self.store = obnamlib.Store(self.context)
@@ -231,7 +231,7 @@ class StoreLookupTests(unittest.TestCase):
 
     def create_context(self):
         context = obnamlib.context.Context()
-        context.cache = obnamlib.cache.Cache(context.config)
+        context.cache = obnamlib.Cache(context.config)
         context.be = obnamlib.backend.init(context.config, context.cache)
         return context
 

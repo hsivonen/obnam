@@ -32,7 +32,7 @@ class CacheTests(unittest.TestCase):
         self.cachedir = tempfile.mkdtemp()
         self.config = obnamlib.config.default_config()
         self.config.set("backup", "cache", self.cachedir)
-        self.cache = obnamlib.cache.Cache(self.config)
+        self.cache = obnamlib.Cache(self.config)
 
     def tearDown(self):
         if os.path.exists(self.cachedir):

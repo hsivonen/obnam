@@ -80,7 +80,7 @@ class ApplicationLoadHostBlockTests(unittest.TestCase):
 
     def setUp(self):
         context = obnamlib.context.Context()
-        cache = obnamlib.cache.Cache(context.config)
+        cache = obnamlib.Cache(context.config)
         context.be = obnamlib.backend.init(context.config, context.cache)
         self.app = obnamlib.Application(context)
 
@@ -99,7 +99,7 @@ class ApplicationLoadHostBlockTests(unittest.TestCase):
 
     def testLoadsActualHostBlockWhenOneExists(self):
         context = obnamlib.context.Context()
-        cache = obnamlib.cache.Cache(context.config)
+        cache = obnamlib.Cache(context.config)
         context.be = obnamlib.backend.init(context.config, context.cache)
         host_id = context.config.get("backup", "host-id")
         temp = obnamlib.obj.HostBlockObject(host_id=host_id,

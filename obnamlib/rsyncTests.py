@@ -33,7 +33,7 @@ class RsyncTests(unittest.TestCase):
         self.tempfiles = []
         self.empty = self.create_temporary_file("")
         self.context = obnamlib.context.Context()
-        self.context.cache = obnamlib.cache.Cache(self.context.config)
+        self.context.cache = obnamlib.Cache(self.context.config)
         self.context.be = obnamlib.backend.init(self.context.config, 
                                                 self.context.cache)
         
