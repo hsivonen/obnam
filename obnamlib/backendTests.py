@@ -269,7 +269,7 @@ class FileListTests(LocalBackendBase):
 
 class RemoveTests(LocalBackendBase):
 
-    def test(self):
+    def testOK(self):
         be = obnamlib.backend.init(self.config, self.cache)
         id = be.generate_block_id()
         block = "pink is still pretty"
@@ -277,5 +277,21 @@ class RemoveTests(LocalBackendBase):
 
         self.failUnlessEqual(be.list(), [id])
         
+        be.remove(id)
+        self.failUnlessEqual(be.list(), [])
+
+    def mock_remove_pathname(self, pathname):
+        os.remove(pathname)
+        raise IOError(pathname)
+
+    def testRemoveError(self):
+        be = obnamlib.backend.init(self.config, self.cache)
+        id = be.generate_block_id()
+        block = "pink is still pretty"
+        be.upload_block(id, block, False)
+
+        self.failUnlessEqual(be.list(), [id])
+        
+        be.remove_pathname = self.mock_remove_pathname
         be.remove(id)
         self.failUnlessEqual(be.list(), [])
