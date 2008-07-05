@@ -42,7 +42,6 @@ class CommandLineParsingTests(unittest.TestCase):
 
     def testDefaultConfig(self):
         config = obnamlib.config.default_config()
-        self.failUnless(config.has_section("backup"))
         needed = ["block-size", "cache", "store", "target-dir",
                   "host-id", "object-cache-size", "log-level", "ssh-key",
                   "log-file", "gpg-home", "gpg-encrypt-to",
