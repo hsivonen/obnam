@@ -224,19 +224,19 @@ class UploadTests(LocalBackendBase):
 class DownloadTests(LocalBackendBase):
 
     def testOK(self):
-        self.config.set("backup", "gpg-home", "")
-        self.config.set("backup", "gpg-encrypt-to", "")
-        self.config.set("backup", "gpg-sign-with", "")
+        self.config.set("backup", "gpg-home", "sample-gpg-home")
+        self.config.set("backup", "gpg-encrypt-to", "490C9ED1")
+        self.config.set("backup", "gpg-sign-with", "490C9ED1")
 
         be = obnamlib.backend.init(self.config, self.cache)
         id = be.generate_block_id()
         block = "pink is still pretty"
         be.upload_block(id, block, False)
         
-        success = be.download_block(id)
-        self.failUnlessEqual(type(success), type(""))
-        self.failUnlessEqual(be.get_bytes_read(), len(block))
-        self.failUnlessEqual(be.get_bytes_written(), len(block))
+        downloaded_block = be.download_block(id)
+        self.failUnlessEqual(block, downloaded_block)
+        self.failUnlessEqual(be.get_bytes_read(), 
+                             be.get_bytes_written())
         
     def testError(self):
         be = obnamlib.backend.init(self.config, self.cache)
