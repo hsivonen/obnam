@@ -50,9 +50,7 @@ class RsyncTests(unittest.TestCase):
         context = obnamlib.context.Context()
         sig = obnamlib.rsync.compute_signature(context, empty_file)
         os.system("rdiff signature %s empty_file.sig.temp" % empty_file)
-        f = file("empty_file.sig.temp")
-        data = f.read()
-        f.close()
+        data = obnamlib.read_file("empty_file.sig.temp")
         self.failUnlessEqual(sig, data)
         os.remove("empty_file.sig.temp")
 
@@ -116,9 +114,7 @@ class RsyncTests(unittest.TestCase):
         third = self.create_temporary_file("")
         obnamlib.rsync.apply_delta(context, first, deltapart_ids, third)
         
-        f = file(third, "r")
-        third_data = f.read()
-        f.close()
+        third_data = obnamlib.read_file(third)
 
         self.failUnlessEqual(third_data, "pretty")
         
