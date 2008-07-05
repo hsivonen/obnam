@@ -259,7 +259,7 @@ def copy_file_contents(context, fd, cont_id):
         os.write(fd, chunk)
 
 
-def reconstruct_file_contents(context, fd, delta_id):
+def reconstruct_file_contents(context, fd, delta_id): #pragma: no cover
     """Write (to file descriptor) file contents, given an rsync delta"""
     logging.debug("Reconstructing contents %s to %d" % (delta_id, fd))
 
