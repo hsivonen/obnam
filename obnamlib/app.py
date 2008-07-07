@@ -589,7 +589,7 @@ class Application:
                 self.set_previous_generation(prevgen)
                 o = self.backup_one_root(root)
                 if self.time_for_snapshot(): #pragma: no cover
-                    logging.warning("Making a snapshot generation")
+                    logging.debug("Making a snapshot generation")
                     gen = self._make_generation(start, root_objs + [o], True)
                     yield gen
                     prevgen = gen
