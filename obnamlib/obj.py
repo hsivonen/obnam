@@ -275,7 +275,8 @@ class GenerationObject(StorageObject):
     kind = GEN
 
     def __init__(self, components=None, id=None, filelist_id=None, 
-                 dirrefs=None, filegrouprefs=None, start=None, end=None):
+                 dirrefs=None, filegrouprefs=None, start=None, end=None,
+                 is_snapshot=False):
         StorageObject.__init__(self, components=components, id=id)
         if filelist_id:
             self.add(obnamlib.cmp.Component(obnamlib.cmp.FILELISTREF, filelist_id))
@@ -291,6 +292,9 @@ class GenerationObject(StorageObject):
         if end:
             self.add(obnamlib.cmp.Component(obnamlib.cmp.GENEND, 
                                          obnamlib.varint.encode(end)))
+        if is_snapshot:
+            self.add(obnamlib.cmp.Component(obnamlib.cmp.SNAPSHOTGEN,
+                                            obnamlib.varint.encode(1)))
 
     def get_filelistref(self):
         return self.first_string_by_kind(obnamlib.cmp.FILELISTREF)
@@ -306,6 +310,10 @@ class GenerationObject(StorageObject):
 
     def get_end_time(self):
         return self.first_varint_by_kind(obnamlib.cmp.GENEND)
+
+    def is_snapshot(self):
+        c = self.first_by_kind(obnamlib.cmp.SNAPSHOTGEN)
+        return c and c.get_varint_value() == 1
 
 
 # This is used only by testing.

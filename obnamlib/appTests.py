@@ -756,3 +756,15 @@ class ApplicationBackupTests(unittest.TestCase):
         for gen in self.app.backup([self.abs("pink"), self.abs("pretty")]):
             self.failIfEqual(gen.get_start_time(), None)
             self.failIfEqual(gen.get_end_time(), None)
+    
+    def testAllButLastReturnedGenerationAreSnapshots(self):
+        dirs = [self.abs(x) for x in ["pink", "pretty"]]
+        gens = [gen for gen in self.app.backup(dirs)]
+        for gen in gens[:-1]:
+            self.failUnless(gen.is_snapshot())
+    
+    def testLastReturnedGenerationIsNotSnapshot(self):
+        dirs = [self.abs(x) for x in ["pink", "pretty"]]
+        gens = [gen for gen in self.app.backup(dirs)]
+        self.failIf(gens[-1].is_snapshot())
+

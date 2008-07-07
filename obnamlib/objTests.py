@@ -210,6 +210,18 @@ class GenerationTests(unittest.TestCase):
     def testSetsEndTimeCorrectly(self):
         self.failUnlessEqual(self.gen.get_end_time(), 456)
 
+    def testSetsSnapshotToTrueCorrectly(self):
+        gen = GenerationObject(id="objid", is_snapshot=True)
+        self.failUnless(gen.is_snapshot())
+        
+    def testSetsSnapshotToFalseCorrectly(self):
+        gen = GenerationObject(id="objid", is_snapshot=False)
+        self.failIf(gen.is_snapshot())
+
+    def testSetsSnapshotToFalseByDefault(self):
+        gen = GenerationObject(id="objid")
+        self.failIf(gen.is_snapshot())
+
 
 class OldStorageObjectTests(unittest.TestCase):
 

@@ -61,6 +61,7 @@ class ComponentKindNameTests(unittest.TestCase):
             "DELTAPARTREF",
             "DIRREF",
             "FILEGROUPREF",
+            "SNAPSHOTGEN",
         )
         
         for name in names:
