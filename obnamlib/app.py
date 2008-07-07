@@ -44,6 +44,7 @@ class Application:
         self._prev_gen = None
         self._store = obnamlib.Store(self._context)
         self._total = 0
+        self._latest_snapshot = 0
         
         # When we traverse the file system tree while making a backup,
         # we process children before the parent. This is necessary for
@@ -118,6 +119,20 @@ class Application:
                     break
             else:
                 i += 1
+
+    def time_for_snapshot(self):
+        """Is it time for a snapshot generation to be made?"""
+        context = self.get_context()
+        threshold = context.config.getint("backup", "snapshot-bytes")
+        if threshold == 0:
+            return False
+        bytes_written = context.be.get_bytes_written() - self._latest_snapshot
+        return bytes_written >= threshold
+        
+    def snapshot_done(self):
+        """Mark we did a snapshot generation at this point in the upload."""
+        bytes_written = self.get_context().be.get_bytes_written()
+        self._latest_snapshot = bytes_written
 
     def file_is_unchanged(self, stat1, stat2):
         """Is a file unchanged from the previous generation?

@@ -128,6 +128,12 @@ def build_parser():
                       action="append",
                       metavar="FILE",
                       help="also read FILE when reading configuration files")
+    
+    parser.add_option("--snapshot-bytes",
+                      type="int",
+                      metavar="SIZE",
+                      help="make a snapshot generation after SIZE uploaded "
+                           "data")
 
     return parser
 
@@ -209,6 +215,8 @@ def parse_options(config, argv):
         config.set("backup", "generation-times", "true")
     else:
         config.set("backup", "generation-times", "false")
+    if options.snapshot_bytes is not None:
+        config.set("backup", "snapshot-bytes", "%d" % options.snapshot_bytes)
 
     return args
 

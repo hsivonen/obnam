@@ -76,6 +76,71 @@ class ApplicationTests(unittest.TestCase):
         self.failUnlessEqual(self.app.get_previous_generation(), "pink")
 
 
+class MockBackend(object):
+
+    def set_amount(self, amount):
+        self.amount = amount
+
+    def get_bytes_written(self):
+        return self.amount
+
+
+class ApplicationSnapshotThresholdTests(unittest.TestCase):
+
+    def setUp(self):
+        self.threshold = 10
+        self.be = MockBackend()
+        self.context = obnamlib.context.Context()
+        self.context.config.set("backup", "snapshot-bytes", 
+                                str(self.threshold))
+        self.context.be = self.be
+        self.app = obnamlib.Application(self.context)
+
+    def testNotExceededIfNoThresholdSet(self):
+        self.context.config.set("backup", "snapshot-bytes", "0")
+        self.be.set_amount(self.threshold + 1)
+        self.failIf(self.app.time_for_snapshot())
+
+    def testNotExceededForZeroBytes(self):
+        self.be.set_amount(0)
+        self.failIf(self.app.time_for_snapshot())
+
+    def testMptExceededForThresholdMinusOneBytes(self):
+        self.be.set_amount(self.threshold - 1)
+        self.failIf(self.app.time_for_snapshot())
+
+    def testExceededForThresholdBytes(self):
+        self.be.set_amount(self.threshold)
+        self.failUnless(self.app.time_for_snapshot())
+
+    def testExceededForThresholdPlusOneBytes(self):
+        self.be.set_amount(self.threshold + 1)
+        self.failUnless(self.app.time_for_snapshot())
+
+    def testNotExceededForZeroAfterSnapshot(self):
+        self.be.set_amount(self.threshold)
+        self.app.snapshot_done()
+        self.failIf(self.app.time_for_snapshot())
+
+    def testNotExceededForThresholdMinusOneAfterSnapshot(self):
+        self.be.set_amount(self.threshold)
+        self.app.snapshot_done()
+        self.be.set_amount(2 * self.threshold - 1)
+        self.failIf(self.app.time_for_snapshot())
+
+    def testExceededForThresholdAfterSnapshot(self):
+        self.be.set_amount(self.threshold)
+        self.app.snapshot_done()
+        self.be.set_amount(2 * self.threshold)
+        self.failUnless(self.app.time_for_snapshot())
+
+    def testExceededForThresholdPlusOneAfterSnapshot(self):
+        self.be.set_amount(self.threshold)
+        self.app.snapshot_done()
+        self.be.set_amount(2 * self.threshold + 1)
+        self.failUnless(self.app.time_for_snapshot())
+
+
 class ApplicationLoadHostBlockTests(unittest.TestCase):
 
     def setUp(self):

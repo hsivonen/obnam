@@ -46,7 +46,7 @@ class CommandLineParsingTests(unittest.TestCase):
                   "host-id", "object-cache-size", "log-level", "ssh-key",
                   "log-file", "gpg-home", "gpg-encrypt-to",
                   "gpg-sign-with", "no-gpg", "exclude",
-                  "report-progress", "generation-times"]
+                  "report-progress", "generation-times", "snapshot-bytes"]
         actual = self.config.options("backup")
         self.failUnlessEqual(sorted(actual), sorted(needed))
 
@@ -121,6 +121,11 @@ class CommandLineParsingTests(unittest.TestCase):
         obnamlib.config.parse_options(self.config, ["--generation-times"])
         self.failUnlessEqual(self.config.get("backup", "generation-times"), 
                              "true")
+
+    def testSnapshotBytes(self):
+        obnamlib.config.parse_options(self.config, ["--snapshot-bytes=42"])
+        self.failUnlessEqual(self.config.getint("backup", "snapshot-bytes"), 
+                             42)
 
     def testExclude(self):
         obnamlib.config.parse_options(self.config, ["--exclude=foo"])
