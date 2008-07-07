@@ -740,18 +740,19 @@ class ApplicationBackupTests(unittest.TestCase):
 
     def testCallsBackupOneRootForEachRoot(self):
         dirs = [self.abs(x) for x in ["pink", "pretty"]]
-        self.app.backup(dirs)
+        for gen in self.app.backup(dirs):
+            pass
         self.failUnlessEqual(self.roots_backed_up, dirs)
 
     def testReturnsGenerationObject(self):
-        ret = self.app.backup([self.abs("pink"), self.abs("pretty")])
-        self.failUnless(isinstance(ret, obnamlib.obj.GenerationObject))
+        for ret in self.app.backup([self.abs("pink"), self.abs("pretty")]):
+            self.failUnless(isinstance(ret, obnamlib.obj.GenerationObject))
 
     def testReturnsGenerationWithTheRightRootObjects(self):
-        gen = self.app.backup([self.abs("pink"), self.abs("pretty")])
-        self.failUnlessEqual(len(gen.get_dirrefs()), 2)
+        for gen in self.app.backup([self.abs("pink"), self.abs("pretty")]):
+            self.failUnlessEqual(len(gen.get_dirrefs()), 2)
 
     def testReturnsGenerationWithTimeStamps(self):
-        gen = self.app.backup([self.abs("pink"), self.abs("pretty")])
-        self.failIfEqual(gen.get_start_time(), None)
-        self.failIfEqual(gen.get_end_time(), None)
+        for gen in self.app.backup([self.abs("pink"), self.abs("pretty")]):
+            self.failIfEqual(gen.get_start_time(), None)
+            self.failIfEqual(gen.get_end_time(), None)

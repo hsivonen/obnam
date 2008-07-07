@@ -240,8 +240,8 @@ class StoreLookupTests(unittest.TestCase):
 
         app = obnamlib.Application(self.create_context())
         app.load_host()
-        gen = app.backup([self.datadir])
-        app.get_store().commit_host_block([gen])
+        gens = [gen for gen in app.backup([self.datadir])]
+        app.get_store().commit_host_block(gens)
         
         self.store = obnamlib.Store(self.create_context())
         self.store.fetch_host_block()

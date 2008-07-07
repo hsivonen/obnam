@@ -506,4 +506,4 @@ class Application:
                                          dirrefs=dirrefs, start=start,
                                          end=end)
         self.get_store().queue_object(gen)
-        return gen
+        yield gen
