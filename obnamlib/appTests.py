@@ -218,6 +218,11 @@ class ApplicationMakeFileGroupsTests(unittest.TestCase):
         fg = list[0]
         self.failIf("/" in fg.get_names()[0])
 
+    def testReturnsOnlyOneFileGroupIfItIsTimeForSnapshot(self):
+        filenames = self.tempfiles[:obnamlib.app.MAX_PER_FILEGROUP + 1]
+        self.app.time_for_snapshot = lambda: True
+        self.failUnlessEqual(len(self.app.make_filegroups(filenames)), 1)
+
 
 class ApplicationUnchangedFileRecognitionTests(unittest.TestCase):
 
