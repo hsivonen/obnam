@@ -35,7 +35,7 @@ class ListGenerations(obnamlib.Operation):
         context = app.get_context()
         gentimes = context.config.getboolean("backup", "generation-times")
         if gentimes:
-            app.load_maps()
+            app.get_store().load_maps()
     
         gen_ids = host.get_generation_ids()
         for id in gen_ids:

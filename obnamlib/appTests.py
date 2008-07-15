@@ -76,6 +76,71 @@ class ApplicationTests(unittest.TestCase):
         self.failUnlessEqual(self.app.get_previous_generation(), "pink")
 
 
+class MockBackend(object):
+
+    def set_amount(self, amount):
+        self.amount = amount
+
+    def get_bytes_written(self):
+        return self.amount
+
+
+class ApplicationSnapshotThresholdTests(unittest.TestCase):
+
+    def setUp(self):
+        self.threshold = 10
+        self.be = MockBackend()
+        self.context = obnamlib.context.Context()
+        self.context.config.set("backup", "snapshot-bytes", 
+                                str(self.threshold))
+        self.context.be = self.be
+        self.app = obnamlib.Application(self.context)
+
+    def testNotExceededIfNoThresholdSet(self):
+        self.context.config.set("backup", "snapshot-bytes", "0")
+        self.be.set_amount(self.threshold + 1)
+        self.failIf(self.app.time_for_snapshot())
+
+    def testNotExceededForZeroBytes(self):
+        self.be.set_amount(0)
+        self.failIf(self.app.time_for_snapshot())
+
+    def testMptExceededForThresholdMinusOneBytes(self):
+        self.be.set_amount(self.threshold - 1)
+        self.failIf(self.app.time_for_snapshot())
+
+    def testExceededForThresholdBytes(self):
+        self.be.set_amount(self.threshold)
+        self.failUnless(self.app.time_for_snapshot())
+
+    def testExceededForThresholdPlusOneBytes(self):
+        self.be.set_amount(self.threshold + 1)
+        self.failUnless(self.app.time_for_snapshot())
+
+    def testNotExceededForZeroAfterSnapshot(self):
+        self.be.set_amount(self.threshold)
+        self.app.snapshot_done()
+        self.failIf(self.app.time_for_snapshot())
+
+    def testNotExceededForThresholdMinusOneAfterSnapshot(self):
+        self.be.set_amount(self.threshold)
+        self.app.snapshot_done()
+        self.be.set_amount(2 * self.threshold - 1)
+        self.failIf(self.app.time_for_snapshot())
+
+    def testExceededForThresholdAfterSnapshot(self):
+        self.be.set_amount(self.threshold)
+        self.app.snapshot_done()
+        self.be.set_amount(2 * self.threshold)
+        self.failUnless(self.app.time_for_snapshot())
+
+    def testExceededForThresholdPlusOneAfterSnapshot(self):
+        self.be.set_amount(self.threshold)
+        self.app.snapshot_done()
+        self.be.set_amount(2 * self.threshold + 1)
+        self.failUnless(self.app.time_for_snapshot())
+
+
 class ApplicationLoadHostBlockTests(unittest.TestCase):
 
     def setUp(self):
@@ -152,6 +217,11 @@ class ApplicationMakeFileGroupsTests(unittest.TestCase):
         list = self.app.make_filegroups(self.tempfiles[:1])
         fg = list[0]
         self.failIf("/" in fg.get_names()[0])
+
+    def testReturnsOnlyOneFileGroupIfItIsTimeForSnapshot(self):
+        filenames = self.tempfiles[:obnamlib.app.MAX_PER_FILEGROUP + 1]
+        self.app.time_for_snapshot = lambda: True
+        self.failUnlessEqual(len(self.app.make_filegroups(filenames)), 1)
 
 
 class ApplicationUnchangedFileRecognitionTests(unittest.TestCase):
@@ -740,18 +810,31 @@ class ApplicationBackupTests(unittest.TestCase):
 
     def testCallsBackupOneRootForEachRoot(self):
         dirs = [self.abs(x) for x in ["pink", "pretty"]]
-        self.app.backup(dirs)
+        for gen in self.app.backup(dirs):
+            pass
         self.failUnlessEqual(self.roots_backed_up, dirs)
 
     def testReturnsGenerationObject(self):
-        ret = self.app.backup([self.abs("pink"), self.abs("pretty")])
-        self.failUnless(isinstance(ret, obnamlib.obj.GenerationObject))
+        for ret in self.app.backup([self.abs("pink"), self.abs("pretty")]):
+            self.failUnless(isinstance(ret, obnamlib.obj.GenerationObject))
 
     def testReturnsGenerationWithTheRightRootObjects(self):
-        gen = self.app.backup([self.abs("pink"), self.abs("pretty")])
-        self.failUnlessEqual(len(gen.get_dirrefs()), 2)
+        for gen in self.app.backup([self.abs("pink"), self.abs("pretty")]):
+            self.failUnlessEqual(len(gen.get_dirrefs()), 2)
 
     def testReturnsGenerationWithTimeStamps(self):
-        gen = self.app.backup([self.abs("pink"), self.abs("pretty")])
-        self.failIfEqual(gen.get_start_time(), None)
-        self.failIfEqual(gen.get_end_time(), None)
+        for gen in self.app.backup([self.abs("pink"), self.abs("pretty")]):
+            self.failIfEqual(gen.get_start_time(), None)
+            self.failIfEqual(gen.get_end_time(), None)
+    
+    def testAllButLastReturnedGenerationAreSnapshots(self):
+        dirs = [self.abs(x) for x in ["pink", "pretty"]]
+        gens = [gen for gen in self.app.backup(dirs)]
+        for gen in gens[:-1]:
+            self.failUnless(gen.is_snapshot())
+    
+    def testLastReturnedGenerationIsNotSnapshot(self):
+        dirs = [self.abs(x) for x in ["pink", "pretty"]]
+        gens = [gen for gen in self.app.backup(dirs)]
+        self.failIf(gens[-1].is_snapshot())
+

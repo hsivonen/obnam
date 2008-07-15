@@ -44,6 +44,7 @@ class Application:
         self._prev_gen = None
         self._store = obnamlib.Store(self._context)
         self._total = 0
+        self._latest_snapshot = 0
         
         # When we traverse the file system tree while making a backup,
         # we process children before the parent. This is necessary for
@@ -118,6 +119,20 @@ class Application:
                     break
             else:
                 i += 1
+
+    def time_for_snapshot(self):
+        """Is it time for a snapshot generation to be made?"""
+        context = self.get_context()
+        threshold = context.config.getint("backup", "snapshot-bytes")
+        if threshold == 0:
+            return False
+        bytes_written = context.be.get_bytes_written() - self._latest_snapshot
+        return bytes_written >= threshold
+        
+    def snapshot_done(self):
+        """Mark we did a snapshot generation at this point in the upload."""
+        bytes_written = self.get_context().be.get_bytes_written()
+        self._latest_snapshot = bytes_written
 
     def file_is_unchanged(self, stat1, stat2):
         """Is a file unchanged from the previous generation?
@@ -349,6 +364,8 @@ class Application:
                 id = obnamlib.obj.object_id_new()
                 list.append(obnamlib.obj.FileGroupObject(id=id))
             self.add_to_filegroup(list[-1], filename)
+            if self.time_for_snapshot():
+                break
                 
         self.get_store().queue_objects(list)
         return list
@@ -445,6 +462,49 @@ class Application:
             self.get_store().queue_object(dir)
             return dir
 
+    def make_snapshot_dir(self, dirname, subdirs, is_root): #pragma: no cover
+        """Like backup_one_dir, but use data only from previous generation."""
+
+        logging.debug("Making snapshot directory: %s" % dirname)
+
+        unsolved = obnamlib.io.unsolve(self.get_context(), dirname)
+        old_dir = self.get_dir_in_previous_generation(unsolved)
+        if old_dir:
+            logging.debug("Found directory in previous generation")
+            filegroups = [self.get_store().get_object(id)
+                          for id in old_dir.get_filegrouprefs()]
+            old_dirrefs = [dirref for dirref in old_dir.get_dirrefs()]
+        else:
+            logging.debug("Did not find directory in previous generation")
+            filegroups = []
+            old_dirrefs = []
+
+        filegrouprefs = [fg.get_id() for fg in filegroups]
+        dirrefs = [subdir.get_id() for subdir in subdirs]
+        
+        for dirref in old_dirrefs:
+            if dirref not in dirrefs:
+                dirrefs.append(dirref)
+
+        basename = os.path.basename(dirname)
+        if not basename and dirname.endswith(os.sep):
+            basename = os.path.basename(dirname[:-len(os.sep)])
+        assert basename
+        logging.debug("Creating DirObject, basename: %s" % basename)
+        if is_root:
+            name = obnamlib.io.unsolve(self.get_context(), dirname)
+        else:
+            name = basename
+        dir = obnamlib.obj.DirObject(id=obnamlib.obj.object_id_new(),
+                                  name=name,
+                                  stat=os.lstat(dirname),
+                                  dirrefs=dirrefs,
+                                  filegrouprefs=filegrouprefs)
+
+        self.get_store().queue_object(dir)
+        return dir
+        
+
     def backup_one_root(self, root):
         """Backup one root for the next generation."""
 
@@ -488,8 +548,34 @@ class Application:
 
             self._total += 1 + len(filenames)
             self.get_context().progress.update_total_files(self._total)
+            
+            if self.time_for_snapshot(): #pragma: no cover
+                # Fill in parent directories with old data + known changes
+                while dirname != resolved:
+                    dirname = os.path.dirname(dirname)
+                    is_root = (dirname == resolved)
+                    subdirs = subdirs_for_dir.get(dirname, [])
+                    dir = self.make_snapshot_dir(dirname, subdirs, is_root)
+                    if not is_root:
+                        parent = os.path.dirname(dirname)
+                        if parent not in subdirs_for_dir:
+                            subdirs_for_dir[parent] = []
+                        subdirs_for_dir[parent].append(dir)
+                    else:
+                        root_object = dir
+                break
 
         return root_object
+
+    def _make_generation(self, start, root_objs, is_snapshot):
+        end = int(time.time())
+
+        dirrefs = [o.get_id() for o in root_objs]
+        gen = obnamlib.obj.GenerationObject(id=obnamlib.obj.object_id_new(),
+                                         dirrefs=dirrefs, start=start,
+                                         end=end, is_snapshot=is_snapshot)
+        self.get_store().queue_object(gen)
+        return gen
 
     def backup(self, roots):
         """Backup all the roots."""
@@ -497,13 +583,19 @@ class Application:
         start = int(time.time())
         root_objs = []
         self._total = 0
+        prevgen = self.get_previous_generation()
         for root in roots:
-            root_objs.append(self.backup_one_root(root))
-        end = int(time.time())
+            while True:
+                self.set_previous_generation(prevgen)
+                o = self.backup_one_root(root)
+                if self.time_for_snapshot(): #pragma: no cover
+                    logging.debug("Making a snapshot generation")
+                    gen = self._make_generation(start, root_objs + [o], True)
+                    yield gen
+                    prevgen = gen
+                else:
+                    break
+            root_objs.append(o)
 
-        dirrefs = [o.get_id() for o in root_objs]
-        gen = obnamlib.obj.GenerationObject(id=obnamlib.obj.object_id_new(),
-                                         dirrefs=dirrefs, start=start,
-                                         end=end)
-        self.get_store().queue_object(gen)
-        return gen
+        yield self._make_generation(start, root_objs, False)
+

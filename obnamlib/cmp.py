@@ -81,6 +81,7 @@ GENEND        = _define_plain(      40, "GENEND")
 DELTAPARTREF  = _define_ref(        41, "DELTAPARTREF")
 DIRREF        = _define_ref(        42, "DIRREF")
 FILEGROUPREF  = _define_ref(        43, "FILEGROUPREF")
+SNAPSHOTGEN   = _define_plain(      44, "SNAPSHOTGEN")
 
 
 def kind_name(kind):

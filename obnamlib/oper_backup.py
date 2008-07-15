@@ -49,8 +49,7 @@ class Backup(obnamlib.Operation):
                 filelist.from_object(o)
                 app.set_prevgen_filelist(filelist)
                 
-        gen = app.backup(roots)
-        
-        app.get_store().commit_host_block([gen])
+        for gen in app.backup(roots):
+            app.get_store().commit_host_block([gen])
     
         logging.info("Backup done")

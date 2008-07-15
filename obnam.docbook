@@ -282,7 +282,21 @@ sftp://ulla@example.com/~/safe
           "DESCRIPTION" for an explanation.</para>
         </listitem>
       </varlistentry>
-    
+
+      <varlistentry>
+        <term><option>--snapshot-bytes</option>=<replaceable>SIZE</replaceable></term>
+        <listitem>
+          <para>Make a snapshot generation approximately after SIZE bytes
+          uploaded bytes. Default is 0, meaning no snapshot generations should
+          be uploaded. A snapshot generation contains the changes uploaded
+          so far; it is otherwise like a normal generation, but there is no
+          attempt to guarantee that all changes have been uploaded. This can
+          be useful for long backups that may be aborted due to network
+          errrors: the next generation will continue from the latest 
+          snapshot.</para>
+        </listitem>
+      </varlistentry>
+        
       <varlistentry>
         <term><option>--version</option></term>
         <listitem>
