@@ -63,6 +63,16 @@ class Application:
         """Get the context for the backup application."""
         return self._context
 
+    def update_file(self, filename):
+        self._total += 1
+        context = self.get_context()
+        context.progress.update_total_files(self._total)
+        context.progress.update_current_action(filename)
+
+    def add_to_total_files(self, count):
+        self._total += count
+        self.get_context().progress.update_total_files(self._total)
+
     def get_store(self):
         """Get the Store for the backup application."""
         return self._store
@@ -329,7 +339,7 @@ class Application:
     def add_to_filegroup(self, fg, filename):
         """Add a file to a filegroup."""
         logging.debug("Backing up %s" % filename)
-        self._context.progress.update_current_action(filename)
+        self.update_file(filename)
         st = os.lstat(filename)
         if stat.S_ISREG(st.st_mode):
             unsolved = obnamlib.io.unsolve(self.get_context(), filename)
@@ -430,6 +440,8 @@ class Application:
                                                              filenames)
         logging.debug("Selected %d existing file groups, %d filenames" %
                       (len(filegroups), len(filenames)))
+        self.add_to_total_files(sum(len(fg.get_files()) for fg in filegroups))
+
         filenames = self._make_absolute(dirname, filenames)
 
         filegroups += self.make_filegroups(filenames)

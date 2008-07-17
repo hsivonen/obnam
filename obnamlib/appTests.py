@@ -838,3 +838,35 @@ class ApplicationBackupTests(unittest.TestCase):
         gens = [gen for gen in self.app.backup(dirs)]
         self.failIf(gens[-1].is_snapshot())
 
+
+class MockContext:
+
+    def __init__(self):
+        self.progress = self
+        self.current_action = None
+        self.total = None
+        
+    def update_current_action(self, value):
+        self.current_action = value
+        
+    def update_total_files(self, value):
+        self.total = value
+
+
+class ApplicationProgressUpdateTests(unittest.TestCase):
+
+    def setUp(self):
+        self.context = MockContext()
+        self.app = obnamlib.Application(self.context)
+
+    def testUpdateFileUpdatesFilename(self):
+        self.app.update_file("foo")
+        self.failUnlessEqual(self.context.current_action, "foo")
+
+    def testUpdateFileUpdatesFileCount(self):
+        self.app.update_file("foo")
+        self.failUnlessEqual(self.context.total, 1)
+
+    def testAddToTotalFilesIncrementsCount(self):
+        self.app.add_to_total_files(42)
+        self.failUnlessEqual(self.context.total, 42)
