@@ -139,6 +139,8 @@ class Store:
                                           map_block_ids=map_ids,
                                           contmap_block_ids=contmap_ids)
         obnamlib.io.upload_host_block(self._context, host2.encode())
+        obnamlib.map.reset_new(self._context.map)
+        obnamlib.map.reset_new(self._context.contmap)
 
         self._host = host2
 

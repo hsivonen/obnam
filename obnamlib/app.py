@@ -611,4 +611,3 @@ class Application:
             root_objs.append(o)
 
         yield self._make_generation(start, root_objs, False)
-
