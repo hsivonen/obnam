@@ -603,6 +603,7 @@ class Application:
                 if self.time_for_snapshot(): #pragma: no cover
                     logging.debug("Making a snapshot generation")
                     gen = self._make_generation(start, root_objs + [o], True)
+                    self.snapshot_done()
                     yield gen
                     prevgen = gen
                 else:
