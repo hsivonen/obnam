@@ -373,7 +373,11 @@ class Application:
                 len(list[-1].get_files()) >= MAX_PER_FILEGROUP):
                 id = obnamlib.obj.object_id_new()
                 list.append(obnamlib.obj.FileGroupObject(id=id))
-            self.add_to_filegroup(list[-1], filename)
+            try:
+                self.add_to_filegroup(list[-1], filename)
+            except os.error, e:
+                logging.warning("Oops, error while doing backup:\n%s" %
+                                str(e))
             if self.time_for_snapshot():
                 break
                 
@@ -606,6 +610,7 @@ class Application:
                     self.snapshot_done()
                     yield gen
                     prevgen = gen
+                    self._total = 0
                 else:
                     break
             root_objs.append(o)
