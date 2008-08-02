@@ -151,21 +151,20 @@ def get_object(context, object_id):
                    obnamlib.obj.SIG, 
                    obnamlib.obj.FILECONTENTS]
 
-    logging.debug("Fetching object %s" % object_id)
-    
     if context.object_cache is None:
         context.object_cache = ObjectCache(context)
     o = context.object_cache.get(object_id)
     if o:
         return o
         
-    logging.debug("Object not in cache, looking up mapping")
     block_id = obnamlib.map.get(context.map, object_id)
     if not block_id:
         block_id = obnamlib.map.get(context.contmap, object_id)
     if not block_id:
         return None
 
+    logging.debug("Fetching object %s" % object_id)
+    
     block = get_block(context, block_id)
     list = obnamlib.obj.block_decode(block)
     list = obnamlib.cmp.find_by_kind(list, obnamlib.cmp.OBJECT)
