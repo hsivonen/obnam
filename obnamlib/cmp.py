@@ -150,7 +150,18 @@ class Component:
     def first_string_by_kind(self, wanted_kind):
         """Find first subcomponent by kind, return its string value"""
         c = self.first_by_kind(wanted_kind)
-        return (c and c.str) or None
+        
+        # Now we do something really ugly. The simple, straightforward
+        # way of doing the code below is to test whether c is None, and
+        # if it is not, then return c.str. However, this turns out to be
+        # a bit slow, compared to the exception handling we use below,
+        # and since this method is called _a_lot_, the speed matters.
+        # In benchmarking the total time spent in this function (not counting
+        # called functions) went from 16 CPU seconds to 4.5.
+        try:
+            return c.str
+        except AttributeError:
+            return None
 
     def first_varint_by_kind(self, wanted_kind):
         """Find first subcomponent by kind, return its integer value"""
