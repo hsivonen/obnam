@@ -442,7 +442,7 @@ class FileGroupObject(StorageObject):
     def populate_caches(self):
         self.cache_file = {}
         self.cache_stat = {}
-        for c in self.get_files(): # pragma: no cover
+        for c in self.find_by_kind(obnamlib.cmp.FILE): # pragma: no cover
             self.add_to_caches(c)
     
     def add_to_caches(self, file_component):
@@ -452,16 +452,16 @@ class FileGroupObject(StorageObject):
         c = file_component.first_by_kind(obnamlib.cmp.STAT)
         self.cache_stat[file_component] = obnamlib.cmp.parse_stat_component(c)
         
-    
     def add_file(self, name, stat, contref, sigref, deltaref):
         c = obnamlib.filelist.create_file_component_from_stat(name, stat, 
                                                            contref, sigref, 
                                                            deltaref)
         self.add(c)
         self.add_to_caches(c)
+        return c # For unit testing
 
     def get_files(self):
-        return self.find_by_kind(obnamlib.cmp.FILE)
+        return self.cache_file.values()
 
     def get_file(self, name):
         return self.cache_file.get(name, None)

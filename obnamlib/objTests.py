@@ -434,8 +434,10 @@ class FileGroupObjectTests(unittest.TestCase):
         ]
         self.names = [x[0] for x in self.files]
         self.fg = FileGroupObject(id="objid")
+        self.file_components = []
         for name, stat, contref, sigref, deltaref in self.files:
-            self.fg.add_file(name, stat, contref, sigref, deltaref)
+            f = self.fg.add_file(name, stat, contref, sigref, deltaref)
+            self.file_components.append(f)
 
     def testReturnsNoneIfSoughtFileNotFound(self):
         self.failUnlessEqual(self.fg.get_file("xxx"), None)
@@ -459,6 +461,8 @@ class FileGroupObjectTests(unittest.TestCase):
         for x in self.files:
             self.failUnlessEqual(x[4], self.fg.get_deltaref(x[0]))
 
+    def testReturnsRightFiles(self):
+        self.assertEqual(set(self.fg.get_files()), set(self.file_components))
 
 class StorageObjectFactoryTests(unittest.TestCase):
 
