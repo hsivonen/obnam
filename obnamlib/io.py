@@ -138,7 +138,6 @@ def get_object(context, object_id):
         context.object_cache = ObjectCache(context)
     o = context.object_cache.get(object_id)
     if o:
-        logging.debug("Object is in cache, good")
         return o
         
     logging.debug("Object not in cache, looking up mapping")
@@ -148,16 +147,10 @@ def get_object(context, object_id):
     if not block_id:
         return None
 
-    logging.debug("Fetching block")
     block = get_block(context, block_id)
-
-    logging.debug("Decoding block")
     list = obnamlib.obj.block_decode(block)
-    
-    logging.debug("Finding objects in block")
     list = obnamlib.cmp.find_by_kind(list, obnamlib.cmp.OBJECT)
 
-    logging.debug("Putting objects into object cache")
     the_one = None
     factory = obnamlib.obj.StorageObjectFactory()
     for component in list:
@@ -168,7 +161,6 @@ def get_object(context, object_id):
         if o.get_id() == object_id:
             the_one = o
 
-    logging.debug("Returning desired object")    
     return the_one
 
 
