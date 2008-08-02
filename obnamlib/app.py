@@ -39,7 +39,7 @@ class Application:
     def __init__(self, context):
         self._context = context
         self._exclusion_strings = []
-        self._exclusion_regexps = []
+        self.exclusion_regexps = []
         self._filelist = None
         self._prev_gen = None
         self._store = obnamlib.Store(self._context)
@@ -82,20 +82,16 @@ class Application:
         self.get_store().fetch_host_block()
         return self.get_store().get_host_block()
 
-    def get_exclusion_regexps(self):
-        """Return list of regexp to exclude things from backup."""
+    def compile_exclusion_regexps(self):
+        """Compile list of regexp to exclude things from backup."""
         
         config = self.get_context().config
         strings = config.getvalues("backup", "exclude")
         strings = [s.strip() for s in strings if s.strip()]
-        if self._exclusion_strings != strings:
-            self._exclusion_strings = strings
-            self._exclusion_regexps = []
-            for string in strings:
-                logging.debug("Compiling exclusion pattern '%s'" % string)
-                self._exclusion_regexps.append(re.compile(string))
-        
-        return self._exclusion_regexps
+        self.exclusion_regexps = []
+        for string in strings:
+            logging.debug("Compiling exclusion pattern '%s'" % string)
+            self.exclusion_regexps.append(re.compile(string))
 
     def prune(self, dirname, dirnames, filenames):
         """Remove excluded items from dirnames and filenames.
@@ -121,7 +117,7 @@ class Application:
         i = 0
         while i < len(basenames):
             path = os.path.join(dirname, basenames[i])
-            for regexp in self.get_exclusion_regexps():
+            for regexp in self.exclusion_regexps:
                 if regexp.search(path):
                     logging.debug("Excluding %s" % path)
                     logging.debug("  based on %s" % regexp.pattern)
@@ -602,6 +598,7 @@ class Application:
         """Backup all the roots."""
 
         start = int(time.time())
+        self.compile_exclusion_regexps()
         root_objs = []
         self._total = 0
         prevgen = self.get_previous_generation()
