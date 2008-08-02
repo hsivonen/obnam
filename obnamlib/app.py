@@ -109,7 +109,7 @@ class Application:
         self._prune_one_list(dirname, filenames)
 
     def _prune_one_list(self, dirname, basenames):
-        """Prune one list of basenames based on exlusion list.
+        """Prune one list of basenames based on exclusion list.
         
         Because this is called from self.prune, the list is modified
         in place.
