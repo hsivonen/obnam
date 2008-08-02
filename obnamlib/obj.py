@@ -432,21 +432,32 @@ class FileGroupObject(StorageObject):
 
     kind = FILEGROUP
 
+    def __init__(self, components=None, id=None):
+        StorageObject.__init__(self, components=components, id=id)
+        self.populate_cache()
+
+    def populate_cache(self):
+        self.cache = {}
+        for c in self.get_files(): # pragma: no cover
+            self.add_to_cache(c)
+    
+    def add_to_cache(self, file_component):
+        name = file_component.first_string_by_kind(obnamlib.cmp.FILENAME)
+        self.cache[name] = file_component
+    
     def add_file(self, name, stat, contref, sigref, deltaref):
         c = obnamlib.filelist.create_file_component_from_stat(name, stat, 
                                                            contref, sigref, 
                                                            deltaref)
         self.add(c)
+        self.add_to_cache(c)
 
     def get_files(self):
+#        return self.cache.values()
         return self.find_by_kind(obnamlib.cmp.FILE)
 
     def get_file(self, name):
-        for file in self.get_files():
-            fname = file.first_string_by_kind(obnamlib.cmp.FILENAME)
-            if name == fname:
-                return file
-        return None
+        return self.cache.get(name, None)
 
     def get_string_from_file(self, file, kind):
         return file.first_string_by_kind(kind)
