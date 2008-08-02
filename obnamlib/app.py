@@ -375,7 +375,7 @@ class Application:
                 list.append(obnamlib.obj.FileGroupObject(id=id))
             try:
                 self.add_to_filegroup(list[-1], filename)
-            except os.error, e:
+            except os.error, e: # pragma: no cover
                 logging.warning("Oops, error while doing backup:\n%s" %
                                 str(e))
             if self.time_for_snapshot():
