@@ -271,8 +271,8 @@ def create_stat_component(st):
 
 def parse_stat_component(stat_component):
     """Return an object like a stat result from a decoded stat_component"""
-    (st_mode, st_ino, st_dev, st_nlink, st_uid, st_gid, st_size, st_atime,
-     st_mtime, st_ctime, st_blocks, st_blksize, 
+    (st_mode, st_ino, st_dev, st_nlink, st_uid, st_gid, #pragma: no cover
+     st_size, st_atime, st_mtime, st_ctime, st_blocks, st_blksize, 
      st_rdev) = obnamlib.varint.decode_many(stat_component.str)
     return obnamlib.utils.make_stat_result(st_mode=st_mode,
                                         st_ino=st_ino,
