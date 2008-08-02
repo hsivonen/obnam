@@ -172,6 +172,7 @@ class Application:
         
         """
         
+        filenames = set(filenames)
         for old_name in fg.get_names():
             if old_name not in filenames:
                 return False    # file has been deleted
