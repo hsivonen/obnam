@@ -35,21 +35,22 @@ class ApplicationTests(unittest.TestCase):
         self.app = obnamlib.Application(context)
 
     def testReturnsEmptyExclusionListInitially(self):
-        self.failUnlessEqual(self.app.get_exclusion_regexps(), [])
+        self.failUnlessEqual(self.app.exclusion_regexps, [])
 
     def setup_excludes(self):
         config = self.app.get_context().config
         config.remove_option("backup", "exclude")
         config.append("backup", "exclude", "pink")
         config.append("backup", "exclude", "pretty")
+        self.app.compile_exclusion_regexps()
 
     def testReturnsRightNumberOfExclusionPatterns(self):
         self.setup_excludes()
-        self.failUnlessEqual(len(self.app.get_exclusion_regexps()), 2)
+        self.failUnlessEqual(len(self.app.exclusion_regexps), 2)
 
     def testReturnsRegexpObjects(self):
         self.setup_excludes()
-        for item in self.app.get_exclusion_regexps():
+        for item in self.app.exclusion_regexps:
             self.failUnlessEqual(type(item), type(re.compile(".")))
 
     def testPrunesMatchingFilenames(self):
@@ -530,7 +531,7 @@ class ApplicationGetFileInPreviousGenerationTests(unittest.TestCase):
 
     def testReturnsFileComponentIfFileDidExist(self):
         cmp = self.app.get_file_in_previous_generation("pink")
-        self.failUnlessEqual(cmp.get_kind(), obnamlib.cmp.FILE)
+        self.failUnlessEqual(cmp.kind, obnamlib.cmp.FILE)
 
 
 class ApplicationSelectFilesToBackUpTests(unittest.TestCase):

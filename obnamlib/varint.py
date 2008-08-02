@@ -30,3 +30,14 @@ def decode(encoded, pos):
         return -1, pos
     else:
         return int(encoded[pos:i]), i+1
+        
+
+def encode_many(numbers):
+    """Encode several numbers as a string with multiple varints."""
+    return "".join(encode(i) for i in numbers)
+        
+
+def decode_many(encoded):
+    """Decode several numbers from a string with multiple varints."""
+    return [int(s) for s in encoded.rstrip("\n").split("\n")]
+

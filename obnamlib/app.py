@@ -39,7 +39,7 @@ class Application:
     def __init__(self, context):
         self._context = context
         self._exclusion_strings = []
-        self._exclusion_regexps = []
+        self.exclusion_regexps = []
         self._filelist = None
         self._prev_gen = None
         self._store = obnamlib.Store(self._context)
@@ -82,20 +82,16 @@ class Application:
         self.get_store().fetch_host_block()
         return self.get_store().get_host_block()
 
-    def get_exclusion_regexps(self):
-        """Return list of regexp to exclude things from backup."""
+    def compile_exclusion_regexps(self):
+        """Compile list of regexp to exclude things from backup."""
         
         config = self.get_context().config
         strings = config.getvalues("backup", "exclude")
         strings = [s.strip() for s in strings if s.strip()]
-        if self._exclusion_strings != strings:
-            self._exclusion_strings = strings
-            self._exclusion_regexps = []
-            for string in strings:
-                logging.debug("Compiling exclusion pattern '%s'" % string)
-                self._exclusion_regexps.append(re.compile(string))
-        
-        return self._exclusion_regexps
+        self.exclusion_regexps = []
+        for string in strings:
+            logging.debug("Compiling exclusion pattern '%s'" % string)
+            self.exclusion_regexps.append(re.compile(string))
 
     def prune(self, dirname, dirnames, filenames):
         """Remove excluded items from dirnames and filenames.
@@ -109,7 +105,7 @@ class Application:
         self._prune_one_list(dirname, filenames)
 
     def _prune_one_list(self, dirname, basenames):
-        """Prune one list of basenames based on exlusion list.
+        """Prune one list of basenames based on exclusion list.
         
         Because this is called from self.prune, the list is modified
         in place.
@@ -121,7 +117,7 @@ class Application:
         i = 0
         while i < len(basenames):
             path = os.path.join(dirname, basenames[i])
-            for regexp in self.get_exclusion_regexps():
+            for regexp in self.exclusion_regexps:
                 if regexp.search(path):
                     logging.debug("Excluding %s" % path)
                     logging.debug("  based on %s" % regexp.pattern)
@@ -153,12 +149,13 @@ class Application:
         
         """
         
-        fields = ("mode", "dev", "nlink", "uid", "gid", "size", "mtime")
-        for field in fields:
-            field = "st_" + field
-            if getattr(stat1, field) != getattr(stat2, field):
-                return False
-        return True
+        return (stat1.st_mode  == stat2.st_mode and
+                stat1.st_dev   == stat2.st_dev and
+                stat1.st_nlink == stat2.st_nlink and
+                stat1.st_uid   == stat2.st_uid and
+                stat1.st_gid   == stat2.st_gid and
+                stat1.st_size  == stat2.st_size and
+                stat1.st_mtime == stat2.st_mtime)
 
     def filegroup_is_unchanged(self, dirname, fg, filenames, stat=os.lstat):
         """Is a filegroup unchanged from the previous generation?
@@ -172,10 +169,14 @@ class Application:
         
         """
         
-        for old_name in fg.get_names():
+        filenames = set(filenames)
+
+        old_names = fg.get_names()
+        for old_name in old_names:
             if old_name not in filenames:
                 return False    # file has been deleted
 
+        for old_name in old_names:
             old_stat = fg.get_stat(old_name)
             new_stat = stat(os.path.join(dirname, old_name))
             if not self.file_is_unchanged(old_stat, new_stat):
@@ -375,7 +376,7 @@ class Application:
                 list.append(obnamlib.obj.FileGroupObject(id=id))
             try:
                 self.add_to_filegroup(list[-1], filename)
-            except os.error, e:
+            except os.error, e: # pragma: no cover
                 logging.warning("Oops, error while doing backup:\n%s" %
                                 str(e))
             if self.time_for_snapshot():
@@ -597,6 +598,7 @@ class Application:
         """Backup all the roots."""
 
         start = int(time.time())
+        self.compile_exclusion_regexps()
         root_objs = []
         self._total = 0
         prevgen = self.get_previous_generation()

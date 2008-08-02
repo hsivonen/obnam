@@ -346,8 +346,7 @@ class GetComponentTests(unittest.TestCase):
             ])
 
     def testGetByKind(self):
-        find = lambda t: \
-            [c.get_string_value() for c in self.o.find_by_kind(t)]
+        find = lambda t: [c.str for c in self.o.find_by_kind(t)]
         self.failUnlessEqual(find(1), ["pink"])
         self.failUnlessEqual(find(2), ["pretty"])
         self.failUnlessEqual(find(3), ["red", "too"])
@@ -363,7 +362,7 @@ class GetComponentTests(unittest.TestCase):
     def helper(self, wanted_kind):
         c = self.o.first_by_kind(wanted_kind)
         if c:
-            return c.get_string_value()
+            return c.str
         else:
             return None
 
@@ -408,6 +407,10 @@ class DirObjectTests(unittest.TestCase):
     def testSetsNameCorrectly(self):
         self.failUnlessEqual(self.dir.get_name(), "name")
 
+    def testGetsNameCorrectlyEvenWhenNameIsSetAfterCreation(self):
+        self.dir.name = None
+        self.failUnlessEqual(self.dir.get_name(), "name")
+
     def testSetsStatCorrectly(self):
         self.failUnlessEqual(self.dir.get_stat(), self.stat)
 
@@ -431,8 +434,10 @@ class FileGroupObjectTests(unittest.TestCase):
         ]
         self.names = [x[0] for x in self.files]
         self.fg = FileGroupObject(id="objid")
+        self.file_components = []
         for name, stat, contref, sigref, deltaref in self.files:
-            self.fg.add_file(name, stat, contref, sigref, deltaref)
+            f = self.fg.add_file(name, stat, contref, sigref, deltaref)
+            self.file_components.append(f)
 
     def testReturnsNoneIfSoughtFileNotFound(self):
         self.failUnlessEqual(self.fg.get_file("xxx"), None)
@@ -456,6 +461,8 @@ class FileGroupObjectTests(unittest.TestCase):
         for x in self.files:
             self.failUnlessEqual(x[4], self.fg.get_deltaref(x[0]))
 
+    def testReturnsRightFiles(self):
+        self.assertEqual(set(self.fg.get_files()), set(self.file_components))
 
 class StorageObjectFactoryTests(unittest.TestCase):
 

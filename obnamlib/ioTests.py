@@ -177,13 +177,13 @@ class GetObjectTests(IoBase):
         o = obnamlib.io.get_object(self.context, id)
 
         self.failUnlessEqual(o.get_id(), id)
-        self.failUnlessEqual(o.get_kind(), obnamlib.obj.FILEPART)
+        self.failUnlessEqual(o.kind, obnamlib.obj.FILEPART)
         list = o.get_components()
-        list = [c for c in list if c.get_kind() not in [obnamlib.cmp.OBJID,
+        list = [c for c in list if c.kind not in [obnamlib.cmp.OBJID,
                                                         obnamlib.cmp.OBJKIND]]
         self.failUnlessEqual(len(list), 1)
-        self.failUnlessEqual(list[0].get_kind(), 42)
-        self.failUnlessEqual(list[0].get_string_value(), "pretty")
+        self.failUnlessEqual(list[0].kind, 42)
+        self.failUnlessEqual(list[0].str, "pretty")
 
     def testGetObjectTwice(self):
         id = "pink"

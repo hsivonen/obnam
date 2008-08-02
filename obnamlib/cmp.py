@@ -122,52 +122,42 @@ class Component:
             for x in value:
                 assert isinstance(x, Component)
             self.subcomponents = value[:]
-
-    def get_kind(self):
-        """Return kind kind of a component"""
-        return self.kind
-
-    def get_string_value(self):
-        """Return string value of leaf component"""
-        assert self.str is not None
-        return self.str
+        self.is_composite = self.str is None
 
     def get_varint_value(self):
         """Return integer value of leaf component"""
         assert self.str is not None
         return obnamlib.varint.decode(self.str, 0)[0]
 
-    def get_subcomponents(self):
-        """Return list of subcomponents of composite component"""
-        assert self.str is None
-        return self.subcomponents
-
-    def is_composite(self):
-        """Is a component a leaf component or a composite one?"""
-        return self.str is None
-
     def find_by_kind(self, wanted_kind):
         """Find subcomponents of a desired kind"""
-        return [c for c in self.subcomponents if c.get_kind() == wanted_kind]
+        return [c for c in self.subcomponents if c.kind == wanted_kind]
     
     def first_by_kind(self, wanted_kind):
         """Find first subcomponent of a desired kind"""
         for c in self.subcomponents:
-            if c.get_kind() == wanted_kind:
+            if c.kind == wanted_kind:
                 return c
         return None
 
     def find_strings_by_kind(self, wanted_kind):
         """Find subcomponents by kind, return their string values"""
-        return [c.get_string_value() 
-                for c in find_by_kind(self.subcomponents, wanted_kind)]
+        return [c.str for c in find_by_kind(self.subcomponents, wanted_kind)]
 
     def first_string_by_kind(self, wanted_kind):
         """Find first subcomponent by kind, return its string value"""
         c = self.first_by_kind(wanted_kind)
-        if c:
-            return c.get_string_value()
-        else:
+        
+        # Now we do something really ugly. The simple, straightforward
+        # way of doing the code below is to test whether c is None, and
+        # if it is not, then return c.str. However, this turns out to be
+        # a bit slow, compared to the exception handling we use below,
+        # and since this method is called _a_lot_, the speed matters.
+        # In benchmarking the total time spent in this function (not counting
+        # called functions) went from 16 CPU seconds to 4.5.
+        try:
+            return c.str
+        except AttributeError:
             return None
 
     def first_varint_by_kind(self, wanted_kind):
@@ -180,9 +170,9 @@ class Component:
 
     def encode(self):
         """Encode a component as a string"""
-        if self.is_composite():
+        if self.is_composite:
             snippets = []
-            for sub in self.get_subcomponents():
+            for sub in self.subcomponents:
                 snippets.append(sub.encode())
             encoded = "".join(snippets)
         else:
@@ -233,28 +223,27 @@ class Parser:
 
 def find_by_kind(components, wanted_kind):
     """Find components of a desired kind in a list of components"""
-    return [c for c in components if c.get_kind() == wanted_kind]
+    return [c for c in components if c.kind == wanted_kind]
 
 
 def first_by_kind(components, wanted_kind):
     """Find first component of a desired kind in a list of components"""
     for c in components:
-        if c.get_kind() == wanted_kind:
+        if c.kind == wanted_kind:
             return c
     return None
 
 
 def find_strings_by_kind(components, wanted_kind):
     """Find components by kind, return their string values"""
-    return [c.get_string_value() 
-            for c in find_by_kind(components, wanted_kind)]
+    return [c.str for c in find_by_kind(components, wanted_kind)]
 
 
 def first_string_by_kind(components, wanted_kind):
     """Find first component by kind, return its string value"""
     c = first_by_kind(components, wanted_kind)
     if c:
-        return c.get_string_value()
+        return c.str
     else:
         return None
 
@@ -270,39 +259,18 @@ def first_varint_by_kind(components, wanted_kind):
 
 def create_stat_component(st):
     """Create a STAT component, given a stat result"""
-    return Component(obnamlib.cmp.STAT,
-                     obnamlib.varint.encode(st.st_mode) +
-                     obnamlib.varint.encode(st.st_ino) +
-                     obnamlib.varint.encode(st.st_dev) +
-                     obnamlib.varint.encode(st.st_nlink) +
-                     obnamlib.varint.encode(st.st_uid) +
-                     obnamlib.varint.encode(st.st_gid) +
-                     obnamlib.varint.encode(st.st_size) +
-                     obnamlib.varint.encode(st.st_atime) +
-                     obnamlib.varint.encode(st.st_mtime) +
-                     obnamlib.varint.encode(st.st_ctime) +
-                     obnamlib.varint.encode(st.st_blocks) +
-                     obnamlib.varint.encode(st.st_blksize) +
-                     obnamlib.varint.encode(st.st_rdev))
+    return Component(obnamlib.cmp.STAT, 
+                     obnamlib.varint.encode_many([st.st_mode, st.st_ino,
+                     st.st_dev, st.st_nlink, st.st_uid, st.st_gid, st.st_size,
+                     st.st_atime, st.st_mtime, st.st_ctime, st.st_blocks,
+                     st.st_blksize, st.st_rdev]))
 
 
 def parse_stat_component(stat_component):
     """Return an object like a stat result from a decoded stat_component"""
-    value = stat_component.get_string_value()
-    pos = 0
-    st_mode, pos = obnamlib.varint.decode(value, pos)
-    st_ino, pos = obnamlib.varint.decode(value, pos)
-    st_dev, pos = obnamlib.varint.decode(value, pos)
-    st_nlink, pos = obnamlib.varint.decode(value, pos)
-    st_uid, pos = obnamlib.varint.decode(value, pos)
-    st_gid, pos = obnamlib.varint.decode(value, pos)
-    st_size, pos = obnamlib.varint.decode(value, pos)
-    st_atime, pos = obnamlib.varint.decode(value, pos)
-    st_mtime, pos = obnamlib.varint.decode(value, pos)
-    st_ctime, pos = obnamlib.varint.decode(value, pos)
-    st_blocks, pos = obnamlib.varint.decode(value, pos)
-    st_blksize, pos = obnamlib.varint.decode(value, pos)
-    st_rdev, pos = obnamlib.varint.decode(value, pos)
+    (st_mode, st_ino, st_dev, st_nlink, st_uid, st_gid, #pragma: no cover
+     st_size, st_atime, st_mtime, st_ctime, st_blocks, st_blksize, 
+     st_rdev) = obnamlib.varint.decode_many(stat_component.str)
     return obnamlib.utils.make_stat_result(st_mode=st_mode,
                                         st_ino=st_ino,
                                         st_dev=st_dev,

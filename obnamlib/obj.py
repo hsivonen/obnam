@@ -102,7 +102,7 @@ class StorageObject(object):
     def remove(self, kind):
         """Remove all components of a given kind."""
         self._components = [c for c in self.get_components()
-                            if c.get_kind() != kind]
+                            if c.kind != kind]
 
     def add(self, c):
         """Add a component"""
@@ -110,7 +110,7 @@ class StorageObject(object):
 
     def replace(self, c):
         """Remove any existing components of this kind, then add this one."""
-        self.remove(c.get_kind())
+        self.remove(c.kind)
         self.add(c)
 
     def get_kind(self):
@@ -132,11 +132,11 @@ class StorageObject(object):
     def find_by_kind(self, wanted_kind):
         """Find all components of a desired kind inside this object"""
         return [c for c in self.get_components() 
-                    if c.get_kind() == wanted_kind]
+                    if c.kind == wanted_kind]
 
     def find_strings_by_kind(self, wanted_kind):
         """Find all components of a desired kind, return string values"""
-        return [c.get_string_value() for c in self.find_by_kind(wanted_kind)]
+        return [c.str for c in self.find_by_kind(wanted_kind)]
 
     def find_varints_by_kind(self, wanted_kind):
         """Find all components of a desired kind, return varint values"""
@@ -145,7 +145,7 @@ class StorageObject(object):
     def first_by_kind(self, wanted_kind):
         """Find first component of a desired kind"""
         for c in self.get_components():
-            if c.get_kind() == wanted_kind:
+            if c.kind == wanted_kind:
                 return c
         return None
 
@@ -153,7 +153,7 @@ class StorageObject(object):
         """Find string value of first component of a desired kind"""
         c = self.first_by_kind(wanted_kind)
         if c:
-            return c.get_string_value()
+            return c.str
         else:
             return None
 
@@ -405,6 +405,7 @@ class DirObject(StorageObject):
         StorageObject.__init__(self, components=components, id=id)
         if name:
             self.add(obnamlib.cmp.Component(obnamlib.cmp.FILENAME, name))
+        self.name = name
         if stat:
             self.add(obnamlib.cmp.create_stat_component(stat))
         if dirrefs:
@@ -415,51 +416,64 @@ class DirObject(StorageObject):
                 self.add(obnamlib.cmp.Component(obnamlib.cmp.FILEGROUPREF, ref))
 
     def get_name(self):
-        return self.first_by_kind(obnamlib.cmp.FILENAME).get_string_value()
+        if not self.name:
+            self.name = self.first_by_kind(obnamlib.cmp.FILENAME).str
+        return self.name
 
     def get_stat(self):
         st = self.first_by_kind(obnamlib.cmp.STAT)
         return obnamlib.cmp.parse_stat_component(st)
 
     def get_dirrefs(self):
-        return [c.get_string_value() 
-                for c in self.find_by_kind(obnamlib.cmp.DIRREF)]
+        return [c.str for c in self.find_by_kind(obnamlib.cmp.DIRREF)]
 
     def get_filegrouprefs(self):
-        return [c.get_string_value() 
-                for c in self.find_by_kind(obnamlib.cmp.FILEGROUPREF)]
+        return [c.str for c in self.find_by_kind(obnamlib.cmp.FILEGROUPREF)]
 
 
 class FileGroupObject(StorageObject):
 
     kind = FILEGROUP
 
+    def __init__(self, components=None, id=None):
+        StorageObject.__init__(self, components=components, id=id)
+        self.populate_caches()
+
+    def populate_caches(self):
+        self.cache_file = {}
+        self.cache_stat = {}
+        for c in self.find_by_kind(obnamlib.cmp.FILE): # pragma: no cover
+            self.add_to_caches(c)
+    
+    def add_to_caches(self, file_component):
+        name = file_component.first_string_by_kind(obnamlib.cmp.FILENAME)
+        self.cache_file[name] = file_component
+
+        c = file_component.first_by_kind(obnamlib.cmp.STAT)
+        self.cache_stat[file_component] = obnamlib.cmp.parse_stat_component(c)
+        
     def add_file(self, name, stat, contref, sigref, deltaref):
         c = obnamlib.filelist.create_file_component_from_stat(name, stat, 
                                                            contref, sigref, 
                                                            deltaref)
         self.add(c)
+        self.add_to_caches(c)
+        return c # For unit testing
 
     def get_files(self):
-        return self.find_by_kind(obnamlib.cmp.FILE)
+        return self.cache_file.values()
 
     def get_file(self, name):
-        for file in self.get_files():
-            fname = file.first_string_by_kind(obnamlib.cmp.FILENAME)
-            if name == fname:
-                return file
-        return None
+        return self.cache_file.get(name, None)
 
     def get_string_from_file(self, file, kind):
         return file.first_string_by_kind(kind)
 
     def get_stat_from_file(self, file):
-        c = file.first_by_kind(obnamlib.cmp.STAT)
-        return obnamlib.cmp.parse_stat_component(c)
+        return self.cache_stat.get(file, None)
 
     def get_names(self):
-        return [self.get_string_from_file(x, obnamlib.cmp.FILENAME) 
-                for x in self.get_files()]
+        return self.cache_file.keys()
 
     def get_stat(self, filename):
         return self.get_stat_from_file(self.get_file(filename))

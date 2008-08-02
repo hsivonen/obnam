@@ -98,31 +98,50 @@ class ObjectCache:
             # size of an object that doesn't contain file data. Inodes,
             # for example.
         self.objects = {}
-        self.mru = []
+        self.counter = 0
 
     def get(self, object_id):
         if object_id in self.objects:
-            self.mru.remove(object_id)
-            self.mru.insert(0, object_id)
-            return self.objects[object_id]
+            pair = self.objects[object_id]
+            self.counter += 1
+            pair[0] = self.counter
+            return pair[1]
         else:
             return None
         
     def forget(self, object_id):
         if object_id in self.objects:
             del self.objects[object_id]
-            self.mru.remove(object_id)
         
     def put(self, object):
         object_id = object.get_id()
-        self.forget(object_id)
-        self.objects[object_id] = object
-        self.mru.insert(0, object_id)
-        while len(self.mru) > self.MAX:
-            self.forget(self.mru[-1])
+        if object_id in self.objects:
+            self.counter += 1
+            self.objects[object_id][0] = self.counter
+            return
+
+        # Put new object in cache. Give it a counter that is one higher
+        # than the currently largest one, so that the object is the most
+        # recently used one.
+        self.counter += 1
+        self.objects[object_id] = [self.counter, object]
+
+        # If the cache is full, remove oldest one. We can only be one over
+        # the maximum by now.
+        if self.size() > self.MAX:
+            list = [(self.objects[id][0], id) for id in self.objects.keys()]
+            list.sort()
+            base, id = list[0]
+            self.forget(id)
+            
+            # Renumber the counters, to avoid overflowing to large integers
+            # unnecessarily.
+            for id in self.objects:
+                self.objects[id][0] -= base
+            self.counter -= base
 
     def size(self):
-        return len(self.mru)
+        return len(self.objects)
 
 
 def get_object(context, object_id):
@@ -132,43 +151,34 @@ def get_object(context, object_id):
                    obnamlib.obj.SIG, 
                    obnamlib.obj.FILECONTENTS]
 
-    logging.debug("Fetching object %s" % object_id)
-    
     if context.object_cache is None:
         context.object_cache = ObjectCache(context)
     o = context.object_cache.get(object_id)
     if o:
-        logging.debug("Object is in cache, good")
         return o
         
-    logging.debug("Object not in cache, looking up mapping")
     block_id = obnamlib.map.get(context.map, object_id)
     if not block_id:
         block_id = obnamlib.map.get(context.contmap, object_id)
     if not block_id:
         return None
 
-    logging.debug("Fetching block")
-    block = get_block(context, block_id)
-
-    logging.debug("Decoding block")
-    list = obnamlib.obj.block_decode(block)
+    logging.debug("Fetching object %s" % object_id)
     
-    logging.debug("Finding objects in block")
+    block = get_block(context, block_id)
+    list = obnamlib.obj.block_decode(block)
     list = obnamlib.cmp.find_by_kind(list, obnamlib.cmp.OBJECT)
 
-    logging.debug("Putting objects into object cache")
     the_one = None
     factory = obnamlib.obj.StorageObjectFactory()
     for component in list:
-        subs = component.get_subcomponents()
+        subs = component.subcomponents
         o = factory.get_object(subs)
         if o.get_kind() not in UNCACHEABLE:
             context.object_cache.put(o)
         if o.get_id() == object_id:
             the_one = o
 
-    logging.debug("Returning desired object")    
     return the_one
 
 
@@ -330,11 +340,10 @@ def _find_refs(components, refs=None): #pragma: no cover
         refs = set()
 
     for c in components:
-        kind = c.get_kind()
-        if obnamlib.cmp.kind_is_reference(kind):
-            refs.add(c.get_string_value())
-        elif kind in _interesting:
-            subs = c.get_subcomponents()
+        if obnamlib.cmp.kind_is_reference(c.kind):
+            refs.add(c.str)
+        elif c.kind in _interesting:
+            subs = c.subcomponents
             _find_refs(subs, refs)
 
     return refs
