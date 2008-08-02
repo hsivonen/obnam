@@ -407,6 +407,10 @@ class DirObjectTests(unittest.TestCase):
     def testSetsNameCorrectly(self):
         self.failUnlessEqual(self.dir.get_name(), "name")
 
+    def testGetsNameCorrectlyEvenWhenNameIsSetAfterCreation(self):
+        self.dir.name = None
+        self.failUnlessEqual(self.dir.get_name(), "name")
+
     def testSetsStatCorrectly(self):
         self.failUnlessEqual(self.dir.get_stat(), self.stat)
 

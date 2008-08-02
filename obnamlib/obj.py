@@ -405,6 +405,7 @@ class DirObject(StorageObject):
         StorageObject.__init__(self, components=components, id=id)
         if name:
             self.add(obnamlib.cmp.Component(obnamlib.cmp.FILENAME, name))
+        self.name = name
         if stat:
             self.add(obnamlib.cmp.create_stat_component(stat))
         if dirrefs:
@@ -415,7 +416,9 @@ class DirObject(StorageObject):
                 self.add(obnamlib.cmp.Component(obnamlib.cmp.FILEGROUPREF, ref))
 
     def get_name(self):
-        return self.first_by_kind(obnamlib.cmp.FILENAME).str
+        if not self.name:
+            self.name = self.first_by_kind(obnamlib.cmp.FILENAME).str
+        return self.name
 
     def get_stat(self):
         st = self.first_by_kind(obnamlib.cmp.STAT)
