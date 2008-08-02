@@ -262,20 +262,11 @@ def first_varint_by_kind(components, wanted_kind):
 
 def create_stat_component(st):
     """Create a STAT component, given a stat result"""
-    return Component(obnamlib.cmp.STAT,
-                     obnamlib.varint.encode(st.st_mode) +
-                     obnamlib.varint.encode(st.st_ino) +
-                     obnamlib.varint.encode(st.st_dev) +
-                     obnamlib.varint.encode(st.st_nlink) +
-                     obnamlib.varint.encode(st.st_uid) +
-                     obnamlib.varint.encode(st.st_gid) +
-                     obnamlib.varint.encode(st.st_size) +
-                     obnamlib.varint.encode(st.st_atime) +
-                     obnamlib.varint.encode(st.st_mtime) +
-                     obnamlib.varint.encode(st.st_ctime) +
-                     obnamlib.varint.encode(st.st_blocks) +
-                     obnamlib.varint.encode(st.st_blksize) +
-                     obnamlib.varint.encode(st.st_rdev))
+    return Component(obnamlib.cmp.STAT, 
+                     obnamlib.varint.encode_many([st.st_mode, st.st_ino,
+                     st.st_dev, st.st_nlink, st.st_uid, st.st_gid, st.st_size,
+                     st.st_atime, st.st_mtime, st.st_ctime, st.st_blocks,
+                     st.st_blksize, st.st_rdev]))
 
 
 def parse_stat_component(stat_component):
