@@ -451,6 +451,7 @@ class FileGroupObject(StorageObject):
 
         c = file_component.first_by_kind(obnamlib.cmp.STAT)
         self.cache_stat[file_component] = obnamlib.cmp.parse_stat_component(c)
+        
     
     def add_file(self, name, stat, contref, sigref, deltaref):
         c = obnamlib.filelist.create_file_component_from_stat(name, stat, 
@@ -472,8 +473,7 @@ class FileGroupObject(StorageObject):
         return self.cache_stat.get(file, None)
 
     def get_names(self):
-        return [self.get_string_from_file(x, obnamlib.cmp.FILENAME) 
-                for x in self.get_files()]
+        return self.cache_file.keys()
 
     def get_stat(self, filename):
         return self.get_stat_from_file(self.get_file(filename))
