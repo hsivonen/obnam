@@ -53,7 +53,7 @@ def show_component(component, indent=0):
     x = " " * (indent * 2)
     kind = component.kind
     print x + "Component:", kind, obnamlib.cmp.kind_name(kind)
-    if component.is_composite():
+    if component.is_composite:
         for c in component.subcomponents:
             show_component(c, indent+1)
     else:

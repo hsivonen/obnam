@@ -122,15 +122,12 @@ class Component:
             for x in value:
                 assert isinstance(x, Component)
             self.subcomponents = value[:]
+        self.is_composite = self.str is None
 
     def get_varint_value(self):
         """Return integer value of leaf component"""
         assert self.str is not None
         return obnamlib.varint.decode(self.str, 0)[0]
-
-    def is_composite(self):
-        """Is a component a leaf component or a composite one?"""
-        return self.str is None
 
     def find_by_kind(self, wanted_kind):
         """Find subcomponents of a desired kind"""
@@ -173,7 +170,7 @@ class Component:
 
     def encode(self):
         """Encode a component as a string"""
-        if self.is_composite():
+        if self.is_composite:
             snippets = []
             for sub in self.subcomponents:
                 snippets.append(sub.encode())

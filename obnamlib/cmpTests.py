@@ -84,14 +84,14 @@ class CreateComponentTests(unittest.TestCase):
         self.failIfEqual(c, None)
         self.failUnlessEqual(c.kind, 1)
         self.failUnlessEqual(c.str, "pink")
-        self.failUnlessEqual(c.is_composite(), False)
+        self.failUnlessEqual(c.is_composite, False)
 
     def testCreateComposite(self):
         leaf1 = obnamlib.cmp.Component(1, "pink")
         leaf2 = obnamlib.cmp.Component(2, "pretty")
         c = obnamlib.cmp.Component(3, [leaf1, leaf2])
         self.failUnlessEqual(c.kind, 3)
-        self.failUnlessEqual(c.is_composite(), True)
+        self.failUnlessEqual(c.is_composite, True)
         self.failUnlessEqual(c.subcomponents, [leaf1, leaf2])
 
 
