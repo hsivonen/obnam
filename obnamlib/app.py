@@ -153,12 +153,13 @@ class Application:
         
         """
         
-        fields = ("mode", "dev", "nlink", "uid", "gid", "size", "mtime")
-        for field in fields:
-            field = "st_" + field
-            if getattr(stat1, field) != getattr(stat2, field):
-                return False
-        return True
+        return (stat1.st_mode  == stat2.st_mode and
+                stat1.st_dev   == stat2.st_dev and
+                stat1.st_nlink == stat2.st_nlink and
+                stat1.st_uid   == stat2.st_uid and
+                stat1.st_gid   == stat2.st_gid and
+                stat1.st_size  == stat2.st_size and
+                stat1.st_mtime == stat2.st_mtime)
 
     def filegroup_is_unchanged(self, dirname, fg, filenames, stat=os.lstat):
         """Is a filegroup unchanged from the previous generation?
