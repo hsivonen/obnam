@@ -150,10 +150,7 @@ class Component:
     def first_string_by_kind(self, wanted_kind):
         """Find first subcomponent by kind, return its string value"""
         c = self.first_by_kind(wanted_kind)
-        if c:
-            return c.str
-        else:
-            return None
+        return (c and c.str) or None
 
     def first_varint_by_kind(self, wanted_kind):
         """Find first subcomponent by kind, return its integer value"""
