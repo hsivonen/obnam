@@ -39,3 +39,9 @@ class VarintEncodeDecodeTests(unittest.TestCase):
         n, pos = obnamlib.varint.decode(str, 0)
         self.failUnlessEqual(n, -1)
         self.failUnlessEqual(pos, 0)
+        
+    def testManyEncodeDecode(self):
+        numbers = [0, 1, 127, 128, 0xff00]
+        encoded = obnamlib.varint.encode_many(numbers)
+        decoded = obnamlib.varint.decode_many(encoded)
+        self.assertEqual(numbers, decoded)
