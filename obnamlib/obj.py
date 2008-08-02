@@ -453,7 +453,6 @@ class FileGroupObject(StorageObject):
         self.add_to_cache(c)
 
     def get_files(self):
-#        return self.cache.values()
         return self.find_by_kind(obnamlib.cmp.FILE)
 
     def get_file(self, name):
