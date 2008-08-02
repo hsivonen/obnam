@@ -173,10 +173,13 @@ class Application:
         """
         
         filenames = set(filenames)
-        for old_name in fg.get_names():
+
+        old_names = fg.get_names()
+        for old_name in old_names:
             if old_name not in filenames:
                 return False    # file has been deleted
 
+        for old_name in old_names:
             old_stat = fg.get_stat(old_name)
             new_stat = stat(os.path.join(dirname, old_name))
             if not self.file_is_unchanged(old_stat, new_stat):
