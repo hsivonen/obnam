@@ -82,12 +82,12 @@ class ObjectMappingTests(unittest.TestCase):
         self.failUnlessEqual(len(list2), 1)
         self.failUnlessEqual(list2[0].kind, obnamlib.cmp.OBJMAP)
         
-        list3 = list2[0].get_subcomponents()
+        list3 = list2[0].subcomponents
         self.failUnlessEqual(len(list3), 2)
         self.failUnlessEqual(list3[0].kind, obnamlib.cmp.BLOCKREF)
-        self.failUnlessEqual(list3[0].get_string_value(), "pretty")
+        self.failUnlessEqual(list3[0].str, "pretty")
         self.failUnlessEqual(list3[1].kind, obnamlib.cmp.OBJREF)
-        self.failUnlessEqual(list3[1].get_string_value(), "pink")
+        self.failUnlessEqual(list3[1].str, "pink")
 
         # Now try decoding with the official function
         block = obnamlib.map.encode_new_to_block(m, "black")

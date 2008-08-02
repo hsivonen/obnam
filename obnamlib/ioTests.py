@@ -183,7 +183,7 @@ class GetObjectTests(IoBase):
                                                         obnamlib.cmp.OBJKIND]]
         self.failUnlessEqual(len(list), 1)
         self.failUnlessEqual(list[0].kind, 42)
-        self.failUnlessEqual(list[0].get_string_value(), "pretty")
+        self.failUnlessEqual(list[0].str, "pretty")
 
     def testGetObjectTwice(self):
         id = "pink"

@@ -161,7 +161,7 @@ def get_object(context, object_id):
     the_one = None
     factory = obnamlib.obj.StorageObjectFactory()
     for component in list:
-        subs = component.get_subcomponents()
+        subs = component.subcomponents
         o = factory.get_object(subs)
         if o.get_kind() not in UNCACHEABLE:
             context.object_cache.put(o)
@@ -331,9 +331,9 @@ def _find_refs(components, refs=None): #pragma: no cover
 
     for c in components:
         if obnamlib.cmp.kind_is_reference(c.kind):
-            refs.add(c.get_string_value())
+            refs.add(c.str)
         elif c.kind in _interesting:
-            subs = c.get_subcomponents()
+            subs = c.subcomponents
             _find_refs(subs, refs)
 
     return refs

@@ -54,11 +54,11 @@ def show_component(component, indent=0):
     kind = component.kind
     print x + "Component:", kind, obnamlib.cmp.kind_name(kind)
     if component.is_composite():
-        for c in component.get_subcomponents():
+        for c in component.subcomponents:
             show_component(c, indent+1)
     else:
         fmt = component_data_formatters.get(kind, repr)
-        print x + "  data:", fmt(component.get_string_value())
+        print x + "  data:", fmt(component.str)
 
 
 def show_block(filename):

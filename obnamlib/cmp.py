@@ -123,20 +123,10 @@ class Component:
                 assert isinstance(x, Component)
             self.subcomponents = value[:]
 
-    def get_string_value(self):
-        """Return string value of leaf component"""
-        assert self.str is not None
-        return self.str
-
     def get_varint_value(self):
         """Return integer value of leaf component"""
         assert self.str is not None
         return obnamlib.varint.decode(self.str, 0)[0]
-
-    def get_subcomponents(self):
-        """Return list of subcomponents of composite component"""
-        assert self.str is None
-        return self.subcomponents
 
     def is_composite(self):
         """Is a component a leaf component or a composite one?"""
@@ -155,14 +145,13 @@ class Component:
 
     def find_strings_by_kind(self, wanted_kind):
         """Find subcomponents by kind, return their string values"""
-        return [c.get_string_value() 
-                for c in find_by_kind(self.subcomponents, wanted_kind)]
+        return [c.str for c in find_by_kind(self.subcomponents, wanted_kind)]
 
     def first_string_by_kind(self, wanted_kind):
         """Find first subcomponent by kind, return its string value"""
         c = self.first_by_kind(wanted_kind)
         if c:
-            return c.get_string_value()
+            return c.str
         else:
             return None
 
@@ -178,7 +167,7 @@ class Component:
         """Encode a component as a string"""
         if self.is_composite():
             snippets = []
-            for sub in self.get_subcomponents():
+            for sub in self.subcomponents:
                 snippets.append(sub.encode())
             encoded = "".join(snippets)
         else:
@@ -242,15 +231,14 @@ def first_by_kind(components, wanted_kind):
 
 def find_strings_by_kind(components, wanted_kind):
     """Find components by kind, return their string values"""
-    return [c.get_string_value() 
-            for c in find_by_kind(components, wanted_kind)]
+    return [c.str for c in find_by_kind(components, wanted_kind)]
 
 
 def first_string_by_kind(components, wanted_kind):
     """Find first component by kind, return its string value"""
     c = first_by_kind(components, wanted_kind)
     if c:
-        return c.get_string_value()
+        return c.str
     else:
         return None
 
@@ -284,7 +272,7 @@ def create_stat_component(st):
 
 def parse_stat_component(stat_component):
     """Return an object like a stat result from a decoded stat_component"""
-    value = stat_component.get_string_value()
+    value = stat_component.str
     pos = 0
     st_mode, pos = obnamlib.varint.decode(value, pos)
     st_ino, pos = obnamlib.varint.decode(value, pos)

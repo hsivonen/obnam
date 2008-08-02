@@ -346,8 +346,7 @@ class GetComponentTests(unittest.TestCase):
             ])
 
     def testGetByKind(self):
-        find = lambda t: \
-            [c.get_string_value() for c in self.o.find_by_kind(t)]
+        find = lambda t: [c.str for c in self.o.find_by_kind(t)]
         self.failUnlessEqual(find(1), ["pink"])
         self.failUnlessEqual(find(2), ["pretty"])
         self.failUnlessEqual(find(3), ["red", "too"])
@@ -363,7 +362,7 @@ class GetComponentTests(unittest.TestCase):
     def helper(self, wanted_kind):
         c = self.o.first_by_kind(wanted_kind)
         if c:
-            return c.get_string_value()
+            return c.str
         else:
             return None
 

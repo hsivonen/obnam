@@ -136,7 +136,7 @@ class StorageObject(object):
 
     def find_strings_by_kind(self, wanted_kind):
         """Find all components of a desired kind, return string values"""
-        return [c.get_string_value() for c in self.find_by_kind(wanted_kind)]
+        return [c.str for c in self.find_by_kind(wanted_kind)]
 
     def find_varints_by_kind(self, wanted_kind):
         """Find all components of a desired kind, return varint values"""
@@ -153,7 +153,7 @@ class StorageObject(object):
         """Find string value of first component of a desired kind"""
         c = self.first_by_kind(wanted_kind)
         if c:
-            return c.get_string_value()
+            return c.str
         else:
             return None
 
@@ -415,19 +415,17 @@ class DirObject(StorageObject):
                 self.add(obnamlib.cmp.Component(obnamlib.cmp.FILEGROUPREF, ref))
 
     def get_name(self):
-        return self.first_by_kind(obnamlib.cmp.FILENAME).get_string_value()
+        return self.first_by_kind(obnamlib.cmp.FILENAME).str
 
     def get_stat(self):
         st = self.first_by_kind(obnamlib.cmp.STAT)
         return obnamlib.cmp.parse_stat_component(st)
 
     def get_dirrefs(self):
-        return [c.get_string_value() 
-                for c in self.find_by_kind(obnamlib.cmp.DIRREF)]
+        return [c.str for c in self.find_by_kind(obnamlib.cmp.DIRREF)]
 
     def get_filegrouprefs(self):
-        return [c.get_string_value() 
-                for c in self.find_by_kind(obnamlib.cmp.FILEGROUPREF)]
+        return [c.str for c in self.find_by_kind(obnamlib.cmp.FILEGROUPREF)]
 
 
 class FileGroupObject(StorageObject):
