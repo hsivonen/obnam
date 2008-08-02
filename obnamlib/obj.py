@@ -437,36 +437,39 @@ class FileGroupObject(StorageObject):
 
     def __init__(self, components=None, id=None):
         StorageObject.__init__(self, components=components, id=id)
-        self.populate_cache()
+        self.populate_caches()
 
-    def populate_cache(self):
-        self.cache = {}
+    def populate_caches(self):
+        self.cache_file = {}
+        self.cache_stat = {}
         for c in self.get_files(): # pragma: no cover
-            self.add_to_cache(c)
+            self.add_to_caches(c)
     
-    def add_to_cache(self, file_component):
+    def add_to_caches(self, file_component):
         name = file_component.first_string_by_kind(obnamlib.cmp.FILENAME)
-        self.cache[name] = file_component
+        self.cache_file[name] = file_component
+
+        c = file_component.first_by_kind(obnamlib.cmp.STAT)
+        self.cache_stat[file_component] = obnamlib.cmp.parse_stat_component(c)
     
     def add_file(self, name, stat, contref, sigref, deltaref):
         c = obnamlib.filelist.create_file_component_from_stat(name, stat, 
                                                            contref, sigref, 
                                                            deltaref)
         self.add(c)
-        self.add_to_cache(c)
+        self.add_to_caches(c)
 
     def get_files(self):
         return self.find_by_kind(obnamlib.cmp.FILE)
 
     def get_file(self, name):
-        return self.cache.get(name, None)
+        return self.cache_file.get(name, None)
 
     def get_string_from_file(self, file, kind):
         return file.first_string_by_kind(kind)
 
     def get_stat_from_file(self, file):
-        c = file.first_by_kind(obnamlib.cmp.STAT)
-        return obnamlib.cmp.parse_stat_component(c)
+        return self.cache_stat.get(file, None)
 
     def get_names(self):
         return [self.get_string_from_file(x, obnamlib.cmp.FILENAME) 
