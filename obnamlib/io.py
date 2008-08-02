@@ -330,10 +330,9 @@ def _find_refs(components, refs=None): #pragma: no cover
         refs = set()
 
     for c in components:
-        kind = c.get_kind()
-        if obnamlib.cmp.kind_is_reference(kind):
+        if obnamlib.cmp.kind_is_reference(c.kind):
             refs.add(c.get_string_value())
-        elif kind in _interesting:
+        elif c.kind in _interesting:
             subs = c.get_subcomponents()
             _find_refs(subs, refs)
 

@@ -123,10 +123,6 @@ class Component:
                 assert isinstance(x, Component)
             self.subcomponents = value[:]
 
-    def get_kind(self):
-        """Return kind kind of a component"""
-        return self.kind
-
     def get_string_value(self):
         """Return string value of leaf component"""
         assert self.str is not None
@@ -148,12 +144,12 @@ class Component:
 
     def find_by_kind(self, wanted_kind):
         """Find subcomponents of a desired kind"""
-        return [c for c in self.subcomponents if c.get_kind() == wanted_kind]
+        return [c for c in self.subcomponents if c.kind == wanted_kind]
     
     def first_by_kind(self, wanted_kind):
         """Find first subcomponent of a desired kind"""
         for c in self.subcomponents:
-            if c.get_kind() == wanted_kind:
+            if c.kind == wanted_kind:
                 return c
         return None
 
@@ -233,13 +229,13 @@ class Parser:
 
 def find_by_kind(components, wanted_kind):
     """Find components of a desired kind in a list of components"""
-    return [c for c in components if c.get_kind() == wanted_kind]
+    return [c for c in components if c.kind == wanted_kind]
 
 
 def first_by_kind(components, wanted_kind):
     """Find first component of a desired kind in a list of components"""
     for c in components:
-        if c.get_kind() == wanted_kind:
+        if c.kind == wanted_kind:
             return c
     return None
 

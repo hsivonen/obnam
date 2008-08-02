@@ -530,7 +530,7 @@ class ApplicationGetFileInPreviousGenerationTests(unittest.TestCase):
 
     def testReturnsFileComponentIfFileDidExist(self):
         cmp = self.app.get_file_in_previous_generation("pink")
-        self.failUnlessEqual(cmp.get_kind(), obnamlib.cmp.FILE)
+        self.failUnlessEqual(cmp.kind, obnamlib.cmp.FILE)
 
 
 class ApplicationSelectFilesToBackUpTests(unittest.TestCase):

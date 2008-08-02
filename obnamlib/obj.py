@@ -102,7 +102,7 @@ class StorageObject(object):
     def remove(self, kind):
         """Remove all components of a given kind."""
         self._components = [c for c in self.get_components()
-                            if c.get_kind() != kind]
+                            if c.kind != kind]
 
     def add(self, c):
         """Add a component"""
@@ -110,7 +110,7 @@ class StorageObject(object):
 
     def replace(self, c):
         """Remove any existing components of this kind, then add this one."""
-        self.remove(c.get_kind())
+        self.remove(c.kind)
         self.add(c)
 
     def get_kind(self):
@@ -132,7 +132,7 @@ class StorageObject(object):
     def find_by_kind(self, wanted_kind):
         """Find all components of a desired kind inside this object"""
         return [c for c in self.get_components() 
-                    if c.get_kind() == wanted_kind]
+                    if c.kind == wanted_kind]
 
     def find_strings_by_kind(self, wanted_kind):
         """Find all components of a desired kind, return string values"""
@@ -145,7 +145,7 @@ class StorageObject(object):
     def first_by_kind(self, wanted_kind):
         """Find first component of a desired kind"""
         for c in self.get_components():
-            if c.get_kind() == wanted_kind:
+            if c.kind == wanted_kind:
                 return c
         return None
 

@@ -82,7 +82,7 @@ class CreateComponentTests(unittest.TestCase):
     def testCreateLeaf(self):
         c = obnamlib.cmp.Component(1, "pink")
         self.failIfEqual(c, None)
-        self.failUnlessEqual(c.get_kind(), 1)
+        self.failUnlessEqual(c.kind, 1)
         self.failUnlessEqual(c.get_string_value(), "pink")
         self.failUnlessEqual(c.is_composite(), False)
 
@@ -90,7 +90,7 @@ class CreateComponentTests(unittest.TestCase):
         leaf1 = obnamlib.cmp.Component(1, "pink")
         leaf2 = obnamlib.cmp.Component(2, "pretty")
         c = obnamlib.cmp.Component(3, [leaf1, leaf2])
-        self.failUnlessEqual(c.get_kind(), 3)
+        self.failUnlessEqual(c.kind, 3)
         self.failUnlessEqual(c.is_composite(), True)
         self.failUnlessEqual(c.get_subcomponents(), [leaf1, leaf2])
 
@@ -139,7 +139,7 @@ class ComponentParserTest(unittest.TestCase):
 class ComponentDecodeAllTests(unittest.TestCase):
 
     def remove_component(self, list, kind, value):
-        self.failUnlessEqual(list[0].get_kind(), kind)
+        self.failUnlessEqual(list[0].kind, kind)
         self.failUnlessEqual(list[0].get_string_value(), value)
         del list[0]
 
@@ -166,7 +166,7 @@ class ComponentFindTests(unittest.TestCase):
     def match(self, result, kind, value):
         self.failUnless(len(result) > 0)
         c = result[0]
-        self.failUnlessEqual(c.get_kind(), kind)
+        self.failUnlessEqual(c.kind, kind)
         self.failUnlessEqual(c.get_string_value(), value)
         del result[0]
 
@@ -262,7 +262,7 @@ class FindTests(unittest.TestCase):
     def match(self, result, kind, value):
         self.failUnless(len(result) > 0)
         c = result[0]
-        self.failUnlessEqual(c.get_kind(), kind)
+        self.failUnlessEqual(c.kind, kind)
         self.failUnlessEqual(c.get_string_value(), value)
         del result[0]
 
