@@ -1,4 +1,4 @@
-# Copyright (C) 2006  Lars Wirzenius <liw@iki.fi>
+# Copyright (C) 2006, 2008  Lars Wirzenius <liw@iki.fi>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-"""Unit tests for obnamlib.map."""
+"""Unit tests for mapping object to block identifiers."""
 
 
 import unittest
@@ -24,90 +24,74 @@ import unittest
 import obnamlib
 
 
-class ObjectMappingTests(unittest.TestCase):
+class MapTests(unittest.TestCase):
+
+    def setUp(self):
+        self.map = obnamlib.Map()
+
+    def testReturnsNoneForUnknownObjectId(self):
+        self.assertEqual(self.map["pink"], None)
+
+    def testSetsMapping(self):
+        self.map["pink"] = "pretty"
+        self.assertEqual(self.map["pink"], "pretty")
+
+    def testWorksWithIn(self):
+        self.map["pink"] = "pretty"
+        self.assert_("pink" in self.map)
+
+    def testWorksWithInWhenObjectIdNotInMapping(self):
+        self.assertFalse("pink" in self.map)
+        
+    def testRaisesErrorIfSettingSameMappingTwice(self):
+        self.map["pink"] = "pretty"
+        self.assertRaises(Exception, self.map.__setitem__, "pink", "pretty")
+
+    def testReturnsZeroLengthForEmptyMapping(self):
+        self.assertEqual(len(self.map), 0)
+        
+    def testReturnsOneForLengthOfMappingWithOneKeySet(self):
+        self.map["pink"] = "pretty"
+        self.assertEqual(len(self.map), 1)
 
     def testInvalidBlockRaisesException(self):
-        m = obnamlib.map.create()
         self.failUnlessRaises(obnamlib.obj.BlockWithoutCookie,
-                              obnamlib.map.decode_block, m, "pink")
+                              self.map.decode_block, "pink")
 
-    def testEmpty(self):
-        m = obnamlib.map.create()
-        self.failUnlessEqual(obnamlib.map.count(m), 0)
-
-    def testGetNonexisting(self):
-        m = obnamlib.map.create()
-        self.failUnlessEqual(obnamlib.map.get(m, "pink"), None)
-
-    def testAddOneMapping(self):
-        m = obnamlib.map.create()
-        obnamlib.map.add(m, "pink", "pretty")
-        self.failUnlessEqual(obnamlib.map.count(m), 1)
+    def testReturnsNoNewMappingsInitially(self):
+        self.assertEqual(self.map.get_new(), set())
         
-        self.failUnlessEqual(obnamlib.map.get(m, "pink"), "pretty")
+    def testReturnsOneNewMappingAfterOneIsAdded(self):
+        self.map["pink"] = "pretty"
+        self.assertEqual(self.map.get_new(), set(["pink"]))
 
-    def testAddTwoMappings(self):
-        m = obnamlib.map.create()
-        obnamlib.map.add(m, "pink", "pretty")
-        self.failUnlessRaises(AssertionError, obnamlib.map.add,
-                              m, "pink", "beautiful")
+    def testReturnsNoNewMappingsAfterNewKeysHaveBeenReset(self):
+        self.map["pink"] = "pretty"
+        self.map.reset_new()
+        self.assertEqual(self.map.get_new(), set())
 
-    def testGetNewMappings(self):
-        m = obnamlib.map.create()
-        self.failUnlessEqual(obnamlib.map.get_new(m), [])
-        obnamlib.map.add(m, "pink", "pretty")
-        self.failUnlessEqual(obnamlib.map.get_new(m), ["pink"])
-        obnamlib.map.reset_new(m)
-        self.failUnlessEqual(obnamlib.map.get_new(m), [])
-        obnamlib.map.add(m, "black", "beautiful")
-        self.failUnlessEqual(obnamlib.map.get_new(m), ["black"])
+    def testEncodesSingleNewKeyCorrectly(self):
+        self.map["pink"] = "pretty"
+        encoded = self.map.encode_new()
+        self.assertEqual(len(encoded), 1)
 
-    def testMappingEncodings(self):
-        # Set up a mapping
-        m = obnamlib.map.create()
-        
-        # It's empty; make sure encoding new ones returns an empty list
-        list = obnamlib.map.encode_new(m)
-        self.failUnlessEqual(list, [])
+        decoded = obnamlib.cmp.Parser(encoded[0]).decode_all()
+        self.assertEqual(len(decoded), 1)
 
-        # Add a mapping
-        obnamlib.map.add(m, "pink", "pretty")
+        c = decoded[0]
+        self.assertEqual(c.kind, obnamlib.cmp.OBJMAP)
+        self.assertEqual(c.first_string_by_kind(obnamlib.cmp.BLOCKREF),
+                         "pretty")
+        self.assertEqual(c.find_strings_by_kind(obnamlib.cmp.OBJREF),
+                         ["pink"])
 
-        # Encode the new mapping, make sure that goes well
-        list = obnamlib.map.encode_new(m)
-        self.failUnlessEqual(len(list), 1)
-        
-        # Make sure the encoding is correct
-        list2 = obnamlib.cmp.Parser(list[0]).decode_all()
-        self.failUnlessEqual(len(list2), 1)
-        self.failUnlessEqual(list2[0].kind, obnamlib.cmp.OBJMAP)
-        
-        list3 = list2[0].subcomponents
-        self.failUnlessEqual(len(list3), 2)
-        self.failUnlessEqual(list3[0].kind, obnamlib.cmp.BLOCKREF)
-        self.failUnlessEqual(list3[0].str, "pretty")
-        self.failUnlessEqual(list3[1].kind, obnamlib.cmp.OBJREF)
-        self.failUnlessEqual(list3[1].str, "pink")
-
-        # Now try decoding with the official function
-        block = obnamlib.map.encode_new_to_block(m, "black")
-        m2 = obnamlib.map.create()
-        obnamlib.map.decode_block(m2, block)
-        self.failUnlessEqual(obnamlib.map.count(m2), 1)
-        self.failUnlessEqual(obnamlib.map.get(m2, "pink"), "pretty")
-
-    def testMappingEncodingsForTwoInOneBlock(self):
-        m = obnamlib.map.create()
-        
-        obnamlib.map.add(m, "pink", "pretty")
-        obnamlib.map.add(m, "black", "pretty")
-
-        list = obnamlib.map.encode_new(m)
-        self.failUnlessEqual(len(list), 1)
-        
-        block = obnamlib.map.encode_new_to_block(m, "box")
-        m2 = obnamlib.map.create()
-        obnamlib.map.decode_block(m2, block)
-        self.failUnlessEqual(obnamlib.map.count(m), obnamlib.map.count(m2))
-        self.failUnlessEqual(obnamlib.map.get(m2, "pink"), "pretty")
-        self.failUnlessEqual(obnamlib.map.get(m2, "black"), "pretty")
+    def testEncodesAndDecodesBlockWithTwoMappingsCorrectly(self):
+        self.map["pink"] = "pretty"
+        self.map["black"] = "pretty"
+        block = self.map.encode_new_to_block("beautiful")
+        map2 = obnamlib.Map()
+        map2.decode_block(block)
+        self.assertEqual(map2.get_new(), set())
+        self.assertEqual(len(map2), 2)
+        self.assertEqual(map2["pink"], "pretty")
+        self.assertEqual(map2["black"], "pretty")

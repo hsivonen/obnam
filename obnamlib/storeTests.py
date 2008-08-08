@@ -125,16 +125,15 @@ class StoreMapTests(unittest.TestCase):
         context.cache = obnamlib.Cache(context.config)
         context.be = obnamlib.backend.init(context.config, context.cache)
 
-        obnamlib.map.add(context.map, "pink", "pretty")
-        obnamlib.map.add(context.contmap, "black", "beautiful")
+        context.map["pink"] = "pretty"
+        context.contmap["black"] = "beautiful"
 
         map_id = context.be.generate_block_id()
-        map_block = obnamlib.map.encode_new_to_block(context.map, map_id)
+        map_block = context.map.encode_new_to_block(map_id)
         context.be.upload_block(map_id, map_block, True)
 
         contmap_id = context.be.generate_block_id()
-        contmap_block = obnamlib.map.encode_new_to_block(context.contmap, 
-                                                      contmap_id)
+        contmap_block = context.contmap.encode_new_to_block(contmap_id)
         context.be.upload_block(contmap_id, contmap_block, True)
 
         host_id = context.config.get("backup", "host-id")
@@ -159,36 +158,36 @@ class StoreMapTests(unittest.TestCase):
                       ignore_errors=True)
 
     def testHasNoMapsLoadedByDefault(self):
-        self.failUnlessEqual(obnamlib.map.count(self.context.map), 0)
+        self.failUnlessEqual(len(self.context.map), 0)
 
     def testHasNoContentMapsLoadedByDefault(self):
-        self.failUnlessEqual(obnamlib.map.count(self.context.contmap), 0)
+        self.failUnlessEqual(len(self.context.contmap), 0)
 
     def testLoadsMapsWhenRequested(self):
         self.store.load_maps()
-        self.failUnlessEqual(obnamlib.map.count(self.context.map), 1)
+        self.failUnlessEqual(len(self.context.map), 1)
 
     def testLoadsContentMapsWhenRequested(self):
         self.store.load_content_maps()
-        self.failUnlessEqual(obnamlib.map.count(self.context.contmap), 1)
+        self.failUnlessEqual(len(self.context.contmap), 1)
 
     def testAddsNoNewMapsWhenNothingHasChanged(self):
         self.store.update_maps()
-        self.failUnlessEqual(obnamlib.map.count(self.context.map), 0)
+        self.failUnlessEqual(len(self.context.map), 0)
 
     def testAddsANewMapsWhenSomethingHasChanged(self):
-        obnamlib.map.add(self.context.map, "pink", "pretty")
+        self.context.map["pink"] = "pretty"
         self.store.update_maps()
-        self.failUnlessEqual(obnamlib.map.count(self.context.map), 1)
+        self.failUnlessEqual(len(self.context.map), 1)
 
     def testAddsNoNewContentMapsWhenNothingHasChanged(self):
         self.store.update_content_maps()
-        self.failUnlessEqual(obnamlib.map.count(self.context.contmap), 0)
+        self.failUnlessEqual(len(self.context.contmap), 0)
 
     def testAddsANewContentMapsWhenSomethingHasChanged(self):
-        obnamlib.map.add(self.context.contmap, "pink", "pretty")
+        self.context.contmap["pink"] = "pretty"
         self.store.update_content_maps()
-        self.failUnlessEqual(obnamlib.map.count(self.context.contmap), 1)
+        self.failUnlessEqual(len(self.context.contmap), 1)
 
 
 class StorePathnameParserTests(unittest.TestCase):
