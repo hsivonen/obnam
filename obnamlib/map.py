@@ -60,7 +60,7 @@ class Map:
             self.hits += 1
             return self.dict[object_id]
         self.misses += 1
-        for map_block_id in self.loadable_blocks:
+        for map_block_id in reversed(self.loadable_blocks):
             if map_block_id not in self.loaded_blocks:
                 block = self.fetch_block(self.context, map_block_id)
                 self.loaded_blocks.add(map_block_id)
@@ -180,7 +180,7 @@ class Map:
         If __getitem__ can't find the block_id for a given object_id,
         it will attempt to load more mappings from the list of blocks
         given in `block_ids`. If that still fails, it will return None.
-        The blocks are tried in the order given in `block_ids`.
+        The blocks are tried in the REVERSE order given in `block_ids`.
         
         """
         self.loadable_blocks += block_ids
