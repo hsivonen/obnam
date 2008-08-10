@@ -31,6 +31,8 @@ def main():
     try:
         context = obnamlib.context.Context()
         args = obnamlib.config.parse_options(context.config, sys.argv[1:])
+        context.map.max = context.config.getint("backup", "max-mappings")
+        context.contmap.max = context.config.getint("backup", "max-mappings")
         context.cache = obnamlib.cache.Cache(context.config)
         context.be = obnamlib.backend.init(context.config, context.cache)
         context.be.set_progress_reporter(context.progress)

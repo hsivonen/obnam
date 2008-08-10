@@ -49,7 +49,7 @@ class Map:
         self.dict = {}
         self.loaded_blocks = set()
         self.loadable_blocks = []
-        self.max = None
+        self.max = 0
         self.reset_new()
 
     def __getitem__(self, object_id):
@@ -69,7 +69,7 @@ class Map:
             raise KeyAlreadyInMapping(object_id)
         self.dict[object_id] = block_id
         self.new_keys.add(object_id)
-        if self.max is not None and len(self.dict) > self.max:
+        if self.max > 0 and len(self.dict) > self.max:
             keys = self.dict.keys()
             for new_key in self.new_keys:
                 keys.remove(new_key)
