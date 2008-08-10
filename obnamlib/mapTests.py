@@ -123,7 +123,11 @@ class MapTests(unittest.TestCase):
         self.map.max = 2
         self.map["pink"] = "pretty"
         self.map["black"] = "beautiful"
+        self.assertEqual(len(self.map), 2)
         self.map.reset_new()
         self.map["foo"] = "bar"
-        self.assertEqual(len(self.map), 2)
+        self.assertEqual(len(self.map), 3)  # 2 old ones, plus new one
+        self.map.reset_new()                # there's now 3 old ones
+        self.map["foobar"] = "baz"
+        self.assertEqual(len(self.map), 3)  # still 2 old ones, plus new one
 
