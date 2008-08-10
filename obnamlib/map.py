@@ -79,7 +79,7 @@ class Map:
                 keys.remove(begone)
             # If we forget anything, we need to re-set the loaded blocks so
             # that we can get the mapping again.
-            self.loaded_blocks = []
+            self.loaded_blocks.clear()
 
     def __contains__(self, object_id):
         return object_id in self.dict
