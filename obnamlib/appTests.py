@@ -840,18 +840,30 @@ class ApplicationBackupTests(unittest.TestCase):
         self.failIf(gens[-1].is_snapshot())
 
 
+class MockMap:
+
+    def __init__(self):
+        self.hits = 0
+        self.misses = 0
+        self.forgotten = 0
+
+
 class MockContext:
 
     def __init__(self):
         self.progress = self
         self.current_action = None
         self.total = None
+        self.map = MockMap()
         
     def update_current_action(self, value):
         self.current_action = value
         
     def update_total_files(self, value):
         self.total = value
+        
+    def update_hits(self, hits, misses, forgotten):
+        pass
 
 
 class ApplicationProgressUpdateTests(unittest.TestCase):

@@ -25,7 +25,8 @@ import time
 class ProgressReporter:
 
     initial_values = (("total_files", 0), ("uploaded", 0), ("downloaded", 0),
-                      ("current_action", None))
+                      ("current_action", None), ("hits", 0), ("misses", 0),
+                      ("forgotten", 0))
 
     def __init__(self, config):
         self.config = config
@@ -54,6 +55,8 @@ class ProgressReporter:
                              (self.dict["uploaded"] / 1024 / 1024))
                 parts.append("down: %d MB" % 
                              (self.dict["downloaded"] / 1024 / 1024))
+                parts.append("maps: %(hits)s/%(misses)s/%(forgotten)s" % 
+                             self.dict)
                 current = self.dict["current_action"]
                 if current:
                     parts.append("now:")
@@ -78,6 +81,11 @@ class ProgressReporter:
 
     def update_current_action(self, current_action):
         self.update("current_action", current_action)
+
+    def update_hits(self, hits, misses, forgotten):
+        self.update("hits", hits)
+        self.update("misses", misses)
+        self.update("forgotten", forgotten)
 
     def final_report(self):
         self.timestamp = 0

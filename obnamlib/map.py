@@ -51,10 +51,15 @@ class Map:
         self.loadable_blocks = []
         self.max = 0
         self.reset_new()
+        self.hits = 0
+        self.misses = 0
+        self.forgotten = 0
 
     def __getitem__(self, object_id):
         if object_id in self.dict:
+            self.hits += 1
             return self.dict[object_id]
+        self.misses += 1
         for map_block_id in self.loadable_blocks:
             if map_block_id not in self.loaded_blocks:
                 block = self.fetch_block(self.context, map_block_id)
@@ -74,6 +79,7 @@ class Map:
             for new_key in self.new_keys:
                 keys.remove(new_key)
             while len(self.dict) > self.max and keys:
+                self.forgotten += 1
                 begone = random.choice(keys)
                 del self.dict[begone]
                 keys.remove(begone)

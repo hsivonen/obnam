@@ -68,6 +68,10 @@ class Application:
         context = self.get_context()
         context.progress.update_total_files(self._total)
         context.progress.update_current_action(filename)
+        
+        context.progress.update_hits(self._context.map.hits,
+                                     self._context.map.misses,
+                                     self._context.map.forgotten)
 
     def add_to_total_files(self, count):
         self._total += count
