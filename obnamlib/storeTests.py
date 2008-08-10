@@ -158,36 +158,36 @@ class StoreMapTests(unittest.TestCase):
                       ignore_errors=True)
 
     def testHasNoMapsLoadedByDefault(self):
-        self.failUnlessEqual(len(self.context.map), 0)
+        self.failUnlessEqual(len(self.context.map.loadable_blocks), 0)
 
     def testHasNoContentMapsLoadedByDefault(self):
-        self.failUnlessEqual(len(self.context.contmap), 0)
+        self.failUnlessEqual(len(self.context.contmap.loadable_blocks), 0)
 
     def testLoadsMapsWhenRequested(self):
         self.store.load_maps()
-        self.failUnlessEqual(len(self.context.map), 1)
+        self.failUnlessEqual(len(self.context.map.loadable_blocks), 1)
 
     def testLoadsContentMapsWhenRequested(self):
         self.store.load_content_maps()
-        self.failUnlessEqual(len(self.context.contmap), 1)
+        self.failUnlessEqual(len(self.context.contmap.loadable_blocks), 1)
 
     def testAddsNoNewMapsWhenNothingHasChanged(self):
         self.store.update_maps()
-        self.failUnlessEqual(len(self.context.map), 0)
+        self.failUnlessEqual(len(self.context.map.loadable_blocks), 0)
 
     def testAddsANewMapsWhenSomethingHasChanged(self):
         self.context.map["pink"] = "pretty"
         self.store.update_maps()
-        self.failUnlessEqual(len(self.context.map), 1)
+        self.failUnlessEqual(len(self.context.map.loadable_blocks), 1)
 
     def testAddsNoNewContentMapsWhenNothingHasChanged(self):
         self.store.update_content_maps()
-        self.failUnlessEqual(len(self.context.contmap), 0)
+        self.failUnlessEqual(len(self.context.contmap.loadable_blocks), 0)
 
     def testAddsANewContentMapsWhenSomethingHasChanged(self):
         self.context.contmap["pink"] = "pretty"
         self.store.update_content_maps()
-        self.failUnlessEqual(len(self.context.contmap), 1)
+        self.failUnlessEqual(len(self.context.contmap.loadable_blocks), 1)
 
 
 class StorePathnameParserTests(unittest.TestCase):

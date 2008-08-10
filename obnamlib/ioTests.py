@@ -531,16 +531,3 @@ class ObjectCacheRegressionTest(unittest.TestCase):
         # Beware the operator.
         oc.put(b)
 
-
-class LoadMapTests(IoBase):
-
-    def test(self):
-        map = obnamlib.Map()
-        map["pink"] = "pretty"
-        block_id = self.context.be.generate_block_id()
-        block = map.encode_new_to_block(block_id)
-        self.context.be.upload_block(block_id, block, False)
-        
-        obnamlib.io.load_maps(self.context, self.context.map, [block_id])
-        self.failUnlessEqual(self.context.map["pink"], "pretty")
-        self.failUnlessEqual(self.context.map["black"], None)

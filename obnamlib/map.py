@@ -42,12 +42,24 @@ class Map:
     
     """
 
-    def __init__(self):
+    def __init__(self, context):
+        self.context = context
         self.dict = {}
+        self.loaded_blocks = set()
+        self.loadable_blocks = []
         self.reset_new()
 
     def __getitem__(self, object_id):
-        return self.dict.get(object_id, None)
+        if object_id in self.dict:
+            return self.dict[object_id]
+        for map_block_id in self.loadable_blocks:
+            if map_block_id not in self.loaded_blocks:
+                block = self.fetch_block(self.context, map_block_id)
+                self.loaded_blocks.add(map_block_id)
+                self.decode_block(block)
+                if object_id in self.dict:
+                    return self.dict[object_id]
+        return None
 
     def __setitem__(self, object_id, block_id):
         if object_id in self.dict:
@@ -141,3 +153,25 @@ class Map:
             pos += size
 
         self.new_keys = original_new
+        
+    def load_from_blocks(self, block_ids):
+        """Add to the blocks from which to attempt demand loading.
+        
+        If __getitem__ can't find the block_id for a given object_id,
+        it will attempt to load more mappings from the list of blocks
+        given in `block_ids`. If that still fails, it will return None.
+        The blocks are tried in the order given in `block_ids`.
+        
+        """
+        self.loadable_blocks += block_ids
+
+    def fetch_block(self, context, block_id):
+        """Load a given block id, return it's contents.
+        
+        This is just a wrapper for obnamlib.io.get_block. It's purpose
+        is to make it easy for unit tests to override this method with
+        a mock version.
+        
+        """
+        
+        return obnamlib.io.get_block(context, block_id) # pragma: no cover

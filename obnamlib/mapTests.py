@@ -27,7 +27,21 @@ import obnamlib
 class MapTests(unittest.TestCase):
 
     def setUp(self):
-        self.map = obnamlib.Map()
+        self.map = self.mocked_map()
+
+    def mocked_map(self):
+        map = obnamlib.Map(None)
+        map.fetch_block = self.mock_fetch_block
+        return map
+
+    def create_map_block(self, map_block_id, tuples):
+        temp = self.mocked_map()
+        for object_id, block_id in tuples:
+            temp[object_id] = block_id
+        return temp.encode_new_to_block(map_block_id)
+
+    def mock_fetch_block(self, context, block_id):
+        return self.mock_block
 
     def testReturnsNoneForUnknownObjectId(self):
         self.assertEqual(self.map["pink"], None)
@@ -89,9 +103,20 @@ class MapTests(unittest.TestCase):
         self.map["pink"] = "pretty"
         self.map["black"] = "pretty"
         block = self.map.encode_new_to_block("beautiful")
-        map2 = obnamlib.Map()
+        map2 = self.mocked_map()
         map2.decode_block(block)
         self.assertEqual(map2.get_new(), set())
         self.assertEqual(len(map2), 2)
         self.assertEqual(map2["pink"], "pretty")
         self.assertEqual(map2["black"], "pretty")
+        
+    def testSetsLoadedBlocksToEmptyInitially(self):
+        self.assertEqual(self.map.loaded_blocks, set())
+        
+    def testDemandLoadsMappingCorrectly(self):
+        self.mock_block = self.create_map_block("black", [("pink", "pretty")])
+        self.map.fetch_block = self.mock_fetch_block
+        self.map.load_from_blocks(["black"])
+        self.assertEqual(self.map["pink"], "pretty")
+        self.assertEqual(self.map.loaded_blocks, set(["black"]))
+

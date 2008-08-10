@@ -421,13 +421,3 @@ def collect_garbage(context, host_block):
         context.be.remove(garbage)
     logging.debug("GC: done")
 
-
-def load_maps(context, map, block_ids):
-    """Load and parse mapping blocks, store results in map"""
-    num_blocks = len(block_ids)
-    logging.debug("Loading %d maps" % num_blocks)
-    for i in range(num_blocks):
-        id = block_ids[i]
-        logging.debug("Loading map block %d/%d: %s" % (i+1, num_blocks, id))
-        block = obnamlib.io.get_block(context, id)
-        map.decode_block(block)
