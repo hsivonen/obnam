@@ -115,8 +115,15 @@ class MapTests(unittest.TestCase):
         
     def testDemandLoadsMappingCorrectly(self):
         self.mock_block = self.create_map_block("black", [("pink", "pretty")])
-        self.map.fetch_block = self.mock_fetch_block
         self.map.load_from_blocks(["black"])
         self.assertEqual(self.map["pink"], "pretty")
         self.assertEqual(self.map.loaded_blocks, set(["black"]))
+
+    def testForgetsOldMappingsWhenTotalBecomesTooLarge(self):
+        self.map.max = 2
+        self.map["pink"] = "pretty"
+        self.map["black"] = "beautiful"
+        self.map.reset_new()
+        self.map["foo"] = "bar"
+        self.assertEqual(len(self.map), 2)
 

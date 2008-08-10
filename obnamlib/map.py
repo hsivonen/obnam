@@ -18,6 +18,8 @@
 """Mapping of object to block identifiers"""
 
 
+import random
+
 import obnamlib
 
 
@@ -47,6 +49,7 @@ class Map:
         self.dict = {}
         self.loaded_blocks = set()
         self.loadable_blocks = []
+        self.max = None
         self.reset_new()
 
     def __getitem__(self, object_id):
@@ -66,6 +69,17 @@ class Map:
             raise KeyAlreadyInMapping(object_id)
         self.dict[object_id] = block_id
         self.new_keys.add(object_id)
+        if self.max is not None and len(self.dict) > self.max:
+            keys = self.dict.keys()
+            for new_key in self.new_keys:
+                keys.remove(new_key)
+            while len(self.dict) > self.max:
+                begone = random.choice(keys)
+                del self.dict[begone]
+                keys.remove(begone)
+            # If we forget anything, we need to re-set the loaded blocks so
+            # that we can get the mapping again.
+            self.loaded_blocks = []
 
     def __contains__(self, object_id):
         return object_id in self.dict
