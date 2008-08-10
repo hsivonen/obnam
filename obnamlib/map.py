@@ -73,7 +73,7 @@ class Map:
             keys = self.dict.keys()
             for new_key in self.new_keys:
                 keys.remove(new_key)
-            while len(self.dict) > self.max:
+            while len(self.dict) > self.max and keys:
                 begone = random.choice(keys)
                 del self.dict[begone]
                 keys.remove(begone)
