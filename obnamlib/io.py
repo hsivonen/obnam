@@ -99,14 +99,37 @@ class ObjectCache:
             # for example.
         self.objects = {}
         self.counter = 0
+        self.hits = 0
+        self.misses = 0
+
+    def count_components(self, c):
+        n = 1
+        for sub in c.subcomponents:
+            n += self.count_components(sub)
+        return n
+
+    def stats(self):
+        return
+        logging.info("Stats for ObjectCache:")
+        logging.info("  MAX = %d" % self.MAX)
+        logging.info("  #objects = %d" % len(self.objects))
+        logging.info("  #hits = %d" % self.hits)
+        logging.info("  #misses = %d" % self.misses)
+        cmps = 0
+        for _, o in self.objects.values():
+            for c in o.get_components():
+                cmps += self.count_components(c)
+        logging.info("  #components = %d" % cmps)
 
     def get(self, object_id):
         if object_id in self.objects:
+            self.hits += 1
             pair = self.objects[object_id]
             self.counter += 1
             pair[0] = self.counter
             return pair[1]
         else:
+            self.misses += 1
             return None
         
     def forget(self, object_id):

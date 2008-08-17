@@ -570,6 +570,9 @@ class Application:
             self._total += 1 + len(filenames)
             self.get_context().progress.update_total_files(self._total)
             
+            obnamlib.update_heapy("Finished dir %s" % dirname)
+            self.get_context().object_cache.stats()
+
             if self.time_for_snapshot(): #pragma: no cover
                 # Fill in parent directories with old data + known changes
                 while dirname != resolved:
@@ -606,6 +609,7 @@ class Application:
         root_objs = []
         self._total = 0
         prevgen = self.get_previous_generation()
+        obnamlib.update_heapy("Starting backup of roots: %s" % roots)
         for root in roots:
             while True:
                 self.set_previous_generation(prevgen)
