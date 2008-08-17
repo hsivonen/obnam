@@ -63,8 +63,7 @@ class Map:
         for map_block_id in reversed(self.loadable_blocks):
             if map_block_id not in self.loaded_blocks:
                 block = self.fetch_block(self.context, map_block_id)
-                self.loaded_blocks.add(map_block_id)
-                self.decode_block(block)
+                self.decode_block(block, which=object_id)
                 if object_id in self.dict:
                     return self.dict[object_id]
         return None
@@ -127,7 +126,7 @@ class Map:
         block = "".join([obnamlib.obj.BLOCK_COOKIE, c.encode()] + list)
         return block
 
-    def decode_block(self, block):
+    def decode_block(self, block, which=None):
         """Decode a block with mappings, add them to the mapping."""
 
         # This function used to use the block and component parsing code
@@ -168,7 +167,8 @@ class Map:
                         object_ids.append(data2)
                 if object_ids and block_id:
                     for object_id in object_ids:
-                        self[object_id] = block_id
+                        if object_id == which or which == None:
+                            self[object_id] = block_id
     
             pos += size
 
