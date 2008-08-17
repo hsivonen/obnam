@@ -66,3 +66,17 @@ def read_file(filename):
     f.close()
     return contents
 
+
+# The following sets up the Guppy/Heapy memory use profiler for easy use.
+# If it's not available, the update_heapy() function won't do anything.
+try: # pragma: no cover
+    import guppy
+except ImportError: # pragma: no cover
+    def update_heapy(f=None):
+        pass
+else: #pragma: no cover
+    heapy = guppy.hpy()
+    import sys
+    def update_heapy(f=sys.stdout):
+        f.write("%s\n" % heapy.heap())
+        heapy.setref()
