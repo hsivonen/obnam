@@ -72,11 +72,12 @@ def read_file(filename):
 try: # pragma: no cover
     import guppy
 except ImportError: # pragma: no cover
-    def update_heapy(f=None):
+    def update_heapy(msg, f=None):
         pass
 else: #pragma: no cover
     heapy = guppy.hpy()
     import sys
-    def update_heapy(f=sys.stdout):
-        f.write("%s\n" % heapy.heap())
+    def update_heapy(msg, f=sys.stdout):
+        f.write("\n============================\n%s:\n%s\n\n" % 
+                (msg, heapy.heap()))
         heapy.setref()
