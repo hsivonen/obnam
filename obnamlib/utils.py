@@ -69,15 +69,18 @@ def read_file(filename):
 
 # The following sets up the Guppy/Heapy memory use profiler for easy use.
 # If it's not available, the update_heapy() function won't do anything.
-try: # pragma: no cover
-    import guppy
-except ImportError: # pragma: no cover
-    def update_heapy(msg, f=None):
+if False: # pragma: no cover
+    try:
+        import guppy
+    except ImportError: # pragma: no cover
+        def update_heapy(msg):
+            pass
+    else: #pragma: no cover
+        heapy = guppy.hpy()
+        import logging
+        def update_heapy(msg):
+            logging.info("%s:\n%s" % (msg, heapy.heap()))
+            heapy.setref()
+else: # pragma: no cover
+    def update_heapy(msg):
         pass
-else: #pragma: no cover
-    heapy = guppy.hpy()
-    import sys
-    def update_heapy(msg, f=sys.stdout):
-        f.write("\n============================\n%s:\n%s\n\n" % 
-                (msg, heapy.heap()))
-        heapy.setref()

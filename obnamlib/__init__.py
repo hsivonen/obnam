@@ -47,7 +47,7 @@ from cache import Cache
 from map import Map
 from oper import Operation, OperationFactory
 from store import Store
-from utils import make_stat_result, create_file, read_file
+from utils import make_stat_result, create_file, read_file, update_heapy
 
 from oper_backup import Backup
 from oper_forget import Forget
