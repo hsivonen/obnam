@@ -102,13 +102,13 @@ class ObjectCache:
         self.hits = 0
         self.misses = 0
 
-    def count_components(self, c):
+    def count_components(self, c): # pragma: no cover
         n = 1
         for sub in c.subcomponents:
             n += self.count_components(sub)
         return n
 
-    def stats(self):
+    def stats(self): # pragma: no cover
         return
         logging.info("Stats for ObjectCache:")
         logging.info("  MAX = %d" % self.MAX)

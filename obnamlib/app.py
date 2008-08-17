@@ -571,7 +571,8 @@ class Application:
             self.get_context().progress.update_total_files(self._total)
             
             obnamlib.update_heapy("Finished dir %s" % dirname)
-            self.get_context().object_cache.stats()
+            if self.get_context().object_cache: # pragma: no cover
+                self.get_context().object_cache.stats()
 
             if self.time_for_snapshot(): #pragma: no cover
                 # Fill in parent directories with old data + known changes
