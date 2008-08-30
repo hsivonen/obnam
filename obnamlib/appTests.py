@@ -852,6 +852,9 @@ class MockContext:
 
     def __init__(self):
         self.progress = self
+        self._context = self
+        self.object_cache = self
+        self.hits = self.misses = self.forgotten = 0
         self.current_action = None
         self.total = None
         self.map = MockMap()
@@ -862,7 +865,10 @@ class MockContext:
     def update_total_files(self, value):
         self.total = value
         
-    def update_hits(self, hits, misses, forgotten):
+    def update_maphits(self, hits, misses, forgotten):
+        pass
+        
+    def update_ochits(self, hits, misses):
         pass
 
 

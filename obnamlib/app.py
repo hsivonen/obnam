@@ -69,9 +69,13 @@ class Application:
         context.progress.update_total_files(self._total)
         context.progress.update_current_action(filename)
         
-        context.progress.update_hits(self._context.map.hits,
-                                     self._context.map.misses,
-                                     self._context.map.forgotten)
+        context.progress.update_maphits(self._context.map.hits,
+                                        self._context.map.misses,
+                                        self._context.map.forgotten)
+        
+        if self._context.object_cache:
+            context.progress.update_ochits(self._context.object_cache.hits,
+                                           self._context.object_cache.misses)
 
     def add_to_total_files(self, count):
         self._total += count
