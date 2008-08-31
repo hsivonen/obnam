@@ -168,7 +168,6 @@ class Backend:
             logging.debug("Encrypting block %s before upload" % block_id)
             block = obnamlib.gpg.encrypt(self.config, block)
         logging.debug("Uploading block %s (%d bytes)" % (block_id, len(block)))
-        self.progress.update_current_action("Uploading block")
         self.really_upload_block(block_id, block)
         if to_cache and self.config.get("backup", "cache"):
             logging.debug("Putting uploaded block to cache, as well")
@@ -182,7 +181,6 @@ class Backend:
         """
         
         logging.debug("Downloading block %s" % block_id)
-        self.progress.update_current_action("Downloading block")
         block = self.really_download_block(block_id)
 
         if self.use_gpg():
