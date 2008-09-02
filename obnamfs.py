@@ -84,9 +84,8 @@ class ObnamFS(fuse.Fuse):
         map_block_ids = host.get_map_block_ids()
         contmap_block_ids = host.get_contmap_block_ids()
         self.gen_ids = gen_ids
-        obnam.io.load_maps(self.context, self.context.map, map_block_ids)
-        obnam.io.load_maps(self.context, self.context.contmap, 
-                           contmap_ids)
+        self.context.map.load_from_blocks(map_block_ids)
+        self.context.contmap.load_from_blocks(contmap_block_ids)
 
         self.fl_cache = {}
         self.handles = {}

@@ -25,7 +25,9 @@ import time
 class ProgressReporter:
 
     initial_values = (("total_files", 0), ("uploaded", 0), ("downloaded", 0),
-                      ("current_action", None))
+                      ("current_action", None), 
+                      ("ochits", 0), ("ocmisses", 0),
+                      ("maphits", 0), ("mapmisses", 0), ("mapforgotten", 0))
 
     def __init__(self, config):
         self.config = config
@@ -50,10 +52,14 @@ class ProgressReporter:
                 self.clear()
                 parts = []
                 parts.append("Files: %(total_files)d" % self.dict)
-                parts.append("up: %d MB" % 
-                             (self.dict["uploaded"] / 1024 / 1024))
-                parts.append("down: %d MB" % 
-                             (self.dict["downloaded"] / 1024 / 1024))
+                parts.append("xfer: %d/%dM" % 
+                             (self.dict["uploaded"] / 1024 / 1024,
+                              self.dict["downloaded"] / 1024 / 1024))
+                parts.append("maps: "
+                             "%(maphits)s/%(mapmisses)s/%(mapforgotten)s" % 
+                             self.dict)
+                parts.append("oc: %(ochits)s/%(ocmisses)s" % 
+                             self.dict)
                 current = self.dict["current_action"]
                 if current:
                     parts.append("now:")
@@ -78,6 +84,15 @@ class ProgressReporter:
 
     def update_current_action(self, current_action):
         self.update("current_action", current_action)
+
+    def update_maphits(self, hits, misses, forgotten):
+        self.update("maphits", hits)
+        self.update("mapmisses", misses)
+        self.update("mapforgotten", forgotten)
+
+    def update_ochits(self, hits, misses):
+        self.update("ochits", hits)
+        self.update("ocmisses", misses)
 
     def final_report(self):
         self.timestamp = 0

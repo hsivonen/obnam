@@ -296,6 +296,20 @@ sftp://ulla@example.com/~/safe
           snapshot.</para>
         </listitem>
       </varlistentry>
+
+      <varlistentry>
+        <term><option>--max-mappings</option>=<replaceable>COUNT</replaceable></term>
+        <listitem>
+          <para>This is a knob to tweak Obnam peformance, and should hopefully
+          not be necessary. Obnam keeps
+          mappings from internal objects to files in which they are stored.
+          This setting changes how many such mappings are kept in memory
+          at once. The higher the value, the more memory is used. The
+          lower the value, to more often Obnam needs to re-load the mappings
+          from disk.
+          </para>
+        </listitem>
+      </varlistentry>
         
       <varlistentry>
         <term><option>--version</option></term>

@@ -134,6 +134,12 @@ def build_parser():
                       metavar="SIZE",
                       help="make a snapshot generation after SIZE uploaded "
                            "data")
+    
+    parser.add_option("--max-mappings",
+                      type="int",
+                      metavar="COUNT",
+                      help="keep only COUNT object/block ID mappings in "
+                           "memory at once")
 
     return parser
 
@@ -217,6 +223,8 @@ def parse_options(config, argv):
         config.set("backup", "generation-times", "false")
     if options.snapshot_bytes is not None:
         config.set("backup", "snapshot-bytes", "%d" % options.snapshot_bytes)
+    if options.max_mappings is not None:
+        config.set("backup", "max-mappings", "%d" % options.max_mappings)
 
     return args
 

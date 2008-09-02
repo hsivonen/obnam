@@ -35,7 +35,6 @@ import format
 import gpg
 import io
 import log
-import map
 import obj
 import progress
 import rsync
@@ -45,13 +44,13 @@ import walk
 
 from app import Application
 from cache import Cache
+from map import Map
 from oper import Operation, OperationFactory
 from store import Store
-from utils import make_stat_result, create_file, read_file
+from utils import make_stat_result, create_file, read_file, update_heapy
 
 from oper_backup import Backup
 from oper_forget import Forget
 from oper_generations import ListGenerations
 from oper_restore import Restore
 from oper_show_generations import ShowGenerations
-

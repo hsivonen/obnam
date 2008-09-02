@@ -129,7 +129,7 @@ class ObjectQueueFlushing(IoBase):
         list = self.context.be.list()
         self.failUnlessEqual(len(list), 1)
         
-        b1 = os.path.basename(obnamlib.map.get(self.context.map, "pink"))
+        b1 = os.path.basename(self.context.map["pink"])
         b2 = os.path.basename(list[0])
         self.failUnlessEqual(b1, b2)
 
@@ -280,7 +280,7 @@ class FileContentsTests(unittest.TestCase):
 
         self.failIfEqual(id, None)
         self.failUnlessEqual(self.context.oq.ids(), [id])
-        self.failUnlessEqual(obnamlib.map.count(self.context.map), 0)
+        self.failUnlessEqual(len(self.context.map), 0)
             # there's no mapping yet, because the queue is small enough
             # that there has been no need to flush it
 
@@ -418,16 +418,15 @@ class ReachabilityTests(IoBase):
         self.failUnlessEqual(list2, [])
 
     def testNoDataExtraMaps(self):
-        obnamlib.map.add(self.context.map, "pink", "pretty")
+        self.context.map["pink"] = "pretty"
         map_block_id = "box"
-        map_block = obnamlib.map.encode_new_to_block(self.context.map,
-                                                         map_block_id)
+        map_block = self.context.map.encode_new_to_block(map_block_id)
         self.context.be.upload_block(map_block_id, map_block, False)
 
-        obnamlib.map.add(self.context.contmap, "black", "beautiful")
+        self.context.contmap["black"] = "beautiful"
         contmap_block_id = "fiddly"
-        contmap_block = obnamlib.map.encode_new_to_block(
-                            self.context.contmap, contmap_block_id)
+        contmap_block = self.context.contmap.encode_new_to_block(
+                            contmap_block_id)
         self.context.be.upload_block(contmap_block_id, contmap_block, False)
 
         host_id = self.context.config.get("backup", "host-id")
@@ -452,10 +451,9 @@ class ReachabilityTests(IoBase):
         block = oq.as_block(block_id)
         self.context.be.upload_block(block_id, block, False)
 
-        obnamlib.map.add(self.context.contmap, "rouge", block_id)
+        self.context.contmap["rouge"] = block_id
         map_block_id = "pretty"
-        map_block = obnamlib.map.encode_new_to_block(self.context.contmap,
-                                                         map_block_id)
+        map_block = self.context.contmap.encode_new_to_block(map_block_id)
         self.context.be.upload_block(map_block_id, map_block, False)
 
         host_id = self.context.config.get("backup", "host-id")
@@ -533,18 +531,3 @@ class ObjectCacheRegressionTest(unittest.TestCase):
         # Beware the operator.
         oc.put(b)
 
-
-class LoadMapTests(IoBase):
-
-    def test(self):
-        map = obnamlib.map.create()
-        obnamlib.map.add(map, "pink", "pretty")
-        block_id = self.context.be.generate_block_id()
-        block = obnamlib.map.encode_new_to_block(map, block_id)
-        self.context.be.upload_block(block_id, block, False)
-        
-        obnamlib.io.load_maps(self.context, self.context.map, [block_id])
-        self.failUnlessEqual(obnamlib.map.get(self.context.map, "pink"),
-                             "pretty")
-        self.failUnlessEqual(obnamlib.map.get(self.context.map, "black"),
-                             None)

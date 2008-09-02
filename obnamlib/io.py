@@ -60,7 +60,7 @@ def flush_object_queue(context, oq, map, to_cache):
         block = oq.as_block(block_id)
         context.be.upload_block(block_id, block, to_cache)
         for id in oq.ids():
-            obnamlib.map.add(map, id, block_id)
+            map[id] = block_id
         oq.clear()
 
 
@@ -99,14 +99,37 @@ class ObjectCache:
             # for example.
         self.objects = {}
         self.counter = 0
+        self.hits = 0
+        self.misses = 0
+
+    def count_components(self, c): # pragma: no cover
+        n = 1
+        for sub in c.subcomponents:
+            n += self.count_components(sub)
+        return n
+
+    def stats(self): # pragma: no cover
+        return
+        logging.info("Stats for ObjectCache:")
+        logging.info("  MAX = %d" % self.MAX)
+        logging.info("  #objects = %d" % len(self.objects))
+        logging.info("  #hits = %d" % self.hits)
+        logging.info("  #misses = %d" % self.misses)
+        cmps = 0
+        for _, o in self.objects.values():
+            for c in o.get_components():
+                cmps += self.count_components(c)
+        logging.info("  #components = %d" % cmps)
 
     def get(self, object_id):
         if object_id in self.objects:
+            self.hits += 1
             pair = self.objects[object_id]
             self.counter += 1
             pair[0] = self.counter
             return pair[1]
         else:
+            self.misses += 1
             return None
         
     def forget(self, object_id):
@@ -157,9 +180,9 @@ def get_object(context, object_id):
     if o:
         return o
         
-    block_id = obnamlib.map.get(context.map, object_id)
+    block_id = context.map[object_id]
     if not block_id:
-        block_id = obnamlib.map.get(context.contmap, object_id)
+        block_id = context.contmap[object_id]
     if not block_id:
         return None
 
@@ -360,9 +383,9 @@ def find_reachable_data_blocks(context, host_block): #pragma: no cover
         logging.debug("find_reachable_data_blocks: %d remaining" % 
                         len(object_ids))
         object_id = object_ids.pop()
-        block_id = obnamlib.map.get(context.map, object_id)
+        block_id = context.map[object_id]
         if not block_id:
-            block_id = obnamlib.map.get(context.contmap, object_id)
+            block_id = context.contmap[object_id]
         if not block_id:
             logging.warning("Can't find object %s in any block" % object_id)
         elif block_id not in reachable_block_ids:
@@ -421,13 +444,3 @@ def collect_garbage(context, host_block):
         context.be.remove(garbage)
     logging.debug("GC: done")
 
-
-def load_maps(context, map, block_ids):
-    """Load and parse mapping blocks, store results in map"""
-    num_blocks = len(block_ids)
-    logging.debug("Loading %d maps" % num_blocks)
-    for i in range(num_blocks):
-        id = block_ids[i]
-        logging.debug("Loading map block %d/%d: %s" % (i+1, num_blocks, id))
-        block = obnamlib.io.get_block(context, id)
-        obnamlib.map.decode_block(map, block)

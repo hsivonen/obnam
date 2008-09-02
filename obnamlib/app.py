@@ -68,6 +68,14 @@ class Application:
         context = self.get_context()
         context.progress.update_total_files(self._total)
         context.progress.update_current_action(filename)
+        
+        context.progress.update_maphits(self._context.map.hits,
+                                        self._context.map.misses,
+                                        self._context.map.forgotten)
+        
+        if self._context.object_cache:
+            context.progress.update_ochits(self._context.object_cache.hits,
+                                           self._context.object_cache.misses)
 
     def add_to_total_files(self, count):
         self._total += count
@@ -566,6 +574,10 @@ class Application:
             self._total += 1 + len(filenames)
             self.get_context().progress.update_total_files(self._total)
             
+            obnamlib.update_heapy("Finished dir %s" % dirname)
+            if self.get_context().object_cache: # pragma: no cover
+                self.get_context().object_cache.stats()
+
             if self.time_for_snapshot(): #pragma: no cover
                 # Fill in parent directories with old data + known changes
                 while dirname != resolved:
@@ -602,6 +614,7 @@ class Application:
         root_objs = []
         self._total = 0
         prevgen = self.get_previous_generation()
+        obnamlib.update_heapy("Starting backup of roots: %s" % roots)
         for root in roots:
             while True:
                 self.set_previous_generation(prevgen)

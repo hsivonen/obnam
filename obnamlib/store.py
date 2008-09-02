@@ -76,14 +76,12 @@ class Store:
     def load_maps(self):
         """Load non-content map blocks."""
         ids = self._host.get_map_block_ids()
-        logging.info("Decoding %d mapping blocks" % len(ids))
-        obnamlib.io.load_maps(self._context, self._context.map, ids)
+        self._context.map.load_from_blocks(ids)
 
     def load_content_maps(self):
         """Load content map blocks."""
         ids = self._host.get_contmap_block_ids()
-        logging.info("Decoding %d content mapping blocks" % len(ids))
-        obnamlib.io.load_maps(self._context, self._context.contmap, ids)
+        self._context.contmap.load_from_blocks(ids)
 
     def _update_map_helper(self, map):
         """Create new mapping blocks of a given kind, and upload them.
@@ -92,11 +90,12 @@ class Store:
 
         """
 
-        if obnamlib.map.get_new(map):
+        if map.get_new():
             id = self._context.be.generate_block_id()
             logging.debug("Creating mapping block %s" % id)
-            block = obnamlib.map.encode_new_to_block(map, id)
+            block = map.encode_new_to_block(id)
             self._context.be.upload_block(id, block, True)
+            map.load_from_blocks([id])
             return [id]
         else:
             logging.debug("No new mappings, no new mapping block")
@@ -139,8 +138,8 @@ class Store:
                                           map_block_ids=map_ids,
                                           contmap_block_ids=contmap_ids)
         obnamlib.io.upload_host_block(self._context, host2.encode())
-        obnamlib.map.reset_new(self._context.map)
-        obnamlib.map.reset_new(self._context.contmap)
+        self._context.map.reset_new()
+        self._context.contmap.reset_new()
 
         self._host = host2
 

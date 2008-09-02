@@ -27,8 +27,8 @@ class Context:
         self.config = obnamlib.config.default_config()
         self.cache = None
         self.be = None
-        self.map = obnamlib.map.create()
-        self.contmap = obnamlib.map.create()
+        self.map = obnamlib.Map(self)
+        self.contmap = obnamlib.Map(self)
         self.oq = obnamlib.obj.ObjectQueue()
         self.content_oq = obnamlib.obj.ObjectQueue()
         self.progress = obnamlib.progress.ProgressReporter(self.config)

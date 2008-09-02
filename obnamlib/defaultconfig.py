@@ -20,6 +20,7 @@ items = (
     ("backup", "report-progress", "false"),
     ("backup", "generation-times", "false"),
     ("backup", "snapshot-bytes", "0"),
+    ("backup", "max-mappings", "0"),
 )
 
 default_paths = []
