@@ -1,4 +1,5 @@
-#!/usr/bin/python
+# obnamlib/exception.py -- Base class for exceptions for obnamlib
+#
 # Copyright (C) 2008  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -15,17 +16,8 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-from distutils.core import setup, Extension
 
-fadvise = Extension('fadvise', sources=['fadvisemodule.c'])
+class BackupException(Exception):
 
-setup(name='obnam',
-      version='0.9.3',
-      description='Backup software',
-      author='Lars Wirzenius',
-      author_email='liw@liw.fi',
-      url='http://braawi.org/obnam.html',
-      packages=['obnamlib'],
-      scripts=['obnam'],
-      ext_modules=[fadvise],
-     )
+    def __str__(self):
+        return self.str

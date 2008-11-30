@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # Copyright (C) 2008  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -15,17 +14,25 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-from distutils.core import setup, Extension
 
-fadvise = Extension('fadvise', sources=['fadvisemodule.c'])
+import unittest
 
-setup(name='obnam',
-      version='0.9.3',
-      description='Backup software',
-      author='Lars Wirzenius',
-      author_email='liw@liw.fi',
-      url='http://braawi.org/obnam.html',
-      packages=['obnamlib'],
-      scripts=['obnam'],
-      ext_modules=[fadvise],
-     )
+import obnamlib
+
+
+class DummyException(obnamlib.Exception):
+
+    def __init__(self, arg):
+        self.str = arg
+
+
+class ExceptionTests(unittest.TestCase):
+
+    def setUp(self):
+        self.e = DummyException("foo")
+
+    def testSetsStrToArgument(self):
+        self.assertEqual(self.e.str, "foo")
+
+    def testStrFunctionFormatsToStrAttribute(self):
+        self.assertEqual(str(self.e), "foo")
