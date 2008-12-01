@@ -44,3 +44,9 @@ class KindsTests(unittest.TestCase):
     def testRaisesErrorForUnknownName(self):
         kinds = obnamlib.Kinds()
         self.assertRaises(KeyError, kinds.codeof, "foo")
+
+    def testAddsIdentifiersToModuleNamespace(self):
+        kinds = obnamlib.Kinds()
+        kinds.add(1, "foo")
+        kinds.add_identifiers(obnamlib)
+        self.assertEqual(obnamlib.foo, 1)

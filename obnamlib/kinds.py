@@ -31,7 +31,7 @@ class Kinds(object):
 
     Additionally we need a Python identifier for each kind, so that we
     can easily refer to the kinds in the source code. This class provides
-    that, too, via the add_to_namespace method.
+    that, too, via the add_identifiers method.
 
     Because Component and Object kinds have different requirements,
     this is a base class that gets subclassed elsewhere.
@@ -60,3 +60,20 @@ class Kinds(object):
     def pairs(self):
         """Return list of all mappings as tuples of code and name."""
         return [(code, name) for code, name in self.dict.iteritems()]
+
+    def add_identifiers(self, module):
+        """Add identifiers from list of kinds to a module's namespace.
+
+        Suggested use:
+
+        import obnamlib
+        kinds = obnamlib.Kinds()
+        kinds.add(123, "FOO")
+        kinds.add_identifiers(obnamlib)
+        ...
+        c = Component(kind=obnamlib.FOO)
+
+        """
+
+        for code, value in self.pairs():
+            setattr(module, value, code)
