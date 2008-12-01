@@ -38,3 +38,4 @@ class Object(object):
     def __init__(self, kind, id):
         self.kind = kind
         self.id = id
+        self.components = []

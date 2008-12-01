@@ -29,3 +29,7 @@ class ObjectTests(unittest.TestCase):
     def testSetsIdCorrectly(self):
         obj = obnamlib.Object(obnamlib.GEN, "id")
         self.assertEqual(obj.id, "id")
+
+    def testSetsComponentToEmptyListInitially(self):
+        obj = obnamlib.Object(obnamlib.GEN, "id")
+        self.assertEqual(obj.components, [])
