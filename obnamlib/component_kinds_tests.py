@@ -1,5 +1,3 @@
-# obnamlib/__init__.py
-#
 # Copyright (C) 2008  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -17,10 +15,24 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-from exception import BackupException as Exception
-from component import Component
-from kinds import Kinds
-from component_kinds import ComponentKinds
+import unittest
 
-FILENAME = 42
-OBJECT = 69
+import obnamlib
+
+
+class ComponentKindsTests(unittest.TestCase):
+
+    def testAddsPlainCorrectly(self):
+        kinds = obnamlib.ComponentKinds()
+        kinds.add_plain(1, "foo")
+        self.assert_(kinds.is_plain(kinds.codeof("foo")))
+
+    def testAddsCompositeCorrectly(self):
+        kinds = obnamlib.ComponentKinds()
+        kinds.add_composite(1, "foo")
+        self.assert_(kinds.is_composite(kinds.codeof("foo")))
+
+    def testAddsReferenceCorrectly(self):
+        kinds = obnamlib.ComponentKinds()
+        kinds.add_ref(1, "foo")
+        self.assert_(kinds.is_ref(kinds.codeof("foo")))
