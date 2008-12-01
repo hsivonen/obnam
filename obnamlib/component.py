@@ -37,6 +37,7 @@ class Component(object):
     def __init__(self, kind):
         self.kind = kind
         self._string = ""
+        self._children = []
 
     def assert_is_plain(self):
         if self.kind != obnamlib.FILENAME:
@@ -52,4 +53,20 @@ class Component(object):
         self._string = str
 
     string = property(fget=get_string, fset=set_string, 
-                      doc="String value of component.")
+                      doc="String value of plain component.")
+
+    def assert_is_composite(self):
+        if self.kind != obnamlib.OBJECT:
+            raise obnamlib.Exception("Using children of non-composite "
+                                     "Component.")
+    
+    def get_children(self):
+        self.assert_is_composite()
+        return self._children
+
+    def set_children(self, children):
+        self.assert_is_composite()
+        self._children = children
+
+    children = property(fget=get_children, fset=set_children,
+                        doc="Children of composite component.")

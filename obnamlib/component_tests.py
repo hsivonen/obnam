@@ -29,7 +29,7 @@ class ComponentTests(unittest.TestCase):
     def testSetsKindCorrectly(self):
         self.assertEqual(self.scmp.kind, obnamlib.FILENAME)
 
-    def testInitiallyEmptyString(self):
+    def testInitiallySetsValueToEmptyString(self):
         self.assertEqual(self.scmp.string, "")
 
     def testSetsStringValueCorrectly(self):
@@ -43,3 +43,24 @@ class ComponentTests(unittest.TestCase):
         def set():
             self.ccmp.string = "foo"
         self.assertRaises(obnamlib.Exception, set)
+
+    def testInitiallyCreatesNoChildren(self):
+        self.assertEqual(self.ccmp.children, [])
+
+    def testSetsChildrenCorrectly(self):
+        self.ccmp.children = [self.scmp]
+        self.assertEqual(self.ccmp.children, [self.scmp])
+
+    def testAddsChildCorrectly(self):
+        self.ccmp.children.append(self.scmp)
+        self.assertEqual(self.ccmp.children, [self.scmp])
+
+    def testAddsSecondChildCorrectly(self):
+        a = obnamlib.Component(obnamlib.FILENAME)
+        b = obnamlib.Component(obnamlib.FILENAME)
+        self.ccmp.children.append(a)
+        self.ccmp.children.append(b)
+        self.assertEqual(self.ccmp.children, [a, b])
+
+    def testRefusesToAccessChildrenForNonCompositeComponent(self):
+        self.assertRaises(obnamlib.Exception, lambda: self.scmp.children)
