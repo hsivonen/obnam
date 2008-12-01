@@ -30,6 +30,17 @@ class ComponentTests(unittest.TestCase):
         cmp = obnamlib.Component(obnamlib.FILENAME)
         self.assertEqual(cmp.string, "")
 
+    def testSetsStringValueCorrectly(self):
+        cmp = obnamlib.Component(obnamlib.FILENAME)
+        cmp.string = "foo"
+        self.assertEqual(cmp.string, "foo")
+
     def testRefusesToAccessStringForCompositeComponent(self):
         cmp = obnamlib.Component(obnamlib.OBJECT)
         self.assertRaises(obnamlib.Exception, lambda: cmp.string)
+
+    def testRefusesToSetStringForCompositeComponent(self):
+        cmp = obnamlib.Component(obnamlib.OBJECT)
+        def set():
+            cmp.string = "foo"
+        self.assertRaises(obnamlib.Exception, set)

@@ -49,7 +49,7 @@ class Component(object):
 
     def set_string(self, str):
         self.assert_is_plain()
-        self._string = string
+        self._string = str
 
     string = property(fget=get_string, fset=set_string, 
                       doc="String value of component.")
