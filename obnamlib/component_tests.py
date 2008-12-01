@@ -25,3 +25,11 @@ class ComponentTests(unittest.TestCase):
     def testSetsKindCorrectly(self):
         cmp = obnamlib.Component(42)
         self.assertEqual(cmp.kind, 42)
+
+    def testInitiallyEmptyString(self):
+        cmp = obnamlib.Component(obnamlib.FILENAME)
+        self.assertEqual(cmp.string, "")
+
+    def testRefusesToAccessStringForCompositeComponent(self):
+        cmp = obnamlib.Component(obnamlib.OBJECT)
+        self.assertRaises(obnamlib.Exception, lambda: cmp.string)

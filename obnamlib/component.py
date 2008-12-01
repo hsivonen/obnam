@@ -36,3 +36,20 @@ class Component(object):
 
     def __init__(self, kind):
         self.kind = kind
+        self._string = ""
+
+    def assert_is_plain(self):
+        if self.kind != obnamlib.FILENAME:
+            raise obnamlib.Exception("Using string value of "
+                                     "non-plain component.")
+
+    def get_string(self):
+        self.assert_is_plain()
+        return self._string
+
+    def set_string(self, str):
+        self.assert_is_plain()
+        self._string = string
+
+    string = property(fget=get_string, fset=set_string, 
+                      doc="String value of component.")

@@ -19,3 +19,7 @@
 
 from exception import BackupException as Exception
 from component import Component
+
+FILENAME = 42
+OBJECT = 69
+
