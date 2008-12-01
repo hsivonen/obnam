@@ -22,5 +22,6 @@ from component import Component
 from kinds import Kinds
 from component_kinds import ComponentKinds
 
-FILENAME = 42
-OBJECT = 69
+_component_kinds = ComponentKinds()
+_component_kinds.add_all()
+_component_kinds.add_to_obnamlib()

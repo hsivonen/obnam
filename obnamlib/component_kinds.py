@@ -71,3 +71,49 @@ class ComponentKinds(obnamlib.Kinds):
     def is_ref(self, code):
         """Is this is a reference kind?"""
         return (code & self.MASK) == self.REF_FLAG
+
+    def add_all(self): # pragma: no cover
+        """Add all component kinds to ourselves."""
+
+        self.add_plain(     1, "OBJID")
+        self.add_plain(     2, "OBJKIND")
+        self.add_plain(     3, "BLKID")
+        self.add_plain(     4, "FILECHUNK")
+        self.add_composite( 5, "OBJECT")
+        self.add_composite( 6, "OBJMAP")
+        # 7-19 have been obsoleted and should not exist anywhere in the 
+        # universe.
+        self.add_ref(      20, "CONTREF")
+        self.add_composite(21, "NAMEIPAIR")
+        # 22 has been obsoleted and should not exist anywhere in the universe.
+        self.add_plain(    23, "FILENAME")
+        self.add_plain(    24, "SIGDATA")
+        self.add_ref(      25, "SIGREF")
+        self.add_ref(      26, "GENREF")
+        # No idea what happened to 27.
+        self.add_ref(      28, "OBJREF")
+        self.add_ref(      29, "BLOCKREF")
+        self.add_ref(      30, "MAPREF")
+        self.add_ref(      31, "FILEPARTREF")
+        self.add_plain(    32, "FORMATVERSION")
+        self.add_composite(33, "FILE")
+        self.add_ref(      34, "FILELISTREF")
+        self.add_ref(      35, "CONTMAPREF")
+        self.add_ref(      36, "DELTAREF")
+        self.add_plain(    37, "DELTADATA")
+        self.add_plain(    38, "STAT")
+        self.add_plain(    39, "GENSTART")
+        self.add_plain(    40, "GENEND")
+        self.add_ref(      41, "DELTAPARTREF")
+        self.add_ref(      42, "DIRREF")
+        self.add_ref(      43, "FILEGROUPREF")
+        self.add_plain(    44, "SNAPSHOTGEN")
+
+    def add_to_obnamlib(self): # pragma: no cover
+        """Add all our names to obnamlib.
+
+        This method must be called from obnamlib/__init__.py only!
+
+        """
+
+        self.add_identifiers(obnamlib)
