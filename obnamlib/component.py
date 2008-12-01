@@ -1,5 +1,3 @@
-# obnamlib/__init__.py
-#
 # Copyright (C) 2008  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -17,5 +15,24 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-from exception import BackupException as Exception
-from component import Component
+import obnamlib
+
+
+class Component(object):
+
+    """A piece of data inside an obnamlib.Object.
+
+    Instances of this class store data inside obnamlib.Object objects.
+    An Object is a list of Components, and a Component is either a string
+    or a list of Components. The distinction between Object and Component
+    makes it easier to encode and decode things for on-disk storage:
+    Object needs more meta data than Component, for example every Object
+    has a unique id, but a Component does not.
+
+    A component has a kind, and the kind determines whether it contains
+    a single octet string or other components (never both).
+
+    """
+
+    def __init__(self, kind):
+        self.kind = kind

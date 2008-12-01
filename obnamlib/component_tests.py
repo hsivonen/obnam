@@ -1,5 +1,3 @@
-# obnamlib/__init__.py
-#
 # Copyright (C) 2008  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -17,5 +15,13 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-from exception import BackupException as Exception
-from component import Component
+import unittest
+
+import obnamlib
+
+
+class ComponentTests(unittest.TestCase):
+
+    def testSetsKindCorrectly(self):
+        cmp = obnamlib.Component(42)
+        self.assertEqual(cmp.kind, 42)
