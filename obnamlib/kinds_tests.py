@@ -31,6 +31,21 @@ class KindsTests(unittest.TestCase):
         kinds.add(1, "foo")
         self.assertEqual(kinds.pairs(), [(1, "foo")])
 
+    def testRefusesToAddDuplicate(self):
+        kinds = obnamlib.Kinds()
+        kinds.add(1, "foo")
+        self.assertRaises(KeyError, kinds.add, 1, "foo")
+
+    def testRefusesToAddDuplicateCodeWithDifferentName(self):
+        kinds = obnamlib.Kinds()
+        kinds.add(1, "foo")
+        self.assertRaises(KeyError, kinds.add, 1, "bar")
+
+    def testRefusesToAddDuplicateNameWithDifferentCode(self):
+        kinds = obnamlib.Kinds()
+        kinds.add(1, "foo")
+        self.assertRaises(KeyError, kinds.add, 2, "foo")
+
     def testAddsMappingInBothDirections(self):
         kinds = obnamlib.Kinds()
         kinds.add(1, "foo")

@@ -44,6 +44,11 @@ class Kinds(object):
 
     def add(self, code, name):
         """Add a mapping between a numeric code and textual name."""
+        for c, n in self.pairs():
+            if c == code:
+                raise KeyError("Code %s already added" % code)
+            if n == name:
+                raise KeyError("Name %s already added" % name)
         self.dict[code] = name
 
     def nameof(self, code):
