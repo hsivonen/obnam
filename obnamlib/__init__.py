@@ -19,7 +19,7 @@
 
 from exception import BackupException as Exception
 from component import Component
+from kinds import Kinds
 
 FILENAME = 42
 OBJECT = 69
-
