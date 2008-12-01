@@ -22,17 +22,17 @@ import obnamlib
 
 class ComponentKindsTests(unittest.TestCase):
 
+    def setUp(self):
+        self.kinds = obnamlib.ComponentKinds()
+
     def testAddsPlainCorrectly(self):
-        kinds = obnamlib.ComponentKinds()
-        kinds.add_plain(1, "foo")
-        self.assert_(kinds.is_plain(kinds.codeof("foo")))
+        self.kinds.add_plain(1, "foo")
+        self.assert_(self.kinds.is_plain(self.kinds.codeof("foo")))
 
     def testAddsCompositeCorrectly(self):
-        kinds = obnamlib.ComponentKinds()
-        kinds.add_composite(1, "foo")
-        self.assert_(kinds.is_composite(kinds.codeof("foo")))
+        self.kinds.add_composite(1, "foo")
+        self.assert_(self.kinds.is_composite(self.kinds.codeof("foo")))
 
     def testAddsReferenceCorrectly(self):
-        kinds = obnamlib.ComponentKinds()
-        kinds.add_ref(1, "foo")
-        self.assert_(kinds.is_ref(kinds.codeof("foo")))
+        self.kinds.add_ref(1, "foo")
+        self.assert_(self.kinds.is_ref(self.kinds.codeof("foo")))
