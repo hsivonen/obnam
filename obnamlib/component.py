@@ -40,7 +40,7 @@ class Component(object):
         self._children = []
 
     def assert_is_plain(self):
-        if self.kind != obnamlib.FILENAME:
+        if not obnamlib.cmp_kinds.is_plain(self.kind):
             raise obnamlib.Exception("Using string value of "
                                      "non-plain component.")
 
@@ -56,7 +56,7 @@ class Component(object):
                       doc="String value of plain component.")
 
     def assert_is_composite(self):
-        if self.kind != obnamlib.OBJECT:
+        if not obnamlib.cmp_kinds.is_composite(self.kind):
             raise obnamlib.Exception("Using children of non-composite "
                                      "Component.")
     

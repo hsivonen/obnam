@@ -23,11 +23,12 @@ import obnamlib
 class ComponentTests(unittest.TestCase):
 
     def setUp(self):
-        self.scmp = obnamlib.Component(obnamlib.FILENAME)
-        self.ccmp = obnamlib.Component(obnamlib.OBJECT)
+        self.scmp = obnamlib.Component(obnamlib.OBJID)
+        self.ccmp = obnamlib.Component(obnamlib.FILE)
 
     def testSetsKindCorrectly(self):
-        self.assertEqual(self.scmp.kind, obnamlib.FILENAME)
+        self.assertEqual(self.scmp.kind, obnamlib.OBJID)
+        self.assertEqual(self.ccmp.kind, obnamlib.FILE)
 
     def testInitiallySetsValueToEmptyString(self):
         self.assertEqual(self.scmp.string, "")

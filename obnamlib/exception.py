@@ -19,5 +19,8 @@
 
 class BackupException(Exception):
 
+    def __init__(self, msg):
+        self.str = msg
+
     def __str__(self):
         return self.str

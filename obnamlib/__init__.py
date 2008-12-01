@@ -22,6 +22,6 @@ from component import Component
 from kinds import Kinds
 from component_kinds import ComponentKinds
 
-_component_kinds = ComponentKinds()
-_component_kinds.add_all()
-_component_kinds.add_to_obnamlib()
+cmp_kinds = ComponentKinds()
+cmp_kinds.add_all()
+cmp_kinds.add_to_obnamlib()
