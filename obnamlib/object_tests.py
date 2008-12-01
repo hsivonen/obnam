@@ -1,5 +1,3 @@
-# obnamlib/__init__.py
-#
 # Copyright (C) 2008  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -17,15 +15,17 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-from exception import BackupException as Exception
-from component import Component
-from object import Object as Object
+import unittest
 
-from kinds import Kinds
-from component_kinds import ComponentKinds
+import obnamlib
 
-cmp_kinds = ComponentKinds()
-cmp_kinds.add_all()
-cmp_kinds.add_to_obnamlib()
 
-GEN = 123
+class ObjectTests(unittest.TestCase):
+
+    def testSetsKindCorrectly(self):
+        obj = obnamlib.Object(obnamlib.GEN, "id")
+        self.assertEqual(obj.kind, obnamlib.GEN)
+
+    def testSetsIdCorrectly(self):
+        obj = obnamlib.Object(obnamlib.GEN, "id")
+        self.assertEqual(obj.id, "id")

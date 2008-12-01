@@ -1,5 +1,3 @@
-# obnamlib/__init__.py
-#
 # Copyright (C) 2008  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -17,15 +15,26 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-from exception import BackupException as Exception
-from component import Component
-from object import Object as Object
+import obnamlib
 
-from kinds import Kinds
-from component_kinds import ComponentKinds
 
-cmp_kinds = ComponentKinds()
-cmp_kinds.add_all()
-cmp_kinds.add_to_obnamlib()
+class Object(object):
 
-GEN = 123
+    """Data about files that are backed up.
+
+    A backup object contains data about files that are backed up:
+    its metadata, or content, or other such things. A backup object
+    can also contain data necessary for the backup process: a
+    backup generation, for example.
+
+    Backup objects should be instantiated via a BackupObjectFactory,
+    or a Store, not directly.
+
+    This class is meant to be sub-classed for specific kinds of
+    object, and not used directly.
+
+    """
+
+    def __init__(self, kind, id):
+        self.kind = kind
+        self.id = id
