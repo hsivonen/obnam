@@ -22,25 +22,24 @@ import obnamlib
 
 class ComponentTests(unittest.TestCase):
 
+    def setUp(self):
+        self.scmp = obnamlib.Component(obnamlib.FILENAME)
+        self.ccmp = obnamlib.Component(obnamlib.OBJECT)
+
     def testSetsKindCorrectly(self):
-        cmp = obnamlib.Component(42)
-        self.assertEqual(cmp.kind, 42)
+        self.assertEqual(self.scmp.kind, obnamlib.FILENAME)
 
     def testInitiallyEmptyString(self):
-        cmp = obnamlib.Component(obnamlib.FILENAME)
-        self.assertEqual(cmp.string, "")
+        self.assertEqual(self.scmp.string, "")
 
     def testSetsStringValueCorrectly(self):
-        cmp = obnamlib.Component(obnamlib.FILENAME)
-        cmp.string = "foo"
-        self.assertEqual(cmp.string, "foo")
+        self.scmp.string = "foo"
+        self.assertEqual(self.scmp.string, "foo")
 
     def testRefusesToAccessStringForCompositeComponent(self):
-        cmp = obnamlib.Component(obnamlib.OBJECT)
-        self.assertRaises(obnamlib.Exception, lambda: cmp.string)
+        self.assertRaises(obnamlib.Exception, lambda: self.ccmp.string)
 
     def testRefusesToSetStringForCompositeComponent(self):
-        cmp = obnamlib.Component(obnamlib.OBJECT)
         def set():
-            cmp.string = "foo"
+            self.ccmp.string = "foo"
         self.assertRaises(obnamlib.Exception, set)
