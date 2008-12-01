@@ -108,12 +108,3 @@ class ComponentKinds(obnamlib.Kinds):
         self.add_ref(      42, "DIRREF")
         self.add_ref(      43, "FILEGROUPREF")
         self.add_plain(    44, "SNAPSHOTGEN")
-
-    def add_to_obnamlib(self): # pragma: no cover
-        """Add all our names to obnamlib.
-
-        This method must be called from obnamlib/__init__.py only!
-
-        """
-
-        self.add_identifiers(obnamlib)

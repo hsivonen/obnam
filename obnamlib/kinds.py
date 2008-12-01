@@ -82,3 +82,12 @@ class Kinds(object):
 
         for code, value in self.pairs():
             setattr(module, value, code)
+
+    def add_to_obnamlib(self): # pragma: no cover
+        """Add all our names to obnamlib.
+
+        This method must be called from obnamlib/__init__.py only!
+
+        """
+
+        self.add_identifiers(obnamlib)
