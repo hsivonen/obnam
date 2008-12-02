@@ -1,5 +1,3 @@
-# obnamlib/exception.py -- Base class for exceptions for obnamlib
-#
 # Copyright (C) 2008  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -17,10 +15,23 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-class BackupException(Exception):
+import obnamlib
 
-    def __init__(self, msg):
-        self.str = msg
 
-    def __str__(self):
-        return self.str
+class ObjectKinds(obnamlib.Kinds):
+
+    """Kinds of Objects."""
+
+    def add_all(self): # pragma: no cover
+        """Add all object kinds to ourselves."""
+        self.add( 1, "FILEPART")
+        # object kind 2 used to be INODE, but it's been removed
+        self.add( 3, "GEN")
+        self.add( 4, "SIG")
+        self.add( 5, "HOST")
+        self.add( 6, "FILECONTENTS")
+        self.add( 7, "FILELIST")
+        self.add( 8, "DELTA")
+        self.add( 9, "DELTAPART")
+        self.add(10, "DIR")
+        self.add(11, "FILEGROUP")

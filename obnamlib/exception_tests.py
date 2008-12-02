@@ -20,16 +20,10 @@ import unittest
 import obnamlib
 
 
-class DummyException(obnamlib.Exception):
-
-    def __init__(self, arg):
-        self.str = arg
-
-
 class ExceptionTests(unittest.TestCase):
 
     def setUp(self):
-        self.e = DummyException("foo")
+        self.e = obnamlib.Exception("foo")
 
     def testSetsStrToArgument(self):
         self.assertEqual(self.e.str, "foo")

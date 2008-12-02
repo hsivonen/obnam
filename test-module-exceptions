@@ -1,2 +1,3 @@
 setup.py
 obnamlib/__init__.py
+obnamlib/object_kinds.py

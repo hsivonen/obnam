@@ -1,5 +1,3 @@
-# obnamlib/exception.py -- Base class for exceptions for obnamlib
-#
 # Copyright (C) 2008  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -17,10 +15,24 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-class BackupException(Exception):
+import unittest
 
-    def __init__(self, msg):
-        self.str = msg
+import obnamlib
 
-    def __str__(self):
-        return self.str
+
+class ComponentKindsTests(unittest.TestCase):
+
+    def setUp(self):
+        self.kinds = obnamlib.ComponentKinds()
+
+    def testAddsPlainCorrectly(self):
+        self.kinds.add_plain(1, "foo")
+        self.assert_(self.kinds.is_plain(self.kinds.codeof("foo")))
+
+    def testAddsCompositeCorrectly(self):
+        self.kinds.add_composite(1, "foo")
+        self.assert_(self.kinds.is_composite(self.kinds.codeof("foo")))
+
+    def testAddsReferenceCorrectly(self):
+        self.kinds.add_ref(1, "foo")
+        self.assert_(self.kinds.is_ref(self.kinds.codeof("foo")))

@@ -1,6 +1,4 @@
-# obnamlib/exception.py -- Base class for exceptions for obnamlib
-#
-# Copyright (C) 2008  Lars Wirzenius <liw@liw.fi>
+# Copyright (C) 2006  Lars Wirzenius <liw@iki.fi>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,10 +15,29 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-class BackupException(Exception):
+"""Variable length integers"""
 
-    def __init__(self, msg):
-        self.str = msg
 
-    def __str__(self):
-        return self.str
+def encode(i):
+    """Encode an integer as a varint"""
+    return "%d\n" % i
+
+
+def decode(encoded, pos):
+    """Decode a varint from a string, return value and pos after it"""
+    i = encoded.find("\n", pos)
+    if i == -1:
+        return -1, pos
+    else:
+        return int(encoded[pos:i]), i+1
+        
+
+def encode_many(numbers):
+    """Encode several numbers as a string with multiple varints."""
+    return "".join(encode(i) for i in numbers)
+        
+
+def decode_many(encoded):
+    """Decode several numbers from a string with multiple varints."""
+    return [int(s) for s in encoded.rstrip("\n").split("\n")]
+

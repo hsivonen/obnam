@@ -18,3 +18,20 @@
 
 
 from exception import BackupException as Exception
+from component import Component
+from object import Object
+from object_factory import ObjectFactory
+
+import varint
+
+from kinds import Kinds
+from component_kinds import ComponentKinds
+from object_kinds import ObjectKinds
+
+cmp_kinds = ComponentKinds()
+cmp_kinds.add_all()
+cmp_kinds.add_to_obnamlib()
+
+obj_kinds = ObjectKinds()
+obj_kinds.add_all()
+obj_kinds.add_to_obnamlib()
