@@ -1,6 +1,4 @@
-# obnamlib/__init__.py
-#
-# Copyright (C) 2008  Lars Wirzenius <liw@liw.fi>
+# Copyright (C) 2006  Lars Wirzenius <liw@iki.fi>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,21 +15,29 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-from exception import BackupException as Exception
-from component import Component
-from object import Object
-from object_factory import ObjectFactory
+"""Variable length integers"""
 
-import varint
 
-from kinds import Kinds
-from component_kinds import ComponentKinds
-from object_kinds import ObjectKinds
+def encode(i):
+    """Encode an integer as a varint"""
+    return "%d\n" % i
 
-cmp_kinds = ComponentKinds()
-cmp_kinds.add_all()
-cmp_kinds.add_to_obnamlib()
 
-obj_kinds = ObjectKinds()
-obj_kinds.add_all()
-obj_kinds.add_to_obnamlib()
+def decode(encoded, pos):
+    """Decode a varint from a string, return value and pos after it"""
+    i = encoded.find("\n", pos)
+    if i == -1:
+        return -1, pos
+    else:
+        return int(encoded[pos:i]), i+1
+        
+
+def encode_many(numbers):
+    """Encode several numbers as a string with multiple varints."""
+    return "".join(encode(i) for i in numbers)
+        
+
+def decode_many(encoded):
+    """Decode several numbers from a string with multiple varints."""
+    return [int(s) for s in encoded.rstrip("\n").split("\n")]
+

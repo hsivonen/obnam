@@ -39,17 +39,18 @@ class Component(object):
         self._string = ""
         self._children = []
 
-    def assert_is_plain(self):
-        if not obnamlib.cmp_kinds.is_plain(self.kind):
+    def assert_is_string_valued(self):
+        if (not obnamlib.cmp_kinds.is_plain(self.kind) and
+            not obnamlib.cmp_kinds.is_ref(self.kind)):
             raise obnamlib.Exception("Using string value of "
                                      "non-plain component.")
 
     def get_string(self):
-        self.assert_is_plain()
+        self.assert_is_string_valued()
         return self._string
 
     def set_string(self, str):
-        self.assert_is_plain()
+        self.assert_is_string_valued()
         self._string = str
 
     string = property(fget=get_string, fset=set_string, 

@@ -33,3 +33,27 @@ class ObjectTests(unittest.TestCase):
     def testSetsComponentToEmptyListInitially(self):
         obj = obnamlib.Object(obnamlib.GEN, "id")
         self.assertEqual(obj.components, [])
+
+    def testFindsNothingByKindWhenThereAreNoChildren(self):
+        obj = obnamlib.Object(obnamlib.GEN, "id")
+        self.assertEqual(obj.find(kind=obnamlib.FILENAME), [])
+
+    def testFindsByKind(self):
+        name = obnamlib.Component(kind=obnamlib.FILENAME)
+        name.string = "foo"
+
+        obj = obnamlib.Object(obnamlib.GEN, "id")
+        obj.components.append(name)
+
+        self.assertEqual(obj.find(kind=obnamlib.FILENAME), [name])
+
+    def testExtractsByKind(self):
+        name = obnamlib.Component(kind=obnamlib.FILENAME)
+        name.string = "foo"
+
+        obj = obnamlib.Object(obnamlib.GEN, "id")
+        obj.components.append(name)
+
+        obj.extract(kind=obnamlib.FILENAME)
+
+        self.assertEqual(obj.components, [])

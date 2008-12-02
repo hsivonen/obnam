@@ -39,3 +39,17 @@ class Object(object):
         self.kind = kind
         self.id = id
         self.components = []
+
+    def find(self, kind=None):
+        """Find top-level components that match non-None arguments."""
+        list = []
+        for cmp in self.components:
+            if kind is not None and cmp.kind == kind:
+                list.append(cmp)
+        return list
+
+    def extract(self, **kwargs):
+        """Find and remove the top-level components matching **kwargs."""
+        list = self.find(**kwargs)
+        self.components = [x for x in self.components if x not in list]
+        return list
