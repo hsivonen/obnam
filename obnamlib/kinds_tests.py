@@ -22,45 +22,45 @@ import obnamlib
 
 class KindsTests(unittest.TestCase):
 
-    def testIsEmptyInitially(self):
+    def test_is_empty_initially(self):
         kinds = obnamlib.Kinds()
         self.assertEqual(kinds.pairs(), [])
 
-    def testAddsOneKindCorrectl(self):
+    def test_adds_one_kind_correctl(self):
         kinds = obnamlib.Kinds()
         kinds.add(1, "foo")
         self.assertEqual(kinds.pairs(), [(1, "foo")])
 
-    def testRefusesToAddDuplicate(self):
+    def test_refuses_to_add_duplicate(self):
         kinds = obnamlib.Kinds()
         kinds.add(1, "foo")
         self.assertRaises(KeyError, kinds.add, 1, "foo")
 
-    def testRefusesToAddDuplicateCodeWithDifferentName(self):
+    def test_refuses_to_add_duplicate_code_with_different_name(self):
         kinds = obnamlib.Kinds()
         kinds.add(1, "foo")
         self.assertRaises(KeyError, kinds.add, 1, "bar")
 
-    def testRefusesToAddDuplicateNameWithDifferentCode(self):
+    def test_refuses_to_add_duplicate_name_with_different_code(self):
         kinds = obnamlib.Kinds()
         kinds.add(1, "foo")
         self.assertRaises(KeyError, kinds.add, 2, "foo")
 
-    def testAddsMappingInBothDirections(self):
+    def test_adds_mapping_in_both_directions(self):
         kinds = obnamlib.Kinds()
         kinds.add(1, "foo")
         self.assertEqual(kinds.nameof(1), "foo")
         self.assertEqual(kinds.codeof("foo"), 1)
 
-    def testRaisesErrorForUnknownCode(self):
+    def test_raises_error_for_unknown_code(self):
         kinds = obnamlib.Kinds()
         self.assertRaises(KeyError, kinds.nameof, 1)
 
-    def testRaisesErrorForUnknownName(self):
+    def test_raises_error_for_unknown_name(self):
         kinds = obnamlib.Kinds()
         self.assertRaises(KeyError, kinds.codeof, "foo")
 
-    def testAddsIdentifiersToModuleNamespace(self):
+    def test_adds_identifiers_to_module_namespace(self):
         kinds = obnamlib.Kinds()
         kinds.add(1, "foo")
         kinds.add_identifiers(obnamlib)

@@ -25,8 +25,8 @@ class ExceptionTests(unittest.TestCase):
     def setUp(self):
         self.e = obnamlib.Exception("foo")
 
-    def testSetsStrToArgument(self):
+    def test_sets_str_to_argument(self):
         self.assertEqual(self.e.str, "foo")
 
-    def testStrFunctionFormatsToStrAttribute(self):
+    def test_str_function_formats_to_str_attribute(self):
         self.assertEqual(str(self.e), "foo")

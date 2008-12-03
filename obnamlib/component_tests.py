@@ -26,42 +26,42 @@ class ComponentTests(unittest.TestCase):
         self.scmp = obnamlib.Component(obnamlib.OBJID)
         self.ccmp = obnamlib.Component(obnamlib.FILE)
 
-    def testSetsKindCorrectly(self):
+    def test_sets_kind_correctly(self):
         self.assertEqual(self.scmp.kind, obnamlib.OBJID)
         self.assertEqual(self.ccmp.kind, obnamlib.FILE)
 
-    def testInitiallySetsValueToEmptyString(self):
+    def test_initially_sets_value_to_empty_string(self):
         self.assertEqual(self.scmp.string, "")
 
-    def testSetsStringValueCorrectly(self):
+    def test_sets_string_value_correctly(self):
         self.scmp.string = "foo"
         self.assertEqual(self.scmp.string, "foo")
 
-    def testRefusesToAccessStringForCompositeComponent(self):
+    def test_refuses_to_access_string_for_composite_component(self):
         self.assertRaises(obnamlib.Exception, lambda: self.ccmp.string)
 
-    def testRefusesToSetStringForCompositeComponent(self):
+    def test_refuses_to_set_string_for_composite_component(self):
         def set():
             self.ccmp.string = "foo"
         self.assertRaises(obnamlib.Exception, set)
 
-    def testInitiallyCreatesNoChildren(self):
+    def test_initially_creates_no_children(self):
         self.assertEqual(self.ccmp.children, [])
 
-    def testSetsChildrenCorrectly(self):
+    def test_sets_children_correctly(self):
         self.ccmp.children = [self.scmp]
         self.assertEqual(self.ccmp.children, [self.scmp])
 
-    def testAddsChildCorrectly(self):
+    def test_adds_child_correctly(self):
         self.ccmp.children.append(self.scmp)
         self.assertEqual(self.ccmp.children, [self.scmp])
 
-    def testAddsSecondChildCorrectly(self):
+    def test_adds_second_child_correctly(self):
         a = obnamlib.Component(obnamlib.FILENAME)
         b = obnamlib.Component(obnamlib.FILENAME)
         self.ccmp.children.append(a)
         self.ccmp.children.append(b)
         self.assertEqual(self.ccmp.children, [a, b])
 
-    def testRefusesToAccessChildrenForNonCompositeComponent(self):
+    def test_refuses_to_access_children_for_non_composite_component(self):
         self.assertRaises(obnamlib.Exception, lambda: self.scmp.children)

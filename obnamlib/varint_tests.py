@@ -34,13 +34,13 @@ class VarintEncodeDecodeTests(unittest.TestCase):
             self.failUnlessEqual(i, i2)
             self.failUnlessEqual(pos, len(str))
 
-    def testError(self):
+    def test_error(self):
         str = "asdf"
         n, pos = obnamlib.varint.decode(str, 0)
         self.failUnlessEqual(n, -1)
         self.failUnlessEqual(pos, 0)
         
-    def testManyEncodeDecode(self):
+    def test_many_encode_decode(self):
         numbers = [0, 1, 127, 128, 0xff00]
         encoded = obnamlib.varint.encode_many(numbers)
         decoded = obnamlib.varint.decode_many(encoded)

@@ -22,23 +22,23 @@ import obnamlib
 
 class ObjectTests(unittest.TestCase):
 
-    def testSetsKindCorrectly(self):
+    def test_sets_kind_correctly(self):
         obj = obnamlib.Object(obnamlib.GEN, "id")
         self.assertEqual(obj.kind, obnamlib.GEN)
 
-    def testSetsIdCorrectly(self):
+    def test_sets_id_correctly(self):
         obj = obnamlib.Object(obnamlib.GEN, "id")
         self.assertEqual(obj.id, "id")
 
-    def testSetsComponentToEmptyListInitially(self):
+    def test_sets_component_to_empty_list_initially(self):
         obj = obnamlib.Object(obnamlib.GEN, "id")
         self.assertEqual(obj.components, [])
 
-    def testFindsNothingByKindWhenThereAreNoChildren(self):
+    def test_finds_nothing_by_kind_when_there_are_no_children(self):
         obj = obnamlib.Object(obnamlib.GEN, "id")
         self.assertEqual(obj.find(kind=obnamlib.FILENAME), [])
 
-    def testFindsByKind(self):
+    def test_finds_by_kind(self):
         name = obnamlib.Component(kind=obnamlib.FILENAME)
         name.string = "foo"
 
@@ -47,7 +47,7 @@ class ObjectTests(unittest.TestCase):
 
         self.assertEqual(obj.find(kind=obnamlib.FILENAME), [name])
 
-    def testExtractsByKind(self):
+    def test_extracts_by_kind(self):
         name = obnamlib.Component(kind=obnamlib.FILENAME)
         name.string = "foo"
 
