@@ -47,6 +47,7 @@ class Store(object):
 
     def __init__(self, url, mode):
         self.url = url
+        self.fs = obnamlib.LocalFS(url)
         self.mode = mode
         self.factory = obnamlib.ObjectFactory()
         self.objects = []
@@ -67,11 +68,8 @@ class Store(object):
         for obj in self.objects:
             if obj.id == id:
                 return obj
-        filename = os.path.join(self.url, id)
-        if os.path.exists(filename):
-            f = file(filename, "r")
-            encoded = f.read()
-            f.close()
+        if self.fs.exists(id):
+            encoded = self.fs.cat(id)
             obj = self.factory.decode_object(encoded)
             self.objects.append(obj)
             if obj.id == id:
@@ -90,7 +88,4 @@ class Store(object):
         self.assert_readwrite_mode()
         for obj in self.objects:
             encoded = self.factory.encode_object(obj)
-            filename = os.path.join(self.url, obj.id)
-            f = file(filename, "w")
-            f.write(encoded)
-            f.close()
+            self.fs.write_file(obj.id, encoded)
