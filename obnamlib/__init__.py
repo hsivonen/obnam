@@ -21,6 +21,7 @@ from exception import BackupException as Exception
 from component import Component
 from object import Object
 from object_factory import ObjectFactory
+from store import Store
 
 import varint
 
