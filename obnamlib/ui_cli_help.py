@@ -23,4 +23,4 @@ import obnamlib
 class HelpCommand(object):
 
     def __call__(self, config, args, stdout=sys.stdout):
-        stdout.write("Help text will appear here.")
+        stdout.write("Help text will appear here.\n")

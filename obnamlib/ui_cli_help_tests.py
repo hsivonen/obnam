@@ -23,8 +23,8 @@ import obnamlib
 
 class HelpCommandTests(unittest.TestCase):
 
-    def test_writes_text_to_stdout(self):
+    def test_writes_text_to_stdout_ending_in_newline(self):
         help = obnamlib.HelpCommand()
         f = StringIO.StringIO()
         help(None, None, stdout=f)
-        self.assert_(f.getvalue())
+        self.assert_(f.getvalue().endswith("\n"))
