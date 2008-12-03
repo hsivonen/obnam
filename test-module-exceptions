@@ -3,3 +3,4 @@ obnamlib/__init__.py
 obnamlib/object_kinds.py
 obnamlib/vfs.py
 obnamlib/cfg.py
+obnamlib/app.py

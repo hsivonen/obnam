@@ -1,5 +1,3 @@
-# obnamlib/__init__.py
-#
 # Copyright (C) 2008  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -17,30 +15,24 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-from exception import BackupException as Exception
-from cfg import Config
-from component import Component
-from object import Object
-from object_factory import ObjectFactory
-from store import Store
-from ui import UserInterface
-from vfs import VirtualFileSystem
-from vfs_local import LocalFS
-from app import BackupApplication
+import sys
 
-from ui_cli_help import HelpCommand
-from ui_cli import CommandLineUI
+import obnamlib
 
-import varint
+class BackupApplication(object):
 
-from kinds import Kinds
-from component_kinds import ComponentKinds
-from object_kinds import ObjectKinds
+    def run(self, args=None):
+        self.load_configs()
+        self.parse_command_line()
+        ui_class = self.find_ui()
+        ui = ui_class(self.cfg)
+        ui.run(args or sys.argv[1:])
 
-cmp_kinds = ComponentKinds()
-cmp_kinds.add_all()
-cmp_kinds.add_to_obnamlib()
+    def load_configs(self):
+        self.cfg = obnamlib.Config()
 
-obj_kinds = ObjectKinds()
-obj_kinds.add_all()
-obj_kinds.add_to_obnamlib()
+    def parse_command_line(self):
+        pass
+
+    def find_ui(self):
+        return obnamlib.CommandLineUI
