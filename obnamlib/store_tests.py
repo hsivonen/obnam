@@ -83,3 +83,6 @@ class StoreTests(unittest.TestCase):
 
         store = obnamlib.Store(self.rw_dirname, "r")
         self.assertEqual(store.get_object(obj.id).id, obj.id)
+
+    def test_refuses_to_commit_in_readonly_mode(self):
+        self.assertRaises(obnamlib.Exception, self.ro.commit)

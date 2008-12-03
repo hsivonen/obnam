@@ -15,6 +15,8 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import os
+
 import obnamlib
 
 
@@ -44,6 +46,7 @@ class Store(object):
     """
 
     def __init__(self, url, mode):
+        self.url = url
         self.mode = mode
         self.factory = obnamlib.ObjectFactory()
         self.objects = []
@@ -64,6 +67,15 @@ class Store(object):
         for obj in self.objects:
             if obj.id == id:
                 return obj
+        filename = os.path.join(self.url, id)
+        if os.path.exists(filename):
+            f = file(filename, "r")
+            encoded = f.read()
+            f.close()
+            obj = self.factory.decode_object(encoded)
+            self.objects.append(obj)
+            if obj.id == id:
+                return obj
         raise obnamlib.Exception("Object %s not found in store" % id)
 
     def put_object(self, obj):
@@ -76,3 +88,9 @@ class Store(object):
 
     def commit(self):
         self.assert_readwrite_mode()
+        for obj in self.objects:
+            encoded = self.factory.encode_object(obj)
+            filename = os.path.join(self.url, obj.id)
+            f = file(filename, "w")
+            f.write(encoded)
+            f.close()
