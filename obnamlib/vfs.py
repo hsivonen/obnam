@@ -39,7 +39,7 @@ class VirtualFileSystem(object):
     """
 
     def __init__(self, baseurl):
-        pass
+        self.baseurl = baseurl
 
     def lock(self, lockname):
         """Create a lock file with the given name."""
@@ -51,6 +51,10 @@ class VirtualFileSystem(object):
 
     def exists(self, relative_path):
         """Does the file or directory exist?"""
+        pass
+
+    def remove(self, relative_path):
+        """Remove a file."""
         pass
 
     def open(self, relative_path, mode):

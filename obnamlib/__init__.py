@@ -22,6 +22,8 @@ from component import Component
 from object import Object
 from object_factory import ObjectFactory
 from store import Store
+from vfs import VirtualFileSystem
+from vfs_local import LocalFS
 
 import varint
 
