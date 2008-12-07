@@ -64,11 +64,10 @@ class ObjectFactory(object):
         return list
 
     def encode_object(self, obj):
-        id = obnamlib.Component(kind=obnamlib.OBJID)
-        id.string = obj.id
+        id = obnamlib.Component(kind=obnamlib.OBJID, string=obj.id)
 
-        kind = obnamlib.Component(kind=obnamlib.OBJKIND)
-        kind.string = obnamlib.varint.encode(obj.kind)
+        kind = obnamlib.Component(kind=obnamlib.OBJKIND,
+                                  string=obnamlib.varint.encode(obj.kind))
 
         components = [id, kind] + obj.components
         return "".join(self.encode_component(c) for c in components)

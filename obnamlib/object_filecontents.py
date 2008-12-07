@@ -30,6 +30,5 @@ class FileContents(obnamlib.Object):
         return self.find_strings(kind=obnamlib.FILEPARTREF)
 
     def add(self, ref):
-        c = obnamlib.Component(kind=obnamlib.FILEPARTREF)
-        c.string = ref
+        c = obnamlib.Component(kind=obnamlib.FILEPARTREF, string=ref)
         self.components.append(c)
