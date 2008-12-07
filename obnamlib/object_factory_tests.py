@@ -26,6 +26,9 @@ class ObjectFactoryTests(unittest.TestCase):
         self.factory = obnamlib.ObjectFactory()
         self.encoded = "2\n4\nid3\n8\n11\n3\n92\nfoo"
 
+    def test_raises_error_for_unknown_object_kind(self):
+        self.assertRaises(obnamlib.Exception, self.factory.new_object, -1)
+
     def test_sets_id_to_a_string_value(self):
         obj = self.factory.new_object(obnamlib.GEN)
         self.assertEqual(type(obj.id), str)
@@ -36,8 +39,8 @@ class ObjectFactoryTests(unittest.TestCase):
         self.assertNotEqual(obj1.id, obj2.id)
 
     def test_creates_new_object_with_desired_kind(self):
-        obj = self.factory.new_object(kind=obnamlib.FILENAME)
-        self.assertEqual(obj.kind, obnamlib.FILENAME)
+        obj = self.factory.new_object(kind=obnamlib.FILEPART)
+        self.assertEqual(obj.kind, obnamlib.FILEPART)
 
     def test_encodes_empty_string_component_correctly(self):
         cmp = obnamlib.Component(obnamlib.FILENAME)

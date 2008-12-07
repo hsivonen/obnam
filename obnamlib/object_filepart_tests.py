@@ -37,3 +37,7 @@ class FilePartTests(unittest.TestCase):
     def test_sets_new_data_correctly(self):
         self.part.data = "newdata"
         self.assertEqual(self.part.data, "newdata")
+
+    def test_sets_initial_data_to_empty_string_by_default(self):
+        part = obnamlib.FilePart(id="id")
+        self.assertEqual(part.data, "")

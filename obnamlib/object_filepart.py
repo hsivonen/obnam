@@ -28,13 +28,20 @@ class FilePart(obnamlib.Object):
 
     """
 
-    def __init__(self, id, data):
-        obnamlib.Object.__init__(self, kind=obnamlib.FILEPART, id=id)
-        self.data = data
+    kind = obnamlib.FILEPART
+
+    def __init__(self, id, data=None):
+        obnamlib.Object.__init__(self, id=id)
+        if data is not None:
+            self.data = data
 
     def get_data(self):
         """Return the contents of this FILEPART."""
-        return self.find(kind=obnamlib.FILECHUNK)[0].string
+        list = self.find(kind=obnamlib.FILECHUNK)
+        if list:
+            return list[0].string
+        else:
+            return ""
 
     def set_data(self, data):
         self.extract(kind=obnamlib.FILECHUNK)

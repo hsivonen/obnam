@@ -18,19 +18,8 @@
 import obnamlib
 
 
-class FileContents(obnamlib.Object):
+class Host(obnamlib.Object):
 
-    """Store the full contents of a file."""
+    """A host object."""
 
-    kind = obnamlib.FILECONTENTS
-
-    def __init__(self, id):
-        obnamlib.Object.__init__(self, id=id)
-
-    @property
-    def part_ids(self):
-        return self.find_strings(kind=obnamlib.FILEPARTREF)
-
-    def add(self, ref):
-        c = obnamlib.Component(kind=obnamlib.FILEPARTREF, string=ref)
-        self.components.append(c)
+    kind = obnamlib.HOST

@@ -41,6 +41,9 @@ class ComponentTests(unittest.TestCase):
         c = obnamlib.Component(kind=obnamlib.OBJID, string="foo")
         self.assertEqual(c.string, "foo")
 
+    def test_refuses_to_set_string_value_to_non_string_value(self):
+        self.assertRaises(obnamlib.Exception, self.scmp.set_string, None)
+
     def test_refuses_to_access_string_for_composite_component(self):
         self.assertRaises(obnamlib.Exception, lambda: self.ccmp.string)
 

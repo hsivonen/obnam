@@ -53,9 +53,12 @@ class Component(object):
         self.assert_is_string_valued()
         return self._string
 
-    def set_string(self, str):
+    def set_string(self, string):
         self.assert_is_string_valued()
-        self._string = str
+        if type(string) != str:
+            raise obnamlib.Exception("Cannot set string value to type %s" %
+                                     type(string))
+        self._string = string
 
     string = property(fget=get_string, fset=set_string, 
                       doc="String value of plain component.")

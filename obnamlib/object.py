@@ -35,8 +35,7 @@ class Object(object):
 
     """
 
-    def __init__(self, kind, id):
-        self.kind = kind
+    def __init__(self, id):
         self.id = id
         self.components = []
 

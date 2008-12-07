@@ -22,11 +22,21 @@ import obnamlib
 
 class ObjectFactory(object):
 
+    classes = {
+        obnamlib.FILECONTENTS: obnamlib.FileContents,
+        obnamlib.FILEGROUP: obnamlib.FileGroup,
+        obnamlib.FILEPART: obnamlib.FilePart,
+        obnamlib.GEN: obnamlib.Generation,
+        obnamlib.HOST: obnamlib.Host,
+        }
+
     def new_id(self):
         return str(uuid.uuid4())
 
     def new_object(self, kind):
-        return obnamlib.Object(id=self.new_id(), kind=kind)
+        if kind not in self.classes:
+            raise obnamlib.Exception("Don't know object kind %s" % kind)
+        return self.classes[kind](id=self.new_id())
 
     def encode_component(self, cmp):
         if obnamlib.cmp_kinds.is_composite(cmp.kind):
@@ -73,10 +83,9 @@ class ObjectFactory(object):
         return "".join(self.encode_component(c) for c in components)
 
     def decode_object(self, str):
-        obj = obnamlib.Object(id=None, kind=None)
+        obj = obnamlib.Object(id=None)
         obj.components = self.decode_all_components(str)
-
         obj.id = obj.extract(kind=obnamlib.OBJID)[0].string
-        obj.kind = obj.extract(kind=obnamlib.OBJKIND)[0].string
-        obj.kind, pos = obnamlib.varint.decode(obj.kind, 0)
+        temp = obj.extract(kind=obnamlib.OBJKIND)[0].string
+        obj.kind, pos = obnamlib.varint.decode(temp, 0)
         return obj
