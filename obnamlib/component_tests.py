@@ -23,8 +23,8 @@ import obnamlib
 class ComponentTests(unittest.TestCase):
 
     def setUp(self):
-        self.scmp = obnamlib.Component(obnamlib.OBJID)
-        self.ccmp = obnamlib.Component(obnamlib.FILE)
+        self.scmp = obnamlib.Component(kind=obnamlib.OBJID)
+        self.ccmp = obnamlib.Component(kind=obnamlib.FILE)
 
     def test_sets_kind_correctly(self):
         self.assertEqual(self.scmp.kind, obnamlib.OBJID)
@@ -36,6 +36,10 @@ class ComponentTests(unittest.TestCase):
     def test_sets_string_value_correctly(self):
         self.scmp.string = "foo"
         self.assertEqual(self.scmp.string, "foo")
+
+    def test_sets_string_value_via_initializer_correctly(self):
+        c = obnamlib.Component(kind=obnamlib.OBJID, string="foo")
+        self.assertEqual(c.string, "foo")
 
     def test_refuses_to_access_string_for_composite_component(self):
         self.assertRaises(obnamlib.Exception, lambda: self.ccmp.string)
@@ -51,6 +55,10 @@ class ComponentTests(unittest.TestCase):
     def test_sets_children_correctly(self):
         self.ccmp.children = [self.scmp]
         self.assertEqual(self.ccmp.children, [self.scmp])
+
+    def test_sets_children_via_initializer_correctly(self):
+        c = obnamlib.Component(kind=obnamlib.FILE, children=[self.scmp])
+        self.assertEqual(c.children, [self.scmp])
 
     def test_adds_child_correctly(self):
         self.ccmp.children.append(self.scmp)

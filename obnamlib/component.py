@@ -34,10 +34,14 @@ class Component(object):
 
     """
 
-    def __init__(self, kind):
+    def __init__(self, kind, string=None, children=None):
         self.kind = kind
-        self._string = ""
-        self._children = []
+        if string is not None:
+            self.assert_is_string_valued()
+        self._string = string or ""
+        if children is not None:
+            self.assert_is_composite()
+        self._children = children or []
 
     def assert_is_string_valued(self):
         if (not obnamlib.cmp_kinds.is_plain(self.kind) and
