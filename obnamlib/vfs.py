@@ -79,3 +79,24 @@ class VirtualFileSystem(object):
 
         """
         pass
+
+    def depth_first(self, relative_path, prune=None):
+        """Walk a directory tree depth-first, except for unwanted subdirs.
+        
+        This is, essentially, 'os.walk(top, topdown=False)', except that
+        if the prune argument is set, we call it before descending to 
+        sub-directories to allow it to remove any directories and files
+        the caller does not want to know about.
+        
+        If set, prune must be a function that gets three arguments (current
+        directory, list of sub-directory names, list of files in directory),
+        and must modify the two lists _in_place_. For example:
+        
+        def prune(dirname, dirnames, filenames):
+            if ".bzr" in dirnames:
+                dirnames.remove(".bzr")
+        
+        The dirnames and filenames lists contain basenames, relative to
+        dirname.
+        
+        """

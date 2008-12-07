@@ -100,3 +100,34 @@ class LocalFSTests(unittest.TestCase):
         except OSError:
             pass
         self.assertEqual(self.fs.cat("foo"), "bar")
+
+
+class DepthFirstTests(unittest.TestCase):
+
+    def setUp(self):
+        self.root = tempfile.mkdtemp()
+        self.dirs = ["foo", "foo/bar", "foobar"]
+        self.dirs = [os.path.join(self.root, x) for x in self.dirs]
+        for dir in self.dirs:
+            os.mkdir(dir)
+        self.dirs.insert(0, self.root)
+        self.fs = obnamlib.LocalFS("/")
+    
+    def tearDown(self):
+        shutil.rmtree(self.root)
+
+    def testFindsAllDirs(self):
+        dirs = [x[0] for x in self.fs.depth_first(self.root)]
+        self.failUnlessEqual(sorted(dirs), sorted(self.dirs))
+
+    def prune(self, dirname, dirnames, filenames):
+        if "foo" in dirnames:
+            dirnames.remove("foo")
+
+    def testFindsAllDirsExceptThePrunedOne(self):
+        correct = [x 
+                   for x in self.dirs 
+                   if not x.endswith("/foo") and not "/foo/" in x]
+        dirs = [x[0] 
+                for x in self.fs.depth_first(self.root, prune=self.prune)]
+        self.failUnlessEqual(sorted(dirs), sorted(correct))
