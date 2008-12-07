@@ -47,5 +47,23 @@ class BackupCommandTests(unittest.TestCase):
         self.cmd.store.put_object(fc)
 
         self.mox.ReplayAll()
-        self.cmd.backup_new_file("foo")
+        new_file = self.cmd.backup_new_file("foo")
+        self.mox.VerifyAll()
+        self.assertEqual(new_file, fc)
+
+    def test_backs_up_filegroup_correctly(self):
+        class Dummy(object):
+            id = "id"
+        self.cmd.backup_new_file = lambda relative_path: Dummy()
+
+        fg = self.mox.CreateMock(obnamlib.FileGroup)
+        fg.components = self.mox.CreateMock(list)
+
+        self.cmd.store.new_object(kind=obnamlib.FILEGROUP).AndReturn(fg)
+        fg.components.append(mox.IsA(obnamlib.Component))
+        fg.components.append(mox.IsA(obnamlib.Component))
+        self.cmd.store.put_object(fg)
+
+        self.mox.ReplayAll()
+        self.cmd.backup_new_files_as_group(["foo", "bar"])
         self.mox.VerifyAll()

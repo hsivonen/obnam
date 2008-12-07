@@ -38,6 +38,21 @@ class BackupCommand(object):
             content.add(part.id)
         f.close()
         self.store.put_object(content)
+        return content
+
+    def backup_new_files_as_group(self, relative_paths):
+        """Back a set of new files as a new FILEGROUP."""
+        fg = self.store.new_object(kind=obnamlib.FILEGROUP)
+        for path in relative_paths:
+            fc = self.backup_new_file(path)
+            file_component = obnamlib.Component(kind=obnamlib.FILE)
+            file_component.children += [
+                obnamlib.Component(kind=obnamlib.FILENAME, string=path),
+                obnamlib.Component(kind=obnamlib.CONTREF, string=fc.id),
+                ]
+            fg.components.append(file_component)
+        self.store.put_object(fg)
+        return fg
 
     def __call__(self, config, args): # pragma: no cover
         # This is here just so I can play around with things on the
