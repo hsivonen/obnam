@@ -78,3 +78,27 @@ class Component(object):
 
     children = property(fget=get_children, fset=set_children,
                         doc="Children of composite component.")
+
+    def find(self, kind=None):
+        """Find subcomponents of a given kind."""
+        return [c for c in self.children if c.kind == kind]
+
+    def find_strings(self, **kwargs):
+        """Like find, but return string values of matches."""
+        return [c.string for c in self.find(**kwargs)]
+
+    def first(self, **kwargs):
+        """Like find, but return first matching sub-component, or None."""
+        list = self.find(**kwargs)
+        if list:
+            return list[0]
+        else:
+            return None
+
+    def first_string(self, **kwargs):
+        """Like first, but return string value if found."""
+        c = self.first(**kwargs)
+        if c:
+            return c.string
+        else:
+            return None
