@@ -1,5 +1,3 @@
-# obnamlib/__init__.py
-#
 # Copyright (C) 2008  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -17,30 +15,22 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-from exception import BackupException as Exception
-from cfg import Config
-from component import Component
-from object import Object
-from object_factory import ObjectFactory
-from store import Store
-from ui import UserInterface
-from vfs import VirtualFileSystem
-from vfs_local import LocalFS
-from app import BackupApplication
+class UserInterface(object):
 
-from ui_cli_help import HelpCommand
-from ui_cli import CommandLineUI
+    """User interface base class.
 
-import varint
+    The application supports both a command line and graphical user
+    interfaces. This class defines the base class for both kinds of
+    user interfaces. Because the two are so different, this is a very
+    simple interface.
 
-from kinds import Kinds
-from component_kinds import ComponentKinds
-from object_kinds import ObjectKinds
+    Sub-classes should implement the run() method to actually do
+    useful things.
 
-cmp_kinds = ComponentKinds()
-cmp_kinds.add_all()
-cmp_kinds.add_to_obnamlib()
+    """
 
-obj_kinds = ObjectKinds()
-obj_kinds.add_all()
-obj_kinds.add_to_obnamlib()
+    def __init__(self, config):
+        self.config = config
+
+    def run(self, args): # pragma: no cover
+        """Actually run the user interface."""
