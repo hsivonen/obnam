@@ -58,12 +58,12 @@ class BackupCommand(object):
         # This is here just so I can play around with things on the
         # command line. It will be replaced with the real stuff later.
         store_url = args[0]
-        root_url = args[1]
+        roots = args[1:]
 
         self.store = obnamlib.Store(store_url, "w")
         self.fs = obnamlib.LocalFS(".")
 
-        self.backup_new_file(root_url)
+        self.backup_new_files_as_group(roots)
         self.store.commit()
 
         print "backup"
