@@ -26,6 +26,7 @@ from store import Store
 from ui import UserInterface
 from vfs import VirtualFileSystem
 from vfs_local import LocalFS
+from walk import depth_first
 from app import BackupApplication
 
 from ui_cli_help import HelpCommand
