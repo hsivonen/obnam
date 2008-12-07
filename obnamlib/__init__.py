@@ -33,6 +33,7 @@ from object_kinds import ObjectKinds
 obj_kinds = ObjectKinds()
 obj_kinds.add_all()
 obj_kinds.add_to_obnamlib()
+from object_dir import Dir
 from object_filecontents import FileContents
 from object_filegroup import FileGroup
 from object_filepart import FilePart
