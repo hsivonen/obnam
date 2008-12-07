@@ -1,0 +1,54 @@
+# Copyright (C) 2008  Lars Wirzenius <liw@liw.fi>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+
+import obnamlib
+
+
+class BackupCommand(object):
+
+    """A sub-command for the command line interface to back up some data."""
+
+    PART_SIZE = 256 * 1024
+
+    def backup_new_file(self, relative_path):
+        """Back up a completely new file."""
+        content = self.store.new_object(kind=obnamlib.FILECONTENTS)
+        f = self.fs.open(relative_path, "r")
+        while True:
+            data = f.read(self.PART_SIZE)
+            if not data:
+                break
+            part = self.store.new_object(kind=obnamlib.FILEPART)
+            part.data = data
+            self.store.put_object(part)
+            content.add(part.id)
+        f.close()
+        self.store.put_object(content)
+
+    def __call__(self, config, args): # pragma: no cover
+        # This is here just so I can play around with things on the
+        # command line. It will be replaced with the real stuff later.
+        store_url = args[0]
+        root_url = args[1]
+
+        self.store = obnamlib.Store(store_url, "w")
+        self.fs = obnamlib.LocalFS(".")
+
+        self.backup_new_file(root_url)
+        self.store.commit()
+
+        print "backup"
