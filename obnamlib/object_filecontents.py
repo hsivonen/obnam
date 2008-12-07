@@ -27,7 +27,7 @@ class FileContents(obnamlib.Object):
 
     @property
     def part_ids(self):
-        return [c.string for c in self.find(kind=obnamlib.FILEPARTREF)]
+        return self.find_strings(kind=obnamlib.FILEPARTREF)
 
     def add(self, ref):
         c = obnamlib.Component(kind=obnamlib.FILEPARTREF)
