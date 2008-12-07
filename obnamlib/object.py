@@ -48,6 +48,10 @@ class Object(object):
                 list.append(cmp)
         return list
 
+    def find_strings(self, **kwargs):
+        """Like find, but return string values of components."""
+        return [c.string for c in self.find(**kwargs)]
+
     def extract(self, **kwargs):
         """Find and remove the top-level components matching **kwargs."""
         list = self.find(**kwargs)

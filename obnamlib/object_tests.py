@@ -47,6 +47,15 @@ class ObjectTests(unittest.TestCase):
 
         self.assertEqual(obj.find(kind=obnamlib.FILENAME), [name])
 
+    def test_finds_strings_by_kind(self):
+        name = obnamlib.Component(kind=obnamlib.FILENAME)
+        name.string = "foo"
+
+        obj = obnamlib.Object(obnamlib.GEN, "id")
+        obj.components.append(name)
+
+        self.assertEqual(obj.find_strings(kind=obnamlib.FILENAME), ["foo"])
+
     def test_extracts_by_kind(self):
         name = obnamlib.Component(kind=obnamlib.FILENAME)
         name.string = "foo"
