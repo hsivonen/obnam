@@ -39,6 +39,17 @@ class Object(object):
         self.id = id
         self.components = []
 
+    def prepare_for_encoding(self):
+        """Prepare object for encoding.
+
+        For performance or convenience reasons, a subclass may decide
+        to keep some information in properties of its instance, rather
+        than as components in self.components. However, when the object
+        is encoded, everything should be in self.components. The
+        encoder will call this method to ensure that happens.
+
+        """
+
     def find(self, kind=None):
         """Find top-level components that match non-None arguments."""
         list = []

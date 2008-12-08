@@ -79,6 +79,7 @@ class ObjectFactory(object):
         return list
 
     def encode_object(self, obj):
+        obj.prepare_for_encoding()
         id = obnamlib.Component(kind=obnamlib.OBJID, string=obj.id)
 
         kind = obnamlib.Component(kind=obnamlib.OBJKIND,

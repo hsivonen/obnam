@@ -15,6 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import mox
 import unittest
 
 import obnamlib
@@ -46,6 +47,18 @@ class ObjectFactoryTests(unittest.TestCase):
     def test_creates_new_object_with_desired_kind(self):
         obj = self.factory.new_object(kind=obnamlib.FILEPART)
         self.assertEqual(obj.kind, obnamlib.FILEPART)
+
+    def test_calls_prepare_before_encoding_object(self):
+        m = mox.Mox()
+        obj = m.CreateMock(obnamlib.Object)
+        obj.id = "id"
+        obj.kind = obnamlib.FILENAME
+        obj.string = ""
+        obj.components = []
+        obj.prepare_for_encoding()
+        m.ReplayAll()
+        self.factory.encode_object(obj)
+        m.VerifyAll()
 
     def test_encodes_empty_string_component_correctly(self):
         cmp = obnamlib.Component(obnamlib.FILENAME)
