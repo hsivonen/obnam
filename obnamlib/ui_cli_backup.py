@@ -54,6 +54,25 @@ class BackupCommand(object):
         self.store.put_object(fg)
         return fg
 
+    def backup_dir(self, relative_path, subdirs, filenames):
+        """Back up a single directory, non-recursively.
+
+        subdirs is a list of obnamlib.Dir objects for the direct
+        subdirectories of the target directory. They must have been
+        backed up already.
+
+        """
+
+        dir = self.store.new_object(obnamlib.DIR)
+        dir.name = relative_path
+        dir.dirrefs = [x.id for x in subdirs]
+        if filenames:
+            dir.fgrefs = [self.backup_new_files_as_group().id]
+        else:
+            dir.fgrefs = []
+        self.store.put_object(dir)
+        return dir
+
     def __call__(self, config, args): # pragma: no cover
         # This is here just so I can play around with things on the
         # command line. It will be replaced with the real stuff later.
