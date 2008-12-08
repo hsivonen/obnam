@@ -24,11 +24,12 @@ class Dir(obnamlib.Object):
 
     kind = obnamlib.DIR
 
-    def __init__(self, id, name, dirrefs=None, fgrefs=None):
+    def __init__(self, id, name=None, dirrefs=None, fgrefs=None):
         obnamlib.Object.__init__(self, id=id)
 
-        c = obnamlib.Component(kind=obnamlib.FILENAME, string=name)
-        self.components.append(c)
+        if name:
+            c = obnamlib.Component(kind=obnamlib.FILENAME, string=name)
+            self.components.append(c)
 
         self.add_refs(obnamlib.DIRREF, dirrefs or [])
         self.add_refs(obnamlib.FILEGROUPREF, fgrefs or [])

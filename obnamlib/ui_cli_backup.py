@@ -105,7 +105,8 @@ class BackupCommand(object):
         self.store = obnamlib.Store(store_url, "w")
         self.fs = obnamlib.LocalFS(".")
 
-        self.backup_new_files_as_group(roots)
+        for root in roots:
+            self.backup_recursively(root)
         self.store.commit()
 
         print "backup"

@@ -29,6 +29,11 @@ class ObjectFactoryTests(unittest.TestCase):
     def test_raises_error_for_unknown_object_kind(self):
         self.assertRaises(obnamlib.Exception, self.factory.new_object, -1)
 
+    def test_creates_all_known_object_kinds(self):
+        for kind, name in obnamlib.obj_kinds.pairs():
+            obj = self.factory.new_object(kind=kind)
+            self.assert_(isinstance(obj, obnamlib.Object))
+
     def test_sets_id_to_a_string_value(self):
         obj = self.factory.new_object(obnamlib.GEN)
         self.assertEqual(type(obj.id), str)

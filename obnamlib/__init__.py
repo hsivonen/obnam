@@ -33,12 +33,16 @@ from object_kinds import ObjectKinds
 obj_kinds = ObjectKinds()
 obj_kinds.add_all()
 obj_kinds.add_to_obnamlib()
+from object_delta import Delta
+from object_deltapart import DeltaPart
 from object_dir import Dir
 from object_filecontents import FileContents
 from object_filegroup import FileGroup
+from object_filelist import FileList
 from object_filepart import FilePart
 from object_gen import Generation
 from object_host import Host
+from object_sig import Signature
 from object_factory import ObjectFactory
 
 from store import Store

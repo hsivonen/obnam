@@ -23,11 +23,16 @@ import obnamlib
 class ObjectFactory(object):
 
     classes = {
+        obnamlib.DELTA: obnamlib.Delta,
+        obnamlib.DELTAPART: obnamlib.DeltaPart,
+        obnamlib.DIR: obnamlib.Dir,
         obnamlib.FILECONTENTS: obnamlib.FileContents,
+        obnamlib.FILELIST: obnamlib.FileList,
         obnamlib.FILEGROUP: obnamlib.FileGroup,
         obnamlib.FILEPART: obnamlib.FilePart,
         obnamlib.GEN: obnamlib.Generation,
         obnamlib.HOST: obnamlib.Host,
+        obnamlib.SIG: obnamlib.Signature,
         }
 
     def new_id(self):
