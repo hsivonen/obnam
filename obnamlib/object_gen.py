@@ -23,3 +23,14 @@ class Generation(obnamlib.Object):
     """A backup generation."""
 
     kind = obnamlib.GEN
+
+    def __init__(self, id):
+        obnamlib.Object.__init__(self, id=id)
+        self.dirrefs = []
+        self.fgrefs = []
+
+    def prepare_for_encoding(self):
+        self.components += [obnamlib.Component(obnamlib.DIRREF, string=x)
+                            for x in self.dirrefs]
+        self.components += [obnamlib.Component(obnamlib.FILEGROUPREF, string=x)
+                            for x in self.fgrefs]
