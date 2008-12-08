@@ -125,6 +125,7 @@ class ObjectFactoryTests(unittest.TestCase):
         obj = self.factory.decode_object(self.encoded)
         self.assertEqual(obj.id, "id")
         self.assertEqual(obj.kind, obnamlib.FILEGROUP)
+        self.assert_(isinstance(obj, self.factory.classes[obj.kind]))
         self.assertEqual(len(obj.components), 1)
         self.assertEqual(obj.components[0].kind, obnamlib.FILENAME)
         self.assertEqual(obj.components[0].string, "foo")

@@ -89,9 +89,15 @@ class ObjectFactory(object):
         return "".join(self.encode_component(c) for c in components)
 
     def decode_object(self, str):
-        obj = obnamlib.Object(id=None)
-        obj.components = self.decode_all_components(str)
-        obj.id = obj.extract(kind=obnamlib.OBJID)[0].string
-        temp = obj.extract(kind=obnamlib.OBJKIND)[0].string
-        obj.kind, pos = obnamlib.varint.decode(temp, 0)
+        meta = obnamlib.Component(kind=obnamlib.OBJECT,
+                                  children=self.decode_all_components(str))
+        temp = meta.first_string(kind=obnamlib.OBJKIND)
+        kind, pos = obnamlib.varint.decode(temp, 0)
+
+        obj = self.new_object(kind=kind)
+        obj.id = meta.first_string(kind=obnamlib.OBJID)
+        obj.components = [c 
+                          for c in meta.children
+                          if c.kind not in [obnamlib.OBJID, obnamlib.OBJKIND]]
+
         return obj

@@ -92,6 +92,7 @@ class StoreTests(unittest.TestCase):
 
     def test_get_host_creates_new_one_when_none_exists(self):
         host = self.rw.get_host("foo")
+        self.assert_(isinstance(host, obnamlib.Host))
         self.assertEquals(host.id, "foo")
         self.assertEquals(host.components, [])
 
@@ -104,6 +105,7 @@ class StoreTests(unittest.TestCase):
 
         store = obnamlib.Store(self.rw_dirname, "w")
         host2 = store.get_host("foo")
+        self.assert_(isinstance(host2, obnamlib.Host))
         self.assertEquals(host2.find_strings(kind=obnamlib.BLKID), ["bar"])
 
     def test_put_host_works_for_existing(self):

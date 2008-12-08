@@ -129,10 +129,5 @@ class BackupCommand(object):
         self.store = obnamlib.Store(store_url, "w")
         self.fs = obnamlib.LocalFS(".")
 
-        host = self.store.get_host(host_id)
-        gen = self.backup_generation(roots)
-        host.genrefs.append(gen.id)
-        self.store.put_host(host)
-        self.store.commit()
-
-        print "backup"
+        print "backing up"
+        self.backup(host_id, roots)
