@@ -40,7 +40,7 @@ class BackupCommand(object):
         self.store.put_object(content)
         return content
 
-    def backup_new_files_as_group(self, relative_paths):
+    def backup_new_files_as_groups(self, relative_paths):
         """Back a set of new files as a new FILEGROUP."""
         fg = self.store.new_object(kind=obnamlib.FILEGROUP)
         for path in relative_paths:
@@ -52,7 +52,7 @@ class BackupCommand(object):
                 ]
             fg.components.append(file_component)
         self.store.put_object(fg)
-        return fg
+        return [fg]
 
     def backup_dir(self, relative_path, subdirs, filenames):
         """Back up a single directory, non-recursively.
@@ -67,7 +67,8 @@ class BackupCommand(object):
         dir.name = relative_path
         dir.dirrefs = [x.id for x in subdirs]
         if filenames:
-            dir.fgrefs = [self.backup_new_files_as_group().id]
+            dir.fgrefs = [x.id 
+                          for x in self.backup_new_files_as_groups(filenames)]
         else:
             dir.fgrefs = []
         self.store.put_object(dir)
