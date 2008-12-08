@@ -68,9 +68,10 @@ class BackupCommand(object):
         dir = self.store.new_object(obnamlib.DIR)
         dir.name = os.path.basename(relative_path)
         dir.dirrefs = [x.id for x in subdirs]
+        fullnames = [os.path.join(relative_path, x) for x in filenames]
         if filenames:
             dir.fgrefs = [x.id 
-                          for x in self.backup_new_files_as_groups(filenames)]
+                          for x in self.backup_new_files_as_groups(fullnames)]
         else:
             dir.fgrefs = []
         self.store.put_object(dir)

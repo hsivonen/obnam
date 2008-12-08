@@ -80,8 +80,14 @@ class BackupCommandTests(unittest.TestCase):
         self.assertEqual(ret, [fg])
 
     def test_backs_up_directory_correctly(self):
+        filenames = []
+        def mock_backup_files(names):
+            for name in names:
+                filenames.append(name)
+            return [DummyObject("fg")]
+        self.cmd.backup_new_files_as_groups = mock_backup_files
+
         dir = self.mox.CreateMock(obnamlib.Dir)
-        self.cmd.backup_new_files_as_groups = lambda x: [DummyObject("fg")]
         subdirs = [DummyObject(id) for id in ["dir1", "dir2"]]
 
         self.cmd.store.new_object(obnamlib.DIR).AndReturn(dir)
@@ -94,6 +100,7 @@ class BackupCommandTests(unittest.TestCase):
         self.assertEqual(ret.name, "foo")
         self.assertEqual(ret.dirrefs, ["dir1", "dir2"])
         self.assertEqual(ret.fgrefs, ["fg"])
+        self.assertEqual(filenames, ["foo/file1", "foo/file2"])
 
     def test_backs_up_empty_directory_correctly(self):
         self.cmd.backup_new_files_as_groups = lambda: None
