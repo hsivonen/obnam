@@ -142,3 +142,45 @@ class BackupCommandTests(unittest.TestCase):
                           [("foo/dir1", [], ["file2"]),
                            ("foo", [results[0]], ["file1"]),
                            ])
+
+    def test_backs_up_mixed_roots(self):
+        self.count = 0
+
+        dirnames = []
+        dirrefs = []
+        def dummy_backup_dir(dirname):
+            dirnames.append(dirname)
+            self.count += 1
+            dir = obnamlib.Dir(id="%s" % self.count)
+            dirrefs.append(dir.id)
+            return dir
+        self.cmd.backup_dir = dummy_backup_dir
+
+        filenames = []
+        fgrefs = []
+        def dummy_backup_groups(names):
+            for name in names:
+                filenames.append(name)
+            self.count += 1
+            fg = obnamlib.FileGroup(id="%s" % self.count)
+            fgrefs.append(fg.id)
+            return [fg]
+        self.cmd.backup_new_files_as_groups = dummy_backup_groups
+
+        gen = self.mox.CreateMock(obnamlib.Generation)
+        gen.dirrefs = []
+        gen.fgrefs = []
+        self.cmd.store.new_object(obnamlib.GEN).AndReturn(gen)
+        self.cmd.fs.isdir("dir").AndReturn(True)
+        self.cmd.fs.isdir("file").AndReturn(False)
+        self.cmd.store.put_object(gen)
+        
+        self.mox.ReplayAll()
+        gen = self.cmd.backup_generation(["dir", "file"])
+        self.mox.VerifyAll()
+        self.assertEqual(dirnames, ["dir"])
+        self.assertEqual(filenames, ["file"])
+        self.assertEqual(len(dirrefs), 1)
+        self.assertEqual(len(fgrefs), 1)
+        self.assertEqual(gen.dirrefs, dirrefs)
+        self.assertEqual(gen.fgrefs, fgrefs)

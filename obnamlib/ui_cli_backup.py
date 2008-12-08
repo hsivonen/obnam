@@ -96,6 +96,23 @@ class BackupCommand(object):
 
         return root_object
 
+    def backup_generation(self, roots):
+        """Back up a generation."""
+
+        gen = self.store.new_object(obnamlib.GEN)
+
+        dirs = [x for x in roots if self.fs.isdir(x)]
+        nondirs = [x for x in roots if x not in dirs]
+
+        for root in dirs:
+            gen.dirrefs.append(self.backup_dir(root).id)
+
+        gen.fgrefs += [x.id for x in self.backup_new_files_as_groups(nondirs)]
+
+        self.store.put_object(gen)
+
+        return gen
+
     def __call__(self, config, args): # pragma: no cover
         # This is here just so I can play around with things on the
         # command line. It will be replaced with the real stuff later.
@@ -105,8 +122,19 @@ class BackupCommand(object):
         self.store = obnamlib.Store(store_url, "w")
         self.fs = obnamlib.LocalFS(".")
 
-        for root in roots:
-            self.backup_recursively(root)
+        dirs = [x for x in roots if os.path.isdir(x)]
+        nondirs = [x for x in roots if x not in dirs]
+        
+        gen = self.store.new_object(obnamlib.GEN)
+        for root in dirs:
+            dir = self.backup_recursively(root)
+            gen.dirrefs += [dir.id]
+
+        fg = self.backup_new_files_as_group(nondirs)
+        gen.fgrefs += [fg.id]
+
+        self.store.put_object(gen)
+
         self.store.commit()
 
         print "backup"
