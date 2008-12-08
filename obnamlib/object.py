@@ -74,3 +74,7 @@ class Object(object):
         list = self.find(**kwargs)
         self.components = [x for x in self.components if x not in list]
         return list
+
+    def extract_strings(self, **kwargs):
+        """Like extract, but return string values."""
+        return [c.string for c in self.extract(**kwargs)]
