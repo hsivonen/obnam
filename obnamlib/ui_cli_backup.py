@@ -15,6 +15,8 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import os
+
 import obnamlib
 
 
@@ -64,7 +66,7 @@ class BackupCommand(object):
         """
 
         dir = self.store.new_object(obnamlib.DIR)
-        dir.name = relative_path
+        dir.name = os.path.basename(relative_path)
         dir.dirrefs = [x.id for x in subdirs]
         if filenames:
             dir.fgrefs = [x.id 
@@ -73,6 +75,26 @@ class BackupCommand(object):
             dir.fgrefs = []
         self.store.put_object(dir)
         return dir
+
+    def backup_recursively(self, root):
+        """Back up a directory, recursively."""
+
+        # We traverse the directory tree depth-first. When we get to a
+        # directory, we need to know its subdirectories. We keep them
+        # in this dict, which is indexed by the directory pathname.
+        # The value is a list of obnamlib.Dir objects.
+        subdirs = {}
+
+        for dirname, dirnames, filenames in self.fs.depth_first(root):
+            list = subdirs.pop(dirname, [])
+            dir = self.backup_dir(dirname, list, filenames)
+            if dirname == root:
+                root_object = dir
+            else:
+                parent = os.path.dirname(dirname)
+                subdirs[parent] = subdirs.get(parent, []) + [dir]
+
+        return root_object
 
     def __call__(self, config, args): # pragma: no cover
         # This is here just so I can play around with things on the

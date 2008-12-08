@@ -101,3 +101,44 @@ class BackupCommandTests(unittest.TestCase):
         ret = self.cmd.backup_dir("foo", [], [])
         self.assertEqual(ret.dirrefs, [])
         self.assertEqual(ret.fgrefs, [])
+
+    def test_backs_up_recursively_empty_directory_correctly(self):
+        dir = self.mox.CreateMock(obnamlib.Dir)
+        dir.id = "dirid"
+        self.cmd.backup_dir = lambda *args: dir
+        self.cmd.fs = self.mox.CreateMock(obnamlib.VirtualFileSystem)
+
+        self.cmd.fs.depth_first("foo").AndReturn([("foo", [], [])])
+
+        self.mox.ReplayAll()
+        ret = self.cmd.backup_recursively("foo")
+        self.mox.VerifyAll()
+        self.assertEquals(ret, dir)
+
+    def test_backs_up_recursively_non_empty_directory_correctly(self):
+        args = []
+        results = []
+        self.count = 0
+        def mock_backup_dir(dirname, subdirs, filenames):
+            args.append((dirname, subdirs, filenames))
+            self.count += 1
+            dir = obnamlib.Dir(id=("%s" % self.count), name=dirname)
+            results.append(dir)
+            return dir
+        self.cmd.backup_dir = mock_backup_dir
+
+        tree = [
+            ("foo/dir1", [], ["file2"]),
+            ("foo", ["dir1"], ["file1"]),
+            ]
+        self.cmd.fs = self.mox.CreateMock(obnamlib.VirtualFileSystem)
+        self.cmd.fs.depth_first("foo").AndReturn(tree)
+
+        self.mox.ReplayAll()
+        ret = self.cmd.backup_recursively("foo")
+        self.mox.VerifyAll()
+        self.assertEquals(ret, results[-1])
+        self.assertEquals(args, 
+                          [("foo/dir1", [], ["file2"]),
+                           ("foo", [results[0]], ["file1"]),
+                           ])
