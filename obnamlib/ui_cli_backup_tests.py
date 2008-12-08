@@ -148,13 +148,13 @@ class BackupCommandTests(unittest.TestCase):
 
         dirnames = []
         dirrefs = []
-        def dummy_backup_dir(dirname):
+        def dummy_backup_recursively(dirname):
             dirnames.append(dirname)
             self.count += 1
             dir = obnamlib.Dir(id="%s" % self.count)
             dirrefs.append(dir.id)
             return dir
-        self.cmd.backup_dir = dummy_backup_dir
+        self.cmd.backup_recursively = dummy_backup_recursively
 
         filenames = []
         fgrefs = []

@@ -105,7 +105,7 @@ class BackupCommand(object):
         nondirs = [x for x in roots if x not in dirs]
 
         for root in dirs:
-            gen.dirrefs.append(self.backup_dir(root).id)
+            gen.dirrefs.append(self.backup_recursively(root).id)
 
         gen.fgrefs += [x.id for x in self.backup_new_files_as_groups(nondirs)]
 
@@ -122,19 +122,7 @@ class BackupCommand(object):
         self.store = obnamlib.Store(store_url, "w")
         self.fs = obnamlib.LocalFS(".")
 
-        dirs = [x for x in roots if os.path.isdir(x)]
-        nondirs = [x for x in roots if x not in dirs]
-        
-        gen = self.store.new_object(obnamlib.GEN)
-        for root in dirs:
-            dir = self.backup_recursively(root)
-            gen.dirrefs += [dir.id]
-
-        fg = self.backup_new_files_as_group(nondirs)
-        gen.fgrefs += [fg.id]
-
-        self.store.put_object(gen)
-
+        gen = self.backup_generation(roots)
         self.store.commit()
 
         print "backup"
