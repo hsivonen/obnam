@@ -20,25 +20,20 @@ import sys
 import obnamlib
 
 
-class CommandLineUI(obnamlib.UserInterface):
+class GenerationsCommand(object):
 
-    commands = {
-        "help": obnamlib.HelpCommand(),
+    """A sub-command for the command line interface to list generations."""
 
-        "backup": obnamlib.BackupCommand(),
+    def generations(self, host_id, output=sys.stdout):
+        """List all generations for a given host."""
+        host = self.store.get_host(host_id)
+        for genref in host.genrefs:
+            output.write("%s\n" % genref)
 
-        "list": obnamlib.GenerationsCommand(),
-        "generations": obnamlib.GenerationsCommand(),
+    def __call__(self, config, args): # pragma: no cover
+        host_id = args[0]
+        store_url = args[1]
 
-        }
+        self.store = obnamlib.Store(store_url, "w")
 
-    def short_help(self, stdout=sys.stdout):
-        stdout.write("Use the help command to get help for this program.\n")
-
-    def run(self, args):
-        if not args:
-            self.short_help()
-        elif args[0] in self.commands:
-            self.commands[args[0]](self.config, args[1:])
-        else:
-            raise obnamlib.Exception("Unknown command '%s'" % args[0])
+        self.generations(host_id)
