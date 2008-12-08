@@ -30,7 +30,8 @@ class Host(obnamlib.Object):
 
     def get_genrefs(self):
         if self._genrefs is None:
-            self._genrefs = self.find_strings(kind=obnamlib.GENREF)
+            list = self.extract(kind=obnamlib.GENREF)
+            self._genrefs = [c.string for c in list]
         return self._genrefs
 
     def set_genrefs(self, genrefs):

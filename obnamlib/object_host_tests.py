@@ -44,6 +44,12 @@ class HostTests(unittest.TestCase):
         self.host.components = [genref]
         self.assertEquals(self.host.genrefs, ["foo"])
 
+    def test_removes_genrefs_from_components_after_first_get(self):
+        genref = obnamlib.Component(kind=obnamlib.GENREF, string="foo")
+        self.host.components = [genref]
+        genrefs = self.host.genrefs
+        self.assertEquals(self.host.components, [])
+
     def test_prepare_puts_genrefs_in_components(self):
         self.host.genrefs = ["foo"]
         self.host.prepare_for_encoding()
