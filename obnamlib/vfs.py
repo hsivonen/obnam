@@ -53,6 +53,10 @@ class VirtualFileSystem(object):
         """Does the file or directory exist?"""
         pass
 
+    def isdir(self, relative_path):
+        """Is it a directory?"""
+        pass
+
     def remove(self, relative_path):
         """Remove a file."""
         pass

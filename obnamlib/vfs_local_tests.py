@@ -71,6 +71,17 @@ class LocalFSTests(unittest.TestCase):
         file(os.path.join(self.dirname, "foo"), "w").close()
         self.assert_(self.fs.exists("foo"))
 
+    def test_isdir_returns_false_for_nonexistent_file(self):
+        self.assertFalse(self.fs.isdir("foo"))
+
+    def test_isdir_returns_false_for_nondir(self):
+        file(os.path.join(self.dirname, "foo"), "w").close()
+        self.assertFalse(self.fs.isdir("foo"))
+
+    def test_isdir_returns_true_for_existing_dir(self):
+        os.mkdir(os.path.join(self.dirname, "foo"))
+        self.assert_(self.fs.isdir("foo"))
+
     def test_opens_existing_file_ok(self):
         file(os.path.join(self.dirname, "foo"), "w").close()
         self.assert_(self.fs.open("foo", "w"))

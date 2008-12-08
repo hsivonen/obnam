@@ -51,6 +51,9 @@ class LocalFS(obnamlib.VirtualFileSystem):
     def exists(self, relative_path):
         return os.path.exists(self.join(relative_path))
 
+    def isdir(self, relative_path):
+        return os.path.isdir(self.join(relative_path))
+
     def cat(self, relative_path):
         f = self.open(relative_path, "r")
         data = f.read()
