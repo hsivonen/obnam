@@ -191,3 +191,20 @@ class BackupCommandTests(unittest.TestCase):
         self.assertEqual(len(fgrefs), 1)
         self.assertEqual(gen.dirrefs, dirrefs)
         self.assertEqual(gen.fgrefs, fgrefs)
+
+    def test_backs_up_correctly(self):
+        def mock_backup_generation(roots):
+            return DummyObject("genid")
+        self.cmd.backup_generation = mock_backup_generation
+
+        host = self.mox.CreateMock(obnamlib.Host)
+        host.genrefs = []
+
+        self.cmd.store.get_host("foo").AndReturn(host)
+        self.cmd.store.put_host(host)
+        self.cmd.store.commit()
+
+        self.mox.ReplayAll()
+        self.cmd.backup("foo", ["bar", "foobar"])
+        self.mox.VerifyAll()
+        self.assertEqual(host.genrefs, ["genid"])

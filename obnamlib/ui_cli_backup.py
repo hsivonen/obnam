@@ -114,6 +114,13 @@ class BackupCommand(object):
 
         return gen
 
+    def backup(self, host_id, roots):
+        host = self.store.get_host(host_id)
+        gen = self.backup_generation(roots)
+        host.genrefs.append(gen.id)
+        self.store.put_host(host)
+        self.store.commit()
+
     def __call__(self, config, args): # pragma: no cover
         host_id = args[0]
         store_url = args[1]
