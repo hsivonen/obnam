@@ -73,6 +73,26 @@ class LocalFS(obnamlib.VirtualFileSystem):
             raise
         os.remove(name)
 
+    def overwrite_file(self, relative_path, contents):
+        path = self.join(relative_path)
+        dirname = os.path.dirname(path)
+        fd, name = tempfile.mkstemp(dir=dirname)
+        os.write(fd, contents)
+        os.close(fd)
+
+        # Rename existing to have a .bak suffix. If _that_ file already
+        # exists, remove that.
+        bak = path + ".bak"
+        try:
+            os.remove(bak)
+        except OSError:
+            pass
+        try:
+            os.link(path, bak)
+        except OSError:
+            pass
+        os.rename(name, path)
+
     def depth_first(self, top, prune=None):
         # We walk topdown, since that's the only way os.walk allows us to
         # do any pruning. We use os.walk to get the exact same error handling

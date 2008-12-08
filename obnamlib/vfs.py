@@ -84,6 +84,15 @@ class VirtualFileSystem(object):
         """
         pass
 
+    def overwrite_file(self, relative_path, contents):
+        """Like write_file, but overwrites existing file.
+
+        The old file isn't immediately lost, it gets renamed with
+        a backup suffix.
+
+        """
+        pass
+
     def depth_first(self, relative_path, prune=None):
         """Walk a directory tree depth-first, except for unwanted subdirs.
         

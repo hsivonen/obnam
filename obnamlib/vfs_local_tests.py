@@ -112,6 +112,26 @@ class LocalFSTests(unittest.TestCase):
             pass
         self.assertEqual(self.fs.cat("foo"), "bar")
 
+    def test_overwrite_creates_new_file_ok(self):
+        self.fs.overwrite_file("foo", "bar")
+        self.assertEqual(self.fs.cat("foo"), "bar")
+
+    def test_overwrite_renames_existing_file(self):
+        self.fs.write_file("foo", "bar")
+        self.fs.overwrite_file("foo", "foobar")
+        self.assert_(self.fs.exists("foo.bak"))
+
+    def test_overwrite_removes_existing_bak_file(self):
+        self.fs.write_file("foo", "bar")
+        self.fs.write_file("foo.bak", "baz")
+        self.fs.overwrite_file("foo", "foobar")
+        self.assertEqual(self.fs.cat("foo.bak"), "bar")
+
+    def test_overwrite_replaces_existing_file(self):
+        self.fs.write_file("foo", "bar")
+        self.fs.overwrite_file("foo", "foobar")
+        self.assertEqual(self.fs.cat("foo"), "foobar")
+
 
 class DepthFirstTests(unittest.TestCase):
 
