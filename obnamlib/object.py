@@ -50,6 +50,13 @@ class Object(object):
 
         """
 
+    def post_decoding_hook(self):
+        """Prepare object for use after it has been decoded.
+
+        This is the reverse of prepare_for_encoding.
+
+        """
+
     def find(self, kind=None):
         """Find top-level components that match non-None arguments."""
         list = []

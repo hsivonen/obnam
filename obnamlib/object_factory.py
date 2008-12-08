@@ -99,5 +99,6 @@ class ObjectFactory(object):
         obj.components = [c 
                           for c in meta.children
                           if c.kind not in [obnamlib.OBJID, obnamlib.OBJKIND]]
+        obj.post_decoding_hook()
 
         return obj
