@@ -45,7 +45,7 @@ from object_host import Host
 from object_sig import Signature
 from object_factory import ObjectFactory
 
-from store import Store
+from store import Store, NotFound
 
 from ui import UserInterface
 

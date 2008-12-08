@@ -115,15 +115,17 @@ class BackupCommand(object):
         return gen
 
     def __call__(self, config, args): # pragma: no cover
-        # This is here just so I can play around with things on the
-        # command line. It will be replaced with the real stuff later.
-        store_url = args[0]
-        roots = args[1:]
+        host_id = args[0]
+        store_url = args[1]
+        roots = args[2:]
 
         self.store = obnamlib.Store(store_url, "w")
         self.fs = obnamlib.LocalFS(".")
 
+        host = self.store.get_host(host_id)
         gen = self.backup_generation(roots)
+        host.genrefs.append(gen.id)
+        self.store.put_host(host)
         self.store.commit()
 
         print "backup"
