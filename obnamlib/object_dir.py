@@ -27,25 +27,16 @@ class Dir(obnamlib.Object):
     def __init__(self, id, name=None, dirrefs=None, fgrefs=None):
         obnamlib.Object.__init__(self, id=id)
 
-        if name:
-            c = obnamlib.Component(kind=obnamlib.FILENAME, string=name)
-            self.components.append(c)
-
-        self.add_refs(obnamlib.DIRREF, dirrefs or [])
-        self.add_refs(obnamlib.FILEGROUPREF, fgrefs or [])
+        self.name = name
+        self.dirrefs = dirrefs or []
+        self.fgrefs = fgrefs or []
 
     def add_refs(self, kind, refs):
         self.components += [obnamlib.Component(kind=kind, string=ref)
                             for ref in refs]
 
-    @property
-    def name(self):
-        return self.find_strings(kind=obnamlib.FILENAME)[0]
-
-    @property
-    def dirrefs(self):
-        return self.find_strings(kind=obnamlib.DIRREF)
-
-    @property
-    def fgrefs(self):
-        return self.find_strings(kind=obnamlib.FILEGROUPREF)
+    def prepare_for_encoding(self):
+        c = obnamlib.Component(kind=obnamlib.FILENAME, string=self.name)
+        self.components.append(c)
+        self.add_refs(obnamlib.DIRREF, self.dirrefs)
+        self.add_refs(obnamlib.FILEGROUPREF, self.fgrefs)

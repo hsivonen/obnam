@@ -35,3 +35,18 @@ class DirTests(unittest.TestCase):
 
     def test_sets_fgrefs_correctl(self):
         self.assertEqual(self.dir.fgrefs, ["fg1", "fg2"])
+
+    def test_prepare_encodes_name(self):
+        self.dir.prepare_for_encoding()
+        self.assertEqual(self.dir.find_strings(kind=obnamlib.FILENAME), 
+                         ["name"])
+
+    def test_prepare_encodes_dirrefs(self):
+        self.dir.prepare_for_encoding()
+        self.assertEqual(self.dir.find_strings(kind=obnamlib.DIRREF), 
+                         ["dir1", "dir2"])
+
+    def test_prepare_encodes_fgrefs(self):
+        self.dir.prepare_for_encoding()
+        self.assertEqual(self.dir.find_strings(kind=obnamlib.FILEGROUPREF), 
+                         ["fg1", "fg2"])
