@@ -53,6 +53,10 @@ class VirtualFileSystem(object):
         """Does the file or directory exist?"""
         pass
 
+    def isdir(self, relative_path):
+        """Is it a directory?"""
+        pass
+
     def remove(self, relative_path):
         """Remove a file."""
         pass
@@ -79,3 +83,33 @@ class VirtualFileSystem(object):
 
         """
         pass
+
+    def overwrite_file(self, relative_path, contents):
+        """Like write_file, but overwrites existing file.
+
+        The old file isn't immediately lost, it gets renamed with
+        a backup suffix.
+
+        """
+        pass
+
+    def depth_first(self, relative_path, prune=None):
+        """Walk a directory tree depth-first, except for unwanted subdirs.
+        
+        This is, essentially, 'os.walk(top, topdown=False)', except that
+        if the prune argument is set, we call it before descending to 
+        sub-directories to allow it to remove any directories and files
+        the caller does not want to know about.
+        
+        If set, prune must be a function that gets three arguments (current
+        directory, list of sub-directory names, list of files in directory),
+        and must modify the two lists _in_place_. For example:
+        
+        def prune(dirname, dirnames, filenames):
+            if ".bzr" in dirnames:
+                dirnames.remove(".bzr")
+        
+        The dirnames and filenames lists contain basenames, relative to
+        dirname.
+        
+        """

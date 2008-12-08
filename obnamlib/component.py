@@ -34,10 +34,14 @@ class Component(object):
 
     """
 
-    def __init__(self, kind):
+    def __init__(self, kind, string=None, children=None):
         self.kind = kind
-        self._string = ""
-        self._children = []
+        if string is not None:
+            self.assert_is_string_valued()
+        self._string = string or ""
+        if children is not None:
+            self.assert_is_composite()
+        self._children = children or []
 
     def assert_is_string_valued(self):
         if (not obnamlib.cmp_kinds.is_plain(self.kind) and
@@ -49,9 +53,12 @@ class Component(object):
         self.assert_is_string_valued()
         return self._string
 
-    def set_string(self, str):
+    def set_string(self, string):
         self.assert_is_string_valued()
-        self._string = str
+        if type(string) != str:
+            raise obnamlib.Exception("Cannot set string value to type %s" %
+                                     type(string))
+        self._string = string
 
     string = property(fget=get_string, fset=set_string, 
                       doc="String value of plain component.")
@@ -71,3 +78,34 @@ class Component(object):
 
     children = property(fget=get_children, fset=set_children,
                         doc="Children of composite component.")
+
+    def find(self, kind=None):
+        """Find subcomponents of a given kind."""
+        return [c for c in self.children if c.kind == kind]
+
+    def find_strings(self, **kwargs):
+        """Like find, but return string values of matches."""
+        return [c.string for c in self.find(**kwargs)]
+
+    def first(self, **kwargs):
+        """Like find, but return first matching sub-component, or None."""
+        list = self.find(**kwargs)
+        if list:
+            return list[0]
+        else:
+            return None
+
+    def first_string(self, **kwargs):
+        """Like first, but return string value if found."""
+        c = self.first(**kwargs)
+        if c:
+            return c.string
+        else:
+            return None
+
+    def extract(self, **kwargs):
+        """Like find, but remove the matches, as well as returning them."""
+        list = self.find(**kwargs)
+        for cmp in list:
+            self.children.remove(cmp)
+        return list

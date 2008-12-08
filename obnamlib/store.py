@@ -20,6 +20,11 @@ import os
 import obnamlib
 
 
+class NotFound(obnamlib.Exception):
+
+    pass
+
+
 class Store(object):
 
     """Persistent storage of obnamlib.Objects.
@@ -74,7 +79,7 @@ class Store(object):
             self.objects.append(obj)
             if obj.id == id:
                 return obj
-        raise obnamlib.Exception("Object %s not found in store" % id)
+        raise obnamlib.NotFound("Object %s not found in store" % id)
 
     def put_object(self, obj):
         self.assert_readwrite_mode()
@@ -84,8 +89,26 @@ class Store(object):
                                          obj.id)
         self.objects.append(obj)
 
+    def get_host(self, host_id):
+        """Return the host object for the host with the given id."""
+        try:
+            host = self.get_object(host_id)
+        except NotFound:
+            host = self.new_object(kind=obnamlib.HOST)
+            host.id = host_id
+        return host
+
+    def put_host(self, host):
+        """Put (possibly updated) host object back into store."""
+        if host in self.objects:
+            self.objects.remove(host)
+        self.put_object(host)
+
     def commit(self):
         self.assert_readwrite_mode()
         for obj in self.objects:
             encoded = self.factory.encode_object(obj)
-            self.fs.write_file(obj.id, encoded)
+            if obj.kind == obnamlib.HOST:
+                self.fs.overwrite_file(obj.id, encoded)
+            else:
+                self.fs.write_file(obj.id, encoded)

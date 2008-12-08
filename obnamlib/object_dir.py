@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # Copyright (C) 2008  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -19,4 +18,25 @@
 import obnamlib
 
 
-obnamlib.BackupApplication().run()
+class Dir(obnamlib.Object):
+
+    """Meta data about a directory."""
+
+    kind = obnamlib.DIR
+
+    def __init__(self, id, name=None, dirrefs=None, fgrefs=None):
+        obnamlib.Object.__init__(self, id=id)
+
+        self.name = name
+        self.dirrefs = dirrefs or []
+        self.fgrefs = fgrefs or []
+
+    def add_refs(self, kind, refs):
+        self.components += [obnamlib.Component(kind=kind, string=ref)
+                            for ref in refs]
+
+    def prepare_for_encoding(self):
+        c = obnamlib.Component(kind=obnamlib.FILENAME, string=self.name)
+        self.components.append(c)
+        self.add_refs(obnamlib.DIRREF, self.dirrefs)
+        self.add_refs(obnamlib.FILEGROUPREF, self.fgrefs)

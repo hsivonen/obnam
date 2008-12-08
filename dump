@@ -15,8 +15,31 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-
+import sys
 import obnamlib
 
 
-obnamlib.BackupApplication().run()
+def dump_component(cmp, indent):
+    spaces = " " * (indent * 2)
+    print "%skind: %s" % (spaces, obnamlib.cmp_kinds.nameof(cmp.kind))
+    if obnamlib.cmp_kinds.is_composite(cmp.kind):
+        for child in cmp.children:
+            dump_component(child, indent+1)
+    else:
+        print "%sstring: %s" % (spaces, cmp.string)
+
+def dump(obj):
+    print "kind:", obnamlib.obj_kinds.nameof(obj.kind)
+    print "id:", obj.id
+    obj.prepare_for_encoding()
+    for c in obj.components:
+        print "component:"
+        dump_component(c, 1)
+    print
+
+
+factory = obnamlib.ObjectFactory()
+for filename in sys.argv[1:]:
+    data = file(filename).read()
+    obj = factory.decode_object(data)
+    dump(obj)

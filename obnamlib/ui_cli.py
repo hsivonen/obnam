@@ -24,6 +24,7 @@ class CommandLineUI(obnamlib.UserInterface):
 
     commands = {
         "help": obnamlib.HelpCommand(),
+        "backup": obnamlib.BackupCommand(),
         }
 
     def short_help(self, stdout=sys.stdout):

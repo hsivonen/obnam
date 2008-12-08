@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # Copyright (C) 2008  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -19,4 +18,8 @@
 import obnamlib
 
 
-obnamlib.BackupApplication().run()
+class FileList(obnamlib.Object):
+
+    """Obsolete meta data format."""
+
+    kind = obnamlib.FILELIST

@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # Copyright (C) 2008  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -16,7 +15,29 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import unittest
+
 import obnamlib
 
 
-obnamlib.BackupApplication().run()
+class FilePartTests(unittest.TestCase):
+
+    def setUp(self):
+        self.part = obnamlib.FilePart(id="id", data="data")
+
+    def test_sets_id_correctly(self):
+        self.assertEqual(self.part.id, "id")
+
+    def test_sets_kind_correctly(self):
+        self.assertEqual(self.part.kind, obnamlib.FILEPART)
+
+    def test_sets_initial_data_correctly(self):
+        self.assertEqual(self.part.data, "data")
+
+    def test_sets_new_data_correctly(self):
+        self.part.data = "newdata"
+        self.assertEqual(self.part.data, "newdata")
+
+    def test_sets_initial_data_to_empty_string_by_default(self):
+        part = obnamlib.FilePart(id="id")
+        self.assertEqual(part.data, "")

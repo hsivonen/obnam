@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # Copyright (C) 2008  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -19,4 +18,29 @@
 import obnamlib
 
 
-obnamlib.BackupApplication().run()
+class Host(obnamlib.Object):
+
+    """A host object."""
+
+    kind = obnamlib.HOST
+
+    def __init__(self, id):
+        obnamlib.Object.__init__(self, id=id)
+        self._genrefs = None
+
+    def get_genrefs(self):
+        if self._genrefs is None:
+            list = self.extract(kind=obnamlib.GENREF)
+            self._genrefs = [c.string for c in list]
+        return self._genrefs
+
+    def set_genrefs(self, genrefs):
+        self._genrefs = genrefs
+
+    genrefs = property(get_genrefs, set_genrefs,
+                       doc="References to GEN objects.")
+
+    def prepare_for_encoding(self):
+        for genref in self.genrefs:
+            c = obnamlib.Component(kind=obnamlib.GENREF, string=genref)
+            self.components.append(c)

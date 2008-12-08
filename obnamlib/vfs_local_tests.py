@@ -71,6 +71,17 @@ class LocalFSTests(unittest.TestCase):
         file(os.path.join(self.dirname, "foo"), "w").close()
         self.assert_(self.fs.exists("foo"))
 
+    def test_isdir_returns_false_for_nonexistent_file(self):
+        self.assertFalse(self.fs.isdir("foo"))
+
+    def test_isdir_returns_false_for_nondir(self):
+        file(os.path.join(self.dirname, "foo"), "w").close()
+        self.assertFalse(self.fs.isdir("foo"))
+
+    def test_isdir_returns_true_for_existing_dir(self):
+        os.mkdir(os.path.join(self.dirname, "foo"))
+        self.assert_(self.fs.isdir("foo"))
+
     def test_opens_existing_file_ok(self):
         file(os.path.join(self.dirname, "foo"), "w").close()
         self.assert_(self.fs.open("foo", "w"))
@@ -100,3 +111,54 @@ class LocalFSTests(unittest.TestCase):
         except OSError:
             pass
         self.assertEqual(self.fs.cat("foo"), "bar")
+
+    def test_overwrite_creates_new_file_ok(self):
+        self.fs.overwrite_file("foo", "bar")
+        self.assertEqual(self.fs.cat("foo"), "bar")
+
+    def test_overwrite_renames_existing_file(self):
+        self.fs.write_file("foo", "bar")
+        self.fs.overwrite_file("foo", "foobar")
+        self.assert_(self.fs.exists("foo.bak"))
+
+    def test_overwrite_removes_existing_bak_file(self):
+        self.fs.write_file("foo", "bar")
+        self.fs.write_file("foo.bak", "baz")
+        self.fs.overwrite_file("foo", "foobar")
+        self.assertEqual(self.fs.cat("foo.bak"), "bar")
+
+    def test_overwrite_replaces_existing_file(self):
+        self.fs.write_file("foo", "bar")
+        self.fs.overwrite_file("foo", "foobar")
+        self.assertEqual(self.fs.cat("foo"), "foobar")
+
+
+class DepthFirstTests(unittest.TestCase):
+
+    def setUp(self):
+        self.root = tempfile.mkdtemp()
+        self.dirs = ["foo", "foo/bar", "foobar"]
+        self.dirs = [os.path.join(self.root, x) for x in self.dirs]
+        for dir in self.dirs:
+            os.mkdir(dir)
+        self.dirs.insert(0, self.root)
+        self.fs = obnamlib.LocalFS("/")
+    
+    def tearDown(self):
+        shutil.rmtree(self.root)
+
+    def testFindsAllDirs(self):
+        dirs = [x[0] for x in self.fs.depth_first(self.root)]
+        self.failUnlessEqual(sorted(dirs), sorted(self.dirs))
+
+    def prune(self, dirname, dirnames, filenames):
+        if "foo" in dirnames:
+            dirnames.remove("foo")
+
+    def testFindsAllDirsExceptThePrunedOne(self):
+        correct = [x 
+                   for x in self.dirs 
+                   if not x.endswith("/foo") and not "/foo/" in x]
+        dirs = [x[0] 
+                for x in self.fs.depth_first(self.root, prune=self.prune)]
+        self.failUnlessEqual(sorted(dirs), sorted(correct))

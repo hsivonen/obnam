@@ -18,30 +18,44 @@
 
 
 from exception import BackupException as Exception
+
 from cfg import Config
-from component import Component
-from object import Object
-from object_factory import ObjectFactory
-from store import Store
-from ui import UserInterface
-from vfs import VirtualFileSystem
-from vfs_local import LocalFS
-from walk import depth_first
-from app import BackupApplication
-
-from ui_cli_help import HelpCommand
-from ui_cli import CommandLineUI
-
-import varint
 
 from kinds import Kinds
+from component import Component
 from component_kinds import ComponentKinds
-from object_kinds import ObjectKinds
-
 cmp_kinds = ComponentKinds()
 cmp_kinds.add_all()
 cmp_kinds.add_to_obnamlib()
 
+from object import Object
+from object_kinds import ObjectKinds
 obj_kinds = ObjectKinds()
 obj_kinds.add_all()
 obj_kinds.add_to_obnamlib()
+from object_delta import Delta
+from object_deltapart import DeltaPart
+from object_dir import Dir
+from object_filecontents import FileContents
+from object_filegroup import FileGroup
+from object_filelist import FileList
+from object_filepart import FilePart
+from object_gen import Generation
+from object_host import Host
+from object_sig import Signature
+from object_factory import ObjectFactory
+
+from store import Store, NotFound
+
+from ui import UserInterface
+
+from vfs import VirtualFileSystem
+from vfs_local import LocalFS
+
+from app import BackupApplication
+
+from ui_cli_backup import BackupCommand
+from ui_cli_help import HelpCommand
+from ui_cli import CommandLineUI
+
+import varint

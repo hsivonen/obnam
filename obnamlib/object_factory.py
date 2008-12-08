@@ -22,11 +22,26 @@ import obnamlib
 
 class ObjectFactory(object):
 
+    classes = {
+        obnamlib.DELTA: obnamlib.Delta,
+        obnamlib.DELTAPART: obnamlib.DeltaPart,
+        obnamlib.DIR: obnamlib.Dir,
+        obnamlib.FILECONTENTS: obnamlib.FileContents,
+        obnamlib.FILELIST: obnamlib.FileList,
+        obnamlib.FILEGROUP: obnamlib.FileGroup,
+        obnamlib.FILEPART: obnamlib.FilePart,
+        obnamlib.GEN: obnamlib.Generation,
+        obnamlib.HOST: obnamlib.Host,
+        obnamlib.SIG: obnamlib.Signature,
+        }
+
     def new_id(self):
         return str(uuid.uuid4())
 
     def new_object(self, kind):
-        return obnamlib.Object(id=self.new_id(), kind=kind)
+        if kind not in self.classes:
+            raise obnamlib.Exception("Don't know object kind %s" % kind)
+        return self.classes[kind](id=self.new_id())
 
     def encode_component(self, cmp):
         if obnamlib.cmp_kinds.is_composite(cmp.kind):
@@ -64,20 +79,25 @@ class ObjectFactory(object):
         return list
 
     def encode_object(self, obj):
-        id = obnamlib.Component(kind=obnamlib.OBJID)
-        id.string = obj.id
+        obj.prepare_for_encoding()
+        id = obnamlib.Component(kind=obnamlib.OBJID, string=obj.id)
 
-        kind = obnamlib.Component(kind=obnamlib.OBJKIND)
-        kind.string = obnamlib.varint.encode(obj.kind)
+        kind = obnamlib.Component(kind=obnamlib.OBJKIND,
+                                  string=obnamlib.varint.encode(obj.kind))
 
         components = [id, kind] + obj.components
         return "".join(self.encode_component(c) for c in components)
 
     def decode_object(self, str):
-        obj = obnamlib.Object(id=None, kind=None)
-        obj.components = self.decode_all_components(str)
+        meta = obnamlib.Component(kind=obnamlib.OBJECT,
+                                  children=self.decode_all_components(str))
+        temp = meta.first_string(kind=obnamlib.OBJKIND)
+        kind, pos = obnamlib.varint.decode(temp, 0)
 
-        obj.id = obj.extract(kind=obnamlib.OBJID)[0].string
-        obj.kind = obj.extract(kind=obnamlib.OBJKIND)[0].string
-        obj.kind, pos = obnamlib.varint.decode(obj.kind, 0)
+        obj = self.new_object(kind=kind)
+        obj.id = meta.first_string(kind=obnamlib.OBJID)
+        obj.components = [c 
+                          for c in meta.children
+                          if c.kind not in [obnamlib.OBJID, obnamlib.OBJKIND]]
+
         return obj

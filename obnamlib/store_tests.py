@@ -57,11 +57,11 @@ class StoreTests(unittest.TestCase):
                           kind=obnamlib.HOST)
 
     def test_raises_exception_when_getting_nonexistent_object(self):
-        self.assertRaises(obnamlib.Exception, self.ro.get_object, "foo")
+        self.assertRaises(obnamlib.NotFound, self.ro.get_object, "foo")
 
     def test_raises_exception_when_getting_new_object_until_it_is_put(self):
         obj = self.rw.new_object(kind=obnamlib.GEN)
-        self.assertRaises(obnamlib.Exception, self.rw.get_object, obj.id)
+        self.assertRaises(obnamlib.NotFound, self.rw.get_object, obj.id)
 
     def test_puts_and_then_gets_object(self):
         obj = self.rw.new_object(kind=obnamlib.GEN)
@@ -86,3 +86,40 @@ class StoreTests(unittest.TestCase):
 
     def test_refuses_to_commit_in_readonly_mode(self):
         self.assertRaises(obnamlib.Exception, self.ro.commit)
+
+    def test_get_host_on_readonly_when_none_exists_fails(self):
+        self.assertRaises(obnamlib.Exception, self.ro.get_host, "foo")
+
+    def test_get_host_creates_new_one_when_none_exists(self):
+        host = self.rw.get_host("foo")
+        self.assert_(isinstance(host, obnamlib.Host))
+        self.assertEquals(host.id, "foo")
+        self.assertEquals(host.components, [])
+
+    def test_put_host_works_on_new(self):
+        host = self.rw.get_host("foo")
+        host.components.append(obnamlib.Component(obnamlib.BLKID, 
+                                                  string="bar"))
+        self.rw.put_host(host)
+        self.rw.commit()
+
+        store = obnamlib.Store(self.rw_dirname, "w")
+        host2 = store.get_host("foo")
+        self.assert_(isinstance(host2, obnamlib.Host))
+        self.assertEquals(host2.find_strings(kind=obnamlib.BLKID), ["bar"])
+
+    def test_put_host_works_for_existing(self):
+        host = self.rw.get_host("foo")
+        self.rw.put_host(host)
+        self.rw.commit()
+
+        store = obnamlib.Store(self.rw_dirname, "w")
+        host = store.get_host("foo")
+        host.components.append(obnamlib.Component(obnamlib.BLKID,
+                                                  string="bar"))
+        store.put_host(host)
+        store.commit()
+
+        store2 = obnamlib.Store(self.rw_dirname, "r")
+        host2 = store2.get_host("foo")
+        self.assert_(host2.find_strings(kind=obnamlib.BLKID), ["bar"])

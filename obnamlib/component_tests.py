@@ -23,8 +23,8 @@ import obnamlib
 class ComponentTests(unittest.TestCase):
 
     def setUp(self):
-        self.scmp = obnamlib.Component(obnamlib.OBJID)
-        self.ccmp = obnamlib.Component(obnamlib.FILE)
+        self.scmp = obnamlib.Component(kind=obnamlib.OBJID)
+        self.ccmp = obnamlib.Component(kind=obnamlib.FILE)
 
     def test_sets_kind_correctly(self):
         self.assertEqual(self.scmp.kind, obnamlib.OBJID)
@@ -36,6 +36,13 @@ class ComponentTests(unittest.TestCase):
     def test_sets_string_value_correctly(self):
         self.scmp.string = "foo"
         self.assertEqual(self.scmp.string, "foo")
+
+    def test_sets_string_value_via_initializer_correctly(self):
+        c = obnamlib.Component(kind=obnamlib.OBJID, string="foo")
+        self.assertEqual(c.string, "foo")
+
+    def test_refuses_to_set_string_value_to_non_string_value(self):
+        self.assertRaises(obnamlib.Exception, self.scmp.set_string, None)
 
     def test_refuses_to_access_string_for_composite_component(self):
         self.assertRaises(obnamlib.Exception, lambda: self.ccmp.string)
@@ -52,6 +59,10 @@ class ComponentTests(unittest.TestCase):
         self.ccmp.children = [self.scmp]
         self.assertEqual(self.ccmp.children, [self.scmp])
 
+    def test_sets_children_via_initializer_correctly(self):
+        c = obnamlib.Component(kind=obnamlib.FILE, children=[self.scmp])
+        self.assertEqual(c.children, [self.scmp])
+
     def test_adds_child_correctly(self):
         self.ccmp.children.append(self.scmp)
         self.assertEqual(self.ccmp.children, [self.scmp])
@@ -65,3 +76,43 @@ class ComponentTests(unittest.TestCase):
 
     def test_refuses_to_access_children_for_non_composite_component(self):
         self.assertRaises(obnamlib.Exception, lambda: self.scmp.children)
+
+
+class CompositeTests(unittest.TestCase):
+
+    def setUp(self):
+        self.cmp = obnamlib.Component(kind=obnamlib.FILE)
+        self.foo = obnamlib.Component(kind=obnamlib.OBJID, string="foo")
+        self.foo2 = obnamlib.Component(kind=obnamlib.OBJID, string="foo2")
+        self.bar = obnamlib.Component(kind=obnamlib.FILENAME, string="bar")
+        self.cmp.children.append(self.foo)
+        self.cmp.children.append(self.bar)
+        self.cmp.children.append(self.foo2)
+
+    def test_finds_by_kind(self):
+        self.assertEqual(self.cmp.find(kind=obnamlib.OBJID), 
+                         [self.foo, self.foo2])
+
+    def test_finds_strings_by_kind(self):
+        self.assertEqual(self.cmp.find_strings(kind=obnamlib.OBJID), 
+                         ["foo", "foo2"])
+
+    def test_finds_first_by_kind(self):
+        self.assertEqual(self.cmp.first(kind=obnamlib.OBJID), self.foo)
+
+    def test_first_returns_None_if_not_found(self):
+        self.assertEqual(self.cmp.first(kind=obnamlib.BLKID), None)
+
+    def test_finds_first_string_by_kind(self):
+        self.assertEqual(self.cmp.first_string(kind=obnamlib.OBJID), "foo")
+
+    def test_first_string_returns_None_if_not_found(self):
+        self.assertEqual(self.cmp.first_string(kind=obnamlib.BLKID), None)
+
+    def test_extract_finds_by_kind(self):
+        self.assertEqual(self.cmp.extract(kind=obnamlib.OBJID), 
+                         [self.foo, self.foo2])
+
+    def test_extract_removes_matches(self):
+        self.cmp.extract(kind=obnamlib.OBJID)
+        self.assertEqual(self.cmp.children, [self.bar])

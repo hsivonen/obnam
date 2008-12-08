@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # Copyright (C) 2008  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -19,4 +18,19 @@
 import obnamlib
 
 
-obnamlib.BackupApplication().run()
+class FileContents(obnamlib.Object):
+
+    """Store the full contents of a file."""
+
+    kind = obnamlib.FILECONTENTS
+
+    def __init__(self, id):
+        obnamlib.Object.__init__(self, id=id)
+
+    @property
+    def part_ids(self):
+        return self.find_strings(kind=obnamlib.FILEPARTREF)
+
+    def add(self, ref):
+        c = obnamlib.Component(kind=obnamlib.FILEPARTREF, string=ref)
+        self.components.append(c)

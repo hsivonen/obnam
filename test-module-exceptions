@@ -4,3 +4,10 @@ obnamlib/object_kinds.py
 obnamlib/vfs.py
 obnamlib/cfg.py
 obnamlib/app.py
+obnamlib/object_filegroup.py
+obnamlib/object_gen.py
+obnamlib/object_host.py
+obnamlib/object_delta.py
+obnamlib/object_deltapart.py
+obnamlib/object_filelist.py
+obnamlib/object_sig.py
