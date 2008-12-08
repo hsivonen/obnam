@@ -102,3 +102,10 @@ class Component(object):
             return c.string
         else:
             return None
+
+    def extract(self, **kwargs):
+        """Like find, but remove the matches, as well as returning them."""
+        list = self.find(**kwargs)
+        for cmp in list:
+            self.children.remove(cmp)
+        return list

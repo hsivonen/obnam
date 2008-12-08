@@ -108,3 +108,11 @@ class CompositeTests(unittest.TestCase):
 
     def test_first_string_returns_None_if_not_found(self):
         self.assertEqual(self.cmp.first_string(kind=obnamlib.BLKID), None)
+
+    def test_extract_finds_by_kind(self):
+        self.assertEqual(self.cmp.extract(kind=obnamlib.OBJID), 
+                         [self.foo, self.foo2])
+
+    def test_extract_removes_matches(self):
+        self.cmp.extract(kind=obnamlib.OBJID)
+        self.assertEqual(self.cmp.children, [self.bar])
