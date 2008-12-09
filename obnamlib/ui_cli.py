@@ -30,6 +30,8 @@ class CommandLineUI(obnamlib.UserInterface):
         "list": obnamlib.GenerationsCommand(),
         "generations": obnamlib.GenerationsCommand(),
 
+        "show": obnamlib.ShowGenerationsCommand(),
+        "show-generations": obnamlib.ShowGenerationsCommand(),
         }
 
     def short_help(self, stdout=sys.stdout):

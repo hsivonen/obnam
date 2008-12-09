@@ -57,6 +57,7 @@ from app import BackupApplication
 from ui_cli_backup import BackupCommand
 from ui_cli_generations import GenerationsCommand
 from ui_cli_help import HelpCommand
+from ui_cli_show import ShowGenerationsCommand
 from ui_cli import CommandLineUI
 
 import varint
