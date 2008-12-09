@@ -40,3 +40,8 @@ class Dir(obnamlib.Object):
         self.components.append(c)
         self.add_refs(obnamlib.DIRREF, self.dirrefs)
         self.add_refs(obnamlib.FILEGROUPREF, self.fgrefs)
+
+    def post_decoding_hook(self):
+        self.name = self.extract_strings(kind=obnamlib.FILENAME)[0]
+        self.dirrefs = self.extract_strings(kind=obnamlib.DIRREF)
+        self.fgrefs = self.extract_strings(kind=obnamlib.FILEGROUPREF)

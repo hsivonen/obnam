@@ -34,3 +34,7 @@ class Generation(obnamlib.Object):
                             for x in self.dirrefs]
         self.components += [obnamlib.Component(obnamlib.FILEGROUPREF, string=x)
                             for x in self.fgrefs]
+
+    def post_decoding_hook(self):
+        self.dirrefs = self.extract_strings(kind=obnamlib.DIRREF)
+        self.fgrefs = self.extract_strings(kind=obnamlib.FILEGROUPREF)

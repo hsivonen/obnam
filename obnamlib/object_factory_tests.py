@@ -60,6 +60,15 @@ class ObjectFactoryTests(unittest.TestCase):
         self.factory.encode_object(obj)
         m.VerifyAll()
 
+    def test_calls_post_hook_after_decoding_object(self):
+        m = mox.Mox()
+        obj = m.CreateMock(obnamlib.Object)
+        self.factory.new_object = lambda kind: obj
+        obj.post_decoding_hook()
+        m.ReplayAll()
+        self.factory.decode_object(self.encoded)
+        m.VerifyAll()
+
     def test_encodes_empty_string_component_correctly(self):
         cmp = obnamlib.Component(obnamlib.FILENAME)
         self.assertEqual(self.factory.encode_component(cmp),

@@ -64,3 +64,22 @@ class GenTests(unittest.TestCase):
         self.gen.prepare_for_encoding()
         self.assertEqual(self.gen.find_strings(kind=obnamlib.FILEGROUPREF), 
                          ["foo"])
+
+    def test_post_hook_extracts_stuff(self):
+        gen = obnamlib.Generation(id="id")
+
+        c = obnamlib.Component(kind=obnamlib.DIRREF, string="dir1")
+        gen.components.append(c)
+
+        c = obnamlib.Component(kind=obnamlib.DIRREF, string="dir2")
+        gen.components.append(c)
+
+        c = obnamlib.Component(kind=obnamlib.FILEGROUPREF, string="fg1")
+        gen.components.append(c)
+
+        c = obnamlib.Component(kind=obnamlib.FILEGROUPREF, string="fg2")
+        gen.components.append(c)
+
+        gen.post_decoding_hook()
+        self.assertEqual(gen.dirrefs, ["dir1", "dir2"])
+        self.assertEqual(gen.fgrefs, ["fg1", "fg2"])
