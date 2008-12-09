@@ -70,9 +70,8 @@ class ObjectFactory(object):
         
         return cmp, pos
 
-    def decode_all_components(self, str):
+    def decode_all_components(self, str, pos=0):
         list = []
-        pos = 0
         while pos < len(str):
             cmp, pos = self.decode_component(str, pos)
             list.append(cmp)
@@ -90,8 +89,7 @@ class ObjectFactory(object):
         cmp.children = [id, kind] + obj.components
         return self.encode_component(cmp)
 
-    def decode_object(self, str, pos):
-        cmp, pos = self.decode_component(str, pos)
+    def construct_object(self, cmp):
         assert cmp.kind == obnamlib.OBJECT
 
         temp = cmp.first_string(kind=obnamlib.OBJKIND)
@@ -104,4 +102,8 @@ class ObjectFactory(object):
                           if c.kind not in [obnamlib.OBJID, obnamlib.OBJKIND]]
         obj.post_decoding_hook()
 
-        return obj, pos
+        return obj
+
+    def decode_object(self, str, pos):
+        cmp, pos = self.decode_component(str, pos)
+        return self.construct_object(cmp), pos
