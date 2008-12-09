@@ -75,7 +75,7 @@ class Store(object):
                 return obj
         if self.fs.exists(id):
             encoded = self.fs.cat(id)
-            obj = self.factory.decode_object(encoded)
+            obj, pos = self.factory.decode_object(encoded, pos=0)
             self.objects.append(obj)
             if obj.id == id:
                 return obj

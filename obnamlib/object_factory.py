@@ -80,25 +80,28 @@ class ObjectFactory(object):
 
     def encode_object(self, obj):
         obj.prepare_for_encoding()
+
         id = obnamlib.Component(kind=obnamlib.OBJID, string=obj.id)
 
         kind = obnamlib.Component(kind=obnamlib.OBJKIND,
                                   string=obnamlib.varint.encode(obj.kind))
 
-        components = [id, kind] + obj.components
-        return "".join(self.encode_component(c) for c in components)
+        cmp = obnamlib.Component(kind=obnamlib.OBJECT)
+        cmp.children = [id, kind] + obj.components
+        return self.encode_component(cmp)
 
-    def decode_object(self, str):
-        meta = obnamlib.Component(kind=obnamlib.OBJECT,
-                                  children=self.decode_all_components(str))
-        temp = meta.first_string(kind=obnamlib.OBJKIND)
-        kind, pos = obnamlib.varint.decode(temp, 0)
+    def decode_object(self, str, pos):
+        cmp, pos = self.decode_component(str, pos)
+        assert cmp.kind == obnamlib.OBJECT
+
+        temp = cmp.first_string(kind=obnamlib.OBJKIND)
+        kind, dummy = obnamlib.varint.decode(temp, 0)
 
         obj = self.new_object(kind=kind)
-        obj.id = meta.first_string(kind=obnamlib.OBJID)
+        obj.id = cmp.first_string(kind=obnamlib.OBJID)
         obj.components = [c 
-                          for c in meta.children
+                          for c in cmp.children
                           if c.kind not in [obnamlib.OBJID, obnamlib.OBJKIND]]
         obj.post_decoding_hook()
 
-        return obj
+        return obj, pos
