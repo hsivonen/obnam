@@ -15,6 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import mox
 import os
 import shutil
 import tempfile
@@ -35,6 +36,8 @@ class StoreTests(unittest.TestCase):
         self.rw_dirname = os.path.join(self.dirname, "rw")
         os.mkdir(self.rw_dirname)
         self.rw = obnamlib.Store(self.rw_dirname, "w")
+
+        self.mox = mox.Mox()
 
     def tearDown(self):
         shutil.rmtree(self.dirname)
@@ -76,6 +79,23 @@ class StoreTests(unittest.TestCase):
     def test_refuses_to_put_object_in_readonly_mode(self):
         self.assertRaises(obnamlib.Exception, self.ro.put_object, None)
 
+    def test_put_object_puts_object_into_object_queue(self):
+        obj = self.rw.new_object(kind=obnamlib.GEN)
+        self.rw.put_object(obj)
+        self.assert_(obj in self.rw.object_queue)
+
+    def test_push_objects_outputs_block(self):
+        self.rw.fs = self.mox.CreateMock(obnamlib.VirtualFileSystem)
+
+        self.rw.fs.write_file(mox.IsA(str), mox.IsA(str))
+
+        self.mox.ReplayAll()
+        obj = self.rw.new_object(kind=obnamlib.GEN)
+        self.rw.put_object(obj)
+        self.rw.push_objects()
+        self.mox.VerifyAll()
+        self.assertEqual(self.rw.object_queue, [])
+
     def test_commit_commits_to_disk(self):
         obj = self.rw.new_object(kind=obnamlib.GEN)
         self.rw.put_object(obj)
@@ -83,6 +103,17 @@ class StoreTests(unittest.TestCase):
 
         store = obnamlib.Store(self.rw_dirname, "r")
         self.assertEqual(store.get_object(obj.id).id, obj.id)
+
+    def test_commit_pushes_objects(self):
+        self.pushed = False
+        def mock_push():
+            self.pushed = True
+        self.rw.push_objects = mock_push
+
+        obj = self.rw.new_object(kind=obnamlib.GEN)
+        self.rw.put_object(obj)
+        self.rw.commit()
+        self.assert_(self.pushed)
 
     def test_refuses_to_commit_in_readonly_mode(self):
         self.assertRaises(obnamlib.Exception, self.ro.commit)

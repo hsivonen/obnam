@@ -56,6 +56,7 @@ class Store(object):
         self.mode = mode
         self.factory = obnamlib.ObjectFactory()
         self.objects = []
+        self.object_queue = []
 
     def check_mode(self, mode):
         if mode not in ["r", "w"]:
@@ -88,6 +89,7 @@ class Store(object):
                 raise obnamlib.Exception("Object %s already in store" % 
                                          obj.id)
         self.objects.append(obj)
+        self.object_queue.append(obj)
 
     def get_host(self, host_id):
         """Return the host object for the host with the given id."""
@@ -104,11 +106,16 @@ class Store(object):
             self.objects.remove(host)
         self.put_object(host)
 
-    def commit(self):
-        self.assert_readwrite_mode()
-        for obj in self.objects:
+    def push_objects(self):
+        """Push queued objects into one or more blocks."""
+        for obj in self.object_queue:
             encoded = self.factory.encode_object(obj)
             if obj.kind == obnamlib.HOST:
                 self.fs.overwrite_file(obj.id, encoded)
             else:
                 self.fs.write_file(obj.id, encoded)
+        self.object_queue = []
+
+    def commit(self):
+        self.assert_readwrite_mode()
+        self.push_objects()
