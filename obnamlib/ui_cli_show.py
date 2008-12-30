@@ -24,37 +24,39 @@ class ShowGenerationsCommand(object):
 
     """Show contents of generations."""
 
-    def show_filegroup(self, fgref, output=sys.stdout):
-        fg = self.store.get_object(fgref)
+    def show_filegroup(self, host, fgref, output=sys.stdout):
+        fg = self.store.get_object(host, fgref)
         for file in fg.find(kind=obnamlib.FILE):
             output.write("%s\n" % file.first_string(kind=obnamlib.FILENAME))
 
-    def show_dir(self, dirref, output=sys.stdout):
-        dir = self.store.get_object(dirref)
+    def show_dir(self, host, dirref, output=sys.stdout):
+        dir = self.store.get_object(host, dirref)
 
         output.write("%s:\n" % dir.name)
 
         for fgref in dir.fgrefs:
-            self.show_filegroup(fgref, output=output)
+            self.show_filegroup(host, fgref, output=output)
         output.write("\n")
 
         for subdirref in dir.dirrefs:
-            self.show_dir(subdirref, output=output)
+            self.show_dir(host, subdirref, output=output)
 
     def show_generations(self, host_id, genrefs, output=sys.stdout):
         """Show contents of the given generations."""
 
+        host = self.store.get_host(host_id)
+
         for genref in genrefs:
             output.write("Generation %s:\n\n" % genref)
 
-            gen = self.store.get_object(genref)
+            gen = self.store.get_object(host, genref)
 
             if gen.fgrefs:
                 for fgref in gen.fgrefs:
-                    self.show_filegroup(fgref, output=output)
+                    self.show_filegroup(host, fgref, output=output)
 
             for dirref in gen.dirrefs:
-                self.show_dir(dirref, output=output)
+                self.show_dir(host, dirref, output=output)
 
     def __call__(self, config, args): # pragma: no cover
         host_id = args[0]
