@@ -63,6 +63,8 @@ class LocalFS(obnamlib.VirtualFileSystem):
     def write_file(self, relative_path, contents):
         path = self.join(relative_path)
         dirname = os.path.dirname(path)
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
         fd, name = tempfile.mkstemp(dir=dirname)
         os.write(fd, contents)
         os.close(fd)
