@@ -55,6 +55,7 @@ class Store(object):
         self.fs = obnamlib.LocalFS(url)
         self.mode = mode
         self.factory = obnamlib.ObjectFactory()
+        self.block_factory = obnamlib.BlockFactory()
         self.object_queue = []
         self.idgen = obnamlib.BlockIdGenerator(3, 1024)
 
@@ -100,10 +101,9 @@ class Store(object):
             return self.objmap[id]
             
         # Load mapping blocks until we find something.
-        bf = obnamlib.BlockFactory()
         for mapref in host.maprefs:
             encoded = self.fs.cat(mapref)
-            block_id, objs, mappings = bf.decode_block(encoded)
+            blkid, objs, mappings = self.block_factory.decode_block(encoded)
             self.objmap.update(mappings)
             if id in self.objmap:
                 return self.objmap[id]
@@ -120,8 +120,7 @@ class Store(object):
         
         block_id = self.find_block(host, id)
         encoded = self.fs.cat(block_id)
-        bf = obnamlib.BlockFactory()
-        block_id, objs, mappings = bf.decode_block(encoded)
+        block_id, objs, mappings = self.block_factory.decode_block(encoded)
         for obj in objs:
             if obj.id == id:
                 return obj
@@ -143,8 +142,7 @@ class Store(object):
         
         if self.fs.exists(host_id):
             encoded = self.fs.cat(host_id)
-            bf = obnamlib.BlockFactory()
-            block_id, objs, mappings = bf.decode_block(encoded)
+            blkid, objs, mappings = self.block_factory.decode_block(encoded)
             for obj in objs:
                 if obj.id == host_id:
                     return obj
@@ -172,11 +170,11 @@ class Store(object):
         
         """
 
-        bf = obnamlib.BlockFactory()
-
         if self.object_queue:
             block_id = self.idgen.new_id()
-            encoded = bf.encode_block(block_id, self.object_queue, {})
+            encoded = self.block_factory.encode_block(block_id, 
+                                                      self.object_queue, 
+                                                      {})
             self.fs.write_file(block_id, encoded)
             for obj in self.object_queue:
                 self.add_mapping(host, obj.id, block_id)
@@ -195,9 +193,8 @@ class Store(object):
             return
         mappings = self.new_mappings[host]
         if mappings:
-            bf = obnamlib.BlockFactory()
             block_id = self.idgen.new_id()
-            encoded = bf.encode_block(block_id, [], mappings)
+            encoded = self.block_factory.encode_block(block_id, [], mappings)
             self.fs.write_file(block_id, encoded)
             host.maprefs.append(block_id)
             self.new_mappings[host] = obnamlib.Mapping()
@@ -215,6 +212,5 @@ class Store(object):
         self.push_new_mappings(host)
 
         # Finally, push the recently modified host object out.
-        bf = obnamlib.BlockFactory()
-        encoded = bf.encode_block(host.id, [host], {})
+        encoded = self.block_factory.encode_block(host.id, [host], {})
         self.fs.overwrite_file(host.id, encoded)
