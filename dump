@@ -19,27 +19,42 @@ import sys
 import obnamlib
 
 
+hide_value_of = set([obnamlib.FILECHUNK])
+
+
 def dump_component(cmp, indent):
     spaces = " " * (indent * 2)
-    print "%skind: %s" % (spaces, obnamlib.cmp_kinds.nameof(cmp.kind))
+    kind = obnamlib.cmp_kinds.nameof(cmp.kind)
     if obnamlib.cmp_kinds.is_composite(cmp.kind):
+        print "%s%s:" % (spaces, kind)
         for child in cmp.children:
             dump_component(child, indent+1)
+    elif cmp.kind in hide_value_of:
+        print "%s%s: (hidden)" % (spaces, kind)
     else:
-        print "%sstring: %s" % (spaces, cmp.string)
+        print "%s%s: %s" % (spaces, kind, repr(cmp.string))
+
 
 def dump(obj):
-    print "kind:", obnamlib.obj_kinds.nameof(obj.kind)
-    print "id:", obj.id
+    print "%s (%s):" % (obnamlib.obj_kinds.nameof(obj.kind), obj.id)
     obj.prepare_for_encoding()
     for c in obj.components:
-        print "component:"
         dump_component(c, 1)
-    print
 
 
-factory = obnamlib.ObjectFactory()
-for filename in sys.argv[1:]:
-    data = file(filename).read()
-    obj = factory.decode_object(data)
-    dump(obj)
+def main():
+    bf = obnamlib.BlockFactory()
+    for filename in sys.argv[1:]:
+        encoded = file(filename).read()
+        block_id, objs, mappings = bf.decode_block(encoded)
+
+        print "filename:", filename
+        print "block_id:", block_id
+        for obj in objs:
+            dump(obj)
+        for objid, blkid in mappings.iteritems():
+            print "MAP:", objid, "->", blkid
+        print
+
+if __name__ == "__main__":
+    main()
