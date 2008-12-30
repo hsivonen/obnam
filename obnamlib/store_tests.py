@@ -86,37 +86,40 @@ class StoreTests(unittest.TestCase):
 
     def test_push_objects_outputs_block(self):
         self.rw.fs = self.mox.CreateMock(obnamlib.VirtualFileSystem)
+        host = self.mox.CreateMock(obnamlib.Host)
 
         self.rw.fs.write_file(mox.IsA(str), mox.IsA(str))
 
         self.mox.ReplayAll()
         obj = self.rw.new_object(kind=obnamlib.GEN)
         self.rw.put_object(obj)
-        self.rw.push_objects()
+        self.rw.push_objects(host)
         self.mox.VerifyAll()
         self.assertEqual(self.rw.object_queue, [])
 
     def test_commit_commits_to_disk(self):
+        host = self.rw.get_host("foo")
         obj = self.rw.new_object(kind=obnamlib.GEN)
         self.rw.put_object(obj)
-        self.rw.commit()
+        self.rw.commit(host)
 
         store = obnamlib.Store(self.rw_dirname, "r")
         self.assertEqual(store.get_object(obj.id).id, obj.id)
 
     def test_commit_pushes_objects(self):
         self.pushed = False
-        def mock_push():
+        def mock_push(host):
             self.pushed = True
         self.rw.push_objects = mock_push
 
+        host = self.rw.get_host("foo")
         obj = self.rw.new_object(kind=obnamlib.GEN)
         self.rw.put_object(obj)
-        self.rw.commit()
+        self.rw.commit(host)
         self.assert_(self.pushed)
 
     def test_refuses_to_commit_in_readonly_mode(self):
-        self.assertRaises(obnamlib.Exception, self.ro.commit)
+        self.assertRaises(obnamlib.Exception, self.ro.commit, None)
 
     def test_get_host_on_readonly_when_none_exists_fails(self):
         self.assertRaises(obnamlib.Exception, self.ro.get_host, "foo")
@@ -132,7 +135,7 @@ class StoreTests(unittest.TestCase):
         host.components.append(obnamlib.Component(obnamlib.BLKID, 
                                                   string="bar"))
         self.rw.put_host(host)
-        self.rw.commit()
+        self.rw.commit(host)
 
         store = obnamlib.Store(self.rw_dirname, "w")
         host2 = store.get_host("foo")
@@ -142,14 +145,14 @@ class StoreTests(unittest.TestCase):
     def test_put_host_works_for_existing(self):
         host = self.rw.get_host("foo")
         self.rw.put_host(host)
-        self.rw.commit()
+        self.rw.commit(host)
 
         store = obnamlib.Store(self.rw_dirname, "w")
         host = store.get_host("foo")
         host.components.append(obnamlib.Component(obnamlib.BLKID,
                                                   string="bar"))
         store.put_host(host)
-        store.commit()
+        store.commit(host)
 
         store2 = obnamlib.Store(self.rw_dirname, "r")
         host2 = store2.get_host("foo")

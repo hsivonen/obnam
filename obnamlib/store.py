@@ -106,8 +106,12 @@ class Store(object):
             self.objects.remove(host)
         self.put_object(host)
 
-    def push_objects(self):
-        """Push queued objects into one or more blocks."""
+    def push_objects(self, host):
+        """Push queued objects into one or more blocks.
+        
+        The objects are mapped so they belong to the given host object.
+        
+        """
         for obj in self.object_queue:
             encoded = self.factory.encode_object(obj)
             if obj.kind == obnamlib.HOST:
@@ -116,6 +120,7 @@ class Store(object):
                 self.fs.write_file(obj.id, encoded)
         self.object_queue = []
 
-    def commit(self):
+    def commit(self, host):
+        """Commit all changes made to a specific host."""
         self.assert_readwrite_mode()
-        self.push_objects()
+        self.push_objects(host)
