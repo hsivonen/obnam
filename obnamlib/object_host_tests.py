@@ -55,3 +55,31 @@ class HostTests(unittest.TestCase):
         self.host.prepare_for_encoding()
         self.assertEquals(self.host.find_strings(kind=obnamlib.GENREF),
                           ["foo"])
+
+    def test_has_no_maprefs_initially(self):
+        self.assertEquals(self.host.maprefs, [])
+
+    def test_allows_appending_to_maprefs(self):
+        self.host.maprefs.append("foo")
+        self.assertEqual(self.host.maprefs, ["foo"])
+
+    def test_allows_plusequals_to_maprefs(self):
+        self.host.maprefs += ["foo"]
+        self.assertEquals(self.host.maprefs, ["foo"])
+
+    def test_gets_maprefs_from_components_the_first_time(self):
+        mapref = obnamlib.Component(kind=obnamlib.MAPREF, string="foo")
+        self.host.components = [mapref]
+        self.assertEquals(self.host.maprefs, ["foo"])
+
+    def test_removes_maprefs_from_components_after_first_get(self):
+        mapref = obnamlib.Component(kind=obnamlib.MAPREF, string="foo")
+        self.host.components = [mapref]
+        genrefs = self.host.maprefs
+        self.assertEquals(self.host.components, [])
+
+    def test_prepare_puts_maprefs_in_components(self):
+        self.host.maprefs = ["foo"]
+        self.host.prepare_for_encoding()
+        self.assertEquals(self.host.find_strings(kind=obnamlib.MAPREF),
+                          ["foo"])

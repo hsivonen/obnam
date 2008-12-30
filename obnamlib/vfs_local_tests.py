@@ -104,6 +104,10 @@ class LocalFSTests(unittest.TestCase):
         file(os.path.join(self.dirname, "foo"), "w").write("bar")
         self.assertRaises(OSError, self.fs.write_file, "foo", "foobar")
 
+    def test_write_creates_missing_directories(self):
+        self.fs.write_file("foo/bar", "yo")
+        self.assertEqual(self.fs.cat("foo/bar"), "yo")
+
     def test_write_leaves_existing_file_intact(self):
         file(os.path.join(self.dirname, "foo"), "w").write("bar")
         try:

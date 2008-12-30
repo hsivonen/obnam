@@ -80,6 +80,8 @@ class VirtualFileSystem(object):
         The file must not yet exist. The file is written atomically,
         so that the given name will only exist when the file is
         completely written.
+        
+        Any directories in relative_path will be created if necessary.
 
         """
         pass

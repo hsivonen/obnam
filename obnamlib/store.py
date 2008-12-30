@@ -55,7 +55,24 @@ class Store(object):
         self.fs = obnamlib.LocalFS(url)
         self.mode = mode
         self.factory = obnamlib.ObjectFactory()
-        self.objects = []
+        self.object_queue = []
+        self.idgen = obnamlib.BlockIdGenerator(3, 1024)
+
+        # We keep the object to block mappings we know about in
+        # self.objmap. We add new mappings there as we learn about
+        # them. For performance reasons, we don't fill the mapping
+        # dictionary completely at start-up, since on a typical
+        # run we don't need most of them.
+        self.objmap = obnamlib.Mapping()
+
+        # We keep track of new mappings separaterly from self.objmap.
+        # This allows us to write out a new mapping block with just
+        # those mappings, in push_new_mappings (called from commit).
+        # Because we allow the caller to use several host objects
+        # in the same store (concurrently at run time, even), we
+        # keep the obnamlib.Mapping dicts for each host in the
+        # self.new_mappings dictionary, indexed by the host.
+        self.new_mappings = {}
 
     def check_mode(self, mode):
         if mode not in ["r", "w"]:
@@ -68,47 +85,136 @@ class Store(object):
     def new_object(self, kind):
         self.assert_readwrite_mode()
         return self.factory.new_object(kind=kind)
+        
+    def find_block(self, host, id):
+        """Find the block in which an object resides.
+        
+        If no matching block is found, raise NotFound().
+        This will load in new mappings from disk, as necessary.
+        For that, we need the host, since mappings are per host.
+        
+        """
+        
+        # Perhaps we know the answer already?
+        if id in self.objmap:
+            return self.objmap[id]
+            
+        # Load mapping blocks until we find something.
+        bf = obnamlib.BlockFactory()
+        for mapref in host.maprefs:
+            encoded = self.fs.cat(mapref)
+            block_id, objs, mappings = bf.decode_block(encoded)
+            self.objmap.update(mappings)
+            if id in self.objmap:
+                return self.objmap[id]
 
-    def get_object(self, id):
-        for obj in self.objects:
+        # Bummer.
+        raise NotFound("Object %s not found in store" % id)
+
+    def get_object(self, host, id):
+        """Return the object with a given id.
+        
+        The object will be loaded from disk first, if necessary.
+        
+        """
+        
+        block_id = self.find_block(host, id)
+        encoded = self.fs.cat(block_id)
+        bf = obnamlib.BlockFactory()
+        block_id, objs, mappings = bf.decode_block(encoded)
+        for obj in objs:
             if obj.id == id:
                 return obj
-        if self.fs.exists(id):
-            encoded = self.fs.cat(id)
-            obj = self.factory.decode_object(encoded)
-            self.objects.append(obj)
-            if obj.id == id:
-                return obj
+        
         raise obnamlib.NotFound("Object %s not found in store" % id)
 
     def put_object(self, obj):
+        """Put an object into the store.
+        
+        The object may not be accessible until commit has been called.
+        
+        """
+
         self.assert_readwrite_mode()
-        for obj2 in self.objects:
-            if obj2.id == obj.id:
-                raise obnamlib.Exception("Object %s already in store" % 
-                                         obj.id)
-        self.objects.append(obj)
+        self.object_queue.append(obj)
 
     def get_host(self, host_id):
         """Return the host object for the host with the given id."""
-        try:
-            host = self.get_object(host_id)
-        except NotFound:
+        
+        if self.fs.exists(host_id):
+            encoded = self.fs.cat(host_id)
+            bf = obnamlib.BlockFactory()
+            block_id, objs, mappings = bf.decode_block(encoded)
+            for obj in objs:
+                if obj.id == host_id:
+                    return obj
+            raise NotFound("Cannot find host object %s" % host_id)
+        else:
             host = self.new_object(kind=obnamlib.HOST)
             host.id = host_id
-        return host
+            return host
 
-    def put_host(self, host):
-        """Put (possibly updated) host object back into store."""
-        if host in self.objects:
-            self.objects.remove(host)
-        self.put_object(host)
+    def add_mapping(self, host, objid, blockid):
+        """Remember block in which an object is stored."""
+        if host not in self.new_mappings:
+            self.new_mappings[host] = obnamlib.Mapping()
+        self.new_mappings[host][objid] = blockid
 
-    def commit(self):
+    def push_objects(self, host):
+        """Push queued objects into one or more blocks.
+
+        The objects will be collected into one or more blocks, and
+        the block of each object will be stored in mapping blocks.
+        The mapping block will be generated by the commit method.
+        Until commit is called, the mappings will be temporarily stored
+        in memory, sorted by the host object, in the new_mappings
+        dictionary.
+        
+        """
+
+        bf = obnamlib.BlockFactory()
+
+        if self.object_queue:
+            block_id = self.idgen.new_id()
+            encoded = bf.encode_block(block_id, self.object_queue, {})
+            self.fs.write_file(block_id, encoded)
+            for obj in self.object_queue:
+                self.add_mapping(host, obj.id, block_id)
+            self.object_queue = []
+
+    def push_new_mappings(self, host):
+        """Generate and push out a new mapping block with all new objects.
+        
+        The block id of the new mapping block is added to the host's
+        maprefs. The caller needs to ensure the host gets committed for
+        the mapping block to be useful for later runs.
+        
+        """
+
+        if host not in self.new_mappings:
+            return
+        mappings = self.new_mappings[host]
+        if mappings:
+            bf = obnamlib.BlockFactory()
+            block_id = self.idgen.new_id()
+            encoded = bf.encode_block(block_id, [], mappings)
+            self.fs.write_file(block_id, encoded)
+            host.maprefs.append(block_id)
+            self.new_mappings[host] = obnamlib.Mapping()
+
+    def commit(self, host):
+        """Commit all changes made to a specific host."""
+
         self.assert_readwrite_mode()
-        for obj in self.objects:
-            encoded = self.factory.encode_object(obj)
-            if obj.kind == obnamlib.HOST:
-                self.fs.overwrite_file(obj.id, encoded)
-            else:
-                self.fs.write_file(obj.id, encoded)
+        
+        # First, push out all queued objects.
+        self.push_objects(host)
+
+        # Next, push out a new mapping block for all the new objects.
+        # This adds a new MAPREF to the host object.
+        self.push_new_mappings(host)
+
+        # Finally, push the recently modified host object out.
+        bf = obnamlib.BlockFactory()
+        encoded = bf.encode_block(host.id, [host], {})
+        self.fs.overwrite_file(host.id, encoded)

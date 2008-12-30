@@ -25,7 +25,23 @@ class ObjectFactoryTests(unittest.TestCase):
 
     def setUp(self):
         self.factory = obnamlib.ObjectFactory()
-        self.encoded = "2\n4\nid3\n8\n11\n3\n92\nfoo"
+
+        # self.object and self.encoded must represent the same object.
+        # self.encoded_content must be the encoded content of self.object's
+        # components.
+
+        self.object = obnamlib.Object(id="id")
+        self.object.kind = obnamlib.FILEGROUP
+        self.object.components = [
+            obnamlib.Component(kind=obnamlib.FILENAME, string="foo"),
+            ]
+
+        filename = "3\n%d\nfoo" % obnamlib.FILENAME
+        objkind = "3\n%d\n%d\n" % (obnamlib.OBJKIND, obnamlib.FILEGROUP)
+        objid = "2\n%d\nid" % obnamlib.OBJID
+        content = objid + objkind + filename
+        self.encoded_content = content
+        self.encoded = "%d\n%d\n%s" % (len(content), obnamlib.OBJECT, content)
 
     def test_raises_error_for_unknown_object_kind(self):
         self.assertRaises(obnamlib.Exception, self.factory.new_object, -1)
@@ -66,7 +82,7 @@ class ObjectFactoryTests(unittest.TestCase):
         self.factory.new_object = lambda kind: obj
         obj.post_decoding_hook()
         m.ReplayAll()
-        self.factory.decode_object(self.encoded)
+        self.factory.decode_object(self.encoded, 0)
         m.VerifyAll()
 
     def test_encodes_empty_string_component_correctly(self):
@@ -92,7 +108,7 @@ class ObjectFactoryTests(unittest.TestCase):
                          (obnamlib.OBJECT, obnamlib.FILENAME))
 
     def test_decodes_string_component_correctly(self):
-        cmp, pos = self.factory.decode_component(self.encoded, 0)
+        cmp, pos = self.factory.decode_component(self.encoded_content, 0)
         self.assertEqual(pos, 6)
         self.assertEqual(cmp.kind, obnamlib.OBJID)
         self.assertEqual(cmp.string, "id")
@@ -110,7 +126,7 @@ class ObjectFactoryTests(unittest.TestCase):
         self.assertEqual(cmp.children[0].string, name.string)
 
     def test_decodes_all_components_correctly(self):
-        list = self.factory.decode_all_components(self.encoded)
+        list = self.factory.decode_all_components(self.encoded_content)
         self.assertEqual([c.kind for c in list],
                          [obnamlib.OBJID, obnamlib.OBJKIND, 
                           obnamlib.FILENAME])
@@ -119,7 +135,7 @@ class ObjectFactoryTests(unittest.TestCase):
         obj = self.factory.new_object(kind=obnamlib.FILEGROUP)
         obj.id = "id"
         self.assertEqual(self.factory.encode_object(obj), 
-                         "2\n4\nid3\n8\n11\n")
+                         "13\n21\n2\n4\nid3\n8\n11\n")
 
     def test_encodes_object_correctly(self):
         name = obnamlib.Component(obnamlib.FILENAME, string="foo")
@@ -131,7 +147,8 @@ class ObjectFactoryTests(unittest.TestCase):
         self.assertEqual(self.factory.encode_object(obj), self.encoded)
 
     def test_decoding_returns_correct_object(self):
-        obj = self.factory.decode_object(self.encoded)
+        obj, pos = self.factory.decode_object(self.encoded, 0)
+        self.assertEqual(pos, len(self.encoded))
         self.assertEqual(obj.id, "id")
         self.assertEqual(obj.kind, obnamlib.FILEGROUP)
         self.assert_(isinstance(obj, self.factory.classes[obj.kind]))

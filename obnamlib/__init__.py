@@ -45,6 +45,12 @@ from object_host import Host
 from object_sig import Signature
 from object_factory import ObjectFactory
 
+from block_factory import BlockFactory
+
+from block_id_generator import BlockIdGenerator
+
+from mapping import Mapping
+
 from store import Store, NotFound
 
 from ui import UserInterface

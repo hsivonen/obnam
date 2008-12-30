@@ -201,8 +201,7 @@ class BackupCommandTests(unittest.TestCase):
         host.genrefs = []
 
         self.cmd.store.get_host("foo").AndReturn(host)
-        self.cmd.store.put_host(host)
-        self.cmd.store.commit()
+        self.cmd.store.commit(host)
 
         self.mox.ReplayAll()
         self.cmd.backup("foo", ["bar", "foobar"])
