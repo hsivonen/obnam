@@ -126,7 +126,6 @@ class BackupCommand(object):
         roots = args[2:]
 
         self.store = obnamlib.Store(store_url, "w")
-        self.fs = obnamlib.LocalFS(".")
+        self.fs = obnamlib.LocalFS("/")
 
-        print "backing up"
         self.backup(host_id, roots)
