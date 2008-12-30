@@ -46,7 +46,7 @@ class BlockFactory(object):
 
         block_id = None
         objects = []
-        mappings = {}
+        mappings = obnamlib.Mapping()
 
         pos = len(self.BLOCK_COOKIE)
         while pos < len(string):
