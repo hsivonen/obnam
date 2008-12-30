@@ -60,21 +60,19 @@ class StoreTests(unittest.TestCase):
                           kind=obnamlib.HOST)
 
     def test_raises_exception_when_getting_nonexistent_object(self):
-        self.assertRaises(obnamlib.NotFound, self.ro.get_object, "foo")
+        host = self.rw.get_host("foobar")
+        self.assertRaises(obnamlib.NotFound, self.rw.get_object, host, "foo")
+
+    def test_get_object_raises_exception_if_object_not_found_in_block(self):
+        host = self.rw.get_host("foobar")
+        self.rw.commit(host)
+        self.rw.objmap["yo"] = "foobar" # introduce fake mapping
+        self.assertRaises(obnamlib.NotFound, self.rw.get_object, host, "yo")
 
     def test_raises_exception_when_getting_new_object_until_it_is_put(self):
+        host = self.rw.get_host("foo")
         obj = self.rw.new_object(kind=obnamlib.GEN)
-        self.assertRaises(obnamlib.NotFound, self.rw.get_object, obj.id)
-
-    def test_puts_and_then_gets_object(self):
-        obj = self.rw.new_object(kind=obnamlib.GEN)
-        self.rw.put_object(obj)
-        self.assertEqual(self.rw.get_object(obj.id).id, obj.id)
-
-    def test_refuses_to_put_object_twice(self):
-        obj = self.rw.new_object(kind=obnamlib.GEN)
-        self.rw.put_object(obj)
-        self.assertRaises(obnamlib.Exception, self.rw.put_object, obj)
+        self.assertRaises(obnamlib.NotFound, self.rw.get_object, host, obj.id)
 
     def test_refuses_to_put_object_in_readonly_mode(self):
         self.assertRaises(obnamlib.Exception, self.ro.put_object, None)
@@ -84,18 +82,53 @@ class StoreTests(unittest.TestCase):
         self.rw.put_object(obj)
         self.assert_(obj in self.rw.object_queue)
 
+    def test_has_no_new_mappings_initially(self):
+        self.assertEqual(self.rw.new_mappings, {})
+
+    def test_adds_mapping_correctly(self):
+        self.rw.add_mapping("host", "obj", "block")
+        self.assertEqual(self.rw.new_mappings,
+                         { "host": { "obj": "block" }})
+
     def test_push_objects_outputs_block(self):
         self.rw.fs = self.mox.CreateMock(obnamlib.VirtualFileSystem)
+        self.rw.idgen = self.mox.CreateMock(obnamlib.BlockIdGenerator)
         host = self.mox.CreateMock(obnamlib.Host)
+        obj = self.rw.new_object(kind=obnamlib.GEN)
 
-        self.rw.fs.write_file(mox.IsA(str), mox.IsA(str))
+        id = self.rw.idgen.new_id().AndReturn("blockid")
+        self.rw.fs.write_file("blockid", mox.IsA(str))
+        self.rw.add_mapping(host, obj.id, "blockid")
 
         self.mox.ReplayAll()
-        obj = self.rw.new_object(kind=obnamlib.GEN)
         self.rw.put_object(obj)
         self.rw.push_objects(host)
         self.mox.VerifyAll()
         self.assertEqual(self.rw.object_queue, [])
+
+    def test_push_new_mappings_does_nothing_if_there_are_no_new_objects(self):
+        host = self.mox.CreateMock(obnamlib.Host)
+        self.rw.new_mappings[host] = {}
+        self.mox.ReplayAll()
+        self.rw.push_new_mappings(host)
+        self.mox.VerifyAll()
+        self.assertEqual(self.rw.new_mappings[host], {})
+    
+    def test_push_new_mappings_writes_out_a_new_mapping_block(self):
+        host = self.mox.CreateMock(obnamlib.Host)
+        host.maprefs = self.mox.CreateMock(list)
+        self.rw.idgen = self.mox.CreateMock(obnamlib.BlockIdGenerator)
+        self.rw.fs = self.mox.CreateMock(obnamlib.VirtualFileSystem)
+        self.rw.add_mapping(host, "foo", "bar")
+        
+        block_id = self.rw.idgen.new_id().AndReturn("blockid")
+        self.rw.fs.write_file(block_id, mox.IsA(str))
+        host.maprefs.append(block_id)
+
+        self.mox.ReplayAll()
+        self.rw.push_new_mappings(host)
+        self.mox.VerifyAll()
+        self.assertEqual(self.rw.new_mappings[host], {})
 
     def test_commit_commits_to_disk(self):
         host = self.rw.get_host("foo")
@@ -104,7 +137,7 @@ class StoreTests(unittest.TestCase):
         self.rw.commit(host)
 
         store = obnamlib.Store(self.rw_dirname, "r")
-        self.assertEqual(store.get_object(obj.id).id, obj.id)
+        self.assertEqual(store.get_object(host, obj.id).id, obj.id)
 
     def test_commit_pushes_objects(self):
         self.pushed = False
@@ -130,30 +163,48 @@ class StoreTests(unittest.TestCase):
         self.assertEquals(host.id, "foo")
         self.assertEquals(host.components, [])
 
-    def test_put_host_works_on_new(self):
+    def test_get_host_loads_existing_object_when_one_exists(self):
         host = self.rw.get_host("foo")
-        host.components.append(obnamlib.Component(obnamlib.BLKID, 
-                                                  string="bar"))
-        self.rw.put_host(host)
+        host.genrefs.append("genref")
         self.rw.commit(host)
-
-        store = obnamlib.Store(self.rw_dirname, "w")
+        
+        store = obnamlib.Store(self.rw_dirname, "r")
         host2 = store.get_host("foo")
-        self.assert_(isinstance(host2, obnamlib.Host))
-        self.assertEquals(host2.find_strings(kind=obnamlib.BLKID), ["bar"])
+        self.assertEqual(host2.genrefs, ["genref"])
 
-    def test_put_host_works_for_existing(self):
+    def test_get_host_raises_notfound_if_host_block_does_not_contain_it(self):
+        bf = obnamlib.BlockFactory()
+        encoded = bf.encode_block("foo", [], {})
+        self.rw.fs.write_file("foo", encoded)
+        
+        self.assertRaises(obnamlib.NotFound, self.rw.get_host, "foo")
+
+    def test_find_block_does_not_find_anything_in_empty_store(self):
+        host = self.rw.get_host("host")
+        self.assertRaises(obnamlib.NotFound, self.rw.find_block, host, "foo")
+
+    def test_find_block_does_not_find_object_that_has_just_been_put(self):
+        host = self.rw.get_host("host")
+        obj = self.rw.new_object(kind=obnamlib.GEN)
+        self.rw.put_object(obj)
+        self.assertRaises(obnamlib.NotFound, self.rw.find_block, host, obj.id)
+
+    def test_find_block_finds_object_after_commit(self):
         host = self.rw.get_host("foo")
-        self.rw.put_host(host)
+        obj = self.rw.new_object(kind=obnamlib.GEN)
+        self.rw.put_object(obj)
         self.rw.commit(host)
+        
+        rw2 = obnamlib.Store(self.rw_dirname, "w")
+        self.assertNotEqual(rw2.find_block(host, obj.id), None)
 
-        store = obnamlib.Store(self.rw_dirname, "w")
-        host = store.get_host("foo")
-        host.components.append(obnamlib.Component(obnamlib.BLKID,
-                                                  string="bar"))
-        store.put_host(host)
-        store.commit(host)
-
-        store2 = obnamlib.Store(self.rw_dirname, "r")
-        host2 = store2.get_host("foo")
-        self.assert_(host2.find_strings(kind=obnamlib.BLKID), ["bar"])
+    def test_find_block_finds_from_cache_the_second_time(self):
+        host = self.rw.get_host("foo")
+        obj = self.rw.new_object(kind=obnamlib.GEN)
+        self.rw.put_object(obj)
+        self.rw.commit(host)
+        
+        rw2 = obnamlib.Store(self.rw_dirname, "w")
+        rw2.find_block(host, obj.id)
+        rw2.fs = None # This breaks find_block unless there's a cache hit
+        self.assertNotEqual(rw2.find_block(host, obj.id), None)
