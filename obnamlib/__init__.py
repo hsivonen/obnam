@@ -1,5 +1,3 @@
-# obnamlib/__init__.py
-#
 # Copyright (C) 2008  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -53,6 +51,8 @@ from mapping import Mapping
 
 from store import Store, NotFound
 
+from lookupper import Lookupper
+
 from ui import UserInterface
 
 from vfs import VirtualFileSystem
@@ -66,5 +66,7 @@ from ui_cli_generations import GenerationsCommand
 from ui_cli_help import HelpCommand
 from ui_cli_show import ShowGenerationsCommand
 from ui_cli import CommandLineUI
+
+from statutils import encode_stat, decode_stat, make_stat
 
 import varint
