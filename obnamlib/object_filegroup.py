@@ -23,3 +23,36 @@ class FileGroup(obnamlib.Object):
     """Meta data about a group of files."""
 
     kind = obnamlib.FILEGROUP
+
+    @property
+    def files(self):
+        return self.find(kind=obnamlib.FILE)
+
+    @property
+    def names(self):
+        return [file.first_string(kind=obnamlib.FILENAME)
+                for file in self.files]
+
+    def add_file(self, name, stat, contref, sigref, deltaref):
+        children = [
+            obnamlib.Component(kind=obnamlib.FILENAME, string=name),
+            obnamlib.Component(kind=obnamlib.STAT, string=stat),
+            obnamlib.Component(kind=obnamlib.CONTREF, string=contref),
+            obnamlib.Component(kind=obnamlib.SIGREF, string=sigref),
+            obnamlib.Component(kind=obnamlib.DELTAREF, string=deltaref),
+        ]
+        file = obnamlib.Component(kind=obnamlib.FILE, children=children)
+        self.components.append(file)
+
+    def get_file(self, name):
+        for file in self.files:
+            if file.first_string(kind=obnamlib.FILENAME) == name:
+                return (file.first_string(kind=obnamlib.STAT),
+                        file.first_string(kind=obnamlib.CONTREF),
+                        file.first_string(kind=obnamlib.SIGREF),
+                        file.first_string(kind=obnamlib.DELTAREF))
+        raise obnamlib.NotFound("File %s not found in FileGroup %s" % 
+                                (name, self.id))
+
+    def get_stat(self, name):
+        return self.get_file(name)[0]
