@@ -15,6 +15,8 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import os
+
 import obnamlib
 
 
@@ -22,6 +24,26 @@ class RestoreCommand(object):
 
     """A restore command for the command line."""
 
+    def setup(self, store_url, host_id, gen_id, target):
+        """Set things up for running other parts of this class."""
+        
+        self.store = obnamlib.Store(store_url, "w")
+        self.host = self.store.get_host(host_id)
+        self.gen = self.store.get_object(self.host, gen_id)
+        self.lookupper = obnamlib.Lookupper(self.store, self.host, self.gen)
+        self.target = target
+        self.fs = obnamlib.LocalFS(target)
+
+    def target_name(self, pathname):
+        """Construct the name of an output file in the target directory."""
+        if os.path.isabs(pathname):
+            drive, pathname = os.path.splitdrive(pathname)
+            pathname = "." + pathname
+        return os.path.normpath(os.path.join(self.target, pathname))
+
+    def restore(self, paths, target):
+        """Restore files from backup to a target directory."""
+        
     def __call__(self, config, args):
         host_id = args[0]
         store_url = args[1]
@@ -29,9 +51,6 @@ class RestoreCommand(object):
         target = args[3]
         paths = args[4:]
 
-        self.store = obnamlib.Store(store_url, "w")
-        self.host = self.store.get_host(host_id)
-        self.fs = obnamlib.LocalFS(target)
-        self.gen = self.store.get_object(self.host, gen_id)
+        self.setup(store_url, host_id, gen_id, target)
 
-        # self.restore(paths)
+#        self.restore(target, paths)

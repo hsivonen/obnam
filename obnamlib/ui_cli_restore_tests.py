@@ -38,17 +38,31 @@ class RestoreCommandTests(unittest.TestCase):
         backup = obnamlib.BackupCommand()
         backup(None, ["host", self.store, self.root])
         
-        store = obnamlib.Store(self.store, "r")
+        store = obnamlib.Store(self.store, "w")
         host = store.get_host("host")
+        store.commit(host)
         self.gen_id = host.genrefs[0]
 
         self.target = os.path.join(self.tempdir, "target")
         os.mkdir(self.target)
 
         self.cmd = obnamlib.RestoreCommand()
+        self.cmd.setup(self.store, "host", self.gen_id, self.target)
 
     def tearDown(self):
         shutil.rmtree(self.tempdir)
+
+    def test_target_name_is_right_for_basename_path(self):
+        self.assertEqual(self.cmd.target_name("foo"),
+                         os.path.join(self.target, "foo"))
+
+    def test_target_name_is_right_for_relative_path(self):
+        self.assertEqual(self.cmd.target_name("foo/bar"),
+                         os.path.join(self.target, "foo/bar"))
+
+    def test_target_name_is_right_for_absolute_path(self):
+        self.assertEqual(self.cmd.target_name("/foo/bar"),
+                         os.path.join(self.target, "foo/bar"))
         
     def test_restores_single_file_correctly(self):
         self.cmd(None, ["host", self.store, self.gen_id, self.target, "foo"])
