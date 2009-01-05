@@ -169,3 +169,12 @@ class LookupperTests(unittest.TestCase):
     def test_finds_dir_deep_in_directory_hierarchy(self):
         self.assertEqual(self.lookupper.get_dir("dir/subdir/subsubdir"),
                          self.subsubdir)
+
+    def test_determines_type_correctly_for_file(self):
+        self.assertEqual(self.lookupper.is_file("foo"), True)
+
+    def test_determines_type_correctly_for_dir(self):
+        self.assertEqual(self.lookupper.is_file("dir"), False)
+
+    def test_raises_notfound_when_asked_for_type_of_nonexistent_file(self):
+        self.assertRaises(obnamlib.NotFound, self.lookupper.is_file, "not")

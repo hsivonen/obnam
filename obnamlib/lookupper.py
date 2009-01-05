@@ -126,3 +126,19 @@ class Lookupper(object):
             parts = parts[1:]
 
         return self.get_dir_in_dirrefs(pathname, parts, self.gen.dirrefs)
+
+    def is_file(self, pathname):
+        """Is a filesystem entity a non-directory file?
+        
+        Return True for non-directories (regular files, device nodes,
+        etc), and False for directories. Raise NotFound if it doesn't
+        exist at all.
+        
+        """
+        
+        try:
+            meta = self.get_file(pathname)
+            return True
+        except obnamlib.NotFound:
+            meta = self.get_dir(pathname)
+            return False
