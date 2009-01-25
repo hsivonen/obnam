@@ -33,15 +33,17 @@ class BackupCommand(object):
         f.close()
         return content
 
-    def backup_new_files_as_groups(self, relative_paths):
+    def backup_new_files_as_groups(self, relative_paths, lstat=os.lstat):
         """Back a set of new files as a new FILEGROUP."""
         fg = self.store.new_object(kind=obnamlib.FILEGROUP)
         for path in relative_paths:
             fc = self.backup_new_file(path)
             file_component = obnamlib.Component(kind=obnamlib.FILE)
+            stat = lstat(path)
             file_component.children += [
                 obnamlib.Component(kind=obnamlib.FILENAME, 
                                    string=os.path.basename(path)),
+                obnamlib.encode_stat(stat),
                 obnamlib.Component(kind=obnamlib.CONTREF, string=fc.id),
                 ]
             fg.components.append(file_component)
