@@ -24,10 +24,11 @@ class Dir(obnamlib.Object):
 
     kind = obnamlib.DIR
 
-    def __init__(self, id, name=None, dirrefs=None, fgrefs=None):
+    def __init__(self, id, name=None, stat=None, dirrefs=None, fgrefs=None):
         obnamlib.Object.__init__(self, id=id)
 
         self.name = name
+        self.stat = stat
         self.dirrefs = dirrefs or []
         self.fgrefs = fgrefs or []
 

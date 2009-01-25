@@ -15,6 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import os
 import unittest
 
 import obnamlib
@@ -24,13 +25,17 @@ class DirTests(unittest.TestCase):
 
     def setUp(self):
         self.dir = obnamlib.Dir(id="id", name="name", 
+                                stat=obnamlib.make_stat(),
                                 dirrefs=["dir1", "dir2"],
                                 fgrefs=["fg1", "fg2"])
 
     def test_sets_name_correctly(self):
         self.assertEqual(self.dir.name, "name")
 
-    def test_sets_dirrefs_correctl(self):
+    def test_sets_stat_correctly(self):
+        self.assert_(isinstance(self.dir.stat, os.stat_result))
+
+    def test_sets_dirrefs_correctly(self):
         self.assertEqual(self.dir.dirrefs, ["dir1", "dir2"])
 
     def test_sets_fgrefs_correctl(self):
