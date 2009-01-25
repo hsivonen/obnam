@@ -49,7 +49,8 @@ class BackupCommand(object):
             fc = self.backup_new_file(path)
             file_component = obnamlib.Component(kind=obnamlib.FILE)
             file_component.children += [
-                obnamlib.Component(kind=obnamlib.FILENAME, string=path),
+                obnamlib.Component(kind=obnamlib.FILENAME, 
+                                   string=os.path.basename(path)),
                 obnamlib.Component(kind=obnamlib.CONTREF, string=fc.id),
                 ]
             fg.components.append(file_component)
@@ -126,7 +127,7 @@ class BackupCommand(object):
         roots = args[2:]
 
         self.store = obnamlib.Store(store_url, "w")
-        self.fs = obnamlib.LocalFS(".")
+        self.fs = obnamlib.LocalFS("/")
 
-        print "backing up"
+        roots = [os.path.abspath(root) for root in roots]
         self.backup(host_id, roots)

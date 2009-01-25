@@ -57,6 +57,18 @@ class VirtualFileSystem(object):
         """Is it a directory?"""
         pass
 
+    def mkdir(self, relative_path):
+        """Create a directory.
+        
+        Parent directories must already exist.
+        
+        """
+        pass
+        
+    def makedirs(self, relative_path):
+        """Create a directory, and missing parents."""
+        pass
+
     def remove(self, relative_path):
         """Remove a file."""
         pass

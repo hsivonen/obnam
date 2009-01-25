@@ -82,6 +82,24 @@ class LocalFSTests(unittest.TestCase):
         os.mkdir(os.path.join(self.dirname, "foo"))
         self.assert_(self.fs.isdir("foo"))
 
+    def test_mkdir_creates_directory(self):
+        self.fs.mkdir("foo")
+        self.assert_(os.path.isdir(os.path.join(self.dirname, "foo")))
+        
+    def test_mkdir_raises_oserror_if_directory_exists(self):
+        self.assertRaises(OSError, self.fs.mkdir, ".")
+
+    def test_mkdir_raises_oserror_if_parent_does_not_exist(self):
+        self.assertRaises(OSError, self.fs.mkdir, "foo/bar")
+    
+    def test_makedirs_creates_directory_when_parent_exists(self):
+        self.fs.makedirs("foo")
+        self.assert_(os.path.isdir(os.path.join(self.dirname, "foo")))
+    
+    def test_makedirs_creates_directory_when_parent_does_not_exist(self):
+        self.fs.makedirs("foo/bar")
+        self.assert_(os.path.isdir(os.path.join(self.dirname, "foo/bar")))
+
     def test_opens_existing_file_ok(self):
         file(os.path.join(self.dirname, "foo"), "w").close()
         self.assert_(self.fs.open("foo", "w"))
