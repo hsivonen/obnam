@@ -46,6 +46,13 @@ class DirTests(unittest.TestCase):
         self.assertEqual(self.dir.find_strings(kind=obnamlib.FILENAME), 
                          ["name"])
 
+    def test_prepare_encodes_stat(self):
+        self.dir.prepare_for_encoding()
+        list = self.dir.find(kind=obnamlib.STAT)
+        self.assertEqual(len(list), 1)
+        st = obnamlib.decode_stat(list[0].string)
+        self.assertEqual(st, obnamlib.make_stat())
+
     def test_prepare_encodes_dirrefs(self):
         self.dir.prepare_for_encoding()
         self.assertEqual(self.dir.find_strings(kind=obnamlib.DIRREF), 
