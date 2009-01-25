@@ -210,12 +210,12 @@ class StoreTests(unittest.TestCase):
         rw2.fs = None # This breaks find_block unless there's a cache hit
         self.assertNotEqual(rw2.find_block(host, obj.id), None)
 
-    def test_gets_nonexistent_contents_correctly(self):
+    def test_cat_gets_nonexistent_contents_correctly(self):
         f = StringIO.StringIO()
         self.rw.cat(None, f, None, None)
         self.assertEqual(f.getvalue(), "")
 
-    def test_gets_simple_file_contents_correctly(self):
+    def test_cat_gets_simple_file_contents_correctly(self):
         filepart = obnamlib.FilePart(id="part.id", data="foo")
         filecont = obnamlib.FileContents(id="cont.id")
         filecont.add(filepart.id)
@@ -230,3 +230,15 @@ class StoreTests(unittest.TestCase):
         host = store.get_host("host.id")
         store.cat(host, f, filecont.id, None)
         self.assertEqual(f.getvalue(), "foo")
+
+    def test_put_contents_puts_contents_correctly(self):
+        f = StringIO.StringIO("foo")
+        host = self.rw.get_host("host.id")
+        filecont = self.rw.put_contents(f, 1024)
+        self.rw.commit(host)
+
+        result = StringIO.StringIO()
+        store = obnamlib.Store(self.rw_dirname, "r")
+        host = store.get_host("host.id")
+        store.cat(host, result, filecont.id, None)
+        self.assertEqual(result.getvalue(), "foo")
