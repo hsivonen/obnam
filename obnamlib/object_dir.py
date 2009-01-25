@@ -24,10 +24,11 @@ class Dir(obnamlib.Object):
 
     kind = obnamlib.DIR
 
-    def __init__(self, id, name=None, dirrefs=None, fgrefs=None):
+    def __init__(self, id, name=None, stat=None, dirrefs=None, fgrefs=None):
         obnamlib.Object.__init__(self, id=id)
 
         self.name = name
+        self.stat = stat
         self.dirrefs = dirrefs or []
         self.fgrefs = fgrefs or []
 
@@ -38,10 +39,16 @@ class Dir(obnamlib.Object):
     def prepare_for_encoding(self):
         c = obnamlib.Component(kind=obnamlib.FILENAME, string=self.name)
         self.components.append(c)
+        if self.stat:
+            c = obnamlib.Component(kind=obnamlib.STAT, 
+                                   string=obnamlib.encode_stat(self.stat))
+            self.components.append(c)
         self.add_refs(obnamlib.DIRREF, self.dirrefs)
         self.add_refs(obnamlib.FILEGROUPREF, self.fgrefs)
 
     def post_decoding_hook(self):
         self.name = self.extract_strings(kind=obnamlib.FILENAME)[0]
+        encoded = self.extract_strings(kind=obnamlib.STAT)[0]
+        self.stat = obnamlib.decode_stat(encoded)
         self.dirrefs = self.extract_strings(kind=obnamlib.DIRREF)
         self.fgrefs = self.extract_strings(kind=obnamlib.FILEGROUPREF)
