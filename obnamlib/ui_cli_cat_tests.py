@@ -29,7 +29,8 @@ class CatCommandTests(unittest.TestCase):
         self.mox = mox.Mox()
         
         self.store = self.mox.CreateMock(obnamlib.Store)
-        self.store.cat = lambda output, contref, deltaref: output.write("foo")
+        self.store.cat = \
+            lambda host, output, contref, deltaref: output.write("foo")
         
         self.lookupper = self.mox.CreateMock(obnamlib.Lookupper)
         self.LookupperClass = lambda store, host, gen: self.lookupper

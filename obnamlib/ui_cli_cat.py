@@ -35,7 +35,7 @@ class CatCommand(object):
         if lookupper.is_file(pathname):
             st, contref, sigref, deltaref = lookupper.get_file(pathname)
             if stat.S_ISREG(st.st_mode):
-                store.cat(output, contref, deltaref)
+                store.cat(host, output, contref, deltaref)
             else:
                 raise obnamlib.Exception("Cannot output: "
                                          "%s is not a regular file" % 
