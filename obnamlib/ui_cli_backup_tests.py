@@ -67,7 +67,8 @@ class BackupCommandTests(unittest.TestCase):
         self.cmd.store.put_object(fg)
 
         self.mox.ReplayAll()
-        ret = self.cmd.backup_new_files_as_groups(["foo", "bar"])
+        lstat = lambda *args: obnamlib.make_stat()
+        ret = self.cmd.backup_new_files_as_groups(["foo", "bar"], lstat=lstat)
         self.mox.VerifyAll()
         self.assertEqual(ret, [fg])
 
