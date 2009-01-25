@@ -48,5 +48,7 @@ class Dir(obnamlib.Object):
 
     def post_decoding_hook(self):
         self.name = self.extract_strings(kind=obnamlib.FILENAME)[0]
+        encoded = self.extract_strings(kind=obnamlib.STAT)[0]
+        self.stat = obnamlib.decode_stat(encoded)
         self.dirrefs = self.extract_strings(kind=obnamlib.DIRREF)
         self.fgrefs = self.extract_strings(kind=obnamlib.FILEGROUPREF)

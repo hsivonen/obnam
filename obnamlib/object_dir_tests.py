@@ -69,6 +69,10 @@ class DirTests(unittest.TestCase):
         c = obnamlib.Component(kind=obnamlib.FILENAME, string="foo")
         dir.components.append(c)
 
+        encoded = obnamlib.encode_stat(obnamlib.make_stat())
+        c = obnamlib.Component(kind=obnamlib.STAT, string=encoded)
+        dir.components.append(c)
+
         c = obnamlib.Component(kind=obnamlib.DIRREF, string="dir1")
         dir.components.append(c)
 
@@ -83,5 +87,6 @@ class DirTests(unittest.TestCase):
 
         dir.post_decoding_hook()
         self.assertEqual(dir.name, "foo")
+        self.assertEqual(dir.stat, obnamlib.make_stat())
         self.assertEqual(dir.dirrefs, ["dir1", "dir2"])
         self.assertEqual(dir.fgrefs, ["fg1", "fg2"])
