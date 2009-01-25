@@ -36,7 +36,7 @@ class FileGroup(obnamlib.Object):
     def add_file(self, name, stat, contref, sigref, deltaref):
         children = [
             obnamlib.Component(kind=obnamlib.FILENAME, string=name),
-            obnamlib.Component(kind=obnamlib.STAT, string=stat),
+            obnamlib.encode_stat(stat),
             obnamlib.Component(kind=obnamlib.CONTREF, string=contref),
             obnamlib.Component(kind=obnamlib.SIGREF, string=sigref),
             obnamlib.Component(kind=obnamlib.DELTAREF, string=deltaref),
@@ -47,7 +47,7 @@ class FileGroup(obnamlib.Object):
     def get_file(self, name):
         for file in self.files:
             if file.first_string(kind=obnamlib.FILENAME) == name:
-                return (file.first_string(kind=obnamlib.STAT),
+                return (obnamlib.decode_stat(file.first(kind=obnamlib.STAT)),
                         file.first_string(kind=obnamlib.CONTREF),
                         file.first_string(kind=obnamlib.SIGREF),
                         file.first_string(kind=obnamlib.DELTAREF))
