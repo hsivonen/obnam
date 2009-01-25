@@ -48,4 +48,4 @@ class FileGroupTests(unittest.TestCase):
     def test_encodes_stat_result_internally(self):
         file = self.fg.files[0]
         stat = file.first(kind=obnamlib.STAT)
-        self.assertEqual(type(stat), obnamlib.Component)
+        self.assertEqual(obnamlib.decode_stat(stat), self.stat_result)
