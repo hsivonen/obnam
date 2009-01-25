@@ -214,3 +214,30 @@ class Store(object):
         # Finally, push the recently modified host object out.
         encoded = self.block_factory.encode_block(host.id, [host], {})
         self.fs.overwrite_file(host.id, encoded)
+
+    def cat(self, host, output, cont_id, delta_id):
+        """Write file contents to an open file.
+        
+        This method will reproduce the contents of a regular file and
+        write it to the output file. If cont_id is not None, then the
+        entire contents is assumed to be in the corresponding FILECONT
+        object. Otherwise, nothing is output.
+        
+        delta_id will be used in the future.
+        
+        Arguments:
+        host -- the host whose files are being used
+        output -- the open file to which data will be written (only the
+                  write method is used)
+        cont_id -- reference to FILECONT object
+        delta_id -- reference to DELTA object
+        
+        """
+        
+        if not cont_id:
+            return
+            
+        cont = self.get_object(host, cont_id)
+        for part_id in cont.part_ids:
+            part = self.get_object(host, part_id)
+            output.write(part.data)
