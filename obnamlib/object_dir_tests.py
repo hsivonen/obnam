@@ -33,7 +33,7 @@ class DirTests(unittest.TestCase):
         self.assertEqual(self.dir.name, "name")
 
     def test_sets_stat_correctly(self):
-        self.assert_(isinstance(self.dir.stat, os.stat_result))
+        self.assertEqual(self.dir.stat, obnamlib.make_stat())
 
     def test_sets_dirrefs_correctly(self):
         self.assertEqual(self.dir.dirrefs, ["dir1", "dir2"])
@@ -48,10 +48,7 @@ class DirTests(unittest.TestCase):
 
     def test_prepare_encodes_stat(self):
         self.dir.prepare_for_encoding()
-        list = self.dir.find(kind=obnamlib.STAT)
-        self.assertEqual(len(list), 1)
-        st = obnamlib.decode_stat(list[0].string)
-        self.assertEqual(st, obnamlib.make_stat())
+        self.assert_(self.dir.find(kind=obnamlib.STAT))
 
     def test_prepare_encodes_dirrefs(self):
         self.dir.prepare_for_encoding()

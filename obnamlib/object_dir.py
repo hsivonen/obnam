@@ -40,9 +40,7 @@ class Dir(obnamlib.Object):
         c = obnamlib.Component(kind=obnamlib.FILENAME, string=self.name)
         self.components.append(c)
         if self.stat:
-            c = obnamlib.Component(kind=obnamlib.STAT, 
-                                   string=obnamlib.encode_stat(self.stat))
-            self.components.append(c)
+            self.components.append(obnamlib.encode_stat(self.stat))
         self.add_refs(obnamlib.DIRREF, self.dirrefs)
         self.add_refs(obnamlib.FILEGROUPREF, self.fgrefs)
 
