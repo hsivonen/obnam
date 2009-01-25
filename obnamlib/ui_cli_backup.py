@@ -28,18 +28,9 @@ class BackupCommand(object):
 
     def backup_new_file(self, relative_path):
         """Back up a completely new file."""
-        content = self.store.new_object(kind=obnamlib.FILECONTENTS)
         f = self.fs.open(relative_path, "r")
-        while True:
-            data = f.read(self.PART_SIZE)
-            if not data:
-                break
-            part = self.store.new_object(kind=obnamlib.FILEPART)
-            part.data = data
-            self.store.put_object(part)
-            content.add(part.id)
+        content = self.store.put_contents(f, self.PART_SIZE)
         f.close()
-        self.store.put_object(content)
         return content
 
     def backup_new_files_as_groups(self, relative_paths):
