@@ -18,6 +18,7 @@
 import mox
 import os
 import shutil
+import StringIO
 import tempfile
 import unittest
 
@@ -208,3 +209,24 @@ class StoreTests(unittest.TestCase):
         rw2.find_block(host, obj.id)
         rw2.fs = None # This breaks find_block unless there's a cache hit
         self.assertNotEqual(rw2.find_block(host, obj.id), None)
+
+    def test_gets_nonexistent_contents_correctly(self):
+        f = StringIO.StringIO()
+        self.rw.cat(None, f, None, None)
+        self.assertEqual(f.getvalue(), "")
+
+    def test_gets_simple_file_contents_correctly(self):
+        filepart = obnamlib.FilePart(id="part.id", data="foo")
+        filecont = obnamlib.FileContents(id="cont.id")
+        filecont.add(filepart.id)
+
+        host = self.rw.get_host("host.id")
+        self.rw.put_object(filepart)
+        self.rw.put_object(filecont)
+        self.rw.commit(host)
+        
+        f = StringIO.StringIO()
+        store = obnamlib.Store(self.rw_dirname, "r")
+        host = store.get_host("host.id")
+        store.cat(host, f, filecont.id, None)
+        self.assertEqual(f.getvalue(), "foo")
