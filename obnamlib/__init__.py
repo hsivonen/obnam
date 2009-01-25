@@ -61,7 +61,6 @@ from vfs_local import LocalFS
 from app import BackupApplication
 
 from ui_cli_backup import BackupCommand
-from ui_cli_restore import RestoreCommand
 from ui_cli_generations import GenerationsCommand
 from ui_cli_help import HelpCommand
 from ui_cli_show import ShowGenerationsCommand
