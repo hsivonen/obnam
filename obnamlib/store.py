@@ -242,7 +242,7 @@ class Store(object):
             part = self.get_object(host, part_id)
             output.write(part.data)
 
-    def put_contents(self, host, file, size):
+    def put_contents(self, file, size):
         """Write contents of open file to store.
         
         The contents of the file will be split into chunks of `size`

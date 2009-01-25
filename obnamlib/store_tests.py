@@ -234,7 +234,7 @@ class StoreTests(unittest.TestCase):
     def test_put_contents_puts_contents_correctly(self):
         f = StringIO.StringIO("foo")
         host = self.rw.get_host("host.id")
-        filecont = self.rw.put_contents(host, f, 1024)
+        filecont = self.rw.put_contents(f, 1024)
         self.rw.commit(host)
 
         result = StringIO.StringIO()
