@@ -41,18 +41,10 @@ class BackupCommandTests(unittest.TestCase):
         f = self.mox.CreateMock(file)
         fc = self.mox.CreateMock(obnamlib.FileContents)
         fc.id = "contentsid"
-        part = self.mox.CreateMock(obnamlib.FilePart)
-        part.id = "partid"
 
-        self.cmd.store.new_object(kind=obnamlib.FILECONTENTS).AndReturn(fc)
         self.cmd.fs.open("foo", "r").AndReturn(f)
-        f.read(self.cmd.PART_SIZE).AndReturn("data")
-        self.cmd.store.new_object(kind=obnamlib.FILEPART).AndReturn(part)
-        self.cmd.store.put_object(part)
-        fc.add(part.id)
-        f.read(self.cmd.PART_SIZE).AndReturn(None)
+        self.cmd.store.put_contents(f, self.cmd.PART_SIZE).AndReturn(fc)
         f.close()
-        self.cmd.store.put_object(fc)
 
         self.mox.ReplayAll()
         new_file = self.cmd.backup_new_file("foo")
