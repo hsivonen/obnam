@@ -48,7 +48,7 @@ class BackupCommand(object):
         self.store.put_object(fg)
         return [fg]
 
-    def backup_dir(self, relative_path, subdirs, filenames):
+    def backup_dir(self, relative_path, subdirs, filenames, lstat=os.lstat):
         """Back up a single directory, non-recursively.
 
         subdirs is a list of obnamlib.Dir objects for the direct
@@ -59,6 +59,7 @@ class BackupCommand(object):
 
         dir = self.store.new_object(obnamlib.DIR)
         dir.name = os.path.basename(relative_path)
+        dir.stat = lstat(relative_path)
         dir.dirrefs = [x.id for x in subdirs]
         fullnames = [os.path.join(relative_path, x) for x in filenames]
         if filenames:
