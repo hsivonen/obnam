@@ -241,3 +241,25 @@ class Store(object):
         for part_id in cont.part_ids:
             part = self.get_object(host, part_id)
             output.write(part.data)
+
+    def put_contents(self, host, file, size):
+        """Write contents of open file to store.
+        
+        The contents of the file will be split into chunks of `size`
+        bytes. Each chunk gets placed in a FILEPART object. Finally,
+        and FILECONTENTS object is created, put into the store, and
+        returned.
+        
+        """
+
+        content = self.new_object(kind=obnamlib.FILECONTENTS)
+        while True:
+            data = file.read(size)
+            if not data:
+                break
+            part = self.new_object(kind=obnamlib.FILEPART)
+            part.data = data
+            self.put_object(part)
+            content.add(part.id)
+        self.put_object(content)
+        return content
