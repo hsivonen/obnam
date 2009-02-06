@@ -28,6 +28,11 @@ class BlockId(obnamlib.StringComponent):
     string_kind = obnamlib.BLKID
 
 
+class FileChunk(obnamlib.StringComponent):
+
+    string_kind = obnamlib.FILECHUNK
+
+
 class ObjectId(obnamlib.StringComponent):
 
     string_kind = obnamlib.OBJID

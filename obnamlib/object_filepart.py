@@ -45,8 +45,7 @@ class FilePart(obnamlib.Object):
 
     def set_data(self, data):
         self.extract(kind=obnamlib.FILECHUNK)
-        c = obnamlib.Component(kind=obnamlib.FILECHUNK)
-        c.string = data
+        c = obnamlib.FileChunk(data)
         self.components.append(c)
 
     data = property(get_data, set_data)
