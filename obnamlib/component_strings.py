@@ -73,6 +73,11 @@ class GenStart(obnamlib.StringComponent):
     string_kind = obnamlib.GENSTART
 
 
+class MapRef(obnamlib.StringComponent):
+
+    string_kind = obnamlib.MAPREF
+
+
 class ObjectId(obnamlib.StringComponent):
 
     string_kind = obnamlib.OBJID

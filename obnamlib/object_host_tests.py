@@ -68,12 +68,12 @@ class HostTests(unittest.TestCase):
         self.assertEquals(self.host.maprefs, ["foo"])
 
     def test_gets_maprefs_from_components_the_first_time(self):
-        mapref = obnamlib.Component(kind=obnamlib.MAPREF, string="foo")
+        mapref = obnamlib.MapRef("foo")
         self.host.components = [mapref]
         self.assertEquals(self.host.maprefs, ["foo"])
 
     def test_removes_maprefs_from_components_after_first_get(self):
-        mapref = obnamlib.Component(kind=obnamlib.MAPREF, string="foo")
+        mapref = obnamlib.MapRef("foo")
         self.host.components = [mapref]
         genrefs = self.host.maprefs
         self.assertEquals(self.host.components, [])

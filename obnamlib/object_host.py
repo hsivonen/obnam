@@ -58,5 +58,5 @@ class Host(obnamlib.Object):
             c = obnamlib.GenRef(genref)
             self.components.append(c)
         for mapref in self.maprefs:
-            c = obnamlib.Component(kind=obnamlib.MAPREF, string=mapref)
+            c = obnamlib.MapRef(mapref)
             self.components.append(c)
