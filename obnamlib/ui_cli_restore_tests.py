@@ -57,8 +57,8 @@ class RestoreCommandTests(unittest.TestCase):
                                       string="deltaref")
         st = obnamlib.make_stat()
     
-        file = obnamlib.Component(kind=obnamlib.FILE)
-        file.children += [name, obnamlib.encode_stat(st), contref, deltaref]
+        file = obnamlib.File([name, obnamlib.encode_stat(st), 
+                              contref, deltaref])
 
         self.mox.ReplayAll()
         self.cmd.restore_helper = self.mock_helper

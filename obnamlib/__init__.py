@@ -33,6 +33,7 @@ from component_strings import (BlockId,
                                ObjectId, 
                                SigData,
                                Stat)
+from component_composites import File
 from component_objkind import ObjectKind
 
 from object import Object

@@ -41,7 +41,7 @@ class FileGroup(obnamlib.Object):
             obnamlib.Component(kind=obnamlib.SIGREF, string=sigref),
             obnamlib.Component(kind=obnamlib.DELTAREF, string=deltaref),
         ]
-        file = obnamlib.Component(kind=obnamlib.FILE, children=children)
+        file = obnamlib.File(children)
         self.components.append(file)
 
     def get_file(self, name):
