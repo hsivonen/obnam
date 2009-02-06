@@ -15,6 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import mox
 import unittest
 
 import obnamlib
@@ -22,6 +23,23 @@ import obnamlib
 
 class RestoreCommandTests(unittest.TestCase):
 
-    def test_nothing(self):
-        pass
+    def setUp(self):
+        self.mox = mox.Mox()
+        self.cmd = obnamlib.RestoreCommand()
 
+    def test_helper_restores_file_contents(self):
+        fs = self.mox.CreateMock(obnamlib.VirtualFileSystem)
+        f = self.mox.CreateMock(file)
+        store = self.mox.CreateMock(obnamlib.Store)
+        
+        self.cmd.vfs = fs
+        self.cmd.store = store
+        self.cmd.host = "host"
+
+        fs.open("foo", "w").AndReturn(f)
+        store.cat("host", f, "contref", "deltaref")
+        f.close()
+        
+        self.mox.ReplayAll()
+        self.cmd.restore_helper("foo", "st", "contref", "deltaref")
+        self.mox.VerifyAll()
