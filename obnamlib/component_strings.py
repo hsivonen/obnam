@@ -48,6 +48,11 @@ class FormatVersion(obnamlib.StringComponent):
     string_kind = obnamlib.FORMATVERSION
 
 
+class GenStart(obnamlib.StringComponent):
+
+    string_kind = obnamlib.GENSTART
+
+
 class ObjectId(obnamlib.StringComponent):
 
     string_kind = obnamlib.OBJID
