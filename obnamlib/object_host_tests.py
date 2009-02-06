@@ -40,12 +40,12 @@ class HostTests(unittest.TestCase):
         self.assertEquals(self.host.genrefs, ["foo"])
 
     def test_gets_genrefs_from_components_the_first_time(self):
-        genref = obnamlib.Component(kind=obnamlib.GENREF, string="foo")
+        genref = obnamlib.GenRef("foo")
         self.host.components = [genref]
         self.assertEquals(self.host.genrefs, ["foo"])
 
     def test_removes_genrefs_from_components_after_first_get(self):
-        genref = obnamlib.Component(kind=obnamlib.GENREF, string="foo")
+        genref = obnamlib.GenRef("foo")
         self.host.components = [genref]
         genrefs = self.host.genrefs
         self.assertEquals(self.host.components, [])

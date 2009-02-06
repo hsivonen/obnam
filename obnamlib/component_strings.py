@@ -58,6 +58,11 @@ class GenEnd(obnamlib.StringComponent):
     string_kind = obnamlib.GENEND
 
 
+class GenRef(obnamlib.StringComponent):
+
+    string_kind = obnamlib.GENREF
+
+
 class GenStart(obnamlib.StringComponent):
 
     string_kind = obnamlib.GENSTART

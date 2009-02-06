@@ -55,7 +55,7 @@ class Host(obnamlib.Object):
 
     def prepare_for_encoding(self):
         for genref in self.genrefs:
-            c = obnamlib.Component(kind=obnamlib.GENREF, string=genref)
+            c = obnamlib.GenRef(genref)
             self.components.append(c)
         for mapref in self.maprefs:
             c = obnamlib.Component(kind=obnamlib.MAPREF, string=mapref)
