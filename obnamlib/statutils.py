@@ -49,10 +49,6 @@ def make_stat(st_mode=0, st_ino=0, st_dev=0, st_nlink=0, st_uid=0,
 
     return os.stat_result(tup, dict)
 
-def encode_stat(stat):
-    """Encode a stat_result as a Component."""
-    return obnamlib.Stat(stat)
-
 def decode_stat(encoded_stat):
     """Decode a Component of kind STAT to a stat_result."""
     

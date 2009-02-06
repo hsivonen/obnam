@@ -94,6 +94,6 @@ from ui_cli_help import HelpCommand
 from ui_cli_show import ShowGenerationsCommand
 from ui_cli import CommandLineUI
 
-from statutils import encode_stat, decode_stat, make_stat
+from statutils import decode_stat, make_stat
 
 import varint

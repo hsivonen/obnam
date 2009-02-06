@@ -26,7 +26,7 @@ class StatTests(unittest.TestCase):
 
     def test_encodes_and_decodes_stat_component_correctly(self):
         stat = obnamlib.make_stat(st_mode=1, st_ino=2)
-        encoded = obnamlib.encode_stat(stat)
+        encoded = obnamlib.Stat(stat)
         decoded = obnamlib.decode_stat(encoded)
         self.assertEqual(stat, decoded)
 
