@@ -27,7 +27,8 @@ cmp_kinds.add_all()
 cmp_kinds.add_to_obnamlib()
 from component_strings import (BlockId, 
                                FileChunk, 
-                               FileName, 
+                               FileName,
+                               GenEnd, 
                                GenStart,
                                ObjectId, 
                                SigData,
