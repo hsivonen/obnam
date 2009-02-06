@@ -30,7 +30,7 @@ class Generation(obnamlib.Object):
         self.fgrefs = []
 
     def prepare_for_encoding(self):
-        self.components += [obnamlib.Component(obnamlib.DIRREF, string=x)
+        self.components += [obnamlib.DirRef(x)
                             for x in self.dirrefs]
         self.components += [obnamlib.Component(obnamlib.FILEGROUPREF, string=x)
                             for x in self.fgrefs]

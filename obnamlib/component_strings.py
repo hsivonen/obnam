@@ -58,6 +58,11 @@ class DeltaRef(obnamlib.StringComponent):
     string_kind = obnamlib.DELTAREF
 
 
+class DirRef(obnamlib.StringComponent):
+
+    string_kind = obnamlib.DIRREF
+
+
 class FileChunk(obnamlib.StringComponent):
 
     string_kind = obnamlib.FILECHUNK

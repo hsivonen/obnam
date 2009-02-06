@@ -67,11 +67,8 @@ class DirTests(unittest.TestCase):
 
         dir.components.append(obnamlib.encode_stat(obnamlib.make_stat()))
 
-        c = obnamlib.Component(kind=obnamlib.DIRREF, string="dir1")
-        dir.components.append(c)
-
-        c = obnamlib.Component(kind=obnamlib.DIRREF, string="dir2")
-        dir.components.append(c)
+        dir.components.append(obnamlib.DirRef("dir1"))
+        dir.components.append(obnamlib.DirRef("dir2"))
 
         c = obnamlib.Component(kind=obnamlib.FILEGROUPREF, string="fg1")
         dir.components.append(c)

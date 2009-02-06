@@ -68,11 +68,8 @@ class GenTests(unittest.TestCase):
     def test_post_hook_extracts_stuff(self):
         gen = obnamlib.Generation(id="id")
 
-        c = obnamlib.Component(kind=obnamlib.DIRREF, string="dir1")
-        gen.components.append(c)
-
-        c = obnamlib.Component(kind=obnamlib.DIRREF, string="dir2")
-        gen.components.append(c)
+        gen.components.append(obnamlib.DirRef("dir1"))
+        gen.components.append(obnamlib.DirRef("dir2"))
 
         c = obnamlib.Component(kind=obnamlib.FILEGROUPREF, string="fg1")
         gen.components.append(c)
