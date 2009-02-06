@@ -34,14 +34,7 @@ class FileGroup(obnamlib.Object):
                 for file in self.files]
 
     def add_file(self, name, stat, contref, sigref, deltaref):
-        children = [
-            obnamlib.FileName(name),
-            obnamlib.encode_stat(stat),
-            obnamlib.ContRef(contref),
-            obnamlib.SigRef(sigref),
-            obnamlib.DeltaRef(deltaref),
-        ]
-        file = obnamlib.File(children)
+        file = obnamlib.File(name, stat, contref, sigref, deltaref)
         self.components.append(file)
 
     def get_file(self, name):

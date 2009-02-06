@@ -38,13 +38,9 @@ class BackupCommand(object):
         fg = self.store.new_object(kind=obnamlib.FILEGROUP)
         for path in relative_paths:
             fc = self.backup_new_file(path)
-            file_component = obnamlib.File([])
             stat = lstat(path)
-            file_component.children += [
-                obnamlib.FileName(os.path.basename(path)),
-                obnamlib.encode_stat(stat),
-                obnamlib.ContRef(fc.id),
-                ]
+            file_component = obnamlib.File(os.path.basename(path), stat,
+                                           fc.id, None, None)
             fg.components.append(file_component)
         self.store.put_object(fg)
         return [fg]

@@ -51,13 +51,8 @@ class RestoreCommandTests(unittest.TestCase):
         self.deltaref = deltaref
 
     def test_restore_file_calls_helper_correctly(self):
-        name = obnamlib.FileName("filename")
-        contref = obnamlib.ContRef("contref")
-        deltaref = obnamlib.DeltaRef("deltaref")
         st = obnamlib.make_stat()
-    
-        file = obnamlib.File([name, obnamlib.encode_stat(st), 
-                              contref, deltaref])
+        file = obnamlib.File("filename", st, "contref", None, "deltaref")
 
         self.mox.ReplayAll()
         self.cmd.restore_helper = self.mock_helper
