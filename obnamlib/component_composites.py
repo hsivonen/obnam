@@ -31,3 +31,8 @@ class File(obnamlib.CompositeComponent):
 class NameIPair(obnamlib.CompositeComponent):
 
     composite_kind = obnamlib.NAMEIPAIR
+
+
+class ObjMap(obnamlib.CompositeComponent):
+
+    composite_kind = obnamlib.OBJMAP
