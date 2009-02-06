@@ -65,7 +65,7 @@ class DirTests(unittest.TestCase):
 
         dir.components.append(obnamlib.FileName("foo"))
 
-        dir.components.append(obnamlib.encode_stat(obnamlib.make_stat()))
+        dir.components.append(obnamlib.Stat(obnamlib.make_stat()))
 
         dir.components.append(obnamlib.DirRef("dir1"))
         dir.components.append(obnamlib.DirRef("dir2"))

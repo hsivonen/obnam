@@ -27,7 +27,7 @@ class File(obnamlib.CompositeComponent):
         if filename is not None:
             children.append(obnamlib.FileName(filename))
         if stat is not None:
-            children.append(obnamlib.encode_stat(stat))
+            children.append(obnamlib.Stat(stat))
         if contref is not None:
             children.append(obnamlib.ContRef(contref))
         if sigref is not None:
