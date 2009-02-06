@@ -26,3 +26,8 @@ import obnamlib
 class File(obnamlib.CompositeComponent):
 
     composite_kind = obnamlib.FILE
+
+
+class NameIPair(obnamlib.CompositeComponent):
+
+    composite_kind = obnamlib.NAMEIPAIR
