@@ -53,6 +53,11 @@ class FileName(obnamlib.StringComponent):
     string_kind = obnamlib.FILENAME
 
 
+class FilePartRef(obnamlib.StringComponent):
+
+    string_kind = obnamlib.FILEPARTREF
+
+
 class FormatVersion(obnamlib.StringComponent):
 
     string_kind = obnamlib.FORMATVERSION
