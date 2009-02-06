@@ -24,10 +24,11 @@ class ShowGenerationsCommand(object):
 
     """Show contents of generations."""
 
-    def show_filegroup(self, host, fgref, output=sys.stdout):
-        fg = self.store.get_object(host, fgref)
-        for file in fg.find(kind=obnamlib.FILE):
-            output.write("%s\n" % file.first_string(kind=obnamlib.FILENAME))
+    def show_file(self, file, output=sys.stdout):
+        """file is file component."""
+        
+        filename = file.first_string(kind=obnamlib.FILENAME)
+        output.write("- file: %s\n" % filename)
 
     def show_dir(self, host, dirref, output=sys.stdout):
         dir = self.store.get_object(host, dirref)
@@ -47,16 +48,15 @@ class ShowGenerationsCommand(object):
         host = self.store.get_host(host_id)
 
         for genref in genrefs:
-            output.write("Generation %s:\n\n" % genref)
+            output.write("Generation %s:\n" % genref)
 
             gen = self.store.get_object(host, genref)
-
-            if gen.fgrefs:
-                for fgref in gen.fgrefs:
-                    self.show_filegroup(host, fgref, output=output)
-
-            for dirref in gen.dirrefs:
-                self.show_dir(host, dirref, output=output)
+            walker = obnamlib.StoreWalker(self.store, host, gen)
+            
+            for dirname, dirnames, files in walker.walk_generation():
+                output.write("%s:\n" % dirname)
+                for file in files:
+                    self.show_file(file, output=output)
 
     def __call__(self, config, args): # pragma: no cover
         host_id = args[0]

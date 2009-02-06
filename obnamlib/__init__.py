@@ -53,6 +53,8 @@ from store import Store, NotFound
 
 from lookupper import Lookupper
 
+from store_walker import StoreWalker
+
 from ui import UserInterface
 
 from vfs import VirtualFileSystem
