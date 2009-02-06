@@ -26,6 +26,7 @@ cmp_kinds = ComponentKinds()
 cmp_kinds.add_all()
 cmp_kinds.add_to_obnamlib()
 from component_objid import ObjectId
+from component_objkind import ObjectKind
 
 from object import Object
 from object_kinds import ObjectKinds

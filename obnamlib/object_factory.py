@@ -82,8 +82,7 @@ class ObjectFactory(object):
 
         id = obnamlib.ObjectId(obj.id)
 
-        kind = obnamlib.Component(kind=obnamlib.OBJKIND,
-                                  string=obnamlib.varint.encode(obj.kind))
+        kind = obnamlib.ObjectKind(obj.kind)
 
         cmp = obnamlib.Component(kind=obnamlib.OBJECT)
         cmp.children = [id, kind] + obj.components
