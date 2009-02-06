@@ -68,6 +68,11 @@ class SigData(obnamlib.StringComponent):
     string_kind = obnamlib.SIGDATA
 
 
+class SnapshotGen(obnamlib.StringComponent):
+
+    string_kind = obnamlib.SNAPSHOTGEN
+
+
 class Stat(obnamlib.StringComponent):
 
     string_kind = obnamlib.STAT
