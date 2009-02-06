@@ -33,6 +33,11 @@ class NameIPair(obnamlib.CompositeComponent):
     composite_kind = obnamlib.NAMEIPAIR
 
 
+class ObjectComponent(obnamlib.CompositeComponent):
+
+    composite_kind = obnamlib.OBJECT
+
+
 class ObjMap(obnamlib.CompositeComponent):
 
     composite_kind = obnamlib.OBJMAP

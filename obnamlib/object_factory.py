@@ -83,8 +83,7 @@ class ObjectFactory(object):
         id = obnamlib.ObjectId(obj.id)
         kind = obnamlib.ObjectKind(obj.kind)
 
-        cmp = obnamlib.Component(kind=obnamlib.OBJECT)
-        cmp.children = [id, kind] + obj.components
+        cmp = obnamlib.ObjectComponent([id, kind] + obj.components)
         return self.encode_component(cmp)
 
     def construct_object(self, cmp):

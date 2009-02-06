@@ -100,7 +100,7 @@ class ObjectFactoryTests(unittest.TestCase):
 
     def test_encodes_composite_component_correctly(self):
         name = obnamlib.FileName("foo")
-        cmp = obnamlib.Component(obnamlib.OBJECT, children=[name])
+        cmp = obnamlib.ObjectComponent([name])
         self.assertEqual(self.factory.encode_component(cmp),
                          "8\n%d\n3\n%d\nfoo" % 
                          (obnamlib.OBJECT, obnamlib.FILENAME))
@@ -113,7 +113,7 @@ class ObjectFactoryTests(unittest.TestCase):
 
     def test_decodes_composite_component_correctly(self):
         name = obnamlib.FileName("foo")
-        cmp = obnamlib.Component(kind=obnamlib.OBJECT, children=[name])
+        cmp = obnamlib.ObjectComponent([name])
 
         encoded = self.factory.encode_component(cmp)
         decoded, pos = self.factory.decode_component(encoded, 0)
