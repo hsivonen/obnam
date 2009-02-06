@@ -109,7 +109,7 @@ class ObjectFactoryTests(unittest.TestCase):
         cmp, pos = self.factory.decode_component(self.encoded_content, 0)
         self.assertEqual(pos, 6)
         self.assertEqual(cmp.kind, obnamlib.OBJID)
-        self.assertEqual(cmp.string, "id")
+        self.assertEqual(str(cmp), "id")
 
     def test_decodes_composite_component_correctly(self):
         name = obnamlib.FileName("foo")
@@ -121,7 +121,7 @@ class ObjectFactoryTests(unittest.TestCase):
         self.assertEqual(cmp.kind, decoded.kind)
         self.assertEqual(pos, len(encoded))
         self.assertEqual(cmp.children[0].kind, name.kind)
-        self.assertEqual(cmp.children[0].string, name.string)
+        self.assertEqual(str(cmp.children[0]), str(name))
 
     def test_decodes_all_components_correctly(self):
         list = self.factory.decode_all_components(self.encoded_content)
@@ -152,4 +152,4 @@ class ObjectFactoryTests(unittest.TestCase):
         self.assert_(isinstance(obj, self.factory.classes[obj.kind]))
         self.assertEqual(len(obj.components), 1)
         self.assertEqual(obj.components[0].kind, obnamlib.FILENAME)
-        self.assertEqual(obj.components[0].string, "foo")
+        self.assertEqual(str(obj.components[0]), "foo")

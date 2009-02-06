@@ -71,7 +71,7 @@ def decode_stat(encoded_stat):
     
     (st_mode, st_ino, st_dev, st_nlink, st_uid, st_gid,
      st_size, st_atime, st_mtime, st_ctime, st_blocks, st_blksize, 
-     st_rdev) = obnamlib.varint.decode_many(encoded_stat.string)
+     st_rdev) = obnamlib.varint.decode_many(str(encoded_stat))
     return obnamlib.make_stat(st_mode=st_mode,
                               st_ino=st_ino,
                               st_dev=st_dev,

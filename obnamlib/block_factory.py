@@ -29,7 +29,7 @@ class BlockFactory(object):
 
         for cmp in objmap.children:
             if cmp.kind == obnamlib.OBJREF:
-                mappings[block_id] = cmp.string
+                mappings[block_id] = str(cmp)
 
     def decode_block(self, string):
         """Decode an encoded block.
@@ -56,7 +56,7 @@ class BlockFactory(object):
             elif cmp.kind == obnamlib.OBJMAP:
                 self.update_mappings(mappings, cmp)
             elif cmp.kind == obnamlib.BLKID:
-                block_id = cmp.string
+                block_id = str(cmp)
             else:
                 raise obnamlib.Exception("Unknown component kind %d" % 
                                          cmp.kind)

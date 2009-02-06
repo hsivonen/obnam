@@ -26,4 +26,4 @@ class ObjectKind(obnamlib.Component):
 
     @property
     def object_kind(self):
-        return obnamlib.varint.decode(self.string, 0)[0]
+        return obnamlib.varint.decode(str(self), 0)[0]
