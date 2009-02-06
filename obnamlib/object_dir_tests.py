@@ -70,11 +70,8 @@ class DirTests(unittest.TestCase):
         dir.components.append(obnamlib.DirRef("dir1"))
         dir.components.append(obnamlib.DirRef("dir2"))
 
-        c = obnamlib.Component(kind=obnamlib.FILEGROUPREF, string="fg1")
-        dir.components.append(c)
-
-        c = obnamlib.Component(kind=obnamlib.FILEGROUPREF, string="fg2")
-        dir.components.append(c)
+        dir.components.append(obnamlib.FileGroupRef("fg1"))
+        dir.components.append(obnamlib.FileGroupRef("fg2"))
 
         dir.post_decoding_hook()
         self.assertEqual(dir.name, "foo")

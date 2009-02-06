@@ -71,11 +71,8 @@ class GenTests(unittest.TestCase):
         gen.components.append(obnamlib.DirRef("dir1"))
         gen.components.append(obnamlib.DirRef("dir2"))
 
-        c = obnamlib.Component(kind=obnamlib.FILEGROUPREF, string="fg1")
-        gen.components.append(c)
-
-        c = obnamlib.Component(kind=obnamlib.FILEGROUPREF, string="fg2")
-        gen.components.append(c)
+        gen.components.append(obnamlib.FileGroupRef("fg1"))
+        gen.components.append(obnamlib.FileGroupRef("fg2"))
 
         gen.post_decoding_hook()
         self.assertEqual(gen.dirrefs, ["dir1", "dir2"])

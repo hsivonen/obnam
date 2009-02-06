@@ -30,10 +30,8 @@ class Generation(obnamlib.Object):
         self.fgrefs = []
 
     def prepare_for_encoding(self):
-        self.components += [obnamlib.DirRef(x)
-                            for x in self.dirrefs]
-        self.components += [obnamlib.Component(obnamlib.FILEGROUPREF, string=x)
-                            for x in self.fgrefs]
+        self.components += [obnamlib.DirRef(x) for x in self.dirrefs]
+        self.components += [obnamlib.FileGroupRef(x) for x in self.fgrefs]
 
     def post_decoding_hook(self):
         self.dirrefs = self.extract_strings(kind=obnamlib.DIRREF)
