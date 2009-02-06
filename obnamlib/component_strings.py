@@ -56,3 +56,8 @@ class ObjectId(obnamlib.StringComponent):
 class SigData(obnamlib.StringComponent):
 
     string_kind = obnamlib.SIGDATA
+
+
+class Stat(obnamlib.StringComponent):
+
+    string_kind = obnamlib.STAT

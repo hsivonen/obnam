@@ -25,7 +25,12 @@ from component_kinds import ComponentKinds
 cmp_kinds = ComponentKinds()
 cmp_kinds.add_all()
 cmp_kinds.add_to_obnamlib()
-from component_strings import BlockId, FileChunk, FileName, ObjectId, SigData
+from component_strings import (BlockId, 
+                               FileChunk, 
+                               FileName, 
+                               ObjectId, 
+                               SigData,
+                               Stat)
 from component_objkind import ObjectKind
 
 from object import Object

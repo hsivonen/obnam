@@ -64,7 +64,7 @@ def encode_stat(stat):
                                                  stat.st_blocks,
                                                  stat.st_blksize, 
                                                  stat.st_rdev])
-    return obnamlib.Component(kind=obnamlib.STAT, string=encoded_value)
+    return obnamlib.Stat(encoded_value)
 
 def decode_stat(encoded_stat):
     """Decode a Component of kind STAT to a stat_result."""
