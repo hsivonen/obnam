@@ -117,3 +117,11 @@ class StringComponent(Component):
     
     def __init__(self, string):
         Component.__init__(self, kind=self.string_kind, string=string)
+
+
+class CompositeComponent(Component):
+
+    """Base class for components that contain other components."""
+    
+    def __init__(self, children):
+        Component.__init__(self, kind=self.composite_kind, children=children)

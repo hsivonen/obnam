@@ -125,3 +125,12 @@ class StringComponentTests(unittest.TestCase):
             string_kind = obnamlib.OBJID
         sc = Dummy("foo")
         self.assertEqual(sc.string, "foo")
+
+
+class CompositeComponentTests(unittest.TestCase):
+
+    def test_sets_children_correctly(self):
+        class Dummy(obnamlib.CompositeComponent):
+            composite_kind = obnamlib.OBJECT
+        sc = Dummy([True, False])
+        self.assertEqual(sc.children, [True, False])
