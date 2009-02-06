@@ -15,11 +15,63 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import os
+
 import obnamlib
 
 
 class RestoreCommand(object):
 
     """Restore files from a generation."""
+
+    def restore_helper(self, filename, st, contref, deltaref):
+        f = self.vfs.open(filename, "w")
+        self.store.cat(self.host, f, contref, deltaref)
+        f.close()
+
+    def restore_file(self, dirname, file):
+        basename = file.first_string(kind=obnamlib.FILENAME)
+        filename = os.path.join(dirname, basename)
+
+        st = obnamlib.decode_stat(file.first(kind=obnamlib.STAT))
+        contref = file.first_string(kind=obnamlib.CONTREF)
+        deltaref = file.first_string(kind=obnamlib.DELTAREF)
+        
+        self.restore_helper(filename, st, contref, deltaref)
+
+    def restore(self, host_id, genref, roots):
+        """Restore files and directories (with contents)."""
+        
+        self.host = self.store.get_host(host_id)
+        gen = self.store.get_object(self.host, genref)
+        walker = obnamlib.StoreWalker(self.store, self.host, gen)
+
+        if roots:
+            lookupper = obnamlib.Lookupper(self.store, self.host, gen)
+            for root in roots:
+                if lookupper.is_file(root):
+                    st, contref, sigref, deltaref = lookupper.get_file(root)
+                    self.vfs.makedirs(os.path.dirname(root))
+                    self.restore_helper(root, st, contref, deltaref)
+                else:
+                    for dirname, dirnames, files in walker.walk(root):
+                        self.vfs.mkdir(dirname)
+                        for file in files:
+                            self.restore_file(dirname, file)
+        else:
+            for dirname, dirnames, files in walker.walk_generation():
+                self.vfs.mkdir(dirname)
+                for file in files:
+                    self.restore_file(dirname, file)
     
-    pass
+    def __call__(self, config, args): # pragma: no cover
+        target = args[0]
+        host_id = args[1]
+        store_url = args[2]
+        genref = args[3]
+        roots = args[4:]
+
+        self.store = obnamlib.Store(store_url, "r")
+        self.vfs = obnamlib.LocalFS(target)
+
+        self.restore(host_id, genref, roots)
