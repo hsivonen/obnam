@@ -32,7 +32,7 @@ class BlockFactoryTests(unittest.TestCase):
         self.assertRaises(obnamlib.Exception, self.factory.decode_block, "foo")
 
     def test_refuses_block_with_bad_component(self):
-        c = obnamlib.Component(obnamlib.FILENAME, string="foo")
+        c = obnamlib.FileName("foo")
         of = obnamlib.ObjectFactory()
         s = self.factory.BLOCK_COOKIE + of.encode_component(c)
         self.assertRaises(obnamlib.Exception, self.factory.decode_block, s)

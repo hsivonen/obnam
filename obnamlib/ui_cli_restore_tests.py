@@ -51,7 +51,7 @@ class RestoreCommandTests(unittest.TestCase):
         self.deltaref = deltaref
 
     def test_restore_file_calls_helper_correctly(self):
-        name = obnamlib.Component(kind=obnamlib.FILENAME, string="filename")
+        name = obnamlib.FileName("filename")
         contref = obnamlib.Component(kind=obnamlib.CONTREF, string="contref")
         deltaref = obnamlib.Component(kind=obnamlib.DELTAREF, 
                                       string="deltaref")

@@ -35,7 +35,7 @@ class FileGroup(obnamlib.Object):
 
     def add_file(self, name, stat, contref, sigref, deltaref):
         children = [
-            obnamlib.Component(kind=obnamlib.FILENAME, string=name),
+            obnamlib.FileName(name),
             obnamlib.encode_stat(stat),
             obnamlib.Component(kind=obnamlib.CONTREF, string=contref),
             obnamlib.Component(kind=obnamlib.SIGREF, string=sigref),

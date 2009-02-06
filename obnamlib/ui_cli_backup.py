@@ -41,8 +41,7 @@ class BackupCommand(object):
             file_component = obnamlib.Component(kind=obnamlib.FILE)
             stat = lstat(path)
             file_component.children += [
-                obnamlib.Component(kind=obnamlib.FILENAME, 
-                                   string=os.path.basename(path)),
+                obnamlib.FileName(os.path.basename(path)),
                 obnamlib.encode_stat(stat),
                 obnamlib.Component(kind=obnamlib.CONTREF, string=fc.id),
                 ]

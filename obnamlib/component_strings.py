@@ -33,6 +33,11 @@ class FileChunk(obnamlib.StringComponent):
     string_kind = obnamlib.FILECHUNK
 
 
+class FileName(obnamlib.StringComponent):
+
+    string_kind = obnamlib.FILENAME
+
+
 class ObjectId(obnamlib.StringComponent):
 
     string_kind = obnamlib.OBJID
