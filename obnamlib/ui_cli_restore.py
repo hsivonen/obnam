@@ -39,6 +39,11 @@ class RestoreCommand(object):
         
         self.restore_helper(filename, st, contref, deltaref)
 
+    def restore_filename(self, lookupper, filename):
+        st, contref, sigref, deltaref = lookupper.get_file(filename)
+        self.vfs.makedirs(os.path.dirname(filename))
+        self.restore_helper(filename, st, contref, deltaref)
+
     def restore_generation(self, walker):
         for dirname, dirnames, files in walker.walk_generation():
             self.vfs.mkdir(dirname)

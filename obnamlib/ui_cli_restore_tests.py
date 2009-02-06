@@ -88,3 +88,23 @@ class RestoreCommandTests(unittest.TestCase):
         
         self.assertEqual(self.dirname, "dirname")
         self.assertEqual(self.file, "file")
+
+    def test_restore_filename_calls_helper_correctly(self):
+        lookupper = self.mox.CreateMock(obnamlib.Lookupper)
+        vfs = self.mox.CreateMock(obnamlib.VirtualFileSystem)
+        
+        cmd = obnamlib.RestoreCommand()
+        cmd.vfs = vfs
+        cmd.restore_helper = self.mock_helper
+        
+        lookupper.get_file("foo/bar").AndReturn(("st", "contref", 
+                                                 "sigref", "deltaref"))
+        cmd.vfs.makedirs("foo")
+        
+        self.mox.ReplayAll()
+        cmd.restore_filename(lookupper, "foo/bar")
+        self.mox.VerifyAll()
+        self.assertEqual(self.filename, "foo/bar")
+        self.assertEqual(self.st, "st")
+        self.assertEqual(self.contref, "contref")
+        self.assertEqual(self.deltaref, "deltaref")
