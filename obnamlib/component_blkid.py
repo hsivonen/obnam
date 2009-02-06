@@ -21,6 +21,3 @@ import obnamlib
 class BlockId(obnamlib.StringComponent):
 
     string_kind = obnamlib.BLKID
-
-    def __init__(self, block_id):
-        obnamlib.StringComponent.__init__(self, block_id)
