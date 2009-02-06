@@ -73,6 +73,11 @@ class ObjectId(obnamlib.StringComponent):
     string_kind = obnamlib.OBJID
 
 
+class ObjRef(obnamlib.StringComponent):
+
+    string_kind = obnamlib.OBJREF
+
+
 class SigData(obnamlib.StringComponent):
 
     string_kind = obnamlib.SIGDATA

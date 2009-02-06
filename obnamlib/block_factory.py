@@ -82,8 +82,7 @@ class BlockFactory(object):
             c.children.append(obnamlib.Component(obnamlib.BLOCKREF,
                                                  string=key))
             for value in values:
-                c.children.append(obnamlib.Component(obnamlib.OBJREF,
-                                                     string=value))
+                c.children.append(obnamlib.ObjRef(value))
             parts.append(of.encode_component(c))
 
         for obj in objects:

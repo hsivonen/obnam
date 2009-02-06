@@ -33,6 +33,7 @@ from component_strings import (BlockId,
                                GenRef,
                                GenStart,
                                ObjectId, 
+                               ObjRef,
                                SigData,
                                SigRef,
                                Stat)
