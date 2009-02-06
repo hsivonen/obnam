@@ -81,7 +81,6 @@ class ObjectFactory(object):
         obj.prepare_for_encoding()
 
         id = obnamlib.ObjectId(obj.id)
-
         kind = obnamlib.ObjectKind(obj.kind)
 
         cmp = obnamlib.Component(kind=obnamlib.OBJECT)

@@ -18,6 +18,16 @@
 import obnamlib
 
 
+# This module contains the component classes that are just for simple
+# string values. They don't need any extra testing. There are, however,
+# so many of them that it's pointless putting each in its own module.
+
+
 class BlockId(obnamlib.StringComponent):
 
     string_kind = obnamlib.BLKID
+
+
+class ObjectId(obnamlib.StringComponent):
+
+    string_kind = obnamlib.OBJID
