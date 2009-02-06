@@ -43,7 +43,7 @@ class BackupCommand(object):
             file_component.children += [
                 obnamlib.FileName(os.path.basename(path)),
                 obnamlib.encode_stat(stat),
-                obnamlib.Component(kind=obnamlib.CONTREF, string=fc.id),
+                obnamlib.ContRef(fc.id),
                 ]
             fg.components.append(file_component)
         self.store.put_object(fg)

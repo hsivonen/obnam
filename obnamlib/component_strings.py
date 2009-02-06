@@ -28,6 +28,11 @@ class BlockId(obnamlib.StringComponent):
     string_kind = obnamlib.BLKID
 
 
+class ContRef(obnamlib.StringComponent):
+
+    string_kind = obnamlib.CONTREF
+
+
 class DeltaData(obnamlib.StringComponent):
 
     string_kind = obnamlib.DELTADATA

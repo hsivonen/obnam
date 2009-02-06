@@ -94,7 +94,7 @@ class ObjectFactoryTests(unittest.TestCase):
                          "3\n%d\nfoo" % obnamlib.FILENAME)
 
     def test_encodes_ref_component_correctly(self):
-        cmp = obnamlib.Component(obnamlib.CONTREF, string="foo")
+        cmp = obnamlib.ContRef("foo")
         self.assertEqual(self.factory.encode_component(cmp),
                          "3\n%d\nfoo" % obnamlib.CONTREF)
 
