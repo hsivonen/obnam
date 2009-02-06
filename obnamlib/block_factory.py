@@ -70,8 +70,7 @@ class BlockFactory(object):
 
         parts = [self.BLOCK_COOKIE]
 
-        id_component = obnamlib.Component(kind=obnamlib.BLKID,
-                                          string=block_id)
+        id_component = obnamlib.BlockId(block_id)
         parts.append(of.encode_component(id_component))
 
         by_block_id = {}
