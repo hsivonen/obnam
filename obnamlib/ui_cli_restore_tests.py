@@ -68,3 +68,23 @@ class RestoreCommandTests(unittest.TestCase):
         self.assertEqual(self.st, st)
         self.assertEqual(self.contref, "contref")
         self.assertEqual(self.deltaref, "deltaref")
+
+    def mock_restore_file(self, dirname, file):
+        self.dirname = dirname
+        self.file = file
+
+    def test_restore_generation_calls_restore_file_correctly(self):
+        walker = self.mox.CreateMock(obnamlib.StoreWalker)
+        cmd = obnamlib.RestoreCommand()
+        cmd.vfs = self.mox.CreateMock(obnamlib.VirtualFileSystem)
+        
+        walker.walk_generation().AndReturn([("dirname", [], ["file"])])
+        cmd.vfs.mkdir("dirname")
+        cmd.restore_file = self.mock_restore_file
+
+        self.mox.ReplayAll()
+        cmd.restore_generation(walker)
+        self.mox.VerifyAll()
+        
+        self.assertEqual(self.dirname, "dirname")
+        self.assertEqual(self.file, "file")

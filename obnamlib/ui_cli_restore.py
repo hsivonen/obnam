@@ -39,6 +39,12 @@ class RestoreCommand(object):
         
         self.restore_helper(filename, st, contref, deltaref)
 
+    def restore_generation(self, walker):
+        for dirname, dirnames, files in walker.walk_generation():
+            self.vfs.mkdir(dirname)
+            for file in files:
+                self.restore_file(dirname, file)
+
     def restore(self, host_id, genref, roots):
         """Restore files and directories (with contents)."""
         
@@ -59,10 +65,7 @@ class RestoreCommand(object):
                         for file in files:
                             self.restore_file(dirname, file)
         else:
-            for dirname, dirnames, files in walker.walk_generation():
-                self.vfs.mkdir(dirname)
-                for file in files:
-                    self.restore_file(dirname, file)
+            self.restore_generation(walker)
     
     def __call__(self, config, args): # pragma: no cover
         target = args[0]
