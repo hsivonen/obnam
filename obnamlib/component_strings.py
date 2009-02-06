@@ -33,6 +33,11 @@ class BlockRef(obnamlib.StringComponent):
     string_kind = obnamlib.BLOCKREF
 
 
+class ContMapRef(obnamlib.StringComponent):
+
+    string_kind = obnamlib.CONTMAPREF
+
+
 class ContRef(obnamlib.StringComponent):
 
     string_kind = obnamlib.CONTREF

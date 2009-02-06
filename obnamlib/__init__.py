@@ -27,6 +27,7 @@ cmp_kinds.add_all()
 cmp_kinds.add_to_obnamlib()
 from component_strings import (BlockId, 
                                BlockRef,
+                               ContMapRef,
                                ContRef,
                                FileChunk, 
                                FileListRef,
