@@ -20,6 +20,7 @@ import obnamlib
 
 class BlockId(obnamlib.StringComponent):
 
+    string_kind = obnamlib.BLKID
+
     def __init__(self, block_id):
-        obnamlib.StringComponent.__init__(self, kind=obnamlib.BLKID, 
-                                    string=block_id)
+        obnamlib.StringComponent.__init__(self, block_id)
