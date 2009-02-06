@@ -79,8 +79,7 @@ class BlockFactory(object):
 
         for key, values in by_block_id.iteritems():
             c = obnamlib.Component(kind=obnamlib.OBJMAP)
-            c.children.append(obnamlib.Component(obnamlib.BLOCKREF,
-                                                 string=key))
+            c.children.append(obnamlib.BlockRef(key))
             for value in values:
                 c.children.append(obnamlib.ObjRef(value))
             parts.append(of.encode_component(c))
