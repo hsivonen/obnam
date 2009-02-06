@@ -38,6 +38,11 @@ class FileName(obnamlib.StringComponent):
     string_kind = obnamlib.FILENAME
 
 
+class FormatVersion(obnamlib.StringComponent):
+
+    string_kind = obnamlib.FORMATVERSION
+
+
 class ObjectId(obnamlib.StringComponent):
 
     string_kind = obnamlib.OBJID
