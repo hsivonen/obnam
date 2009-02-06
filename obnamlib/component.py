@@ -109,3 +109,11 @@ class Component(object):
         for cmp in list:
             self.children.remove(cmp)
         return list
+
+
+class StringComponent(Component):
+
+    """Base class for components that only contain a string."""
+    
+    def __init__(self, kind, string):
+        Component.__init__(self, kind=kind, string=string)

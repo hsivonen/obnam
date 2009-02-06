@@ -116,3 +116,10 @@ class CompositeTests(unittest.TestCase):
     def test_extract_removes_matches(self):
         self.cmp.extract(kind=obnamlib.OBJID)
         self.assertEqual(self.cmp.children, [self.bar])
+
+
+class StringComponentTests(unittest.TestCase):
+
+    def test_sets_string_correctly(self):
+        sc = obnamlib.StringComponent(kind=obnamlib.OBJID, string="foo")
+        self.assertEqual(sc.string, "foo")

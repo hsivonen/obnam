@@ -20,7 +20,7 @@ from exception import BackupException as Exception
 from cfg import Config
 
 from kinds import Kinds
-from component import Component
+from component import Component, StringComponent
 from component_kinds import ComponentKinds
 cmp_kinds = ComponentKinds()
 cmp_kinds.add_all()
