@@ -73,6 +73,11 @@ class SigData(obnamlib.StringComponent):
     string_kind = obnamlib.SIGDATA
 
 
+class SigRef(obnamlib.StringComponent):
+
+    string_kind = obnamlib.SIGREF
+
+
 class SnapshotGen(obnamlib.StringComponent):
 
     string_kind = obnamlib.SNAPSHOTGEN

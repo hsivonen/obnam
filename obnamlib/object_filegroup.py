@@ -38,7 +38,7 @@ class FileGroup(obnamlib.Object):
             obnamlib.FileName(name),
             obnamlib.encode_stat(stat),
             obnamlib.ContRef(contref),
-            obnamlib.Component(kind=obnamlib.SIGREF, string=sigref),
+            obnamlib.SigRef(sigref),
             obnamlib.Component(kind=obnamlib.DELTAREF, string=deltaref),
         ]
         file = obnamlib.File(children)
