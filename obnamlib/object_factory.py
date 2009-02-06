@@ -80,7 +80,7 @@ class ObjectFactory(object):
     def encode_object(self, obj):
         obj.prepare_for_encoding()
 
-        id = obnamlib.Component(kind=obnamlib.OBJID, string=obj.id)
+        id = obnamlib.ObjectId(obj.id)
 
         kind = obnamlib.Component(kind=obnamlib.OBJKIND,
                                   string=obnamlib.varint.encode(obj.kind))
