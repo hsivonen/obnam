@@ -48,6 +48,11 @@ class DeltaData(obnamlib.StringComponent):
     string_kind = obnamlib.DELTADATA
 
 
+class DeltaPartRef(obnamlib.StringComponent):
+
+    string_kind = obnamlib.DELTAPARTREF
+
+
 class DeltaRef(obnamlib.StringComponent):
 
     string_kind = obnamlib.DELTAREF
