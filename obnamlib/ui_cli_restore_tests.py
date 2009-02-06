@@ -43,3 +43,28 @@ class RestoreCommandTests(unittest.TestCase):
         self.mox.ReplayAll()
         self.cmd.restore_helper("foo", "st", "contref", "deltaref")
         self.mox.VerifyAll()
+
+    def mock_helper(self, filename, st, contref, deltaref):
+        self.filename = filename
+        self.st = st
+        self.contref = contref
+        self.deltaref = deltaref
+
+    def test_restore_file_calls_helper_correctly(self):
+        name = obnamlib.Component(kind=obnamlib.FILENAME, string="filename")
+        contref = obnamlib.Component(kind=obnamlib.CONTREF, string="contref")
+        deltaref = obnamlib.Component(kind=obnamlib.DELTAREF, 
+                                      string="deltaref")
+        st = obnamlib.make_stat()
+    
+        file = obnamlib.Component(kind=obnamlib.FILE)
+        file.children += [name, obnamlib.encode_stat(st), contref, deltaref]
+
+        self.mox.ReplayAll()
+        self.cmd.restore_helper = self.mock_helper
+        self.cmd.restore_file("dirname", file)
+        self.mox.VerifyAll()
+        self.assertEqual(self.filename, "dirname/filename")
+        self.assertEqual(self.st, st)
+        self.assertEqual(self.contref, "contref")
+        self.assertEqual(self.deltaref, "deltaref")
