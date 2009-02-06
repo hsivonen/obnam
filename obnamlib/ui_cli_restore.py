@@ -56,7 +56,7 @@ class RestoreCommand(object):
             for file in files:
                 self.restore_file(dirname, file)
 
-    def restore(self, host_id, genref, roots):
+    def restore(self, host_id, genref, roots): # pragma: no cover
         """Restore files and directories (with contents)."""
         
         self.host = self.store.get_host(host_id)
