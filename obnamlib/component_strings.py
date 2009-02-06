@@ -28,6 +28,11 @@ class BlockId(obnamlib.StringComponent):
     string_kind = obnamlib.BLKID
 
 
+class DeltaData(obnamlib.StringComponent):
+
+    string_kind = obnamlib.DELTADATA
+
+
 class FileChunk(obnamlib.StringComponent):
 
     string_kind = obnamlib.FILECHUNK
