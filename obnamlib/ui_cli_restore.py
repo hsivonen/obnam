@@ -44,6 +44,12 @@ class RestoreCommand(object):
         self.vfs.makedirs(os.path.dirname(filename))
         self.restore_helper(filename, st, contref, deltaref)
 
+    def restore_dir(self, walker, root):
+        for dirname, dirnames, files in walker.walk(root):
+            self.vfs.mkdir(dirname)
+            for file in files:
+                self.restore_file(dirname, file)
+
     def restore_generation(self, walker):
         for dirname, dirnames, files in walker.walk_generation():
             self.vfs.mkdir(dirname)
@@ -61,14 +67,9 @@ class RestoreCommand(object):
             lookupper = obnamlib.Lookupper(self.store, self.host, gen)
             for root in roots:
                 if lookupper.is_file(root):
-                    st, contref, sigref, deltaref = lookupper.get_file(root)
-                    self.vfs.makedirs(os.path.dirname(root))
-                    self.restore_helper(root, st, contref, deltaref)
+                    self.restore_filename(lookupper, root)
                 else:
-                    for dirname, dirnames, files in walker.walk(root):
-                        self.vfs.mkdir(dirname)
-                        for file in files:
-                            self.restore_file(dirname, file)
+                    self.restore_dir(walker, root)
         else:
             self.restore_generation(walker)
     
