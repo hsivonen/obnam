@@ -27,6 +27,8 @@ class CommandLineUI(obnamlib.UserInterface):
 
         "backup": obnamlib.BackupCommand(),
         
+        "restore": obnamlib.RestoreCommand(),
+        
         "cat": obnamlib.CatCommand(),
         
         "list": obnamlib.GenerationsCommand(),
