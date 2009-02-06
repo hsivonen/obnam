@@ -48,6 +48,11 @@ class FileChunk(obnamlib.StringComponent):
     string_kind = obnamlib.FILECHUNK
 
 
+class FileListRef(obnamlib.StringComponent):
+
+    string_kind = obnamlib.FILELISTREF
+
+
 class FileName(obnamlib.StringComponent):
 
     string_kind = obnamlib.FILENAME
