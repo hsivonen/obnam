@@ -39,7 +39,7 @@ class FileGroup(obnamlib.Object):
             obnamlib.encode_stat(stat),
             obnamlib.ContRef(contref),
             obnamlib.SigRef(sigref),
-            obnamlib.Component(kind=obnamlib.DELTAREF, string=deltaref),
+            obnamlib.DeltaRef(deltaref),
         ]
         file = obnamlib.File(children)
         self.components.append(file)

@@ -53,8 +53,7 @@ class RestoreCommandTests(unittest.TestCase):
     def test_restore_file_calls_helper_correctly(self):
         name = obnamlib.FileName("filename")
         contref = obnamlib.ContRef("contref")
-        deltaref = obnamlib.Component(kind=obnamlib.DELTAREF, 
-                                      string="deltaref")
+        deltaref = obnamlib.DeltaRef("deltaref")
         st = obnamlib.make_stat()
     
         file = obnamlib.File([name, obnamlib.encode_stat(st), 
