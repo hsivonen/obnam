@@ -41,3 +41,8 @@ class FileName(obnamlib.StringComponent):
 class ObjectId(obnamlib.StringComponent):
 
     string_kind = obnamlib.OBJID
+
+
+class SigData(obnamlib.StringComponent):
+
+    string_kind = obnamlib.SIGDATA
