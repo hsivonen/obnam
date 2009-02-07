@@ -1,4 +1,4 @@
-# Copyright (C) 2008  Lars Wirzenius <liw@liw.fi>
+# Copyright (C) 2009  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,19 +18,21 @@
 import obnamlib
 
 
-class FileContents(obnamlib.Object):
+# This module contains the component classes that are simple composite
+# ones. They don't need any extra testing. There are, however, so many
+# of them that it's pointless putting each in its own module.
 
-    """Store the full contents of a file."""
 
-    kind = obnamlib.FILECONTENTS
+class NameIPair(obnamlib.CompositeComponent):
 
-    def __init__(self, id):
-        obnamlib.Object.__init__(self, id=id)
+    composite_kind = obnamlib.NAMEIPAIR
 
-    @property
-    def part_ids(self):
-        return self.find_strings(kind=obnamlib.FILEPARTREF)
 
-    def add(self, ref):
-        c = obnamlib.FilePartRef(ref)
-        self.components.append(c)
+class ObjectComponent(obnamlib.CompositeComponent):
+
+    composite_kind = obnamlib.OBJECT
+
+
+class ObjMap(obnamlib.CompositeComponent):
+
+    composite_kind = obnamlib.OBJMAP

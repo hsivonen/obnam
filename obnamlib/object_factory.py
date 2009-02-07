@@ -47,7 +47,7 @@ class ObjectFactory(object):
         if obnamlib.cmp_kinds.is_composite(cmp.kind):
             content = "".join(self.encode_component(x) for x in cmp.children)
         else:
-            content = cmp.string
+            content = str(cmp)
         length = obnamlib.varint.encode(len(content))
         kind = obnamlib.varint.encode(cmp.kind)
         return "%s%s%s" % (length, kind, content)
@@ -58,15 +58,14 @@ class ObjectFactory(object):
         size, pos = obnamlib.varint.decode(str, pos)
         kind, pos = obnamlib.varint.decode(str, pos)
         
-        cmp = obnamlib.Component(kind=kind)
-
         content = str[pos:pos+size]
         pos += size
 
         if obnamlib.cmp_kinds.is_composite(kind):
-            cmp.children = self.decode_all_components(content)
+            children = self.decode_all_components(content)
+            cmp = obnamlib.Component(kind=kind, children=children)
         else:
-            cmp.string = content
+            cmp = obnamlib.Component(kind=kind, string=content)
         
         return cmp, pos
 
@@ -80,13 +79,10 @@ class ObjectFactory(object):
     def encode_object(self, obj):
         obj.prepare_for_encoding()
 
-        id = obnamlib.Component(kind=obnamlib.OBJID, string=obj.id)
+        id = obnamlib.ObjectId(obj.id)
+        kind = obnamlib.ObjectKind(obj.kind)
 
-        kind = obnamlib.Component(kind=obnamlib.OBJKIND,
-                                  string=obnamlib.varint.encode(obj.kind))
-
-        cmp = obnamlib.Component(kind=obnamlib.OBJECT)
-        cmp.children = [id, kind] + obj.components
+        cmp = obnamlib.ObjectComponent([id, kind] + obj.components)
         return self.encode_component(cmp)
 
     def construct_object(self, cmp):

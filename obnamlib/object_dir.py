@@ -37,10 +37,10 @@ class Dir(obnamlib.Object):
                             for ref in refs]
 
     def prepare_for_encoding(self):
-        c = obnamlib.Component(kind=obnamlib.FILENAME, string=self.name)
+        c = obnamlib.FileName(self.name)
         self.components.append(c)
         if self.stat:
-            self.components.append(obnamlib.encode_stat(self.stat))
+            self.components.append(obnamlib.Stat(self.stat))
         self.add_refs(obnamlib.DIRREF, self.dirrefs)
         self.add_refs(obnamlib.FILEGROUPREF, self.fgrefs)
 

@@ -31,26 +31,18 @@ class ComponentTests(unittest.TestCase):
         self.assertEqual(self.ccmp.kind, obnamlib.FILE)
 
     def test_initially_sets_value_to_empty_string(self):
-        self.assertEqual(self.scmp.string, "")
+        self.assertEqual(str(self.scmp), "")
 
     def test_sets_string_value_correctly(self):
-        self.scmp.string = "foo"
-        self.assertEqual(self.scmp.string, "foo")
+        scmp = obnamlib.Component(kind=obnamlib.OBJID, string="foo")
+        self.assertEqual(str(scmp), "foo")
 
     def test_sets_string_value_via_initializer_correctly(self):
         c = obnamlib.Component(kind=obnamlib.OBJID, string="foo")
-        self.assertEqual(c.string, "foo")
-
-    def test_refuses_to_set_string_value_to_non_string_value(self):
-        self.assertRaises(obnamlib.Exception, self.scmp.set_string, None)
+        self.assertEqual(str(c), "foo")
 
     def test_refuses_to_access_string_for_composite_component(self):
-        self.assertRaises(obnamlib.Exception, lambda: self.ccmp.string)
-
-    def test_refuses_to_set_string_for_composite_component(self):
-        def set():
-            self.ccmp.string = "foo"
-        self.assertRaises(obnamlib.Exception, set)
+        self.assertRaises(obnamlib.Exception, lambda: str(self.ccmp))
 
     def test_initially_creates_no_children(self):
         self.assertEqual(self.ccmp.children, [])
@@ -116,3 +108,21 @@ class CompositeTests(unittest.TestCase):
     def test_extract_removes_matches(self):
         self.cmp.extract(kind=obnamlib.OBJID)
         self.assertEqual(self.cmp.children, [self.bar])
+
+
+class StringComponentTests(unittest.TestCase):
+
+    def test_sets_string_correctly(self):
+        class Dummy(obnamlib.StringComponent):
+            string_kind = obnamlib.OBJID
+        sc = Dummy("foo")
+        self.assertEqual(str(sc), "foo")
+
+
+class CompositeComponentTests(unittest.TestCase):
+
+    def test_sets_children_correctly(self):
+        class Dummy(obnamlib.CompositeComponent):
+            composite_kind = obnamlib.OBJECT
+        sc = Dummy([True, False])
+        self.assertEqual(sc.children, [True, False])

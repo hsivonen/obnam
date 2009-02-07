@@ -32,7 +32,7 @@ class Host(obnamlib.Object):
     def get_genrefs(self):
         if self._genrefs is None:
             list = self.extract(kind=obnamlib.GENREF)
-            self._genrefs = [c.string for c in list]
+            self._genrefs = [str(c) for c in list]
         return self._genrefs
 
     def set_genrefs(self, genrefs):
@@ -44,7 +44,7 @@ class Host(obnamlib.Object):
     def get_maprefs(self):
         if self._maprefs is None:
             list = self.extract(kind=obnamlib.MAPREF)
-            self._maprefs = [c.string for c in list]
+            self._maprefs = [str(c) for c in list]
         return self._maprefs
 
     def set_maprefs(self, maprefs):
@@ -55,8 +55,8 @@ class Host(obnamlib.Object):
 
     def prepare_for_encoding(self):
         for genref in self.genrefs:
-            c = obnamlib.Component(kind=obnamlib.GENREF, string=genref)
+            c = obnamlib.GenRef(genref)
             self.components.append(c)
         for mapref in self.maprefs:
-            c = obnamlib.Component(kind=obnamlib.MAPREF, string=mapref)
+            c = obnamlib.MapRef(mapref)
             self.components.append(c)

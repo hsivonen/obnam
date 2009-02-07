@@ -1,4 +1,4 @@
-# Copyright (C) 2008  Lars Wirzenius <liw@liw.fi>
+# Copyright (C) 2009  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,22 +15,13 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import unittest
+
 import obnamlib
 
 
-class FileContents(obnamlib.Object):
+class ObjectKindTests(unittest.TestCase):
 
-    """Store the full contents of a file."""
-
-    kind = obnamlib.FILECONTENTS
-
-    def __init__(self, id):
-        obnamlib.Object.__init__(self, id=id)
-
-    @property
-    def part_ids(self):
-        return self.find_strings(kind=obnamlib.FILEPARTREF)
-
-    def add(self, ref):
-        c = obnamlib.FilePartRef(ref)
-        self.components.append(c)
+    def test_sets_kind_correctly(self):
+        cmp = obnamlib.ObjectKind(42)
+        self.assertEqual(cmp.object_kind, 42)

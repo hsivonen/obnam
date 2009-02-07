@@ -63,22 +63,15 @@ class DirTests(unittest.TestCase):
     def test_post_hook_extracts_stuff(self):
         dir = obnamlib.Dir(id="id")
 
-        c = obnamlib.Component(kind=obnamlib.FILENAME, string="foo")
-        dir.components.append(c)
+        dir.components.append(obnamlib.FileName("foo"))
 
-        dir.components.append(obnamlib.encode_stat(obnamlib.make_stat()))
+        dir.components.append(obnamlib.Stat(obnamlib.make_stat()))
 
-        c = obnamlib.Component(kind=obnamlib.DIRREF, string="dir1")
-        dir.components.append(c)
+        dir.components.append(obnamlib.DirRef("dir1"))
+        dir.components.append(obnamlib.DirRef("dir2"))
 
-        c = obnamlib.Component(kind=obnamlib.DIRREF, string="dir2")
-        dir.components.append(c)
-
-        c = obnamlib.Component(kind=obnamlib.FILEGROUPREF, string="fg1")
-        dir.components.append(c)
-
-        c = obnamlib.Component(kind=obnamlib.FILEGROUPREF, string="fg2")
-        dir.components.append(c)
+        dir.components.append(obnamlib.FileGroupRef("fg1"))
+        dir.components.append(obnamlib.FileGroupRef("fg2"))
 
         dir.post_decoding_hook()
         self.assertEqual(dir.name, "foo")

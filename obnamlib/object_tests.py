@@ -35,7 +35,7 @@ class ObjectTests(unittest.TestCase):
         self.assertEqual(obj.find(kind=obnamlib.FILENAME), [])
 
     def test_finds_by_kind(self):
-        name = obnamlib.Component(kind=obnamlib.FILENAME, string="foo")
+        name = obnamlib.FileName("foo")
 
         obj = obnamlib.Object(id="id")
         obj.components.append(name)
@@ -43,7 +43,7 @@ class ObjectTests(unittest.TestCase):
         self.assertEqual(obj.find(kind=obnamlib.FILENAME), [name])
 
     def test_finds_strings_by_kind(self):
-        name = obnamlib.Component(kind=obnamlib.FILENAME, string="foo")
+        name = obnamlib.FileName("foo")
 
         obj = obnamlib.Object(id="id")
         obj.components.append(name)
@@ -51,7 +51,7 @@ class ObjectTests(unittest.TestCase):
         self.assertEqual(obj.find_strings(kind=obnamlib.FILENAME), ["foo"])
 
     def test_extracts_by_kind(self):
-        name = obnamlib.Component(kind=obnamlib.FILENAME, string="foo")
+        name = obnamlib.FileName("foo")
 
         obj = obnamlib.Object(id="id")
         obj.components.append(name)
@@ -61,7 +61,7 @@ class ObjectTests(unittest.TestCase):
         self.assertEqual(obj.components, [])
 
     def test_extracts_strings_by_kind(self):
-        name = obnamlib.Component(kind=obnamlib.FILENAME, string="foo")
+        name = obnamlib.FileName("foo")
 
         obj = obnamlib.Object(id="id")
         obj.components.append(name)

@@ -20,11 +20,35 @@ from exception import BackupException as Exception
 from cfg import Config
 
 from kinds import Kinds
-from component import Component
+from component import Component, StringComponent, CompositeComponent
 from component_kinds import ComponentKinds
 cmp_kinds = ComponentKinds()
 cmp_kinds.add_all()
 cmp_kinds.add_to_obnamlib()
+from component_file import File
+from component_stat import Stat
+from component_strings import (BlockId, 
+                               BlockRef,
+                               ContMapRef,
+                               ContRef,
+                               DeltaPartRef,
+                               DeltaRef,
+                               DirRef,
+                               FileChunk, 
+                               FileGroupRef,
+                               FileListRef,
+                               FileName,
+                               FilePartRef,
+                               GenEnd, 
+                               GenRef,
+                               GenStart,
+                               MapRef,
+                               ObjectId, 
+                               ObjRef,
+                               SigData,
+                               SigRef)
+from component_composites import NameIPair, ObjectComponent, ObjMap
+from component_objkind import ObjectKind
 
 from object import Object
 from object_kinds import ObjectKinds
@@ -70,6 +94,6 @@ from ui_cli_help import HelpCommand
 from ui_cli_show import ShowGenerationsCommand
 from ui_cli import CommandLineUI
 
-from statutils import encode_stat, decode_stat, make_stat
+from statutils import decode_stat, make_stat
 
 import varint

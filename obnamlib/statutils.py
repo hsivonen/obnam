@@ -49,29 +49,12 @@ def make_stat(st_mode=0, st_ino=0, st_dev=0, st_nlink=0, st_uid=0,
 
     return os.stat_result(tup, dict)
 
-def encode_stat(stat):
-    """Encode a stat_result as a Component."""
-    encoded_value = obnamlib.varint.encode_many([stat.st_mode, 
-                                                 stat.st_ino,
-                                                 stat.st_dev, 
-                                                 stat.st_nlink, 
-                                                 stat.st_uid, 
-                                                 stat.st_gid, 
-                                                 stat.st_size,
-                                                 stat.st_atime, 
-                                                 stat.st_mtime, 
-                                                 stat.st_ctime, 
-                                                 stat.st_blocks,
-                                                 stat.st_blksize, 
-                                                 stat.st_rdev])
-    return obnamlib.Component(kind=obnamlib.STAT, string=encoded_value)
-
 def decode_stat(encoded_stat):
     """Decode a Component of kind STAT to a stat_result."""
     
     (st_mode, st_ino, st_dev, st_nlink, st_uid, st_gid,
      st_size, st_atime, st_mtime, st_ctime, st_blocks, st_blksize, 
-     st_rdev) = obnamlib.varint.decode_many(encoded_stat.string)
+     st_rdev) = obnamlib.varint.decode_many(str(encoded_stat))
     return obnamlib.make_stat(st_mode=st_mode,
                               st_ino=st_ino,
                               st_dev=st_dev,

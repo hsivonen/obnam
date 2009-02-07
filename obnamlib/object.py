@@ -67,7 +67,7 @@ class Object(object):
 
     def find_strings(self, **kwargs):
         """Like find, but return string values of components."""
-        return [c.string for c in self.find(**kwargs)]
+        return [str(c) for c in self.find(**kwargs)]
 
     def extract(self, **kwargs):
         """Find and remove the top-level components matching **kwargs."""
@@ -77,4 +77,4 @@ class Object(object):
 
     def extract_strings(self, **kwargs):
         """Like extract, but return string values."""
-        return [c.string for c in self.extract(**kwargs)]
+        return [str(c) for c in self.extract(**kwargs)]

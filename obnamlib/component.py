@@ -49,19 +49,9 @@ class Component(object):
             raise obnamlib.Exception("Using string value of "
                                      "non-plain component.")
 
-    def get_string(self):
+    def __str__(self):
         self.assert_is_string_valued()
         return self._string
-
-    def set_string(self, string):
-        self.assert_is_string_valued()
-        if type(string) != str:
-            raise obnamlib.Exception("Cannot set string value to type %s" %
-                                     type(string))
-        self._string = string
-
-    string = property(fget=get_string, fset=set_string, 
-                      doc="String value of plain component.")
 
     def assert_is_composite(self):
         if not obnamlib.cmp_kinds.is_composite(self.kind):
@@ -85,7 +75,7 @@ class Component(object):
 
     def find_strings(self, **kwargs):
         """Like find, but return string values of matches."""
-        return [c.string for c in self.find(**kwargs)]
+        return [str(c) for c in self.find(**kwargs)]
 
     def first(self, **kwargs):
         """Like find, but return first matching sub-component, or None."""
@@ -99,7 +89,7 @@ class Component(object):
         """Like first, but return string value if found."""
         c = self.first(**kwargs)
         if c:
-            return c.string
+            return str(c)
         else:
             return None
 
@@ -109,3 +99,19 @@ class Component(object):
         for cmp in list:
             self.children.remove(cmp)
         return list
+
+
+class StringComponent(Component):
+
+    """Base class for components that only contain a string."""
+    
+    def __init__(self, string):
+        Component.__init__(self, kind=self.string_kind, string=string)
+
+
+class CompositeComponent(Component):
+
+    """Base class for components that contain other components."""
+    
+    def __init__(self, children):
+        Component.__init__(self, kind=self.composite_kind, children=children)

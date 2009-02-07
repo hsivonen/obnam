@@ -1,4 +1,4 @@
-# Copyright (C) 2008  Lars Wirzenius <liw@liw.fi>
+# Copyright (C) 2009  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,19 +18,12 @@
 import obnamlib
 
 
-class FileContents(obnamlib.Object):
+class ObjectKind(obnamlib.Component):
 
-    """Store the full contents of a file."""
-
-    kind = obnamlib.FILECONTENTS
-
-    def __init__(self, id):
-        obnamlib.Object.__init__(self, id=id)
+    def __init__(self, object_kind):
+        obnamlib.Component.__init__(self, kind=obnamlib.OBJKIND, 
+                                    string=obnamlib.varint.encode(object_kind))
 
     @property
-    def part_ids(self):
-        return self.find_strings(kind=obnamlib.FILEPARTREF)
-
-    def add(self, ref):
-        c = obnamlib.FilePartRef(ref)
-        self.components.append(c)
+    def object_kind(self):
+        return obnamlib.varint.decode(str(self), 0)[0]
