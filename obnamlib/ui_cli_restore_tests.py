@@ -120,7 +120,9 @@ class RestoreCommandTests(unittest.TestCase):
         
         walker.walk("dirname").AndReturn([("dirname", [], ["file"])])
         cmd.vfs.mkdir("dirname")
-        cmd.lookupper.get_dir('dirname').AndReturn(obnamlib.make_stat())
+        dir = self.mox.CreateMock(obnamlib.Dir)
+        dir.stat = obnamlib.make_stat()
+        cmd.lookupper.get_dir('dirname').AndReturn(dir)
         cmd.vfs.chmod('dirname', 0)
         cmd.vfs.utime('dirname', 0, 0)
 
