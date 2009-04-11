@@ -1,0 +1,221 @@
+#!/usr/bin/python
+#
+# Copyright (C) 2009  Lars Wirzenius <liw@liw.fi>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+
+"""Run some black box tests of obnam."""
+
+
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+import traceback
+
+
+class RestoresIdenticalData:
+
+    """Generate some data, back it up, restore. Result should be identical."""
+    
+    def __init__(self):
+        self.temproot = tempfile.mkdtemp()
+        self.hostid = "hostid"
+
+    def tempdir(self):
+        """Create a new temporary directory, create its name.
+        
+        The clean() method will remove this directory.
+        
+        """
+        
+        return tempfile.mkdtemp(dir=self.temproot)
+
+    def clean(self):
+        shutil.rmtree(self.temproot)
+
+    def runcmd(self, argv):
+        """Run an external command.
+        
+        If the command fails (non-zero exit), raise an exception.
+        
+        """
+        
+        subprocess.check_call(argv)
+
+    def create_file(self, root, relative, contents):
+        """Create a new file with the desired contents."""
+        
+        pathname = os.path.join(root, relative)
+        f = file(pathname, "w")
+        f.write(contents)
+        f.close()
+    
+    def generate(self):
+        """Generate some test data.
+        
+        Return name of temporary directory.
+        
+        """
+    
+        data = self.tempdir()
+        self.create_file(data, "foo", "foo")
+        return data
+    
+    def backup(self, data):
+        """Back up a data directory. Return name of store."""
+        store = self.tempdir()
+        
+        self.runcmd(["./obnam", "backup", self.hostid, store, data])
+        
+        return store
+        
+    def restore(self, store):
+        """Restore the newest generation from a store.
+        
+        Return name of directorey with restored data.
+        
+        """
+        
+        restored = self.tempdir()
+        self.runcmd(["./obnam", "restore", restored, self.hostid, store,
+                     "latest"])
+        return restored
+
+    def get_info(self, root, pathname):
+        """Get the information about a given file.
+        
+        Return a tuple (relativepath, stat) where relativepath is the
+        path relative to root, and stat is the result of os.lstat.
+        
+        """
+        
+        if pathname == root:
+            return ".", os.lstat(pathname)
+        assert pathname.startswith(root + os.sep), (pathname, root)
+        return pathname[len(root + os.sep):], os.lstat(pathname)
+
+    def find_everything(self, root):
+        """Find all filesystem objects inside a directory tree.
+        
+        Return list of (pathname, stat) tuples. The pathname will be
+        relative to the root of the directory tree. The stat tuples
+        will be the result of os.lstat for each pathname.
+        
+        """
+        
+        result = []
+        for dirname, dirnames, filenames in os.walk(root):
+            result.append(self.get_info(root, dirname))
+            for filename in filenames:
+                pathname = os.path.join(dirname, filename)
+                result.append(self.get_info(root, pathname))
+        return result
+
+    def same_stat(self, stat1, stat2):
+        """Are two stat results effectively identical?"""
+        
+        if False:
+            # This is the real version. However, we don't have what it
+            # takes in obnam yet, so in order to see if there are any
+            # other problems than stat problems, we currently use the
+            # absolute minimum to compare that things are identical.
+            return (stat1.st_atime  == stat2.st_atime and
+                    stat1.st_blocks == stat2.st_blocks and
+                    stat1.st_ctime  == stat2.st_ctime and
+                    stat1.st_gid    == stat2.st_gid and
+                    stat1.st_mode   == stat2.st_mode and
+                    stat1.st_mtime  == stat2.st_mtime and
+                    stat1.st_nlink  == stat2.st_nlink and
+                    stat1.st_size   == stat2.st_size and
+                    stat1.st_uid    == stat2.st_uid)
+        else:
+            return (stat1.st_size == stat2.st_size)
+
+    def same_contents(self, relative, root1, root2):
+        """Verify that file contents has been restored correctly."""
+        
+        path1 = os.path.join(root1, relative)
+        path2 = os.path.join(root2, relative)
+        
+        if not os.path.isfile(path1):
+            return True
+        
+        f1 = file(path1, "r")
+        f2 = file(path2, "r")
+        
+        data1 = f1.read()
+        data2 = f2.read()
+        
+        f1.close()
+        f2.close()
+        
+        return data1 == data2
+
+    def verify(self, data, restored):
+        """Verify that a restored directory is identical to the original.
+        
+        Raise an exception for the first error found.
+        
+        """
+        
+        origs = dict(self.find_everything(data))
+        basename = os.path.basename(data)
+        restored_tree = os.path.join(restored, basename)
+        restoreds = dict(self.find_everything(restored_tree))
+        
+        for name, orig_stat in origs.iteritems():
+            if name not in restoreds:
+                raise Exception("%s not in restored data" % name)
+            restored_stat = restoreds[name]
+            if not self.same_stat(orig_stat, restored_stat):
+                raise Exception("%s metadata restored badly" % name)
+            if not self.same_contents(name, data, restored_tree):
+                raise Exception("%s content restored badly" % name)
+        for name, restored_stat in restoreds.iteritems():
+            if name not in origs:
+                raise Exception("spurious %s in restored data" % name)
+    
+    def test(self):
+        data = self.generate()
+        store = self.backup(data)
+        restored = self.restore(store)
+        self.verify(data, restored)
+
+
+class ObnamBlackBoxTests:
+
+    """Main class for running black box tests of obnam."""
+    
+    def run(self):
+        errors = False
+        tests = [RestoresIdenticalData]
+        for klass in tests:
+            test = klass()
+            try:
+                test.test()
+            except Exception, e:
+                sys.stderr.write("Error: %s\n" % str(e))
+                sys.stderr.write(traceback.format_exc())
+                errors = True
+            test.clean()
+        if errors:
+            sys.exit(1)
+
+
+if __name__ == "__main__":
+    ObnamBlackBoxTests().run()
