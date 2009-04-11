@@ -156,22 +156,6 @@ class BlackBoxTest:
             if name not in origs:
                 raise Exception("spurious %s in restored data" % name)
 
-
-class RestoresIdenticalData(BlackBoxTest):
-
-    """Generate some data, back it up, restore. Result should be identical."""
-    
-    def generate(self):
-        """Generate some test data.
-        
-        Return name of temporary directory.
-        
-        """
-    
-        data = self.tempdir()
-        self.create_file(data, "foo", "foo")
-        return data
-    
     def backup(self, data):
         """Back up a data directory. Return name of store."""
         store = self.tempdir()
@@ -192,8 +176,27 @@ class RestoresIdenticalData(BlackBoxTest):
                      "latest"])
         return restored
 
+
+class RestoresIdenticalData(BlackBoxTest):
+
+    """Generate some data, back it up, restore. Result should be identical."""
+    
     def test(self):
-        data = self.generate()
+        data = self.tempdir()
+        self.create_file(data, "foo", "foo")
+        store = self.backup(data)
+        restored = self.restore(store)
+        self.verify(data, restored)
+
+
+class HandlesHardLinks(BlackBoxTest):
+
+    def test(self):
+        data = self.tempdir()
+        self.create_file(data, "foo", "foo")
+        foo = os.path.join(data, "foo")
+        bar = os.path.join(data, "bar")
+        os.link(foo, bar)
         store = self.backup(data)
         restored = self.restore(store)
         self.verify(data, restored)
@@ -205,7 +208,7 @@ class ObnamBlackBoxTests:
     
     def run(self):
         errors = False
-        tests = [RestoresIdenticalData]
+        tests = [RestoresIdenticalData, HandlesHardLinks]
         for klass in tests:
             test = klass()
             try:
