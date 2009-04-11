@@ -60,6 +60,10 @@ class RestoreCommand(object):
         """Restore files and directories (with contents)."""
         
         self.host = self.store.get_host(host_id)
+        
+        if genref == "latest":
+            genref = self.host.genrefs[-1]
+        
         gen = self.store.get_object(self.host, genref)
         walker = obnamlib.StoreWalker(self.store, self.host, gen)
 
