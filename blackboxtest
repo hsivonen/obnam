@@ -202,13 +202,23 @@ class HandlesHardLinks(BlackBoxTest):
         self.verify(data, restored)
 
 
+class HandlesSymLinks(BlackBoxTest):
+
+    def test(self):
+        data = self.tempdir()
+        os.symlink("bar", os.path.join(data, "foo"))
+        store = self.backup(data)
+        restored = self.restore(store)
+        self.verify(data, restored)
+
+
 class ObnamBlackBoxTests:
 
     """Main class for running black box tests of obnam."""
     
     def run(self):
         errors = False
-        tests = [RestoresIdenticalData, HandlesHardLinks]
+        tests = [RestoresIdenticalData, HandlesHardLinks, HandlesSymLinks]
         for klass in tests:
             test = klass()
             try:
