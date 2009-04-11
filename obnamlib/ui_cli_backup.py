@@ -15,7 +15,9 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import logging
 import os
+import stat
 
 import obnamlib
 
@@ -28,10 +30,15 @@ class BackupCommand(object):
 
     def backup_new_file(self, relative_path):
         """Back up a completely new file."""
-        f = self.fs.open(relative_path, "r")
-        content = self.store.put_contents(f, self.PART_SIZE)
-        f.close()
-        return content
+        
+        st = self.fs.lstat(relative_path)
+        if stat.S_ISREG(st.st_mode):
+            f = self.fs.open(relative_path, "r")
+            content = self.store.put_contents(f, self.PART_SIZE)
+            f.close()
+            return content
+        else:
+            logging.warning("Ignoring file of unknown type %s" % relative_path)
 
     def backup_new_files_as_groups(self, relative_paths, lstat=None):
         """Back a set of new files as a new FILEGROUP."""
@@ -40,10 +47,11 @@ class BackupCommand(object):
         fg = self.store.new_object(kind=obnamlib.FILEGROUP)
         for path in relative_paths:
             fc = self.backup_new_file(path)
-            stat = lstat(path)
-            file_component = obnamlib.File(os.path.basename(path), stat,
-                                           fc.id, None, None)
-            fg.components.append(file_component)
+            if fc:
+                stat = lstat(path)
+                file_component = obnamlib.File(os.path.basename(path), stat,
+                                               fc.id, None, None)
+                fg.components.append(file_component)
         self.store.put_object(fg)
         return [fg]
 
