@@ -22,6 +22,7 @@
 
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 import traceback
@@ -33,6 +34,7 @@ class RestoresIdenticalData:
     
     def __init__(self):
         self.temproot = tempfile.mkdtemp()
+        self.hostid = "hostid"
 
     def tempdir(self):
         """Create a new temporary directory, create its name.
@@ -45,6 +47,15 @@ class RestoresIdenticalData:
 
     def clean(self):
         shutil.rmtree(self.temproot)
+
+    def runcmd(self, argv):
+        """Run an external command.
+        
+        If the command fails (non-zero exit), raise an exception.
+        
+        """
+        
+        subprocess.check_call(argv)
 
     def create_file(self, root, relative, contents):
         """Create a new file with the desired contents."""
@@ -68,6 +79,9 @@ class RestoresIdenticalData:
     def backup(self, data):
         """Back up a data directory. Return name of store."""
         store = self.tempdir()
+        
+        self.runcmd(["./obnam", "backup", self.hostid, store, data])
+        
         return store
         
     def restore(self, store):
