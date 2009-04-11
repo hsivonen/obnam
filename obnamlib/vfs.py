@@ -92,7 +92,15 @@ class VirtualFileSystem(object):
         pass
 
     def link(self, existing_path, new_path):
-        """Link os.link."""
+        """Like os.link."""
+        pass
+
+    def readlink(self, symlink):
+        """Like os.readlink."""
+        pass
+
+    def symlink(self, source, destination):
+        """Like os.symlink."""
         pass
 
     def open(self, relative_path, mode):
