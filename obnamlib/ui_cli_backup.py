@@ -28,17 +28,24 @@ class BackupCommand(object):
 
     PART_SIZE = 256 * 1024
 
-    def backup_new_file(self, relative_path):
+    def backup_new_symlink(self, relative_path, stat):
+        """Backup a new symlink."""
+        target = self.fs.readlink(relative_path)
+        fc = obnamlib.Symlink(os.path.basename(relative_path), stat, target)
+        return fc
+
+    def backup_new_other(self, path, st):
+        """Backup a new thing that is not a symlink or regular file."""
+        return obnamlib.File(os.path.basename(path), st, None, None, None)
+
+    def backup_new_file(self, path, st):
         """Back up a completely new file."""
         
-        st = self.fs.lstat(relative_path)
-        if stat.S_ISREG(st.st_mode):
-            f = self.fs.open(relative_path, "r")
-            content = self.store.put_contents(f, self.PART_SIZE)
-            f.close()
-            return content
-        else:
-            logging.warning("Ignoring file of unknown type %s" % relative_path)
+        f = self.fs.open(path, "r")
+        content = self.store.put_contents(f, self.PART_SIZE)
+        f.close()
+        fc = obnamlib.File(os.path.basename(path), st, content.id, None, None)
+        return fc
 
     def backup_new_files_as_groups(self, relative_paths, lstat=None):
         """Back a set of new files as a new FILEGROUP."""
@@ -46,12 +53,15 @@ class BackupCommand(object):
             lstat = self.fs.lstat
         fg = self.store.new_object(kind=obnamlib.FILEGROUP)
         for path in relative_paths:
-            fc = self.backup_new_file(path)
-            if fc:
-                stat = lstat(path)
-                file_component = obnamlib.File(os.path.basename(path), stat,
-                                               fc.id, None, None)
-                fg.components.append(file_component)
+            st = lstat(path)
+            fc = None
+            if stat.S_ISREG(st.st_mode):
+                fc = self.backup_new_file(path, st)
+            elif stat.S_ISLNK(st.st_mode):
+                fc = self.backup_new_symlink(path, st)
+            else:
+                fc = self.backup_new_other(path, st)
+            fg.components.append(fc)
         self.store.put_object(fg)
         return [fg]
 
