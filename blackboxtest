@@ -92,6 +92,8 @@ class RestoresIdenticalData:
         """
         
         restored = self.tempdir()
+        self.runcmd(["./obnam", "restore", restored, self.hostid, store,
+                     "latest"])
         return restored
 
     def get_info(self, root, pathname):
@@ -124,6 +126,26 @@ class RestoresIdenticalData:
                 result.append(self.get_info(root, pathname))
         return result
 
+    def same_stat(self, stat1, stat2):
+        """Are two stat results effectively identical?"""
+        
+        if False:
+            # This is the real version. However, we don't have what it
+            # takes in obnam yet, so in order to see if there are any
+            # other problems than stat problems, we currently use the
+            # absolute minimum to compare that things are identical.
+            return (stat1.st_atime  == stat2.st_atime and
+                    stat1.st_blocks == stat2.st_blocks and
+                    stat1.st_ctime  == stat2.st_ctime and
+                    stat1.st_gid    == stat2.st_gid and
+                    stat1.st_mode   == stat2.st_mode and
+                    stat1.st_mtime  == stat2.st_mtime and
+                    stat1.st_nlink  == stat2.st_nlink and
+                    stat1.st_size   == stat2.st_size and
+                    stat1.st_uid    == stat2.st_uid)
+        else:
+            return (stat1.st_size == stat2.st_size)
+
     def verify(self, data, restored):
         """Verify that a restored directory is identical to the original.
         
@@ -132,7 +154,9 @@ class RestoresIdenticalData:
         """
         
         origs = dict(self.find_everything(data))
-        restoreds = dict(self.find_everything(restored))
+        basename = os.path.basename(data)
+        restored_tree = os.path.join(restored, basename)
+        restoreds = dict(self.find_everything(restored_tree))
         
         for name, orig_stat in origs.iteritems():
             if name not in restoreds:
