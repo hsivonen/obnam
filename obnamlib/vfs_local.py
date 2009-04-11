@@ -45,6 +45,15 @@ class LocalFS(obnamlib.VirtualFileSystem):
     def remove(self, relative_path):
         os.remove(self.join(relative_path))
 
+    def lstat(self, relative_path):
+        return os.lstat(self.join(relative_path))
+
+    def chmod(self, relative_path, mode):
+        os.chmod(self.join(relative_path), mode)
+
+    def utime(self, relative_path, atime, mtime):
+        os.utime(self.join(relative_path), (atime, mtime))
+
     def open(self, relative_path, mode):
         return file(self.join(relative_path), mode)
 

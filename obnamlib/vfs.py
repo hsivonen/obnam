@@ -73,6 +73,24 @@ class VirtualFileSystem(object):
         """Remove a file."""
         pass
 
+    def lstat(self, relative_path):
+        """Like os.lstat."""
+        pass
+
+    def chmod(self, relative_path, mode):
+        """Like os.chmod."""
+        pass
+
+    def utime(self, relative_path, atime, mtime):
+        """Like os.utime.
+        
+        Unlike os.utime, both times must always be specified, and they
+        must be separate arguments.
+        
+        """
+
+        pass
+
     def open(self, relative_path, mode):
         """Open a file, like the builtin open() or file() function.
 
