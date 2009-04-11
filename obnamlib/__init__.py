@@ -26,6 +26,7 @@ cmp_kinds = ComponentKinds()
 cmp_kinds.add_all()
 cmp_kinds.add_to_obnamlib()
 from component_file import File
+from component_symlink import Symlink
 from component_stat import Stat
 from component_strings import (BlockId, 
                                BlockRef,
@@ -46,7 +47,8 @@ from component_strings import (BlockId,
                                ObjectId, 
                                ObjRef,
                                SigData,
-                               SigRef)
+                               SigRef,
+                               SymlinkTarget)
 from component_composites import NameIPair, ObjectComponent, ObjMap
 from component_objkind import ObjectKind
 

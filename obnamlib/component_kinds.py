@@ -108,3 +108,5 @@ class ComponentKinds(obnamlib.Kinds):
         self.add_ref(      42, "DIRREF")
         self.add_ref(      43, "FILEGROUPREF")
         self.add_plain(    44, "SNAPSHOTGEN")
+        self.add_composite(45, "SYMLINK")
+        self.add_plain(    46, "SYMLINKTARGET")
