@@ -48,7 +48,7 @@ class RestoreCommand(object):
             self.store.cat(self.host, f, contref, deltaref)
             f.close()
         elif stat.S_ISLNK(st.st_mode):
-            self.fs.symlink(target, filename)
+            self.vfs.symlink(target, filename)
         if not stat.S_ISLNK(st.st_mode):
             self.vfs.chmod(filename, st.st_mode)
             self.vfs.utime(filename, st.st_atime, st.st_mtime)
@@ -60,7 +60,7 @@ class RestoreCommand(object):
         st = obnamlib.decode_stat(file.first(kind=obnamlib.STAT))
         contref = file.first_string(kind=obnamlib.CONTREF)
         deltaref = file.first_string(kind=obnamlib.DELTAREF)
-        target = file.symlink_target
+        target = file.first_string(kind=obnamlib.SYMLINKTARGET)
         
         self.restore_helper(filename, st, contref, deltaref, target)
 

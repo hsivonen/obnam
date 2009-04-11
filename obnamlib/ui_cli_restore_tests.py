@@ -54,8 +54,8 @@ class RestoreCommandTests(unittest.TestCase):
 
     def test_helper_restores_symlink(self):
         st = obnamlib.make_stat(st_mode=stat.S_IFLNK)
-        self.cmd.fs = self.mox.CreateMock(obnamlib.VirtualFileSystem)
-        self.cmd.fs.symlink("target", "foo")
+        self.cmd.vfs = self.mox.CreateMock(obnamlib.VirtualFileSystem)
+        self.cmd.vfs.symlink("target", "foo")
         self.mox.ReplayAll()
         self.cmd.restore_helper("foo", st, "contref", "deltaref", "target")
         self.mox.VerifyAll()
