@@ -80,9 +80,15 @@ class RestoreCommandTests(unittest.TestCase):
         cmd = obnamlib.RestoreCommand()
         cmd.vfs = self.mox.CreateMock(obnamlib.VirtualFileSystem)
         cmd.restore_file = self.mock_restore_file
+        cmd.lookupper = self.mox.CreateMock(obnamlib.Lookupper)
         
         walker.walk_generation().AndReturn([("dirname", [], ["file"])])
         cmd.vfs.mkdir("dirname")
+        dir = self.mox.CreateMock(obnamlib.Dir)
+        dir.stat = obnamlib.make_stat()
+        cmd.lookupper.get_dir('dirname').AndReturn(dir)
+        cmd.vfs.chmod('dirname', 0)
+        cmd.vfs.utime('dirname', 0, 0)
 
         self.mox.ReplayAll()
         cmd.restore_generation(walker)
