@@ -129,22 +129,15 @@ class RestoresIdenticalData:
     def same_stat(self, stat1, stat2):
         """Are two stat results effectively identical?"""
         
-        if True:
-            # This is the real version. However, we don't have what it
-            # takes in obnam yet, so in order to see if there are any
-            # other problems than stat problems, we currently use the
-            # absolute minimum to compare that things are identical.
-            return (stat1.st_atime  == stat2.st_atime and
-                    stat1.st_blocks == stat2.st_blocks and
-                    stat1.st_ctime  == stat2.st_ctime and
-                    stat1.st_gid    == stat2.st_gid and
-                    stat1.st_mode   == stat2.st_mode and
-                    stat1.st_mtime  == stat2.st_mtime and
-                    stat1.st_nlink  == stat2.st_nlink and
-                    stat1.st_size   == stat2.st_size and
-                    stat1.st_uid    == stat2.st_uid)
-        else:
-            return (stat1.st_size == stat2.st_size)
+        return (stat1.st_atime  == stat2.st_atime and
+                stat1.st_blocks == stat2.st_blocks and
+                stat1.st_ctime  == stat2.st_ctime and
+                stat1.st_gid    == stat2.st_gid and
+                stat1.st_mode   == stat2.st_mode and
+                stat1.st_mtime  == stat2.st_mtime and
+                stat1.st_nlink  == stat2.st_nlink and
+                stat1.st_size   == stat2.st_size and
+                stat1.st_uid    == stat2.st_uid)
 
     def same_contents(self, relative, root1, root2):
         """Verify that file contents has been restored correctly."""
