@@ -29,23 +29,38 @@ class FileGroup(obnamlib.Object):
         return self.find(kind=obnamlib.FILE)
 
     @property
+    def symlinks(self):
+        return self.find(kind=obnamlib.SYMLINK)
+
+    @property
     def names(self):
-        return [file.first_string(kind=obnamlib.FILENAME)
-                for file in self.files]
+        return [x.filename for x in self.files + self.symlinks]
 
     def add_file(self, name, stat, contref, sigref, deltaref):
         file = obnamlib.File(name, stat, contref, sigref, deltaref)
         self.components.append(file)
 
+    def add_symlink(self, name, stat, target):
+        symlink = obnamlib.Symlink(name, stat, target)
+        self.components.append(symlink)
+
     def get_file(self, name):
         for file in self.files:
-            if file.first_string(kind=obnamlib.FILENAME) == name:
-                return (obnamlib.decode_stat(file.first(kind=obnamlib.STAT)),
-                        file.first_string(kind=obnamlib.CONTREF),
-                        file.first_string(kind=obnamlib.SIGREF),
-                        file.first_string(kind=obnamlib.DELTAREF))
+            if file.filename == name:
+                return (file.stat, file.contref, file.sigref, file.deltaref)
         raise obnamlib.NotFound("File %s not found in FileGroup %s" % 
                                 (name, self.id))
 
+    def get_symlink(self, name):
+        for symlink in self.symlinks:
+            if symlink.filename == name:
+                return (symlink.stat, symlink.target)
+        raise obnamlib.NotFound("Symlink %s not found in FileGroup %s" % 
+                                (name, self.id))
+
     def get_stat(self, name):
-        return self.get_file(name)[0]
+        for x in self.files + self.symlinks:
+            if x.filename == name:
+                return x.stat
+        raise obnamlib.NotFound("File or symlink %s not found in FileGroup %s"
+                                % (name, self.id))

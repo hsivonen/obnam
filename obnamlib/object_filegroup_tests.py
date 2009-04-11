@@ -27,23 +27,41 @@ class FileGroupTests(unittest.TestCase):
         self.stat_result = obnamlib.make_stat(st_size=1, st_mode=2)
         self.fg.add_file("foo", self.stat_result, "contref", "sigref", 
                          "deltaref")
+        self.fg.add_symlink("bar", self.stat_result, "target")
         
     def test_has_no_files_initially(self):
         fg = obnamlib.FileGroup("fg")
         self.assertEqual(fg.names, [])
 
-    def test_adds_file_correctly(self):
-        self.assertEqual(self.fg.names, ["foo"])
+    def test_has_no_symlinks_initially(self):
+        fg = obnamlib.FileGroup("fg")
+        self.assertEqual(fg.symlinks, [])
+
+    def test_adds_files_and_symlinks_correctly(self):
+        self.assertEqual(self.fg.names, ["foo", "bar"])
 
     def test_get_file_raises_notfound_if_file_does_not_exist(self):
         self.assertRaises(obnamlib.NotFound, self.fg.get_file, "notfound")
+
+    def test_get_symlink_raises_notfound_if_symlink_does_not_exist(self):
+        self.assertRaises(obnamlib.NotFound, self.fg.get_symlink, "notfound")
 
     def test_gets_file_correctly(self):
         self.assertEqual(self.fg.get_file("foo"), 
                          (self.stat_result, "contref", "sigref", "deltaref"))
 
-    def test_gets_stat_correctly(self):
+    def test_gets_symlink_correctly(self):
+        self.assertEqual(self.fg.get_symlink("bar"), 
+                         (self.stat_result, "target"))
+
+    def test_gets_stat_correctly_for_file(self):
         self.assertEqual(self.fg.get_stat("foo"), self.stat_result)
+
+    def test_gets_stat_correctly_for_symlink(self):
+        self.assertEqual(self.fg.get_stat("bar"), self.stat_result)
+
+    def test_get_stat_raises_notfound_if_not_found(self):
+        self.assertRaises(obnamlib.NotFound, self.fg.get_stat, "notfound")
 
     def test_encodes_stat_result_internally(self):
         file = self.fg.files[0]
