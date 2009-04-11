@@ -20,12 +20,88 @@
 """Run some black box tests of obnam."""
 
 
+import shutil
+import sys
+import tempfile
+import traceback
+
+
+class RestoresIdenticalData:
+
+    """Generate some data, back it up, restore. Result should be identical."""
+    
+    def __init__(self):
+        self.temproot = tempfile.mkdtemp()
+
+    def tempdir(self):
+        """Create a new temporary directory, create its name.
+        
+        The clean() method will remove this directory.
+        
+        """
+        
+        return tempfile.mkdtemp(dir=self.temproot)
+
+    def clean(self):
+        shutil.rmtree(self.temproot)
+    
+    def generate(self):
+        """Generate some test data.
+        
+        Return name of temporary directory.
+        
+        """
+    
+        data = self.tempdir()
+        return data
+    
+    def backup(self, data):
+        """Back up a data directory. Return name of store."""
+        store = self.tempdir()
+        return store
+        
+    def restore(self, store):
+        """Restore the newest generation from a store.
+        
+        Return name of directorey with restored data.
+        
+        """
+        
+        restored = self.tempdir()
+        return restored
+
+    def verify(self, data, restored):
+        """Verify that a restored directory is identical to the original.
+        
+        Raise an exception for the first error found.
+        
+        """
+    
+    def test(self):
+        data = self.generate()
+        store = self.backup(data)
+        restored = self.restore(store)
+        self.verify(data, restored)
+
+
 class ObnamBlackBoxTests:
 
     """Main class for running black box tests of obnam."""
     
     def run(self):
-        print "hello"
+        errors = False
+        tests = [RestoresIdenticalData]
+        for klass in tests:
+            test = klass()
+            try:
+                test.test()
+            except Exception, e:
+                sys.stderr.write("Error: %s\n" % str(e))
+                sys.stderr.write(traceback.format_exc())
+                errors = True
+            test.clean()
+        if errors:
+            sys.exit(1)
 
 
 if __name__ == "__main__":
