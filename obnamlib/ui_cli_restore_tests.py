@@ -16,8 +16,10 @@
 
 
 import os
-import mox
+import stat
 import unittest
+
+import mox
 
 import obnamlib
 
@@ -37,11 +39,8 @@ class RestoreCommandTests(unittest.TestCase):
         self.cmd.store = store
         self.cmd.host = "host"
         
-        st = self.mox.CreateMock(os.stat_result)
-        st.st_mode = 0666
-        st.st_mtime = 1
-        st.st_atime = 2
-        st.st_nlink = 1
+        st = obnamlib.make_stat(st_mode=stat.S_IFREG | 0666, st_mtime=1,
+                                st_atime=2, st_nlink=1)
 
         fs.open("foo", "w").AndReturn(f)
         store.cat("host", f, "contref", "deltaref")
@@ -50,14 +49,23 @@ class RestoreCommandTests(unittest.TestCase):
         fs.utime("foo", st.st_atime, st.st_mtime)
         
         self.mox.ReplayAll()
-        self.cmd.restore_helper("foo", st, "contref", "deltaref")
+        self.cmd.restore_helper("foo", st, "contref", "deltaref", "target")
         self.mox.VerifyAll()
 
-    def mock_helper(self, filename, st, contref, deltaref):
+    def test_helper_restores_symlink(self):
+        st = obnamlib.make_stat(st_mode=stat.S_IFLNK)
+        self.cmd.fs = self.mox.CreateMock(obnamlib.VirtualFileSystem)
+        self.cmd.fs.symlink("target", "foo")
+        self.mox.ReplayAll()
+        self.cmd.restore_helper("foo", st, "contref", "deltaref", "target")
+        self.mox.VerifyAll()
+
+    def mock_helper(self, filename, st, contref, deltaref, target):
         self.filename = filename
         self.st = st
         self.contref = contref
         self.deltaref = deltaref
+        self.target = target
 
     def test_restore_file_calls_helper_correctly(self):
         st = obnamlib.make_stat()
@@ -107,7 +115,8 @@ class RestoreCommandTests(unittest.TestCase):
         cmd.restore_helper = self.mock_helper
         
         lookupper.get_file("foo/bar").AndReturn(("st", "contref", 
-                                                 "sigref", "deltaref"))
+                                                 "sigref", "deltaref",
+                                                 "target"))
         cmd.vfs.makedirs("foo")
         
         self.mox.ReplayAll()

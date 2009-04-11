@@ -29,7 +29,7 @@ class RestoreCommand(object):
         """Return hash key into hardlink lookup table from stat result."""
         return "%d/%d" % (st.st_dev, st.st_ino)
 
-    def restore_helper(self, filename, st, contref, deltaref):
+    def restore_helper(self, filename, st, contref, deltaref, target):
         # This is where we handle hard links. The first link is restored
         # normally, but we remember the name of the file we created.
         # For the remaining links, we create a link to the remembered
@@ -42,12 +42,16 @@ class RestoreCommand(object):
                 return
             else:
                 self.hardlinks[key] = filename
-        
-        f = self.vfs.open(filename, "w")
-        self.store.cat(self.host, f, contref, deltaref)
-        f.close()
-        self.vfs.chmod(filename, st.st_mode)
-        self.vfs.utime(filename, st.st_atime, st.st_mtime)
+
+        if stat.S_ISREG(st.st_mode):
+            f = self.vfs.open(filename, "w")
+            self.store.cat(self.host, f, contref, deltaref)
+            f.close()
+        elif stat.S_ISLNK(st.st_mode):
+            self.fs.symlink(target, filename)
+        if not stat.S_ISLNK(st.st_mode):
+            self.vfs.chmod(filename, st.st_mode)
+            self.vfs.utime(filename, st.st_atime, st.st_mtime)
 
     def restore_file(self, dirname, file):
         basename = file.first_string(kind=obnamlib.FILENAME)
@@ -56,13 +60,14 @@ class RestoreCommand(object):
         st = obnamlib.decode_stat(file.first(kind=obnamlib.STAT))
         contref = file.first_string(kind=obnamlib.CONTREF)
         deltaref = file.first_string(kind=obnamlib.DELTAREF)
+        target = file.symlink_target
         
-        self.restore_helper(filename, st, contref, deltaref)
+        self.restore_helper(filename, st, contref, deltaref, target)
 
     def restore_filename(self, lookupper, filename):
-        st, contref, sigref, deltaref = lookupper.get_file(filename)
+        st, contref, sigref, deltaref, target = lookupper.get_file(filename)
         self.vfs.makedirs(os.path.dirname(filename))
-        self.restore_helper(filename, st, contref, deltaref)
+        self.restore_helper(filename, st, contref, deltaref, target)
 
     def set_dir_stat(self, dirs): # pragma: no cover
         """Set the stat info for some directories."""
