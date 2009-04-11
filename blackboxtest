@@ -146,6 +146,26 @@ class RestoresIdenticalData:
         else:
             return (stat1.st_size == stat2.st_size)
 
+    def same_contents(self, relative, root1, root2):
+        """Verify that file contents has been restored correctly."""
+        
+        path1 = os.path.join(root1, relative)
+        path2 = os.path.join(root2, relative)
+        
+        if not os.path.isfile(path1):
+            return True
+        
+        f1 = file(path1, "r")
+        f2 = file(path2, "r")
+        
+        data1 = f1.read()
+        data2 = f2.read()
+        
+        f1.close()
+        f2.close()
+        
+        return data1 == data2
+
     def verify(self, data, restored):
         """Verify that a restored directory is identical to the original.
         
@@ -164,6 +184,8 @@ class RestoresIdenticalData:
             restored_stat = restoreds[name]
             if not self.same_stat(orig_stat, restored_stat):
                 raise Exception("%s metadata restored badly" % name)
+            if not self.same_contents(name, data, restored_tree):
+                raise Exception("%s content restored badly" % name)
         for name, restored_stat in restoreds.iteritems():
             if name not in origs:
                 raise Exception("spurious %s in restored data" % name)
