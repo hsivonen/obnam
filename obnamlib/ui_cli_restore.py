@@ -46,17 +46,30 @@ class RestoreCommand(object):
         self.vfs.makedirs(os.path.dirname(filename))
         self.restore_helper(filename, st, contref, deltaref)
 
+    def set_dir_stat(self, dirs): # pragma: no cover
+        """Set the stat info for some directories."""
+        for pathname in dirs:
+            stat = self.lookupper.get_dir(pathname).stat
+            self.vfs.chmod(pathname, stat.st_mode)
+            self.vfs.utime(pathname, stat.st_atime, stat.st_mtime)
+
     def restore_dir(self, walker, root):
+        dirs = []
         for dirname, dirnames, files in walker.walk(root):
             self.vfs.mkdir(dirname)
+            dirs.insert(0, dirname)
             for file in files:
                 self.restore_file(dirname, file)
+        self.set_dir_stat(dirs)
 
     def restore_generation(self, walker):
+        dirs = []
         for dirname, dirnames, files in walker.walk_generation():
             self.vfs.mkdir(dirname)
+            dirs.insert(0, dirname)
             for file in files:
                 self.restore_file(dirname, file)
+        self.set_dir_stat(dirs)
 
     def restore(self, host_id, genref, roots): # pragma: no cover
         """Restore files and directories (with contents)."""
@@ -69,10 +82,10 @@ class RestoreCommand(object):
         gen = self.store.get_object(self.host, genref)
         walker = obnamlib.StoreWalker(self.store, self.host, gen)
 
+        self.lookupper = obnamlib.Lookupper(self.store, self.host, gen)
         if roots:
-            lookupper = obnamlib.Lookupper(self.store, self.host, gen)
             for root in roots:
-                if lookupper.is_file(root):
+                if self.lookupper.is_file(root):
                     self.restore_filename(lookupper, root)
                 else:
                     self.restore_dir(walker, root)

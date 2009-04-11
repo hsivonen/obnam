@@ -206,7 +206,6 @@ class ObnamBlackBoxTests:
             try:
                 test.test()
             except Exception, e:
-                sys.stderr.write("Error: %s\n" % str(e))
                 sys.stderr.write(traceback.format_exc())
                 errors = True
             test.clean()
