@@ -41,6 +41,7 @@ class RestoreCommandTests(unittest.TestCase):
         st.st_mode = 0666
         st.st_mtime = 1
         st.st_atime = 2
+        st.st_nlink = 1
 
         fs.open("foo", "w").AndReturn(f)
         store.cat("host", f, "contref", "deltaref")

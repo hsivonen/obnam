@@ -114,6 +114,15 @@ class LocalFSTests(unittest.TestCase):
         self.assertEqual(self.fs.lstat("foo").st_atime, 1)
         self.assertEqual(self.fs.lstat("foo").st_mtime, 2)
 
+    def test_link_creates_hard_link(self):
+        f = self.fs.open("foo", "w")
+        f.write("foo")
+        f.close()
+        self.fs.link("foo", "bar")
+        st1 = self.fs.lstat("foo")
+        st2 = self.fs.lstat("bar")
+        self.assertEqual(st1, st2)
+
     def test_opens_existing_file_ok(self):
         file(os.path.join(self.dirname, "foo"), "w").close()
         self.assert_(self.fs.open("foo", "w"))

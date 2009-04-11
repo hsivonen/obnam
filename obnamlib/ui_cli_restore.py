@@ -16,6 +16,7 @@
 
 
 import os
+import stat
 
 import obnamlib
 
@@ -24,7 +25,24 @@ class RestoreCommand(object):
 
     """Restore files from a generation."""
 
+    def hardlink_key(self, st): # pragma: no cover
+        """Return hash key into hardlink lookup table from stat result."""
+        return "%d/%d" % (st.st_dev, st.st_ino)
+
     def restore_helper(self, filename, st, contref, deltaref):
+        # This is where we handle hard links. The first link is restored
+        # normally, but we remember the name of the file we created.
+        # For the remaining links, we create a link to the remembered
+        # file instead.
+        if st.st_nlink > 1 and not stat.S_ISDIR(st.st_mode): # pragma: no cover
+            key = self.hardlink_key(st)
+            if key in self.hardlinks:
+                existing_link = self.hardlinks[key]
+                self.vfs.link(existing_link, filename)
+                return
+            else:
+                self.hardlinks[key] = filename
+        
         f = self.vfs.open(filename, "w")
         self.store.cat(self.host, f, contref, deltaref)
         f.close()
@@ -81,6 +99,8 @@ class RestoreCommand(object):
         
         gen = self.store.get_object(self.host, genref)
         walker = obnamlib.StoreWalker(self.store, self.host, gen)
+        
+        self.hardlinks = {}
 
         self.lookupper = obnamlib.Lookupper(self.store, self.host, gen)
         if roots:

@@ -54,6 +54,9 @@ class LocalFS(obnamlib.VirtualFileSystem):
     def utime(self, relative_path, atime, mtime):
         os.utime(self.join(relative_path), (atime, mtime))
 
+    def link(self, existing, new):
+        os.link(self.join(existing), self.join(new))
+
     def open(self, relative_path, mode):
         return file(self.join(relative_path), mode)
 
