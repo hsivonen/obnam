@@ -25,8 +25,8 @@ class FileTests(unittest.TestCase):
     def setUp(self):
         self.stat = obnamlib.make_stat()
         self.file = obnamlib.File("filename", self.stat, "contref", "sigref",
-                                  "deltaref")
-        self.none = obnamlib.File(None, None, None, None, None)
+                                  "deltaref", "target")
+        self.none = obnamlib.File("filename", obnamlib.make_stat())
 
     def test_has_filename_attribute(self):
         self.assertEqual(self.file.filename, "filename")
@@ -43,11 +43,8 @@ class FileTests(unittest.TestCase):
     def test_has_deltaref_attribute(self):
         self.assertEqual(self.file.deltaref, "deltaref")
 
-    def test_handles_None_as_filename_correctly(self):
-        self.assertEqual(self.none.filename, None)
-
-    def test_handles_None_as_stat_correctly(self):
-        self.assertEqual(self.none.stat, None)
+    def test_has_symlink_target_attribute(self):
+        self.assertEqual(self.file.symlink_target, "target")
 
     def test_handles_None_as_contref_correctly(self):
         self.assertEqual(self.none.contref, None)
@@ -57,3 +54,6 @@ class FileTests(unittest.TestCase):
 
     def test_handles_None_as_deltaref_correctly(self):
         self.assertEqual(self.none.deltaref, None)
+
+    def test_handles_None_as_symlink_target_correctly(self):
+        self.assertEqual(self.none.symlink_target, None)

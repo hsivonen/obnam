@@ -40,15 +40,18 @@ class BackupCommandTests(unittest.TestCase):
         self.cmd.fs = self.mox.CreateMock(obnamlib.VirtualFileSystem)
 
     def test_backs_up_new_symlink_correctly(self):
+        st = obnamlib.make_stat()
         self.cmd.fs.readlink("foo").AndReturn("target")
         self.mox.ReplayAll()
-        symlink = self.cmd.backup_new_symlink("foo", None)
+        symlink = self.cmd.backup_new_symlink("foo", st)
         self.mox.VerifyAll()
         self.assertEqual(symlink.filename, "foo")
-        self.assertEqual(symlink.stat, None)
-        self.assertEqual(symlink.target, "target")
+        self.assertEqual(symlink.stat, st)
+        self.assertEqual(symlink.symlink_target, "target")
 
     def test_backs_up_new_file_correctly(self):
+        st = obnamlib.make_stat()
+
         f = self.mox.CreateMock(file)
         fc = self.mox.CreateMock(obnamlib.FileContents)
         fc.id = "contentsid"
@@ -58,10 +61,10 @@ class BackupCommandTests(unittest.TestCase):
         f.close()
 
         self.mox.ReplayAll()
-        new_file = self.cmd.backup_new_file("foo", None)
+        new_file = self.cmd.backup_new_file("foo", st)
         self.mox.VerifyAll()
         self.assertEqual(new_file.filename, "foo")
-        self.assertEqual(new_file.stat, None)
+        self.assertEqual(new_file.stat, st)
         self.assertEqual(new_file.contref, fc.id)
         self.assertEqual(new_file.sigref, None)
         self.assertEqual(new_file.deltaref, None)

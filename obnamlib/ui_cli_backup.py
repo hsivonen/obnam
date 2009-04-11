@@ -31,12 +31,13 @@ class BackupCommand(object):
     def backup_new_symlink(self, relative_path, stat):
         """Backup a new symlink."""
         target = self.fs.readlink(relative_path)
-        fc = obnamlib.Symlink(os.path.basename(relative_path), stat, target)
+        fc = obnamlib.File(os.path.basename(relative_path), stat, 
+                           symlink_target=target)
         return fc
 
     def backup_new_other(self, path, st):
         """Backup a new thing that is not a symlink or regular file."""
-        return obnamlib.File(os.path.basename(path), st, None, None, None)
+        return obnamlib.File(os.path.basename(path), st)
 
     def backup_new_file(self, path, st):
         """Back up a completely new file."""

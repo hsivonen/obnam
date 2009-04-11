@@ -22,18 +22,19 @@ class File(obnamlib.CompositeComponent):
 
     composite_kind = obnamlib.FILE
     
-    def __init__(self, filename, stat, contref, sigref, deltaref):
+    def __init__(self, filename, stat, contref=None, sigref=None, 
+                 deltaref=None, symlink_target=None):
         children = []
-        if filename is not None:
-            children.append(obnamlib.FileName(filename))
-        if stat is not None:
-            children.append(obnamlib.Stat(stat))
+        children.append(obnamlib.FileName(filename))
+        children.append(obnamlib.Stat(stat))
         if contref is not None:
             children.append(obnamlib.ContRef(contref))
         if sigref is not None:
             children.append(obnamlib.SigRef(sigref))
         if deltaref is not None:
             children.append(obnamlib.DeltaRef(deltaref))
+        if symlink_target is not None:
+            children.append(obnamlib.SymlinkTarget(symlink_target))
         obnamlib.CompositeComponent.__init__(self, children)
 
     @property
@@ -43,10 +44,7 @@ class File(obnamlib.CompositeComponent):
     @property
     def stat(self):
         encoded = self.first_string(kind=obnamlib.STAT)
-        if encoded:
-            return obnamlib.decode_stat(encoded)
-        else:
-            return None
+        return obnamlib.decode_stat(encoded)
 
     @property
     def contref(self):
@@ -59,3 +57,7 @@ class File(obnamlib.CompositeComponent):
     @property
     def deltaref(self):
         return self.first_string(kind=obnamlib.DELTAREF)
+
+    @property
+    def symlink_target(self):
+        return self.first_string(kind=obnamlib.SYMLINKTARGET)
