@@ -30,22 +30,24 @@ class FileGroup(obnamlib.Object):
 
     @property
     def names(self):
-        return [file.first_string(kind=obnamlib.FILENAME)
-                for file in self.files]
+        return [x.filename for x in self.files]
 
-    def add_file(self, name, stat, contref, sigref, deltaref):
-        file = obnamlib.File(name, stat, contref, sigref, deltaref)
+    def add_file(self, name, stat, contref, sigref, deltaref, symlink_target):
+        file = obnamlib.File(name, stat, contref, sigref, deltaref, 
+                             symlink_target)
         self.components.append(file)
 
     def get_file(self, name):
         for file in self.files:
-            if file.first_string(kind=obnamlib.FILENAME) == name:
-                return (obnamlib.decode_stat(file.first(kind=obnamlib.STAT)),
-                        file.first_string(kind=obnamlib.CONTREF),
-                        file.first_string(kind=obnamlib.SIGREF),
-                        file.first_string(kind=obnamlib.DELTAREF))
+            if file.filename == name:
+                return (file.stat, file.contref, file.sigref, file.deltaref,
+                        file.symlink_target)
         raise obnamlib.NotFound("File %s not found in FileGroup %s" % 
                                 (name, self.id))
 
     def get_stat(self, name):
-        return self.get_file(name)[0]
+        for x in self.files:
+            if x.filename == name:
+                return x.stat
+        raise obnamlib.NotFound("File or symlink %s not found in FileGroup %s"
+                                % (name, self.id))

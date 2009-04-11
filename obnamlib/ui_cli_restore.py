@@ -16,6 +16,7 @@
 
 
 import os
+import stat
 
 import obnamlib
 
@@ -24,12 +25,33 @@ class RestoreCommand(object):
 
     """Restore files from a generation."""
 
-    def restore_helper(self, filename, st, contref, deltaref):
-        f = self.vfs.open(filename, "w")
-        self.store.cat(self.host, f, contref, deltaref)
-        f.close()
-        self.vfs.chmod(filename, st.st_mode)
-        self.vfs.utime(filename, st.st_atime, st.st_mtime)
+    def hardlink_key(self, st): # pragma: no cover
+        """Return hash key into hardlink lookup table from stat result."""
+        return "%d/%d" % (st.st_dev, st.st_ino)
+
+    def restore_helper(self, filename, st, contref, deltaref, target):
+        # This is where we handle hard links. The first link is restored
+        # normally, but we remember the name of the file we created.
+        # For the remaining links, we create a link to the remembered
+        # file instead.
+        if st.st_nlink > 1 and not stat.S_ISDIR(st.st_mode): # pragma: no cover
+            key = self.hardlink_key(st)
+            if key in self.hardlinks:
+                existing_link = self.hardlinks[key]
+                self.vfs.link(existing_link, filename)
+                return
+            else:
+                self.hardlinks[key] = filename
+
+        if stat.S_ISREG(st.st_mode):
+            f = self.vfs.open(filename, "w")
+            self.store.cat(self.host, f, contref, deltaref)
+            f.close()
+        elif stat.S_ISLNK(st.st_mode):
+            self.vfs.symlink(target, filename)
+        if not stat.S_ISLNK(st.st_mode):
+            self.vfs.chmod(filename, st.st_mode)
+            self.vfs.utime(filename, st.st_atime, st.st_mtime)
 
     def restore_file(self, dirname, file):
         basename = file.first_string(kind=obnamlib.FILENAME)
@@ -38,13 +60,14 @@ class RestoreCommand(object):
         st = obnamlib.decode_stat(file.first(kind=obnamlib.STAT))
         contref = file.first_string(kind=obnamlib.CONTREF)
         deltaref = file.first_string(kind=obnamlib.DELTAREF)
+        target = file.first_string(kind=obnamlib.SYMLINKTARGET)
         
-        self.restore_helper(filename, st, contref, deltaref)
+        self.restore_helper(filename, st, contref, deltaref, target)
 
     def restore_filename(self, lookupper, filename):
-        st, contref, sigref, deltaref = lookupper.get_file(filename)
+        st, contref, sigref, deltaref, target = lookupper.get_file(filename)
         self.vfs.makedirs(os.path.dirname(filename))
-        self.restore_helper(filename, st, contref, deltaref)
+        self.restore_helper(filename, st, contref, deltaref, target)
 
     def set_dir_stat(self, dirs): # pragma: no cover
         """Set the stat info for some directories."""
@@ -81,6 +104,8 @@ class RestoreCommand(object):
         
         gen = self.store.get_object(self.host, genref)
         walker = obnamlib.StoreWalker(self.store, self.host, gen)
+        
+        self.hardlinks = {}
 
         self.lookupper = obnamlib.Lookupper(self.store, self.host, gen)
         if roots:

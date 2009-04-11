@@ -46,7 +46,8 @@ from component_strings import (BlockId,
                                ObjectId, 
                                ObjRef,
                                SigData,
-                               SigRef)
+                               SigRef,
+                               SymlinkTarget)
 from component_composites import NameIPair, ObjectComponent, ObjMap
 from component_objkind import ObjectKind
 

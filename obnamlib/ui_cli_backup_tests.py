@@ -15,7 +15,9 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import stat
 import unittest
+
 import mox
 
 import obnamlib
@@ -37,7 +39,19 @@ class BackupCommandTests(unittest.TestCase):
         self.cmd.store = self.mox.CreateMock(obnamlib.Store)
         self.cmd.fs = self.mox.CreateMock(obnamlib.VirtualFileSystem)
 
+    def test_backs_up_new_symlink_correctly(self):
+        st = obnamlib.make_stat()
+        self.cmd.fs.readlink("foo").AndReturn("target")
+        self.mox.ReplayAll()
+        symlink = self.cmd.backup_new_symlink("foo", st)
+        self.mox.VerifyAll()
+        self.assertEqual(symlink.filename, "foo")
+        self.assertEqual(symlink.stat, st)
+        self.assertEqual(symlink.symlink_target, "target")
+
     def test_backs_up_new_file_correctly(self):
+        st = obnamlib.make_stat()
+
         f = self.mox.CreateMock(file)
         fc = self.mox.CreateMock(obnamlib.FileContents)
         fc.id = "contentsid"
@@ -47,28 +61,47 @@ class BackupCommandTests(unittest.TestCase):
         f.close()
 
         self.mox.ReplayAll()
-        new_file = self.cmd.backup_new_file("foo")
+        new_file = self.cmd.backup_new_file("foo", st)
         self.mox.VerifyAll()
-        self.assertEqual(new_file, fc)
+        self.assertEqual(new_file.filename, "foo")
+        self.assertEqual(new_file.stat, st)
+        self.assertEqual(new_file.contref, fc.id)
+        self.assertEqual(new_file.sigref, None)
+        self.assertEqual(new_file.deltaref, None)
 
     def test_backs_up_filegroups_correctly(self):
-        self.count = 0
-        def dummy(relative_path):
-            self.count += 1
-            return DummyObject("%d" % self.count)
-        self.cmd.backup_new_file = dummy
-
         fg = self.mox.CreateMock(obnamlib.FileGroup)
         fg.components = self.mox.CreateMock(list)
 
+        # First create FileGroup.
         self.cmd.store.new_object(kind=obnamlib.FILEGROUP).AndReturn(fg)
+        
+        # Backup foo, a regular file.
+        self.cmd.fs.lstat("foo").AndReturn(
+            obnamlib.make_stat(st_mode=stat.S_IFREG))
+        f = self.mox.CreateMock(file)
+        self.cmd.fs.open("foo", "r").AndReturn(f)
+        cont = self.mox.CreateMock(obnamlib.FileContents)
+        cont.id = "filecontents.id"
+        self.cmd.store.put_contents(f, self.cmd.PART_SIZE).AndReturn(cont)
+        f.close()
         fg.components.append(mox.IsA(obnamlib.Component))
+        
+        # Backup bar, a symlink.
+        self.cmd.fs.lstat("bar").AndReturn(
+            obnamlib.make_stat(st_mode=stat.S_IFLNK))
+        self.cmd.fs.readlink("bar").AndReturn("target")
         fg.components.append(mox.IsA(obnamlib.Component))
-        self.cmd.store.put_object(fg)
+        
+        # Backup foobar, something else.
+        self.cmd.fs.lstat("foobar").AndReturn(obnamlib.make_stat())
+        fg.components.append(mox.IsA(obnamlib.Component))
+        
+        # Put FileGroup in store.
+        self.cmd.store.put_object(fg)        
 
         self.mox.ReplayAll()
-        lstat = lambda *args: obnamlib.make_stat()
-        ret = self.cmd.backup_new_files_as_groups(["foo", "bar"], lstat=lstat)
+        ret = self.cmd.backup_new_files_as_groups(["foo", "bar", "foobar"])
         self.mox.VerifyAll()
         self.assertEqual(ret, [fg])
 

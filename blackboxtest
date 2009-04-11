@@ -28,9 +28,9 @@ import tempfile
 import traceback
 
 
-class RestoresIdenticalData:
+class BlackBoxTest:
 
-    """Generate some data, back it up, restore. Result should be identical."""
+    """Base class for black box tests of Obnam."""
     
     def __init__(self):
         self.temproot = tempfile.mkdtemp()
@@ -46,6 +46,7 @@ class RestoresIdenticalData:
         return tempfile.mkdtemp(dir=self.temproot)
 
     def clean(self):
+        """Remove temporary files."""
         shutil.rmtree(self.temproot)
 
     def runcmd(self, argv):
@@ -65,37 +66,6 @@ class RestoresIdenticalData:
         f.write(contents)
         f.close()
     
-    def generate(self):
-        """Generate some test data.
-        
-        Return name of temporary directory.
-        
-        """
-    
-        data = self.tempdir()
-        self.create_file(data, "foo", "foo")
-        return data
-    
-    def backup(self, data):
-        """Back up a data directory. Return name of store."""
-        store = self.tempdir()
-        
-        self.runcmd(["./obnam", "backup", self.hostid, store, data])
-        
-        return store
-        
-    def restore(self, store):
-        """Restore the newest generation from a store.
-        
-        Return name of directorey with restored data.
-        
-        """
-        
-        restored = self.tempdir()
-        self.runcmd(["./obnam", "restore", restored, self.hostid, store,
-                     "latest"])
-        return restored
-
     def get_info(self, root, pathname):
         """Get the information about a given file.
         
@@ -185,9 +155,58 @@ class RestoresIdenticalData:
         for name, restored_stat in restoreds.iteritems():
             if name not in origs:
                 raise Exception("spurious %s in restored data" % name)
+
+    def backup(self, data):
+        """Back up a data directory. Return name of store."""
+        store = self.tempdir()
+        
+        self.runcmd(["./obnam", "backup", self.hostid, store, data])
+        
+        return store
+        
+    def restore(self, store):
+        """Restore the newest generation from a store.
+        
+        Return name of directorey with restored data.
+        
+        """
+        
+        restored = self.tempdir()
+        self.runcmd(["./obnam", "restore", restored, self.hostid, store,
+                     "latest"])
+        return restored
+
+
+class RestoresIdenticalData(BlackBoxTest):
+
+    """Generate some data, back it up, restore. Result should be identical."""
     
     def test(self):
-        data = self.generate()
+        data = self.tempdir()
+        self.create_file(data, "foo", "foo")
+        store = self.backup(data)
+        restored = self.restore(store)
+        self.verify(data, restored)
+
+
+class HandlesHardLinks(BlackBoxTest):
+
+    def test(self):
+        data = self.tempdir()
+        self.create_file(data, "foo", "foo")
+        foo = os.path.join(data, "foo")
+        bar = os.path.join(data, "bar")
+        os.link(foo, bar)
+        store = self.backup(data)
+        restored = self.restore(store)
+        self.verify(data, restored)
+
+
+class HandlesSymLinks(BlackBoxTest):
+
+    def test(self):
+        data = self.tempdir()
+        os.symlink("bar", os.path.join(data, "foo"))
         store = self.backup(data)
         restored = self.restore(store)
         self.verify(data, restored)
@@ -199,7 +218,7 @@ class ObnamBlackBoxTests:
     
     def run(self):
         errors = False
-        tests = [RestoresIdenticalData]
+        tests = [RestoresIdenticalData, HandlesHardLinks, HandlesSymLinks]
         for klass in tests:
             test = klass()
             try:

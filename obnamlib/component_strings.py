@@ -136,3 +136,8 @@ class SigRef(obnamlib.StringComponent):
 class SnapshotGen(obnamlib.StringComponent):
 
     string_kind = obnamlib.SNAPSHOTGEN
+
+
+class SymlinkTarget(obnamlib.StringComponent):
+
+    string_kind = obnamlib.SYMLINKTARGET

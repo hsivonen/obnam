@@ -91,6 +91,18 @@ class VirtualFileSystem(object):
 
         pass
 
+    def link(self, existing_path, new_path):
+        """Like os.link."""
+        pass
+
+    def readlink(self, symlink):
+        """Like os.readlink."""
+        pass
+
+    def symlink(self, source, destination):
+        """Like os.symlink."""
+        pass
+
     def open(self, relative_path, mode):
         """Open a file, like the builtin open() or file() function.
 
