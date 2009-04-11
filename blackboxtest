@@ -20,6 +20,7 @@
 """Run some black box tests of obnam."""
 
 
+import os
 import shutil
 import sys
 import tempfile
@@ -44,6 +45,14 @@ class RestoresIdenticalData:
 
     def clean(self):
         shutil.rmtree(self.temproot)
+
+    def create_file(self, root, relative, contents):
+        """Create a new file with the desired contents."""
+        
+        pathname = os.path.join(root, relative)
+        f = file(pathname, "w")
+        f.write(contents)
+        f.close()
     
     def generate(self):
         """Generate some test data.
@@ -53,6 +62,7 @@ class RestoresIdenticalData:
         """
     
         data = self.tempdir()
+        self.create_file(data, "foo", "foo")
         return data
     
     def backup(self, data):
@@ -70,12 +80,55 @@ class RestoresIdenticalData:
         restored = self.tempdir()
         return restored
 
+    def get_info(self, root, pathname):
+        """Get the information about a given file.
+        
+        Return a tuple (relativepath, stat) where relativepath is the
+        path relative to root, and stat is the result of os.lstat.
+        
+        """
+        
+        if pathname == root:
+            return ".", os.lstat(pathname)
+        assert pathname.startswith(root + os.sep), (pathname, root)
+        return pathname[len(root + os.sep):], os.lstat(pathname)
+
+    def find_everything(self, root):
+        """Find all filesystem objects inside a directory tree.
+        
+        Return list of (pathname, stat) tuples. The pathname will be
+        relative to the root of the directory tree. The stat tuples
+        will be the result of os.lstat for each pathname.
+        
+        """
+        
+        result = []
+        for dirname, dirnames, filenames in os.walk(root):
+            result.append(self.get_info(root, dirname))
+            for filename in filenames:
+                pathname = os.path.join(dirname, filename)
+                result.append(self.get_info(root, pathname))
+        return result
+
     def verify(self, data, restored):
         """Verify that a restored directory is identical to the original.
         
         Raise an exception for the first error found.
         
         """
+        
+        origs = dict(self.find_everything(data))
+        restoreds = dict(self.find_everything(restored))
+        
+        for name, orig_stat in origs.iteritems():
+            if name not in restoreds:
+                raise Exception("%s not in restored data" % name)
+            restored_stat = restoreds[name]
+            if not self.same_stat(orig_stat, restored_stat):
+                raise Exception("%s metadata restored badly" % name)
+        for name, restored_stat in restoreds.iteritems():
+            if name not in origs:
+                raise Exception("spurious %s in restored data" % name)
     
     def test(self):
         data = self.generate()
