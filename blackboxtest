@@ -126,20 +126,26 @@ class RestoresIdenticalData:
                 result.append(self.get_info(root, pathname))
         return result
 
-    def same_stat(self, stat1, stat2):
-        """Are two stat results effectively identical?"""
-        
-        return (stat1.st_atime  == stat2.st_atime and
-                stat1.st_blocks == stat2.st_blocks and
-                stat1.st_ctime  == stat2.st_ctime and
-                stat1.st_gid    == stat2.st_gid and
-                stat1.st_mode   == stat2.st_mode and
-                stat1.st_mtime  == stat2.st_mtime and
-                stat1.st_nlink  == stat2.st_nlink and
-                stat1.st_size   == stat2.st_size and
-                stat1.st_uid    == stat2.st_uid)
+    def assertEqual(self, name, value1, value2, message):
+        """Raise an exception if two values are not equal."""
+        if value1 != value2:
+            raise Exception("%s: %s: %s != %s" % 
+                            (name, message, repr(value1), repr(value2)))
 
-    def same_contents(self, relative, root1, root2):
+    def assert_same_stat(self, name, stat1, stat2):
+        """Are two stat results effectively identical?"""
+
+        self.assertEqual(name, stat1.st_atime, stat2.st_atime, "atime")
+        self.assertEqual(name, stat1.st_blocks, stat2.st_blocks, "blocks")
+        self.assertEqual(name, stat1.st_ctime, stat2.st_ctime, "ctime")
+        self.assertEqual(name, stat1.st_gid, stat2.st_gid, "gid")
+        self.assertEqual(name, stat1.st_mode, stat2.st_mode, "mode")
+        self.assertEqual(name, stat1.st_mtime, stat2.st_mtime, "mtime")
+        self.assertEqual(name, stat1.st_nlink, stat2.st_nlink, "nlink")
+        self.assertEqual(name, stat1.st_size, stat2.st_size, "size")
+        self.assertEqual(name, stat1.st_uid, stat2.st_uid, "uid")
+
+    def assert_same_contents(self, relative, root1, root2):
         """Verify that file contents has been restored correctly."""
         
         path1 = os.path.join(root1, relative)
@@ -157,7 +163,7 @@ class RestoresIdenticalData:
         f1.close()
         f2.close()
         
-        return data1 == data2
+        self.assertEqual(relative, data1, data2, "content")
 
     def verify(self, data, restored):
         """Verify that a restored directory is identical to the original.
@@ -175,10 +181,8 @@ class RestoresIdenticalData:
             if name not in restoreds:
                 raise Exception("%s not in restored data" % name)
             restored_stat = restoreds[name]
-            if not self.same_stat(orig_stat, restored_stat):
-                raise Exception("%s metadata restored badly" % name)
-            if not self.same_contents(name, data, restored_tree):
-                raise Exception("%s content restored badly" % name)
+            self.assert_same_stat(name, orig_stat, restored_stat)
+            self.assert_same_contents(name, data, restored_tree)
         for name, restored_stat in restoreds.iteritems():
             if name not in origs:
                 raise Exception("spurious %s in restored data" % name)
