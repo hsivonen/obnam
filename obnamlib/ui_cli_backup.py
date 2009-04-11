@@ -33,8 +33,10 @@ class BackupCommand(object):
         f.close()
         return content
 
-    def backup_new_files_as_groups(self, relative_paths, lstat=os.lstat):
+    def backup_new_files_as_groups(self, relative_paths, lstat=None):
         """Back a set of new files as a new FILEGROUP."""
+        if lstat is None: # pragma: no cover
+            lstat = self.fs.lstat
         fg = self.store.new_object(kind=obnamlib.FILEGROUP)
         for path in relative_paths:
             fc = self.backup_new_file(path)
@@ -45,7 +47,7 @@ class BackupCommand(object):
         self.store.put_object(fg)
         return [fg]
 
-    def backup_dir(self, relative_path, subdirs, filenames, lstat=os.lstat):
+    def backup_dir(self, relative_path, subdirs, filenames, lstat=None):
         """Back up a single directory, non-recursively.
 
         subdirs is a list of obnamlib.Dir objects for the direct
@@ -53,6 +55,9 @@ class BackupCommand(object):
         backed up already.
 
         """
+
+        if lstat is None: # pragma: no cover
+            lstat = self.fs.lstat
 
         dir = self.store.new_object(obnamlib.DIR)
         dir.name = os.path.basename(relative_path)
