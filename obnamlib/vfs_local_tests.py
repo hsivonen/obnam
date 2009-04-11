@@ -108,6 +108,12 @@ class LocalFSTests(unittest.TestCase):
         self.fs.chmod("foo", 0777)
         self.assertEqual(self.fs.lstat("foo").st_mode & 0777, 0777)
 
+    def test_utime_sets_times_correctly(self):
+        self.fs.mkdir("foo")
+        self.fs.utime("foo", 1, 2)
+        self.assertEqual(self.fs.lstat("foo").st_atime, 1)
+        self.assertEqual(self.fs.lstat("foo").st_mtime, 2)
+
     def test_opens_existing_file_ok(self):
         file(os.path.join(self.dirname, "foo"), "w").close()
         self.assert_(self.fs.open("foo", "w"))

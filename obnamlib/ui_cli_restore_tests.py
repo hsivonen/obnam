@@ -15,6 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import os
 import mox
 import unittest
 
@@ -35,13 +36,20 @@ class RestoreCommandTests(unittest.TestCase):
         self.cmd.vfs = fs
         self.cmd.store = store
         self.cmd.host = "host"
+        
+        st = self.mox.CreateMock(os.stat_result)
+        st.st_mode = 0666
+        st.st_mtime = 1
+        st.st_atime = 2
 
         fs.open("foo", "w").AndReturn(f)
         store.cat("host", f, "contref", "deltaref")
         f.close()
+        fs.chmod("foo", st.st_mode)
+        fs.utime("foo", st.st_atime, st.st_mtime)
         
         self.mox.ReplayAll()
-        self.cmd.restore_helper("foo", "st", "contref", "deltaref")
+        self.cmd.restore_helper("foo", st, "contref", "deltaref")
         self.mox.VerifyAll()
 
     def mock_helper(self, filename, st, contref, deltaref):

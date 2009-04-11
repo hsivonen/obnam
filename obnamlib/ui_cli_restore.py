@@ -28,6 +28,8 @@ class RestoreCommand(object):
         f = self.vfs.open(filename, "w")
         self.store.cat(self.host, f, contref, deltaref)
         f.close()
+        self.vfs.chmod(filename, st.st_mode)
+        self.vfs.utime(filename, st.st_atime, st.st_mtime)
 
     def restore_file(self, dirname, file):
         basename = file.first_string(kind=obnamlib.FILENAME)
