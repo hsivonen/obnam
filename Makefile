@@ -26,7 +26,7 @@ fadvise.so: fadvisemodule.c
 	rm -rf build
 
 .PHONY: check
-check: check-test-modules check-unittests check-licenses
+check: check-test-modules check-unittests check-licenses check-blackbox
 
 .PHONY: check-test-modules
 check-test-modules:
@@ -43,6 +43,10 @@ check-licenses:
 	bzr ls --versioned --kind=file | \
 	    grep -Fxv -f check-license-exceptions | \
 	    xargs ./check-license
+
+.PHONY: check-blackbox
+check-blackbox:
+	./blackboxtest
 
 .PHONY: clean
 clean:

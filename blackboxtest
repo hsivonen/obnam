@@ -137,7 +137,6 @@ class RestoresIdenticalData:
 
         self.assertEqual(name, stat1.st_atime, stat2.st_atime, "atime")
         self.assertEqual(name, stat1.st_blocks, stat2.st_blocks, "blocks")
-        self.assertEqual(name, stat1.st_ctime, stat2.st_ctime, "ctime")
         self.assertEqual(name, stat1.st_gid, stat2.st_gid, "gid")
         self.assertEqual(name, stat1.st_mode, stat2.st_mode, "mode")
         self.assertEqual(name, stat1.st_mtime, stat2.st_mtime, "mtime")
