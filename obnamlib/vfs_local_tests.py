@@ -100,6 +100,14 @@ class LocalFSTests(unittest.TestCase):
         self.fs.makedirs("foo/bar")
         self.assert_(os.path.isdir(os.path.join(self.dirname, "foo/bar")))
 
+    def test_lstat_returns_result(self):
+        self.assert_(self.fs.lstat("."))
+
+    def test_chmod_sets_permissions_correctly(self):
+        self.fs.mkdir("foo")
+        self.fs.chmod("foo", 0777)
+        self.assertEqual(self.fs.lstat("foo").st_mode & 0777, 0777)
+
     def test_opens_existing_file_ok(self):
         file(os.path.join(self.dirname, "foo"), "w").close()
         self.assert_(self.fs.open("foo", "w"))
