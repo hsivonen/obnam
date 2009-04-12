@@ -105,7 +105,6 @@ class BlackBoxTest:
     def assert_same_stat(self, name, stat1, stat2):
         """Are two stat results effectively identical?"""
 
-        self.assertEqual(name, stat1.st_atime, stat2.st_atime, "atime")
         self.assertEqual(name, stat1.st_blocks, stat2.st_blocks, "blocks")
         self.assertEqual(name, stat1.st_gid, stat2.st_gid, "gid")
         self.assertEqual(name, stat1.st_mode, stat2.st_mode, "mode")
