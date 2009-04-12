@@ -155,13 +155,9 @@ class BlackBoxTest:
             if name not in origs:
                 raise Exception("spurious %s in restored data" % name)
 
-    def backup(self, data):
-        """Back up a data directory. Return name of store."""
-        store = self.tempdir()
-        
+    def backup(self, store, data):
+        """Back up a data directory to a store."""
         self.runcmd(["./obnam", "backup", self.hostid, store, data])
-        
-        return store
         
     def restore(self, store):
         """Restore the newest generation from a store.
@@ -183,7 +179,8 @@ class RestoresIdenticalData(BlackBoxTest):
     def test(self):
         data = self.tempdir()
         self.create_file(data, "foo", "foo")
-        store = self.backup(data)
+        store = self.tempdir()
+        self.backup(store, data)
         restored = self.restore(store)
         self.verify(data, restored)
 
@@ -196,7 +193,8 @@ class HandlesHardLinks(BlackBoxTest):
         foo = os.path.join(data, "foo")
         bar = os.path.join(data, "bar")
         os.link(foo, bar)
-        store = self.backup(data)
+        store = self.tempdir()
+        self.backup(store, data)
         restored = self.restore(store)
         self.verify(data, restored)
 
@@ -206,7 +204,8 @@ class HandlesSymLinks(BlackBoxTest):
     def test(self):
         data = self.tempdir()
         os.symlink("bar", os.path.join(data, "foo"))
-        store = self.backup(data)
+        store = self.tempdir()
+        self.backup(store, data)
         restored = self.restore(store)
         self.verify(data, restored)
 
