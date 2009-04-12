@@ -22,6 +22,11 @@ import stat
 import obnamlib
 
 
+class DummyLookupper:
+
+    pass
+
+
 class BackupCommand(object):
 
     """A sub-command for the command line interface to back up some data."""
@@ -130,6 +135,12 @@ class BackupCommand(object):
 
     def backup(self, host_id, roots):
         host = self.store.get_host(host_id)
+        if host.genrefs: # pragma: no cover
+            prevgen = host.genrefs[-1]
+            self.prevgen_lookupper = obnamlib.Lookupper(self.store, host, 
+                                                        prevgen)
+        else:
+            self.prevgen_lookupper = DummyLookupper()
         gen = self.backup_generation(roots)
         host.genrefs.append(gen.id)
         self.store.commit(host)
