@@ -38,6 +38,7 @@ class BackupCommandTests(unittest.TestCase):
         self.cmd = obnamlib.BackupCommand()
         self.cmd.store = self.mox.CreateMock(obnamlib.Store)
         self.cmd.fs = self.mox.CreateMock(obnamlib.VirtualFileSystem)
+        self.cmd.prevgen_lookupper = obnamlib.ui_cli_backup.DummyLookupper()
 
     def test_backs_up_new_symlink_correctly(self):
         st = obnamlib.make_stat()
@@ -132,7 +133,7 @@ class BackupCommandTests(unittest.TestCase):
         self.assertEqual(filenames, ["foo/file1", "foo/file2"])
 
     def test_backs_up_empty_directory_correctly(self):
-        self.cmd.backup_new_files_as_groups = lambda: None
+        self.cmd.backup_new_files_as_groups = lambda *args: []
 
         lstat = lambda *args: obnamlib.make_stat()
         ret = self.cmd.backup_dir("foo", [], [], lstat=lstat)

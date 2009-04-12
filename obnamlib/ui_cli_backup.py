@@ -24,7 +24,8 @@ import obnamlib
 
 class DummyLookupper:
 
-    pass
+    def get_dir(self, name):
+        raise obnamlib.NotFound(name)
 
 
 class BackupCommand(object):
@@ -71,6 +72,35 @@ class BackupCommand(object):
         self.store.put_object(fg)
         return [fg]
 
+    def new_dir(self, relative_path, st, subdirs, filegroups):
+        """Create a new obnamlib.Dir."""
+        dir = self.store.new_object(obnamlib.DIR)
+        dir.name = os.path.basename(relative_path)
+        dir.stat = st
+        dir.dirrefs = [x.id for x in subdirs]
+        dir.fgrefs = [x.id for x in filegroups]
+        self.store.put_object(dir)
+        return dir
+
+    def backup_existing_dir(self, prevdir, relative_path, st, subdirs, 
+                            filenames):
+        """Back up a directory that exists in the previous generation."""
+
+        return self.backup_new_dir(relative_path, st, subdirs, filenames)
+
+    def backup_new_dir(self, relative_path, st, subdirs, filenames):
+        """Back up a new directory."""
+        fullnames = [os.path.join(relative_path, x) for x in filenames]
+        filegroups = self.backup_new_files_as_groups(fullnames)
+        return self.new_dir(relative_path, st, subdirs, filegroups)
+
+    def get_dir_in_prevgen(self, relative_path):
+        """Return obnamlib.Dir in previous generation, or None."""
+        try:
+            return self.prevgen_lookupper.get_dir(relative_path)
+        except obnamlib.NotFound:
+            return None
+
     def backup_dir(self, relative_path, subdirs, filenames, lstat=None):
         """Back up a single directory, non-recursively.
 
@@ -82,18 +112,15 @@ class BackupCommand(object):
 
         if lstat is None: # pragma: no cover
             lstat = self.fs.lstat
+        st = lstat(relative_path)
 
-        dir = self.store.new_object(obnamlib.DIR)
-        dir.name = os.path.basename(relative_path)
-        dir.stat = lstat(relative_path)
-        dir.dirrefs = [x.id for x in subdirs]
-        fullnames = [os.path.join(relative_path, x) for x in filenames]
-        if filenames:
-            dir.fgrefs = [x.id 
-                          for x in self.backup_new_files_as_groups(fullnames)]
+        prevdir = self.get_dir_in_prevgen(relative_path)
+        if prevdir:
+            dir = self.backup_existing_dir(prevdir, relative_path, st,
+                                           subdirs, filenames)
         else:
-            dir.fgrefs = []
-        self.store.put_object(dir)
+            dir = self.backup_new_dir(relative_path, st, subdirs, filenames)
+
         return dir
 
     def backup_recursively(self, root):
