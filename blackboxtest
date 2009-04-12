@@ -96,6 +96,11 @@ class BlackBoxTest:
                 result.append(self.get_info(root, pathname))
         return result
 
+    def assert_(self, name, condition, message):
+        """Raise an exception if a condition is not met."""
+        if not condition:
+            raise Exception("%s: %s" % (name, message))
+
     def assertEqual(self, name, value1, value2, message):
         """Raise an exception if two values are not equal."""
         if value1 != value2:
@@ -210,13 +215,56 @@ class HandlesSymLinks(BlackBoxTest):
         self.verify(data, restored)
 
 
+class ReusesUnmodifiedFiles(BlackBoxTest):
+
+    def disk_kilobytes(self, pathname):
+        """Return disk usage in kilobytes of a given filesystem object."""
+        # Posix mandates st_blocks is in units of 512 byte blocks.
+        return os.stat(pathname).st_blocks / 2 
+
+    def disk_usage(self, root):
+        """Like 'du -ks root'."""
+        result = 0
+        for dirname, dirnames, filenames in os.walk(root):
+            result += self.disk_kilobytes(dirname)
+            for filename in filenames:
+                result += self.disk_kilobytes(os.path.join(dirname, filename))
+        return result
+
+    def test(self):
+        # Generate a lot of data. Take two generations of backups.
+        # The disk space used by the store should increase only little:
+        # enough for a new generation object, plus a new mapping block.
+        
+        data_size = 1024 ** 2
+        small_increase = 2 * 4    # two disk blocks
+                                  # FIXME: we probably should query the
+                                  # block size dynamically, but this is
+                                  # good enough for now, as long as it's
+                                  # lots smaller than data_size and bigger
+                                  # than actual use
+
+        data = self.tempdir()
+        self.create_file(data, "foo", "x" * data_size)
+        store = self.tempdir()
+        self.backup(store, data)
+        du1 = self.disk_usage(store)
+        self.backup(store, data)
+        du2 = self.disk_usage(store)
+        self.assert_("foo", du2 <= du1 + small_increase, 
+                     "disk usage for new generation grows "
+                     "too much for unmodified data (by %d KiB, %d allowed)" % 
+                     (du2 - du1, small_increase))
+
+
 class ObnamBlackBoxTests:
 
     """Main class for running black box tests of obnam."""
     
     def run(self):
         errors = False
-        tests = [RestoresIdenticalData, HandlesHardLinks, HandlesSymLinks]
+        tests = [RestoresIdenticalData, HandlesHardLinks, HandlesSymLinks,
+                 ReusesUnmodifiedFiles]
         for klass in tests:
             test = klass()
             try:
