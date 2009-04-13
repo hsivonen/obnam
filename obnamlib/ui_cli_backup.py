@@ -83,7 +83,7 @@ class BackupCommand(object):
         return dir
 
     def backup_existing_dir(self, prevdir, relative_path, st, subdirs, 
-                            filenames):
+                            filenames): # pragma: no cover
         """Back up a directory that exists in the previous generation."""
 
         return self.backup_new_dir(relative_path, st, subdirs, filenames)
@@ -115,7 +115,7 @@ class BackupCommand(object):
         st = lstat(relative_path)
 
         prevdir = self.get_dir_in_prevgen(relative_path)
-        if prevdir:
+        if prevdir: # pragma: no cover
             dir = self.backup_existing_dir(prevdir, relative_path, st,
                                            subdirs, filenames)
         else:
@@ -163,7 +163,8 @@ class BackupCommand(object):
     def backup(self, host_id, roots):
         host = self.store.get_host(host_id)
         if host.genrefs: # pragma: no cover
-            prevgen = host.genrefs[-1]
+            prevgenref = host.genrefs[-1]
+            prevgen = self.store.get_object(host, prevgenref)
             self.prevgen_lookupper = obnamlib.Lookupper(self.store, host, 
                                                         prevgen)
         else:
