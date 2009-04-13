@@ -263,8 +263,12 @@ class ObnamBlackBoxTests:
     
     def run(self):
         errors = False
-        tests = [RestoresIdenticalData, HandlesHardLinks, HandlesSymLinks,
-                 ReusesUnmodifiedFiles]
+        tests = [
+                    RestoresIdenticalData, 
+                    HandlesHardLinks, 
+                    HandlesSymLinks,
+                    ReusesUnmodifiedFiles,
+                ]
         for klass in tests:
             test = klass()
             try:
