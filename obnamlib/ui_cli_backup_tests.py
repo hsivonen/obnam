@@ -239,3 +239,28 @@ class BackupCommandTests(unittest.TestCase):
         self.cmd.backup("foo", ["bar", "foobar"])
         self.mox.VerifyAll()
         self.assertEqual(host.genrefs, ["genid"])
+        
+    def test_lists_no_ancestor_for_root_directory(self):
+        self.assertEqual(self.cmd.list_ancestors("/"), [])
+
+    def test_lists_only_root_for_subdir_of_root(self):
+        self.assertEqual(self.cmd.list_ancestors("/foo"), ["/"])
+
+    def test_lists_all_ancestors_of_long_path(self):
+        self.assertEqual(self.cmd.list_ancestors("/foo/bar/foobar"), 
+                         ["/foo/bar", "/foo", "/"])
+
+    def test_list_ancestors_ignores_period(self):
+        self.assertEqual(self.cmd.list_ancestors("/foo/bar/./foobar"), 
+                         ["/foo/bar", "/foo", "/"])
+
+    def test_list_ancestors_interprets_two_periods(self):
+        self.assertEqual(self.cmd.list_ancestors("/foo/bar/../foobar"), 
+                         ["/foo", "/"])
+
+    def test_lists_ancestors_for_relative_path(self):
+        self.assertEqual(self.cmd.list_ancestors("foo/bar"), ["foo"])
+
+    def test_lists_no_ancestors_for_single_element_relative_path(self):
+        self.assertEqual(self.cmd.list_ancestors("foo"), [])
+

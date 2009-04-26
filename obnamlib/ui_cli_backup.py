@@ -207,6 +207,52 @@ class BackupCommand(object):
 
         return root_object
 
+    def list_ancestors(self, pathname):
+        """Return list of pathnames of ancestors of a given name."""
+        
+        pathname = os.path.normpath(pathname)
+        ancestors = []
+        while pathname and pathname != os.sep:
+            parent = os.path.dirname(pathname)
+            if parent:
+                ancestors.append(parent)
+            pathname = parent
+        return ancestors
+
+    def fake_ancestors(self, root_list): # pragma: no cover
+        """Create fake obnamlib.Dir entries for all ancestors of roots.
+        
+        Return the fake obnamlib.Dir for the root of the filesystem.
+        
+        """
+        
+        ancestors = {}
+        
+        result = set()
+        
+        for root_name, root_obj in root_list:
+            descendant = root_obj
+            ancestor_list = self.list_ancestors(root_name)
+            for ancestor in ancestor_list:
+                if ancestor in ancestors:
+                    dir = ancestors[ancestor]
+                else:
+                    dir = self.store.new_object(obnamlib.DIR)
+                    dir.name = os.path.basename(ancestor)
+                    dir.stat = self.fs.lstat(ancestor)
+                    ancestors[ancestor] = dir
+                dir.dirrefs.append(descendant.id)
+                descendant = dir
+            if ancestor_list:
+                result.add(ancestors[ancestor_list[-1]])
+            else:
+                result.add(root_obj)
+
+        for path in ancestors:
+            self.store.put_object(ancestors[path])
+
+        return result
+
     def backup_generation(self, roots):
         """Back up a generation."""
 
@@ -215,8 +261,11 @@ class BackupCommand(object):
         dirs = [x for x in roots if self.fs.isdir(x)]
         nondirs = [x for x in roots if x not in dirs]
 
+        root_list = []
         for root in dirs:
-            gen.dirrefs.append(self.backup_recursively(root).id)
+            root_list.append((root, self.backup_recursively(root)))
+        dirlist = self.fake_ancestors(root_list)
+        gen.dirrefs = [x.id for x in dirlist]
 
         gen.fgrefs += [x.id for x in self.backup_new_files_as_groups(nondirs)]
 
