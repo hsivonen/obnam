@@ -93,6 +93,7 @@ from ui_cli_cat import CatCommand
 from ui_cli_fsck import FsckCommand
 from ui_cli_generations import GenerationsCommand
 from ui_cli_help import HelpCommand
+from ui_cli_objtree import ObjtreeCommand
 from ui_cli_show import ShowGenerationsCommand
 from ui_cli import CommandLineUI
 
