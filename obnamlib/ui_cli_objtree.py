@@ -41,12 +41,19 @@ class ObjtreeCommand(object):
     def quote(self, name):
         return '"%s"' % "".join(self.quotechar(c) for c in name)
 
+    def label(self, obj):
+        label = "%s" % obnamlib.obj_kinds.nameof(obj.kind)
+        if obj.kind == obnamlib.DIR:
+            label += "<br/>%s" % obj.name
+        return label
+
     def find_refs(self, obj):
         result = []
         obj.prepare_for_encoding()
         for c in obj.components:
             if obnamlib.cmp_kinds.is_ref(c.kind):
                 result.append(str(c))
+        obj.post_decoding_hook()
         return result
 
     def objtree(self): # pragma: no cover
@@ -55,8 +62,7 @@ class ObjtreeCommand(object):
         while refs:
             ref = refs[0]
             obj = self.store.get_object(self.host, ref)
-            print "  %s [ label=%s ];" % (self.quote(ref), 
-                                          obnamlib.obj_kinds.nameof(obj.kind))
+            print '  %s [ label=<%s> ];' % (self.quote(ref), self.label(obj))
             more_refs = self.find_refs(obj)
             for target in more_refs:
                 print "  %s -> %s;" % (self.quote(ref), self.quote(target))
