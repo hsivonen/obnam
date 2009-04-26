@@ -14,3 +14,5 @@ obnamlib/object_sig.py
 obnamlib/ui_cli_show.py
 obnamlib/component_composites.py
 obnamlib/component_strings.py
+obnamlib/ui_cli_fsck.py
+obnamlib/ui_cli_objtree.py
