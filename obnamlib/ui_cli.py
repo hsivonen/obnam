@@ -40,6 +40,8 @@ class CommandLineUI(obnamlib.UserInterface):
         "fsck": obnamlib.FsckCommand(),
 
         "objtree": obnamlib.ObjtreeCommand(),
+
+        "showobjs": obnamlib.ShowobjsCommand(),
         }
 
     def short_help(self, stdout=sys.stdout):
