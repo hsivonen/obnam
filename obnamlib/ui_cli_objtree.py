@@ -22,7 +22,15 @@ import obnamlib
 
 class ObjtreeCommand(object):
 
-    """Print a graphviz .dot file of the object DAG."""
+    """Print a graphviz .dot file of the object DAG.
+    
+    To use the file:
+    
+        obnam objtree host.id store.path > foo.dot
+        dot -Tpng -o foo.png foo.dot
+        eog foo.png
+    
+    """
 
     def quotechar(self, char):
         if char == '"':
