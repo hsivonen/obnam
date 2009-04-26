@@ -36,6 +36,8 @@ class CommandLineUI(obnamlib.UserInterface):
 
         "show": obnamlib.ShowGenerationsCommand(),
         "show-generations": obnamlib.ShowGenerationsCommand(),
+        
+        "fsck": obnamlib.FsckCommand(),
         }
 
     def short_help(self, stdout=sys.stdout):
