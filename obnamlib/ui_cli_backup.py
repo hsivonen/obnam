@@ -238,7 +238,7 @@ class BackupCommand(object):
                     dir = ancestors[ancestor]
                 else:
                     dir = self.store.new_object(obnamlib.DIR)
-                    dir.name = os.path.basename(ancestor)
+                    dir.name = os.path.basename(ancestor) or ancestor
                     dir.stat = self.fs.lstat(ancestor)
                     ancestors[ancestor] = dir
                 dir.dirrefs.append(descendant.id)
