@@ -91,6 +91,16 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(self.rw.new_mappings,
                          { "host": { "obj": "block" }})
 
+    def test_unpushed_size_is_zero_initially(self):
+        self.assertEqual(self.rw.unpushed_size, 0)
+
+    def test_unpushed_size_is_length_of_object_after_put(self):
+        o = self.rw.new_object(obnamlib.FILEGROUP)
+        name = "x" * 1024
+        o.add_file(name, obnamlib.make_stat(), None, None, None, None)
+        self.rw.put_object(o)
+        self.assert_(self.rw.unpushed_size >= len(name))
+
     def test_push_objects_outputs_block(self):
         self.rw.fs = self.mox.CreateMock(obnamlib.VirtualFileSystem)
         self.rw.idgen = self.mox.CreateMock(obnamlib.BlockIdGenerator)
