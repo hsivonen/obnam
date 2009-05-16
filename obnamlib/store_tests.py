@@ -83,6 +83,15 @@ class StoreTests(unittest.TestCase):
         self.rw.put_object(obj)
         self.assert_(obj in self.rw.object_queue)
 
+    def test_put_object_calls_hook_if_defined(self):
+        self.called = False
+        def hook():
+            self.called = True
+        self.rw.put_hook = hook
+        obj = self.rw.new_object(kind=obnamlib.GEN)
+        self.rw.put_object(obj)
+        self.assert_(self.called)
+
     def test_has_no_new_mappings_initially(self):
         self.assertEqual(self.rw.new_mappings, {})
 

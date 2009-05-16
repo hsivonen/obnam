@@ -57,6 +57,7 @@ class Store(object):
         self.factory = obnamlib.ObjectFactory()
         self.block_factory = obnamlib.BlockFactory()
         self.object_queue = []
+        self.put_hook = None
         self.idgen = obnamlib.BlockIdGenerator(3, 1024)
 
         # We keep the object to block mappings we know about in
@@ -136,6 +137,9 @@ class Store(object):
 
         self.assert_readwrite_mode()
         self.object_queue.append(obj)
+        
+        if self.put_hook is not None:
+            self.put_hook()
 
     @property
     def unpushed_size(self):
