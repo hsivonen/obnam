@@ -197,6 +197,7 @@ class BackupCommand(object):
         subdirs = {}
 
         for dirname, dirnames, filenames in self.fs.depth_first(root):
+            logging.info("Backing up %s" % dirname)
             list = subdirs.pop(dirname, [])
             dir = self.backup_dir(dirname, list, filenames)
             if dirname == root:
