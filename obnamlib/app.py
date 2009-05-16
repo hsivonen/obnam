@@ -31,7 +31,9 @@ class BackupApplication(object):
         ui.run(args or sys.argv[1:])
 
     def setup_logging(self):
-        logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
+        logging.basicConfig(level=logging.DEBUG, stream=sys.stdout,
+                            format="%(asctime)s [%(process)s] "
+                                   "%(levelname)s %(message)s")
 
     def load_configs(self):
         self.cfg = obnamlib.Config()

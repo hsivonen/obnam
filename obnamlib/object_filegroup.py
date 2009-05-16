@@ -52,7 +52,7 @@ class FileGroup(obnamlib.Object):
 
     def get_stat(self, name):
         for x in self.files:
-            if x.filename == name:
-                return x.stat
+            if x.first_string(kind=obnamlib.FILENAME) == name:
+                return obnamlib.decode_stat(x.first_string(kind=obnamlib.STAT))
         raise obnamlib.NotFound("File or symlink %s not found in FileGroup %s"
                                 % (name, self.id))

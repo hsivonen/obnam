@@ -91,7 +91,8 @@ class RestoreCommand(object):
         for dirname, dirnames, files in walker.walk_generation():
             logging.debug("restore_gen: dirname=%s dirnames=%s files=%s" %
                           (repr(dirname), repr(dirnames), repr(files)))
-            self.vfs.mkdir(dirname)
+            if not self.vfs.exists(dirname):
+                self.vfs.mkdir(dirname)
             dirs.insert(0, dirname)
             for file in files:
                 self.restore_file(dirname, file)

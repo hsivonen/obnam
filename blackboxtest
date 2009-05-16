@@ -143,11 +143,17 @@ class BlackBoxTest:
         
         Raise an exception for the first error found.
         
+        We need to play a little trick. When we backup /foo/bar/foobar,
+        the backup will contain entries for /, /foo, and /foo/bar, and
+        when we restore the backup, it will put foobar into 
+        $TARGET/foo/bar/foobar. Thus, to verify data, we need to append
+        data to restored.
+        
         """
         
         origs = dict(self.find_everything(data))
         basename = os.path.basename(data)
-        restored_tree = os.path.join(restored, basename)
+        restored_tree = os.path.join(restored, "." + data)
         restoreds = dict(self.find_everything(restored_tree))
         
         for name, orig_stat in origs.iteritems():
@@ -236,15 +242,18 @@ class ReusesUnmodifiedFiles(BlackBoxTest):
         # The disk space used by the store should increase only little:
         # enough for a new generation object, plus a new mapping block.
         
+        data = self.tempdir()
+
         data_size = 1024 ** 2
-        small_increase = 2 * 4    # two disk blocks
+        dir_blocks = (len(data.split(os.sep)) + 1)
+        data_blocks = 1
+        small_increase = (dir_blocks + data_blocks) * 4
                                   # FIXME: we probably should query the
                                   # block size dynamically, but this is
                                   # good enough for now, as long as it's
                                   # lots smaller than data_size and bigger
                                   # than actual use
 
-        data = self.tempdir()
         self.create_file(data, "foo", "x" * data_size)
         store = self.tempdir()
         self.backup(store, data)

@@ -92,6 +92,7 @@ class RestoreCommandTests(unittest.TestCase):
         cmd.lookupper = self.mox.CreateMock(obnamlib.Lookupper)
         
         walker.walk_generation().AndReturn([("dirname", [], ["file"])])
+        cmd.vfs.exists("dirname").AndReturn(False)
         cmd.vfs.mkdir("dirname")
         dir = self.mox.CreateMock(obnamlib.Dir)
         dir.stat = obnamlib.make_stat()
