@@ -16,6 +16,7 @@
 
 
 import logging
+import os
 import sys
 
 import obnamlib
@@ -31,7 +32,12 @@ class BackupApplication(object):
         ui.run(args or sys.argv[1:])
 
     def setup_logging(self):
-        logging.basicConfig(level=logging.DEBUG, stream=sys.stdout,
+        debugging = os.environ.get("OBNAM_DEBUGGING", "false")
+        if debugging == "true":
+            level = logging.DEBUG
+        else:
+            level = logging.INFO
+        logging.basicConfig(level=level, stream=sys.stdout,
                             format="%(asctime)s [%(process)s] "
                                    "%(levelname)s %(message)s")
 
