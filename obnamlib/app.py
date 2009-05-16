@@ -15,6 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import logging
 import sys
 
 import obnamlib
@@ -22,11 +23,17 @@ import obnamlib
 class BackupApplication(object):
 
     def run(self, args=None):
+        self.setup_logging()
         self.load_configs()
         self.parse_command_line()
         ui_class = self.find_ui()
         ui = ui_class(self.cfg)
         ui.run(args or sys.argv[1:])
+
+    def setup_logging(self):
+        logging.basicConfig(level=logging.DEBUG, stream=sys.stdout,
+                            format="%(asctime)s [%(process)s] "
+                                   "%(levelname)s %(message)s")
 
     def load_configs(self):
         self.cfg = obnamlib.Config()

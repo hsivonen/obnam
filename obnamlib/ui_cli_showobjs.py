@@ -15,37 +15,32 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-import logging
-
 import obnamlib
 
 
-class ObjtreeCommand(object):
+class ShowobjsCommand(object):
 
-    """Print a graphviz .dot file of the object DAG.
-    
-    To use the file:
-    
-        obnam objtree host.id store.path > foo.dot
-        dot -Tpng -o foo.png foo.dot
-        eog foo.png
-    
-    """
+    """Show object info for all objects for host."""
 
-    def quotechar(self, char):
-        if char == '"':
-            return '\\"'
-        else:
-            return char
+    def showcmp(self, cmp, indent=0):
+        s = " " * (indent * 2)
+        print s+"component:", obnamlib.cmp_kinds.nameof(cmp.kind),
+        if obnamlib.cmp_kinds.is_plain(cmp.kind):
+            print repr(str(cmp))
+        elif obnamlib.cmp_kinds.is_ref(cmp.kind):
+            print repr(str(cmp))
+        elif obnamlib.cmp_kinds.is_composite(cmp.kind):
+            print
+            for c in cmp.children:
+                self.showcmp(c, indent+1)
 
-    def quote(self, name):
-        return '"%s"' % "".join(self.quotechar(c) for c in name)
-
-    def label(self, obj):
-        label = "%s" % obnamlib.obj_kinds.nameof(obj.kind)
-        if obj.kind == obnamlib.DIR:
-            label += "<br/>%s" % obj.name
-        return label
+    def showobj(self, obj):
+        print "id:", obj.id
+        print "kind:", obnamlib.obj_kinds.nameof(obj.kind)
+        obj.prepare_for_encoding()
+        for c in obj.components:
+            self.showcmp(c)
+        print
 
     def find_refs(self, obj):
         result = []
@@ -56,22 +51,22 @@ class ObjtreeCommand(object):
         obj.post_decoding_hook()
         return result
 
-    def objtree(self): # pragma: no cover
-        print "digraph abstract {"
+    def showobjs(self): # pragma: no cover
+        self.showobj(self.host)
         refs = self.host.genrefs[:]
+        seen = set(self.host.id)
         while refs:
             ref = refs[0]
-            obj = self.store.get_object(self.host, ref)
-            print '  %s [ label=<%s> ];' % (self.quote(ref), self.label(obj))
-            more_refs = self.find_refs(obj)
-            for target in more_refs:
-                print "  %s -> %s;" % (self.quote(ref), self.quote(target))
-            refs = refs[1:] + more_refs
-        print "}"
+            refs = refs[1:]
+            if ref not in seen:
+                obj = self.store.get_object(self.host, ref)
+                self.showobj(obj)
+                seen.add(ref)
+                refs += self.find_refs(obj)
     
     def __call__(self, config, args): # pragma: no cover
         host_id = args[0]
         store_url = args[1]
         self.store = obnamlib.Store(store_url, "r")
         self.host = self.store.get_host(host_id)
-        self.objtree()
+        self.showobjs()

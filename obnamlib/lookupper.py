@@ -15,6 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import logging
 import os
 
 import obnamlib
@@ -58,6 +59,7 @@ class Lookupper(object):
         """
 
         for fgref in fgrefs:
+            logging.debug("get_file_in_filegroups: fgref=%s" % fgref)
             fg = self.store.get_object(self.host, fgref)
             if basename in fg.names:
                 return fg.get_file(basename)
@@ -78,11 +80,6 @@ class Lookupper(object):
         
         parts = self.split(pathname)
         
-        # Absolute pathnames start at generation, so we skip a leading
-        # slash, if any.
-        if parts[:1] == [os.sep]:
-            parts = parts[1:]
-
         if len(parts) == 1:
             return self.get_file_in_filegroups(parts[0], self.gen.fgrefs)
         else:
@@ -98,7 +95,7 @@ class Lookupper(object):
         
         """
         
-        assert parts
+        assert parts, "parts is '%s', should be non-empty" % repr(parts)
 
         for dirref in dirrefs:
             dir = self.store.get_object(self.host, dirref)
@@ -119,11 +116,6 @@ class Lookupper(object):
         """
 
         parts = self.split(pathname)
-
-        # Absolute pathnames start at generation, so we skip a leading
-        # slash, if any.
-        if parts[:1] == [os.sep]:
-            parts = parts[1:]
 
         return self.get_dir_in_dirrefs(pathname, parts, self.gen.dirrefs)
 
