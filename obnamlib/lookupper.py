@@ -98,7 +98,7 @@ class Lookupper(object):
         
         """
         
-        assert parts
+        assert parts, "parts is '%s', should be non-empty" % repr(parts)
 
         for dirref in dirrefs:
             dir = self.store.get_object(self.host, dirref)
