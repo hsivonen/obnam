@@ -30,7 +30,12 @@ class FileGroup(obnamlib.Object):
 
     @property
     def names(self):
-        return [x.filename for x in self.files]
+#        return [x.filename for x in self.files]
+        result = []
+        for f in self.files:
+            name = f.first_string(kind=obnamlib.FILENAME)
+            result.append(name)
+        return result
 
     def add_file(self, name, stat, contref, sigref, deltaref, symlink_target):
         file = obnamlib.File(name, stat, contref, sigref, deltaref, 

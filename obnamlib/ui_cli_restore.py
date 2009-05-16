@@ -15,6 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import logging
 import os
 import stat
 
@@ -88,6 +89,8 @@ class RestoreCommand(object):
     def restore_generation(self, walker):
         dirs = []
         for dirname, dirnames, files in walker.walk_generation():
+            logging.debug("restore_gen: dirname=%s dirnames=%s files=%s" %
+                          (repr(dirname), repr(dirnames), repr(files)))
             self.vfs.mkdir(dirname)
             dirs.insert(0, dirname)
             for file in files:

@@ -15,6 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import logging
 import os
 
 import obnamlib
@@ -96,9 +97,10 @@ class StoreWalker(object):
         
         """
         
+        logging.debug("walker.walk: root=%s" % repr(root))
         if self.lookupper.is_file(root):
             raise obnamlib.Exception("%s must be a directory" % root)
-            
+
         dir = self.lookupper.get_dir(root)
         dirnames = self.find_dirnames(dir)
         files = self.find_files(dir)
@@ -120,8 +122,11 @@ class StoreWalker(object):
         """
         
         if self.root_files:
+            logging.debug("walk_generation: root_files=%s" % 
+                          repr(self.root_files))
             yield ".", [], self.root_files
             
         for dirname in self.root_dirs:
+            logging.debug("walk_generation: dirname=%s" % repr(dirname))
             for x in self.walk(dirname):
                 yield x
