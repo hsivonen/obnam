@@ -106,7 +106,7 @@ class BackupCommand(object):
         """Is the file on disk the same as in the filegroup?"""
         fullname = os.path.join(dirname, basename)
         st = self.fs.lstat(fullname)
-        return self.same_stat(st, fg.get_stat(name))
+        return self.same_stat(st, fg.get_stat(fullname))
 
     def same_filegroups(self, prevdir, filegroups): # pragma: no cover
         """Does prevdir have exactly those filegroups?"""

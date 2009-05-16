@@ -61,7 +61,6 @@ class Lookupper(object):
         for fgref in fgrefs:
             logging.debug("get_file_in_filegroups: fgref=%s" % fgref)
             fg = self.store.get_object(self.host, fgref)
-            assert fg.kind == obnamlib.FILEGROUP
             if basename in fg.names:
                 return fg.get_file(basename)
         
