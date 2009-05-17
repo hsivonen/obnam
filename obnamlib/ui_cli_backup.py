@@ -38,6 +38,11 @@ class BackupCommand(obnamlib.CommandLineCommand):
     PART_SIZE = 256 * 1024
     
     def add_options(self, parser): # pragma: no cover
+        parser.add_option("--root", metavar="FILE-OR-DIR", default=None,
+                          action="append", dest="roots",
+                          help="backup also FILE-OR-DIR (or give them "
+                               "as non-options)")
+
         parser.add_option("--blocksize", metavar="SIZE", default=BLOCKSIZE,
                           help="make blocks of SIZE bytes (default: %default)")
         parser.epilog += """\
@@ -328,6 +333,12 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
 
         self.max_unpushed = options.blocksize
         self.max_mappings = options.max_mappings
+        
+        if not args and not options.roots:
+            raise obnamlib.Exception("No backup roots given.")
+        
+        if options.roots:
+            args = options.roots + args
 
         roots = [os.path.abspath(root) for root in args]
         self.backup(options.host, roots)
