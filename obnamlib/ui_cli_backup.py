@@ -322,7 +322,7 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         self.store = obnamlib.Store(options.store, "w")
         self.fs = obnamlib.LocalFS("/")
 
-        self.max_unpushed = 1024**2 # FIXME: this should be user-settable
+        self.max_unpushed = options.blocksize
         self.max_mappings = 1024 # FIXME: this should be user-settable
 
         roots = [os.path.abspath(root) for root in args]
