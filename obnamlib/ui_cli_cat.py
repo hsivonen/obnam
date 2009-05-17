@@ -46,8 +46,6 @@ class CatCommand(obnamlib.CommandLineCommand):
                                      "not a file" % pathname)
 
     def run(self, options, args): # pragma: no cover
-        gen_id = args[0]
-        pathname = args[1]
-
+        pathname = args[0]
         store = obnamlib.Store(options.store, "r")
-        self.cat(store, options.host, gen_id, pathname)
+        self.cat(store, options.host, options.generation, pathname)
