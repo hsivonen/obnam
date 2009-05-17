@@ -24,6 +24,17 @@ class FsckCommand(object):
 
     """Verify that all objects in host block are found, recursively."""
 
+    def check_filegroup(self, fg):
+        assert len(fg.files) > 0, "FILEGROUP must contain files"
+
+    def check_object(self, obj):
+        dict = {
+            obnamlib.FILEGROUP: self.check_filegroup,
+        }
+        
+        if obj.kind in dict:
+            dict[obj.kind](obj)
+
     def find_refs(self, obj):
         result = []
         obj.prepare_for_encoding()
@@ -39,6 +50,7 @@ class FsckCommand(object):
             refs = refs[1:]
             logging.debug("fsck: getting object %s" % ref)
             obj = self.store.get_object(self.host, ref)
+            self.check_object(obj)
             refs += self.find_refs(obj)
         logging.info("fsck OK")
     

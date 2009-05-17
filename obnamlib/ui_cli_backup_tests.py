@@ -74,9 +74,6 @@ class BackupCommandTests(unittest.TestCase):
         fg = self.mox.CreateMock(obnamlib.FileGroup)
         fg.components = self.mox.CreateMock(list)
 
-        # First create FileGroup.
-        self.cmd.store.new_object(kind=obnamlib.FILEGROUP).AndReturn(fg)
-        
         # Backup foo, a regular file.
         self.cmd.fs.lstat("foo").AndReturn(
             obnamlib.make_stat(st_mode=stat.S_IFREG))
@@ -86,6 +83,10 @@ class BackupCommandTests(unittest.TestCase):
         cont.id = "filecontents.id"
         self.cmd.store.put_contents(f, self.cmd.PART_SIZE).AndReturn(cont)
         f.close()
+
+        # The FileGroup gets created after the first file to be added,
+        # so it doesn't created if there is nothing to add.
+        self.cmd.store.new_object(kind=obnamlib.FILEGROUP).AndReturn(fg)
         fg.components.append(mox.IsA(obnamlib.Component))
         
         # Backup bar, a symlink.

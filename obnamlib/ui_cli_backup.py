@@ -58,7 +58,7 @@ class BackupCommand(object):
         """Back a set of new files as a new FILEGROUP."""
         if lstat is None: # pragma: no cover
             lstat = self.fs.lstat
-        fg = self.store.new_object(kind=obnamlib.FILEGROUP)
+        fg = None
         for path in relative_paths:
             st = lstat(path)
             fc = None
@@ -68,9 +68,14 @@ class BackupCommand(object):
                 fc = self.backup_new_symlink(path, st)
             else:
                 fc = self.backup_new_other(path, st)
+            if fg is None:
+                fg = self.store.new_object(kind=obnamlib.FILEGROUP)
             fg.components.append(fc)
-        self.store.put_object(fg)
-        return [fg]
+        if fg:
+            self.store.put_object(fg)
+            return [fg]
+        else: # pragma: no cover
+            return []
 
     def new_dir(self, relative_path, st, subdirs, filegroups):
         """Create a new obnamlib.Dir."""
