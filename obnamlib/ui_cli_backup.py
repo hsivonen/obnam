@@ -44,6 +44,10 @@ class BackupCommand(obnamlib.CommandLineCommand):
 SIZE is 
 bytes, or use suffixes kB, K, MB, M, GB, G.
 """
+
+        parser.add_option("--max-mappings", metavar="COUNT", default=1000,
+                          help="max number of mappings before flushing them "
+                               "to disk (default: %default)")
         
 
     def backup_new_symlink(self, relative_path, stat):
@@ -323,7 +327,7 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         self.fs = obnamlib.LocalFS("/")
 
         self.max_unpushed = options.blocksize
-        self.max_mappings = 1024 # FIXME: this should be user-settable
+        self.max_mappings = options.max_mappings
 
         roots = [os.path.abspath(root) for root in args]
         self.backup(options.host, roots)
