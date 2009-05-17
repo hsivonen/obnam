@@ -49,10 +49,10 @@ class CatCommandTests(unittest.TestCase):
         self.gen.dirrefs = []
         
         self.device = (obnamlib.make_stat(st_mode=stat.S_IFCHR), 
-                       None, None, None)
+                       None, None, None, None)
 
         self.file = (obnamlib.make_stat(st_mode=stat.S_IFREG), 
-                                        "file.cont", None, None)
+                                        "file.cont", None, None, None)
         
         self.cmd = obnamlib.CatCommand()
 

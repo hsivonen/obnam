@@ -17,3 +17,4 @@ obnamlib/component_strings.py
 obnamlib/ui_cli_fsck.py
 obnamlib/ui_cli_objtree.py
 obnamlib/ui_cli_showobjs.py
+obnamlib/component_factory.py

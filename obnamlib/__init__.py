@@ -34,6 +34,7 @@ from component_strings import (BlockId,
                                BlockRef,
                                ContMapRef,
                                ContRef,
+                               DeltaData,
                                DeltaPartRef,
                                DeltaRef,
                                DirRef,
@@ -42,6 +43,7 @@ from component_strings import (BlockId,
                                FileListRef,
                                FileName,
                                FilePartRef,
+                               FormatVersion,
                                GenEnd, 
                                GenRef,
                                GenStart,
@@ -50,9 +52,11 @@ from component_strings import (BlockId,
                                ObjRef,
                                SigData,
                                SigRef,
+                               SnapshotGen,
                                SymlinkTarget)
 from component_composites import NameIPair, ObjectComponent, ObjMap
 from component_objkind import ObjectKind
+from component_factory import ComponentFactory
 
 from object import Object
 from object_kinds import ObjectKinds
