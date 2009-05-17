@@ -168,7 +168,8 @@ class BlackBoxTest:
 
     def backup(self, store, data):
         """Back up a data directory to a store."""
-        self.runcmd(["./obnam", "backup", self.hostid, store, data])
+        self.runcmd(["./obnam", "backup", "--host", self.hostid, 
+                     "--store", store, data])
         
     def restore(self, store):
         """Restore the newest generation from a store.

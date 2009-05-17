@@ -98,6 +98,6 @@ class CommandLineUI(obnamlib.UserInterface):
         if not args:
             self.short_help()
         elif args[0] in self.commands:
-            self.commands[args[0]].run(self.config, args[1:])
+            self.commands[args[0]].run(options, args[1:])
         else:
             raise obnamlib.Exception("Unknown command '%s'" % args[0])

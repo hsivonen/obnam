@@ -318,16 +318,12 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         self.host.genrefs.append(gen.id)
         self.store.commit(self.host)
 
-    def run(self, config, args): # pragma: no cover
-        host_id = args[0]
-        store_url = args[1]
-        roots = args[2:]
-
-        self.store = obnamlib.Store(store_url, "w")
+    def run(self, options, args): # pragma: no cover
+        self.store = obnamlib.Store(options.store, "w")
         self.fs = obnamlib.LocalFS("/")
 
         self.max_unpushed = 1024**2 # FIXME: this should be user-settable
         self.max_mappings = 1024 # FIXME: this should be user-settable
 
-        roots = [os.path.abspath(root) for root in roots]
-        self.backup(host_id, roots)
+        roots = [os.path.abspath(root) for root in args]
+        self.backup(options.host, roots)
