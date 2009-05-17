@@ -27,14 +27,13 @@ class CatCommand(obnamlib.CommandLineCommand):
 
     def cat(self, store, host_id, gen_id, pathname, output=sys.stdout,
             Lookupper=obnamlib.Lookupper):
-        import logging; logging.info("cat %s" % pathname)
         host = store.get_host(host_id)
         gen = store.get_object(host, gen_id)
         lookupper = Lookupper(store, host, gen)
         # The following will raise NotFound if pathname doesn't exist.
         # That's what we want.
         if lookupper.is_file(pathname):
-            st, contref, sigref, deltaref = lookupper.get_file(pathname)
+            st, contref, sigref, deltaref, slink = lookupper.get_file(pathname)
             if stat.S_ISREG(st.st_mode):
                 store.cat(host, output, contref, deltaref)
             else:

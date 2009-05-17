@@ -71,8 +71,9 @@ class Lookupper(object):
         """Look up the meta data for a file.
         
         Return tuple (stat_result, content reference, signature
-        reference, delta reference), where the three references are
-        either None or the string value of the corresponding component.
+        reference, delta reference, symlink target), where the three 
+        references are either None or the string value of the corresponding 
+        component.
         
         If not found, the NotFound exception is raised.
         
