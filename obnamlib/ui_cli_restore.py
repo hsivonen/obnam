@@ -124,10 +124,9 @@ class RestoreCommand(obnamlib.CommandLineCommand):
     
     def run(self, options, args): # pragma: no cover
         target = args[0]
-        genref = args[1]
-        roots = args[2:]
+        roots = args[1:]
 
         self.store = obnamlib.Store(options.store, "r")
         self.vfs = obnamlib.LocalFS(target)
 
-        self.restore(options.host, genref, roots)
+        self.restore(options.host, options.generation, roots)

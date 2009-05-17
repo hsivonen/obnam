@@ -180,8 +180,7 @@ class BlackBoxTest:
         
         restored = self.tempdir()
         self.runcmd(["./obnam", "restore", restored, "--host", self.hostid, 
-                     "--store", store,
-                     "latest"])
+                     "--store", store, "--generation", "latest"])
         return restored
 
 
