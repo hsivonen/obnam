@@ -26,7 +26,6 @@ class BackupApplication(object):
     def run(self, args=None):
         self.setup_logging()
         self.load_configs()
-        self.parse_command_line()
         ui_class = self.find_ui()
         ui = ui_class(self.cfg)
         ui.run(args or sys.argv[1:])
@@ -43,9 +42,6 @@ class BackupApplication(object):
 
     def load_configs(self):
         self.cfg = obnamlib.Config()
-
-    def parse_command_line(self):
-        pass
 
     def find_ui(self):
         return obnamlib.CommandLineUI

@@ -305,8 +305,6 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
                       (host_id, " ".join(roots)))
         self.host = self.store.get_host(host_id)
         self.store.put_hook = self.put_hook
-        self.max_unpushed = 1024**2 # FIXME: this should be user-settable
-        self.max_mappings = 1024 # FIXME: this should be user-settable
         if self.host.genrefs: # pragma: no cover
             prevgenref = self.host.genrefs[-1]
             logging.debug("Found previous generation %s" % prevgenref)
@@ -327,6 +325,9 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
 
         self.store = obnamlib.Store(store_url, "w")
         self.fs = obnamlib.LocalFS("/")
+
+        self.max_unpushed = 1024**2 # FIXME: this should be user-settable
+        self.max_mappings = 1024 # FIXME: this should be user-settable
 
         roots = [os.path.abspath(root) for root in roots]
         self.backup(host_id, roots)
