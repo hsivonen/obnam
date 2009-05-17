@@ -35,6 +35,9 @@ class ObjectFactory(object):
         obnamlib.SIG: obnamlib.Signature,
         }
 
+    def __init__(self):
+        self.cmp_factory = obnamlib.ComponentFactory()
+
     def new_id(self):
         return str(uuid.uuid4())
 
@@ -63,9 +66,9 @@ class ObjectFactory(object):
 
         if obnamlib.cmp_kinds.is_composite(kind):
             children = self.decode_all_components(content)
-            cmp = obnamlib.Component(kind=kind, children=children)
+            cmp = self.cmp_factory.new_component(kind, children=children)
         else:
-            cmp = obnamlib.Component(kind=kind, string=content)
+            cmp = self.cmp_factory.new_component(kind=kind, string=content)
         
         return cmp, pos
 
