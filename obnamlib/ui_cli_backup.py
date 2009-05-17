@@ -277,6 +277,11 @@ class BackupCommand(object):
     def put_hook(self): # pragma: no cover
         if self.store.unpushed_size > self.max_unpushed:
             self.store.push_objects(self.host)
+        if self.host not in self.store.new_mappings:
+            return
+        mappings = self.store.new_mappings[self.host]
+        if len(mappings) > self.max_mappings:
+            self.store.push_new_mappings(self.host)
 
     def backup(self, host_id, roots):
         logging.debug("Backing up: host %s, roots %s" % 
@@ -284,6 +289,7 @@ class BackupCommand(object):
         self.host = self.store.get_host(host_id)
         self.store.put_hook = self.put_hook
         self.max_unpushed = 1024**2 # FIXME: this should be user-settable
+        self.max_mappings = 1024 # FIXME: this should be user-settable
         if self.host.genrefs: # pragma: no cover
             prevgenref = self.host.genrefs[-1]
             logging.debug("Found previous generation %s" % prevgenref)
