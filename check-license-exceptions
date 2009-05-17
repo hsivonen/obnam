@@ -2,3 +2,6 @@ check-license-exceptions
 HACKING
 NEWS
 test-module-exceptions
+scripts/backup
+scripts/create-test-case
+scripts/dotstore
