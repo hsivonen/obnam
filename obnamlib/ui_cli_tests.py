@@ -21,6 +21,15 @@ import unittest
 import obnamlib
 
 
+class MockCommand(object):
+
+    def add_options(self, parser):
+        pass
+        
+    def run(self, *args):
+        self.args = args
+
+
 class CommandLineUITests(unittest.TestCase):
 
     def setUp(self):
@@ -28,14 +37,11 @@ class CommandLineUITests(unittest.TestCase):
         self.ui.short_help = self.mock_short_help
         self.short_helped = False
         self.ui.commands = {
-            "cmd": self.mock_command,
+            "cmd": MockCommand(),
             }
 
     def mock_short_help(self):
         self.short_helped = True
-
-    def mock_command(self, *args):
-        self.args = args
 
     def test_calls_right_command_function_with_right_args(self):
         self.ui.run(["cmd", "arg1", "arg2"])

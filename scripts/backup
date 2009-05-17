@@ -3,4 +3,4 @@
 
 set -e
 
-./obnam backup hostid test.store test.tree
+./obnam backup --host hostid --store test.store test.tree

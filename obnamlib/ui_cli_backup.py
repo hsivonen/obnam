@@ -22,17 +22,38 @@ import stat
 import obnamlib
 
 
+BLOCKSIZE = 1000 ** 2
+
+
 class DummyLookupper:
 
     def get_dir(self, name):
         raise obnamlib.NotFound(name)
 
 
-class BackupCommand(object):
+class BackupCommand(obnamlib.CommandLineCommand):
 
     """A sub-command for the command line interface to back up some data."""
 
     PART_SIZE = 256 * 1024
+    
+    def add_options(self, parser): # pragma: no cover
+        parser.add_option("--root", metavar="FILE-OR-DIR", default=None,
+                          action="append", dest="roots",
+                          help="backup also FILE-OR-DIR (or give them "
+                               "as non-options)")
+
+        parser.add_option("--blocksize", metavar="SIZE", default=BLOCKSIZE,
+                          help="make blocks of SIZE bytes (default: %default)")
+        parser.epilog += """\
+SIZE is 
+bytes, or use suffixes kB, K, MB, M, GB, G.
+"""
+
+        parser.add_option("--max-mappings", metavar="COUNT", default=1000,
+                          help="max number of mappings before flushing them "
+                               "to disk (default: %default)")
+        
 
     def backup_new_symlink(self, relative_path, stat):
         """Backup a new symlink."""
@@ -293,8 +314,6 @@ class BackupCommand(object):
                       (host_id, " ".join(roots)))
         self.host = self.store.get_host(host_id)
         self.store.put_hook = self.put_hook
-        self.max_unpushed = 1024**2 # FIXME: this should be user-settable
-        self.max_mappings = 1024 # FIXME: this should be user-settable
         if self.host.genrefs: # pragma: no cover
             prevgenref = self.host.genrefs[-1]
             logging.debug("Found previous generation %s" % prevgenref)
@@ -308,13 +327,18 @@ class BackupCommand(object):
         self.host.genrefs.append(gen.id)
         self.store.commit(self.host)
 
-    def __call__(self, config, args): # pragma: no cover
-        host_id = args[0]
-        store_url = args[1]
-        roots = args[2:]
-
-        self.store = obnamlib.Store(store_url, "w")
+    def run(self, options, args): # pragma: no cover
+        self.store = obnamlib.Store(options.store, "w")
         self.fs = obnamlib.LocalFS("/")
 
-        roots = [os.path.abspath(root) for root in roots]
-        self.backup(host_id, roots)
+        self.max_unpushed = options.blocksize
+        self.max_mappings = options.max_mappings
+        
+        if not args and not options.roots:
+            raise obnamlib.Exception("No backup roots given.")
+        
+        if options.roots:
+            args = options.roots + args
+
+        roots = [os.path.abspath(root) for root in args]
+        self.backup(options.host, roots)

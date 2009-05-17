@@ -20,7 +20,7 @@ import sys
 import obnamlib
 
 
-class HelpCommand(object):
+class HelpCommand(obnamlib.CommandLineCommand):
 
-    def __call__(self, config, args, stdout=sys.stdout):
+    def run(self, config, args, stdout=sys.stdout):
         stdout.write("Help text will appear here.\n")

@@ -168,7 +168,8 @@ class BlackBoxTest:
 
     def backup(self, store, data):
         """Back up a data directory to a store."""
-        self.runcmd(["./obnam", "backup", self.hostid, store, data])
+        self.runcmd(["./obnam", "backup", "--host", self.hostid, 
+                     "--store", store, data])
         
     def restore(self, store):
         """Restore the newest generation from a store.
@@ -178,8 +179,8 @@ class BlackBoxTest:
         """
         
         restored = self.tempdir()
-        self.runcmd(["./obnam", "restore", restored, self.hostid, store,
-                     "latest"])
+        self.runcmd(["./obnam", "restore", restored, "--host", self.hostid, 
+                     "--store", store, "--generation", "latest"])
         return restored
 
 
@@ -277,7 +278,8 @@ class NoEmptyFilegroups(BlackBoxTest):
         self.create_dir("foo")
         store = self.tempdir()
         self.backup(store, data)
-        self.runcmd(["./obnam", "fsck", self.hostid, store])
+        self.runcmd(["./obnam", "fsck", "--host", self.hostid, "--store", 
+                     store])
 
 
 class ObnamBlackBoxTests:

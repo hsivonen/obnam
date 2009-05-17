@@ -20,7 +20,7 @@ import logging
 import obnamlib
 
 
-class ObjtreeCommand(object):
+class ObjtreeCommand(obnamlib.CommandLineCommand):
 
     """Print a graphviz .dot file of the object DAG.
     
@@ -69,9 +69,7 @@ class ObjtreeCommand(object):
             refs = refs[1:] + more_refs
         print "}"
     
-    def __call__(self, config, args): # pragma: no cover
-        host_id = args[0]
-        store_url = args[1]
-        self.store = obnamlib.Store(store_url, "r")
-        self.host = self.store.get_host(host_id)
+    def run(self, options, args): # pragma: no cover
+        self.store = obnamlib.Store(options.store, "r")
+        self.host = self.store.get_host(options.host)
         self.objtree()

@@ -21,12 +21,13 @@ import sys
 import obnamlib
 
 
-class CatCommand(object):
+class CatCommand(obnamlib.CommandLineCommand):
 
     """Show contents of a file from a given generation."""
 
     def cat(self, store, host_id, gen_id, pathname, output=sys.stdout,
             Lookupper=obnamlib.Lookupper):
+        import logging; logging.info("cat %s" % pathname)
         host = store.get_host(host_id)
         gen = store.get_object(host, gen_id)
         lookupper = Lookupper(store, host, gen)
@@ -44,11 +45,7 @@ class CatCommand(object):
             raise obnamlib.Exception("Cannot output: %s is a directory, "
                                      "not a file" % pathname)
 
-    def __call__(self, config, args): # pragma: no cover
-        host_id = args[0]
-        store_url = args[1]
-        gen_id = args[2]
-        pathname = args[3]
-
-        store = obnamlib.Store(store_url, "r")
-        self.cat(store, host_id, gen_id, pathname)
+    def run(self, options, args): # pragma: no cover
+        pathname = args[0]
+        store = obnamlib.Store(options.store, "r")
+        self.cat(store, options.host, options.generation, pathname)

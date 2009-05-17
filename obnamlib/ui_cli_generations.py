@@ -20,7 +20,7 @@ import sys
 import obnamlib
 
 
-class GenerationsCommand(object):
+class GenerationsCommand(obnamlib.CommandLineCommand):
 
     """A sub-command for the command line interface to list generations."""
 
@@ -30,10 +30,6 @@ class GenerationsCommand(object):
         for genref in host.genrefs:
             output.write("%s\n" % genref)
 
-    def __call__(self, config, args): # pragma: no cover
-        host_id = args[0]
-        store_url = args[1]
-
-        self.store = obnamlib.Store(store_url, "w")
-
-        self.generations(host_id)
+    def run(self, options, args): # pragma: no cover
+        self.store = obnamlib.Store(options.store, "r")
+        self.generations(options.host)
