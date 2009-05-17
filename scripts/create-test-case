@@ -1,0 +1,11 @@
+#!/bin/sh
+# Create a simple test case.
+
+set -e
+
+mkdir test.tree
+cd test.tree
+echo foo > foo
+mkdir emptydir
+mkdir dir
+echo bar > dir/bar
