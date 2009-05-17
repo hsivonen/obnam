@@ -83,6 +83,15 @@ class StoreTests(unittest.TestCase):
         self.rw.put_object(obj)
         self.assert_(obj in self.rw.object_queue)
 
+    def test_put_object_calls_hook_if_defined(self):
+        self.called = False
+        def hook():
+            self.called = True
+        self.rw.put_hook = hook
+        obj = self.rw.new_object(kind=obnamlib.GEN)
+        self.rw.put_object(obj)
+        self.assert_(self.called)
+
     def test_has_no_new_mappings_initially(self):
         self.assertEqual(self.rw.new_mappings, {})
 
@@ -90,6 +99,16 @@ class StoreTests(unittest.TestCase):
         self.rw.add_mapping("host", "obj", "block")
         self.assertEqual(self.rw.new_mappings,
                          { "host": { "obj": "block" }})
+
+    def test_unpushed_size_is_zero_initially(self):
+        self.assertEqual(self.rw.unpushed_size, 0)
+
+    def test_unpushed_size_is_length_of_object_after_put(self):
+        o = self.rw.new_object(obnamlib.FILEGROUP)
+        name = "x" * 1024
+        o.add_file(name, obnamlib.make_stat(), None, None, None, None)
+        self.rw.put_object(o)
+        self.assert_(self.rw.unpushed_size >= len(name))
 
     def test_push_objects_outputs_block(self):
         self.rw.fs = self.mox.CreateMock(obnamlib.VirtualFileSystem)

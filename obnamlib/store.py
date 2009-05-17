@@ -57,6 +57,7 @@ class Store(object):
         self.factory = obnamlib.ObjectFactory()
         self.block_factory = obnamlib.BlockFactory()
         self.object_queue = []
+        self.put_hook = None
         self.idgen = obnamlib.BlockIdGenerator(3, 1024)
 
         # We keep the object to block mappings we know about in
@@ -136,6 +137,26 @@ class Store(object):
 
         self.assert_readwrite_mode()
         self.object_queue.append(obj)
+        
+        if self.put_hook is not None:
+            self.put_hook()
+
+    @property
+    def unpushed_size(self):
+        """Return approximate size of unpushed objects."""
+        
+        def approx_size(c):
+            """Return approximate size of component."""
+            if obnamlib.cmp_kinds.is_composite(c.kind):
+                return sum(approx_size(kid) for kid in c.children)
+            else:
+                return len(str(c))
+
+        size = 0        
+        for o in self.object_queue:
+            for c in o.components:
+                size += approx_size(c)
+        return size
 
     def get_host(self, host_id):
         """Return the host object for the host with the given id."""
