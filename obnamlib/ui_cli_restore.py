@@ -122,14 +122,12 @@ class RestoreCommand(obnamlib.CommandLineCommand):
         else:
             self.restore_generation(walker)
     
-    def run(self, config, args): # pragma: no cover
+    def run(self, options, args): # pragma: no cover
         target = args[0]
-        host_id = args[1]
-        store_url = args[2]
-        genref = args[3]
-        roots = args[4:]
+        genref = args[1]
+        roots = args[2:]
 
-        self.store = obnamlib.Store(store_url, "r")
+        self.store = obnamlib.Store(options.store, "r")
         self.vfs = obnamlib.LocalFS(target)
 
-        self.restore(host_id, genref, roots)
+        self.restore(options.host, genref, roots)

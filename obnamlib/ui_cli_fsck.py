@@ -54,9 +54,7 @@ class FsckCommand(obnamlib.CommandLineCommand):
             refs += self.find_refs(obj)
         logging.info("fsck OK")
     
-    def run(self, config, args): # pragma: no cover
-        host_id = args[0]
-        store_url = args[1]
-        self.store = obnamlib.Store(store_url, "r")
-        self.host = self.store.get_host(host_id)
+    def run(self, options, args): # pragma: no cover
+        self.store = obnamlib.Store(options.store, "r")
+        self.host = self.store.get_host(options.host)
         self.fsck()

@@ -58,11 +58,6 @@ class ShowGenerationsCommand(obnamlib.CommandLineCommand):
                 for file in files:
                     self.show_file(file, output=output)
 
-    def run(self, config, args): # pragma: no cover
-        host_id = args[0]
-        store_url = args[1]
-        genrefs = args[2:]
-
-        self.store = obnamlib.Store(store_url, "w")
-
-        self.show_generations(host_id, genrefs)
+    def run(self, options, args): # pragma: no cover
+        self.store = obnamlib.Store(options.store, "w")
+        self.show_generations(options.host, args)

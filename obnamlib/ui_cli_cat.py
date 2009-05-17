@@ -27,6 +27,7 @@ class CatCommand(obnamlib.CommandLineCommand):
 
     def cat(self, store, host_id, gen_id, pathname, output=sys.stdout,
             Lookupper=obnamlib.Lookupper):
+        import logging; logging.info("cat %s" % pathname)
         host = store.get_host(host_id)
         gen = store.get_object(host, gen_id)
         lookupper = Lookupper(store, host, gen)
@@ -44,11 +45,9 @@ class CatCommand(obnamlib.CommandLineCommand):
             raise obnamlib.Exception("Cannot output: %s is a directory, "
                                      "not a file" % pathname)
 
-    def run(self, config, args): # pragma: no cover
-        host_id = args[0]
-        store_url = args[1]
-        gen_id = args[2]
-        pathname = args[3]
+    def run(self, options, args): # pragma: no cover
+        gen_id = args[0]
+        pathname = args[1]
 
-        store = obnamlib.Store(store_url, "r")
-        self.cat(store, host_id, gen_id, pathname)
+        store = obnamlib.Store(options.store, "r")
+        self.cat(store, options.host, gen_id, pathname)
