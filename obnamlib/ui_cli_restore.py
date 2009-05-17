@@ -80,6 +80,7 @@ class RestoreCommand(object):
     def restore_dir(self, walker, root):
         dirs = []
         for dirname, dirnames, files in walker.walk(root):
+            logging.info("Restore %s" % dirname)
             self.vfs.mkdir(dirname)
             dirs.insert(0, dirname)
             for file in files:
@@ -87,10 +88,10 @@ class RestoreCommand(object):
         self.set_dir_stat(dirs)
 
     def restore_generation(self, walker):
+        logging.info("Restoring generation")
         dirs = []
         for dirname, dirnames, files in walker.walk_generation():
-            logging.debug("restore_gen: dirname=%s dirnames=%s files=%s" %
-                          (repr(dirname), repr(dirnames), repr(files)))
+            logging.info("Restore %s" % dirname)
             if not self.vfs.exists(dirname):
                 self.vfs.mkdir(dirname)
             dirs.insert(0, dirname)
