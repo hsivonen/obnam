@@ -21,7 +21,7 @@ import sys
 import obnamlib
 
 
-class CatCommand(object):
+class CatCommand(obnamlib.CommandLineCommand):
 
     """Show contents of a file from a given generation."""
 
@@ -44,7 +44,7 @@ class CatCommand(object):
             raise obnamlib.Exception("Cannot output: %s is a directory, "
                                      "not a file" % pathname)
 
-    def __call__(self, config, args): # pragma: no cover
+    def run(self, config, args): # pragma: no cover
         host_id = args[0]
         store_url = args[1]
         gen_id = args[2]

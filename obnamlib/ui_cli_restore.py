@@ -22,10 +22,10 @@ import stat
 import obnamlib
 
 
-class RestoreCommand(object):
+class RestoreCommand(obnamlib.CommandLineCommand):
 
     """Restore files from a generation."""
-
+    
     def hardlink_key(self, st): # pragma: no cover
         """Return hash key into hardlink lookup table from stat result."""
         return "%d/%d" % (st.st_dev, st.st_ino)
@@ -122,7 +122,7 @@ class RestoreCommand(object):
         else:
             self.restore_generation(walker)
     
-    def __call__(self, config, args): # pragma: no cover
+    def run(self, config, args): # pragma: no cover
         target = args[0]
         host_id = args[1]
         store_url = args[2]

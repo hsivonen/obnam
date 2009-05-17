@@ -20,7 +20,7 @@ import logging
 import obnamlib
 
 
-class FsckCommand(object):
+class FsckCommand(obnamlib.CommandLineCommand):
 
     """Verify that all objects in host block are found, recursively."""
 
@@ -54,7 +54,7 @@ class FsckCommand(object):
             refs += self.find_refs(obj)
         logging.info("fsck OK")
     
-    def __call__(self, config, args): # pragma: no cover
+    def run(self, config, args): # pragma: no cover
         host_id = args[0]
         store_url = args[1]
         self.store = obnamlib.Store(store_url, "r")

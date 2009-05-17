@@ -15,6 +15,9 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+VERSION = "x.y"
+
+
 from exception import BackupException as Exception
 
 from cfg import Config
@@ -87,6 +90,7 @@ from vfs_local import LocalFS
 
 from app import BackupApplication
 
+from ui_cli import CommandLineUI, CommandLineCommand
 from ui_cli_backup import BackupCommand
 from ui_cli_restore import RestoreCommand
 from ui_cli_cat import CatCommand
@@ -96,7 +100,6 @@ from ui_cli_help import HelpCommand
 from ui_cli_objtree import ObjtreeCommand
 from ui_cli_show import ShowGenerationsCommand
 from ui_cli_showobjs import ShowobjsCommand
-from ui_cli import CommandLineUI
 
 from statutils import decode_stat, make_stat
 

@@ -18,7 +18,7 @@
 import obnamlib
 
 
-class ShowobjsCommand(object):
+class ShowobjsCommand(obnamlib.CommandLineCommand):
 
     """Show object info for all objects for host."""
 
@@ -64,7 +64,7 @@ class ShowobjsCommand(object):
                 seen.add(ref)
                 refs += self.find_refs(obj)
     
-    def __call__(self, config, args): # pragma: no cover
+    def run(self, config, args): # pragma: no cover
         host_id = args[0]
         store_url = args[1]
         self.store = obnamlib.Store(store_url, "r")

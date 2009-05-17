@@ -20,10 +20,10 @@ import sys
 import obnamlib
 
 
-class ShowGenerationsCommand(object):
+class ShowGenerationsCommand(obnamlib.CommandLineCommand):
 
     """Show contents of generations."""
-
+    
     def show_file(self, file, output=sys.stdout):
         """file is file component."""
         
@@ -58,7 +58,7 @@ class ShowGenerationsCommand(object):
                 for file in files:
                     self.show_file(file, output=output)
 
-    def __call__(self, config, args): # pragma: no cover
+    def run(self, config, args): # pragma: no cover
         host_id = args[0]
         store_url = args[1]
         genrefs = args[2:]

@@ -22,17 +22,29 @@ import stat
 import obnamlib
 
 
+BLOCKSIZE = 1000 ** 2
+
+
 class DummyLookupper:
 
     def get_dir(self, name):
         raise obnamlib.NotFound(name)
 
 
-class BackupCommand(object):
+class BackupCommand(obnamlib.CommandLineCommand):
 
     """A sub-command for the command line interface to back up some data."""
 
     PART_SIZE = 256 * 1024
+    
+    def add_options(self, parser): # pragma: no cover
+        parser.add_option("--blocksize", metavar="SIZE", default=BLOCKSIZE,
+                          help="make blocks of SIZE bytes (default: %default)")
+        parser.epilog += """\
+SIZE is 
+bytes, or use suffixes kB, K, MB, M, GB, G.
+"""
+        
 
     def backup_new_symlink(self, relative_path, stat):
         """Backup a new symlink."""
@@ -308,7 +320,7 @@ class BackupCommand(object):
         self.host.genrefs.append(gen.id)
         self.store.commit(self.host)
 
-    def __call__(self, config, args): # pragma: no cover
+    def run(self, config, args): # pragma: no cover
         host_id = args[0]
         store_url = args[1]
         roots = args[2:]
