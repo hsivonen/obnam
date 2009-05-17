@@ -266,6 +266,20 @@ class ReusesUnmodifiedFiles(BlackBoxTest):
                      (du2 - du1, small_increase))
 
 
+class NoEmptyFilegroups(BlackBoxTest):
+
+    def create_dir(self, pathname):
+        fullname = os.path.join(self.temproot, pathname)
+        os.makedirs(fullname)
+
+    def test(self):
+        data = self.tempdir()
+        self.create_dir("foo")
+        store = self.tempdir()
+        self.backup(store, data)
+        self.runcmd(["./obnam", "fsck", self.hostid, store])
+
+
 class ObnamBlackBoxTests:
 
     """Main class for running black box tests of obnam."""
@@ -277,6 +291,7 @@ class ObnamBlackBoxTests:
                     HandlesHardLinks, 
                     HandlesSymLinks,
                     ReusesUnmodifiedFiles,
+                    NoEmptyFilegroups,
                 ]
         for klass in tests:
             test = klass()
