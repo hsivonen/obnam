@@ -18,6 +18,8 @@
 VERSION = "x.y"
 
 
+import _obnam
+
 from exception import BackupException as Exception
 
 from cfg import Config

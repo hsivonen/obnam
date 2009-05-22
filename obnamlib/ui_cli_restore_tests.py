@@ -46,7 +46,7 @@ class RestoreCommandTests(unittest.TestCase):
         store.cat("host", f, "contref", "deltaref")
         f.close()
         fs.chmod("foo", st.st_mode)
-        fs.utime("foo", st.st_atime, st.st_mtime)
+        fs.lutimes("foo", st.st_atime, st.st_mtime)
         
         self.mox.ReplayAll()
         self.cmd.restore_helper("foo", st, "contref", "deltaref", "target")
@@ -56,6 +56,7 @@ class RestoreCommandTests(unittest.TestCase):
         st = obnamlib.make_stat(st_mode=stat.S_IFLNK)
         self.cmd.vfs = self.mox.CreateMock(obnamlib.VirtualFileSystem)
         self.cmd.vfs.symlink("target", "foo")
+        self.cmd.vfs.lutimes("foo", 0, 0)
         self.mox.ReplayAll()
         self.cmd.restore_helper("foo", st, "contref", "deltaref", "target")
         self.mox.VerifyAll()
@@ -98,7 +99,7 @@ class RestoreCommandTests(unittest.TestCase):
         dir.stat = obnamlib.make_stat()
         cmd.lookupper.get_dir('dirname').AndReturn(dir)
         cmd.vfs.chmod('dirname', 0)
-        cmd.vfs.utime('dirname', 0, 0)
+        cmd.vfs.lutimes('dirname', 0, 0)
 
         self.mox.ReplayAll()
         cmd.restore_generation(walker)
@@ -141,7 +142,7 @@ class RestoreCommandTests(unittest.TestCase):
         dir.stat = obnamlib.make_stat()
         cmd.lookupper.get_dir('dirname').AndReturn(dir)
         cmd.vfs.chmod('dirname', 0)
-        cmd.vfs.utime('dirname', 0, 0)
+        cmd.vfs.lutimes('dirname', 0, 0)
 
         self.mox.ReplayAll()
         cmd.restore_dir(walker, "dirname")

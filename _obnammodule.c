@@ -1,7 +1,7 @@
 /*
- * fadvisemodule.c -- Python extension to call posix_fadvise from Python
+ * _obnammodule.c -- Python extensions for Obna
  *
- * Copyright (C) 2008  Lars Wirzenius <liw@liw.fi>
+ * Copyright (C) 2008, 2009  Lars Wirzenius <liw@liw.fi>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,15 +56,37 @@ fadvise_dontneed(PyObject *self, PyObject *args)
 }
 
 
+static PyObject *
+lutimes_wrapper(PyObject *self, PyObject *args)
+{
+    int ret;
+    long atime;
+    long mtime;
+    struct timeval tv[2];
+    const char *filename;
+
+    if (!PyArg_ParseTuple(args, "sll", &filename, &atime, &mtime))
+        return NULL;
+    tv[0].tv_sec = atime;
+    tv[0].tv_usec = 0;
+    tv[1].tv_sec = mtime;
+    tv[1].tv_usec = 0;
+    ret = lutimes(filename, tv);
+    return Py_BuildValue("i", ret);
+}
+
+
 static PyMethodDef methods[] = {
     {"fadvise_dontneed",  fadvise_dontneed, METH_VARARGS, 
      "Call posix_fadvise(2) with POSIX_FADV_DONTNEED argument."},
+    {"lutimes", lutimes_wrapper, METH_VARARGS,
+     "lutimes(2) wrapper; args are filename, atime, and mtime."},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
 
 PyMODINIT_FUNC
-initfadvise(void)
+init_obnam(void)
 {
-    (void) Py_InitModule("fadvise", methods);
+    (void) Py_InitModule("_obnam", methods);
 }

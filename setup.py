@@ -17,8 +17,6 @@
 
 from distutils.core import setup, Extension
 
-fadvise = Extension('fadvise', sources=['fadvisemodule.c'])
-
 setup(name='obnam',
       version='0.9.3',
       description='Backup software',
@@ -27,5 +25,5 @@ setup(name='obnam',
       url='http://braawi.org/obnam.html',
       packages=['obnamlib'],
       scripts=['obnam'],
-      ext_modules=[fadvise],
+      ext_modules=[Extension('_obnam', sources=['_obnammodule.c'])],
      )

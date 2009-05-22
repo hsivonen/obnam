@@ -81,13 +81,8 @@ class VirtualFileSystem(object):
         """Like os.chmod."""
         pass
 
-    def utime(self, relative_path, atime, mtime):
-        """Like os.utime.
-        
-        Unlike os.utime, both times must always be specified, and they
-        must be separate arguments.
-        
-        """
+    def lutimes(self, relative_path, atime, mtime):
+        """Like lutimes(2)."""
 
         pass
 

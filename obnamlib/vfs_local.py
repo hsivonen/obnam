@@ -51,8 +51,8 @@ class LocalFS(obnamlib.VirtualFileSystem):
     def chmod(self, relative_path, mode):
         os.chmod(self.join(relative_path), mode)
 
-    def utime(self, relative_path, atime, mtime):
-        os.utime(self.join(relative_path), (atime, mtime))
+    def lutimes(self, relative_path, atime, mtime):
+        obnamlib._obnam.lutimes(self.join(relative_path), atime, mtime)
 
     def link(self, existing, new):
         os.link(self.join(existing), self.join(new))

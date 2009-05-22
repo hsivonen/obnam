@@ -18,15 +18,15 @@
 CC = gcc
 CFLAGS = -D_GNU_SOURCE
 
-all:
+all: _obnam.so
 
-fadvise.so: fadvisemodule.c
+_obnam.so: _obnammodule.c
 	python setup.py build
-	cp build/lib*/fadvise.so .
+	cp build/lib*/*.so .
 	rm -rf build
 
 .PHONY: check
-check: check-test-modules check-unittests check-licenses check-blackbox
+check: all check-test-modules check-unittests check-licenses check-blackbox
 
 .PHONY: check-test-modules
 check-test-modules:
@@ -51,5 +51,4 @@ check-blackbox:
 .PHONY: clean
 clean:
 	rm -rf *~ */*~ *.pyc *.pyo */*.pyc */*.pyo tmp.* *,cover */*,cover build
-	rm -f obnam.1 obnamfs.1 .coverage fadvise.so
-
+	rm -f obnam.1 obnamfs.1 .coverage *.so

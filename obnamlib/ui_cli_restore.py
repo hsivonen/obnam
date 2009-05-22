@@ -52,7 +52,7 @@ class RestoreCommand(obnamlib.CommandLineCommand):
             self.vfs.symlink(target, filename)
         if not stat.S_ISLNK(st.st_mode):
             self.vfs.chmod(filename, st.st_mode)
-            self.vfs.utime(filename, st.st_atime, st.st_mtime)
+        self.vfs.lutimes(filename, st.st_atime, st.st_mtime)
 
     def restore_file(self, dirname, file):
         basename = file.first_string(kind=obnamlib.FILENAME)
@@ -75,7 +75,7 @@ class RestoreCommand(obnamlib.CommandLineCommand):
         for pathname in dirs:
             stat = self.lookupper.get_dir(pathname).stat
             self.vfs.chmod(pathname, stat.st_mode)
-            self.vfs.utime(pathname, stat.st_atime, stat.st_mtime)
+            self.vfs.lutimes(pathname, stat.st_atime, stat.st_mtime)
 
     def restore_dir(self, walker, root):
         dirs = []

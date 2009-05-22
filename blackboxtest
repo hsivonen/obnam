@@ -289,11 +289,11 @@ class ObnamBlackBoxTests:
     def run(self):
         errors = False
         tests = [
-                    RestoresIdenticalData, 
-                    HandlesHardLinks, 
+#                    RestoresIdenticalData, 
+#                    HandlesHardLinks, 
                     HandlesSymLinks,
-                    ReusesUnmodifiedFiles,
-                    NoEmptyFilegroups,
+#                    ReusesUnmodifiedFiles,
+#                    NoEmptyFilegroups,
                 ]
         for klass in tests:
             test = klass()
@@ -302,7 +302,7 @@ class ObnamBlackBoxTests:
             except Exception, e:
                 sys.stderr.write(traceback.format_exc())
                 errors = True
-            test.clean()
+#            test.clean()
         if errors:
             sys.exit(1)
 
