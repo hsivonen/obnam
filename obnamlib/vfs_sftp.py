@@ -138,8 +138,13 @@ class SftpFS(obnamlib.VirtualFileSystem):
     def mkdir(self, relative_path):
         self.sftp.mkdir(self.join(relative_path))
 
-#    def makedirs(self, relative_path):
-#        os.makedirs(self.join(relative_path))
+    def makedirs(self, relative_path):
+        if self.isdir(relative_path):
+            return
+        parent = os.path.dirname(relative_path)
+        if parent and parent != relative_path:
+            self.makedirs(parent)
+        self.mkdir(relative_path)
 
     def cat(self, relative_path):
         f = self.open(relative_path, "r")
