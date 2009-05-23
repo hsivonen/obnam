@@ -96,8 +96,8 @@ class SftpFS(obnamlib.VirtualFileSystem):
 #    def remove(self, relative_path):
 #        self.sftp.remove(self.join(relative_path))
 
-#    def lstat(self, relative_path):
-#        return self.sftp.lstat(self.join(relative_path))
+    def lstat(self, relative_path):
+        return self.sftp.lstat(self.join(relative_path))
 
 #    def chmod(self, relative_path, mode):
 #        self.sftp.chmod(self.join(relative_path), mode)
