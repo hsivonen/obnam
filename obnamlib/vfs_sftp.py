@@ -99,8 +99,8 @@ class SftpFS(obnamlib.VirtualFileSystem):
     def lstat(self, relative_path):
         return self.sftp.lstat(self.join(relative_path))
 
-#    def chmod(self, relative_path, mode):
-#        self.sftp.chmod(self.join(relative_path), mode)
+    def chmod(self, relative_path, mode):
+        self.sftp.chmod(self.join(relative_path), mode)
 
 #    def lutimes(self, relative_path, atime, mtime):
 #        # FIXME: This does not work for symlinks!
