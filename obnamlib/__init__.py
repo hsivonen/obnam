@@ -93,6 +93,7 @@ from ui import UserInterface
 
 from vfs import VirtualFileSystem
 from vfs_local import LocalFS
+from vfs_sftp import SftpFS
 
 from app import BackupApplication
 
