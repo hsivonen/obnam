@@ -80,18 +80,18 @@ class SftpFS(obnamlib.VirtualFileSystem):
     def listdir(self, relative_path):
         return self.sftp.listdir(self.join(relative_path))
 
-#    def lock(self, lockname):
-#        try:
-#            self.write_file(lockname, "")
-#        except OSError, e:
-#            if e.errno == errno.EEXIST:
-#                raise obnamlib.Exception("Lock %s already exists" % lockname)
-#            else:
-#                raise
+    def lock(self, lockname):
+        try:
+            self.write_file(lockname, "")
+        except IOError, e:
+            if e.errno == errno.EEXIST:
+                raise obnamlib.Exception("Lock %s already exists" % lockname)
+            else:
+                raise
 
-#    def unlock(self, lockname):
-#        if self.exists(lockname):
-#            self.remove(lockname)
+    def unlock(self, lockname):
+        if self.exists(lockname):
+            self.remove(lockname)
 
     def remove(self, relative_path):
         self.sftp.remove(self.join(relative_path))
