@@ -18,7 +18,7 @@
 import errno
 import getpass
 import os
-import tempfile
+import stat
 import urlparse
 
 import paramiko
@@ -128,8 +128,12 @@ class SftpFS(obnamlib.VirtualFileSystem):
         except IOError:
             return False
 
-#    def isdir(self, relative_path):
-#        return os.path.isdir(self.join(relative_path))
+    def isdir(self, relative_path):
+        try:
+            st = self.lstat(relative_path)
+        except IOError:
+            return False
+        return stat.S_ISDIR(st.st_mode)
 
     def mkdir(self, relative_path):
         self.sftp.mkdir(self.join(relative_path))
