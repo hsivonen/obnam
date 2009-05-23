@@ -153,11 +153,13 @@ class SftpFS(obnamlib.VirtualFileSystem):
         return data
 
     def write_file(self, relative_path, contents):
+        self.makedirs(os.path.dirname(relative_path))
         f = self.open(relative_path, 'wx')
         f.write(contents)
         f.close()
 
     def overwrite_file(self, relative_path, contents):
+        self.makedirs(os.path.dirname(relative_path))
         f = self.open(relative_path, 'w')
         f.write(contents)
         f.close()
