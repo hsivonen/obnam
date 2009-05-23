@@ -109,14 +109,14 @@ class SftpFS(obnamlib.VirtualFileSystem):
         # mtimes.
         self.sftp.utime(self.join(relative_path), (atime, mtime))
 
-#    def link(self, existing, new):
-#        self.sftp.link(self.join(existing), self.join(new))
+    def link(self, existing, new):
+        raise obnamlib.Exception("Cannot link on SFTP. Sorry.")
 
-#    def readlink(self, relative_path):
-#        return self.sftp.readlink(self.join(relative_path))
+    def readlink(self, relative_path):
+        return self.sftp.readlink(self.join(relative_path))
 
-#    def symlink(self, existing, new):
-#        self.sftp.symlink(existing, self.join(new))
+    def symlink(self, existing, new):
+        self.sftp.symlink(existing, self.join(new))
 
     def open(self, relative_path, mode):
         return self.sftp.file(self.join(relative_path), mode)
