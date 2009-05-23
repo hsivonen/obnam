@@ -118,8 +118,8 @@ class SftpFS(obnamlib.VirtualFileSystem):
 #    def symlink(self, existing, new):
 #        self.sftp.symlink(existing, self.join(new))
 
-#    def open(self, relative_path, mode):
-#        return self.sftp.file(self.join(relative_path), mode)
+    def open(self, relative_path, mode):
+        return self.sftp.file(self.join(relative_path), mode)
 
 #    def exists(self, relative_path):
 #        try:
@@ -137,26 +137,16 @@ class SftpFS(obnamlib.VirtualFileSystem):
 #    def makedirs(self, relative_path):
 #        os.makedirs(self.join(relative_path))
 
-#    def cat(self, relative_path):
-#        f = self.open(relative_path, "r")
-#        data = f.read()
-#        f.close()
-#        return data
+    def cat(self, relative_path):
+        f = self.open(relative_path, "r")
+        data = f.read()
+        f.close()
+        return data
 
-#    def write_file(self, relative_path, contents):
-#        path = self.join(relative_path)
-#        dirname = os.path.dirname(path)
-#        if not self.exists(dirname):
-#            self.makedirs(dirname)
-#        fd, name = tempfile.mkstemp(dir=dirname)
-#        os.write(fd, contents)
-#        os.close(fd)
-#        try:
-#            os.link(name, path)
-#        except OSError:
-#            os.remove(name)
-#            raise
-#        os.remove(name)
+    def write_file(self, relative_path, contents):
+        f = self.open(relative_path, 'wx')
+        f.write(contents)
+        f.close()
 
 #    def overwrite_file(self, relative_path, contents):
 #        path = self.join(relative_path)
