@@ -93,8 +93,8 @@ class SftpFS(obnamlib.VirtualFileSystem):
 #        if self.exists(lockname):
 #            self.remove(lockname)
 
-#    def remove(self, relative_path):
-#        self.sftp.remove(self.join(relative_path))
+    def remove(self, relative_path):
+        self.sftp.remove(self.join(relative_path))
 
     def lstat(self, relative_path):
         return self.sftp.lstat(self.join(relative_path))
