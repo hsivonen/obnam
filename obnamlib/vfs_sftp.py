@@ -102,12 +102,12 @@ class SftpFS(obnamlib.VirtualFileSystem):
     def chmod(self, relative_path, mode):
         self.sftp.chmod(self.join(relative_path), mode)
 
-#    def lutimes(self, relative_path, atime, mtime):
-#        # FIXME: This does not work for symlinks!
-#        # Sftp does not have a way of doing that. This means if the restore
-#        # target is over sftp, symlinks and their targets will have wrong
-#        # mtimes.
-#        self.sftp(self.join(relative_path), (atime, mtime))
+    def lutimes(self, relative_path, atime, mtime):
+        # FIXME: This does not work for symlinks!
+        # Sftp does not have a way of doing that. This means if the restore
+        # target is over sftp, symlinks and their targets will have wrong
+        # mtimes.
+        self.sftp.utime(self.join(relative_path), (atime, mtime))
 
 #    def link(self, existing, new):
 #        self.sftp.link(self.join(existing), self.join(new))
@@ -121,12 +121,12 @@ class SftpFS(obnamlib.VirtualFileSystem):
     def open(self, relative_path, mode):
         return self.sftp.file(self.join(relative_path), mode)
 
-#    def exists(self, relative_path):
-#        try:
-#            self.lstat(relative_path)
-#            return True
-#        except IOError:
-#            return False
+    def exists(self, relative_path):
+        try:
+            self.lstat(relative_path)
+            return True
+        except IOError:
+            return False
 
 #    def isdir(self, relative_path):
 #        return os.path.isdir(self.join(relative_path))
