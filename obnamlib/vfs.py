@@ -40,6 +40,19 @@ class VirtualFileSystem(object):
 
     def __init__(self, baseurl):
         self.baseurl = baseurl
+        self.connect()
+
+    def connect(self):
+        """Connect to filesystem."""
+        pass
+        
+    def close(self):
+        """Close connection to filesystem."""
+        pass
+
+    def listdir(self, relative_path):
+        """Return list of basenames of entities at relative_path."""
+        pass
 
     def lock(self, lockname):
         """Create a lock file with the given name."""

@@ -31,6 +31,7 @@ class LocalFSTests(unittest.TestCase):
         self.fs = obnamlib.LocalFS(self.dirname)
 
     def tearDown(self):
+        self.fs.close()
         shutil.rmtree(self.dirname)
 
     def test_joins_relative_path_ok(self):
