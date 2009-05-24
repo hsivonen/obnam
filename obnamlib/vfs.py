@@ -15,6 +15,11 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import urlparse
+
+import obnamlib
+
+
 class VirtualFileSystem(object):
 
     """A virtual filesystem interface.
@@ -40,7 +45,6 @@ class VirtualFileSystem(object):
 
     def __init__(self, baseurl):
         self.baseurl = baseurl
-        self.connect()
 
     def connect(self):
         """Connect to filesystem."""
@@ -152,4 +156,8 @@ class VfsFactory:
     
     def new(self, url):
         """Create a new VFS appropriate for a given URL."""
-        return VirtualFileSystem(url)
+        scheme, netloc, path, params, query, fragment = urlparse.urlparse(url)
+        if scheme == "sftp":
+            return obnamlib.SftpFS(url)
+        else:
+            return obnamlib.LocalFS(url)
