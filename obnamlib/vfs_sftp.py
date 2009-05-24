@@ -19,6 +19,7 @@ import errno
 import getpass
 import logging
 import os
+import pwd
 import stat
 import urlparse
 
@@ -41,6 +42,8 @@ class SftpFS(obnamlib.VirtualFileSystem):
         assert scheme == "sftp", "wrong scheme in %s" % self.baseurl
         if "@" in netloc:
             user, netloc = netloc.split("@", 1)
+        else:
+            user = self.get_username()
         if "." in netloc:
             host, port = netloc.split(":", 1)
             port = int(port)
@@ -55,6 +58,9 @@ class SftpFS(obnamlib.VirtualFileSystem):
         self.check_host_key(host)
         self.authenticate(user)
         self.sftp = paramiko.SFTPClient.from_transport(self.transport)
+
+    def get_username(self):
+        return pwd.getpwuid(os.getuid()).pw_name
 
     def check_host_key(self, hostname):
         key = self.transport.get_remote_server_key()
