@@ -52,7 +52,8 @@ class Store(object):
 
     def __init__(self, url, mode):
         self.url = url
-        self.fs = obnamlib.LocalFS(url)
+        self.fs = obnamlib.VfsFactory().new(url)
+        self.fs.connect()
         self.mode = mode
         self.factory = obnamlib.ObjectFactory()
         self.block_factory = obnamlib.BlockFactory()
@@ -235,6 +236,7 @@ class Store(object):
         # Finally, push the recently modified host object out.
         encoded = self.block_factory.encode_block(host.id, [host], {})
         self.fs.overwrite_file(host.id, encoded)
+        self.fs.close()
 
     def cat(self, host, output, cont_id, delta_id):
         """Write file contents to an open file.

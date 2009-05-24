@@ -326,10 +326,11 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         gen = self.backup_generation(roots)
         self.host.genrefs.append(gen.id)
         self.store.commit(self.host)
+        logging.debug("Backup ends")
 
     def run(self, options, args): # pragma: no cover
         self.store = obnamlib.Store(options.store, "w")
-        self.fs = obnamlib.LocalFS("/")
+        self.fs = obnamlib.VfsFactory().new("/")
 
         self.max_unpushed = options.blocksize
         self.max_mappings = options.max_mappings
