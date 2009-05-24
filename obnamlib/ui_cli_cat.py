@@ -48,3 +48,4 @@ class CatCommand(obnamlib.CommandLineCommand):
         pathname = args[0]
         store = obnamlib.Store(options.store, "r")
         self.cat(store, options.host, options.generation, pathname)
+        store.close()

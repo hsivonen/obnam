@@ -343,3 +343,4 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
 
         roots = [os.path.abspath(root) for root in args]
         self.backup(options.host, roots)
+        self.fs.close()

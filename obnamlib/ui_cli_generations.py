@@ -33,3 +33,4 @@ class GenerationsCommand(obnamlib.CommandLineCommand):
     def run(self, options, args): # pragma: no cover
         self.store = obnamlib.Store(options.store, "r")
         self.generations(options.host)
+        self.store.close()

@@ -73,3 +73,4 @@ class ObjtreeCommand(obnamlib.CommandLineCommand):
         self.store = obnamlib.Store(options.store, "r")
         self.host = self.store.get_host(options.host)
         self.objtree()
+        self.store.close()

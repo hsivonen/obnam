@@ -47,6 +47,9 @@ class Store(object):
     since all the other objects are found via the host object, they
     cannot be accessed without the new host object. They may, however,
     be uploaded before the commit.
+    
+    A store open only for reading must be closed by calling the close
+    method. This ensure the (network) transport gets shut down properly.
 
     """
 
@@ -76,6 +79,9 @@ class Store(object):
         # keep the obnamlib.Mapping dicts for each host in the
         # self.new_mappings dictionary, indexed by the host.
         self.new_mappings = {}
+
+    def close(self): # pragma: no cover
+        self.fs.close()
 
     def check_mode(self, mode):
         if mode not in ["r", "w"]:

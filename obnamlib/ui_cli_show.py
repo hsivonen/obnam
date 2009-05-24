@@ -61,3 +61,4 @@ class ShowGenerationsCommand(obnamlib.CommandLineCommand):
     def run(self, options, args): # pragma: no cover
         self.store = obnamlib.Store(options.store, "w")
         self.show_generations(options.host, args)
+        self.store.close()
