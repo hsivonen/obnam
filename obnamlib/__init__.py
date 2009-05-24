@@ -91,7 +91,7 @@ from store_walker import StoreWalker
 
 from ui import UserInterface
 
-from vfs import VirtualFileSystem
+from vfs import VirtualFileSystem, VfsFactory
 from vfs_local import LocalFS
 from vfs_sftp import SftpFS
 

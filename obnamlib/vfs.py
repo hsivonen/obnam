@@ -44,31 +44,24 @@ class VirtualFileSystem(object):
 
     def connect(self):
         """Connect to filesystem."""
-        pass
         
     def close(self):
         """Close connection to filesystem."""
-        pass
 
     def listdir(self, relative_path):
         """Return list of basenames of entities at relative_path."""
-        pass
 
     def lock(self, lockname):
         """Create a lock file with the given name."""
-        pass
 
     def unlock(self, lockname):
         """Remove a lock file."""
-        pass
 
     def exists(self, relative_path):
         """Does the file or directory exist?"""
-        pass
 
     def isdir(self, relative_path):
         """Is it a directory?"""
-        pass
 
     def mkdir(self, relative_path):
         """Create a directory.
@@ -76,40 +69,30 @@ class VirtualFileSystem(object):
         Parent directories must already exist.
         
         """
-        pass
         
     def makedirs(self, relative_path):
         """Create a directory, and missing parents."""
-        pass
 
     def remove(self, relative_path):
         """Remove a file."""
-        pass
 
     def lstat(self, relative_path):
         """Like os.lstat."""
-        pass
 
     def chmod(self, relative_path, mode):
         """Like os.chmod."""
-        pass
 
     def lutimes(self, relative_path, atime, mtime):
         """Like lutimes(2)."""
 
-        pass
-
     def link(self, existing_path, new_path):
         """Like os.link."""
-        pass
 
     def readlink(self, symlink):
         """Like os.readlink."""
-        pass
 
     def symlink(self, source, destination):
         """Like os.symlink."""
-        pass
 
     def open(self, relative_path, mode):
         """Open a file, like the builtin open() or file() function.
@@ -118,11 +101,9 @@ class VirtualFileSystem(object):
         by the builtin open() function.
 
         """
-        pass
 
     def cat(self, relative_path):
         """Return the contents of a file."""
-        pass
 
     def write_file(self, relative_path, contents):
         """Write a new file.
@@ -134,7 +115,6 @@ class VirtualFileSystem(object):
         Any directories in relative_path will be created if necessary.
 
         """
-        pass
 
     def overwrite_file(self, relative_path, contents):
         """Like write_file, but overwrites existing file.
@@ -143,7 +123,6 @@ class VirtualFileSystem(object):
         a backup suffix.
 
         """
-        pass
 
     def depth_first(self, relative_path, prune=None):
         """Walk a directory tree depth-first, except for unwanted subdirs.
@@ -165,3 +144,12 @@ class VirtualFileSystem(object):
         dirname.
         
         """
+        
+        
+class VfsFactory:
+
+    """Create new instances of VirtualFileSystem."""
+    
+    def new(self, url):
+        """Create a new VFS appropriate for a given URL."""
+        return VirtualFileSystem(url)
