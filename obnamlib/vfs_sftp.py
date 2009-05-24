@@ -17,6 +17,7 @@
 
 import errno
 import getpass
+import logging
 import os
 import stat
 import urlparse
@@ -29,6 +30,10 @@ import obnamlib
 class SftpFS(obnamlib.VirtualFileSystem):
 
     """A VFS implementation for SFTP."""
+
+    def __init__(self, baseurl):
+        obnamlib.VirtualFileSystem.__init__(self, baseurl)
+        self.first_lutimes = True
 
     def connect(self):
         user = host = port = path = None
@@ -47,13 +52,21 @@ class SftpFS(obnamlib.VirtualFileSystem):
         self.basepath = path
         self.transport = paramiko.Transport((host, port))
         self.transport.connect()
-        self.check_host_key()
+        self.check_host_key(host)
         self.authenticate(user)
         self.sftp = paramiko.SFTPClient.from_transport(self.transport)
 
-    def check_host_key(self):
+    def check_host_key(self, hostname):
         key = self.transport.get_remote_server_key()
-        # FIXME: this is incomplete
+        known_hosts = os.path.expanduser('~/.ssh/known_hosts')
+        keys = paramiko.util.load_host_keys(known_hosts)
+        if hostname not in keys:
+            raise obnamlib.Exception("Host key for %s not found" % hostname)
+        elif not keys[hostname].has_key(key.get_name()):
+            raise obnamlib.Exception("Unknown host key for %s" % hostname)
+        elif keys[hostname][key.get_name()] != key:
+            print '*** WARNING: Host key has changed!!!'
+            raise obnamlib.Exception("Host key has changed for %s" % hostname)
     
     def authenticate(self, username):
         if self.authenticate_via_agent(username):
@@ -107,6 +120,11 @@ class SftpFS(obnamlib.VirtualFileSystem):
         # Sftp does not have a way of doing that. This means if the restore
         # target is over sftp, symlinks and their targets will have wrong
         # mtimes.
+        if self.first_lutimes:
+            logging.warning("lutimes used over SFTP, this does not work "
+                            "against symlinks (warning appears only first "
+                            "time)")
+            self.first_lutimes = False
         self.sftp.utime(self.join(relative_path), (atime, mtime))
 
     def link(self, existing, new):
