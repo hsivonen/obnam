@@ -182,27 +182,20 @@ class SftpFS(obnamlib.VirtualFileSystem):
         f.write(contents)
         f.close()
 
-#    def depth_first(self, top, prune=None):
-#        # We walk topdown, since that's the only way os.walk allows us to
-#        # do any pruning. We use os.walk to get the exact same error handling
-#        # and other logic it uses.
-#        for dirname, dirnames, filenames in os.walk(top):
-
-#            # Prune. This modifies dirnames and filenames in place.
-#            if prune:
-#                prune(dirname, dirnames, filenames)
-
-#            # Make a duplicate of the dirnames, then empty the existing list.
-#            # This way, os.walk won't try to walk to subdirectories. We'll
-#            # do that manually.
-#            real_dirnames = dirnames[:]
-#            del dirnames[:]
-
-#            # Process subdirectories, recursively.
-#            for subdirname in real_dirnames:
-#                subdirpath = os.path.join(dirname, subdirname)
-#                for x in self.depth_first(subdirpath, prune=prune):
-#                    yield x
-
-#            # Return current directory last.
-#            yield dirname, real_dirnames, filenames
+    def depth_first(self, top, prune=None):
+        print "top:", top
+        names = self.listdir(top)
+        dirs = []
+        nondirs = []
+        for name in names:
+            if self.isdir(self.join(os.path.join(top, name))):
+                dirs.append(name)
+            else:
+                nondirs.append(name)
+        if prune:
+            prune(top, dirs, nondirs)
+        for name in dirs:
+            path = os.path.join(top, name)
+            for x in self.depth_first(path, prune=prune):
+                yield x
+        yield top, dirs, nondirs
