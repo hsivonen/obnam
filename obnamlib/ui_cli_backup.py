@@ -232,7 +232,7 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
                 parent = os.path.dirname(dirname)
                 subdirs[parent] = subdirs.get(parent, []) + [dir]
 
-        return root_object
+        yield root_object
 
     def list_ancestors(self, pathname):
         """Return list of pathnames of ancestors of a given name."""
@@ -283,22 +283,31 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
     def backup_generation(self, roots):
         """Back up a generation."""
 
-        gen = self.store.new_object(obnamlib.GEN)
-
         dirs = [x for x in roots if self.fs.isdir(x)]
         nondirs = [x for x in roots if x not in dirs]
 
+        fgrefs = [x.id for x in self.backup_new_files_as_groups(nondirs)]
+
         root_list = []
+        lastest_gen = None
         for root in dirs:
-            root_list.append((root, self.backup_recursively(root)))
-        dirlist = self.fake_ancestors(root_list)
-        gen.dirrefs = [x.id for x in dirlist]
+            lastest = None
+            for root_object in self.backup_recursively(root):
+                logging.debug("Making snapshot generation")
+                lastest = root_object
+                root_list_snapshot = root_list + [(root, root_object)]
+                dirlist = self.fake_ancestors(root_list_snapshot)
+                gen_snapshot = self.store.new_object(obnamlib.GEN)
+                gen_snapshot.dirrefs = [x.id for x in dirlist]
+                gen_snapshot.fgrefs = fgrefs[:]
+                self.store.put_object(gen_snapshot)
+                self.host.genrefs.append(gen_snapshot.id)
+                self.store.commit(self.host, close=False)
+                lastest_gen = gen_snapshot
 
-        gen.fgrefs += [x.id for x in self.backup_new_files_as_groups(nondirs)]
+            root_list.append((root, lastest))
 
-        self.store.put_object(gen)
-
-        return gen
+        return lastest_gen
 
     def put_hook(self): # pragma: no cover
         if self.store.unpushed_size > self.max_unpushed:
