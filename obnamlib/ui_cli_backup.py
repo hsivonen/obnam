@@ -232,7 +232,45 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
                 parent = os.path.dirname(dirname)
                 subdirs[parent] = subdirs.get(parent, []) + [dir]
 
+            if self.it_is_snapshot_time():
+                yield self.mix_parents(root, dirname, subdirs)
+
         yield root_object
+
+    def it_is_snapshot_time(self):
+        return True
+
+    def mix_parents(self, root, dirname, subdirs):
+        """Create dummy parents with mix of old and new data.
+        
+        Create obnamlib.Dir objects for each parent of dirname, up to and
+        including root, filling in the Dir with data from old generation,
+        plus the data we've found during this backup run already.
+        
+        Return obnamlib.Dir representing root.
+        
+        """
+        
+        # FIXME: This does NOT use previous generation yet.
+        subdirs = subdirs.copy()
+        while dirname != root:
+            dir = self.new_snapshot_dir(dirname, subdirs)
+            subdirs[dirname] = dir
+            dirname = os.path.dirname(dirname)
+        return self.new_snapshot_dir(root, subdirs)
+
+    def new_snapshot_dir(self, dirname, subdirs):
+        """Create an obnamlib.Dir for snapshots.
+        
+        The directory will be filled with data from the previous generation,
+        plus any new data we have found during this backup run.
+        
+        """
+        
+        # FIXME: This does not yet use data from previous generation.
+        st = self.fs.lstat(dirname)
+        dirrefs = [x.id for x in subdirs.get(dirname, [])]
+        return self.new_dir(dirname, st, dirrefs, [])
 
     def list_ancestors(self, pathname):
         """Return list of pathnames of ancestors of a given name."""
