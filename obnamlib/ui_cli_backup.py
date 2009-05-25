@@ -238,7 +238,7 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         yield root_object
 
     def it_is_snapshot_time(self):
-        return True
+        return self.store.unpushed_size > self.max_unpushed
 
     def mix_parents(self, root, dirname, subdirs):
         """Create dummy parents with mix of old and new data.
