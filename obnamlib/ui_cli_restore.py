@@ -131,4 +131,4 @@ class RestoreCommand(obnamlib.CommandLineCommand):
 
         self.restore(options.host, options.generation, roots)
         self.store.close()
-        self.vfs.commit()
+        self.vfs.close()
