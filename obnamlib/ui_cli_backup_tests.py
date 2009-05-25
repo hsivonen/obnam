@@ -149,6 +149,7 @@ class BackupCommandTests(unittest.TestCase):
         self.cmd.fs = self.mox.CreateMock(obnamlib.VirtualFileSystem)
 
         self.cmd.fs.depth_first("foo").AndReturn([("foo", [], [])])
+        self.cmd.it_is_snapshot_time = lambda: False
 
         self.mox.ReplayAll()
         ret = [x for x in self.cmd.backup_recursively("foo")]
@@ -167,6 +168,7 @@ class BackupCommandTests(unittest.TestCase):
             results.append(dir)
             return dir
         self.cmd.backup_dir = mock_backup_dir
+        self.cmd.it_is_snapshot_time = lambda: False
 
         tree = [
             ("foo/dir1", [], ["file2"]),

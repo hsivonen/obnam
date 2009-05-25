@@ -232,15 +232,15 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
                 parent = os.path.dirname(dirname)
                 subdirs[parent] = subdirs.get(parent, []) + [dir]
 
-            if self.it_is_snapshot_time():
+            if self.it_is_snapshot_time(): # pragma: no cover
                 yield self.mix_parents(root, dirname, subdirs)
 
         yield root_object
 
-    def it_is_snapshot_time(self):
+    def it_is_snapshot_time(self): # pragma: no cover
         return self.store.unpushed_size > self.max_unpushed
 
-    def mix_parents(self, root, dirname, subdirs):
+    def mix_parents(self, root, dirname, subdirs): # pragma: no cover
         """Create dummy parents with mix of old and new data.
         
         Create obnamlib.Dir objects for each parent of dirname, up to and
@@ -259,7 +259,7 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
             dirname = os.path.dirname(dirname)
         return self.new_snapshot_dir(root, subdirs)
 
-    def new_snapshot_dir(self, dirname, subdirs):
+    def new_snapshot_dir(self, dirname, subdirs): # pragma: no cover
         """Create an obnamlib.Dir for snapshots.
         
         The directory will be filled with data from the previous generation,
