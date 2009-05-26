@@ -16,7 +16,14 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import os
+
 import obnamlib
 
 
-obnamlib.BackupApplication().run()
+if "OBNAM_PROFILE" in os.environ:
+    import cProfile
+    cProfile.run('obnamlib.BackupApplication().run()', 
+                 os.environ["OBNAM_PROFILE"])
+else:
+    obnamlib.BackupApplication().run()
