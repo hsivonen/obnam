@@ -227,7 +227,7 @@ class Store(object):
             host.maprefs.append(block_id)
             self.new_mappings[host] = obnamlib.Mapping()
 
-    def commit(self, host):
+    def commit(self, host, close=True):
         """Commit all changes made to a specific host."""
 
         self.assert_readwrite_mode()
@@ -242,7 +242,9 @@ class Store(object):
         # Finally, push the recently modified host object out.
         encoded = self.block_factory.encode_block(host.id, [host], {})
         self.fs.overwrite_file(host.id, encoded)
-        self.fs.close()
+        
+        if close:
+            self.fs.close()
 
     def cat(self, host, output, cont_id, delta_id):
         """Write file contents to an open file.

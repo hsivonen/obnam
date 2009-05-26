@@ -149,11 +149,13 @@ class BackupCommandTests(unittest.TestCase):
         self.cmd.fs = self.mox.CreateMock(obnamlib.VirtualFileSystem)
 
         self.cmd.fs.depth_first("foo").AndReturn([("foo", [], [])])
+        self.cmd.it_is_snapshot_time = lambda: False
 
         self.mox.ReplayAll()
-        ret = self.cmd.backup_recursively("foo")
+        ret = [x for x in self.cmd.backup_recursively("foo")]
+        self.assertEqual(len(ret), 1)
         self.mox.VerifyAll()
-        self.assertEquals(ret, dir)
+        self.assertEquals(ret[0], dir)
 
     def test_backs_up_recursively_non_empty_directory_correctly(self):
         args = []
@@ -166,6 +168,7 @@ class BackupCommandTests(unittest.TestCase):
             results.append(dir)
             return dir
         self.cmd.backup_dir = mock_backup_dir
+        self.cmd.it_is_snapshot_time = lambda: False
 
         tree = [
             ("foo/dir1", [], ["file2"]),
@@ -175,7 +178,9 @@ class BackupCommandTests(unittest.TestCase):
         self.cmd.fs.depth_first("foo").AndReturn(tree)
 
         self.mox.ReplayAll()
-        ret = self.cmd.backup_recursively("foo")
+        ret = [x for x in self.cmd.backup_recursively("foo")]
+        self.assertEqual(len(ret), 1)
+        ret = ret[0]
         self.mox.VerifyAll()
         self.assertEquals(ret, results[-1])
         self.assertEquals(args, 
@@ -193,7 +198,7 @@ class BackupCommandTests(unittest.TestCase):
             self.count += 1
             dir = obnamlib.Dir(id="%s" % self.count)
             dirrefs.append(dir.id)
-            return dir
+            yield dir
         self.cmd.backup_recursively = dummy_backup_recursively
 
         filenames = []
@@ -206,14 +211,20 @@ class BackupCommandTests(unittest.TestCase):
             fgrefs.append(fg.id)
             return [fg]
         self.cmd.backup_new_files_as_groups = dummy_backup_groups
+        
+        self.cmd.host = self.mox.CreateMock(obnamlib.Host)
+        self.cmd.host.genrefs = []
+        self.cmd.host.fgrefs = []
 
         gen = self.mox.CreateMock(obnamlib.Generation)
         gen.dirrefs = []
         gen.fgrefs = []
+        gen.id = "gen.id"
         self.cmd.store.new_object(obnamlib.GEN).AndReturn(gen)
         self.cmd.fs.isdir("dir").AndReturn(True)
         self.cmd.fs.isdir("file").AndReturn(False)
         self.cmd.store.put_object(gen)
+        self.cmd.store.commit(self.cmd.host, close=False)
         
         self.mox.ReplayAll()
         gen = self.cmd.backup_generation(["dir", "file"])

@@ -232,7 +232,50 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
                 parent = os.path.dirname(dirname)
                 subdirs[parent] = subdirs.get(parent, []) + [dir]
 
-        return root_object
+            if self.it_is_snapshot_time(): # pragma: no cover
+                yield self.mix_parents(root, dirname, subdirs)
+
+        yield root_object
+
+    def it_is_snapshot_time(self): # pragma: no cover
+        return self.store.unpushed_size > self.max_unpushed
+
+    def mix_parents(self, root, dirname, subdirs): # pragma: no cover
+        """Create dummy parents with mix of old and new data.
+        
+        Create obnamlib.Dir objects for each parent of dirname, up to and
+        including root, filling in the Dir with data from old generation,
+        plus the data we've found during this backup run already.
+        
+        Return obnamlib.Dir representing root.
+        
+        """
+        
+        subdirs = subdirs.copy()
+        while dirname != root:
+            dir = self.new_snapshot_dir(dirname, subdirs)
+            subdirs[dirname] = dir
+            dirname = os.path.dirname(dirname)
+        return self.new_snapshot_dir(root, subdirs)
+
+    def new_snapshot_dir(self, dirname, subdirs): # pragma: no cover
+        """Create an obnamlib.Dir for snapshots.
+        
+        The directory will be filled with data from the previous generation,
+        plus any new data we have found during this backup run.
+        
+        """
+        
+        st = self.fs.lstat(dirname)
+        dirrefs = [x.id for x in subdirs.get(dirname, [])]
+        subdirnames = [x.name for x in subdirs.get(dirname, [])]
+
+        old = self.get_dir_in_prevgen(dirname)
+        if old:
+            olddirs = [self.store.get_object(x.id) for x in old.dirrefs]
+            dirrefs += [x.id for x in olddirs if x.name not in subdirnames]
+
+        return self.new_dir(dirname, st, dirrefs, old.fgrefs)
 
     def list_ancestors(self, pathname):
         """Return list of pathnames of ancestors of a given name."""
@@ -283,22 +326,31 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
     def backup_generation(self, roots):
         """Back up a generation."""
 
-        gen = self.store.new_object(obnamlib.GEN)
-
         dirs = [x for x in roots if self.fs.isdir(x)]
         nondirs = [x for x in roots if x not in dirs]
 
+        fgrefs = [x.id for x in self.backup_new_files_as_groups(nondirs)]
+
         root_list = []
+        lastest_gen = None
         for root in dirs:
-            root_list.append((root, self.backup_recursively(root)))
-        dirlist = self.fake_ancestors(root_list)
-        gen.dirrefs = [x.id for x in dirlist]
+            lastest = None
+            for root_object in self.backup_recursively(root):
+                logging.debug("Making snapshot generation")
+                lastest = root_object
+                root_list_snapshot = root_list + [(root, root_object)]
+                dirlist = self.fake_ancestors(root_list_snapshot)
+                gen_snapshot = self.store.new_object(obnamlib.GEN)
+                gen_snapshot.dirrefs = [x.id for x in dirlist]
+                gen_snapshot.fgrefs = fgrefs[:]
+                self.store.put_object(gen_snapshot)
+                self.host.genrefs.append(gen_snapshot.id)
+                self.store.commit(self.host, close=False)
+                lastest_gen = gen_snapshot
 
-        gen.fgrefs += [x.id for x in self.backup_new_files_as_groups(nondirs)]
+            root_list.append((root, lastest))
 
-        self.store.put_object(gen)
-
-        return gen
+        return lastest_gen
 
     def put_hook(self): # pragma: no cover
         if self.store.unpushed_size > self.max_unpushed:
