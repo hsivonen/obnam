@@ -172,9 +172,16 @@ class SftpFS(obnamlib.VirtualFileSystem):
 
     def cat(self, relative_path):
         f = self.open(relative_path, "r")
-        data = f.read()
+        chunks = []
+        while True:
+            # 32 KiB is the chunk size that gives me the fastest speed
+            # for sftp transfers. I don't know why the size matters.
+            chunk = f.read(32 * 1024)
+            if not chunk:
+                break
+            chunks.append(chunk)
         f.close()
-        return data
+        return "".join(chunks)
 
     def write_file(self, relative_path, contents):
         self.makedirs(os.path.dirname(relative_path))
