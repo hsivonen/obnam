@@ -251,7 +251,6 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         
         """
         
-        # FIXME: This does NOT use previous generation yet.
         subdirs = subdirs.copy()
         while dirname != root:
             dir = self.new_snapshot_dir(dirname, subdirs)
@@ -267,10 +266,16 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         
         """
         
-        # FIXME: This does not yet use data from previous generation.
         st = self.fs.lstat(dirname)
         dirrefs = [x.id for x in subdirs.get(dirname, [])]
-        return self.new_dir(dirname, st, dirrefs, [])
+        subdirnames = [x.name for x in subdirs.get(dirname, [])]
+
+        old = self.get_dir_in_prevgen(dirname)
+        if old:
+            olddirs = [self.store.get_object(x.id) for x in old.dirrefs]
+            dirrefs += [x.id for x in olddirs if x.name not in subdirnames]
+
+        return self.new_dir(dirname, st, dirrefs, old.fgrefs)
 
     def list_ancestors(self, pathname):
         """Return list of pathnames of ancestors of a given name."""
