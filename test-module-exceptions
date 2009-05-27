@@ -19,3 +19,4 @@ obnamlib/ui_cli_objtree.py
 obnamlib/ui_cli_showobjs.py
 obnamlib/component_factory.py
 obnamlib/vfs_sftp.py
+obnamlib/progress.py
