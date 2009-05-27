@@ -33,6 +33,7 @@ class ProgressReporter(object):
             "time-passed": "",
         }
         self.prevmsg = ""
+        self.prevmsg_time = 0
         
     def __setitem__(self, key, value):
         assert key in self.items
@@ -43,10 +44,12 @@ class ProgressReporter(object):
     def __getitem__(self, key):
         return self.items[key]
 
-    def show(self):
-        self.update_automatic_fields()
-        msg = self.template % self.items
-        self.update_screen(msg)
+    def show(self, force=False):
+        if force or time.time() - self.prevmsg_time >= 1:
+            self.update_automatic_fields()
+            msg = self.template % self.items
+            self.update_screen(msg)
+            self.prevmsg_time = time.time()
 
     def update_automatic_fields(self):
         self.items["time-passed"] = ("%d seconds" % 
@@ -60,5 +63,6 @@ class ProgressReporter(object):
         self.prevmsg = msg
 
     def done(self):
+        self.show(force=True)
         sys.stdout.write("\n")
 
