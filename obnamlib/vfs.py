@@ -45,6 +45,7 @@ class VirtualFileSystem(object):
 
     def __init__(self, baseurl):
         self.baseurl = baseurl
+        self.progress = None
 
     def connect(self):
         """Connect to filesystem."""

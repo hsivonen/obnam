@@ -1,4 +1,4 @@
-# Copyright (C) 2008  Lars Wirzenius <liw@liw.fi>
+# Copyright (C) 2008, 2009  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -386,9 +386,10 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         logging.debug("Backup ends")
 
     def run(self, options, args): # pragma: no cover
-        self.store = obnamlib.Store(options.store, "w")
-        self.fs = obnamlib.VfsFactory().new("/")
         self.progress = obnamlib.ProgressReporter()
+        self.store = obnamlib.Store(options.store, "w")
+        self.store.fs.progress = self.progress
+        self.fs = obnamlib.VfsFactory().new("/")
 
         self.max_unpushed = options.blocksize
         self.max_mappings = options.max_mappings

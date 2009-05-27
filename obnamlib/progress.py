@@ -23,12 +23,16 @@ import obnamlib
 
 class ProgressReporter(object):
 
-    template = "%(files-found)s files in %(time-passed)s"
+    template = ("%(files-found)s files, up %(sent)s, down %(received)s "
+                "in %(time-passed)s")
 
     def __init__(self):
         self.items = {
             "files-found": 0,
-            "bytes-found": 0,
+            "bytes-sent": 0,
+            "bytes-received": 0,
+            "sent": "",
+            "received": "",
             "time-started": time.time(),
             "time-passed": "",
         }
@@ -54,6 +58,19 @@ class ProgressReporter(object):
     def update_automatic_fields(self):
         self.items["time-passed"] = ("%d seconds" % 
                                      (time.time() - self["time-started"]))
+        self.items["sent"] = self.format_size(self["bytes-sent"])
+        self.items["received"] = self.format_size(self["bytes-received"])
+
+    def format_size(self, size):
+        factors = [
+            (1024, "KiB"),
+            (1024**2, "MiB"),
+            (1024**3, "GiB"),
+        ]
+        for factor, suffix in reversed(factors):
+            if size >= factor:
+                return "%.1f %s" % (float(size) / float(factor), suffix)
+        return "0 B"
 
     def update_screen(self, msg):
         w = 79 # FIXME: should determine screen width dynamically

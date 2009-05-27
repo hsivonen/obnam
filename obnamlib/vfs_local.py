@@ -16,6 +16,7 @@
 
 
 import errno
+import logging
 import os
 import tempfile
 
@@ -79,12 +80,18 @@ class LocalFS(obnamlib.VirtualFileSystem):
         os.makedirs(self.join(relative_path))
 
     def cat(self, relative_path):
+        logging.debug("LocalFS: Reading %s" % relative_path)
         f = self.open(relative_path, "r")
         data = f.read()
         f.close()
+        if self.progress:
+            self.progress["bytes-received"] += len(data)
+        logging.debug("LocalFS: %s had %d bytes" % (relative_path, len(data)))
         return data
 
     def write_file(self, relative_path, contents):
+        logging.debug("LocalFS: Writing %s (%d)" % 
+                      (relative_path, len(contents)))
         path = self.join(relative_path)
         dirname = os.path.dirname(path)
         if not os.path.exists(dirname):
@@ -98,8 +105,15 @@ class LocalFS(obnamlib.VirtualFileSystem):
             os.remove(name)
             raise
         os.remove(name)
+        if self.progress:
+            logging.debug("LocalFS: write_file updates bytes-sent")
+            self.progress["bytes-sent"] += len(contents)
+        else:
+            logging.debug("%s: progress is %s" % (repr(self), repr(self.progress)))
 
     def overwrite_file(self, relative_path, contents):
+        logging.debug("LocalFS: Over-writing %s (%d)" % 
+                      (relative_path, len(contents)))
         path = self.join(relative_path)
         dirname = os.path.dirname(path)
         fd, name = tempfile.mkstemp(dir=dirname)
@@ -118,6 +132,9 @@ class LocalFS(obnamlib.VirtualFileSystem):
         except OSError:
             pass
         os.rename(name, path)
+
+        if self.progress:
+            self.progress["bytes-sent"] += len(contents)
 
     def depth_first(self, top, prune=None):
         # We walk topdown, since that's the only way os.walk allows us to
