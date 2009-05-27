@@ -23,7 +23,7 @@ import obnamlib
 
 class ProgressReporter(object):
 
-    template = "%(files-found)s files found in %(time-passed)s"
+    template = "%(files-found)s files in %(time-passed)s"
 
     def __init__(self):
         self.items = {
