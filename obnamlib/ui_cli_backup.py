@@ -1,4 +1,4 @@
-# Copyright (C) 2008  Lars Wirzenius <liw@liw.fi>
+# Copyright (C) 2008, 2009  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -57,6 +57,7 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
 
     def backup_new_symlink(self, relative_path, stat):
         """Backup a new symlink."""
+        self.progress["files-found"] += 1
         target = self.fs.readlink(relative_path)
         fc = obnamlib.File(os.path.basename(relative_path), stat, 
                            symlink_target=target)
@@ -64,11 +65,13 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
 
     def backup_new_other(self, path, st):
         """Backup a new thing that is not a symlink or regular file."""
+        self.progress["files-found"] += 1
         return obnamlib.File(os.path.basename(path), st)
 
     def backup_new_file(self, path, st):
         """Back up a completely new file."""
         
+        self.progress["files-found"] += 1
         f = self.fs.open(path, "r")
         content = self.store.put_contents(f, self.PART_SIZE)
         f.close()
@@ -161,6 +164,7 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         filegroups, filenames = self.find_reusable_filegroups(prevdir, 
                                                               relative_path,
                                                               filenames)
+        self.progress["files-found"] += sum(len(fg.names) for fg in filegroups)
         if (not filenames and
             self.same_filegroups(prevdir, filegroups) and
             self.same_subdirs(prevdir, subdirs) and
@@ -196,6 +200,7 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         """
 
         logging.debug("Backing up directory %s" % relative_path)
+        self.progress["files-found"] += 1
 
         if lstat is None: # pragma: no cover
             lstat = self.fs.lstat
@@ -381,7 +386,9 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         logging.debug("Backup ends")
 
     def run(self, options, args): # pragma: no cover
+        self.progress = obnamlib.ProgressReporter()
         self.store = obnamlib.Store(options.store, "w")
+        self.store.fs.progress = self.progress
         self.fs = obnamlib.VfsFactory().new("/")
 
         self.max_unpushed = options.blocksize
@@ -396,3 +403,4 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         roots = [os.path.abspath(root) for root in args]
         self.backup(options.host, roots)
         self.fs.close()
+        self.progress.done()

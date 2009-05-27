@@ -108,6 +108,8 @@ from ui_cli_objtree import ObjtreeCommand
 from ui_cli_show import ShowGenerationsCommand
 from ui_cli_showobjs import ShowobjsCommand
 
+from progress import ProgressReporter
+
 from statutils import decode_stat, make_stat
 
 import varint
