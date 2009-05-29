@@ -84,8 +84,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
         f = self.open(relative_path, "r")
         data = f.read()
         f.close()
-        if self.progress:
-            self.progress["bytes-received"] += len(data)
+        self.progress["bytes-received"] += len(data)
         logging.debug("LocalFS: %s had %d bytes" % (relative_path, len(data)))
         return data
 
@@ -105,11 +104,8 @@ class LocalFS(obnamlib.VirtualFileSystem):
             os.remove(name)
             raise
         os.remove(name)
-        if self.progress:
-            logging.debug("LocalFS: write_file updates bytes-sent")
-            self.progress["bytes-sent"] += len(contents)
-        else:
-            logging.debug("%s: progress is %s" % (repr(self), repr(self.progress)))
+        logging.debug("LocalFS: write_file updates bytes-sent")
+        self.progress["bytes-sent"] += len(contents)
 
     def overwrite_file(self, relative_path, contents):
         logging.debug("LocalFS: Over-writing %s (%d)" % 
@@ -133,8 +129,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
             pass
         os.rename(name, path)
 
-        if self.progress:
-            self.progress["bytes-sent"] += len(contents)
+        self.progress["bytes-sent"] += len(contents)
 
     def depth_first(self, top, prune=None):
         # We walk topdown, since that's the only way os.walk allows us to

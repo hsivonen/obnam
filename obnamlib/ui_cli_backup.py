@@ -389,7 +389,7 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         self.progress = obnamlib.ProgressReporter()
         self.store = obnamlib.Store(options.store, "w")
         self.store.fs.progress = self.progress
-        self.fs = obnamlib.VfsFactory().new("/")
+        self.fs = obnamlib.VfsFactory().new("/", self.progress)
 
         self.max_unpushed = options.blocksize
         self.max_mappings = options.max_mappings

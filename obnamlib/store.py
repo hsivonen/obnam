@@ -55,7 +55,8 @@ class Store(object):
 
     def __init__(self, url, mode):
         self.url = url
-        self.fs = obnamlib.VfsFactory().new(url)
+        progress = obnamlib.ProgressReporter(silent=True)
+        self.fs = obnamlib.VfsFactory().new(url, progress)
         self.fs.connect()
         self.mode = mode
         self.factory = obnamlib.ObjectFactory()

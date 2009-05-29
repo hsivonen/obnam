@@ -39,6 +39,7 @@ class BackupCommandTests(unittest.TestCase):
         self.cmd.store = self.mox.CreateMock(obnamlib.Store)
         self.cmd.fs = self.mox.CreateMock(obnamlib.VirtualFileSystem)
         self.cmd.prevgen_lookupper = obnamlib.ui_cli_backup.DummyLookupper()
+        self.cmd.progress = obnamlib.ProgressReporter(silent=True)
 
     def test_backs_up_new_symlink_correctly(self):
         st = obnamlib.make_stat()

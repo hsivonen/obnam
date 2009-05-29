@@ -126,8 +126,9 @@ class RestoreCommand(obnamlib.CommandLineCommand):
         target = args[0]
         roots = args[1:]
 
+        self.progress = obnamlib.ProgressReporter()
         self.store = obnamlib.Store(options.store, "r")
-        self.vfs = obnamlib.VfsFactory().new(target)
+        self.vfs = obnamlib.VfsFactory().new(target, self.progress)
 
         self.restore(options.host, options.generation, roots)
         self.store.close()

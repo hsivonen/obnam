@@ -28,7 +28,8 @@ class LocalFSTests(unittest.TestCase):
 
     def setUp(self):
         self.dirname = tempfile.mkdtemp()
-        self.fs = obnamlib.LocalFS(self.dirname)
+        progress = obnamlib.ProgressReporter(silent=True)
+        self.fs = obnamlib.LocalFS(self.dirname, progress)
 
     def tearDown(self):
         self.fs.close()
@@ -197,7 +198,8 @@ class DepthFirstTests(unittest.TestCase):
         for dir in self.dirs:
             os.mkdir(dir)
         self.dirs.insert(0, self.root)
-        self.fs = obnamlib.LocalFS("/")
+        progress = obnamlib.ProgressReporter(silent=True)
+        self.fs = obnamlib.LocalFS("/", progress)
     
     def tearDown(self):
         shutil.rmtree(self.root)

@@ -43,9 +43,9 @@ class VirtualFileSystem(object):
 
     """
 
-    def __init__(self, baseurl):
+    def __init__(self, baseurl, progress):
         self.baseurl = baseurl
-        self.progress = None
+        self.progress = progress
 
     def connect(self):
         """Connect to filesystem."""
@@ -155,10 +155,10 @@ class VfsFactory:
 
     """Create new instances of VirtualFileSystem."""
     
-    def new(self, url):
+    def new(self, url, progress):
         """Create a new VFS appropriate for a given URL."""
         scheme, netloc, path, params, query, fragment = urlparse.urlparse(url)
         if scheme == "sftp":
-            return obnamlib.SftpFS(url)
+            return obnamlib.SftpFS(url, progress)
         else:
-            return obnamlib.LocalFS(url)
+            return obnamlib.LocalFS(url, progress)

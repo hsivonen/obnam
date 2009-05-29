@@ -26,7 +26,8 @@ class ProgressReporter(object):
     template = ("%(files-found)s files, up %(sent)s, down %(received)s "
                 "in %(time-passed)s")
 
-    def __init__(self):
+    def __init__(self, silent=False):
+        self.silent = silent
         self.items = {
             "files-found": 0,
             "bytes-sent": 0,
@@ -49,6 +50,8 @@ class ProgressReporter(object):
         return self.items[key]
 
     def show(self, force=False):
+        if self.silent:
+            return
         if force or time.time() - self.prevmsg_time >= 1:
             self.update_automatic_fields()
             msg = self.template % self.items
