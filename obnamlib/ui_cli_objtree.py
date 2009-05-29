@@ -1,3 +1,4 @@
+
 # Copyright (C) 2009  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -69,7 +70,7 @@ class ObjtreeCommand(obnamlib.CommandLineCommand):
             refs = refs[1:] + more_refs
         print "}"
     
-    def run(self, options, args): # pragma: no cover
+    def run(self, options, args, progress): # pragma: no cover
         self.store = obnamlib.Store(options.store, "r")
         self.host = self.store.get_host(options.host)
         self.objtree()

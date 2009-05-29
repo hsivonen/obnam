@@ -22,5 +22,5 @@ import obnamlib
 
 class HelpCommand(obnamlib.CommandLineCommand):
 
-    def run(self, config, args, stdout=sys.stdout):
+    def run(self, config, args, progress, stdout=sys.stdout):
         stdout.write("Help text will appear here.\n")

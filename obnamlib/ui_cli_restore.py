@@ -122,13 +122,12 @@ class RestoreCommand(obnamlib.CommandLineCommand):
         else:
             self.restore_generation(walker)
     
-    def run(self, options, args): # pragma: no cover
+    def run(self, options, args, progress): # pragma: no cover
         target = args[0]
         roots = args[1:]
 
-        self.progress = obnamlib.ProgressReporter()
         self.store = obnamlib.Store(options.store, "r")
-        self.vfs = obnamlib.VfsFactory().new(target, self.progress)
+        self.vfs = obnamlib.VfsFactory().new(target, progress)
 
         self.restore(options.host, options.generation, roots)
         self.store.close()

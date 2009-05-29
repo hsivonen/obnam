@@ -44,7 +44,7 @@ class CatCommand(obnamlib.CommandLineCommand):
             raise obnamlib.Exception("Cannot output: %s is a directory, "
                                      "not a file" % pathname)
 
-    def run(self, options, args): # pragma: no cover
+    def run(self, options, args, progress): # pragma: no cover
         pathname = args[0]
         store = obnamlib.Store(options.store, "r")
         self.cat(store, options.host, options.generation, pathname)

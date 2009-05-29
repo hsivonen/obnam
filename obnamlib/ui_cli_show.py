@@ -58,7 +58,7 @@ class ShowGenerationsCommand(obnamlib.CommandLineCommand):
                 for file in files:
                     self.show_file(file, output=output)
 
-    def run(self, options, args): # pragma: no cover
+    def run(self, options, args, progress): # pragma: no cover
         self.store = obnamlib.Store(options.store, "w")
         self.show_generations(options.host, args)
         self.store.close()

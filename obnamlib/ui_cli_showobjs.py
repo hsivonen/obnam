@@ -64,7 +64,7 @@ class ShowobjsCommand(obnamlib.CommandLineCommand):
                 seen.add(ref)
                 refs += self.find_refs(obj)
     
-    def run(self, options, args): # pragma: no cover
+    def run(self, options, args, progress): # pragma: no cover
         self.store = obnamlib.Store(options.store, "r")
         self.host = self.store.get_host(options.host)
         self.showobjs()

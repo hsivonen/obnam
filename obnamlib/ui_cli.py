@@ -32,7 +32,7 @@ class CommandLineCommand(object):
     def add_options(self, parser): # pragma: no cover
         """Add options to parser."""
         
-    def run(self, config, args): # pragma: no cover
+    def run(self, config, args, progress): # pragma: no cover
         """Run the command."""
 
 
@@ -94,10 +94,17 @@ class CommandLineUI(obnamlib.UserInterface):
     def run(self, args):
         parser = self.create_option_parser()
         options, args = parser.parse_args(args)
+        progress = obnamlib.ProgressReporter()
 	
         if not args:
             self.short_help()
         elif args[0] in self.commands:
-            self.commands[args[0]].run(options, args[1:])
+            progress = obnamlib.ProgressReporter()
+            try:
+                cmd = self.commands[args[0]]
+                cmd.run(options, args[1:], progress)
+            except Exception, e: # pragma: no cover
+                progress.done()
+                raise
         else:
             raise obnamlib.Exception("Unknown command '%s'" % args[0])

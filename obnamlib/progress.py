@@ -83,6 +83,7 @@ class ProgressReporter(object):
         self.prevmsg = msg
 
     def done(self):
-        self.show(force=True)
-        sys.stdout.write("\n")
+        if self.prevmsg:
+            self.show(force=True)
+            sys.stdout.write("\n")
 

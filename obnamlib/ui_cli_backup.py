@@ -385,8 +385,8 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         self.store.commit(self.host)
         logging.debug("Backup ends")
 
-    def run(self, options, args): # pragma: no cover
-        self.progress = obnamlib.ProgressReporter()
+    def run(self, options, args, progress): # pragma: no cover
+        self.progress = progress
         self.store = obnamlib.Store(options.store, "w")
         self.store.fs.progress = self.progress
         self.fs = obnamlib.VfsFactory().new("/", self.progress)

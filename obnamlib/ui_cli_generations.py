@@ -30,7 +30,7 @@ class GenerationsCommand(obnamlib.CommandLineCommand):
         for genref in host.genrefs:
             output.write("%s\n" % genref)
 
-    def run(self, options, args): # pragma: no cover
+    def run(self, options, args, progress): # pragma: no cover
         self.store = obnamlib.Store(options.store, "r")
         self.generations(options.host)
         self.store.close()
