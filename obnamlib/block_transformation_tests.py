@@ -27,5 +27,5 @@ class BlockTransformationTests(unittest.TestCase):
         for klass in obnamlib.block_transformations:
             transform = klass()
             to_blob = transform.to_fs(blob)
-            from_blob = transform.from_fs(blob)
-            self.failUnlessEqual(to_blob, from_blob)
+            from_blob = transform.from_fs(to_blob)
+            self.failUnlessEqual(blob, from_blob)
