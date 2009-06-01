@@ -52,3 +52,10 @@ class GzipTransformation(BlockTransformation):
 block_transformations = [
     GzipTransformation,
 ]
+
+
+def choose_transformations(options): # pragma: no cover
+    result = []
+    if options.use_gzip:
+        result.append(GzipTransformation())
+    return result

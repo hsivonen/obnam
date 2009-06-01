@@ -127,6 +127,7 @@ class RestoreCommand(obnamlib.CommandLineCommand):
         roots = args[1:]
 
         self.store = obnamlib.Store(options.store, "r")
+        self.store.transformations = obnamlib.choose_transformations(options)
         self.vfs = obnamlib.VfsFactory().new(target, progress)
 
         self.restore(options.host, options.generation, roots)

@@ -388,6 +388,7 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
     def run(self, options, args, progress): # pragma: no cover
         self.progress = progress
         self.store = obnamlib.Store(options.store, "w")
+        self.store.transformations = obnamlib.choose_transformations(options)
         self.store.fs.progress = self.progress
         self.fs = obnamlib.VfsFactory().new("/", self.progress)
 

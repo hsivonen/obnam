@@ -85,6 +85,9 @@ class CommandLineUI(obnamlib.UserInterface):
         
         parser.add_option("--generation", metavar="GEN",
                           help="use generation GEN")
+
+        parser.add_option("--use-gzip", action="store_true",
+                          help="compress blocks with gzip?")
         
         for cmd in self.commands.values():
             cmd.add_options(parser)
