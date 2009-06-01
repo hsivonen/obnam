@@ -5,3 +5,8 @@ test-module-exceptions
 scripts/backup
 scripts/create-test-case
 scripts/dotstore
+scripts/fsck
+scripts/generations
+scripts/objtree
+scripts/show
+scripts/showobjs
