@@ -78,8 +78,8 @@ from object_sig import Signature
 from object_factory import ObjectFactory
 
 from block_factory import BlockFactory
-
 from block_id_generator import BlockIdGenerator
+from block_transformation import block_transformations
 
 from mapping import Mapping
 
