@@ -20,12 +20,20 @@ import unittest
 import obnamlib
 
 
+class MockOptions:
+
+    def __init__(self):
+        self.use_gzip = False
+
+
 class BlockTransformationTests(unittest.TestCase):
 
     def test_reversibility(self):
         blob = "lorem ipsum"
+        options = MockOptions()
         for klass in obnamlib.block_transformations:
             transform = klass()
+            transform.configure(options)
             to_blob = transform.to_fs(blob)
             from_blob = transform.from_fs(to_blob)
             self.failUnlessEqual(blob, from_blob)

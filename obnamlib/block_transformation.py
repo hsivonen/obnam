@@ -34,6 +34,9 @@ class BlockTransformation(object):
     
     """
     
+    def configure(self, options):
+        """Configure the transformation, assuming it will run."""
+    
     def to_fs(self, blob):
         """Transform blob into form that should be written to filesystem."""
         
@@ -62,4 +65,6 @@ def choose_transformations(options): # pragma: no cover
     if options.use_gzip:
         logging.debug("Using GzipTransformation")
         result.append(GzipTransformation())
+    for t in result:
+        t.configure(options)
     return result
