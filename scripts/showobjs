@@ -1,0 +1,5 @@
+#!/bin/sh
+
+set -e
+
+./obnam showobjs --use-gzip --host hostid --store test.store 

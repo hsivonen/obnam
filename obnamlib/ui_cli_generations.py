@@ -32,5 +32,6 @@ class GenerationsCommand(obnamlib.CommandLineCommand):
 
     def run(self, options, args, progress): # pragma: no cover
         self.store = obnamlib.Store(options.store, "r")
+        self.store.transformations = obnamlib.choose_transformations(options)
         self.generations(options.host)
         self.store.close()
