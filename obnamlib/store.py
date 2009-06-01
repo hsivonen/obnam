@@ -64,6 +64,7 @@ class Store(object):
         self.object_queue = []
         self.put_hook = None
         self.idgen = obnamlib.BlockIdGenerator(3, 1024)
+        self.transformations = []
 
         # We keep the object to block mappings we know about in
         # self.objmap. We add new mappings there as we learn about
@@ -95,7 +96,19 @@ class Store(object):
     def new_object(self, kind):
         self.assert_readwrite_mode()
         return self.factory.new_object(kind=kind)
-        
+
+    def transform_to_fs(self, block): # pragma: no cover
+        """Apply transformations to a block about to be written."""
+        for t in self.transformations:
+            block = t.to_fs(block)
+        return block
+
+    def transform_from_fs(self, block): # pragma: no cover
+        """Apply transformations to a block that has been read."""
+        for t in reversed(self.transformations):
+            block = t.from_fs(block)
+        return block
+
     def find_block(self, host, id):
         """Find the block in which an object resides.
         
