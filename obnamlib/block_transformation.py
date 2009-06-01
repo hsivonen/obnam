@@ -40,7 +40,7 @@ class BlockTransformation(object):
         """Undo transformation done by to_fs."""
 
 
-class GzipTransform(BlockTransformation):
+class GzipTransformation(BlockTransformation):
 
     def to_fs(self, blob):
         return zlib.compress(blob)
@@ -50,5 +50,5 @@ class GzipTransform(BlockTransformation):
 
 
 block_transformations = [
-    GzipTransform,
+    GzipTransformation,
 ]
