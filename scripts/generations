@@ -1,5 +1,0 @@
-#!/bin/sh
-
-set -e
-
-./obnam generations --use-gzip --host hostid --store test.store

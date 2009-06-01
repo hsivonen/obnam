@@ -61,7 +61,7 @@ class GnuPGTransformation(BlockTransformation):
     def configure(self, options):
         self.encrypt_to = options.encrypt_to
         self.sign_with = options.sign_with
-        self.gpghome = options.gpghome
+        self.gpg_home = options.gpg_home
 
     def pipe(self, args, block):
         p = subprocess.Popen(args, stdin=subprocess.PIPE,
@@ -70,14 +70,14 @@ class GnuPGTransformation(BlockTransformation):
         stdout, stderr = p.communicate(block)
         if p.returncode != 0: # pragma: no cover
             raise obnamlib.Exception("Subprocess %s failed: %d\n%s" % 
-                                     (p.returncode, stderr))
+                                     (args, p.returncode, stderr))
         return stdout
 
     def to_fs(self, blob):
         logging.debug("Encrypting with gpg")
         args = ["gpg"]
-        if self.gpghome:
-            args += ["--homedir", self.gpghome]
+        if self.gpg_home:
+            args += ["--homedir", self.gpg_home]
         if self.encrypt_to:
             args += ["--encrypt", "--recipient", self.encrypt_to]
         if self.sign_with:
@@ -87,8 +87,8 @@ class GnuPGTransformation(BlockTransformation):
     def from_fs(self, blob):
         logging.debug("Decrypting with gpg")
         args = ["gpg"]
-        if self.gpghome:
-            args += ["--homedir", self.gpghome]
+        if self.gpg_home:
+            args += ["--homedir", self.gpg_home]
         return self.pipe(args, blob)
 
 
@@ -101,8 +101,10 @@ block_transformations = [
 def choose_transformations(options): # pragma: no cover
     result = []
     if options.use_gzip:
-        logging.debug("Using GzipTransformation")
         result.append(GzipTransformation())
+    if options.encrypt_to or options.sign_with:
+        result.append(GnuPGTransformation())
     for t in result:
+        logging.debug("Using transformation %s" % t)
         t.configure(options)
     return result

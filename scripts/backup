@@ -1,6 +1,0 @@
-#!/bin/sh
-# Run backup for test case.
-
-set -e
-
-./obnam backup --use-gzip --host hostid --store test.store test.tree
