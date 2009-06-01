@@ -15,6 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import logging
 import zlib
 
 import obnamlib
@@ -43,9 +44,11 @@ class BlockTransformation(object):
 class GzipTransformation(BlockTransformation):
 
     def to_fs(self, blob):
+        logging.debug("Compressing blob with zlib")
         return zlib.compress(blob)
         
     def from_fs(self, blob):
+        logging.debug("Decompressing blob with zlib")
         return zlib.decompress(blob)
 
 
@@ -57,5 +60,6 @@ block_transformations = [
 def choose_transformations(options): # pragma: no cover
     result = []
     if options.use_gzip:
+        logging.debug("Using GzipTransformation")
         result.append(GzipTransformation())
     return result
