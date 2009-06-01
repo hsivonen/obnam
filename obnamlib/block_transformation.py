@@ -16,6 +16,7 @@
 
 
 import logging
+import subprocess
 import zlib
 
 import obnamlib
@@ -55,8 +56,45 @@ class GzipTransformation(BlockTransformation):
         return zlib.decompress(blob)
 
 
+class GnuPGTransformation(BlockTransformation):
+
+    def configure(self, options):
+        self.encrypt_to = options.encrypt_to
+        self.sign_with = options.sign_with
+        self.gpghome = options.gpghome
+
+    def pipe(self, args, block):
+        p = subprocess.Popen(args, stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+        stdout, stderr = p.communicate(block)
+        if p.returncode != 0: # pragma: no cover
+            raise obnamlib.Exception("Subprocess %s failed: %d\n%s" % 
+                                     (p.returncode, stderr))
+        return stdout
+
+    def to_fs(self, blob):
+        logging.debug("Encrypting with gpg")
+        args = ["gpg"]
+        if self.gpghome:
+            args += ["--homedir", self.gpghome]
+        if self.encrypt_to:
+            args += ["--encrypt", "--recipient", self.encrypt_to]
+        if self.sign_with:
+            args += ["--sign", "--local-user", self.sign_with]
+        return self.pipe(args, blob)
+        
+    def from_fs(self, blob):
+        logging.debug("Decrypting with gpg")
+        args = ["gpg"]
+        if self.gpghome:
+            args += ["--homedir", self.gpghome]
+        return self.pipe(args, blob)
+
+
 block_transformations = [
     GzipTransformation,
+    GnuPGTransformation,
 ]
 
 
