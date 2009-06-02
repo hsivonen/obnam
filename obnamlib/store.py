@@ -15,6 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import logging
 import os
 
 import obnamlib
@@ -111,10 +112,12 @@ class Store(object):
 
     def get_block(self, blockid): # pragma: no cover
         """Read a given block from the filesystem, and de-transform it."""
+        logging.debug("Get block %s" % blockid)
         return self.transform_from_fs(self.fs.cat(blockid))
 
     def put_block(self, blockid, block, overwrite=False): # pragma: no cover
         """Write a block to the filesystem, after transforming it."""
+        logging.debug("Put block %s" % blockid)
         if overwrite:
             self.fs.overwrite_file(blockid, self.transform_to_fs(block))
         else:
@@ -128,14 +131,20 @@ class Store(object):
         For that, we need the host, since mappings are per host.
         
         """
+
+        logging.debug("find_block %s" % id)
         
         # Perhaps we know the answer already?
         if id in self.objmap:
+            logging.debug("find_block objmap hit for %s" % id)
             return self.objmap[id]
+        else:
+            logging.debug("find_block objmap miss for %s" % id)
             
         # Load mapping blocks until we find something.
         for mapref in host.maprefs:
             encoded = self.get_block(mapref)
+            logging.debug("find_block: mapref %s" % mapref)
             blkid, objs, mappings = self.block_factory.decode_block(encoded)
             self.objmap.update(mappings)
             if id in self.objmap:
@@ -151,6 +160,7 @@ class Store(object):
         
         """
         
+        logging.debug("Get object %s" % id)
         block_id = self.find_block(host, id)
         encoded = self.get_block(block_id)
         block_id, objs, mappings = self.block_factory.decode_block(encoded)
