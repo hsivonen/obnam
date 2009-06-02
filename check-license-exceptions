@@ -7,3 +7,6 @@ scripts/testrun
 sample-gpg-home/pubring.gpg
 sample-gpg-home/secring.gpg
 sample-gpg-home/trustdb.gpg
+scripts/profile-prepare
+scripts/profile-run
+showblock
