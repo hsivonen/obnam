@@ -83,3 +83,14 @@ class HostTests(unittest.TestCase):
         self.host.prepare_for_encoding()
         self.assertEquals(self.host.find_strings(kind=obnamlib.MAPREF),
                           ["foo"])
+                          
+    def test_prepare_empties_genrefs(self):
+        self.host.genrefs = ["foo"]
+        self.host.prepare_for_encoding()
+        self.assertEquals(self.host._genrefs, None)
+                          
+    def test_prepare_empties_maprefs(self):
+        self.host.maprefs = ["foo"]
+        self.host.prepare_for_encoding()
+        self.assertEquals(self.host._maprefs, None)
+

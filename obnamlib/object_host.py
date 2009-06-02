@@ -54,9 +54,14 @@ class Host(obnamlib.Object):
                        doc="References to MAP objects.")
 
     def prepare_for_encoding(self):
-        for genref in self.genrefs:
-            c = obnamlib.GenRef(genref)
-            self.components.append(c)
-        for mapref in self.maprefs:
-            c = obnamlib.MapRef(mapref)
-            self.components.append(c)
+        if self._genrefs is not None:
+            for genref in self._genrefs:
+                c = obnamlib.GenRef(genref)
+                self.components.append(c)
+            self._genrefs = None
+        if self._maprefs is not None:
+            for mapref in self._maprefs:
+                c = obnamlib.MapRef(mapref)
+                self.components.append(c)
+            self._maprefs = None
+

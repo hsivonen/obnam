@@ -251,7 +251,6 @@ class BackupCommandTests(unittest.TestCase):
         self.mox.ReplayAll()
         self.cmd.backup("foo", ["bar", "foobar"])
         self.mox.VerifyAll()
-        self.assertEqual(host.genrefs, ["genid"])
         
     def test_lists_no_ancestor_for_root_directory(self):
         self.assertEqual(self.cmd.list_ancestors("/"), [])
