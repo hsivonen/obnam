@@ -26,6 +26,38 @@ class NotFound(obnamlib.Exception):
     pass
 
 
+class ObjectCache(object):
+
+    """Cache objects in memory."""
+    
+    def __init__(self):
+        self.dict = {}
+        self.order = []
+        self.max = 1000
+        
+    def put(self, obj):
+        self.dict[obj.id] = obj
+        self.use(obj.id)
+        self.forget()
+
+    def use(self, objid):
+        if objid in self.order:
+            self.order.remove(objid)
+        self.order.append(objid)
+
+    def forget(self): # pragma: no cover
+        while len(self.order) > self.max:
+            del self.dict[self.order[0]]
+            del self.order[0]
+        
+    def get(self, objid):
+        if objid in self.dict:
+            self.use(objid)
+            return self.dict[objid]
+        else:
+            return None
+
+
 class Store(object):
 
     """Persistent storage of obnamlib.Objects.
@@ -66,6 +98,7 @@ class Store(object):
         self.put_hook = None
         self.idgen = obnamlib.BlockIdGenerator(3, 1024)
         self.transformations = []
+        self.objcache = ObjectCache()
 
         # We keep the object to block mappings we know about in
         # self.objmap. We add new mappings there as we learn about
@@ -161,14 +194,24 @@ class Store(object):
         """
         
         logging.debug("Get object %s" % id)
+        
+        obj = self.objcache.get(id)
+        if obj:
+            logging.debug("get_object objcache hit for %s" % id)
+            return obj
+        else:
+            logging.debug("get_object objcache miss for %s" % id)
+        
         block_id = self.find_block(host, id)
         encoded = self.get_block(block_id)
         block_id, objs, mappings = self.block_factory.decode_block(encoded)
         for obj in objs:
-            if obj.id == id:
-                return obj
+            self.objcache.put(obj)
         
-        raise obnamlib.NotFound("Object %s not found in store" % id)
+        obj = self.objcache.get(id)
+        if obj == None:
+            raise obnamlib.NotFound("Object %s not found in store" % id)
+        return obj
 
     def put_object(self, obj):
         """Put an object into the store.
