@@ -47,5 +47,6 @@ class CatCommand(obnamlib.CommandLineCommand):
     def run(self, options, args, progress): # pragma: no cover
         pathname = args[0]
         store = obnamlib.Store(options.store, "r")
+        store.transformations = obnamlib.choose_transformations(options)
         self.cat(store, options.host, options.generation, pathname)
         store.close()

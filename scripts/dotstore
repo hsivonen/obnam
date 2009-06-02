@@ -1,7 +1,0 @@
-#!/bin/sh
-# Draw a graph of the objects in the store, using "obnam objtree" and dot(1).
-
-set -e
-
-./obnam objtree --host hostid --store test.store > test.dot
-dot -Tpng test.dot > test.png

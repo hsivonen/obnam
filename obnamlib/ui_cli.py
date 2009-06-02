@@ -85,6 +85,18 @@ class CommandLineUI(obnamlib.UserInterface):
         
         parser.add_option("--generation", metavar="GEN",
                           help="use generation GEN")
+
+        parser.add_option("--use-gzip", action="store_true",
+                          help="compress blocks with gzip?")
+
+        parser.add_option("--encrypt-to", metavar="KEYID",
+                          help="encrypt with gpg to KEYID")
+
+        parser.add_option("--sign-with", metavar="KEYID",
+                          help="sign with gpg using KEYID")
+        
+        parser.add_option("--gpg-home", metavar="DIR",
+                          help="use DIR as gpg home directory")
         
         for cmd in self.commands.values():
             cmd.add_options(parser)

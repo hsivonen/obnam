@@ -1,0 +1,29 @@
+#!/bin/sh
+
+set -e
+
+opts="--encrypt-to 490C9ED1 --sign-with 490C9ED1 --gpg-home sample-gpg-home"
+opts="$opts --store test.store --host hostid"
+
+rm -rf test.*
+mkdir test.tree
+(
+cd test.tree
+echo foo > foo
+mkdir emptydir
+mkdir dir
+echo bar > dir/bar
+)
+
+./obnam backup $opts test.tree
+
+./obnam fsck $opts
+
+./obnam objtree $opts > test.dot
+dot -Tpng test.dot > test.png
+
+./obnam generations $opts |
+tail -n 1 |
+xargs ./obnam show $opts > test.show
+
+./obnam showobjs $opts > test.objs

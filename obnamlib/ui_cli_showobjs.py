@@ -66,6 +66,7 @@ class ShowobjsCommand(obnamlib.CommandLineCommand):
     
     def run(self, options, args, progress): # pragma: no cover
         self.store = obnamlib.Store(options.store, "r")
+        self.store.transformations = obnamlib.choose_transformations(options)
         self.host = self.store.get_host(options.host)
         self.showobjs()
         self.store.close()

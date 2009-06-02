@@ -5,3 +5,12 @@ test-module-exceptions
 scripts/backup
 scripts/create-test-case
 scripts/dotstore
+scripts/fsck
+scripts/generations
+scripts/objtree
+scripts/show
+scripts/showobjs
+.bzrignore
+sample-gpg-home/pubring.gpg
+sample-gpg-home/secring.gpg
+sample-gpg-home/trustdb.gpg
