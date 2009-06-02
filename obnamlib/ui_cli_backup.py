@@ -381,7 +381,6 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
             logging.debug("Using DummyLookupper")
             self.prevgen_lookupper = DummyLookupper()
         gen = self.backup_generation(roots)
-        self.host.genrefs.append(gen.id)
         self.store.commit(self.host)
         logging.debug("Backup ends")
 
