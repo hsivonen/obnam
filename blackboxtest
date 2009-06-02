@@ -289,10 +289,10 @@ class ObnamBlackBoxTests:
     def run(self):
         errors = False
         tests = [
-#                    RestoresIdenticalData, 
-#                    HandlesHardLinks, 
+                    RestoresIdenticalData, 
+                    HandlesHardLinks, 
                     HandlesSymLinks,
-#                    ReusesUnmodifiedFiles,
+                    ReusesUnmodifiedFiles,
 #                    NoEmptyFilegroups,
                 ]
         for klass in tests:
