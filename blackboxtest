@@ -312,7 +312,7 @@ class ObnamBlackBoxTests:
                     HandlesSymLinks,
                     ReusesUnmodifiedFiles,
                     SaneHostObject,
-#                    NoEmptyFilegroups,
+                    NoEmptyFilegroups,
                 ]
         for klass in tests:
             test = klass()
