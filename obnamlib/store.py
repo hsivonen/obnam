@@ -15,6 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import logging
 import os
 
 import obnamlib
@@ -23,6 +24,38 @@ import obnamlib
 class NotFound(obnamlib.Exception):
 
     pass
+
+
+class ObjectCache(object):
+
+    """Cache objects in memory."""
+    
+    def __init__(self):
+        self.dict = {}
+        self.order = []
+        self.max = 1000
+        
+    def put(self, obj):
+        self.dict[obj.id] = obj
+        self.use(obj.id)
+        self.forget()
+
+    def use(self, objid):
+        if objid in self.order:
+            self.order.remove(objid)
+        self.order.append(objid)
+
+    def forget(self): # pragma: no cover
+        while len(self.order) > self.max:
+            del self.dict[self.order[0]]
+            del self.order[0]
+        
+    def get(self, objid):
+        if objid in self.dict:
+            self.use(objid)
+            return self.dict[objid]
+        else:
+            return None
 
 
 class Store(object):
@@ -65,6 +98,7 @@ class Store(object):
         self.put_hook = None
         self.idgen = obnamlib.BlockIdGenerator(3, 1024)
         self.transformations = []
+        self.objcache = ObjectCache()
 
         # We keep the object to block mappings we know about in
         # self.objmap. We add new mappings there as we learn about
@@ -111,10 +145,12 @@ class Store(object):
 
     def get_block(self, blockid): # pragma: no cover
         """Read a given block from the filesystem, and de-transform it."""
+        logging.debug("Get block %s" % blockid)
         return self.transform_from_fs(self.fs.cat(blockid))
 
     def put_block(self, blockid, block, overwrite=False): # pragma: no cover
         """Write a block to the filesystem, after transforming it."""
+        logging.debug("Put block %s" % blockid)
         if overwrite:
             self.fs.overwrite_file(blockid, self.transform_to_fs(block))
         else:
@@ -128,14 +164,20 @@ class Store(object):
         For that, we need the host, since mappings are per host.
         
         """
+
+        logging.debug("find_block %s" % id)
         
         # Perhaps we know the answer already?
         if id in self.objmap:
+            logging.debug("find_block objmap hit for %s" % id)
             return self.objmap[id]
+        else:
+            logging.debug("find_block objmap miss for %s" % id)
             
         # Load mapping blocks until we find something.
         for mapref in host.maprefs:
             encoded = self.get_block(mapref)
+            logging.debug("find_block: mapref %s" % mapref)
             blkid, objs, mappings = self.block_factory.decode_block(encoded)
             self.objmap.update(mappings)
             if id in self.objmap:
@@ -151,14 +193,25 @@ class Store(object):
         
         """
         
+        logging.debug("Get object %s" % id)
+        
+        obj = self.objcache.get(id)
+        if obj:
+            logging.debug("get_object objcache hit for %s" % id)
+            return obj
+        else:
+            logging.debug("get_object objcache miss for %s" % id)
+        
         block_id = self.find_block(host, id)
         encoded = self.get_block(block_id)
         block_id, objs, mappings = self.block_factory.decode_block(encoded)
         for obj in objs:
-            if obj.id == id:
-                return obj
+            self.objcache.put(obj)
         
-        raise obnamlib.NotFound("Object %s not found in store" % id)
+        obj = self.objcache.get(id)
+        if obj == None:
+            raise obnamlib.NotFound("Object %s not found in store" % id)
+        return obj
 
     def put_object(self, obj):
         """Put an object into the store.

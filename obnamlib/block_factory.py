@@ -15,6 +15,8 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import logging
+
 import obnamlib
 
 
@@ -61,6 +63,8 @@ class BlockFactory(object):
                 raise obnamlib.Exception("Unknown component kind %d" % 
                                          cmp.kind)
 
+        logging.debug("decode_block id %s #objects %d #mappings %d" %
+                      (block_id, len(objects), len(mappings)))
         return block_id, objects, mappings
 
     def encode_block(self, block_id, objects, mappings):

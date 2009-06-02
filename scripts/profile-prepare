@@ -1,0 +1,17 @@
+#!/bin/sh
+# Setup a tree and store with 9 generations of data.
+
+n=9
+start=100m
+inc=5m
+
+rm -rf test.tree test.store
+mkdir test.tree test.store
+genbackupdata test.tree --create $start
+./obnam backup --store test.store test.tree
+seq 2 $n | 
+while read i
+do
+    genbackupdata test.tree --create $inc
+./obnam backup --store test.store test.tree
+done
