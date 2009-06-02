@@ -24,7 +24,7 @@ class MockOptions:
 
     def __init__(self):
         self.use_gzip = False
-        self.gpghome = "sample-gpg-home"
+        self.gpg_home = "sample-gpg-home"
         self.encrypt_to = "490C9ED1"
         self.sign_with = "490C9ED1"
 
