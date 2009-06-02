@@ -321,7 +321,7 @@ class ObnamBlackBoxTests:
             except Exception, e:
                 sys.stderr.write(traceback.format_exc())
                 errors = True
-#            test.clean()
+            test.clean()
         if errors:
             sys.exit(1)
 
