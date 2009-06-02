@@ -284,7 +284,7 @@ class SaneHostObject(BlackBoxTest):
         store = obnamlib.Store(store_dir, "r")
         host = store.get_host(self.hostid)
         self.assertEqual("host", len(host.genrefs), 1, 
-                         "Must have exactly one generation in host" + repr(host.genrefs))
+                         "Must have exactly one generation in host")
         self.assertEqual("host", len(host.maprefs), 1, 
                          "Must have exactly one map block"
                          " " + repr(host.maprefs))
