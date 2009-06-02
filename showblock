@@ -1,0 +1,40 @@
+#!/usr/bin/python
+
+
+import sys
+
+import obnamlib
+
+
+def show_component(comp, indent=0):
+    print "%*scomponent: %s" % (indent, "", 
+                                obnamlib.cmp_kinds.nameof(comp.kind))
+    if obnamlib.cmp_kinds.is_composite(comp.kind):
+        for c in comp.children:
+            show_component(c, indent+1)
+
+
+def show_block(filename):
+    print "Block", filename
+    
+    blob = file(filename).read()
+    cookie = obnamlib.BlockFactory.BLOCK_COOKIE
+    if not blob.startswith(cookie):
+        print "Does not start with cookie!"
+    else:
+        of = obnamlib.ObjectFactory()
+        pos = len(cookie)
+        while pos < len(blob):
+            comp, pos = of.decode_component(blob, pos)
+            show_component(comp)
+    
+    print
+
+
+def main():
+    for filename in sys.argv[1:]:
+        show_block(filename)
+
+
+if __name__ == "__main__":
+    main()
