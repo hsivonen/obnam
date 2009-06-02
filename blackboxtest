@@ -286,8 +286,7 @@ class SaneHostObject(BlackBoxTest):
         self.assertEqual("host", len(host.genrefs), 1, 
                          "Must have exactly one generation in host")
         self.assertEqual("host", len(host.maprefs), 1, 
-                         "Must have exactly one map block"
-                         " " + repr(host.maprefs))
+                         "Must have exactly one map block")
 
 
 class NoEmptyFilegroups(BlackBoxTest):
