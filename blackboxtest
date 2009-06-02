@@ -27,6 +27,8 @@ import sys
 import tempfile
 import traceback
 
+import obnamlib
+
 
 class BlackBoxTest:
 
@@ -65,7 +67,12 @@ class BlackBoxTest:
         f = file(pathname, "w")
         f.write(contents)
         f.close()
-    
+
+    def create_dir(self, pathname):
+        """Create a new directory, return name."""
+        fullname = os.path.join(self.temproot, pathname)
+        os.makedirs(fullname)
+
     def get_info(self, root, pathname):
         """Get the information about a given file.
         
@@ -267,11 +274,23 @@ class ReusesUnmodifiedFiles(BlackBoxTest):
                      (du2 - du1, small_increase))
 
 
-class NoEmptyFilegroups(BlackBoxTest):
+class SaneHostObject(BlackBoxTest):
 
-    def create_dir(self, pathname):
-        fullname = os.path.join(self.temproot, pathname)
-        os.makedirs(fullname)
+    def test(self):
+        data_dir = self.tempdir()
+        self.create_dir("foo")
+        store_dir = self.tempdir()
+        self.backup(store_dir, data_dir)
+        store = obnamlib.Store(store_dir, "r")
+        host = store.get_host(self.hostid)
+        self.assertEqual("host", len(host.genrefs), 1, 
+                         "Must have exactly one generation in host" + repr(host.genrefs))
+        self.assertEqual("host", len(host.maprefs), 1, 
+                         "Must have exactly one map block"
+                         " " + repr(host.maprefs))
+
+
+class NoEmptyFilegroups(BlackBoxTest):
 
     def test(self):
         data = self.tempdir()
@@ -293,6 +312,7 @@ class ObnamBlackBoxTests:
                     HandlesHardLinks, 
                     HandlesSymLinks,
                     ReusesUnmodifiedFiles,
+                    SaneHostObject,
 #                    NoEmptyFilegroups,
                 ]
         for klass in tests:
