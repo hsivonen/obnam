@@ -104,8 +104,7 @@ class RestoreCommand(obnamlib.CommandLineCommand):
         
         self.host = self.store.get_host(host_id)
         
-        if genref == "latest":
-            genref = self.host.genrefs[-1]
+        genref = self.host.get_generation_id(genref)
         
         gen = self.store.get_object(self.host, genref)
         walker = obnamlib.StoreWalker(self.store, self.host, gen)

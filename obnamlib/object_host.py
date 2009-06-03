@@ -83,3 +83,11 @@ class Host(obnamlib.Object):
                 self.components.append(c)
             self._contmaprefs = None
 
+    def get_generation_id(self, name):
+        if name in ("oldest", "first"):
+            return self.genrefs[0]
+        elif name == 'latest':
+            return self.genrefs[-1]
+        else:
+            return name
+
