@@ -301,6 +301,17 @@ class NoEmptyFilegroups(BlackBoxTest):
                      store])
 
 
+class SeparateContentAndMetadataBlocks(BlackBoxTest):
+
+    def test(self):
+        data = self.tempdir()
+        self.runcmd(["genbackupdata", "--create", "1m", data])
+        store = self.tempdir()
+        self.backup(store, data)
+        self.runcmd(["./obnam", "fsck", "--host", self.hostid, "--store", 
+                     store])
+
+
 class ObnamBlackBoxTests:
 
     """Main class for running black box tests of obnam."""
@@ -314,6 +325,7 @@ class ObnamBlackBoxTests:
                     ReusesUnmodifiedFiles,
                     SaneHostObject,
                     NoEmptyFilegroups,
+                    SeparateContentAndMetadataBlocks,
                 ]
         for klass in tests:
             test = klass()

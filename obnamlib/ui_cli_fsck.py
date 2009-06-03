@@ -32,12 +32,14 @@ class FsckCommand(obnamlib.CommandLineCommand):
             if msg:
                 sys.stdout.write("%s: " % msg)
             sys.stdout.write("%s\n" % ("%s != %s" % (value1, value2)))
+            self.ok = False
 
     def assertNotEqual(self, value1, value2, msg=None):
         if value1 == value2:
             if msg:
                 sys.stdout.write("%s: " % msg)
             sys.stdout.write("%s\n" % ("%s == %s" % (value1, value2)))
+            self.ok = False
 
     def check_block_id(self, components, block_id):
         """Check that block id matches what it should be."""
@@ -131,6 +133,8 @@ class FsckCommand(obnamlib.CommandLineCommand):
         return result
 
     def fsck(self): # pragma: no cover
+        self.ok = True
+
         refs = self.host.genrefs[:]
         while refs:
             ref = refs[0]
@@ -143,11 +147,17 @@ class FsckCommand(obnamlib.CommandLineCommand):
         for block_id in self.find_blocks():
             self.check_block(block_id)
 
-        logging.info("fsck OK")
+        if self.ok:
+            logging.info("fsck OK")
+        else:
+            logging.warning("fsck found problems")
+        return self.ok
     
     def run(self, options, args, progress): # pragma: no cover
         self.store = obnamlib.Store(options.store, "r")
         self.store.transformations = obnamlib.choose_transformations(options)
         self.host = self.store.get_host(options.host)
-        self.fsck()
+        ok = self.fsck()
         self.store.close()
+        if not ok:
+            sys.exit(1)
