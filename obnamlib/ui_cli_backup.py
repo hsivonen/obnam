@@ -272,15 +272,17 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         """
         
         st = self.fs.lstat(dirname)
-        dirrefs = [x.id for x in subdirs.get(dirname, [])]
-        subdirnames = [x.name for x in subdirs.get(dirname, [])]
-
+        dirs = subdirs.get(dirname, [])
+        filegroups = []
+        
         old = self.get_dir_in_prevgen(dirname)
         if old:
+            dirnames = [x.name for x in dirs]
             olddirs = [self.store.get_object(x.id) for x in old.dirrefs]
-            dirrefs += [x.id for x in olddirs if x.name not in subdirnames]
+            dirs += [x for x in olddirs if x.name not in dirnames]
+            filegroups = [self.store.get_object(x.id) for x in old.fgrefs]
 
-        return self.new_dir(dirname, st, dirrefs, old.fgrefs)
+        return self.new_dir(dirname, st, dirs, filegroups)
 
     def list_ancestors(self, pathname):
         """Return list of pathnames of ancestors of a given name."""

@@ -95,11 +95,6 @@ class StoreTests(unittest.TestCase):
     def test_has_no_new_mappings_initially(self):
         self.assertEqual(self.rw.new_mappings, {})
 
-    def test_adds_mapping_correctly(self):
-        self.rw.add_mapping("host", "obj", "block")
-        self.assertEqual(self.rw.new_mappings,
-                         { "host": { "obj": "block" }})
-
     def test_unpushed_size_is_zero_initially(self):
         self.assertEqual(self.rw.unpushed_size, 0)
 
@@ -118,7 +113,6 @@ class StoreTests(unittest.TestCase):
 
         id = self.rw.idgen.new_id().AndReturn("blockid")
         self.rw.fs.write_file("blockid", mox.IsA(str))
-        self.rw.add_mapping(host, obj.id, "blockid")
 
         self.mox.ReplayAll()
         self.rw.put_object(obj)
@@ -134,22 +128,6 @@ class StoreTests(unittest.TestCase):
         self.mox.VerifyAll()
         self.assertEqual(self.rw.new_mappings[host], {})
     
-    def test_push_new_mappings_writes_out_a_new_mapping_block(self):
-        host = self.mox.CreateMock(obnamlib.Host)
-        host.maprefs = self.mox.CreateMock(list)
-        self.rw.idgen = self.mox.CreateMock(obnamlib.BlockIdGenerator)
-        self.rw.fs = self.mox.CreateMock(obnamlib.VirtualFileSystem)
-        self.rw.add_mapping(host, "foo", "bar")
-        
-        block_id = self.rw.idgen.new_id().AndReturn("blockid")
-        self.rw.fs.write_file(block_id, mox.IsA(str))
-        host.maprefs.append(block_id)
-
-        self.mox.ReplayAll()
-        self.rw.push_new_mappings(host)
-        self.mox.VerifyAll()
-        self.assertEqual(self.rw.new_mappings[host], {})
-
     def test_commit_commits_to_disk(self):
         host = self.rw.get_host("foo")
         obj = self.rw.new_object(kind=obnamlib.GEN)

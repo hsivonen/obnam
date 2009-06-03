@@ -28,6 +28,7 @@ class Host(obnamlib.Object):
         obnamlib.Object.__init__(self, id=id)
         self._genrefs = None
         self._maprefs = None
+        self._contmaprefs = None
 
     def get_genrefs(self):
         if self._genrefs is None:
@@ -53,6 +54,18 @@ class Host(obnamlib.Object):
     maprefs = property(get_maprefs, set_maprefs,
                        doc="References to MAP objects.")
 
+    def get_contmaprefs(self):
+        if self._contmaprefs is None:
+            list = self.extract(kind=obnamlib.CONTMAPREF)
+            self._contmaprefs = [str(c) for c in list]
+        return self._contmaprefs
+
+    def set_contmaprefs(self, contmaprefs):
+        self._contmaprefs = contmaprefs
+
+    contmaprefs = property(get_contmaprefs, set_contmaprefs,
+                           doc="References to CONTMAP objects.")
+
     def prepare_for_encoding(self):
         if self._genrefs is not None:
             for genref in self._genrefs:
@@ -64,4 +77,9 @@ class Host(obnamlib.Object):
                 c = obnamlib.MapRef(mapref)
                 self.components.append(c)
             self._maprefs = None
+        if self._contmaprefs is not None:
+            for contmapref in self._contmaprefs:
+                c = obnamlib.ContMapRef(contmapref)
+                self.components.append(c)
+            self._contmaprefs = None
 

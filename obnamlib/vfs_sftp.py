@@ -32,8 +32,8 @@ class SftpFS(obnamlib.VirtualFileSystem):
 
     """A VFS implementation for SFTP."""
 
-    def __init__(self, baseurl):
-        obnamlib.VirtualFileSystem.__init__(self, baseurl)
+    def __init__(self, baseurl, progress):
+        obnamlib.VirtualFileSystem.__init__(self, baseurl, progress)
         self.first_lutimes = True
 
     def connect(self):
@@ -194,21 +194,3 @@ class SftpFS(obnamlib.VirtualFileSystem):
         f = self.open(relative_path, 'w')
         f.write(contents)
         f.close()
-
-    def depth_first(self, top, prune=None):
-        print "top:", top
-        names = self.listdir(top)
-        dirs = []
-        nondirs = []
-        for name in names:
-            if self.isdir(self.join(os.path.join(top, name))):
-                dirs.append(name)
-            else:
-                nondirs.append(name)
-        if prune:
-            prune(top, dirs, nondirs)
-        for name in dirs:
-            path = os.path.join(top, name)
-            for x in self.depth_first(path, prune=prune):
-                yield x
-        yield top, dirs, nondirs

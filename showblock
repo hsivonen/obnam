@@ -7,11 +7,18 @@ import obnamlib
 
 
 def show_component(comp, indent=0):
-    print "%*scomponent: %s" % (indent, "", 
-                                obnamlib.cmp_kinds.nameof(comp.kind))
+    kind = obnamlib.cmp_kinds.nameof(comp.kind)
+    sys.stdout.write("%*scomponent: %s" % (indent, "", kind))
     if obnamlib.cmp_kinds.is_composite(comp.kind):
+        sys.stdout.write("\n")
         for c in comp.children:
-            show_component(c, indent+1)
+            show_component(c, indent + 1)
+    elif comp.kind == obnamlib.OBJKIND:
+        objkind, x = obnamlib.varint.decode(str(comp), 0)
+        sys.stdout.write(" %s\n" % obnamlib.obj_kinds.nameof(objkind))
+    else:
+        content = repr(str(comp))
+        sys.stdout.write(" %s\n" % content)
 
 
 def show_block(filename):
