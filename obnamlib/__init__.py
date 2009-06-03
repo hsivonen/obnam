@@ -107,6 +107,7 @@ from ui_cli_help import HelpCommand
 from ui_cli_objtree import ObjtreeCommand
 from ui_cli_show import ShowGenerationsCommand
 from ui_cli_showobjs import ShowobjsCommand
+from ui_cli_diskusage import DiskUsageCommand
 
 from progress import ProgressReporter
 

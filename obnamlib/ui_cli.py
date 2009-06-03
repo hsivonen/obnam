@@ -60,6 +60,8 @@ class CommandLineUI(obnamlib.UserInterface):
             "objtree": obnamlib.ObjtreeCommand(),
 
             "showobjs": obnamlib.ShowobjsCommand(),
+            
+            "du": obnamlib.DiskUsageCommand(),
             }
 
     def short_help(self, stdout=sys.stdout):
