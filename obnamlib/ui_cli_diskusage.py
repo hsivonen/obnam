@@ -44,16 +44,13 @@ class DiskUsageCommand(obnamlib.CommandLineCommand):
                 nblocks += 1
             return nblocks * BLOCK_SIZE
 
-    def format_size(self, size):
-        return size / 1024
-
     def disk_usage(self, fs):
         du = 0
         for dirname, dirnames, filenames in fs.depth_first('.'):
             for x in [dirname] + filenames:
                 du += self.estimate(fs, x)
         fs.close()
-        print self.format_size(du), fs.baseurl
+        print obnamlib.format_size(du), fs.baseurl
 
     def run(self, options, args, progress): # pragma: no cover
         fsf = obnamlib.VfsFactory()
