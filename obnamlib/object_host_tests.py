@@ -143,3 +143,6 @@ class GenerationNamesTests(unittest.TestCase):
     def test_latest(self):
         self.assertEqual(self.host.get_generation_id("latest"), "9")
 
+    def test_other(self):
+        self.assertEqual(self.host.get_generation_id("5"), "5")
+
