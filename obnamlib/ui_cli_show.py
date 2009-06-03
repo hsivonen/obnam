@@ -48,6 +48,7 @@ class ShowGenerationsCommand(obnamlib.CommandLineCommand):
         host = self.store.get_host(host_id)
 
         for genref in genrefs:
+            genref = host.get_generation_id(genref)
             output.write("Generation %s:\n" % genref)
 
             gen = self.store.get_object(host, genref)

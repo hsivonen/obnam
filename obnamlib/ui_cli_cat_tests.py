@@ -68,6 +68,7 @@ class CatCommandTests(unittest.TestCase):
 
     def test_raises_exception_for_nonexistent_generation(self):
         self.store.get_host(self.host.id).AndReturn(self.host)
+        self.host.get_generation_id(self.gen.id).AndReturn(self.gen.id)
         self.store.get_object(self.host, self.gen.id).AndRaise(
             obnamlib.NotFound("foo"))
         self.mox.ReplayAll()
@@ -76,6 +77,7 @@ class CatCommandTests(unittest.TestCase):
 
     def test_raises_notfound_for_nonexistent_file(self):
         self.store.get_host(self.host.id).AndReturn(self.host)
+        self.host.get_generation_id(self.gen.id).AndReturn(self.gen.id)
         self.store.get_object(self.host, self.gen.id).AndReturn(self.gen)
         self.lookupper.is_file("notexist").AndRaise(obnamlib.NotFound("foo"))
         self.mox.ReplayAll()
@@ -84,6 +86,7 @@ class CatCommandTests(unittest.TestCase):
         
     def test_raises_exception_for_directory(self):
         self.store.get_host(self.host.id).AndReturn(self.host)
+        self.host.get_generation_id(self.gen.id).AndReturn(self.gen.id)
         self.store.get_object(self.host, self.gen.id).AndReturn(self.gen)
         self.lookupper.is_file("dir").AndReturn(False)
         self.mox.ReplayAll()
@@ -92,7 +95,8 @@ class CatCommandTests(unittest.TestCase):
 
     def test_raises_exception_for_irregular_file(self):
         self.store.get_host(self.host.id).AndReturn(self.host)
-        self.store.get_object(self.host, self.gen.id).AndReturn(self.gen)
+        self.host.get_generation_id(self.gen.id).AndReturn(self.gen.id)
+        self.store.get_object(self.host, self.gen.id).AndReturn(self.gen.id)
         self.lookupper.is_file("device").AndReturn(True)
         self.lookupper.get_file("device").AndReturn(self.device)
         self.mox.ReplayAll()
@@ -101,6 +105,7 @@ class CatCommandTests(unittest.TestCase):
 
     def test_returns_correct_contents_for_regular_file(self):
         self.store.get_host(self.host.id).AndReturn(self.host)
+        self.host.get_generation_id(self.gen.id).AndReturn(self.gen.id)
         self.store.get_object(self.host, self.gen.id).AndReturn(self.gen)
         self.lookupper.is_file("file").AndReturn(True)
         self.lookupper.get_file("file").AndReturn(self.file)

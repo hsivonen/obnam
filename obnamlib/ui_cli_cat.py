@@ -28,6 +28,7 @@ class CatCommand(obnamlib.CommandLineCommand):
     def cat(self, store, host_id, gen_id, pathname, output=sys.stdout,
             Lookupper=obnamlib.Lookupper):
         host = store.get_host(host_id)
+        gen_id = host.get_generation_id(gen_id)
         gen = store.get_object(host, gen_id)
         lookupper = Lookupper(store, host, gen)
         # The following will raise NotFound if pathname doesn't exist.
