@@ -46,6 +46,9 @@ class FsckCommand(obnamlib.CommandLineCommand):
         self.assertEqual(str(ids[0]), block_id, 
                          "block id must match filename")
 
+    def objnames(self, kinds):
+        return set(obnamlib.obj_kinds.nameof(kind) for kind in kinds)
+
     def check_block_unity_of_purpose(self, components):
         """Check that block contains only one style of data.
         
@@ -55,9 +58,29 @@ class FsckCommand(obnamlib.CommandLineCommand):
         """
 
         ignored = (obnamlib.BLKID,)
-        kinds = [c.kind for c in components if c.kind not in ignored]
-        self.assertEqual(set(kinds), set([kinds[0]]), 
+        c_kinds = [c.kind for c in components if c.kind not in ignored]
+        self.assertEqual(set(c_kinds), set([c_kinds[0]]), 
                          "component kinds all equal in block")
+        
+        o_components = [c for c in components if c.kind == obnamlib.OBJECT]
+        o_kinds = []
+        for c in o_components:
+            for cc in c.children:
+                if cc.kind == obnamlib.OBJKIND:
+                    o_kind, pos = obnamlib.varint.decode(str(cc), 0)
+                    o_kinds.append(o_kind)
+
+        if obnamlib.HOST in o_kinds:
+            self.assertEqual(self.objnames(o_kinds), 
+                             self.objnames([obnamlib.HOST]),
+                             "host block must only contain host object")
+            self.assertEqual(len(o_kinds), 1, 
+                             "host block must contain exactly one host object")
+        elif obnamlib.FILEPART in o_kinds:
+            self.assertEqual(self.objnames(o_kinds), 
+                             self.objnames([obnamlib.FILEPART]),
+                            "block with file contents must contain "
+                            "only file content objects")
         
     def check_block(self, block_id):
         """Check that a block looks OK."""
