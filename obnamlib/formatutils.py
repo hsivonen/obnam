@@ -15,6 +15,19 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+size_units = [
+    (1000**3, "GB"),
+    (1000**2, "MB"),
+    (1000, "kB"),
+    (0, "B"), # Last item MUST be zero!
+]
+
 def format_size(size):
     """Format a file size into bytes, kilobytes, megabytes, etc."""
-    return ""
+    for factor, unit in size_units:
+        if size >= factor:
+            if factor > 0:
+                count = int(round(float(size) / factor))
+            else:
+                count = size
+            return "%s %s" % (count, unit)
