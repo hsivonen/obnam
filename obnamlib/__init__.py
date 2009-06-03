@@ -112,5 +112,6 @@ from ui_cli_diskusage import DiskUsageCommand
 from progress import ProgressReporter
 
 from statutils import decode_stat, make_stat
+from formatutils import format_size
 
 import varint
