@@ -310,7 +310,7 @@ class Store(object):
     def push_content_objects(self, host):
         self.push_queue(host, self.content_queue, self.new_content_mappings)
 
-    def push_new_mappings(self, host):
+    def push_mappings(self, host, maprefs, new_mappings):
         """Generate and push out a new mapping block with all new objects.
         
         The block id of the new mapping block is added to the host's
@@ -319,28 +319,21 @@ class Store(object):
         
         """
 
-        if host not in self.new_mappings:
+        if host not in new_mappings:
             return
-        mappings = self.new_mappings[host]
+        mappings = new_mappings[host]
         if mappings:
             block_id = self.idgen.new_id()
             encoded = self.block_factory.encode_block(block_id, [], mappings)
             self.put_block(block_id, encoded)
-            host.maprefs.append(block_id)
-            self.new_mappings[host] = obnamlib.Mapping()
+            maprefs.append(block_id)
+            del new_mappings[host]
+
+    def push_new_mappings(self, host):
+        self.push_mappings(host, host.maprefs, self.new_mappings)
 
     def push_new_content_mappings(self, host): # pragma: no cover
-        """Like push_new_mappings, but for content mappings."""
-
-        if host not in self.new_content_mappings:
-            return
-        mappings = self.new_content_mappings[host]
-        if mappings:
-            block_id = self.idgen.new_id()
-            encoded = self.block_factory.encode_block(block_id, [], mappings)
-            self.put_block(block_id, encoded)
-            host.contmaprefs.append(block_id)
-            self.new_content_mappings[host] = obnamlib.Mapping()
+        self.push_mappings(host, host.contmaprefs, self.new_content_mappings)
 
     def commit(self, host, close=True):
         """Commit all changes made to a specific host."""
