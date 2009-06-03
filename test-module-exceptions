@@ -20,3 +20,4 @@ obnamlib/ui_cli_showobjs.py
 obnamlib/component_factory.py
 obnamlib/vfs_sftp.py
 obnamlib/progress.py
+obnamlib/ui_cli_diskusage_tests.py
