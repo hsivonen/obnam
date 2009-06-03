@@ -94,3 +94,36 @@ class HostTests(unittest.TestCase):
         self.host.prepare_for_encoding()
         self.assertEquals(self.host._maprefs, None)
 
+    def test_has_no_contmaprefs_initially(self):
+        self.assertEquals(self.host.contmaprefs, [])
+
+    def test_allows_appending_to_contmaprefs(self):
+        self.host.contmaprefs.append("foo")
+        self.assertEqual(self.host.contmaprefs, ["foo"])
+
+    def test_allows_plusequals_to_contmaprefs(self):
+        self.host.contmaprefs += ["foo"]
+        self.assertEquals(self.host.contmaprefs, ["foo"])
+
+    def test_gets_contmaprefs_from_components_the_first_time(self):
+        contmapref = obnamlib.ContMapRef("foo")
+        self.host.components = [contmapref]
+        self.assertEquals(self.host.contmaprefs, ["foo"])
+
+    def test_removes_contmaprefs_from_components_after_first_get(self):
+        contmapref = obnamlib.ContMapRef("foo")
+        self.host.components = [contmapref]
+        genrefs = self.host.contmaprefs
+        self.assertEquals(self.host.components, [])
+
+    def test_prepare_puts_contmaprefs_in_components(self):
+        self.host.contmaprefs = ["foo"]
+        self.host.prepare_for_encoding()
+        self.assertEquals(self.host.find_strings(kind=obnamlib.CONTMAPREF),
+                          ["foo"])
+                          
+    def test_prepare_empties_contmaprefs(self):
+        self.host.contmaprefs = ["foo"]
+        self.host.prepare_for_encoding()
+        self.assertEquals(self.host._contmaprefs, None)
+
