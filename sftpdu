@@ -30,9 +30,10 @@ def disk_usage(fs, pathname):
         nblocks += 1
     return nblocks * BLOCK_SIZE
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.WARNING)
 for url in sys.argv[1:]:
-    fs = obnamlib.SftpFS(url)
+    fs = obnamlib.VfsFactory().new(url, None)
+    fs.connect()
     du = 0
     for dirname, dirnames, filenames in fs.depth_first('.'):
         for x in [dirname] + filenames:

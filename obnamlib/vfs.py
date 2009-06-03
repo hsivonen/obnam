@@ -15,6 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import os
 import urlparse
 
 import obnamlib
@@ -129,7 +130,7 @@ class VirtualFileSystem(object):
 
         """
 
-    def depth_first(self, relative_path, prune=None):
+    def depth_first(self, top, prune=None):
         """Walk a directory tree depth-first, except for unwanted subdirs.
         
         This is, essentially, 'os.walk(top, topdown=False)', except that
@@ -148,7 +149,25 @@ class VirtualFileSystem(object):
         The dirnames and filenames lists contain basenames, relative to
         dirname.
         
+        top is relative to VFS root, and so is the returned directory name.
+        
         """
+
+        names = self.listdir(top)
+        dirs = []
+        nondirs = []
+        for name in names:
+            if self.isdir(os.path.join(top, name)):
+                dirs.append(name)
+            else:
+                nondirs.append(name)
+        if prune:
+            prune(top, dirs, nondirs)
+        for name in dirs:
+            path = os.path.join(top, name)
+            for x in self.depth_first(path, prune=prune):
+                yield x
+        yield top, dirs, nondirs
         
         
 class VfsFactory:
