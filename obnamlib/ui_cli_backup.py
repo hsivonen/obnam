@@ -278,9 +278,10 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         old = self.get_dir_in_prevgen(dirname)
         if old:
             dirnames = [x.name for x in dirs]
-            olddirs = [self.store.get_object(x) for x in old.dirrefs]
+            olddirs = [self.store.get_object(self.host, x) for x in old.dirrefs]
             dirs += [x for x in olddirs if x.name not in dirnames]
-            filegroups = [self.store.get_object(x.id) for x in old.fgrefs]
+            filegroups = [self.store.get_object(self.host, x) 
+                          for x in old.fgrefs]
 
         return self.new_dir(dirname, st, dirs, filegroups)
 
