@@ -83,3 +83,6 @@ class Host(obnamlib.Object):
                 self.components.append(c)
             self._contmaprefs = None
 
+    def get_generation_id(self, name):
+        return None
+

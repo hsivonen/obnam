@@ -127,3 +127,19 @@ class HostTests(unittest.TestCase):
         self.host.prepare_for_encoding()
         self.assertEquals(self.host._contmaprefs, None)
 
+
+class GenerationNamesTests(unittest.TestCase):
+
+    def setUp(self):
+        self.host = obnamlib.Host(id="id")
+        self.host.genrefs = [str(i) for i in range(10)]
+        
+    def test_first(self):
+        self.assertEqual(self.host.get_generation_id("first"), "0")
+        
+    def test_oldest(self):
+        self.assertEqual(self.host.get_generation_id("oldest"), "0")
+        
+    def test_latest(self):
+        self.assertEqual(self.host.get_generation_id("latest"), "9")
+
