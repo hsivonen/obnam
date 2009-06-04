@@ -116,14 +116,13 @@ class CommandLineUI(obnamlib.UserInterface):
         if not args:
             self.short_help()
         elif args[0] in self.commands:
-            progress = None
-            if not options.quiet:
-                progress = obnamlib.ProgressReporter()
+            progress = obnamlib.ProgressReporter(silent=options.quiet)
             try:
                 cmd = self.commands[args[0]]
                 cmd.run(options, args[1:], progress)
             except Exception, e: # pragma: no cover
-                progress.done()
+                if progress:
+                    progress.done()
                 raise
         else:
             raise obnamlib.Exception("Unknown command '%s'" % args[0])
