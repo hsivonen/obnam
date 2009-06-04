@@ -31,3 +31,8 @@ def format_size(size):
             else:
                 count = size
             return "%s %s" % (count, unit)
+            
+            
+def format_time(seconds):
+    """Format a length of time into human-readable form."""
+    return ""
