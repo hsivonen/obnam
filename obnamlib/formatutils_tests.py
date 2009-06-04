@@ -33,3 +33,22 @@ class FormatSizeTests(unittest.TestCase):
         
     def test_1000_bytes_results_in_kilobyte(self):
         self.assertEqual(obnamlib.format_size(1000), "1 kB")
+        
+
+class FormatTimeTests(unittest.TestCase):
+
+    def test_zero_time_is_zero_seconds(self):
+        self.assertEqual(obnamlib.format_time(0), "0 s")
+
+    def test_one_second(self):
+        self.assertEqual(obnamlib.format_time(1), "1 s")
+        
+    def test_59_seconds(self):
+        self.assertEqual(obnamlib.format_time(59), "59 s")
+        
+    def test_60_seconds(self):
+        self.assertEqual(obnamlib.format_time(60), "1 min")
+        
+    def test_61_seconds(self):
+        self.assertEqual(obnamlib.format_time(61), "1 min 1 s")
+

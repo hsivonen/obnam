@@ -1,3 +1,4 @@
+
 # Copyright (C) 2008  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -112,6 +113,6 @@ from ui_cli_diskusage import DiskUsageCommand
 from progress import ProgressReporter
 
 from statutils import decode_stat, make_stat
-from formatutils import format_size
+from formatutils import format_size, format_time
 
 import varint

@@ -59,8 +59,8 @@ class ProgressReporter(object):
             self.prevmsg_time = time.time()
 
     def update_automatic_fields(self):
-        self.items["time-passed"] = ("%d seconds" % 
-                                     (time.time() - self["time-started"]))
+        duration = int(time.time() - self["time-started"])
+        self.items["time-passed"] = obnamlib.format_time(duration)
         self.items["sent"] = obnamlib.format_size(self["bytes-sent"])
         self.items["received"] = obnamlib.format_size(self["bytes-received"])
 

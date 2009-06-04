@@ -31,3 +31,25 @@ def format_size(size):
             else:
                 count = size
             return "%s %s" % (count, unit)
+
+
+time_units = [
+    (24*60*60, "d"),
+    (60*60, "h"),
+    (60, "min"),
+    (0, "s"),
+]      
+            
+def format_time(seconds):
+    """Format a length of time into human-readable form."""
+    
+    parts = []
+    for factor, unit in time_units:
+        if seconds >= factor and factor > 0:
+            n = seconds / factor
+            seconds -= n * factor
+            parts.append("%s %s" % (n, unit))
+        elif factor == 0 and (seconds > 0 or not parts):
+            parts.append("%s %s" % (seconds, unit))
+    
+    return " ".join(parts)
