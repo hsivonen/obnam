@@ -1,5 +1,5 @@
 # Makefile for Obnam
-# Copyright (C) 2006-2008  Lars Wirzenius <liw@liw.fi>
+# Copyright (C) 2006-2009  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,7 +21,8 @@ CFLAGS = -D_GNU_SOURCE
 all: _obnam.so
 
 _obnam.so: _obnammodule.c
-	python setup.py build
+	if python setup.py build > setup.log 2>&1; then \
+	    rm setup.log; else cat setup.log; exit 1; fi
 	cp build/lib*/*.so .
 	rm -rf build
 

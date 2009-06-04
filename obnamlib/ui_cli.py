@@ -100,6 +100,9 @@ class CommandLineUI(obnamlib.UserInterface):
         parser.add_option("--gpg-home", metavar="DIR",
                           help="use DIR as gpg home directory")
         
+        parser.add_option("--quiet", action="store_true",
+                          help="only output things if there are errors")
+        
         for cmd in self.commands.values():
             cmd.add_options(parser)
         
@@ -113,12 +116,13 @@ class CommandLineUI(obnamlib.UserInterface):
         if not args:
             self.short_help()
         elif args[0] in self.commands:
-            progress = obnamlib.ProgressReporter()
+            progress = obnamlib.ProgressReporter(silent=options.quiet)
             try:
                 cmd = self.commands[args[0]]
                 cmd.run(options, args[1:], progress)
             except Exception, e: # pragma: no cover
-                progress.done()
+                if progress:
+                    progress.done()
                 raise
         else:
             raise obnamlib.Exception("Unknown command '%s'" % args[0])
