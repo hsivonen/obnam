@@ -82,9 +82,15 @@ class LocalFS(obnamlib.VirtualFileSystem):
     def cat(self, relative_path):
         logging.debug("LocalFS: Reading %s" % relative_path)
         f = self.open(relative_path, "r")
-        data = f.read()
+        chunks = []
+        while True:
+            chunk = f.read(64*1024)
+            if not chunk:
+                break
+            chunks.append(chunk)
+            self.progress["bytes-received"] += len(chunk)
         f.close()
-        self.progress["bytes-received"] += len(data)
+        data = "".join(chunks)
         logging.debug("LocalFS: %s had %d bytes" % (relative_path, len(data)))
         return data
 
@@ -96,7 +102,13 @@ class LocalFS(obnamlib.VirtualFileSystem):
         if not os.path.exists(dirname):
             os.makedirs(dirname)
         fd, name = tempfile.mkstemp(dir=dirname)
-        os.write(fd, contents)
+        pos = 0
+        chunk_len = 64 * 1024
+        while pos < len(contents):
+            chunk = contents[pos:pos+chunk_len]
+            os.write(fd, chunk)
+            self.progress["bytes-sent"] += len(chunk)
+            pos += len(chunk)
         os.close(fd)
         try:
             os.link(name, path)
@@ -105,7 +117,6 @@ class LocalFS(obnamlib.VirtualFileSystem):
             raise
         os.remove(name)
         logging.debug("LocalFS: write_file updates bytes-sent")
-        self.progress["bytes-sent"] += len(contents)
 
     def overwrite_file(self, relative_path, contents):
         logging.debug("LocalFS: Over-writing %s (%d)" % 
@@ -113,7 +124,13 @@ class LocalFS(obnamlib.VirtualFileSystem):
         path = self.join(relative_path)
         dirname = os.path.dirname(path)
         fd, name = tempfile.mkstemp(dir=dirname)
-        os.write(fd, contents)
+        pos = 0
+        chunk_len = 64 * 1024
+        while pos < len(contents):
+            chunk = contents[pos:pos+chunk_len]
+            os.write(fd, chunk)
+            self.progress["bytes-sent"] += len(chunk)
+            pos += len(chunk)
         os.close(fd)
 
         # Rename existing to have a .bak suffix. If _that_ file already
@@ -128,8 +145,6 @@ class LocalFS(obnamlib.VirtualFileSystem):
         except OSError:
             pass
         os.rename(name, path)
-
-        self.progress["bytes-sent"] += len(contents)
 
     def listdir(self, dirname):
         return os.listdir(self.join(dirname))
