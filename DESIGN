@@ -281,6 +281,8 @@ significant.
     FILEGROUP
         FILE*
             FILENAME
+            OWNER
+            GROUP
             STAT -- specially encoded component with struct stat fields
             CONTREF? -- either this or DELTAREF must be there
             SIGREF?
@@ -369,6 +371,8 @@ that reference a block or object use the UUID to do it.
     FILEGROUPREF 43     string      A reference to a FILEGROUP object.
     SNAPSHOTGEN 44      string      Marker for snapshot GEN objects.
     SYMLINKTARGET 45    string      Target of a symbolic link.
+    OWNER       46      string      Username of owner of file.
+    GROUP       47      string      Groupname of group that owns a file.
 
 The actual code for a kind is the number from the table above, shifted
 two bits up, and with the new lowest two bits used for flags: 0x01 for
