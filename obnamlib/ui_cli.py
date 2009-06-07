@@ -135,8 +135,6 @@ class CommandLineUI(obnamlib.UserInterface):
         parser = self.create_option_parser()
         options, args = parser.parse_args(args)
         self.setup_logging(options)
-        logging.debug("Debugging startup message")
-        logging.info("Info startup message")
         progress = obnamlib.ProgressReporter()
 	
         if not args:
