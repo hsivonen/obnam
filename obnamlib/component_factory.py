@@ -86,6 +86,8 @@ class ComponentFactory(object):
         obnamlib.FILEGROUPREF:  str_or_ref(obnamlib.FileGroupRef),
         obnamlib.SNAPSHOTGEN:   str_or_ref(obnamlib.SnapshotGen),
         obnamlib.SYMLINKTARGET: str_or_ref(obnamlib.SymlinkTarget),
+        obnamlib.OWNER:         str_or_ref(obnamlib.Owner),
+        obnamlib.GROUP:         str_or_ref(obnamlib.Group),
         }
 
     def new_component(self, kind, string=None, children=None):
