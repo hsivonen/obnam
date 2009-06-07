@@ -49,13 +49,13 @@ class IdCache(dict):
 class UidCache(IdCache):
 
     def lookup_name(self, uid): # pragma: no cover
-        return pwd.getpwuid(uid).pw_nam
+        return pwd.getpwuid(uid).pw_name
 
 
 class GidCache(IdCache):
 
     def lookup_name(self, gid): # pragma: no cover
-        return grp.getgrid(gid).gr_name
+        return grp.getgrgid(gid).gr_name
 
 
 class BackupCommand(obnamlib.CommandLineCommand):
