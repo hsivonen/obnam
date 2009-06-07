@@ -47,6 +47,14 @@ class File(obnamlib.CompositeComponent):
         return obnamlib.decode_stat(encoded)
 
     @property
+    def owner(self):
+        return self.first_string(kind=obnamlib.OWNER)
+
+    @property
+    def group(self):
+        return self.first_string(kind=obnamlib.GROUP)
+
+    @property
     def contref(self):
         return self.first_string(kind=obnamlib.CONTREF)
 
