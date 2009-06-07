@@ -15,7 +15,9 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import logging
 import optparse
+import os
 import socket
 import sys
 
@@ -25,6 +27,8 @@ import obnamlib
 DESCRIPTION = """\
 A backup command.
 """
+
+DEFAULT_LOGFILE = os.path.expanduser("~/.cache/obnam.log")
 
 
 class CommandLineCommand(object):
@@ -102,15 +106,37 @@ class CommandLineUI(obnamlib.UserInterface):
         
         parser.add_option("--quiet", action="store_true",
                           help="only output things if there are errors")
+
+        parser.add_option("--log-file", metavar="FILE",
+                          default=DEFAULT_LOGFILE,
+                          help="write log messages to FILE "
+                               "(default: %default)")
+
+        parser.add_option("--debug", action="store_true",
+                          help="log debugging messages, too")
         
         for cmd in self.commands.values():
             cmd.add_options(parser)
         
         return parser
 
+    def setup_logging(self, options):
+        debugging = os.environ.get("OBNAM_DEBUGGING", "false")
+        level = logging.DEBUG
+        if debugging != "true" and not options.debug:
+            level = logging.INFO
+        if os.path.exists(options.log_file): # pragma: no cover
+            os.remove(options.log_file)
+        logging.basicConfig(level=level, filename=options.log_file,
+                            format="%(asctime)s [%(process)s] "
+                                   "%(levelname)s %(message)s")
+
     def run(self, args):
         parser = self.create_option_parser()
         options, args = parser.parse_args(args)
+        self.setup_logging(options)
+        logging.debug("Debugging startup message")
+        logging.info("Info startup message")
         progress = obnamlib.ProgressReporter()
 	
         if not args:

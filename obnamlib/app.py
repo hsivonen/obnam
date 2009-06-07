@@ -22,31 +22,13 @@ import sys
 import obnamlib
 
 
-DEFAULT_LOGFILE = "~/.cache/obnam.log"
-
-
 class BackupApplication(object):
 
     def run(self, args=None):
-        self.setup_logging()
         self.load_configs()
         ui_class = self.find_ui()
         ui = ui_class(self.cfg)
         ui.run(args or sys.argv[1:])
-
-    def setup_logging(self):
-        debugging = os.environ.get("OBNAM_DEBUGGING", "false")
-        if debugging == "true":
-            level = logging.DEBUG
-        else:
-            level = logging.INFO
-        filename = os.environ.get("OBNAM_LOGFILE", 
-                                  os.path.expanduser(DEFAULT_LOGFILE))
-        if os.path.exists(filename):
-            os.remove(filename)
-        logging.basicConfig(level=level, filename=filename,
-                            format="%(asctime)s [%(process)s] "
-                                   "%(levelname)s %(message)s")
 
     def load_configs(self):
         self.cfg = obnamlib.Config()
