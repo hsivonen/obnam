@@ -27,7 +27,8 @@ class FileTests(unittest.TestCase):
         self.owner = "owner"
         self.group = "group"
         self.file = obnamlib.File("filename", self.stat, "contref", "sigref",
-                                  "deltaref", "target")
+                                  "deltaref", "target", owner=self.owner,
+                                  group=self.group)
         self.none = obnamlib.File("filename", obnamlib.make_stat())
 
     def test_has_filename_attribute(self):

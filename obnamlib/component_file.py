@@ -23,7 +23,8 @@ class File(obnamlib.CompositeComponent):
     composite_kind = obnamlib.FILE
     
     def __init__(self, filename, stat, contref=None, sigref=None, 
-                 deltaref=None, symlink_target=None):
+                 deltaref=None, symlink_target=None, owner=None,
+                 group=None):
         children = []
         children.append(obnamlib.FileName(filename))
         children.append(obnamlib.Stat(stat))
@@ -35,6 +36,10 @@ class File(obnamlib.CompositeComponent):
             children.append(obnamlib.DeltaRef(deltaref))
         if symlink_target is not None:
             children.append(obnamlib.SymlinkTarget(symlink_target))
+        if owner is not None:
+            children.append(obnamlib.Owner(owner))
+        if group is not None:
+            children.append(obnamlib.Group(group))
         obnamlib.CompositeComponent.__init__(self, children)
 
     @property
