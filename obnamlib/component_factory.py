@@ -50,7 +50,9 @@ def file_factory(string, children):
                          contref=find(children, obnamlib.CONTREF), 
                          sigref=find(children, obnamlib.SIGREF),
                          deltaref=find(children, obnamlib.DELTAREF), 
-                         symlink_target=find(children, obnamlib.SYMLINKTARGET))
+                         symlink_target=find(children, obnamlib.SYMLINKTARGET),
+                         owner=find(children, obnamlib.OWNER),
+                         group=find(children, obnamlib.GROUP))
 
 
 class ComponentFactory(object):

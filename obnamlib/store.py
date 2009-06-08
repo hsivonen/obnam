@@ -296,6 +296,7 @@ class Store(object):
 
         if queue:
             block_id = self.idgen.new_id()
+            logging.debug("push_queue: block_id %s" % block_id)
             encoded = self.block_factory.encode_block(block_id,  queue,  {})
             self.put_block(block_id, encoded)
             for obj in queue:
@@ -305,10 +306,14 @@ class Store(object):
             del queue[:]
 
     def push_objects(self, host):
-        self.push_queue(host, self.object_queue, self.new_mappings)
+        if self.object_queue:
+            logging.debug("push_objects")
+            self.push_queue(host, self.object_queue, self.new_mappings)
 
     def push_content_objects(self, host):
-        self.push_queue(host, self.content_queue, self.new_content_mappings)
+        if self.content_queue:
+            logging.debug("push_content_objects")
+            self.push_queue(host, self.content_queue, self.new_content_mappings)
 
     def push_mappings(self, host, maprefs, new_mappings):
         """Generate and push out a new mapping block with all new objects.
