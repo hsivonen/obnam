@@ -113,8 +113,14 @@ class FsckCommand(obnamlib.CommandLineCommand):
                     assert pathname.startswith("./")
                     yield pathname[2:] # strip leading ./
 
+    def check_file(self, f):
+        self.assertNotEqual(f.owner, None)
+        self.assertNotEqual(f.group, None)
+
     def check_filegroup(self, fg):
         self.assertNotEqual(len(fg.files), 0, "FILEGROUP must contain files")
+        for f in fg.files:
+            self.check_file(f)
 
     def check_object(self, obj):
         dict = {

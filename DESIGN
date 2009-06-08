@@ -281,6 +281,8 @@ significant.
     FILEGROUP
         FILE*
             FILENAME
+            OWNER
+            GROUP
             STAT -- specially encoded component with struct stat fields
             CONTREF? -- either this or DELTAREF must be there
             SIGREF?
@@ -365,6 +367,12 @@ that reference a block or object use the UUID to do it.
     GENSTART    39      integer     A generation's starting timestamp.
     GENEND      40      integer     A generation's ending timestamp.
     DELTAPARTREF 41     string      A reference to a DELTAPART object.
+    DIRREF      42      string      A reference to a DIR object.
+    FILEGROUPREF 43     string      A reference to a FILEGROUP object.
+    SNAPSHOTGEN 44      string      Marker for snapshot GEN objects.
+    SYMLINKTARGET 45    string      Target of a symbolic link.
+    OWNER       46      string      Username of owner of file.
+    GROUP       47      string      Groupname of group that owns a file.
 
 The actual code for a kind is the number from the table above, shifted
 two bits up, and with the new lowest two bits used for flags: 0x01 for
@@ -381,7 +389,7 @@ proved to be pretty slow.
 Legalese
 --------
 
-Copyright 2007, 2008 Lars Wirzenius
+Copyright 2007, 2008, 2009 Lars Wirzenius
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

@@ -24,8 +24,11 @@ class FileTests(unittest.TestCase):
 
     def setUp(self):
         self.stat = obnamlib.make_stat()
+        self.owner = "owner"
+        self.group = "group"
         self.file = obnamlib.File("filename", self.stat, "contref", "sigref",
-                                  "deltaref", "target")
+                                  "deltaref", "target", owner=self.owner,
+                                  group=self.group)
         self.none = obnamlib.File("filename", obnamlib.make_stat())
 
     def test_has_filename_attribute(self):
@@ -33,6 +36,12 @@ class FileTests(unittest.TestCase):
 
     def test_has_stat_attribute(self):
         self.assertEqual(self.file.stat, self.stat)
+
+    def test_has_owner_attribute(self):
+        self.assertEqual(self.file.owner, self.owner)
+
+    def test_has_group_attribute(self):
+        self.assertEqual(self.file.group, self.group)
 
     def test_has_contref_attribute(self):
         self.assertEqual(self.file.contref, "contref")

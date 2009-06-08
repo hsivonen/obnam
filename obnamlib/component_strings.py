@@ -141,3 +141,12 @@ class SnapshotGen(obnamlib.StringComponent):
 class SymlinkTarget(obnamlib.StringComponent):
 
     string_kind = obnamlib.SYMLINKTARGET
+    
+class Owner(obnamlib.StringComponent):
+
+    string_kind = obnamlib.OWNER
+    
+class Group(obnamlib.StringComponent):
+
+    string_kind = obnamlib.GROUP
+

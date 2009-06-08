@@ -109,3 +109,6 @@ class ComponentKinds(obnamlib.Kinds):
         self.add_ref(      43, "FILEGROUPREF")
         self.add_plain(    44, "SNAPSHOTGEN")
         self.add_plain(    45, "SYMLINKTARGET")
+        self.add_plain(    46, "OWNER")
+        self.add_plain(    47, "GROUP")
+

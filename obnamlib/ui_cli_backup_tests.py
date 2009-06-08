@@ -31,6 +31,33 @@ class DummyObject(object):
         self.id = id
 
 
+class DummyIdCache(object):
+
+    def __getitem__(self, numeric_id):
+        return ""
+
+
+class IdCacheTests(unittest.TestCase):
+
+    def setUp(self):
+        self.cache = obnamlib.ui_cli_backup.IdCache()
+        self.cache.lookup_name = lambda x: str(x)
+        
+    def test_finds_id_the_first_time(self):
+        self.assertEqual(self.cache[42], "42")
+        
+    def test_finds_id_the_second_time(self):
+        self.cache[42] = "foo" # make sure it's there, and different from
+                               # what lookup_name returns
+        self.assertEqual(self.cache[42], "foo")
+
+    def test_returns_empty_if_id_is_not_found(self):
+        def notfound(x):
+            raise KeyError()
+        self.cache.lookup_name = notfound
+        self.assertEqual(self.cache[42], "")
+
+
 class BackupCommandTests(unittest.TestCase):
 
     def setUp(self):
@@ -40,6 +67,8 @@ class BackupCommandTests(unittest.TestCase):
         self.cmd.fs = self.mox.CreateMock(obnamlib.VirtualFileSystem)
         self.cmd.prevgen_lookupper = obnamlib.ui_cli_backup.DummyLookupper()
         self.cmd.progress = obnamlib.ProgressReporter(silent=True)
+        self.cmd.uid_cache = DummyIdCache()
+        self.cmd.gid_cache = DummyIdCache()
 
     def test_backs_up_new_symlink_correctly(self):
         st = obnamlib.make_stat()

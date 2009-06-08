@@ -15,8 +15,10 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import grp
 import logging
 import os
+import pwd
 import stat
 
 import obnamlib
@@ -29,6 +31,31 @@ class DummyLookupper:
 
     def get_dir(self, name):
         raise obnamlib.NotFound(name)
+
+
+class IdCache(dict):
+
+    def __getitem__(self, numeric_id):
+        if numeric_id in self:
+            return dict.__getitem__(self, numeric_id)
+        try:
+            name = self.lookup_name(numeric_id)
+        except KeyError:
+            name = ""
+        self[numeric_id] = name
+        return name
+
+
+class UidCache(IdCache):
+
+    def lookup_name(self, uid): # pragma: no cover
+        return pwd.getpwuid(uid).pw_name
+
+
+class GidCache(IdCache):
+
+    def lookup_name(self, gid): # pragma: no cover
+        return grp.getgrgid(gid).gr_name
 
 
 class BackupCommand(obnamlib.CommandLineCommand):
@@ -53,20 +80,26 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         parser.add_option("--max-mappings", metavar="COUNT", default=1000,
                           help="max number of mappings before flushing them "
                                "to disk (default: %default)")
-        
+    
+    def new_file(self, name, st, contref=None, sigref=None, deltaref=None,
+                 symlink_target=None):
+        owner = self.uid_cache[st.st_uid]
+        group = self.gid_cache[st.st_gid]
+        return obnamlib.File(name, st, contref=contref, sigref=sigref,
+                             deltaref=deltaref, symlink_target=symlink_target,
+                             owner=owner, group=group)
 
     def backup_new_symlink(self, relative_path, stat):
         """Backup a new symlink."""
         self.progress["files-found"] += 1
         target = self.fs.readlink(relative_path)
-        fc = obnamlib.File(os.path.basename(relative_path), stat, 
+        return self.new_file(os.path.basename(relative_path), stat, 
                            symlink_target=target)
-        return fc
 
     def backup_new_other(self, path, st):
         """Backup a new thing that is not a symlink or regular file."""
         self.progress["files-found"] += 1
-        return obnamlib.File(os.path.basename(path), st)
+        return self.new_file(os.path.basename(path), st)
 
     def backup_new_file(self, path, st):
         """Back up a completely new file."""
@@ -75,8 +108,7 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         f = self.fs.open(path, "r")
         content = self.store.put_contents(f, self.PART_SIZE)
         f.close()
-        fc = obnamlib.File(os.path.basename(path), st, content.id, None, None)
-        return fc
+        return self.new_file(os.path.basename(path), st, contref=content.id)
 
     def backup_new_files_as_groups(self, relative_paths, lstat=None):
         """Back a set of new files as a new FILEGROUP."""
@@ -374,6 +406,8 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
                       (host_id, " ".join(roots)))
         self.host = self.store.get_host(host_id)
         self.store.put_hook = self.put_hook
+        self.uid_cache = UidCache()
+        self.gid_cache = GidCache()
         if self.host.genrefs: # pragma: no cover
             prevgenref = self.host.genrefs[-1]
             logging.debug("Found previous generation %s" % prevgenref)
