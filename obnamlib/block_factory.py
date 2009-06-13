@@ -26,12 +26,11 @@ class BlockFactory(object):
 
     def update_mappings(self, mappings, objmap):
         assert objmap.kind == obnamlib.OBJMAP
-        block_id = objmap.first_string(kind=obnamlib.BLOCKREF)
-        assert block_id
+        blockid = objmap.first_string(kind=obnamlib.BLOCKREF)
+        assert blockid
 
-        for cmp in objmap.children:
-            if cmp.kind == obnamlib.OBJREF:
-                mappings[block_id] = str(cmp)
+        for objid in objmap.find_strings(kind=obnamlib.OBJREF):
+            mappings[objid] = blockid
 
     def decode_block(self, string):
         """Decode an encoded block.
@@ -74,20 +73,20 @@ class BlockFactory(object):
         
         """
         
-        components = []
+        objmaps = []
 
-        by_block_id = {}
-        for key, value in mappings.iteritems():
-            by_block_id[key] = by_block_id.get(key, []) + [value]
+        blocks = {}
+        for objid, blockid in mappings.iteritems():
+            if blockid not in blocks:
+                blocks[blockid] = []
+            blocks[blockid].append(objid)
 
-        for key, values in by_block_id.iteritems():
-            c = obnamlib.Component(kind=obnamlib.OBJMAP)
-            c.children.append(obnamlib.BlockRef(key))
-            for value in values:
-                c.children.append(obnamlib.ObjRef(value))
-            components.append(c)
+        for blockid in blocks:
+            blockref = obnamlib.BlockRef(blockid)
+            objrefs = [obnamlib.ObjRef(objid) for objid in blocks[blockid]]
+            objmaps.append(obnamlib.ObjMap([blockref] + objrefs))
 
-        return components
+        return objmaps
 
     def encode_block(self, block_id, objects, mappings):
         """Encode a block."""

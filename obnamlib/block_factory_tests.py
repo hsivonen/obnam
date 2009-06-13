@@ -44,6 +44,22 @@ class BlockFactoryTests(unittest.TestCase):
         self.assertEqual(objects, [])
         self.assertEqual(mappings, {})
 
+    def test_creates_mapping_components_correctly(self):
+        orig_mappings = { "foo-object": "foo-block",
+                          "bar-object": "foo-block",
+                          "foobar-object": "bar-block",
+                          }
+        components = self.factory.mappings_to_components(orig_mappings)
+        self.assertEqual(len(components), 2)
+        self.assertEqual(components[0].first_string(kind=obnamlib.BLOCKREF),
+                         "foo-block")
+        self.assertEqual(components[0].find_strings(kind=obnamlib.OBJREF),
+                         ["foo-object", "bar-object"])
+        self.assertEqual(components[1].first_string(kind=obnamlib.BLOCKREF),
+                         "bar-block")
+        self.assertEqual(components[1].find_strings(kind=obnamlib.OBJREF),
+                         ["foobar-object"])
+
     def test_handles_mappings_correctly(self):
         orig_mappings = { "foo-object": "foo-block",
                           "bar-object": "foo-block",
