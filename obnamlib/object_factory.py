@@ -15,6 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import logging
 import uuid
 
 import obnamlib
@@ -44,7 +45,10 @@ class ObjectFactory(object):
     def new_object(self, kind):
         if kind not in self.classes:
             raise obnamlib.Exception("Don't know object kind %s" % kind)
-        return self.classes[kind](id=self.new_id())
+        obj = self.classes[kind](id=self.new_id())
+        logging.debug("ObjectFactory.new_object: kind %s id %s" %
+                      (obnamlib.obj_kinds.nameof(kind), obj.id))
+        return obj
 
     def encode_component(self, cmp):
         if obnamlib.cmp_kinds.is_composite(cmp.kind):
