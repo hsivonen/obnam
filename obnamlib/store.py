@@ -50,7 +50,7 @@ class ObjectCache(object):
             del self.dict[self.order[0]]
             del self.order[0]
         
-    def get(self, objid):
+    def get(self, objid): # pragma: no cover
         if objid in self.dict:
             self.use(objid)
             return self.dict[objid]
@@ -206,15 +206,20 @@ class Store(object):
             logging.debug("find_block objmap miss for %s" % id)
             
         # Load mapping blocks until we find something.
+        logging.debug("find_block: host %s" % host.id)
+        logging.debug("find_block: maprefs %s" % repr(host.maprefs))
+        logging.debug("find_block: contmaprefs %s" % repr(host.contmaprefs))
         for mapref in host.maprefs + host.contmaprefs:
-            encoded = self.get_block(mapref)
             logging.debug("find_block: mapref %s" % mapref)
+            encoded = self.get_block(mapref)
             blkid, objs, mappings = self.block_factory.decode_block(encoded)
             self.objmap.update(mappings)
             if id in self.objmap:
+                logging.debug("find_block: found %s in %s" % (id, mapref))
                 return self.objmap[id]
 
         # Bummer.
+        logging.debug("find_block: can't find %s" % id)
         raise NotFound("Object %s not found in store" % id)
 
     def get_object(self, host, id):
@@ -224,7 +229,7 @@ class Store(object):
         
         """
         
-        logging.debug("Get object %s" % id)
+        logging.debug("get_object %s" % id)
         assert id is not None
         
         obj = self.objcache.get(id)
@@ -237,13 +242,17 @@ class Store(object):
         block_id = self.find_block(host, id)
         encoded = self.get_block(block_id)
         block_id, objs, mappings = self.block_factory.decode_block(encoded)
+        found = None
         for obj in objs:
             self.objcache.put(obj)
-        
-        obj = self.objcache.get(id)
-        if obj == None:
-            raise obnamlib.NotFound("Object %s not found in store" % id)
-        return obj
+            if id == obj.id:
+                found = obj
+
+        if not found:
+            raise obnamlib.NotFound("Object %s not found in block %s" % 
+                                    (id, block_id))
+        self.objcache.put(found)
+        return found
 
     def put_object(self, obj):
         """Put an object into the store.
