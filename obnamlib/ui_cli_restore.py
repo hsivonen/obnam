@@ -105,6 +105,8 @@ class RestoreCommand(obnamlib.CommandLineCommand):
         self.host = self.store.get_host(host_id)
         
         genref = self.host.get_generation_id(genref)
+        if genref is None:
+            raise obnamlib.Exception("Unknown generation %s" % genref)
         
         gen = self.store.get_object(self.host, genref)
         walker = obnamlib.StoreWalker(self.store, self.host, gen)
