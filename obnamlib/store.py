@@ -225,6 +225,7 @@ class Store(object):
         """
         
         logging.debug("Get object %s" % id)
+        assert id is not None
         
         obj = self.objcache.get(id)
         if obj: # pragma: no cover
