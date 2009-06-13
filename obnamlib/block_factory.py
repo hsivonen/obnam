@@ -67,15 +67,14 @@ class BlockFactory(object):
                       (block_id, len(objects), len(mappings)))
         return block_id, objects, mappings
 
-    def encode_block(self, block_id, objects, mappings):
-        """Encode a block."""
-
-        of = obnamlib.ObjectFactory()
-
-        parts = [self.BLOCK_COOKIE]
-
-        id_component = obnamlib.BlockId(block_id)
-        parts.append(of.encode_component(id_component))
+    def mappings_to_components(self, mappings):
+        """Create components that match mappings.
+        
+        The caller will then encode these as strings for writing to disk.
+        
+        """
+        
+        components = []
 
         by_block_id = {}
         for key, value in mappings.iteritems():
@@ -86,7 +85,22 @@ class BlockFactory(object):
             c.children.append(obnamlib.BlockRef(key))
             for value in values:
                 c.children.append(obnamlib.ObjRef(value))
-            parts.append(of.encode_component(c))
+            components.append(c)
+
+        return components
+
+    def encode_block(self, block_id, objects, mappings):
+        """Encode a block."""
+
+        of = obnamlib.ObjectFactory()
+
+        parts = [self.BLOCK_COOKIE]
+
+        id_component = obnamlib.BlockId(block_id)
+        parts.append(of.encode_component(id_component))
+
+        parts += [of.encode_component(c)
+                  for c in self.mappings_to_components(mappings)]
 
         for obj in objects:
             parts.append(of.encode_object(obj))
