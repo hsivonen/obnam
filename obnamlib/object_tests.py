@@ -68,3 +68,10 @@ class ObjectTests(unittest.TestCase):
 
         self.assertEqual(obj.extract_strings(kind=obnamlib.FILENAME),
                          ["foo"])
+                         
+    def test_finds_references_correctly(self):
+        fg1 = obnamlib.Component(kind=obnamlib.FILEGROUPREF, string="fg1")
+        fg2 = obnamlib.Component(kind=obnamlib.FILEGROUPREF, string="fg2")
+        obj = obnamlib.Object(id="id")
+        obj.components = [fg1, fg2]
+        self.assertEqual(obj.find_refs(), ["fg1", "fg2"])

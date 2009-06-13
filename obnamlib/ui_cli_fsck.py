@@ -130,14 +130,6 @@ class FsckCommand(obnamlib.CommandLineCommand):
         if obj.kind in dict:
             dict[obj.kind](obj)
 
-    def find_refs(self, obj):
-        result = []
-        obj.prepare_for_encoding()
-        for c in obj.components:
-            if obnamlib.cmp_kinds.is_ref(c.kind):
-                result.append(str(c))
-        return result
-
     def fsck(self): # pragma: no cover
         self.ok = True
 
@@ -147,14 +139,14 @@ class FsckCommand(obnamlib.CommandLineCommand):
             ref = refs[0]
             refs = refs[1:]
             logging.debug("fsck: getting object %s" % ref)
+            seen.add(ref)
             try:
                 obj = self.store.get_object(self.host, ref)
             except obnamlib.NotFound:
                 logging.error("fsck: object %s not found" % ref)
             else:
                 self.check_object(obj)
-                refs += self.find_refs(obj)
-            seen.add(ref)
+                refs += [x for x in obj.find_refs() if x not in seen]
 
         for block_id in self.find_blocks():
             self.check_block(block_id)

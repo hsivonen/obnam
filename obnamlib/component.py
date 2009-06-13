@@ -100,6 +100,18 @@ class Component(object):
             self.children.remove(cmp)
         return list
 
+    def find_refs(self):
+        """Find all references, recursively."""
+        if self._children:
+            refs = []
+            for c in self._children:
+                refs += c.find_refs()
+            return refs
+        elif obnamlib.cmp_kinds.is_ref(self.kind):
+            return [self._string]
+        else:
+            return []
+
 
 class StringComponent(Component):
 

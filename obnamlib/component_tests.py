@@ -108,6 +108,26 @@ class CompositeTests(unittest.TestCase):
     def test_extract_removes_matches(self):
         self.cmp.extract(kind=obnamlib.OBJID)
         self.assertEqual(self.cmp.children, [self.bar])
+        
+
+class FindRefsTests(unittest.TestCase):
+
+    def test_finds_no_refs_for_plain_component(self):
+        c = obnamlib.FileChunk("foo")
+        self.assertEqual(c.find_refs(), [])
+        
+    def test_finds_self_for_ref_component(self):
+        ref = obnamlib.ObjRef("foo")
+        self.assertEqual(ref.find_refs(), ["foo"])
+        
+    def test_finds_no_refs_when_none_exist(self):
+        c = obnamlib.File("foo", obnamlib.make_stat())
+        self.assertEqual(c.find_refs(), [])
+
+    def test_finds_ref_in_subcomponent(self):
+        objref = obnamlib.ObjRef("foo")
+        c = obnamlib.ObjMap([objref])
+        self.assertEqual(c.find_refs(), ["foo"])
 
 
 class StringComponentTests(unittest.TestCase):

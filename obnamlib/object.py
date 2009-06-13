@@ -78,3 +78,19 @@ class Object(object):
     def extract_strings(self, **kwargs):
         """Like extract, but return string values."""
         return [str(c) for c in self.extract(**kwargs)]
+        
+    def find_refs(self):
+        """Find all references.
+        
+        Note that this will call prepare_for_encoding, so that we can
+        search generically. All sub-classes should be prepared for this,
+        if they cache data outside of components.
+        
+        """
+
+        self.prepare_for_encoding()
+        refs = []
+        for c in self.components:
+            refs += c.find_refs()
+        return refs
+
