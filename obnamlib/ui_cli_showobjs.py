@@ -59,10 +59,14 @@ class ShowobjsCommand(obnamlib.CommandLineCommand):
             ref = refs[0]
             refs = refs[1:]
             if ref not in seen:
-                obj = self.store.get_object(self.host, ref)
-                self.showobj(obj)
+                try:
+                    obj = self.store.get_object(self.host, ref)
+                except obnamlib.NotFound:
+                    print "ERROR: Object id %s not found" % ref
+                else:
+                    self.showobj(obj)
+                    refs += self.find_refs(obj)
                 seen.add(ref)
-                refs += self.find_refs(obj)
     
     def run(self, options, args, progress): # pragma: no cover
         self.store = obnamlib.Store(options.store, "r")

@@ -141,14 +141,20 @@ class FsckCommand(obnamlib.CommandLineCommand):
     def fsck(self): # pragma: no cover
         self.ok = True
 
+        seen = set(self.host.id)
         refs = self.host.genrefs[:]
         while refs:
             ref = refs[0]
             refs = refs[1:]
             logging.debug("fsck: getting object %s" % ref)
-            obj = self.store.get_object(self.host, ref)
-            self.check_object(obj)
-            refs += self.find_refs(obj)
+            try:
+                obj = self.store.get_object(self.host, ref)
+            except obnamlib.NotFound:
+                logging.error("fsck: object %s not found" % ref)
+            else:
+                self.check_object(obj)
+                refs += self.find_refs(obj)
+            seen.add(ref)
 
         for block_id in self.find_blocks():
             self.check_block(block_id)
