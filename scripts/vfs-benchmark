@@ -4,6 +4,7 @@
 
 
 import optparse
+import os
 import sys
 
 import obnamlib
@@ -11,18 +12,38 @@ import obnamlib
 
 def parse_args():
     parser = optparse.OptionParser()
+
+    parser.add_option("--base", metavar="URL",
+                      help="create files at URL")
     
-    parser.add_option("--num-files", type="int", metavar="N",
-                      help="number of files to create")
+    parser.add_option("--repeat", type="int", metavar="N",
+                      help="number of times to repeat")
     
     parser.add_option("--file-size", type="int", metavar="BYTES",
                       help="size of files to create")
     
     return parser.parse_args()
 
-def benchmark_cat(options):
-    pass
-    
+
+def create_file(fs, size):
+    fs.write_file("test.dat", "x" * size)
+    return "test.dat"
+
+
+def measure(func, *args):
+    start = os.times()
+    func(*args)
+    end = os.times()
+    return end[-1] - start[-1]
+
+
+def benchmark_cat(fs, options):
+    filename = create_file(fs, options.file_size)
+    cumulative = 0
+    for i in range(options.repeat):
+        cumulative += measure(fs.cat, filename)
+    fs.remove(filename)
+    return cumulative
 
 def benchmark_write(options):
     pass
@@ -40,11 +61,18 @@ def main():
     }
 
     options, args = parse_args()
+    
+    progress = obnamlib.ProgressReporter(silent=True)
+    fs = obnamlib.VfsFactory().new(options.base, progress)
+    fs.connect()
+    
     for op in args:
         if op in operations:
-            operations[op](options)
+            print "%s %.1f s" % (op, operations[op](fs, options))
         else:
             raise Exception("Unknown operation %s" % op)
+
+    fs.close()
 
 
 if __name__ == "__main__":
