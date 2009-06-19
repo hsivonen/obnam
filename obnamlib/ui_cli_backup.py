@@ -470,7 +470,7 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         if options.roots:
             args = options.roots + args
 
-	self.exclude_regexps = [re.compile(x) for x in options.exclude]
+        self.exclude_regexps = [re.compile(x) for x in options.exclude]
 
         roots = [os.path.abspath(root) for root in args]
         self.backup(options.host, roots)
