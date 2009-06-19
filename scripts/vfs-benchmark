@@ -55,7 +55,12 @@ def benchmark_write(fs, options):
     
 
 def benchmark_overwrite(fs, options):
-    pass
+    data = "x" * options.file_size
+    cumulative = 0
+    for i in range(options.repeat):
+        cumulative += measure(fs.overwrite_file, "test.dat", data)
+        fs.remove("test.dat")
+    return cumulative
     
 
 def main():
