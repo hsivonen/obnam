@@ -33,7 +33,9 @@ class ObjectCache(object):
     def __init__(self):
         self.dict = {}
         self.order = []
-        self.max = 1000
+        # Compute a default max cache size by assuming a one megabyte
+        # block size and a 64 byte object size.
+        self.max = 1000 * 1000 / 64
         
     def put(self, obj):
         self.dict[obj.id] = obj
