@@ -18,10 +18,12 @@
 CC = gcc
 CFLAGS = -D_GNU_SOURCE
 
+PYTHON = python
+
 all: _obnam.so
 
 _obnam.so: _obnammodule.c
-	if python setup.py build > setup.log 2>&1; then \
+	if $(PYTHON) setup.py build > setup.log 2>&1; then \
 	    rm setup.log; else cat setup.log; exit 1; fi
 	cp build/lib*/*.so .
 	rm -rf build
@@ -36,7 +38,7 @@ check-test-modules:
 
 .PHONY: check-unittests
 check-unittests:
-	python -m CoverageTestRunner
+	$(PYTHON) -m CoverageTestRunner
 	rm -f .coverage
 
 .PHONY: check-licenses
