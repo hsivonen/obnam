@@ -392,14 +392,27 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
 
         return lastest_gen
 
+    def push_queue(self, name, queue, pusher): # pragma: no cover
+	unpushed = queue.unpushed_size
+	logging.debug("push_queue: %s unpushed %d max %d" % 
+		      (name, unpushed, self.max_unpushed))
+	if unpushed >= self.max_unpushed:
+            pusher(self.host)
+	    logging.debug("put_hook: pushed %s, unpushed now %d" % 
+			  (name, queue.unpushed_size))
+
     def put_hook(self): # pragma: no cover
-        if self.store.unpushed_size > self.max_unpushed:
-            self.store.push_objects(self.host)
+	self.push_queue("object_queue", self.store.object_queue,
+			self.store.push_objects)
+	self.push_queue("content", self.store.content_queue,
+			self.store.push_content_objects)
         if self.host not in self.store.new_mappings:
+	    logging.debug("put_hook: host not in new_mappings")
             return
         mappings = self.store.new_mappings[self.host]
         if len(mappings) > self.max_mappings:
             self.store.push_new_mappings(self.host)
+	    logging.debug("put_hook: pushed mappings")
 
     def backup(self, host_id, roots):
         logging.debug("Backing up: host %s, roots %s" % 
