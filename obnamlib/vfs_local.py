@@ -26,6 +26,8 @@ import obnamlib
 class LocalFS(obnamlib.VirtualFileSystem):
 
     """A VFS implementation for local filesystems."""
+    
+    chunk_size = 1024 * 1024
 
     def lock(self, lockname):
         try:
@@ -84,7 +86,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
         f = self.open(relative_path, "r")
         chunks = []
         while True:
-            chunk = f.read(64*1024)
+            chunk = f.read(self.chunk_size)
             if not chunk:
                 break
             chunks.append(chunk)
@@ -103,9 +105,8 @@ class LocalFS(obnamlib.VirtualFileSystem):
             os.makedirs(dirname)
         fd, name = tempfile.mkstemp(dir=dirname)
         pos = 0
-        chunk_len = 64 * 1024
         while pos < len(contents):
-            chunk = contents[pos:pos+chunk_len]
+            chunk = contents[pos:pos+self.chunk_size]
             os.write(fd, chunk)
             self.progress["bytes-sent"] += len(chunk)
             pos += len(chunk)
@@ -125,9 +126,8 @@ class LocalFS(obnamlib.VirtualFileSystem):
         dirname = os.path.dirname(path)
         fd, name = tempfile.mkstemp(dir=dirname)
         pos = 0
-        chunk_len = 64 * 1024
         while pos < len(contents):
-            chunk = contents[pos:pos+chunk_len]
+            chunk = contents[pos:pos+self.chunk_size]
             os.write(fd, chunk)
             self.progress["bytes-sent"] += len(chunk)
             pos += len(chunk)
