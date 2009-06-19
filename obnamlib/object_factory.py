@@ -46,8 +46,6 @@ class ObjectFactory(object):
         if kind not in self.classes:
             raise obnamlib.Exception("Don't know object kind %s" % kind)
         obj = self.classes[kind](id=self.new_id())
-        logging.debug("ObjectFactory.new_object: kind %s id %s" %
-                      (obnamlib.obj_kinds.nameof(kind), obj.id))
         return obj
 
     def encode_component(self, cmp):
