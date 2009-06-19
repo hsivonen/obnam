@@ -180,17 +180,23 @@ class SftpFS(obnamlib.VirtualFileSystem):
             if not chunk:
                 break
             chunks.append(chunk)
+            self.progress["bytes-received"] += len(chunk)
         f.close()
         return "".join(chunks)
 
-    def write_file(self, relative_path, contents):
+    def write_helper(self, relative_path, mode, contents):
         self.makedirs(os.path.dirname(relative_path))
-        f = self.open(relative_path, 'wx')
-        f.write(contents)
+        f = self.open(relative_path, mode)
+        chunk_size = 32 * 1024
+        for pos in range(0, len(contents), chunk_size):
+            chunk = contents[pos:pos + chunk_size]
+            f.write(chunk)
+            self.progress["bytes-sent"] += len(chunk)
         f.close()
 
+    def write_file(self, relative_path, contents):
+        self.write_helper(relative_path, 'wx', contents)
+
     def overwrite_file(self, relative_path, contents):
-        self.makedirs(os.path.dirname(relative_path))
-        f = self.open(relative_path, 'w')
-        f.write(contents)
-        f.close()
+        self.write_helper(relative_path, 'w', contents)
+
