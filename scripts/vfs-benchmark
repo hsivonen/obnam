@@ -1,0 +1,44 @@
+#!/usr/bin/python
+#
+# Benchmark some obnamlib.VirtualFileSystem operations.
+
+
+import sys
+
+import obnamlib
+
+
+def parse_args():
+    return None, sys.argv[1:]
+
+
+def benchmark_cat(options):
+    pass
+    
+
+def benchmark_write(options):
+    pass
+    
+
+def benchmark_overwrite(options):
+    pass
+    
+
+def main():
+    operations = {
+        "cat": benchmark_cat,
+        "write": benchmark_write,
+        "overwrite": benchmark_overwrite,
+    }
+
+    options, args = parse_args()
+    for op in args:
+        if op in operations:
+            operations[op](options)
+        else:
+            raise Exception("Unknown operation %s" % op)
+
+
+if __name__ == "__main__":
+    main()
+
