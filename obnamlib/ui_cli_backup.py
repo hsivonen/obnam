@@ -20,6 +20,7 @@ import logging
 import os
 import pwd
 import stat
+import re
 
 import obnamlib
 
