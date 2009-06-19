@@ -33,6 +33,6 @@ else:
         obnamlib.BackupApplication().run()
     except Exception, e:
         logging.debug(traceback.format_exc())
-        logging.error(str(e))
-        sys.stdout.write("ERROR: %s\n" % str(e))
+        logging.error(str(e) or repr(e))
+        sys.stdout.write("ERROR: %s\n" % (str(e) or repr(e)))
         sys.exit(1)
