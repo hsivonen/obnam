@@ -80,7 +80,25 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         parser.add_option("--max-mappings", metavar="COUNT", default=1000,
                           help="max number of mappings before flushing them "
                                "to disk (default: %default)")
+
+	parser.add_option("--exclude", metavar="REGEXP", action="append",
+			  help="exclude pathnames matching REGEXP")
+	parser.set_defaults(exclude=[])
     
+    def excluded(self, pathname): # pragma: no cover
+	for regexp in self.exclude_regexps:
+	    if regexp.search(pathname):
+		return True
+	return False
+
+    def prune(self, dirname, dirnames, filenames): # pragma: no cover
+	for x in dirnames[:]:
+	    if self.excluded(os.path.join(dirname, x)):
+		dirnames.remove(x)
+	for x in filenames[:]:
+	    if self.excluded(os.path.join(dirname, x)):
+		filenames.remove(x)
+
     def new_file(self, name, st, contref=None, sigref=None, deltaref=None,
                  symlink_target=None):
         owner = self.uid_cache[st.st_uid]
@@ -259,7 +277,8 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         # The value is a list of obnamlib.Dir objects.
         subdirs = {}
 
-        for dirname, dirnames, filenames in self.fs.depth_first(root):
+        for dirname, dirnames, filenames in self.fs.depth_first(root,
+							prune=self.prune):
             logging.info("Backing up %s" % dirname)
             list = subdirs.pop(dirname, [])
             dir = self.backup_dir(dirname, list, filenames)
@@ -449,6 +468,8 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         
         if options.roots:
             args = options.roots + args
+
+	self.exclude_regexps = [re.compile(x) for x in options.exclude]
 
         roots = [os.path.abspath(root) for root in args]
         self.backup(options.host, roots)

@@ -178,7 +178,8 @@ class BackupCommandTests(unittest.TestCase):
         self.cmd.backup_dir = lambda *args: dir
         self.cmd.fs = self.mox.CreateMock(obnamlib.VirtualFileSystem)
 
-        self.cmd.fs.depth_first("foo").AndReturn([("foo", [], [])])
+        self.cmd.fs.depth_first("foo", prune=mox.IgnoreArg()).AndReturn(
+		[("foo", [], [])])
         self.cmd.it_is_snapshot_time = lambda: False
 
         self.mox.ReplayAll()
@@ -205,7 +206,7 @@ class BackupCommandTests(unittest.TestCase):
             ("foo", ["dir1"], ["file1"]),
             ]
         self.cmd.fs = self.mox.CreateMock(obnamlib.VirtualFileSystem)
-        self.cmd.fs.depth_first("foo").AndReturn(tree)
+        self.cmd.fs.depth_first("foo", prune=mox.IgnoreArg()).AndReturn(tree)
 
         self.mox.ReplayAll()
         ret = [x for x in self.cmd.backup_recursively("foo")]
