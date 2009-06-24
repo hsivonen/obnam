@@ -21,44 +21,7 @@ import os
 import obnamlib
 
 
-class SimplisticObjectCache(object):
-
-    """Cache objects in memory."""
-    
-    # This is a very simplistic LRU implementation: it keeps the objects
-    # in a list in the order in which they have last been used.
-    
-    def __init__(self):
-        self.dict = {}
-        self.order = []
-        # Compute a default max cache size by assuming a one megabyte
-        # block size and a 64 byte object size.
-        self.max = 1000 * 1000 / 64
-        
-    def put(self, obj):
-        self.dict[obj.id] = obj
-        self.use(obj.id)
-        self.forget()
-
-    def use(self, objid):
-        if objid in self.order:
-            self.order.remove(objid)
-        self.order.append(objid)
-
-    def forget(self):
-        while len(self.order) > self.max:
-            del self.dict[self.order[0]]
-            del self.order[0]
-        
-    def get(self, objid):
-        if objid in self.dict:
-            self.use(objid)
-            return self.dict[objid]
-        else:
-            return None
-
-
-class CounterObjectCache(object):
+class ObjectCache(object):
 
     """Cache objects in memory."""
     
@@ -101,7 +64,4 @@ class CounterObjectCache(object):
             return pair[1]
         else:
             return None
-
-
-ObjectCache = CounterObjectCache
 

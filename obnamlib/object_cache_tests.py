@@ -40,3 +40,8 @@ class ObjectCacheTests(unittest.TestCase):
             self.cache.put(obnamlib.Object("%d" % i))
         self.assertEqual(self.cache.get(self.o), None)
 
+    def test_put_again_keeps_object_in_cache(self):
+        self.cache.put(self.o)
+        self.cache.put(self.o)
+        self.assertEqual(self.cache.get(self.o.id), self.o)
+
