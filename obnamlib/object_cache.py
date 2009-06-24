@@ -42,12 +42,12 @@ class ObjectCache(object):
             self.order.remove(objid)
         self.order.append(objid)
 
-    def forget(self): # pragma: no cover
+    def forget(self):
         while len(self.order) > self.max:
             del self.dict[self.order[0]]
             del self.order[0]
         
-    def get(self, objid): # pragma: no cover
+    def get(self, objid):
         if objid in self.dict:
             self.use(objid)
             return self.dict[objid]

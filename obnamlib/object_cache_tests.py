@@ -32,3 +32,11 @@ class ObjectCacheTests(unittest.TestCase):
     def test_puts_object_into_cache(self):
         self.cache.put(self.o)
         self.assertEqual(self.cache.get(self.o.id), self.o)
+        
+    def test_forgets_object(self):
+        self.cache.max = 5
+        self.cache.put(self.o)
+        for i in xrange(self.cache.max):
+            self.cache.put(obnamlib.Object("%d" % i))
+        self.assertEqual(self.cache.get(self.o), None)
+
