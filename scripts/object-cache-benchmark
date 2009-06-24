@@ -20,7 +20,7 @@
 
 set -e
 
-for klass in SimplisticObjectCache CounterObjectCache
+for klass in ComplicatedObjectCache
 do
     echo "$klass"
     python -m timeit \
