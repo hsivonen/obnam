@@ -80,6 +80,8 @@ from object_host import Host
 from object_sig import Signature
 from object_factory import ObjectFactory
 
+from object_cache import ObjectCache
+
 from block_factory import BlockFactory
 from block_id_generator import BlockIdGenerator
 from block_transformation import block_transformations, choose_transformations
