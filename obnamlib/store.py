@@ -26,40 +26,6 @@ class NotFound(obnamlib.Exception):
     pass
 
 
-class ObjectCache(object):
-
-    """Cache objects in memory."""
-    
-    def __init__(self):
-        self.dict = {}
-        self.order = []
-        # Compute a default max cache size by assuming a one megabyte
-        # block size and a 64 byte object size.
-        self.max = 1000 * 1000 / 64
-        
-    def put(self, obj):
-        self.dict[obj.id] = obj
-        self.use(obj.id)
-        self.forget()
-
-    def use(self, objid):
-        if objid in self.order:
-            self.order.remove(objid)
-        self.order.append(objid)
-
-    def forget(self): # pragma: no cover
-        while len(self.order) > self.max:
-            del self.dict[self.order[0]]
-            del self.order[0]
-        
-    def get(self, objid): # pragma: no cover
-        if objid in self.dict:
-            self.use(objid)
-            return self.dict[objid]
-        else:
-            return None
-
-
 class ObjectQueue(list):
 
     """Queue of outgoing objects.
@@ -128,7 +94,7 @@ class Store(object):
         self.put_hook = None
         self.idgen = obnamlib.BlockIdGenerator(3, 1024)
         self.transformations = []
-        self.objcache = ObjectCache()
+        self.objcache = obnamlib.ObjectCache()
 
         # We keep the object to block mappings we know about in
         # self.objmap. We add new mappings there as we learn about
