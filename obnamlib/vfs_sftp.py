@@ -44,7 +44,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
             user, netloc = netloc.split("@", 1)
         else:
             user = self.get_username()
-        if "." in netloc:
+        if ":" in netloc:
             host, port = netloc.split(":", 1)
             port = int(port)
         else:
