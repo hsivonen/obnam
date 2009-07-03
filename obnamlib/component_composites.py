@@ -23,6 +23,11 @@ import obnamlib
 # of them that it's pointless putting each in its own module.
 
 
+class Checksums(obnamlib.CompositeComponent):
+
+    composite_kind = obnamlib.CHECKSUMS
+
+
 class NameIPair(obnamlib.CompositeComponent):
 
     composite_kind = obnamlib.NAMEIPAIR

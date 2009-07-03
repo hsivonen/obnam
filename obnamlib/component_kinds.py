@@ -111,4 +111,7 @@ class ComponentKinds(obnamlib.Kinds):
         self.add_plain(    45, "SYMLINKTARGET")
         self.add_plain(    46, "OWNER")
         self.add_plain(    47, "GROUP")
+        self.add_composite(48, "CHECKSUMS")
+        self.add_plain(    49, "ADLER32")
+        self.add_plain(    50, "MD5")
 

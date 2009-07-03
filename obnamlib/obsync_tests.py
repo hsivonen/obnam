@@ -38,3 +38,6 @@ class ObsyncTests(unittest.TestCase):
             num_blocks += 1
         sigs = self.obsync.file_signature(StringIO.StringIO(data), block_size)
         self.assertEqual(len(sigs), num_blocks)
+        for sig in sigs:
+            self.assert_(isinstance(sig, obnamlib.Checksums))
+

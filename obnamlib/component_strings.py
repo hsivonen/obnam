@@ -23,6 +23,11 @@ import obnamlib
 # so many of them that it's pointless putting each in its own module.
 
 
+class Adler32(obnamlib.StringComponent):
+
+    string_kind = obnamlib.ADLER32
+
+
 class BlockId(obnamlib.StringComponent):
 
     string_kind = obnamlib.BLKID
@@ -109,6 +114,11 @@ class GenStart(obnamlib.StringComponent):
 
 
 class MapRef(obnamlib.StringComponent):
+
+    string_kind = obnamlib.MAPREF
+
+
+class Md5(obnamlib.StringComponent):
 
     string_kind = obnamlib.MAPREF
 

@@ -33,7 +33,8 @@ cmp_kinds.add_all()
 cmp_kinds.add_to_obnamlib()
 from component_file import File
 from component_stat import Stat
-from component_strings import (BlockId, 
+from component_strings import (Adler32,
+                               BlockId, 
                                BlockRef,
                                ContMapRef,
                                ContRef,
@@ -52,6 +53,7 @@ from component_strings import (BlockId,
                                GenStart,
                                Group,
                                MapRef,
+                               Md5,
                                ObjectId, 
                                ObjRef,
                                Owner,
@@ -59,7 +61,7 @@ from component_strings import (BlockId,
                                SigRef,
                                SnapshotGen,
                                SymlinkTarget)
-from component_composites import NameIPair, ObjectComponent, ObjMap
+from component_composites import Checksums, NameIPair, ObjectComponent, ObjMap
 from component_objkind import ObjectKind
 from component_factory import ComponentFactory
 
@@ -112,7 +114,6 @@ from ui_cli_help import HelpCommand
 from ui_cli_objtree import ObjtreeCommand
 from ui_cli_show import ShowGenerationsCommand
 from ui_cli_showobjs import ShowobjsCommand
-from ui_cli_signature import SignatureCommand
 from ui_cli_diskusage import DiskUsageCommand
 
 from progress import ProgressReporter

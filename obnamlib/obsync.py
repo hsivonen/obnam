@@ -38,13 +38,15 @@ class Obsync(object):
     def block_signature(self, block_data):
         """Compute rsync signature for a given block of data.
         
-        Return an obnamlib.SyncSignature component.
+        Return an obnamlib.Checksums component.
         
         Assume the block is of whatever size the signatures should be
         computed for. It is the caller's responsibility to make sure
         all blocks in a signature file are of the same size.
         
         """
+        
+        return obnamlib.Checksums([])
         
     def file_signature(self, f, block_size):
         """Compute signatures for a file.

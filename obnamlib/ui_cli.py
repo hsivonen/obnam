@@ -66,8 +66,6 @@ class CommandLineUI(obnamlib.UserInterface):
             "showobjs": obnamlib.ShowobjsCommand(),
             
             "du": obnamlib.DiskUsageCommand(),
-            
-            "signature": obnamlib.SignatureCommand(),
             }
 
     def short_help(self, stdout=sys.stdout):
