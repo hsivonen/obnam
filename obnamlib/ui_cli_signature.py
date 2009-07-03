@@ -32,10 +32,10 @@ class SignatureCommand(obnamlib.CommandLineCommand):
     def signature(self, options, args):
         obsync = obnamlib.Obsync()
         f = file(args[0])
-        sigs = obsync.file_signature(f, options.rsync_block_size)
+        rsyncsig = obsync.make_signature("obj_id", f, options.rsync_block_size)
         f.close()
-        bf = obnamlib.BlockFactory()
-        sys.stdout.write(bf.encode_block(block_id, sigs, []))
+        of = obnamlib.ObjectFactory()
+        sys.stdout.write(of.encode_object(rsyncsig))
 
     def run(self, options, args, progress): # pragma: no cover
         self.signature(options, args)
