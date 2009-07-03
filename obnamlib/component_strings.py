@@ -113,6 +113,11 @@ class GenStart(obnamlib.StringComponent):
     string_kind = obnamlib.GENSTART
 
 
+class Length(obnamlib.StringComponent):
+
+    string_kind = obnamlib.LENGTH
+
+
 class MapRef(obnamlib.StringComponent):
 
     string_kind = obnamlib.MAPREF
@@ -131,6 +136,11 @@ class ObjectId(obnamlib.StringComponent):
 class ObjRef(obnamlib.StringComponent):
 
     string_kind = obnamlib.OBJREF
+
+
+class Offset(obnamlib.StringComponent):
+
+    string_kind = obnamlib.OFFSET
 
 
 class SigData(obnamlib.StringComponent):

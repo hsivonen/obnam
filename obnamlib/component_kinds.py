@@ -115,4 +115,7 @@ class ComponentKinds(obnamlib.Kinds):
         self.add_plain(    49, "ADLER32")
         self.add_plain(    50, "MD5")
         self.add_plain(    51, "SIGBLOCKSIZE")
+        self.add_plain(    52, "OFFSET")
+        self.add_plain(    53, "LENGTH")
+        self.add_composite(54, "OLDFILESUBSTRING")
 
