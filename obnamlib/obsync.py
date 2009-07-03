@@ -20,6 +20,28 @@ import obnamlib
 import zlib
 
 
+class RsyncLookupTable(object):
+
+    def __init__(self, compute_weak, compute_strong, checksums):
+        self.compute_weak = compute_weak
+        self.compute_strong = compute_strong
+        self.dict = {}
+        for block_number, c in enumerate(checksums):
+            weak = c.first_string(kind=obnamlib.ADLER32)
+            strong = c.first_string(kind=obnamlib.MD5)
+            if weak not in self.dict:
+                self.dict[weak] = dict()
+            self.dict[weak][strong] = block_number
+
+    def __getitem__(self, block_data):
+        weak = str(self.compute_weak(block_data))
+        subdict = self.dict.get(weak)
+        if subdict:
+            strong = str(self.compute_strong(block_data))
+            return subdict.get(strong)
+        return None
+
+
 class Obsync(object):
 
     """A pure-Python implementation of the rsync algorithm.
@@ -101,5 +123,27 @@ class Obsync(object):
         
         """
 
-        return []
+        block_size = rsyncsig.block_size
+        lookup_table = RsyncLookupTable(self.weak_checksum,
+                                        self.strong_checksum,
+                                        rsyncsig.checksums)
+        output = []
+        
+        block_data = new_file.read(block_size)
+        while block_data:
+            block_number = lookup_table[block_data]
+            if block_number is None:
+                literal = obnamlib.FileChunk(block_data[0])
+                output.append(literal)
+                block_data = block_data[1:]
+                byte = new_file.read(1)
+                if byte:
+                    block_data += byte
+            else:
+                offset = block_number * block_size
+                ofss = obnamlib.OldFileSubString(offset, block_size)
+                output.append(ofss)
+                block_data = new_file.read(block_size)
+
+        return output
 

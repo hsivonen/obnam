@@ -42,8 +42,3 @@ class ObjMap(obnamlib.CompositeComponent):
 
     composite_kind = obnamlib.OBJMAP
 
-
-class OldFileSubString(obnamlib.CompositeComponent):
-
-    composite_kind = obnamlib.OLDFILESUBSTRING
-

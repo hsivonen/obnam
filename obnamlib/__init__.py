@@ -52,10 +52,12 @@ from component_strings import (Adler32,
                                GenRef,
                                GenStart,
                                Group,
+                               Length,
                                MapRef,
                                Md5,
                                ObjectId, 
                                ObjRef,
+                               Offset,
                                Owner,
                                SigData,
                                SigRef,
@@ -64,9 +66,9 @@ from component_strings import (Adler32,
 from component_composites import (Checksums, 
                                   NameIPair, 
                                   ObjectComponent, 
-                                  ObjMap,
-                                  OldFileSubString)
+                                  ObjMap)
 from component_objkind import ObjectKind
+from component_oldfilesubstring import OldFileSubString
 from component_sigblocksize import SigBlockSize
 from component_factory import ComponentFactory
 
