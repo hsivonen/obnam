@@ -151,3 +151,17 @@ class ObsyncDeltaTests(unittest.TestCase):
         old_tail = self.old_data[full_blocks * self.block_size : ]
         self.assertEqual(str(delta[1]), old_tail + self.additional_data)
 
+    def test_file_delta_computes_delta_for_leading_changes(self):
+        self.obsync.foo = True
+        data = self.additional_data + self.old_data
+        f = StringIO.StringIO(data)
+        delta = self.obsync.file_delta(self.sig, f, self.chunk_size)
+
+        self.assertEqual(len(delta), 2, delta)
+
+        self.assertEqual(delta[0].kind, obnamlib.FILECHUNK)
+        self.assertEqual(str(delta[0]), self.additional_data)
+
+        self.assertEqual(delta[1].kind, obnamlib.OLDFILESUBSTRING)
+        self.assertEqual(delta[1].offset, 0)
+        self.assertEqual(delta[1].length, len(self.old_data))
