@@ -18,23 +18,12 @@
 import obnamlib
 
 
-class RsyncSig(obnamlib.Object):
+class SigBlockSize(obnamlib.Component):
 
-    """An rsync signature."""
+    def __init__(self, block_size):
+        obnamlib.Component.__init__(self, kind=obnamlib.SIGBLOCKSIZE, 
+                                    string=obnamlib.varint.encode(block_size))
 
-    kind = obnamlib.RSYNCSIG
-
-    def __init__(self, id, block_size=0, checksums=None):
-        obnamlib.Object.__init__(self, id)
-        self.components += [obnamlib.SigBlockSize(block_size)]
-        if checksums:
-            self.components += checksums
-            
     @property
     def block_size(self):
-        return self.find(kind=obnamlib.SIGBLOCKSIZE)[0].block_size
-        
-    @property
-    def checksums(self):
-        return self.find(kind=obnamlib.CHECKSUMS)
-
+        return obnamlib.varint.decode(str(self), 0)[0]

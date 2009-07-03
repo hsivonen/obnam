@@ -61,3 +61,16 @@ class ObsyncTests(unittest.TestCase):
         for sig in sigs:
             self.assert_(isinstance(sig, obnamlib.Checksums))
 
+    def test_make_signature_returns_rsyncsig_object(self):
+        data = "x" * 64
+        block_size = 13
+        num_blocks = len(data) / block_size
+        if len(data) % block_size:
+            num_blocks += 1
+        o = self.obsync.make_signature("id", StringIO.StringIO(data), block_size)
+        self.assert_(isinstance(o, obnamlib.RsyncSig))
+        self.assertEqual(o.kind, obnamlib.RSYNCSIG)
+        self.assertEqual(o.id, "id")
+        self.assertEqual(o.block_size, block_size)
+        self.assertEqual(len(o.checksums), num_blocks)
+

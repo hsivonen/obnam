@@ -10,8 +10,8 @@ obnamlib/object_host.py
 obnamlib/object_delta.py
 obnamlib/object_deltapart.py
 obnamlib/object_filelist.py
-obnamlib/object_sig.py
 obnamlib/object_rsyncsig.py
+obnamlib/object_sig.py
 obnamlib/ui_cli_show.py
 obnamlib/component_composites.py
 obnamlib/component_strings.py

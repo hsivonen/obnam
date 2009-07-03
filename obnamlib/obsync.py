@@ -86,3 +86,10 @@ class Obsync(object):
 
         return sigs
 
+    def make_signature(self, obj_id, f, block_size):
+        """Create an rsync signature for a file."""
+        
+        checksums = self.file_signature(f, block_size)
+        return obnamlib.RsyncSig(obj_id, block_size=block_size, 
+                                 checksums=checksums)
+

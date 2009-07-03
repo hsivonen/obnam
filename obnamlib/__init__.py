@@ -63,6 +63,7 @@ from component_strings import (Adler32,
                                SymlinkTarget)
 from component_composites import Checksums, NameIPair, ObjectComponent, ObjMap
 from component_objkind import ObjectKind
+from component_sigblocksize import SigBlockSize
 from component_factory import ComponentFactory
 
 from object import Object
