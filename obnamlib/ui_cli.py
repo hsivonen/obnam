@@ -70,6 +70,8 @@ class CommandLineUI(obnamlib.UserInterface):
             "signature": obnamlib.SignatureCommand(),
 
             "delta": obnamlib.DeltaCommand(),
+
+            "patch": obnamlib.PatchCommand(),
             }
 
     def short_help(self, stdout=sys.stdout):

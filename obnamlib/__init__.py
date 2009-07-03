@@ -125,6 +125,7 @@ from ui_cli_show import ShowGenerationsCommand
 from ui_cli_showobjs import ShowobjsCommand
 from ui_cli_signature import SignatureCommand
 from ui_cli_delta import DeltaCommand
+from ui_cli_patch import PatchCommand
 from ui_cli_diskusage import DiskUsageCommand
 
 from progress import ProgressReporter

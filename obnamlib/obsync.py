@@ -195,3 +195,17 @@ class Obsync(object):
         delta_directives = self.file_delta(rsyncsig, f, chunk_size)
         return obnamlib.RsyncDelta(obj_id, delta_directives=delta_directives)
 
+    def patch(self, output_file, old_file, rsyncdelta): # pragma: no cover
+        """Apply RsyncDelta on old_file, writing output to new_file."""
+        
+        for directive in rsyncdelta.delta_directives:
+            if directive.kind == obnamlib.FILECHUNK:
+                output_file.write(str(directive))
+            else:
+                assert directive.kind == obnamlib.OLDFILESUBSTRING
+                old_file.seek(directive.offset)
+                data = old_file.read(directive.length)
+                if len(data) != directive.length:
+                    raise obnamlib.Exception("Too little data from old file")
+                new_file.write(data)
+

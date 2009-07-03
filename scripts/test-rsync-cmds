@@ -1,0 +1,20 @@
+#!/bin/sh
+
+set -e
+
+oldfile=$(mktemp)
+newfile=$(mktemp)
+sigfile=$(mktemp)
+deltafile=$(mktemp)
+outputfile=$(mktemp)
+
+echo foobar > "$oldfile"
+(cat "$oldfile"; echo bleep) > "$newfile"
+
+./obnam signature --debug "$oldfile" > "$sigfile"
+./obnam delta --debug "$sigfile" "$newfile" > "$deltafile"
+./obnam patch --debug "$oldfile" "$deltafile" > "$outputfile"
+cmp "$newfile" "$outputfile"
+
+rm -f "$oldfile" "$newfile" "$sigfile" "$deltafile" "$outputfile"
+

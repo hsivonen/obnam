@@ -23,3 +23,5 @@ obnamlib/vfs_sftp.py
 obnamlib/progress.py
 obnamlib/ui_cli_diskusage.py
 obnamlib/ui_cli_signature.py
+obnamlib/object_rsyncdelta.py
+obnamlib/ui_cli_delta.py
