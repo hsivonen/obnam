@@ -120,7 +120,7 @@ class MapRef(obnamlib.StringComponent):
 
 class Md5(obnamlib.StringComponent):
 
-    string_kind = obnamlib.MAPREF
+    string_kind = obnamlib.MD5
 
 
 class ObjectId(obnamlib.StringComponent):

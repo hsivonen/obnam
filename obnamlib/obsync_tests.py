@@ -37,6 +37,7 @@ class ObsyncTests(unittest.TestCase):
     def test_strong_checksum_returns_the_right_checksum(self):
         data = "foo"
         checksum = self.obsync.strong_checksum(data)
+        self.assertEqual(checksum.kind, obnamlib.MD5)
         self.assertEqual(str(checksum), hashlib.md5(data).digest())
         
     def test_block_signature_returns_the_right_checksums(self):

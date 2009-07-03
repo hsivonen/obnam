@@ -66,7 +66,9 @@ class Obsync(object):
         
         """
         
-        return obnamlib.Checksums([])
+        weak = self.weak_checksum(block_data)
+        strong = self.strong_checksum(block_data)
+        return obnamlib.Checksums([weak, strong])
         
     def file_signature(self, f, block_size):
         """Compute signatures for a file.
