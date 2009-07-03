@@ -93,3 +93,13 @@ class Obsync(object):
         return obnamlib.RsyncSig(obj_id, block_size=block_size, 
                                  checksums=checksums)
 
+    def file_delta(self, rsyncsig, new_file):
+        """Compute delta from RsyncSig to new_file.
+        
+        Return list of obnamlib.FileChunk and obnamlib.OldFileSubString
+        objects.
+        
+        """
+
+        return []
+

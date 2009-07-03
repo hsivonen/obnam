@@ -23,7 +23,7 @@ import zlib
 import obnamlib
 
 
-class ObsyncTests(unittest.TestCase):
+class ObsyncSignatureTests(unittest.TestCase):
 
     def setUp(self):
         self.obsync = obnamlib.Obsync()
@@ -73,4 +73,20 @@ class ObsyncTests(unittest.TestCase):
         self.assertEqual(o.id, "id")
         self.assertEqual(o.block_size, block_size)
         self.assertEqual(len(o.checksums), num_blocks)
+
+
+class ObsyncDeltaTests(unittest.TestCase):
+
+    def setUp(self):
+        self.obsync = obnamlib.Obsync()
+        self.old_data = "x" * 64
+        self.new_data = self.old_data + "y" * 64
+        self.block_size = 7
+
+    def test_file_delta_returns_empty_list_for_no_difference(self):
+        oldf = StringIO.StringIO(self.old_data)
+        sig = self.obsync.make_signature("id", oldf, self.block_size)
+        newf = StringIO.StringIO(self.old_data)
+        delta = self.obsync.file_delta(sig, newf)
+        self.assertEqual(delta, [])
 
