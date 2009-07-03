@@ -80,13 +80,27 @@ class ObsyncDeltaTests(unittest.TestCase):
     def setUp(self):
         self.obsync = obnamlib.Obsync()
         self.old_data = "x" * 64
-        self.new_data = self.old_data + "y" * 64
+        self.additional_data = "y" * 64
+        self.new_data = self.old_data + self.additional_data
         self.block_size = 7
+        oldf = StringIO.StringIO(self.old_data)
+        self.sig = self.obsync.make_signature("id", oldf, self.block_size)
+        self.old_file = StringIO.StringIO(self.old_data)
+        self.new_file = StringIO.StringIO(self.new_data)
 
     def test_file_delta_returns_empty_list_for_no_difference(self):
-        oldf = StringIO.StringIO(self.old_data)
-        sig = self.obsync.make_signature("id", oldf, self.block_size)
-        newf = StringIO.StringIO(self.old_data)
-        delta = self.obsync.file_delta(sig, newf)
+        delta = self.obsync.file_delta(self.sig, self.old_file)
         self.assertEqual(delta, [])
+
+    def test_file_delta_computes_delta_correctly_for_changes(self):
+        delta = self.obsync.file_delta(self.sig, self.new_file)
+
+        self.assertEqual(len(delta), 2)
+
+        self.assertEqual(delta[0].kind, obnamlib.OLDFILESUBSTRING)
+        self.assertEqual(delta[0].offset, 0)
+        self.assertEqual(delta[0].length, len(self.old_data))
+
+        self.assertEqual(delta[1].kind, obnamlib.FILECHUNK)
+        self.assertEqual(str(delta[1]), self.additional_data)
 
