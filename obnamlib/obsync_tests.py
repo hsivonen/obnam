@@ -98,24 +98,40 @@ class RsyncLookupTableTests(unittest.TestCase):
     def test_does_not_find_new_block(self):
         self.assertEqual(self.table["z"], None)
 
+    def test_handles_weak_collision(self):  
+        checksums = [obnamlib.Checksums([obnamlib.Adler32('0'),
+                                         obnamlib.Md5(self.block1)]),
+                     obnamlib.Checksums([obnamlib.Adler32('0'),
+                                         obnamlib.Md5(self.block2)])]
+        table = obnamlib.obsync.RsyncLookupTable(lambda s: '0', lambda s: s,
+                                                 checksums)
+        self.assertEqual(table[self.block1], 0)
+        self.assertEqual(table[self.block2], 1)
+
 
 class ObsyncDeltaTests(unittest.TestCase):
 
     def setUp(self):
         self.obsync = obnamlib.Obsync()
-        self.old_data = "x" * 64
-        self.additional_data = "y" * 128
+        self.old_data = "".join(str(i) for i in range(64))
+        self.additional_data = "".join(str(i) 
+                for i in range(len(self.old_data), len(self.old_data) + 128))
         self.new_data = self.old_data + self.additional_data
         self.block_size = 7
+        self.chunk_size = 1024**2
         oldf = StringIO.StringIO(self.old_data)
         self.sig = self.obsync.make_signature("id", oldf, self.block_size)
         self.old_file = StringIO.StringIO(self.old_data)
         self.new_file = StringIO.StringIO(self.new_data)
 
-    def test_file_delta_returns_empty_list_for_no_difference(self):
-        delta = self.obsync.file_delta(self.sig, self.old_file)
-        self.assertEqual(len(delta), 0)
-        self.assertEqual(delta, [])
+    def test_file_delta_returns_single_oldfilesubstr_for_no_difference(self):
+        delta = self.obsync.file_delta(self.sig, self.old_file, 
+                                       self.chunk_size)
+        self.assertEqual(len(delta), 1)
+        c = delta[0]
+        self.assertEqual(c.kind, obnamlib.OLDFILESUBSTRING)
+        self.assertEqual(c.offset, 0)
+        self.assertEqual(c.length, len(self.old_data))
 
     def xtest_file_delta_computes_delta_correctly_for_changes(self):
         delta = self.obsync.file_delta(self.sig, self.new_file)

@@ -115,7 +115,7 @@ class Obsync(object):
         return obnamlib.RsyncSig(obj_id, block_size=block_size, 
                                  checksums=checksums)
 
-    def file_delta(self, rsyncsig, new_file):
+    def file_delta(self, rsyncsig, new_file, chunk_size):
         """Compute delta from RsyncSig to new_file.
         
         Return list of obnamlib.FileChunk and obnamlib.OldFileSubString
@@ -127,23 +127,66 @@ class Obsync(object):
         lookup_table = RsyncLookupTable(self.weak_checksum,
                                         self.strong_checksum,
                                         rsyncsig.checksums)
-        output = []
+
+        # First we collect just the raw data as single-character strings
+        # and block numbers plus lengths in the old file. We'll optimize 
+        # this list later.
         
+        output = []
         block_data = new_file.read(block_size)
         while block_data:
             block_number = lookup_table[block_data]
             if block_number is None:
-                literal = obnamlib.FileChunk(block_data[0])
-                output.append(literal)
+                output.append(block_data[0])
                 block_data = block_data[1:]
                 byte = new_file.read(1)
                 if byte:
                     block_data += byte
             else:
-                offset = block_number * block_size
-                ofss = obnamlib.OldFileSubString(offset, block_size)
-                output.append(ofss)
+                output.append((block_number, len(block_data)))
                 block_data = new_file.read(block_size)
 
-        return output
+        # Now we optimize. This is similar to peep-hole optimization in
+        # compilers. We look at adjacent items in output, and if they
+        # can be combined (two strings, or adjacent block numbers), we
+        # do that.
+        
+        output2 = []
+        while output:
+            if type(output[0]) != str:
+                block_number, length = output[0]
+                offset = block_number * block_size
+                
+                # Count adjacent blocks at beginning of output.
+                i = 1
+                while i < len(output):
+                    if type(output[i]) == str:
+                        break
+                    next_block_number, next_length = output[i]
+                    next_offset = next_block_number * block_size
+                    if next_offset != offset + length:
+                        break
+                    length += next_length
+                    i += 1
+
+                # Now make the OldFileSubString.
+                output2.append(obnamlib.OldFileSubString(offset, length))
+            else:
+                assert type(output[0]) == str
+                # Count number of strings at the beginning of output.
+                i = 0
+                while i < len(output) and type(output[i]) == str:
+                    i += 1
+                # Now make the FileChunk. Or several: they can only contain
+                # up to chunk_size bytes.
+                bytes = output[:i]
+                while bytes:
+                    string = "".join(bytes[:chunk_size])
+                    output2.append(obnamlib.FileChunk(string))
+                    del bytes[:chunk_size]
+            
+            # Finally, get rid of prefix from output.
+            del output[:i]
+
+        return output2
 
