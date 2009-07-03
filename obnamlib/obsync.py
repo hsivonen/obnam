@@ -15,6 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import hashlib
 import obnamlib
 import zlib
 
@@ -51,6 +52,8 @@ class Obsync(object):
         Return obnamlib.Md5 component.
         
         """
+
+        return obnamlib.Md5(hashlib.md5(data).digest())
 
     def block_signature(self, block_data):
         """Compute rsync signature for a given block of data.
