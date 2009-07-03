@@ -16,6 +16,7 @@
 
 
 import obnamlib
+import zlib
 
 
 class Obsync(object):
@@ -41,6 +42,8 @@ class Obsync(object):
         Return obnamlib.Adler32 component.
         
         """
+        
+        return obnamlib.Adler32(str(zlib.adler32(data)))
 
     def strong_checksum(self, data):
         """Compute weak checksum for data.
