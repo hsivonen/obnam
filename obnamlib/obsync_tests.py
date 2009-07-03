@@ -30,13 +30,14 @@ class ObsyncTests(unittest.TestCase):
         
     def test_weak_checksum_returns_the_right_checksum(self):
         data = "foo"
-        self.assertEqual(str(self.obsync.weak_checksum(data)),
-                         str(zlib.adler32(data)))
+        checksum = self.obsync.weak_checksum(data)
+        self.assertEqual(checksum.kind, obnamlib.ADLER32)
+        self.assertEqual(str(checksum), str(zlib.adler32(data)))
         
     def test_strong_checksum_returns_the_right_checksum(self):
         data = "foo"
-        self.assertEqual(str(self.obsync.strong_checksum(data)),
-                         hashlib.md5(data).digest())
+        checksum = self.obsync.strong_checksum(data)
+        self.assertEqual(str(checksum), hashlib.md5(data).digest())
         
     def test_block_signature_returns_the_right_checksums(self):
         sig = self.obsync.block_signature("foo")
