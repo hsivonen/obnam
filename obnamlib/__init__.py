@@ -112,6 +112,7 @@ from ui_cli_help import HelpCommand
 from ui_cli_objtree import ObjtreeCommand
 from ui_cli_show import ShowGenerationsCommand
 from ui_cli_showobjs import ShowobjsCommand
+from ui_cli_signature import SignatureCommand
 from ui_cli_diskusage import DiskUsageCommand
 
 from progress import ProgressReporter
@@ -120,3 +121,6 @@ from statutils import decode_stat, make_stat
 from formatutils import format_size, format_time
 
 import varint
+
+from obsync import Obsync
+
