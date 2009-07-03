@@ -114,4 +114,5 @@ class ComponentKinds(obnamlib.Kinds):
         self.add_composite(48, "CHECKSUMS")
         self.add_plain(    49, "ADLER32")
         self.add_plain(    50, "MD5")
+        self.add_plain(    51, "SIGBLOCKSIZE")
 

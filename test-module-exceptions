@@ -11,6 +11,7 @@ obnamlib/object_delta.py
 obnamlib/object_deltapart.py
 obnamlib/object_filelist.py
 obnamlib/object_sig.py
+obnamlib/object_rsyncsig.py
 obnamlib/ui_cli_show.py
 obnamlib/component_composites.py
 obnamlib/component_strings.py
@@ -21,3 +22,4 @@ obnamlib/component_factory.py
 obnamlib/vfs_sftp.py
 obnamlib/progress.py
 obnamlib/ui_cli_diskusage.py
+obnamlib/ui_cli_signature.py

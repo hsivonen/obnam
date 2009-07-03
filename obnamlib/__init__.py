@@ -80,6 +80,7 @@ from object_filepart import FilePart
 from object_gen import Generation
 from object_host import Host
 from object_sig import Signature
+from object_rsyncsig import RsyncSig
 from object_factory import ObjectFactory
 
 from object_cache import ObjectCache
