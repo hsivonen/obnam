@@ -190,3 +190,8 @@ class Obsync(object):
 
         return output2
 
+    def make_delta(self, obj_id, rsyncsig, f, chunk_size): # pragma: no cover
+        """Create an RsyncDelta object."""
+        delta_directives = self.file_delta(rsyncsig, f, chunk_size)
+        return obnamlib.RsyncDelta(obj_id, delta_directives=delta_directives)
+

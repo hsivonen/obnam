@@ -1,4 +1,4 @@
-# Copyright (C) 2008  Lars Wirzenius <liw@liw.fi>
+# Copyright (C) 2009  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,26 +15,26 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import sys
+
 import obnamlib
 
 
-class ObjectKinds(obnamlib.Kinds):
+class DeltaCommand(obnamlib.CommandLineCommand):
 
-    """Kinds of Objects."""
+    """Compute rsync delta for a file on the filesystem."""
 
-    def add_all(self): # pragma: no cover
-        """Add all object kinds to ourselves."""
-        self.add( 1, "FILEPART")
-        # object kind 2 used to be INODE, but it's been removed
-        self.add( 3, "GEN")
-        self.add( 4, "SIG")
-        self.add( 5, "HOST")
-        self.add( 6, "FILECONTENTS")
-        self.add( 7, "FILELIST")
-        self.add( 8, "DELTA")
-        self.add( 9, "DELTAPART")
-        self.add(10, "DIR")
-        self.add(11, "FILEGROUP")
-        self.add(12, "RSYNCSIG")
-        self.add(13, "RSYNCDELTA")
+    def delta(self, options, args):
+        of = obnamlib.ObjectFactory()
+        data = file(args[0]).read()
+        rsyncsig, pos = of.decode_object(data, 0)
+        
+        obsync = obnamlib.Obsync()
+        f = file(args[1])
+        delta = obsync.make_delta("obj_id", rsyncsig, f, options.blocksize)
+        f.close()
+        sys.stdout.write(of.encode_object(delta))
+
+    def run(self, options, args, progress): # pragma: no cover
+        self.delta(options, args)
 

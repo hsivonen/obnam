@@ -68,6 +68,8 @@ class CommandLineUI(obnamlib.UserInterface):
             "du": obnamlib.DiskUsageCommand(),
             
             "signature": obnamlib.SignatureCommand(),
+
+            "delta": obnamlib.DeltaCommand(),
             }
 
     def short_help(self, stdout=sys.stdout):

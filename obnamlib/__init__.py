@@ -87,6 +87,7 @@ from object_filepart import FilePart
 from object_gen import Generation
 from object_host import Host
 from object_sig import Signature
+from object_rsyncdelta import RsyncDelta
 from object_rsyncsig import RsyncSig
 from object_factory import ObjectFactory
 
@@ -123,6 +124,7 @@ from ui_cli_objtree import ObjtreeCommand
 from ui_cli_show import ShowGenerationsCommand
 from ui_cli_showobjs import ShowobjsCommand
 from ui_cli_signature import SignatureCommand
+from ui_cli_delta import DeltaCommand
 from ui_cli_diskusage import DiskUsageCommand
 
 from progress import ProgressReporter

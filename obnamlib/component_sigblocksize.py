@@ -27,3 +27,4 @@ class SigBlockSize(obnamlib.Component):
     @property
     def block_size(self):
         return obnamlib.varint.decode(str(self), 0)[0]
+

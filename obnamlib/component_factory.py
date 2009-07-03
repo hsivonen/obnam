@@ -24,6 +24,10 @@ def str_or_ref(klass):
     return lambda s, c: klass(s)
 
 
+def varint(klass):
+    return lambda s, c: klass(obnamlib.varint.decode(s, 0)[0])
+
+
 def object_kind_factory(string, children):
     return obnamlib.ObjectKind(obnamlib.varint.decode(string, 0)[0])
 
@@ -90,6 +94,14 @@ class ComponentFactory(object):
         obnamlib.SYMLINKTARGET: str_or_ref(obnamlib.SymlinkTarget),
         obnamlib.OWNER:         str_or_ref(obnamlib.Owner),
         obnamlib.GROUP:         str_or_ref(obnamlib.Group),
+        obnamlib.CHECKSUMS:     composite_factory(obnamlib.Checksums),
+        obnamlib.ADLER32:       str_or_ref(obnamlib.Adler32),
+        obnamlib.MD5:           str_or_ref(obnamlib.Md5),
+        obnamlib.SIGBLOCKSIZE:  varint(obnamlib.SigBlockSize),
+        obnamlib.OFFSET:        varint(obnamlib.Offset),
+        obnamlib.LENGTH:        varint(obnamlib.Length),
+        obnamlib.OLDFILESUBSTRING: 
+                                composite_factory(obnamlib.OldFileSubString),
         }
 
     def new_component(self, kind, string=None, children=None):

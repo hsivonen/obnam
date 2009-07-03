@@ -35,6 +35,7 @@ class ObjectFactory(object):
         obnamlib.HOST: obnamlib.Host,
         obnamlib.SIG: obnamlib.Signature,
         obnamlib.RSYNCSIG: obnamlib.RsyncSig,
+        obnamlib.RSYNCDELTA: obnamlib.RsyncDelta,
         }
 
     def __init__(self):
