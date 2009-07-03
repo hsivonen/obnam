@@ -15,8 +15,10 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import hashlib
 import StringIO
 import unittest
+import zlib
 
 import obnamlib
 
@@ -25,6 +27,22 @@ class ObsyncTests(unittest.TestCase):
 
     def setUp(self):
         self.obsync = obnamlib.Obsync()
+        
+    def test_weak_checksum_returns_the_right_checksum(self):
+        data = "foo"
+        self.assertEqual(str(self.obsync.weak_checksum(data)),
+                         str(zlib.adler32(data)))
+        
+    def test_strong_checksum_returns_the_right_checksum(self):
+        data = "foo"
+        self.assertEqual(str(self.obsync.strong_checksum(data)),
+                         hashlib.md5(data).digest())
+        
+    def test_block_signature_returns_the_right_checksums(self):
+        sig = self.obsync.block_signature("foo")
+        self.assertEqual(sig.kind, obnamlib.CHECKSUMS)
+        self.assert_(sig.first(kind=obnamlib.ADLER32))
+        self.assert_(sig.first(kind=obnamlib.MD5))
         
     def test_file_signature_returns_empty_list_for_empty_file(self):
         sigs = self.obsync.file_signature(StringIO.StringIO(""), 42)

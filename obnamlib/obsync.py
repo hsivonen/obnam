@@ -34,6 +34,20 @@ class Obsync(object):
     the requirements of generic rsync a little bit.
 
     """
+    
+    def weak_checksum(self, data):
+        """Compute weak checksum for data.
+        
+        Return obnamlib.Adler32 component.
+        
+        """
+
+    def strong_checksum(self, data):
+        """Compute weak checksum for data.
+        
+        Return obnamlib.Md5 component.
+        
+        """
 
     def block_signature(self, block_data):
         """Compute rsync signature for a given block of data.
