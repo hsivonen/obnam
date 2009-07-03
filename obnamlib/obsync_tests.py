@@ -113,8 +113,8 @@ class ObsyncDeltaTests(unittest.TestCase):
 
     def setUp(self):
         self.obsync = obnamlib.Obsync()
-        self.old_data = "".join(str(i) for i in range(64))
-        self.additional_data = "".join(str(i) 
+        self.old_data = "".join(chr(i) for i in range(64))
+        self.additional_data = "".join(chr(i) 
                 for i in range(len(self.old_data), len(self.old_data) + 128))
         self.new_data = self.old_data + self.additional_data
         self.block_size = 7
@@ -133,15 +133,21 @@ class ObsyncDeltaTests(unittest.TestCase):
         self.assertEqual(c.offset, 0)
         self.assertEqual(c.length, len(self.old_data))
 
-    def xtest_file_delta_computes_delta_correctly_for_changes(self):
-        delta = self.obsync.file_delta(self.sig, self.new_file)
+    def test_file_delta_computes_delta_correctly_for_changes(self):
+        delta = self.obsync.file_delta(self.sig, self.new_file, 
+                                       self.chunk_size)
 
         self.assertEqual(len(delta), 2)
 
         self.assertEqual(delta[0].kind, obnamlib.OLDFILESUBSTRING)
         self.assertEqual(delta[0].offset, 0)
-        self.assertEqual(delta[0].length, len(self.old_data))
+        # The algorithm only finds full blocks: new_data has junk after
+        # the last partial block at the end of old_data, which is why
+        # it isn't found.
+        full_blocks = len(self.old_data) / self.block_size
+        self.assertEqual(delta[0].length, full_blocks * self.block_size)
 
         self.assertEqual(delta[1].kind, obnamlib.FILECHUNK)
-        self.assertEqual(str(delta[1]), self.additional_data)
+        old_tail = self.old_data[full_blocks * self.block_size : ]
+        self.assertEqual(str(delta[1]), old_tail + self.additional_data)
 
