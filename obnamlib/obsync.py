@@ -150,12 +150,11 @@ class RsyncDeltaGenerator(object):
     """Generate a delta from signature file and new version of a file."""
     
     def __init__(self, rsyncsigparts, new_file, chunk_size):
-        self.rsyncsigparts = rsyncsigparts
         self.new_file = new_file
         self.chunk_size = chunk_size
-        self.block_size = self.rsyncsigparts[0].block_size
+        self.block_size = rsyncsigparts[0].block_size
         self.lookup_table = RsyncLookupTable()
-        for part in self.rsyncsigparts:
+        for part in rsyncsigparts:
             self.lookup_table.add_checksums(part.checksums)
 
     def simple_file_delta(self):
