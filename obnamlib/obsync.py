@@ -197,7 +197,8 @@ class RsyncDeltaGenerator(object):
         # We'll keep all un-yielded items in a queue. The queue will contain
         # either a sequence of single-byte strings or a single tuple.
         # The strings will be combined into one when we generate a
-        # FileChunk.
+        # FileChunk. This way we only catenate the strings once, which
+        # is potentially a big performance win.
         queue = []
 
         for x in self.simple_file_delta(rsyncsigparts, new_file, chunk_size):
