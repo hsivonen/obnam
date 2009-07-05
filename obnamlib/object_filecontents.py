@@ -31,13 +31,18 @@ class FileContents(obnamlib.Object):
     def part_ids(self):
         return self.find_strings(kind=obnamlib.FILEPARTREF)
 
-    @property
-    def md5(self):
+    def get_md5(self): # pragma: no cover
         strings = self.find_strings(kind=obnamlib.MD5)
         if strings:
             return strings[0]
         else:
             return None
+
+    def set_md5(self, value): # pragma: no cover
+        self.extract(kind=obnamlib.MD5)
+        self.components += [obnamlib.Md5(value)]
+        
+    md5 = property(get_md5, set_md5)
 
     def add(self, ref):
         c = obnamlib.FilePartRef(ref)

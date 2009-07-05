@@ -15,6 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import hashlib
 import logging
 import os
 
@@ -377,6 +378,7 @@ class Store(object):
         """
 
         content = self.new_object(kind=obnamlib.FILECONTENTS)
+        md5 = hashlib.md5()
         while True:
             data = file.read(size)
             if not data:
@@ -385,5 +387,8 @@ class Store(object):
             part.data = data
             self.put_object(part)
             content.add(part.id)
+            md5.update(data)
+        content.md5 = md5.digest()
         self.put_object(content)
         return content
+
