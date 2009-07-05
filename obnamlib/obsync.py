@@ -157,8 +157,9 @@ class RsyncDeltaGenerator(object):
         self.lookup_table = RsyncLookupTable()
         for part in rsyncsigparts:
             self.lookup_table.add_checksums(part.checksums)
+        self.buf = ""
 
-    def simple_file_delta(self):
+    def simple_feed(self, some_data):
         """Compute an unoptimized delta from signature file to new file.
         
         Generate a sequence of single-byte strings and tuples of
@@ -172,18 +173,32 @@ class RsyncDeltaGenerator(object):
         # and block numbers plus lengths in the old file. We'll optimize 
         # this list later.
         
-        block_data = self.new_file.read(self.block_size)
-        while block_data:
+        self.buf += some_data
+        while True:
+            if len(self.buf) >= self.block_size:
+                block_data = self.buf[:self.block_size]
+            elif some_data == "" and self.buf:
+                block_data = self.buf
+            else:
+                break
+
             block_number = self.lookup_table[block_data]
             if block_number is None:
                 yield block_data[0]
-                block_data = block_data[1:]
-                byte = self.new_file.read(1)
-                if byte:
-                    block_data += byte
+                self.buf = self.buf[1:]
             else:
                 yield (block_number * self.block_size, len(block_data))
-                block_data = self.new_file.read(self.block_size)
+                self.buf = self.buf[len(block_data):]
+
+    def simple_file_delta(self):
+        while True:
+            data = self.new_file.read(self.block_size)
+            if not data:
+                for x in self.simple_feed(""):
+                    yield x
+                break
+            for x in self.simple_feed(data):
+                yield x
 
     def file_delta(self):
         """Compute delta from RsyncSigParts to new_file.
