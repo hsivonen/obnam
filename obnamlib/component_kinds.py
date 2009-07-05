@@ -118,4 +118,5 @@ class ComponentKinds(obnamlib.Kinds):
         self.add_plain(    52, "OFFSET")
         self.add_plain(    53, "LENGTH")
         self.add_composite(54, "OLDFILESUBSTRING")
+        self.add_ref(      55, "RSYNCSIGPARTREF")
 

@@ -47,7 +47,7 @@ class ObsyncSignatureTests(unittest.TestCase):
         self.assert_(sig.first(kind=obnamlib.MD5))
         
     def test_file_signature_returns_empty_list_for_empty_file(self):
-        sigs = self.obsync.file_signature(StringIO.StringIO(""), 42)
+        sigs = list(self.obsync.file_signature(StringIO.StringIO(""), 42))
         self.assertEqual(sigs, [])
         
     def test_file_signature_returns_right_number_of_sigs_for_file(self):
@@ -56,23 +56,11 @@ class ObsyncSignatureTests(unittest.TestCase):
         num_blocks = len(data) / block_size
         if len(data) % block_size:
             num_blocks += 1
-        sigs = self.obsync.file_signature(StringIO.StringIO(data), block_size)
+        f = StringIO.StringIO(data)
+        sigs = list(self.obsync.file_signature(f, block_size))
         self.assertEqual(len(sigs), num_blocks)
         for sig in sigs:
             self.assert_(isinstance(sig, obnamlib.Checksums))
-
-    def test_make_signature_returns_rsyncsig_object(self):
-        data = "x" * 64
-        block_size = 13
-        num_blocks = len(data) / block_size
-        if len(data) % block_size:
-            num_blocks += 1
-        o = self.obsync.make_signature("id", StringIO.StringIO(data), block_size)
-        self.assert_(isinstance(o, obnamlib.RsyncSig))
-        self.assertEqual(o.kind, obnamlib.RSYNCSIG)
-        self.assertEqual(o.id, "id")
-        self.assertEqual(o.block_size, block_size)
-        self.assertEqual(len(o.checksums), num_blocks)
 
 
 class RsyncLookupTableTests(unittest.TestCase):
@@ -86,8 +74,8 @@ class RsyncLookupTableTests(unittest.TestCase):
         f = StringIO.StringIO(data)
         self.checksums = obsync.file_signature(f, block_size)
         self.table = obnamlib.obsync.RsyncLookupTable(obsync.weak_checksum,
-                                                      obsync.strong_checksum,
-                                                      self.checksums)
+                                                      obsync.strong_checksum)
+        self.table.add_checksums(self.checksums)
 
     def test_finds_first_block(self):
         self.assertEqual(self.table[self.block1], 0)
@@ -103,8 +91,8 @@ class RsyncLookupTableTests(unittest.TestCase):
                                          obnamlib.Md5(self.block1)]),
                      obnamlib.Checksums([obnamlib.Adler32('0'),
                                          obnamlib.Md5(self.block2)])]
-        table = obnamlib.obsync.RsyncLookupTable(lambda s: '0', lambda s: s,
-                                                 checksums)
+        table = obnamlib.obsync.RsyncLookupTable(lambda s: '0', lambda s: s)
+        table.add_checksums(checksums)
         self.assertEqual(table[self.block1], 0)
         self.assertEqual(table[self.block2], 1)
 
@@ -120,12 +108,13 @@ class ObsyncDeltaTests(unittest.TestCase):
         self.block_size = 7
         self.chunk_size = 1024**2
         oldf = StringIO.StringIO(self.old_data)
-        self.sig = self.obsync.make_signature("id", oldf, self.block_size)
+        checksums = list(self.obsync.file_signature(oldf, self.block_size))
+        self.sigparts = [obnamlib.RsyncSigPart(id="id", block_size=self.block_size, checksums=checksums)]
         self.old_file = StringIO.StringIO(self.old_data)
         self.new_file = StringIO.StringIO(self.new_data)
 
     def test_file_delta_returns_single_oldfilesubstr_for_no_difference(self):
-        delta = self.obsync.file_delta(self.sig, self.old_file, 
+        delta = self.obsync.file_delta(self.sigparts, self.old_file, 
                                        self.chunk_size)
         self.assertEqual(len(delta), 1)
         c = delta[0]
@@ -134,7 +123,7 @@ class ObsyncDeltaTests(unittest.TestCase):
         self.assertEqual(c.length, len(self.old_data))
 
     def test_file_delta_computes_delta_correctly_for_changes(self):
-        delta = self.obsync.file_delta(self.sig, self.new_file, 
+        delta = self.obsync.file_delta(self.sigparts, self.new_file, 
                                        self.chunk_size)
 
         self.assertEqual(len(delta), 2)
@@ -154,7 +143,7 @@ class ObsyncDeltaTests(unittest.TestCase):
     def test_file_delta_computes_delta_for_leading_changes(self):
         data = self.additional_data + self.old_data
         f = StringIO.StringIO(data)
-        delta = self.obsync.file_delta(self.sig, f, self.chunk_size)
+        delta = self.obsync.file_delta(self.sigparts, f, self.chunk_size)
 
         self.assertEqual(len(delta), 2, delta)
 
@@ -168,7 +157,7 @@ class ObsyncDeltaTests(unittest.TestCase):
     def test_file_delta_computes_delta_for_duplicated_block(self):
         data = self.old_data[:self.block_size] + self.old_data
         f = StringIO.StringIO(data)
-        delta = self.obsync.file_delta(self.sig, f, self.chunk_size)
+        delta = self.obsync.file_delta(self.sigparts, f, self.chunk_size)
 
         self.assertEqual(len(delta), 2, delta)
 

@@ -22,10 +22,12 @@ import zlib
 
 class RsyncLookupTable(object):
 
-    def __init__(self, compute_weak, compute_strong, checksums):
+    def __init__(self, compute_weak, compute_strong):
         self.compute_weak = compute_weak
         self.compute_strong = compute_strong
         self.dict = {}
+        
+    def add_checksums(self, checksums):
         for block_number, c in enumerate(checksums):
             weak = c.first_string(kind=obnamlib.ADLER32)
             strong = c.first_string(kind=obnamlib.MD5)
@@ -95,38 +97,29 @@ class Obsync(object):
     def file_signature(self, f, block_size):
         """Compute signatures for a file.
         
-        Return a list of obnamlib.SyncSignature objects.
+        Generate a list of obnamlib.Checksums objects.
         
         """
         
-        sigs = []
         while True:
             block = f.read(block_size)
             if not block:
                 break
-            sigs.append(self.block_signature(block))
+            yield self.block_signature(block)
 
-        return sigs
-
-    def make_signature(self, obj_id, f, block_size):
-        """Create an rsync signature for a file."""
+    def file_delta(self, rsyncsigparts, new_file, chunk_size):
+        """Compute delta from RsyncSigParts to new_file.
         
-        checksums = self.file_signature(f, block_size)
-        return obnamlib.RsyncSig(obj_id, block_size=block_size, 
-                                 checksums=checksums)
-
-    def file_delta(self, rsyncsig, new_file, chunk_size):
-        """Compute delta from RsyncSig to new_file.
-        
-        Return list of obnamlib.FileChunk and obnamlib.OldFileSubString
+        Generate a list of obnamlib.FileChunk and obnamlib.OldFileSubString
         objects.
         
         """
 
-        block_size = rsyncsig.block_size
+        block_size = rsyncsigparts[0].block_size
         lookup_table = RsyncLookupTable(self.weak_checksum,
-                                        self.strong_checksum,
-                                        rsyncsig.checksums)
+                                        self.strong_checksum)
+        for part in rsyncsigparts:
+            lookup_table.add_checksums(part.checksums)
 
         # First we collect just the raw data as single-character strings
         # and block numbers plus lengths in the old file. We'll optimize 

@@ -15,25 +15,26 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-import os
-import unittest
-
 import obnamlib
 
 
-class RsyncSigTests(unittest.TestCase):
+class RsyncSigPart(obnamlib.Object):
 
-    def setUp(self):
-        self.checksums = [obnamlib.Checksums([])]
-        self.o = obnamlib.RsyncSig(id="id", block_size=42, 
-                                   checksums=self.checksums)
+    """A (partial) rsync signature."""
 
-    def test_sets_id_correctly(self):
-        self.assertEqual(self.o.id, "id")
+    kind = obnamlib.RSYNCSIGPART
 
-    def test_sets_block_size_correctly(self):
-        self.assertEqual(self.o.block_size, 42)
-
-    def test_sets_checksums_correctly(self):
-        self.assertEqual(self.o.checksums, self.checksums)
+    def __init__(self, id, block_size=0, checksums=None):
+        obnamlib.Object.__init__(self, id)
+        self.components += [obnamlib.SigBlockSize(block_size)]
+        if checksums:
+            self.components += checksums
+            
+    @property
+    def block_size(self):
+        return self.find(kind=obnamlib.SIGBLOCKSIZE)[0].block_size
+        
+    @property
+    def checksums(self):
+        return self.find(kind=obnamlib.CHECKSUMS)
 
