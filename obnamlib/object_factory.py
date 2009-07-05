@@ -24,8 +24,6 @@ import obnamlib
 class ObjectFactory(object):
 
     classes = {
-        obnamlib.DELTA: obnamlib.Delta,
-        obnamlib.DELTAPART: obnamlib.DeltaPart,
         obnamlib.DIR: obnamlib.Dir,
         obnamlib.FILECONTENTS: obnamlib.FileContents,
         obnamlib.FILELIST: obnamlib.FileList,
@@ -33,7 +31,6 @@ class ObjectFactory(object):
         obnamlib.FILEPART: obnamlib.FilePart,
         obnamlib.GEN: obnamlib.Generation,
         obnamlib.HOST: obnamlib.Host,
-        obnamlib.SIG: obnamlib.Signature,
         obnamlib.RSYNCSIGPART: obnamlib.RsyncSigPart,
         }
 
