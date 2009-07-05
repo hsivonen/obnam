@@ -153,6 +153,10 @@ class RsyncDeltaGenerator(object):
         self.rsyncsigparts = rsyncsigparts
         self.new_file = new_file
         self.chunk_size = chunk_size
+        self.block_size = self.rsyncsigparts[0].block_size
+        self.lookup_table = RsyncLookupTable()
+        for part in self.rsyncsigparts:
+            self.lookup_table.add_checksums(part.checksums)
 
     def simple_file_delta(self):
         """Compute an unoptimized delta from signature file to new file.
@@ -164,20 +168,15 @@ class RsyncDeltaGenerator(object):
         
         """
 
-        block_size = self.rsyncsigparts[0].block_size
-        lookup_table = RsyncLookupTable()
-        for part in self.rsyncsigparts:
-            lookup_table.add_checksums(part.checksums)
-
         # First we collect just the raw data as single-character strings
         # and block numbers plus lengths in the old file. We'll optimize 
         # this list later.
         
         output = []
-        assert block_size > 0
-        block_data = self.new_file.read(block_size)
+        assert self.block_size > 0
+        block_data = self.new_file.read(self.block_size)
         while block_data:
-            block_number = lookup_table[block_data]
+            block_number = self.lookup_table[block_data]
             if block_number is None:
                 yield block_data[0]
                 block_data = block_data[1:]
@@ -185,8 +184,8 @@ class RsyncDeltaGenerator(object):
                 if byte:
                     block_data += byte
             else:
-                yield (block_number * block_size, len(block_data))
-                block_data = self.new_file.read(block_size)
+                yield (block_number * self.block_size, len(block_data))
+                block_data = self.new_file.read(self.block_size)
 
     def file_delta(self):
         """Compute delta from RsyncSigParts to new_file.
