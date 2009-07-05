@@ -149,10 +149,13 @@ class RsyncDeltaGenerator(object):
 
     """Generate a delta from signature file and new version of a file."""
 
-    def file_delta(self, rsyncsigparts, new_file, chunk_size):
-        """Compute delta from RsyncSigParts to new_file.
+    def simple_file_delta(self, rsyncsigparts, new_file, chunk_size):
+        """Compute an unoptimized delta from signature file to new file.
         
-        Generate obnamlib.FileChunk and obnamlib.OldFileSubString objects.
+        Generate a sequence of single-byte strings and tuples of
+        block number and length in the old file. This makes no
+        attempt at combining adjacent bytes to a single string,
+        or otherwise optimizing the result.
         
         """
 
@@ -171,59 +174,59 @@ class RsyncDeltaGenerator(object):
         while block_data:
             block_number = lookup_table[block_data]
             if block_number is None:
-                output.append(block_data[0])
+                yield block_data[0]
                 block_data = block_data[1:]
                 byte = new_file.read(1)
                 if byte:
                     block_data += byte
             else:
-                output.append((block_number, len(block_data)))
+                yield (block_number * block_size, len(block_data))
                 block_data = new_file.read(block_size)
+
+    def file_delta(self, rsyncsigparts, new_file, chunk_size):
+        """Compute delta from RsyncSigParts to new_file.
+        
+        Generate obnamlib.FileChunk and obnamlib.OldFileSubString objects.
+        
+        """
 
         # Now we optimize. This is similar to peep-hole optimization in
         # compilers. We look at adjacent items in output, and if they
-        # can be combined (two strings, or adjacent block numbers), we
-        # do that.
+        # can be combined (two strings, or adjacent blocks), we do that.
         
-        output2 = []
-        while output:
-            if type(output[0]) != str:
-                block_number, length = output[0]
-                offset = block_number * block_size
-                
-                # Count adjacent blocks at beginning of output.
-                i = 1
-                while i < len(output):
-                    if type(output[i]) == str:
-                        break
-                    next_block_number, next_length = output[i]
-                    next_offset = next_block_number * block_size
-                    if next_offset != offset + length:
-                        break
-                    length += next_length
-                    i += 1
+        # We'll keep all un-yielded items in a queue. The queue will contain
+        # either a sequence of single-byte strings or a single tuple.
+        # The strings will be combined into one when we generate a
+        # FileChunk.
+        queue = []
 
-                # Now make the OldFileSubString.
-                output2.append(obnamlib.OldFileSubString(offset, length))
+        for x in self.simple_file_delta(rsyncsigparts, new_file, chunk_size):
+            if not queue:
+                queue = [x]
+            elif type(queue[0]) == str:
+                if type(x) == str:
+                    queue.append(x)
+                else:
+                    yield obnamlib.FileChunk(''.join(queue))
+                    queue = [x]
             else:
-                assert type(output[0]) == str
-                # Count number of strings at the beginning of output.
-                i = 0
-                while i < len(output) and type(output[i]) == str:
-                    i += 1
-                # Now make the FileChunk. Or several: they can only contain
-                # up to chunk_size bytes.
-                bytes = output[:i]
-                while bytes:
-                    string = "".join(bytes[:chunk_size])
-                    output2.append(obnamlib.FileChunk(string))
-                    del bytes[:chunk_size]
-            
-            # Finally, get rid of prefix from output.
-            del output[:i]
-
-        for x in output2:
-            yield x
+                offset, length = queue[0]
+                if type(x) == tuple:
+                    new_offset, new_length = x
+                    if new_offset == offset + length:
+                        queue = [(offset, length + new_length)]
+                    else:
+                        yield obnamlib.OldFileSubString(offset, length)
+                        queue = [x]
+                else:
+                    yield obnamlib.OldFileSubString(offset, length)
+                    queue = [x]
+        if queue:
+            if type(queue[0]) == str:
+                yield obnamlib.FileChunk(''.join(queue))
+            else:
+                offset, length = queue[0]
+                yield obnamlib.OldFileSubString(offset, length)
 
 
 class RsyncPatcher(object):
