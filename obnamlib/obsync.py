@@ -21,67 +21,49 @@ import StringIO
 import zlib
 
 
-class RsyncLookupTable(object):
+"""A pure-Python implementation of the rsync algorithm.
 
-    def __init__(self, compute_weak, compute_strong):
-        self.compute_weak = compute_weak
-        self.compute_strong = compute_strong
-        self.dict = {}
-        
-    def add_checksums(self, checksums):
-        for block_number, c in enumerate(checksums):
-            weak = c.first_string(kind=obnamlib.ADLER32)
-            strong = c.first_string(kind=obnamlib.MD5)
-            if weak not in self.dict:
-                self.dict[weak] = dict()
-            self.dict[weak][strong] = block_number
+See http://www.samba.org/rsync/tech_report/ for an explanation of the
+rsync algorithm.
 
-    def __getitem__(self, block_data):
-        weak = str(self.compute_weak(block_data))
-        subdict = self.dict.get(weak)
-        if subdict:
-            strong = str(self.compute_strong(block_data))
-            return subdict.get(strong)
-        return None
+This is not at all compatible with rsync the program, or rdiff, or
+librsync, or any other implementation of the rsync algorithm. It does not
+even implement the algorithm as described in the original paper. This
+is mostly because a) Python sucks as bit twiddling kinds of things, so
+we have chosen approaches that are fast in Python, and b) this is meant
+to be part of Obnam, a backup program, which changes the requirements of
+generic rsync a little bit.
 
+"""
+    
 
-class Obsync(object):
-
-    """A pure-Python implementation of the rsync algorithm.
-
-    See http://www.samba.org/rsync/tech_report/ for an explanation of the
-    rsync algorithm.
-
-    This is not at all compatible with rsync the program, or rdiff,
-    or librsync, or any other implementation of the rsync algorithm. It
-    does not even implement the algorithm as described in the original
-    paper. This is mostly because a) Python sucks as bit twiddling kinds
-    of things, so we have chosen approaches that are fast in Python, and
-    b) this is meant to be part of Obnam, a backup program, which changes
-    the requirements of generic rsync a little bit.
-
+    
+def weak_checksum(data):
+    """Compute weak checksum for data.
+    
+    Return obnamlib.Adler32 component.
+    
     """
     
+    return obnamlib.Adler32(str(zlib.adler32(data)))
+
+
+def strong_checksum(data):
+    """Compute weak checksum for data.
+    
+    Return obnamlib.Md5 component.
+    
+    """
+
+    return obnamlib.Md5(hashlib.md5(data).digest())
+
+
+class RsyncSignatureGenerator(object):
+
+    """Generate the rsync signature."""
+
     def __init__(self):
         self.buf = ""
-    
-    def weak_checksum(self, data):
-        """Compute weak checksum for data.
-        
-        Return obnamlib.Adler32 component.
-        
-        """
-        
-        return obnamlib.Adler32(str(zlib.adler32(data)))
-
-    def strong_checksum(self, data):
-        """Compute weak checksum for data.
-        
-        Return obnamlib.Md5 component.
-        
-        """
-
-        return obnamlib.Md5(hashlib.md5(data).digest())
 
     def block_signature(self, block_data):
         """Compute rsync signature for a given block of data.
@@ -94,8 +76,8 @@ class Obsync(object):
         
         """
         
-        weak = self.weak_checksum(block_data)
-        strong = self.strong_checksum(block_data)
+        weak = weak_checksum(block_data)
+        strong = strong_checksum(block_data)
         return obnamlib.Checksums([weak, strong])
         
     def buffered_block_signature(self, new_data, block_size): # pragma: no cover
@@ -136,6 +118,37 @@ class Obsync(object):
                 break
             yield self.block_signature(block)
 
+
+class RsyncLookupTable(object):
+
+    """Look up matching blocks from a signature file."""
+
+    def __init__(self, compute_weak=None, compute_strong=None):
+        self.compute_weak = compute_weak or weak_checksum
+        self.compute_strong = compute_strong or strong_checksum
+        self.dict = {}
+        
+    def add_checksums(self, checksums):
+        for block_number, c in enumerate(checksums):
+            weak = c.first_string(kind=obnamlib.ADLER32)
+            strong = c.first_string(kind=obnamlib.MD5)
+            if weak not in self.dict:
+                self.dict[weak] = dict()
+            self.dict[weak][strong] = block_number
+
+    def __getitem__(self, block_data):
+        weak = str(self.compute_weak(block_data))
+        subdict = self.dict.get(weak)
+        if subdict:
+            strong = str(self.compute_strong(block_data))
+            return subdict.get(strong)
+        return None
+
+
+class RsyncDeltaGenerator(object):
+
+    """Generate a delta from signature file and new version of a file."""
+
     def file_delta(self, rsyncsigparts, new_file, chunk_size):
         """Compute delta from RsyncSigParts to new_file.
         
@@ -145,8 +158,7 @@ class Obsync(object):
         """
 
         block_size = rsyncsigparts[0].block_size
-        lookup_table = RsyncLookupTable(self.weak_checksum,
-                                        self.strong_checksum)
+        lookup_table = RsyncLookupTable()
         for part in rsyncsigparts:
             lookup_table.add_checksums(part.checksums)
 
@@ -212,6 +224,11 @@ class Obsync(object):
             del output[:i]
 
         return output2
+
+
+class RsyncPatcher(object):
+
+    """Apply delta from RsyncDeltaGenerator against old version of file."""
 
     def patch(self, output_file, old_file, rsyncdelta): # pragma: no cover
         """Apply rsync delta on old_file, writing output to new_file.

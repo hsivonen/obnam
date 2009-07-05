@@ -31,8 +31,8 @@ class PatchCommand(obnamlib.CommandLineCommand):
         data = file(args[1]).read()
         delta = of.decode_all_components(data)
         
-        obsync = obnamlib.Obsync()
-        obsync.patch(sys.stdout, old_file, delta)
+        patcher = obnamlib.RsyncPatcher()
+        patcher.patch(sys.stdout, old_file, delta)
 
     def run(self, options, args, progress): # pragma: no cover
         self.patch(options, args)

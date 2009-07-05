@@ -131,5 +131,8 @@ from formatutils import format_size, format_time
 
 import varint
 
-from obsync import Obsync
+from obsync import (RsyncSignatureGenerator, 
+                    RsyncLookupTable,
+                    RsyncDeltaGenerator,
+                    RsyncPatcher)
 

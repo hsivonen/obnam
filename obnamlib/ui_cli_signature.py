@@ -30,10 +30,10 @@ class SignatureCommand(obnamlib.CommandLineCommand):
                                "SIZE (default %default bytes)")
     
     def signature(self, options, args):
-        obsync = obnamlib.Obsync()
+        siggen = obnamlib.RsyncSignatureGenerator()
         of = obnamlib.ObjectFactory()
         f = file(args[0])
-        for sums in obsync.file_signature(f, options.rsync_block_size):
+        for sums in siggen.file_signature(f, options.rsync_block_size):
             part = obnamlib.RsyncSigPart(id="id", 
                                          block_size=options.rsync_block_size,
                                          checksums=[sums])

@@ -367,8 +367,8 @@ class Store(object):
             part = self.get_object(host, part_id)
             output.write(part.data)
 
-    def make_rsyncsigparts(self, content, obsync, rsync_block_size, new_data):
-        sigs = obsync.buffered_block_signature(new_data, rsync_block_size)
+    def make_rsyncsigparts(self, content, siggen, rsync_block_size, new_data):
+        sigs = siggen.buffered_block_signature(new_data, rsync_block_size)
         if sigs:
             rsyncsigpart = self.new_object(kind=obnamlib.RSYNCSIGPART)
             rsyncsigpart.components += sigs
@@ -390,7 +390,7 @@ class Store(object):
 
         content = self.new_object(kind=obnamlib.FILECONTENTS)
         md5 = hashlib.md5()
-        obsync = obnamlib.Obsync()
+        siggen = obnamlib.RsyncSignatureGenerator()
         while True:
             data = file.read(size)
             if not data:
@@ -400,9 +400,9 @@ class Store(object):
             self.put_object(part)
             content.add(part.id)
             md5.update(data)
-            self.make_rsyncsigparts(content, obsync, rsync_block_size, data)
+            self.make_rsyncsigparts(content, siggen, rsync_block_size, data)
 
-        self.make_rsyncsigparts(content, obsync, rsync_block_size, "")
+        self.make_rsyncsigparts(content, siggen, rsync_block_size, "")
 
         content.md5 = md5.digest()
         self.put_object(content)

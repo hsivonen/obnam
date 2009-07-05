@@ -33,9 +33,9 @@ class DeltaCommand(obnamlib.CommandLineCommand):
             part, pos = of.decode_object(data, pos)
             parts.append(part)
         
-        obsync = obnamlib.Obsync()
+        deltagen = obnamlib.RsyncDeltaGenerator()
         f = file(args[1])
-        delta = obsync.file_delta(parts, f, options.blocksize)
+        delta = deltagen.file_delta(parts, f, options.blocksize)
         f.close()
         for x in delta:
             sys.stdout.write(of.encode_component(x))
