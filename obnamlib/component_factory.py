@@ -99,8 +99,7 @@ class ComponentFactory(object):
         obnamlib.SIGBLOCKSIZE:  varint(obnamlib.SigBlockSize),
         obnamlib.OFFSET:        varint(obnamlib.Offset),
         obnamlib.LENGTH:        varint(obnamlib.Length),
-        obnamlib.OLDFILESUBSTRING: 
-                                composite_factory(obnamlib.OldFileSubString),
+        obnamlib.SUBFILEPART:   composite_factory(obnamlib.SubFilePart),
         obnamlib.RSYNCSIGPARTREF: str_or_ref(obnamlib.RsyncSigPartRef),
         }
 

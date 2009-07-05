@@ -120,14 +120,14 @@ class RsyncDeltaGeneratorTests(unittest.TestCase):
         self.deltagen = obnamlib.RsyncDeltaGenerator(self.sigparts,
                                                      self.chunk_size)
 
-    def test_returns_single_oldfilesubstr_for_no_difference(self):
+    def test_returns_single_subfilepart_for_no_difference(self):
         deltagen = obnamlib.RsyncDeltaGenerator(self.sigparts, 
                                                 self.chunk_size)
         delta = list(deltagen.feed(self.old_file.read()))
         delta += list(deltagen.feed(""))
         self.assertEqual(len(delta), 1)
         c = delta[0]
-        self.assertEqual(c.kind, obnamlib.OLDFILESUBSTRING)
+        self.assertEqual(c.kind, obnamlib.SUBFILEPART)
         self.assertEqual(c.offset, 0)
         self.assertEqual(c.length, len(self.old_data))
 
@@ -137,7 +137,7 @@ class RsyncDeltaGeneratorTests(unittest.TestCase):
 
         self.assertEqual(len(delta), 2)
 
-        self.assertEqual(delta[0].kind, obnamlib.OLDFILESUBSTRING)
+        self.assertEqual(delta[0].kind, obnamlib.SUBFILEPART)
         self.assertEqual(delta[0].offset, 0)
         # The algorithm only finds full blocks: new_data has junk after
         # the last partial block at the end of old_data, which is why
@@ -162,7 +162,7 @@ class RsyncDeltaGeneratorTests(unittest.TestCase):
         self.assertEqual(delta[0].kind, obnamlib.FILECHUNK)
         self.assertEqual(str(delta[0]), self.additional_data)
 
-        self.assertEqual(delta[1].kind, obnamlib.OLDFILESUBSTRING)
+        self.assertEqual(delta[1].kind, obnamlib.SUBFILEPART)
         self.assertEqual(delta[1].offset, 0)
         self.assertEqual(delta[1].length, len(self.old_data))
         
@@ -176,11 +176,11 @@ class RsyncDeltaGeneratorTests(unittest.TestCase):
 
         self.assertEqual(len(delta), 2, delta)
 
-        self.assertEqual(delta[0].kind, obnamlib.OLDFILESUBSTRING)
+        self.assertEqual(delta[0].kind, obnamlib.SUBFILEPART)
         self.assertEqual(delta[0].offset, 0)
         self.assertEqual(delta[0].length, self.block_size)
 
-        self.assertEqual(delta[1].kind, obnamlib.OLDFILESUBSTRING)
+        self.assertEqual(delta[1].kind, obnamlib.SUBFILEPART)
         self.assertEqual(delta[1].offset, 0)
         self.assertEqual(delta[1].length, len(self.old_data))
 

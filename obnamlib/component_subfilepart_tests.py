@@ -15,28 +15,21 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import unittest
+
 import obnamlib
 
 
-class OldFileSubString(obnamlib.CompositeComponent):
+class SubFilePartTests(unittest.TestCase):
 
-    composite_kind = obnamlib.OLDFILESUBSTRING
-
-    def __init__(self, offset, length):
-        offset = obnamlib.varint.encode(offset)
-        length = obnamlib.varint.encode(length)
-        children = [obnamlib.Offset(offset), obnamlib.Length(length)]
-        obnamlib.CompositeComponent.__init__(self, children)
+    def setUp(self):
+        self.offset = 42
+        self.length = 42*2
+        self.c = obnamlib.SubFilePart(self.offset, self.length)
         
-    def getint(self, kind):
-        s = self.first_string(kind=kind)
-        return obnamlib.varint.decode(s, 0)[0]
+    def test_sets_offset_correctly(self):
+        self.assertEqual(self.c.offset, self.offset)
         
-    @property
-    def offset(self):
-        return self.getint(obnamlib.OFFSET)
-        
-    @property
-    def length(self):
-        return self.getint(obnamlib.LENGTH)
+    def test_sets_length_correctly(self):
+        self.assertEqual(self.c.length, self.length)
 

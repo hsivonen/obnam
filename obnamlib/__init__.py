@@ -68,7 +68,7 @@ from component_composites import (Checksums,
                                   ObjectComponent, 
                                   ObjMap)
 from component_objkind import ObjectKind
-from component_oldfilesubstring import OldFileSubString
+from component_subfilepart import SubFilePart
 from component_sigblocksize import SigBlockSize
 from component_factory import ComponentFactory
 

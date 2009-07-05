@@ -202,7 +202,7 @@ class RsyncDeltaGenerator(object):
     def feed(self, some_data):
         """Compute delta from RsyncSigParts to new_file.
         
-        Generate obnamlib.FileChunk and obnamlib.OldFileSubString objects.
+        Generate obnamlib.FileChunk and obnamlib.SubFilePart objects.
         
         """
 
@@ -226,17 +226,17 @@ class RsyncDeltaGenerator(object):
                     if new_offset == offset + length:
                         self.queue = [(offset, length + new_length)]
                     else:
-                        yield obnamlib.OldFileSubString(offset, length)
+                        yield obnamlib.SubFilePart(offset, length)
                         self.queue = [x]
                 else:
-                    yield obnamlib.OldFileSubString(offset, length)
+                    yield obnamlib.SubFilePart(offset, length)
                     self.queue = [x]
         if some_data == "" and self.queue:
             if type(self.queue[0]) == str:
                 yield obnamlib.FileChunk(''.join(self.queue))
             else:
                 offset, length = self.queue[0]
-                yield obnamlib.OldFileSubString(offset, length)
+                yield obnamlib.SubFilePart(offset, length)
 
 
 class RsyncPatcher(object):
@@ -254,7 +254,7 @@ class RsyncPatcher(object):
             if directive.kind == obnamlib.FILECHUNK:
                 output_file.write(str(directive))
             else:
-                assert directive.kind == obnamlib.OLDFILESUBSTRING
+                assert directive.kind == obnamlib.SUBFILEPART
                 old_file.seek(directive.offset)
                 data = old_file.read(directive.length)
                 if len(data) != directive.length:
