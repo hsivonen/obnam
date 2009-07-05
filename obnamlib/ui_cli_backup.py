@@ -82,23 +82,23 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
                           help="max number of mappings before flushing them "
                                "to disk (default: %default)")
 
-	parser.add_option("--exclude", metavar="REGEXP", action="append",
-			  help="exclude pathnames matching REGEXP")
-	parser.set_defaults(exclude=[])
+        parser.add_option("--exclude", metavar="REGEXP", action="append",
+                          help="exclude pathnames matching REGEXP")
+        parser.set_defaults(exclude=[])
     
     def excluded(self, pathname): # pragma: no cover
-	for regexp in self.exclude_regexps:
-	    if regexp.search(pathname):
-		return True
-	return False
+        for regexp in self.exclude_regexps:
+            if regexp.search(pathname):
+                return True
+        return False
 
     def prune(self, dirname, dirnames, filenames): # pragma: no cover
-	for x in dirnames[:]:
-	    if self.excluded(os.path.join(dirname, x)):
-		dirnames.remove(x)
-	for x in filenames[:]:
-	    if self.excluded(os.path.join(dirname, x)):
-		filenames.remove(x)
+        for x in dirnames[:]:
+            if self.excluded(os.path.join(dirname, x)):
+                dirnames.remove(x)
+        for x in filenames[:]:
+            if self.excluded(os.path.join(dirname, x)):
+                filenames.remove(x)
 
     def new_file(self, name, st, contref=None, sigref=None, deltaref=None,
                  symlink_target=None):
@@ -279,7 +279,7 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         subdirs = {}
 
         for dirname, dirnames, filenames in self.fs.depth_first(root,
-							prune=self.prune):
+                                                        prune=self.prune):
             logging.info("Backing up %s" % dirname)
             list = subdirs.pop(dirname, [])
             dir = self.backup_dir(dirname, list, filenames)
@@ -413,26 +413,26 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         return lastest_gen
 
     def push_queue(self, name, queue, pusher): # pragma: no cover
-	unpushed = queue.unpushed_size
-	logging.debug("push_queue: %s unpushed %d max %d" % 
-		      (name, unpushed, self.max_unpushed))
-	if unpushed >= self.max_unpushed:
+        unpushed = queue.unpushed_size
+        logging.debug("push_queue: %s unpushed %d max %d" % 
+                      (name, unpushed, self.max_unpushed))
+        if unpushed >= self.max_unpushed:
             pusher(self.host)
-	    logging.debug("put_hook: pushed %s, unpushed now %d" % 
-			  (name, queue.unpushed_size))
+            logging.debug("put_hook: pushed %s, unpushed now %d" % 
+                          (name, queue.unpushed_size))
 
     def put_hook(self): # pragma: no cover
-	self.push_queue("object_queue", self.store.object_queue,
-			self.store.push_objects)
-	self.push_queue("content", self.store.content_queue,
-			self.store.push_content_objects)
+        self.push_queue("object_queue", self.store.object_queue,
+                        self.store.push_objects)
+        self.push_queue("content", self.store.content_queue,
+                        self.store.push_content_objects)
         if self.host not in self.store.new_mappings:
-	    logging.debug("put_hook: host not in new_mappings")
+            logging.debug("put_hook: host not in new_mappings")
             return
         mappings = self.store.new_mappings[self.host]
         if len(mappings) > self.max_mappings:
             self.store.push_new_mappings(self.host)
-	    logging.debug("put_hook: pushed mappings")
+            logging.debug("put_hook: pushed mappings")
 
     def backup(self, host_id, roots):
         logging.debug("Backing up: host %s, roots %s" % 

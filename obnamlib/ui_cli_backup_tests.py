@@ -179,7 +179,7 @@ class BackupCommandTests(unittest.TestCase):
         self.cmd.fs = self.mox.CreateMock(obnamlib.VirtualFileSystem)
 
         self.cmd.fs.depth_first("foo", prune=mox.IgnoreArg()).AndReturn(
-		[("foo", [], [])])
+                [("foo", [], [])])
         self.cmd.it_is_snapshot_time = lambda: False
 
         self.mox.ReplayAll()

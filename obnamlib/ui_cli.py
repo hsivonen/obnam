@@ -142,7 +142,7 @@ class CommandLineUI(obnamlib.UserInterface):
         options, args = parser.parse_args(args)
         self.setup_logging(options)
         progress = obnamlib.ProgressReporter()
-	
+        
         if not args:
             self.short_help()
         elif args[0] in self.commands:
