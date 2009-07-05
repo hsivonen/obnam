@@ -153,6 +153,7 @@ class RsyncDeltaGenerator(object):
         self.new_file = new_file
         self.chunk_size = chunk_size
         self.block_size = rsyncsigparts[0].block_size
+        assert self.block_size > 0
         self.lookup_table = RsyncLookupTable()
         for part in rsyncsigparts:
             self.lookup_table.add_checksums(part.checksums)
@@ -172,7 +173,6 @@ class RsyncDeltaGenerator(object):
         # this list later.
         
         output = []
-        assert self.block_size > 0
         block_data = self.new_file.read(self.block_size)
         while block_data:
             block_number = self.lookup_table[block_data]
