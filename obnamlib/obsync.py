@@ -148,8 +148,13 @@ class RsyncLookupTable(object):
 class RsyncDeltaGenerator(object):
 
     """Generate a delta from signature file and new version of a file."""
+    
+    def __init__(self, rsyncsigparts, new_file, chunk_size):
+        self.rsyncsigparts = rsyncsigparts
+        self.new_file = new_file
+        self.chunk_size = chunk_size
 
-    def simple_file_delta(self, rsyncsigparts, new_file, chunk_size):
+    def simple_file_delta(self):
         """Compute an unoptimized delta from signature file to new file.
         
         Generate a sequence of single-byte strings and tuples of
@@ -159,9 +164,9 @@ class RsyncDeltaGenerator(object):
         
         """
 
-        block_size = rsyncsigparts[0].block_size
+        block_size = self.rsyncsigparts[0].block_size
         lookup_table = RsyncLookupTable()
-        for part in rsyncsigparts:
+        for part in self.rsyncsigparts:
             lookup_table.add_checksums(part.checksums)
 
         # First we collect just the raw data as single-character strings
@@ -170,20 +175,20 @@ class RsyncDeltaGenerator(object):
         
         output = []
         assert block_size > 0
-        block_data = new_file.read(block_size)
+        block_data = self.new_file.read(block_size)
         while block_data:
             block_number = lookup_table[block_data]
             if block_number is None:
                 yield block_data[0]
                 block_data = block_data[1:]
-                byte = new_file.read(1)
+                byte = self.new_file.read(1)
                 if byte:
                     block_data += byte
             else:
                 yield (block_number * block_size, len(block_data))
-                block_data = new_file.read(block_size)
+                block_data = self.new_file.read(block_size)
 
-    def file_delta(self, rsyncsigparts, new_file, chunk_size):
+    def file_delta(self):
         """Compute delta from RsyncSigParts to new_file.
         
         Generate obnamlib.FileChunk and obnamlib.OldFileSubString objects.
@@ -201,7 +206,7 @@ class RsyncDeltaGenerator(object):
         # is potentially a big performance win.
         queue = []
 
-        for x in self.simple_file_delta(rsyncsigparts, new_file, chunk_size):
+        for x in self.simple_file_delta():
             if not queue:
                 queue = [x]
             elif type(queue[0]) == str:
