@@ -15,6 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import hashlib
 import mox
 import os
 import shutil
@@ -239,3 +240,11 @@ class StoreTests(unittest.TestCase):
         host = store.get_host("host.id")
         store.cat(host, result, filecont.id, None)
         self.assertEqual(result.getvalue(), "foo")
+        
+    def test_put_contents_computes_md5(self):
+        data = "foo"
+        f = StringIO.StringIO(data)
+        host = self.rw.get_host("host.id")
+        filecont = self.rw.put_contents(f, 1024)
+        self.assertEqual(filecont.md5, hashlib.md5(data).digest())
+

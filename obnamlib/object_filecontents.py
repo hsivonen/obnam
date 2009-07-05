@@ -31,6 +31,14 @@ class FileContents(obnamlib.Object):
     def part_ids(self):
         return self.find_strings(kind=obnamlib.FILEPARTREF)
 
+    @property
+    def md5(self):
+        strings = self.find_strings(kind=obnamlib.MD5)
+        if strings:
+            return strings[0]
+        else:
+            return None
+
     def add(self, ref):
         c = obnamlib.FilePartRef(ref)
         self.components.append(c)
