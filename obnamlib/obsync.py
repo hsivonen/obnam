@@ -172,7 +172,6 @@ class RsyncDeltaGenerator(object):
         # and block numbers plus lengths in the old file. We'll optimize 
         # this list later.
         
-        output = []
         block_data = self.new_file.read(self.block_size)
         while block_data:
             block_number = self.lookup_table[block_data]
