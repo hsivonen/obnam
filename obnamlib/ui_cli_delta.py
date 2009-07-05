@@ -35,10 +35,9 @@ class DeltaCommand(obnamlib.CommandLineCommand):
         
         deltagen = obnamlib.RsyncDeltaGenerator()
         f = file(args[1])
-        delta = deltagen.file_delta(parts, f, options.blocksize)
-        f.close()
-        for x in delta:
+        for x in deltagen.file_delta(parts, f, options.blocksize):
             sys.stdout.write(of.encode_component(x))
+        f.close()
 
     def run(self, options, args, progress): # pragma: no cover
         self.delta(options, args)
