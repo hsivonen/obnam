@@ -64,7 +64,6 @@ from component_strings import (Adler32,
                                SnapshotGen,
                                SymlinkTarget)
 from component_composites import (Checksums, 
-                                  NameIPair, 
                                   ObjectComponent, 
                                   ObjMap)
 from component_objkind import ObjectKind

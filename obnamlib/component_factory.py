@@ -69,7 +69,6 @@ class ComponentFactory(object):
         obnamlib.OBJECT:        composite_factory(obnamlib.ObjectComponent),
         obnamlib.OBJMAP:        composite_factory(obnamlib.ObjMap),
         obnamlib.CONTREF:       str_or_ref(obnamlib.ContRef),
-        obnamlib.NAMEIPAIR:     composite_factory(obnamlib.NameIPair),
         obnamlib.FILENAME:      str_or_ref(obnamlib.FileName),
         obnamlib.SIGDATA:       str_or_ref(obnamlib.SigData),
         obnamlib.SIGREF:        str_or_ref(obnamlib.SigRef),

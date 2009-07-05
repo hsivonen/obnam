@@ -28,11 +28,6 @@ class Checksums(obnamlib.CompositeComponent):
     composite_kind = obnamlib.CHECKSUMS
 
 
-class NameIPair(obnamlib.CompositeComponent):
-
-    composite_kind = obnamlib.NAMEIPAIR
-
-
 class ObjectComponent(obnamlib.CompositeComponent):
 
     composite_kind = obnamlib.OBJECT

@@ -84,7 +84,7 @@ class ComponentKinds(obnamlib.Kinds):
         # 7-19 have been obsoleted and should not exist anywhere in the 
         # universe.
         self.add_ref(      20, "CONTREF")
-        self.add_composite(21, "NAMEIPAIR")
+        # now unused: self.add_composite(21, "NAMEIPAIR")
         # 22 has been obsoleted and should not exist anywhere in the universe.
         self.add_plain(    23, "FILENAME")
         self.add_plain(    24, "SIGDATA")
