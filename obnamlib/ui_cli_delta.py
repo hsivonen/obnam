@@ -33,10 +33,14 @@ class DeltaCommand(obnamlib.CommandLineCommand):
             part, pos = of.decode_object(data, pos)
             parts.append(part)
         
-        deltagen = obnamlib.RsyncDeltaGenerator()
+        deltagen = obnamlib.RsyncDeltaGenerator(parts, options.blocksize)
         f = file(args[1])
-        for x in deltagen.file_delta(parts, f, options.blocksize):
-            sys.stdout.write(of.encode_component(x))
+        while True:
+            data = f.read(options.blocksize)
+            for x in deltagen.feed(data):
+                sys.stdout.write(of.encode_component(x))
+            if not data:
+                break
         f.close()
 
     def run(self, options, args, progress): # pragma: no cover
