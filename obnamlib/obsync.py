@@ -110,7 +110,7 @@ class Obsync(object):
     def file_delta(self, rsyncsigparts, new_file, chunk_size):
         """Compute delta from RsyncSigParts to new_file.
         
-        Generate a list of obnamlib.FileChunk and obnamlib.OldFileSubString
+        Return a list of obnamlib.FileChunk and obnamlib.OldFileSubString
         objects.
         
         """
@@ -126,6 +126,7 @@ class Obsync(object):
         # this list later.
         
         output = []
+        assert block_size > 0
         block_data = new_file.read(block_size)
         while block_data:
             block_number = lookup_table[block_data]
@@ -183,15 +184,14 @@ class Obsync(object):
 
         return output2
 
-    def make_delta(self, obj_id, rsyncsig, f, chunk_size): # pragma: no cover
-        """Create an RsyncDelta object."""
-        delta_directives = self.file_delta(rsyncsig, f, chunk_size)
-        return obnamlib.RsyncDelta(obj_id, delta_directives=delta_directives)
-
     def patch(self, output_file, old_file, rsyncdelta): # pragma: no cover
-        """Apply RsyncDelta on old_file, writing output to new_file."""
+        """Apply rsync delta on old_file, writing output to new_file.
         
-        for directive in rsyncdelta.delta_directives:
+        Delta is a list like the one returned by file_delta.
+        
+        """
+        
+        for directive in rsyncdelta:
             if directive.kind == obnamlib.FILECHUNK:
                 output_file.write(str(directive))
             else:

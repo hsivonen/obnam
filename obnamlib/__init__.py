@@ -87,7 +87,6 @@ from object_filepart import FilePart
 from object_gen import Generation
 from object_host import Host
 from object_sig import Signature
-from object_rsyncdelta import RsyncDelta
 from object_rsyncsigpart import RsyncSigPart
 from object_factory import ObjectFactory
 

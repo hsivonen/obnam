@@ -36,5 +36,3 @@ class ObjectKinds(obnamlib.Kinds):
         self.add(10, "DIR")
         self.add(11, "FILEGROUP")
         self.add(12, "RSYNCSIGPART")
-        self.add(13, "RSYNCDELTA")
-

@@ -31,11 +31,14 @@ class SignatureCommand(obnamlib.CommandLineCommand):
     
     def signature(self, options, args):
         obsync = obnamlib.Obsync()
-        f = file(args[0])
-        rsyncsig = obsync.make_signature("obj_id", f, options.rsync_block_size)
-        f.close()
         of = obnamlib.ObjectFactory()
-        sys.stdout.write(of.encode_object(rsyncsig))
+        f = file(args[0])
+        for sums in obsync.file_signature(f, options.rsync_block_size):
+            part = obnamlib.RsyncSigPart(id="id", 
+                                         block_size=options.rsync_block_size,
+                                         checksums=[sums])
+            sys.stdout.write(of.encode_object(part))
+        f.close()
 
     def run(self, options, args, progress): # pragma: no cover
         self.signature(options, args)

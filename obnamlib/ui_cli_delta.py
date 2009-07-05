@@ -27,13 +27,18 @@ class DeltaCommand(obnamlib.CommandLineCommand):
     def delta(self, options, args):
         of = obnamlib.ObjectFactory()
         data = file(args[0]).read()
-        rsyncsig, pos = of.decode_object(data, 0)
+        parts = []
+        pos = 0
+        while pos < len(data):
+            part, pos = of.decode_object(data, pos)
+            parts.append(part)
         
         obsync = obnamlib.Obsync()
         f = file(args[1])
-        delta = obsync.make_delta("obj_id", rsyncsig, f, options.blocksize)
+        delta = obsync.file_delta(parts, f, options.blocksize)
         f.close()
-        sys.stdout.write(of.encode_object(delta))
+        for x in delta:
+            sys.stdout.write(of.encode_component(x))
 
     def run(self, options, args, progress): # pragma: no cover
         self.delta(options, args)
