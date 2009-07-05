@@ -149,8 +149,7 @@ class RsyncDeltaGenerator(object):
 
     """Generate a delta from signature file and new version of a file."""
     
-    def __init__(self, rsyncsigparts, new_file, chunk_size):
-        self.new_file = new_file
+    def __init__(self, rsyncsigparts, chunk_size):
         self.chunk_size = chunk_size
         self.block_size = rsyncsigparts[0].block_size
         assert self.block_size > 0
@@ -158,6 +157,16 @@ class RsyncDeltaGenerator(object):
         for part in rsyncsigparts:
             self.lookup_table.add_checksums(part.checksums)
         self.buf = ""
+
+        # This is used by the feed method to optimize delta directive
+        # sequences.
+        #
+        # We'll keep all un-yielded items in a queue. The queue will contain
+        # either a sequence of single-byte strings or a single tuple.
+        # The strings will be combined into one when we generate a
+        # FileChunk. This way we only catenate the strings once, which
+        # is potentially a big performance win.
+        self.queue = []
 
     def simple_feed(self, some_data):
         """Compute an unoptimized delta from signature file to new file.
@@ -190,17 +199,7 @@ class RsyncDeltaGenerator(object):
                 yield (block_number * self.block_size, len(block_data))
                 self.buf = self.buf[len(block_data):]
 
-    def simple_file_delta(self):
-        while True:
-            data = self.new_file.read(self.block_size)
-            if not data:
-                for x in self.simple_feed(""):
-                    yield x
-                break
-            for x in self.simple_feed(data):
-                yield x
-
-    def file_delta(self):
+    def feed(self, some_data):
         """Compute delta from RsyncSigParts to new_file.
         
         Generate obnamlib.FileChunk and obnamlib.OldFileSubString objects.
@@ -210,40 +209,33 @@ class RsyncDeltaGenerator(object):
         # Now we optimize. This is similar to peep-hole optimization in
         # compilers. We look at adjacent items in output, and if they
         # can be combined (two strings, or adjacent blocks), we do that.
-        
-        # We'll keep all un-yielded items in a queue. The queue will contain
-        # either a sequence of single-byte strings or a single tuple.
-        # The strings will be combined into one when we generate a
-        # FileChunk. This way we only catenate the strings once, which
-        # is potentially a big performance win.
-        queue = []
 
-        for x in self.simple_file_delta():
-            if not queue:
-                queue = [x]
-            elif type(queue[0]) == str:
+        for x in self.simple_feed(some_data):
+            if not self.queue:
+                self.queue = [x]
+            elif type(self.queue[0]) == str:
                 if type(x) == str:
-                    queue.append(x)
+                    self.queue.append(x)
                 else:
-                    yield obnamlib.FileChunk(''.join(queue))
-                    queue = [x]
+                    yield obnamlib.FileChunk(''.join(self.queue))
+                    self.queue = [x]
             else:
-                offset, length = queue[0]
+                offset, length = self.queue[0]
                 if type(x) == tuple:
                     new_offset, new_length = x
                     if new_offset == offset + length:
-                        queue = [(offset, length + new_length)]
+                        self.queue = [(offset, length + new_length)]
                     else:
                         yield obnamlib.OldFileSubString(offset, length)
-                        queue = [x]
+                        self.queue = [x]
                 else:
                     yield obnamlib.OldFileSubString(offset, length)
-                    queue = [x]
-        if queue:
-            if type(queue[0]) == str:
-                yield obnamlib.FileChunk(''.join(queue))
+                    self.queue = [x]
+        if some_data == "" and self.queue:
+            if type(self.queue[0]) == str:
+                yield obnamlib.FileChunk(''.join(self.queue))
             else:
-                offset, length = queue[0]
+                offset, length = self.queue[0]
                 yield obnamlib.OldFileSubString(offset, length)
 
 

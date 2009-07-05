@@ -117,15 +117,14 @@ class RsyncDeltaGeneratorTests(unittest.TestCase):
                                                checksums=checksums)]
         self.old_file = StringIO.StringIO(self.old_data)
         self.new_file = StringIO.StringIO(self.new_data)
-        self.deltagen = obnamlib.RsyncDeltaGenerator(self.sigparts, 
-                                                     self.new_file, 
+        self.deltagen = obnamlib.RsyncDeltaGenerator(self.sigparts,
                                                      self.chunk_size)
 
-    def test_file_delta_returns_single_oldfilesubstr_for_no_difference(self):
+    def test_returns_single_oldfilesubstr_for_no_difference(self):
         deltagen = obnamlib.RsyncDeltaGenerator(self.sigparts, 
-                                                self.old_file, 
                                                 self.chunk_size)
-        delta = list(deltagen.file_delta())
+        delta = list(deltagen.feed(self.old_file.read()))
+        delta += list(deltagen.feed(""))
         self.assertEqual(len(delta), 1)
         c = delta[0]
         self.assertEqual(c.kind, obnamlib.OLDFILESUBSTRING)
@@ -133,7 +132,8 @@ class RsyncDeltaGeneratorTests(unittest.TestCase):
         self.assertEqual(c.length, len(self.old_data))
 
     def test_file_delta_computes_delta_correctly_for_changes(self):
-        delta = list(self.deltagen.file_delta())
+        delta = list(self.deltagen.feed(self.new_file.read()))
+        delta += list(self.deltagen.feed(""))
 
         self.assertEqual(len(delta), 2)
 
@@ -153,9 +153,9 @@ class RsyncDeltaGeneratorTests(unittest.TestCase):
         data = self.additional_data + self.old_data
         f = StringIO.StringIO(data)
         deltagen = obnamlib.RsyncDeltaGenerator(self.sigparts,
-                                                f,
                                                 self.chunk_size)
-        delta = list(deltagen.file_delta())
+        delta = list(deltagen.feed(f.read()))
+        delta += list(deltagen.feed(""))
 
         self.assertEqual(len(delta), 2, delta)
 
@@ -170,9 +170,9 @@ class RsyncDeltaGeneratorTests(unittest.TestCase):
         data = self.old_data[:self.block_size] + self.old_data
         f = StringIO.StringIO(data)
         deltagen = obnamlib.RsyncDeltaGenerator(self.sigparts,
-                                                f,
                                                 self.chunk_size)
-        delta = list(deltagen.file_delta())
+        delta = list(deltagen.feed(f.read()))
+        delta += list(deltagen.feed(""))
 
         self.assertEqual(len(delta), 2, delta)
 
