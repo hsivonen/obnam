@@ -120,8 +120,8 @@ class RsyncDeltaGeneratorTests(unittest.TestCase):
         self.new_file = StringIO.StringIO(self.new_data)
 
     def test_file_delta_returns_single_oldfilesubstr_for_no_difference(self):
-        delta = self.deltagen.file_delta(self.sigparts, self.old_file, 
-                                         self.chunk_size)
+        delta = list(self.deltagen.file_delta(self.sigparts, self.old_file, 
+                                              self.chunk_size))
         self.assertEqual(len(delta), 1)
         c = delta[0]
         self.assertEqual(c.kind, obnamlib.OLDFILESUBSTRING)
@@ -129,8 +129,8 @@ class RsyncDeltaGeneratorTests(unittest.TestCase):
         self.assertEqual(c.length, len(self.old_data))
 
     def test_file_delta_computes_delta_correctly_for_changes(self):
-        delta = self.deltagen.file_delta(self.sigparts, self.new_file, 
-                                         self.chunk_size)
+        delta = list(self.deltagen.file_delta(self.sigparts, self.new_file, 
+                                              self.chunk_size))
 
         self.assertEqual(len(delta), 2)
 
@@ -149,7 +149,8 @@ class RsyncDeltaGeneratorTests(unittest.TestCase):
     def test_file_delta_computes_delta_for_leading_changes(self):
         data = self.additional_data + self.old_data
         f = StringIO.StringIO(data)
-        delta = self.deltagen.file_delta(self.sigparts, f, self.chunk_size)
+        delta = list(self.deltagen.file_delta(self.sigparts, f, 
+                                              self.chunk_size))
 
         self.assertEqual(len(delta), 2, delta)
 
@@ -163,7 +164,8 @@ class RsyncDeltaGeneratorTests(unittest.TestCase):
     def test_file_delta_computes_delta_for_duplicated_block(self):
         data = self.old_data[:self.block_size] + self.old_data
         f = StringIO.StringIO(data)
-        delta = self.deltagen.file_delta(self.sigparts, f, self.chunk_size)
+        delta = list(self.deltagen.file_delta(self.sigparts, f, 
+                                              self.chunk_size))
 
         self.assertEqual(len(delta), 2, delta)
 

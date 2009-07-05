@@ -152,8 +152,7 @@ class RsyncDeltaGenerator(object):
     def file_delta(self, rsyncsigparts, new_file, chunk_size):
         """Compute delta from RsyncSigParts to new_file.
         
-        Return a list of obnamlib.FileChunk and obnamlib.OldFileSubString
-        objects.
+        Generate obnamlib.FileChunk and obnamlib.OldFileSubString objects.
         
         """
 
@@ -223,7 +222,8 @@ class RsyncDeltaGenerator(object):
             # Finally, get rid of prefix from output.
             del output[:i]
 
-        return output2
+        for x in output2:
+            yield x
 
 
 class RsyncPatcher(object):
