@@ -47,3 +47,17 @@ class FileContents(obnamlib.Object):
     def add(self, ref):
         c = obnamlib.FilePartRef(ref)
         self.components.append(c)
+        
+    def add_rsyncsigpartref(self, ref): # pragma: no cover
+        c = obnamlib.RsyncSigPartRef(ref)
+        self.components.append(c)
+
+    def get_rsyncsigpartrefs(self): # pragma: no cover
+        return self.find_strings(kind=obnamlib.RSYNCSIGPARTREF)
+
+    def set_rsyncsigpartrefs(self, new_refs): # pragma: no cover
+        self.extract(kind=obnamlib.RSYNCSIGPARTREF)
+        self.components += [obnamlib.RsyncSigPartRef(x) for x in new_refs]
+        
+    rsyncsigpartrefs = property(get_rsyncsigpartrefs, set_rsyncsigpartrefs)
+

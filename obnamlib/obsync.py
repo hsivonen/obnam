@@ -17,6 +17,7 @@
 
 import hashlib
 import obnamlib
+import StringIO
 import zlib
 
 
@@ -61,6 +62,9 @@ class Obsync(object):
 
     """
     
+    def __init__(self):
+        self.buf = ""
+    
     def weak_checksum(self, data):
         """Compute weak checksum for data.
         
@@ -94,6 +98,31 @@ class Obsync(object):
         strong = self.strong_checksum(block_data)
         return obnamlib.Checksums([weak, strong])
         
+    def buffered_block_signature(self, new_data, block_size): # pragma: no cover
+        """Compute rsync signature from a sequence of data.
+        
+        This method is meant to be called a number of times. Each time,
+        some more data is provided. Whenever there's enough data, rsync
+        signatures for additional blocks are computed. Each call returns
+        the list of new signatures. The final call must provide
+        an empty string as new_data, at which point the internal buffer
+        is cleared and all remaining signatures are returned.
+        
+        """
+        
+        self.buf += new_data
+        
+        sigs = []
+        while len(self.buf) >= block_size:
+            sigs.append(self.block_signature(self.buf[:block_size]))
+            self.buf = self.buf[block_size:]
+
+        if not new_data:
+            sigs.append(self.block_signature(self.buf))
+            self.buf = ""
+
+        return sigs
+
     def file_signature(self, f, block_size):
         """Compute signatures for a file.
         

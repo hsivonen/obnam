@@ -64,6 +64,7 @@ class BackupCommand(obnamlib.CommandLineCommand):
     """A sub-command for the command line interface to back up some data."""
 
     PART_SIZE = 256 * 1024
+    RSYNC_SIZE = 4096
     
     def add_options(self, parser): # pragma: no cover
         parser.add_option("--root", metavar="FILE-OR-DIR", default=None,
@@ -125,7 +126,7 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         
         self.progress["files-found"] += 1
         f = self.fs.open(path, "r")
-        content = self.store.put_contents(f, self.PART_SIZE)
+        content = self.store.put_contents(f, self.PART_SIZE, self.RSYNC_SIZE)
         f.close()
         return self.new_file(os.path.basename(path), st, contref=content.id)
 
@@ -471,8 +472,11 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
             args = options.roots + args
 
         self.exclude_regexps = [re.compile(x) for x in options.exclude]
+        
+        self.RSYNC_SIZE = options.rsync_block_size
 
         roots = [os.path.abspath(root) for root in args]
         self.backup(options.host, roots)
         self.fs.close()
         self.progress.done()
+

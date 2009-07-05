@@ -143,6 +143,11 @@ class Offset(obnamlib.StringComponent):
     string_kind = obnamlib.OFFSET
 
 
+class RsyncSigPartRef(obnamlib.StringComponent):
+
+    string_kind = obnamlib.RSYNCSIGPARTREF
+
+
 class SigData(obnamlib.StringComponent):
 
     string_kind = obnamlib.SIGDATA

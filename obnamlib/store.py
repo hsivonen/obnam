@@ -367,7 +367,15 @@ class Store(object):
             part = self.get_object(host, part_id)
             output.write(part.data)
 
-    def put_contents(self, file, size):
+    def make_rsyncsigparts(self, content, obsync, rsync_block_size, new_data):
+        sigs = obsync.buffered_block_signature(new_data, rsync_block_size)
+        if sigs:
+            rsyncsigpart = self.new_object(kind=obnamlib.RSYNCSIGPART)
+            rsyncsigpart.components += sigs
+            self.put_object(rsyncsigpart)
+            content.rsyncsigpartrefs += [rsyncsigpart.id]
+
+    def put_contents(self, file, size, rsync_block_size):
         """Write contents of open file to store.
         
         The contents of the file will be split into chunks of `size`
@@ -375,10 +383,14 @@ class Store(object):
         and FILECONTENTS object is created, put into the store, and
         returned.
         
+        rsync_block_size is the size of rsync block sizes for signature
+        computation.
+        
         """
 
         content = self.new_object(kind=obnamlib.FILECONTENTS)
         md5 = hashlib.md5()
+        obsync = obnamlib.Obsync()
         while True:
             data = file.read(size)
             if not data:
@@ -388,6 +400,10 @@ class Store(object):
             self.put_object(part)
             content.add(part.id)
             md5.update(data)
+            self.make_rsyncsigparts(content, obsync, rsync_block_size, data)
+
+        self.make_rsyncsigparts(content, obsync, rsync_block_size, "")
+
         content.md5 = md5.digest()
         self.put_object(content)
         return content

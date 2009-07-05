@@ -101,6 +101,7 @@ class ComponentFactory(object):
         obnamlib.LENGTH:        varint(obnamlib.Length),
         obnamlib.OLDFILESUBSTRING: 
                                 composite_factory(obnamlib.OldFileSubString),
+        obnamlib.RSYNCSIGPARTREF: str_or_ref(obnamlib.RsyncSigPartRef),
         }
 
     def new_component(self, kind, string=None, children=None):

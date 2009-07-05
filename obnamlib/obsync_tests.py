@@ -45,7 +45,7 @@ class ObsyncSignatureTests(unittest.TestCase):
         self.assertEqual(sig.kind, obnamlib.CHECKSUMS)
         self.assert_(sig.first(kind=obnamlib.ADLER32))
         self.assert_(sig.first(kind=obnamlib.MD5))
-        
+
     def test_file_signature_returns_empty_list_for_empty_file(self):
         sigs = list(self.obsync.file_signature(StringIO.StringIO(""), 42))
         self.assertEqual(sigs, [])
