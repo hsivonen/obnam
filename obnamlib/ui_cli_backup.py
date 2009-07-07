@@ -182,6 +182,25 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
                 filenames = [x for x in filenames if x not in fg.names]
 
         return filegroups, filenames
+        
+    def find_existing_files(self, prevdir, dirname, filenames): # pragma: no cover
+        """Find all filenames that also exist in prevdir.
+        
+        Return two lists: existing files, others.
+        
+        """
+        
+        existing = []
+        filenames = filenames[:]
+        
+        for fgref in prevdir.fgrefs:
+            fg = self.store.get_object(self.host, fgref)
+            for name in fg.names:
+                if name in filenames:
+                    existing.append(name)
+                    filenames.remove(name)
+        
+        return existing, filenames
 
     def same_file(self, dirname, basename, fg): # pragma: no cover
         """Is the file on disk the same as in the filegroup?"""
@@ -223,8 +242,11 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
             self.same_stat(prevdir.stat, st)):
             return prevdir
         else:
+            existing, others = self.find_existing_files(prevdir, dirname, 
+                                                        filenames)
+            filenames = existing + others
             if filenames:
-                fullnames = [os.path.join(relative_path, x) for x in filenames]
+                fullnames = [os.path.join(relative_path, x) for x in others]
                 filegroups += self.backup_new_files_as_groups(fullnames)
             return self.new_dir(relative_path, st, subdirs, filegroups)
 
