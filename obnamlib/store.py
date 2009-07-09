@@ -375,7 +375,7 @@ class Store(object):
             self.put_object(rsyncsigpart)
             content.rsyncsigpartrefs += [rsyncsigpart.id]
 
-    def put_contents(self, f, size, rsync_block_size):
+    def put_contents(self, f, chunk_size, rsync_block_size):
         """Write contents of open file to store.
         
         The contents of the file will be split into chunks of `size`
@@ -392,7 +392,7 @@ class Store(object):
         md5 = hashlib.md5()
         siggen = obnamlib.RsyncSignatureGenerator()
         while True:
-            data = f.read(size)
+            data = f.read(chunk_size)
             if not data:
                 break
             part = self.new_object(kind=obnamlib.FILEPART)
