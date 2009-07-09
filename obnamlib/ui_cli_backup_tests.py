@@ -88,7 +88,7 @@ class BackupCommandTests(unittest.TestCase):
         fc.id = "contentsid"
 
         self.cmd.fs.open("foo", "r").AndReturn(f)
-        self.cmd.store.put_contents(f, self.cmd.PART_SIZE,
+        self.cmd.store.put_contents(f, None, self.cmd.PART_SIZE,
                                     self.cmd.RSYNC_SIZE).AndReturn(fc)
         f.close()
 
@@ -112,7 +112,7 @@ class BackupCommandTests(unittest.TestCase):
         self.cmd.fs.open("foo", "r").AndReturn(f)
         cont = self.mox.CreateMock(obnamlib.FileContents)
         cont.id = "filecontents.id"
-        self.cmd.store.put_contents(f, self.cmd.PART_SIZE, 
+        self.cmd.store.put_contents(f, None, self.cmd.PART_SIZE, 
                                     self.cmd.RSYNC_SIZE).AndReturn(cont)
         f.close()
 

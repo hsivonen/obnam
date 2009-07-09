@@ -375,13 +375,17 @@ class Store(object):
             self.put_object(rsyncsigpart)
             content.rsyncsigpartrefs += [rsyncsigpart.id]
 
-    def put_contents(self, f, chunk_size, rsync_block_size):
+    def put_contents(self, f, rsynclookuptable, chunk_size, rsync_block_size):
         """Write contents of open file to store.
         
-        The contents of the file will be split into chunks of `size`
+        The contents of the file will be split into chunks of `chunk_size`
         bytes. Each chunk gets placed in a FILEPART object. Finally,
         and FILECONTENTS object is created, put into the store, and
         returned.
+        
+        rsynclookuptable is an instance of obnamlib.RsyncLookupTable,
+        containing the signature data for the previous version of the
+        file. It may be None.
         
         rsync_block_size is the size of rsync block sizes for signature
         computation.

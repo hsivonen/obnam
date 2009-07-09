@@ -126,7 +126,8 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         
         self.progress["files-found"] += 1
         f = self.fs.open(path, "r")
-        content = self.store.put_contents(f, self.PART_SIZE, self.RSYNC_SIZE)
+        content = self.store.put_contents(f, None, self.PART_SIZE, 
+                                          self.RSYNC_SIZE)
         f.close()
         return self.new_file(os.path.basename(path), st, contref=content.id)
 
