@@ -121,17 +121,29 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         self.progress["files-found"] += 1
         return self.new_file(os.path.basename(path), st)
 
-    def backup_new_file(self, path, st):
+    def get_rsyncsig_as_table(self, prevdir, basename):
+        """Look up the rsync signature data for a file.
+        
+        Return None, if not found, or an obnamlib.RsyncLookupTable.
+        previdr may be None.
+        
+        """
+        
+        return None
+
+    def backup_file(self, prevdir, path, st):
         """Back up a completely new file."""
         
         self.progress["files-found"] += 1
+        basename = os.path.basename(path)
+        table = self.get_rsyncsig_as_table(prevdir, basename)
         f = self.fs.open(path, "r")
-        content = self.store.put_contents(f, None, self.PART_SIZE, 
+        content = self.store.put_contents(f, table, self.PART_SIZE, 
                                           self.RSYNC_SIZE)
         f.close()
         return self.new_file(os.path.basename(path), st, contref=content.id)
 
-    def backup_new_files_as_groups(self, relative_paths, lstat=None):
+    def backup_files_as_groups(self, prevdir, relative_paths, lstat=None):
         """Back a set of new files as a new FILEGROUP."""
         if lstat is None: # pragma: no cover
             lstat = self.fs.lstat
@@ -140,7 +152,7 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
             st = lstat(path)
             fc = None
             if stat.S_ISREG(st.st_mode):
-                fc = self.backup_new_file(path, st)
+                fc = self.backup_file(prevdir, path, st)
             elif stat.S_ISLNK(st.st_mode):
                 fc = self.backup_new_symlink(path, st)
             else:
@@ -247,15 +259,15 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
                                                         filenames)
             existing = [os.path.join(relative_path, x) for x in existing]
             others = [os.path.join(relative_path, x) for x in others]
-            filegroups += self.backup_new_files_as_groups(existing)
-            filegroups += self.backup_new_files_as_groups(others)
+            filegroups += self.backup_files_as_groups(prevdir, existing)
+            filegroups += self.backup_files_as_groups(prevdir, others)
             return self.new_dir(relative_path, st, subdirs, filegroups)
 
     def backup_new_dir(self, relative_path, st, subdirs, filenames):
         """Back up a new directory."""
         logging.debug("Directory is NEW: %s" % relative_path)
         fullnames = [os.path.join(relative_path, x) for x in filenames]
-        filegroups = self.backup_new_files_as_groups(fullnames)
+        filegroups = self.backup_files_as_groups(None, fullnames)
         return self.new_dir(relative_path, st, subdirs, filegroups)
 
     def get_dir_in_prevgen(self, relative_path):
@@ -413,7 +425,7 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         dirs = [x for x in roots if self.fs.isdir(x)]
         nondirs = [x for x in roots if x not in dirs]
 
-        fgrefs = [x.id for x in self.backup_new_files_as_groups(nondirs)]
+        fgrefs = [x.id for x in self.backup_files_as_groups(None, nondirs)]
 
         root_list = []
         lastest_gen = None
