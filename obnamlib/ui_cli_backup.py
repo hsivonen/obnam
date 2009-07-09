@@ -121,7 +121,7 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         self.progress["files-found"] += 1
         return self.new_file(os.path.basename(path), st)
 
-    def get_rsyncsig_as_table(self, prevdir, basename):
+    def get_rsyncsig_as_table(self, prevdir, basename): # pragma: no cover
         """Look up the rsync signature data for a file.
         
         Return None, if not found, or an obnamlib.RsyncLookupTable.
@@ -129,6 +129,21 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         
         """
         
+        if prevdir is None:
+            return None
+            
+        for fgref in prevdir.fgrefs:
+            fg = self.store.get_object(fgref)
+            if basename in fg.names:
+                fc = fg.get_file(basename)
+                cont = self.store.get_object(fc.contref)
+                if cont.rsyncsigpartrefs:
+                    table = obnamlib.RsyncLookupTable()
+                    for ref in cont.rsyncsigpartrefs:
+                        o = self.store.get_object(ref)
+                        table.add_checksums(o.checksums)
+                    return table
+
         return None
 
     def backup_file(self, prevdir, path, st):
