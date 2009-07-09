@@ -245,10 +245,10 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         else:
             existing, others = self.find_existing_files(prevdir, dirname, 
                                                         filenames)
-            filenames = existing + others
-            if filenames:
-                fullnames = [os.path.join(relative_path, x) for x in others]
-                filegroups += self.backup_new_files_as_groups(fullnames)
+            existing = [os.path.join(relative_path, x) for x in existing]
+            others = [os.path.join(relative_path, x) for x in others]
+            filegroups += self.backup_new_files_as_groups(existing)
+            filegroups += self.backup_new_files_as_groups(others)
             return self.new_dir(relative_path, st, subdirs, filegroups)
 
     def backup_new_dir(self, relative_path, st, subdirs, filenames):
