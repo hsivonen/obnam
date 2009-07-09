@@ -149,13 +149,11 @@ class RsyncDeltaGenerator(object):
 
     """Generate a delta from signature file and new version of a file."""
     
-    def __init__(self, rsyncsigparts, chunk_size):
-        self.chunk_size = chunk_size
-        self.block_size = rsyncsigparts[0].block_size
+    def __init__(self, block_size, rsynclookuptable, chunk_size):
+        self.block_size = block_size
         assert self.block_size > 0
-        self.lookup_table = RsyncLookupTable()
-        for part in rsyncsigparts:
-            self.lookup_table.add_checksums(part.checksums)
+        self.chunk_size = chunk_size
+        self.lookup_table = rsynclookuptable
         self.buf = ""
 
         # This is used by the feed method to optimize delta directive

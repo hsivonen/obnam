@@ -115,13 +115,18 @@ class RsyncDeltaGeneratorTests(unittest.TestCase):
         self.sigparts = [obnamlib.RsyncSigPart(id="id", 
                                                block_size=self.block_size, 
                                                checksums=checksums)]
+        self.table = obnamlib.RsyncLookupTable()
+        for x in self.sigparts:
+            self.table.add_checksums(x.checksums)
         self.old_file = StringIO.StringIO(self.old_data)
         self.new_file = StringIO.StringIO(self.new_data)
-        self.deltagen = obnamlib.RsyncDeltaGenerator(self.sigparts,
+        self.deltagen = obnamlib.RsyncDeltaGenerator(self.block_size,
+                                                     self.table,
                                                      self.chunk_size)
 
     def test_returns_single_subfilepart_for_no_difference(self):
-        deltagen = obnamlib.RsyncDeltaGenerator(self.sigparts, 
+        deltagen = obnamlib.RsyncDeltaGenerator(self.block_size,
+                                                self.table, 
                                                 self.chunk_size)
         delta = list(deltagen.feed(self.old_file.read()))
         delta += list(deltagen.feed(""))
@@ -152,7 +157,8 @@ class RsyncDeltaGeneratorTests(unittest.TestCase):
     def test_file_delta_computes_delta_for_leading_changes(self):
         data = self.additional_data + self.old_data
         f = StringIO.StringIO(data)
-        deltagen = obnamlib.RsyncDeltaGenerator(self.sigparts,
+        deltagen = obnamlib.RsyncDeltaGenerator(self.block_size,
+                                                self.table,
                                                 self.chunk_size)
         delta = list(deltagen.feed(f.read()))
         delta += list(deltagen.feed(""))
@@ -169,7 +175,8 @@ class RsyncDeltaGeneratorTests(unittest.TestCase):
     def test_file_delta_computes_delta_for_duplicated_block(self):
         data = self.old_data[:self.block_size] + self.old_data
         f = StringIO.StringIO(data)
-        deltagen = obnamlib.RsyncDeltaGenerator(self.sigparts,
+        deltagen = obnamlib.RsyncDeltaGenerator(self.block_size,
+                                                self.table,
                                                 self.chunk_size)
         delta = list(deltagen.feed(f.read()))
         delta += list(deltagen.feed(""))

@@ -395,6 +395,14 @@ class Store(object):
         content = self.new_object(kind=obnamlib.FILECONTENTS)
         md5 = hashlib.md5()
         siggen = obnamlib.RsyncSignatureGenerator()
+        
+        if not rsynclookuptable:
+            rsynclookuptable = obnamlib.RsyncLookupTable()
+
+        deltagen = obnamlib.RsyncDeltaGenerator(rsync_block_size,
+                                                rsynclookuptable,
+                                                chunk_size)
+        
         while True:
             data = f.read(chunk_size)
             if not data:
