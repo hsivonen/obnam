@@ -363,9 +363,16 @@ class Store(object):
             return
             
         cont = self.get_object(host, cont_id)
-        for part_id in cont.part_ids:
-            part = self.get_object(host, part_id)
-            output.write(part.data)
+        for contpart_ref in cont.filecontentspartrefs:
+            contpart = self.get_object(host, contpart_ref)
+            for c in contpart.components:
+                if c.kind == obnamlib.FILEPARTREF:
+                    part = self.get_object(host, str(c))
+                    output.write(part.data)
+                elif c.kind == obnamlib.SUBFILEPART:
+                    raise Exception("unimplemented")
+                elif c.kind == obnamlib.FILECHUNK:
+                    raise Exception("unimplemented")
 
     def make_rsyncsigparts(self, content, siggen, rsync_block_size, new_data):
         sigs = siggen.buffered_block_signature(new_data, rsync_block_size)
@@ -393,6 +400,7 @@ class Store(object):
         """
 
         content = self.new_object(kind=obnamlib.FILECONTENTS)
+        content_part = self.new_object(kind=obnamlib.FILECONTENTSPART)
         md5 = hashlib.md5()
         siggen = obnamlib.RsyncSignatureGenerator()
         
@@ -407,15 +415,17 @@ class Store(object):
             data = f.read(chunk_size)
             if not data:
                 break
-            part = self.new_object(kind=obnamlib.FILEPART)
-            part.data = data
-            self.put_object(part)
-            content.add(part.id)
+            filepart = self.new_object(kind=obnamlib.FILEPART)
+            filepart.data = data
+            self.put_object(filepart)
+            content_part.add_filepartref(filepart.id)
             md5.update(data)
             self.make_rsyncsigparts(content, siggen, rsync_block_size, data)
 
         self.make_rsyncsigparts(content, siggen, rsync_block_size, "")
 
+        self.put_object(content_part)
+        content.add_filecontentspartref(content_part.id)
         content.md5 = md5.digest()
         self.put_object(content)
         return content

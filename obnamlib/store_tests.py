@@ -215,11 +215,14 @@ class StoreTests(unittest.TestCase):
 
     def test_cat_gets_simple_file_contents_correctly(self):
         filepart = obnamlib.FilePart(id="part.id", data="foo")
+        contpart = obnamlib.FileContentsPart(id="contpart.id")
+        contpart.add_filepartref(filepart.id)
         filecont = obnamlib.FileContents(id="cont.id")
-        filecont.add(filepart.id)
+        filecont.add_filecontentspartref(contpart.id)
 
         host = self.rw.get_host("host.id")
         self.rw.put_object(filepart)
+        self.rw.put_object(contpart)
         self.rw.put_object(filecont)
         self.rw.commit(host)
         

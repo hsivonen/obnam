@@ -73,6 +73,11 @@ class FileChunk(obnamlib.StringComponent):
     string_kind = obnamlib.FILECHUNK
 
 
+class FileContentsPartRef(obnamlib.StringComponent):
+
+    string_kind = obnamlib.FILECONTENTSPARTREF
+
+
 class FileGroupRef(obnamlib.StringComponent):
 
     string_kind = obnamlib.FILEGROUPREF

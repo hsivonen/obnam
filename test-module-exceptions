@@ -26,3 +26,4 @@ obnamlib/ui_cli_signature.py
 obnamlib/object_rsyncdelta.py
 obnamlib/ui_cli_delta.py
 obnamlib/ui_cli_patch.py
+obnamlib/object_filecontentspart.py

@@ -43,6 +43,7 @@ from component_strings import (Adler32,
                                DeltaRef,
                                DirRef,
                                FileChunk, 
+                               FileContentsPartRef,
                                FileGroupRef,
                                FileListRef,
                                FileName,
@@ -79,6 +80,7 @@ obj_kinds.add_all()
 obj_kinds.add_to_obnamlib()
 from object_dir import Dir
 from object_filecontents import FileContents
+from object_filecontentspart import FileContentsPart
 from object_filegroup import FileGroup
 from object_filelist import FileList
 from object_filepart import FilePart

@@ -26,8 +26,8 @@ class FileContentsTests(unittest.TestCase):
         self.fc = obnamlib.FileContents(id="id")
 
     def test_has_no_parts_initially(self):
-        self.assertEqual(self.fc.part_ids, [])
+        self.assertEqual(self.fc.filecontentspartrefs, [])
 
     def test_adds_a_part_correctly(self):
-        self.fc.add("foo")
-        self.assertEqual(self.fc.part_ids, ["foo"])
+        self.fc.add_filecontentspartref("foo")
+        self.assertEqual(self.fc.filecontentspartrefs, ["foo"])

@@ -27,10 +27,6 @@ class FileContents(obnamlib.Object):
     def __init__(self, id):
         obnamlib.Object.__init__(self, id=id)
 
-    @property
-    def part_ids(self):
-        return self.find_strings(kind=obnamlib.FILEPARTREF)
-
     def get_md5(self): # pragma: no cover
         strings = self.find_strings(kind=obnamlib.MD5)
         if strings:
@@ -44,9 +40,13 @@ class FileContents(obnamlib.Object):
         
     md5 = property(get_md5, set_md5)
 
-    def add(self, ref):
-        c = obnamlib.FilePartRef(ref)
+    def add_filecontentspartref(self, ref):
+        c = obnamlib.FileContentsPartRef(ref)
         self.components.append(c)
+
+    @property
+    def filecontentspartrefs(self):
+        return self.find_strings(kind=obnamlib.FILECONTENTSPARTREF)
         
     def add_rsyncsigpartref(self, ref): # pragma: no cover
         c = obnamlib.RsyncSigPartRef(ref)
