@@ -382,7 +382,8 @@ class Store(object):
             self.put_object(rsyncsigpart)
             content.rsyncsigpartrefs += [rsyncsigpart.id]
 
-    def put_contents(self, f, rsynclookuptable, chunk_size, rsync_block_size):
+    def put_contents(self, f, rsynclookuptable, chunk_size, rsync_block_size,
+                     prevgen_contentsref):
         """Write contents of open file to store.
         
         The contents of the file will be split into chunks of `chunk_size`
@@ -413,14 +414,27 @@ class Store(object):
         
         while True:
             data = f.read(chunk_size)
-            if not data:
-                break
-            filepart = self.new_object(kind=obnamlib.FILEPART)
-            filepart.data = data
-            self.put_object(filepart)
-            content_part.add_filepartref(filepart.id)
+
             md5.update(data)
             self.make_rsyncsigparts(content, siggen, rsync_block_size, data)
+
+            for x in deltagen.feed(data):
+                logging.debug("deltagen gave %s" % repr(x))
+                if x.kind == obnamlib.FILECHUNK:
+                    filepart = self.new_object(kind=obnamlib.FILEPART)
+                    filepart.components.append(x)
+                    self.put_object(filepart)
+                    content_part.add_filepartref(filepart.id)
+                elif x.kind == obnamlib.SUBFILEPART:
+                    assert prevgen_contentsref is not None
+                    c = obnamlib.FileContentsRef(prevgen_contentsref)
+                    x.components += [c]
+                    content_part.components += [x]
+                else:
+                    raise Exception("wtf is deltagen returning? %s" % repr(x))
+
+            if not data:
+                break
 
         self.make_rsyncsigparts(content, siggen, rsync_block_size, "")
 

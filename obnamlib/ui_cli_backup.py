@@ -146,15 +146,28 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
 
         return None
 
+    def get_filecontentsref(self, prevdir, basename): # pragma: no cover
+        if prevdir is None:
+            return None
+            
+        for fgref in prevdir.fgrefs:
+            fg = self.store.get_object(fgref)
+            if basename in fg.names:
+                fc = fg.get_file(basename)
+                return fc.contref
+
+        return None
+
     def backup_file(self, prevdir, path, st):
         """Back up a completely new file."""
         
         self.progress["files-found"] += 1
         basename = os.path.basename(path)
         table = self.get_rsyncsig_as_table(prevdir, basename)
+        contref = self.get_filecontentsref(prevdir, basename)
         f = self.fs.open(path, "r")
         content = self.store.put_contents(f, table, self.PART_SIZE, 
-                                          self.RSYNC_SIZE)
+                                          self.RSYNC_SIZE, contref)
         f.close()
         return self.new_file(os.path.basename(path), st, contref=content.id)
 

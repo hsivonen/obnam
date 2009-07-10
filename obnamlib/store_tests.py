@@ -235,7 +235,7 @@ class StoreTests(unittest.TestCase):
     def test_put_contents_puts_contents_correctly(self):
         f = StringIO.StringIO("foo")
         host = self.rw.get_host("host.id")
-        filecont = self.rw.put_contents(f, None, 1024, 1024)
+        filecont = self.rw.put_contents(f, None, 1024, 1024, None)
         self.rw.commit(host)
 
         result = StringIO.StringIO()
@@ -248,13 +248,13 @@ class StoreTests(unittest.TestCase):
         data = "foo"
         f = StringIO.StringIO(data)
         host = self.rw.get_host("host.id")
-        filecont = self.rw.put_contents(f, None, 1024, 1024)
+        filecont = self.rw.put_contents(f, None, 1024, 1024, None)
         self.assertEqual(filecont.md5, hashlib.md5(data).digest())
         
     def test_put_contents_computes_rsync_signature(self):
         data = "foo"
         f = StringIO.StringIO(data)
         host = self.rw.get_host("host.id")
-        filecont = self.rw.put_contents(f, None, 1024, 1024)
+        filecont = self.rw.put_contents(f, None, 1024, 1024, None)
         self.assert_(filecont.find(kind=obnamlib.RSYNCSIGPARTREF))
 

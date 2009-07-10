@@ -89,7 +89,7 @@ class BackupCommandTests(unittest.TestCase):
 
         self.cmd.fs.open("foo", "r").AndReturn(f)
         self.cmd.store.put_contents(f, None, self.cmd.PART_SIZE,
-                                    self.cmd.RSYNC_SIZE).AndReturn(fc)
+                                    self.cmd.RSYNC_SIZE, None).AndReturn(fc)
         f.close()
 
         self.mox.ReplayAll()
@@ -113,7 +113,7 @@ class BackupCommandTests(unittest.TestCase):
         cont = self.mox.CreateMock(obnamlib.FileContents)
         cont.id = "filecontents.id"
         self.cmd.store.put_contents(f, None, self.cmd.PART_SIZE, 
-                                    self.cmd.RSYNC_SIZE).AndReturn(cont)
+                                    self.cmd.RSYNC_SIZE, None).AndReturn(cont)
         f.close()
 
         # The FileGroup gets created after the first file to be added,
