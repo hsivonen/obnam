@@ -221,12 +221,10 @@ class RsyncDeltaGenerator(object):
     def feed(self, some_data):
         """Compute delta from RsyncSigParts to new_file.
         
-        Generate obnamlib.FileChunk and obnamlib.SubFilePart objects.
-        
-        NOTE: The SubFileParts that are returned have an INVALID reference
-        to the FilePart. The caller must create a new SubFilePart with
-        the correct reference.
-        
+        This is like simple_feed, but instead of single-character
+        strings, it returns longer ones. Also, references to adjacent
+        blocks are combines.
+
         """
 
         # Now we optimize. This is similar to peep-hole optimization in
@@ -240,7 +238,7 @@ class RsyncDeltaGenerator(object):
                 if type(x) == str:
                     self.queue.append(x)
                 else:
-                    yield obnamlib.FileChunk(''.join(self.queue))
+                    yield ''.join(self.queue)
                     self.queue = [x]
             else:
                 offset, length = self.queue[0]
@@ -249,29 +247,17 @@ class RsyncDeltaGenerator(object):
                     if new_offset == offset + length:
                         self.queue = [(offset, length + new_length)]
                     else:
-                        sfp = obnamlib.SubFilePart()
-                        sfp.filepartref = ""
-                        sfp.offset = offset
-                        sfp.length = length
-                        yield sfp
+                        yield (offset, length)
                         self.queue = [x]
                 else:
-                    sfp = obnamlib.SubFilePart()
-                    sfp.filepartref = ""
-                    sfp.offset = offset
-                    sfp.length = length
-                    yield sfp
+                    yield (offset, length)
                     self.queue = [x]
         if some_data == "" and self.queue:
             if type(self.queue[0]) == str:
-                yield obnamlib.FileChunk(''.join(self.queue))
+                yield ''.join(self.queue)
             else:
                 offset, length = self.queue[0]
-                sfp = obnamlib.SubFilePart()
-                sfp.filepartref = ""
-                sfp.offset = offset
-                sfp.length = length
-                yield sfp
+                yield offset, length
 
 
 class RsyncPatcher(object):

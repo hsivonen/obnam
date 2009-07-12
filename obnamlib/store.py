@@ -420,10 +420,10 @@ class Store(object):
             self.make_rsyncsigparts(content, siggen, rsync_block_size, data)
 
             for x in deltagen.feed(data):
-                assert x.kind in (obnamlib.FILECHUNK, obnamlib.SUBFILEPART)
-                if x.kind == obnamlib.FILECHUNK:
+                assert type(x) in (str, tuple)
+                if type(x) == str:
                     filepart = self.new_object(kind=obnamlib.FILEPART)
-                    filepart.components.append(x)
+                    filepart.data = x
                     self.put_object(filepart)
                     sfp = obnamlib.SubFilePart()
                     sfp.filepartref = filepart.id
@@ -432,7 +432,7 @@ class Store(object):
                     content_part.components += [sfp]
                 else: # pragma: no cover
                     assert prevcont is not None
-                    for sftp in prevcont.find_fileparts(x.offset, x.length):
+                    for sftp in prevcont.find_fileparts(x[0], x[1]):
                         content_part.components += [sfp]
 
             if not data:
