@@ -15,6 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import hashlib
 import mox
 import os
 import shutil
@@ -214,11 +215,14 @@ class StoreTests(unittest.TestCase):
 
     def test_cat_gets_simple_file_contents_correctly(self):
         filepart = obnamlib.FilePart(id="part.id", data="foo")
+        contpart = obnamlib.FileContentsPart(id="contpart.id")
+        contpart.add_filepartref(filepart.id)
         filecont = obnamlib.FileContents(id="cont.id")
-        filecont.add(filepart.id)
+        filecont.add_filecontentspartref(contpart.id)
 
         host = self.rw.get_host("host.id")
         self.rw.put_object(filepart)
+        self.rw.put_object(contpart)
         self.rw.put_object(filecont)
         self.rw.commit(host)
         
@@ -231,7 +235,7 @@ class StoreTests(unittest.TestCase):
     def test_put_contents_puts_contents_correctly(self):
         f = StringIO.StringIO("foo")
         host = self.rw.get_host("host.id")
-        filecont = self.rw.put_contents(f, 1024)
+        filecont = self.rw.put_contents(f, None, 1024, 1024, None)
         self.rw.commit(host)
 
         result = StringIO.StringIO()
@@ -239,3 +243,18 @@ class StoreTests(unittest.TestCase):
         host = store.get_host("host.id")
         store.cat(host, result, filecont.id, None)
         self.assertEqual(result.getvalue(), "foo")
+        
+    def test_put_contents_computes_md5(self):
+        data = "foo"
+        f = StringIO.StringIO(data)
+        host = self.rw.get_host("host.id")
+        filecont = self.rw.put_contents(f, None, 1024, 1024, None)
+        self.assertEqual(filecont.md5, hashlib.md5(data).digest())
+        
+    def test_put_contents_computes_rsync_signature(self):
+        data = "foo"
+        f = StringIO.StringIO(data)
+        host = self.rw.get_host("host.id")
+        filecont = self.rw.put_contents(f, None, 1024, 1024, None)
+        self.assert_(filecont.find(kind=obnamlib.RSYNCSIGPARTREF))
+

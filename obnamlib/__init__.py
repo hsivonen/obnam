@@ -33,7 +33,8 @@ cmp_kinds.add_all()
 cmp_kinds.add_to_obnamlib()
 from component_file import File
 from component_stat import Stat
-from component_strings import (BlockId, 
+from component_strings import (Adler32,
+                               BlockId, 
                                BlockRef,
                                ContMapRef,
                                ContRef,
@@ -42,6 +43,7 @@ from component_strings import (BlockId,
                                DeltaRef,
                                DirRef,
                                FileChunk, 
+                               FileContentsPartRef,
                                FileGroupRef,
                                FileListRef,
                                FileName,
@@ -51,16 +53,24 @@ from component_strings import (BlockId,
                                GenRef,
                                GenStart,
                                Group,
+                               Length,
                                MapRef,
+                               Md5,
                                ObjectId, 
                                ObjRef,
+                               Offset,
                                Owner,
+                               RsyncSigPartRef,
                                SigData,
                                SigRef,
                                SnapshotGen,
                                SymlinkTarget)
-from component_composites import NameIPair, ObjectComponent, ObjMap
+from component_composites import (Checksums, 
+                                  ObjectComponent, 
+                                  ObjMap)
 from component_objkind import ObjectKind
+from component_subfilepart import SubFilePart
+from component_sigblocksize import SigBlockSize
 from component_factory import ComponentFactory
 
 from object import Object
@@ -68,16 +78,15 @@ from object_kinds import ObjectKinds
 obj_kinds = ObjectKinds()
 obj_kinds.add_all()
 obj_kinds.add_to_obnamlib()
-from object_delta import Delta
-from object_deltapart import DeltaPart
 from object_dir import Dir
 from object_filecontents import FileContents
+from object_filecontentspart import FileContentsPart
 from object_filegroup import FileGroup
 from object_filelist import FileList
 from object_filepart import FilePart
 from object_gen import Generation
 from object_host import Host
-from object_sig import Signature
+from object_rsyncsigpart import RsyncSigPart
 from object_factory import ObjectFactory
 
 from object_cache import ObjectCache
@@ -112,6 +121,9 @@ from ui_cli_help import HelpCommand
 from ui_cli_objtree import ObjtreeCommand
 from ui_cli_show import ShowGenerationsCommand
 from ui_cli_showobjs import ShowobjsCommand
+from ui_cli_signature import SignatureCommand
+from ui_cli_delta import DeltaCommand
+from ui_cli_patch import PatchCommand
 from ui_cli_diskusage import DiskUsageCommand
 
 from progress import ProgressReporter
@@ -120,3 +132,9 @@ from statutils import decode_stat, make_stat
 from formatutils import format_size, format_time
 
 import varint
+
+from obsync import (RsyncSignatureGenerator, 
+                    RsyncLookupTable,
+                    RsyncDeltaGenerator,
+                    RsyncPatcher)
+

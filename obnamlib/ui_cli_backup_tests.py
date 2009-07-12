@@ -88,11 +88,12 @@ class BackupCommandTests(unittest.TestCase):
         fc.id = "contentsid"
 
         self.cmd.fs.open("foo", "r").AndReturn(f)
-        self.cmd.store.put_contents(f, self.cmd.PART_SIZE).AndReturn(fc)
+        self.cmd.store.put_contents(f, None, self.cmd.PART_SIZE,
+                                    self.cmd.RSYNC_SIZE, None).AndReturn(fc)
         f.close()
 
         self.mox.ReplayAll()
-        new_file = self.cmd.backup_new_file("foo", st)
+        new_file = self.cmd.backup_file(None, "foo", st)
         self.mox.VerifyAll()
         self.assertEqual(new_file.filename, "foo")
         self.assertEqual(new_file.stat, st)
@@ -111,7 +112,8 @@ class BackupCommandTests(unittest.TestCase):
         self.cmd.fs.open("foo", "r").AndReturn(f)
         cont = self.mox.CreateMock(obnamlib.FileContents)
         cont.id = "filecontents.id"
-        self.cmd.store.put_contents(f, self.cmd.PART_SIZE).AndReturn(cont)
+        self.cmd.store.put_contents(f, None, self.cmd.PART_SIZE, 
+                                    self.cmd.RSYNC_SIZE, None).AndReturn(cont)
         f.close()
 
         # The FileGroup gets created after the first file to be added,
@@ -133,17 +135,17 @@ class BackupCommandTests(unittest.TestCase):
         self.cmd.store.put_object(fg)        
 
         self.mox.ReplayAll()
-        ret = self.cmd.backup_new_files_as_groups(["foo", "bar", "foobar"])
+        ret = self.cmd.backup_files_as_groups(None, ["foo", "bar", "foobar"])
         self.mox.VerifyAll()
         self.assertEqual(ret, [fg])
 
     def test_backs_up_directory_correctly(self):
         filenames = []
-        def mock_backup_files(names):
+        def mock_backup_files(prevdir, names):
             for name in names:
                 filenames.append(name)
             return [DummyObject("fg")]
-        self.cmd.backup_new_files_as_groups = mock_backup_files
+        self.cmd.backup_files_as_groups = mock_backup_files
 
         dir = self.mox.CreateMock(obnamlib.Dir)
         subdirs = [DummyObject(id) for id in ["dir1", "dir2"]]
@@ -164,7 +166,7 @@ class BackupCommandTests(unittest.TestCase):
         self.assertEqual(filenames, ["foo/file1", "foo/file2"])
 
     def test_backs_up_empty_directory_correctly(self):
-        self.cmd.backup_new_files_as_groups = lambda *args: []
+        self.cmd.backup_files_as_groups = lambda *args: []
 
         lstat = lambda *args: obnamlib.make_stat()
         ret = self.cmd.backup_dir("foo", [], [], lstat=lstat)
@@ -179,7 +181,7 @@ class BackupCommandTests(unittest.TestCase):
         self.cmd.fs = self.mox.CreateMock(obnamlib.VirtualFileSystem)
 
         self.cmd.fs.depth_first("foo", prune=mox.IgnoreArg()).AndReturn(
-		[("foo", [], [])])
+                [("foo", [], [])])
         self.cmd.it_is_snapshot_time = lambda: False
 
         self.mox.ReplayAll()
@@ -234,14 +236,14 @@ class BackupCommandTests(unittest.TestCase):
 
         filenames = []
         fgrefs = []
-        def dummy_backup_groups(names):
+        def dummy_backup_groups(prevdir, names):
             for name in names:
                 filenames.append(name)
             self.count += 1
             fg = obnamlib.FileGroup(id="%s" % self.count)
             fgrefs.append(fg.id)
             return [fg]
-        self.cmd.backup_new_files_as_groups = dummy_backup_groups
+        self.cmd.backup_files_as_groups = dummy_backup_groups
         
         self.cmd.host = self.mox.CreateMock(obnamlib.Host)
         self.cmd.host.genrefs = []

@@ -15,6 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import hashlib
 import logging
 import os
 
@@ -362,28 +363,86 @@ class Store(object):
             return
             
         cont = self.get_object(host, cont_id)
-        for part_id in cont.part_ids:
-            part = self.get_object(host, part_id)
-            output.write(part.data)
+        for contpart_ref in cont.filecontentspartrefs:
+            contpart = self.get_object(host, contpart_ref)
+            for c in contpart.components:
+                assert c.kind in (obnamlib.FILEPARTREF, obnamlib.SUBFILEPART)
+                if c.kind == obnamlib.FILEPARTREF:
+                    part = self.get_object(host, str(c))
+                    output.write(part.data)
+                else:
+                    filepart = self.get_object(host, c.filepartref)
+                    data = filepart.find_strings(kind=obnamlib.FILECHUNK)[0]
+                    output.write(data[c.offset:c.offset + c.length])
 
-    def put_contents(self, file, size):
+    def make_rsyncsigparts(self, content, siggen, rsync_block_size, new_data):
+        sigs = siggen.buffered_block_signature(new_data, rsync_block_size)
+        if sigs:
+            rsyncsigpart = self.new_object(kind=obnamlib.RSYNCSIGPART)
+            rsyncsigpart.components += sigs
+            self.put_object(rsyncsigpart)
+            content.rsyncsigpartrefs += [rsyncsigpart.id]
+
+    def put_contents(self, f, rsynclookuptable, chunk_size, rsync_block_size,
+                     prevcont):
         """Write contents of open file to store.
         
-        The contents of the file will be split into chunks of `size`
+        The contents of the file will be split into chunks of `chunk_size`
         bytes. Each chunk gets placed in a FILEPART object. Finally,
         and FILECONTENTS object is created, put into the store, and
         returned.
         
+        rsynclookuptable is an instance of obnamlib.RsyncLookupTable,
+        containing the signature data for the previous version of the
+        file. It may be None.
+        
+        rsync_block_size is the size of rsync block sizes for signature
+        computation.
+        
         """
 
         content = self.new_object(kind=obnamlib.FILECONTENTS)
+        content_part = self.new_object(kind=obnamlib.FILECONTENTSPART)
+        md5 = hashlib.md5()
+        siggen = obnamlib.RsyncSignatureGenerator()
+        
+        if not rsynclookuptable:
+            rsynclookuptable = obnamlib.RsyncLookupTable()
+
+        deltagen = obnamlib.RsyncDeltaGenerator(rsync_block_size,
+                                                rsynclookuptable,
+                                                chunk_size)
+
         while True:
-            data = file.read(size)
+            data = f.read(chunk_size)
+
+            md5.update(data)
+            self.make_rsyncsigparts(content, siggen, rsync_block_size, data)
+
+            for x in deltagen.feed(data):
+                assert x.kind in (obnamlib.FILECHUNK, obnamlib.SUBFILEPART)
+                if x.kind == obnamlib.FILECHUNK:
+                    filepart = self.new_object(kind=obnamlib.FILEPART)
+                    filepart.components.append(x)
+                    self.put_object(filepart)
+                    sfp = obnamlib.SubFilePart()
+                    sfp.filepartref = filepart.id
+                    sfp.offset = 0
+                    sfp.length = len(str(x))
+                    content_part.components += [sfp]
+                else: # pragma: no cover
+                    assert prevcont is not None
+                    for sftp in prevcont.find_fileparts(x.offset, x.length):
+                        content_part.components += [sfp]
+
             if not data:
                 break
-            part = self.new_object(kind=obnamlib.FILEPART)
-            part.data = data
-            self.put_object(part)
-            content.add(part.id)
+
+        self.make_rsyncsigparts(content, siggen, rsync_block_size, "")
+
+        self.put_object(content_part)
+        content.add_filecontentspartref(content_part.id)
+        content.md5 = md5.digest()
         self.put_object(content)
         return content
+

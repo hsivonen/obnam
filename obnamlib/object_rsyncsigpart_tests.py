@@ -1,4 +1,4 @@
-# Copyright (C) 2008  Lars Wirzenius <liw@liw.fi>
+# Copyright (C) 2009  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,26 +15,25 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import os
+import unittest
+
 import obnamlib
 
 
-class ObjectKinds(obnamlib.Kinds):
+class RsyncSigPartTests(unittest.TestCase):
 
-    """Kinds of Objects."""
+    def setUp(self):
+        self.checksums = [obnamlib.Checksums([])]
+        self.o = obnamlib.RsyncSigPart(id="id", block_size=42, 
+                                       checksums=self.checksums)
 
-    def add_all(self): # pragma: no cover
-        """Add all object kinds to ourselves."""
-        self.add( 1, "FILEPART")
-        # object kind 2 used to be INODE, but it's been removed
-        self.add( 3, "GEN")
-        # no longer used: self.add( 4, "SIG")
-        self.add( 5, "HOST")
-        self.add( 6, "FILECONTENTS")
-        self.add( 7, "FILELIST")
-        # no longer used: self.add( 8, "DELTA")
-        # no longer used: self.add( 9, "DELTAPART")
-        self.add(10, "DIR")
-        self.add(11, "FILEGROUP")
-        self.add(12, "RSYNCSIGPART")
-        self.add(13, "FILECONTENTSPART")
+    def test_sets_id_correctly(self):
+        self.assertEqual(self.o.id, "id")
+
+    def test_sets_block_size_correctly(self):
+        self.assertEqual(self.o.block_size, 42)
+
+    def test_sets_checksums_correctly(self):
+        self.assertEqual(self.o.checksums, self.checksums)
 

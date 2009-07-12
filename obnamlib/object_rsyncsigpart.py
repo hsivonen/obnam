@@ -1,4 +1,4 @@
-# Copyright (C) 2008  Lars Wirzenius <liw@liw.fi>
+# Copyright (C) 2009  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,23 +18,23 @@
 import obnamlib
 
 
-class ObjectKinds(obnamlib.Kinds):
+class RsyncSigPart(obnamlib.Object):
 
-    """Kinds of Objects."""
+    """A (partial) rsync signature."""
 
-    def add_all(self): # pragma: no cover
-        """Add all object kinds to ourselves."""
-        self.add( 1, "FILEPART")
-        # object kind 2 used to be INODE, but it's been removed
-        self.add( 3, "GEN")
-        # no longer used: self.add( 4, "SIG")
-        self.add( 5, "HOST")
-        self.add( 6, "FILECONTENTS")
-        self.add( 7, "FILELIST")
-        # no longer used: self.add( 8, "DELTA")
-        # no longer used: self.add( 9, "DELTAPART")
-        self.add(10, "DIR")
-        self.add(11, "FILEGROUP")
-        self.add(12, "RSYNCSIGPART")
-        self.add(13, "FILECONTENTSPART")
+    kind = obnamlib.RSYNCSIGPART
+
+    def __init__(self, id, block_size=0, checksums=None):
+        obnamlib.Object.__init__(self, id)
+        self.components += [obnamlib.SigBlockSize(block_size)]
+        if checksums:
+            self.components += checksums
+            
+    @property
+    def block_size(self):
+        return self.find(kind=obnamlib.SIGBLOCKSIZE)[0].block_size
+        
+    @property
+    def checksums(self):
+        return self.find(kind=obnamlib.CHECKSUMS)
 

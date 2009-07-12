@@ -15,25 +15,13 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import unittest
+
 import obnamlib
 
 
-# This module contains the component classes that are simple composite
-# ones. They don't need any extra testing. There are, however, so many
-# of them that it's pointless putting each in its own module.
+class SigBlockSizeTests(unittest.TestCase):
 
-
-class Checksums(obnamlib.CompositeComponent):
-
-    composite_kind = obnamlib.CHECKSUMS
-
-
-class ObjectComponent(obnamlib.CompositeComponent):
-
-    composite_kind = obnamlib.OBJECT
-
-
-class ObjMap(obnamlib.CompositeComponent):
-
-    composite_kind = obnamlib.OBJMAP
-
+    def test_sets_size_correctly(self):
+        c = obnamlib.SigBlockSize(42)
+        self.assertEqual(c.block_size, 42)

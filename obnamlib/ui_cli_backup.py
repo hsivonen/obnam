@@ -64,6 +64,7 @@ class BackupCommand(obnamlib.CommandLineCommand):
     """A sub-command for the command line interface to back up some data."""
 
     PART_SIZE = 256 * 1024
+    RSYNC_SIZE = 4096
     
     def add_options(self, parser): # pragma: no cover
         parser.add_option("--root", metavar="FILE-OR-DIR", default=None,
@@ -82,23 +83,23 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
                           help="max number of mappings before flushing them "
                                "to disk (default: %default)")
 
-	parser.add_option("--exclude", metavar="REGEXP", action="append",
-			  help="exclude pathnames matching REGEXP")
-	parser.set_defaults(exclude=[])
+        parser.add_option("--exclude", metavar="REGEXP", action="append",
+                          help="exclude pathnames matching REGEXP")
+        parser.set_defaults(exclude=[])
     
     def excluded(self, pathname): # pragma: no cover
-	for regexp in self.exclude_regexps:
-	    if regexp.search(pathname):
-		return True
-	return False
+        for regexp in self.exclude_regexps:
+            if regexp.search(pathname):
+                return True
+        return False
 
     def prune(self, dirname, dirnames, filenames): # pragma: no cover
-	for x in dirnames[:]:
-	    if self.excluded(os.path.join(dirname, x)):
-		dirnames.remove(x)
-	for x in filenames[:]:
-	    if self.excluded(os.path.join(dirname, x)):
-		filenames.remove(x)
+        for x in dirnames[:]:
+            if self.excluded(os.path.join(dirname, x)):
+                dirnames.remove(x)
+        for x in filenames[:]:
+            if self.excluded(os.path.join(dirname, x)):
+                filenames.remove(x)
 
     def new_file(self, name, st, contref=None, sigref=None, deltaref=None,
                  symlink_target=None):
@@ -120,16 +121,59 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         self.progress["files-found"] += 1
         return self.new_file(os.path.basename(path), st)
 
-    def backup_new_file(self, path, st):
+    def get_rsyncsig_as_table(self, prevdir, basename): # pragma: no cover
+        """Look up the rsync signature data for a file.
+        
+        Return None, if not found, or an obnamlib.RsyncLookupTable.
+        previdr may be None.
+        
+        """
+        
+        if prevdir is None:
+            return None
+            
+        for fgref in prevdir.fgrefs:
+            fg = self.store.get_object(self.host, fgref)
+            if basename in fg.names:
+                st, contref, sigref, deltaref, symlink_target = \
+                    fg.get_file(basename)
+                cont = self.store.get_object(self.host, contref)
+                if cont.rsyncsigpartrefs:
+                    table = obnamlib.RsyncLookupTable()
+                    for ref in cont.rsyncsigpartrefs:
+                        o = self.store.get_object(self.host, ref)
+                        table.add_checksums(o.checksums)
+                    return table
+
+        return None
+
+    def get_filecontents(self, prevdir, basename): # pragma: no cover
+        if prevdir is None:
+            return None
+            
+        for fgref in prevdir.fgrefs:
+            fg = self.store.get_object(self.host, fgref)
+            if basename in fg.names:
+                st, contref, sigref, deltaref, symlink_target = \
+                    fg.get_file(basename)
+                return self.store.get_object(self.host, contref)
+
+        return None
+
+    def backup_file(self, prevdir, path, st):
         """Back up a completely new file."""
         
         self.progress["files-found"] += 1
+        basename = os.path.basename(path)
+        table = self.get_rsyncsig_as_table(prevdir, basename)
+        cont = self.get_filecontents(prevdir, basename)
         f = self.fs.open(path, "r")
-        content = self.store.put_contents(f, self.PART_SIZE)
+        content = self.store.put_contents(f, table, self.PART_SIZE, 
+                                          self.RSYNC_SIZE, cont)
         f.close()
         return self.new_file(os.path.basename(path), st, contref=content.id)
 
-    def backup_new_files_as_groups(self, relative_paths, lstat=None):
+    def backup_files_as_groups(self, prevdir, relative_paths, lstat=None):
         """Back a set of new files as a new FILEGROUP."""
         if lstat is None: # pragma: no cover
             lstat = self.fs.lstat
@@ -138,7 +182,7 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
             st = lstat(path)
             fc = None
             if stat.S_ISREG(st.st_mode):
-                fc = self.backup_new_file(path, st)
+                fc = self.backup_file(prevdir, path, st)
             elif stat.S_ISLNK(st.st_mode):
                 fc = self.backup_new_symlink(path, st)
             else:
@@ -181,6 +225,25 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
                 filenames = [x for x in filenames if x not in fg.names]
 
         return filegroups, filenames
+        
+    def find_existing_files(self, prevdir, dirname, filenames): # pragma: no cover
+        """Find all filenames that also exist in prevdir.
+        
+        Return two lists: existing files, others.
+        
+        """
+        
+        existing = []
+        filenames = filenames[:]
+        
+        for fgref in prevdir.fgrefs:
+            fg = self.store.get_object(self.host, fgref)
+            for name in fg.names:
+                if name in filenames:
+                    existing.append(name)
+                    filenames.remove(name)
+        
+        return existing, filenames
 
     def same_file(self, dirname, basename, fg): # pragma: no cover
         """Is the file on disk the same as in the filegroup?"""
@@ -222,16 +285,19 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
             self.same_stat(prevdir.stat, st)):
             return prevdir
         else:
-            if filenames:
-                fullnames = [os.path.join(relative_path, x) for x in filenames]
-                filegroups += self.backup_new_files_as_groups(fullnames)
+            existing, others = self.find_existing_files(prevdir, relative_path,
+                                                        filenames)
+            existing = [os.path.join(relative_path, x) for x in existing]
+            others = [os.path.join(relative_path, x) for x in others]
+            filegroups += self.backup_files_as_groups(prevdir, existing)
+            filegroups += self.backup_files_as_groups(prevdir, others)
             return self.new_dir(relative_path, st, subdirs, filegroups)
 
     def backup_new_dir(self, relative_path, st, subdirs, filenames):
         """Back up a new directory."""
         logging.debug("Directory is NEW: %s" % relative_path)
         fullnames = [os.path.join(relative_path, x) for x in filenames]
-        filegroups = self.backup_new_files_as_groups(fullnames)
+        filegroups = self.backup_files_as_groups(None, fullnames)
         return self.new_dir(relative_path, st, subdirs, filegroups)
 
     def get_dir_in_prevgen(self, relative_path):
@@ -279,7 +345,7 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         subdirs = {}
 
         for dirname, dirnames, filenames in self.fs.depth_first(root,
-							prune=self.prune):
+                                                        prune=self.prune):
             logging.info("Backing up %s" % dirname)
             list = subdirs.pop(dirname, [])
             dir = self.backup_dir(dirname, list, filenames)
@@ -389,7 +455,7 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         dirs = [x for x in roots if self.fs.isdir(x)]
         nondirs = [x for x in roots if x not in dirs]
 
-        fgrefs = [x.id for x in self.backup_new_files_as_groups(nondirs)]
+        fgrefs = [x.id for x in self.backup_files_as_groups(None, nondirs)]
 
         root_list = []
         lastest_gen = None
@@ -413,26 +479,26 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         return lastest_gen
 
     def push_queue(self, name, queue, pusher): # pragma: no cover
-	unpushed = queue.unpushed_size
-	logging.debug("push_queue: %s unpushed %d max %d" % 
-		      (name, unpushed, self.max_unpushed))
-	if unpushed >= self.max_unpushed:
+        unpushed = queue.unpushed_size
+        logging.debug("push_queue: %s unpushed %d max %d" % 
+                      (name, unpushed, self.max_unpushed))
+        if unpushed >= self.max_unpushed:
             pusher(self.host)
-	    logging.debug("put_hook: pushed %s, unpushed now %d" % 
-			  (name, queue.unpushed_size))
+            logging.debug("put_hook: pushed %s, unpushed now %d" % 
+                          (name, queue.unpushed_size))
 
     def put_hook(self): # pragma: no cover
-	self.push_queue("object_queue", self.store.object_queue,
-			self.store.push_objects)
-	self.push_queue("content", self.store.content_queue,
-			self.store.push_content_objects)
+        self.push_queue("object_queue", self.store.object_queue,
+                        self.store.push_objects)
+        self.push_queue("content", self.store.content_queue,
+                        self.store.push_content_objects)
         if self.host not in self.store.new_mappings:
-	    logging.debug("put_hook: host not in new_mappings")
+            logging.debug("put_hook: host not in new_mappings")
             return
         mappings = self.store.new_mappings[self.host]
         if len(mappings) > self.max_mappings:
             self.store.push_new_mappings(self.host)
-	    logging.debug("put_hook: pushed mappings")
+            logging.debug("put_hook: pushed mappings")
 
     def backup(self, host_id, roots):
         logging.debug("Backing up: host %s, roots %s" % 
@@ -471,8 +537,11 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
             args = options.roots + args
 
         self.exclude_regexps = [re.compile(x) for x in options.exclude]
+        
+        self.RSYNC_SIZE = options.rsync_block_size
 
         roots = [os.path.abspath(root) for root in args]
         self.backup(options.host, roots)
         self.fs.close()
         self.progress.done()
+

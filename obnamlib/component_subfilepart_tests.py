@@ -15,25 +15,28 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import unittest
+
 import obnamlib
 
 
-# This module contains the component classes that are simple composite
-# ones. They don't need any extra testing. There are, however, so many
-# of them that it's pointless putting each in its own module.
+class SubFilePartTests(unittest.TestCase):
 
-
-class Checksums(obnamlib.CompositeComponent):
-
-    composite_kind = obnamlib.CHECKSUMS
-
-
-class ObjectComponent(obnamlib.CompositeComponent):
-
-    composite_kind = obnamlib.OBJECT
-
-
-class ObjMap(obnamlib.CompositeComponent):
-
-    composite_kind = obnamlib.OBJMAP
+    def setUp(self):
+        self.ref = "ref"
+        self.offset = 42
+        self.length = 42*2
+        self.c = obnamlib.SubFilePart()
+        self.c.filepartref = self.ref
+        self.c.offset = self.offset
+        self.c.length = self.length
+        
+    def test_sets_reference_correctly(self):
+        self.assertEqual(self.c.filepartref, self.ref)
+        
+    def test_sets_offset_correctly(self):
+        self.assertEqual(self.c.offset, self.offset)
+        
+    def test_sets_length_correctly(self):
+        self.assertEqual(self.c.length, self.length)
 

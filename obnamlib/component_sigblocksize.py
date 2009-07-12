@@ -1,4 +1,4 @@
-# Copyright (C) 2008  Lars Wirzenius <liw@liw.fi>
+# Copyright (C) 2009  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,23 +18,15 @@
 import obnamlib
 
 
-class ObjectKinds(obnamlib.Kinds):
+class SigBlockSize(obnamlib.Component):
 
-    """Kinds of Objects."""
+    def __init__(self, block_size):
+        if type(block_size) == int:
+            block_size = obnamlib.varint.encode(block_size)
+        obnamlib.Component.__init__(self, kind=obnamlib.SIGBLOCKSIZE, 
+                                    string=block_size)
 
-    def add_all(self): # pragma: no cover
-        """Add all object kinds to ourselves."""
-        self.add( 1, "FILEPART")
-        # object kind 2 used to be INODE, but it's been removed
-        self.add( 3, "GEN")
-        # no longer used: self.add( 4, "SIG")
-        self.add( 5, "HOST")
-        self.add( 6, "FILECONTENTS")
-        self.add( 7, "FILELIST")
-        # no longer used: self.add( 8, "DELTA")
-        # no longer used: self.add( 9, "DELTAPART")
-        self.add(10, "DIR")
-        self.add(11, "FILEGROUP")
-        self.add(12, "RSYNCSIGPART")
-        self.add(13, "FILECONTENTSPART")
+    @property
+    def block_size(self):
+        return obnamlib.varint.decode(str(self), 0)[0]
 

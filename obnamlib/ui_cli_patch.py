@@ -1,4 +1,4 @@
-# Copyright (C) 2008  Lars Wirzenius <liw@liw.fi>
+# Copyright (C) 2009  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,26 +15,25 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
+import sys
+
 import obnamlib
 
 
-class ObjectKinds(obnamlib.Kinds):
+class PatchCommand(obnamlib.CommandLineCommand):
 
-    """Kinds of Objects."""
+    """Apply an rsync delta file."""
 
-    def add_all(self): # pragma: no cover
-        """Add all object kinds to ourselves."""
-        self.add( 1, "FILEPART")
-        # object kind 2 used to be INODE, but it's been removed
-        self.add( 3, "GEN")
-        # no longer used: self.add( 4, "SIG")
-        self.add( 5, "HOST")
-        self.add( 6, "FILECONTENTS")
-        self.add( 7, "FILELIST")
-        # no longer used: self.add( 8, "DELTA")
-        # no longer used: self.add( 9, "DELTAPART")
-        self.add(10, "DIR")
-        self.add(11, "FILEGROUP")
-        self.add(12, "RSYNCSIGPART")
-        self.add(13, "FILECONTENTSPART")
+    def patch(self, options, args):
+        old_file = file(sys.argv[0])
+    
+        of = obnamlib.ObjectFactory()
+        data = file(args[1]).read()
+        delta = of.decode_all_components(data)
+        
+        patcher = obnamlib.RsyncPatcher()
+        patcher.patch(sys.stdout, old_file, delta)
+
+    def run(self, options, args, progress): # pragma: no cover
+        self.patch(options, args)
 

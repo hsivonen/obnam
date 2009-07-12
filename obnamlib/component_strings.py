@@ -23,6 +23,11 @@ import obnamlib
 # so many of them that it's pointless putting each in its own module.
 
 
+class Adler32(obnamlib.StringComponent):
+
+    string_kind = obnamlib.ADLER32
+
+
 class BlockId(obnamlib.StringComponent):
 
     string_kind = obnamlib.BLKID
@@ -68,6 +73,11 @@ class FileChunk(obnamlib.StringComponent):
     string_kind = obnamlib.FILECHUNK
 
 
+class FileContentsPartRef(obnamlib.StringComponent):
+
+    string_kind = obnamlib.FILECONTENTSPARTREF
+
+
 class FileGroupRef(obnamlib.StringComponent):
 
     string_kind = obnamlib.FILEGROUPREF
@@ -108,9 +118,19 @@ class GenStart(obnamlib.StringComponent):
     string_kind = obnamlib.GENSTART
 
 
+class Length(obnamlib.StringComponent):
+
+    string_kind = obnamlib.LENGTH
+
+
 class MapRef(obnamlib.StringComponent):
 
     string_kind = obnamlib.MAPREF
+
+
+class Md5(obnamlib.StringComponent):
+
+    string_kind = obnamlib.MD5
 
 
 class ObjectId(obnamlib.StringComponent):
@@ -121,6 +141,16 @@ class ObjectId(obnamlib.StringComponent):
 class ObjRef(obnamlib.StringComponent):
 
     string_kind = obnamlib.OBJREF
+
+
+class Offset(obnamlib.StringComponent):
+
+    string_kind = obnamlib.OFFSET
+
+
+class RsyncSigPartRef(obnamlib.StringComponent):
+
+    string_kind = obnamlib.RSYNCSIGPARTREF
 
 
 class SigData(obnamlib.StringComponent):

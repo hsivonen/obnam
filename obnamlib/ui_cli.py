@@ -66,6 +66,12 @@ class CommandLineUI(obnamlib.UserInterface):
             "showobjs": obnamlib.ShowobjsCommand(),
             
             "du": obnamlib.DiskUsageCommand(),
+            
+            "signature": obnamlib.SignatureCommand(),
+
+            "delta": obnamlib.DeltaCommand(),
+
+            "patch": obnamlib.PatchCommand(),
             }
 
     def short_help(self, stdout=sys.stdout):
@@ -136,7 +142,7 @@ class CommandLineUI(obnamlib.UserInterface):
         options, args = parser.parse_args(args)
         self.setup_logging(options)
         progress = obnamlib.ProgressReporter()
-	
+        
         if not args:
             self.short_help()
         elif args[0] in self.commands:

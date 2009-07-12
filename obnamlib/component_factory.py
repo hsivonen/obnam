@@ -65,7 +65,6 @@ class ComponentFactory(object):
         obnamlib.OBJECT:        composite_factory(obnamlib.ObjectComponent),
         obnamlib.OBJMAP:        composite_factory(obnamlib.ObjMap),
         obnamlib.CONTREF:       str_or_ref(obnamlib.ContRef),
-        obnamlib.NAMEIPAIR:     composite_factory(obnamlib.NameIPair),
         obnamlib.FILENAME:      str_or_ref(obnamlib.FileName),
         obnamlib.SIGDATA:       str_or_ref(obnamlib.SigData),
         obnamlib.SIGREF:        str_or_ref(obnamlib.SigRef),
@@ -90,6 +89,16 @@ class ComponentFactory(object):
         obnamlib.SYMLINKTARGET: str_or_ref(obnamlib.SymlinkTarget),
         obnamlib.OWNER:         str_or_ref(obnamlib.Owner),
         obnamlib.GROUP:         str_or_ref(obnamlib.Group),
+        obnamlib.CHECKSUMS:     composite_factory(obnamlib.Checksums),
+        obnamlib.ADLER32:       str_or_ref(obnamlib.Adler32),
+        obnamlib.MD5:           str_or_ref(obnamlib.Md5),
+        obnamlib.SIGBLOCKSIZE:  str_or_ref(obnamlib.SigBlockSize),
+        obnamlib.OFFSET:        str_or_ref(obnamlib.Offset),
+        obnamlib.LENGTH:        str_or_ref(obnamlib.Length),
+        obnamlib.SUBFILEPART:   composite_factory(obnamlib.SubFilePart),
+        obnamlib.RSYNCSIGPARTREF: str_or_ref(obnamlib.RsyncSigPartRef),
+        obnamlib.FILECONTENTSPARTREF: 
+                                str_or_ref(obnamlib.FileContentsPartRef),
         }
 
     def new_component(self, kind, string=None, children=None):

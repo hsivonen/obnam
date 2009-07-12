@@ -49,3 +49,4 @@ class Dir(obnamlib.Object):
         self.stat = obnamlib.decode_stat(self.find(kind=obnamlib.STAT)[0])
         self.dirrefs = self.extract_strings(kind=obnamlib.DIRREF)
         self.fgrefs = self.extract_strings(kind=obnamlib.FILEGROUPREF)
+

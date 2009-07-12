@@ -1,3 +1,4 @@
+#!/bin/sh
 # Copyright (C) 2009  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -14,26 +15,21 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+set -e
 
-import obnamlib
+oldfile=$(mktemp)
+newfile=$(mktemp)
+sigfile=$(mktemp)
+deltafile=$(mktemp)
+outputfile=$(mktemp)
 
+echo foobar > "$oldfile"
+(cat "$oldfile"; echo bleep) > "$newfile"
 
-# This module contains the component classes that are simple composite
-# ones. They don't need any extra testing. There are, however, so many
-# of them that it's pointless putting each in its own module.
+./obnam signature --debug "$oldfile" > "$sigfile"
+./obnam delta --debug "$sigfile" "$newfile" > "$deltafile"
+./obnam patch --debug "$oldfile" "$deltafile" > "$outputfile"
+cmp "$newfile" "$outputfile"
 
-
-class Checksums(obnamlib.CompositeComponent):
-
-    composite_kind = obnamlib.CHECKSUMS
-
-
-class ObjectComponent(obnamlib.CompositeComponent):
-
-    composite_kind = obnamlib.OBJECT
-
-
-class ObjMap(obnamlib.CompositeComponent):
-
-    composite_kind = obnamlib.OBJMAP
+rm -f "$oldfile" "$newfile" "$sigfile" "$deltafile" "$outputfile"
 

@@ -84,7 +84,7 @@ class ComponentKinds(obnamlib.Kinds):
         # 7-19 have been obsoleted and should not exist anywhere in the 
         # universe.
         self.add_ref(      20, "CONTREF")
-        self.add_composite(21, "NAMEIPAIR")
+        # now unused: self.add_composite(21, "NAMEIPAIR")
         # 22 has been obsoleted and should not exist anywhere in the universe.
         self.add_plain(    23, "FILENAME")
         self.add_plain(    24, "SIGDATA")
@@ -111,4 +111,13 @@ class ComponentKinds(obnamlib.Kinds):
         self.add_plain(    45, "SYMLINKTARGET")
         self.add_plain(    46, "OWNER")
         self.add_plain(    47, "GROUP")
+        self.add_composite(48, "CHECKSUMS")
+        self.add_plain(    49, "ADLER32")
+        self.add_plain(    50, "MD5")
+        self.add_plain(    51, "SIGBLOCKSIZE")
+        self.add_plain(    52, "OFFSET")
+        self.add_plain(    53, "LENGTH")
+        self.add_composite(54, "SUBFILEPART")
+        self.add_ref(      55, "RSYNCSIGPARTREF")
+        self.add_ref(      56, "FILECONTENTSPARTREF")
 
