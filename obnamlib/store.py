@@ -407,36 +407,51 @@ class Store(object):
         siggen = obnamlib.RsyncSignatureGenerator()
         
         if not rsynclookuptable:
-            rsynclookuptable = obnamlib.RsyncLookupTable()
+            while True:
+                data = f.read(chunk_size)
 
-        deltagen = obnamlib.RsyncDeltaGenerator(rsync_block_size,
-                                                rsynclookuptable,
-                                                chunk_size)
+                md5.update(data)
+                self.make_rsyncsigparts(content, siggen, rsync_block_size, data)
 
-        while True:
-            data = f.read(chunk_size)
+                if not data:
+                    break
 
-            md5.update(data)
-            self.make_rsyncsigparts(content, siggen, rsync_block_size, data)
+                filepart = self.new_object(kind=obnamlib.FILEPART)
+                filepart.data = data
+                self.put_object(filepart)
+                sfp = obnamlib.SubFilePart()
+                sfp.filepartref = filepart.id
+                sfp.offset = 0
+                sfp.length = len(str(data))
+                content_part.components += [sfp]
+        else: # pragma: no cover
+            deltagen = obnamlib.RsyncDeltaGenerator(rsync_block_size,
+                                                    rsynclookuptable,
+                                                    chunk_size)
+            while True:
+                data = f.read(chunk_size)
 
-            for x in deltagen.feed(data):
-                assert type(x) in (str, tuple)
-                if type(x) == str:
-                    filepart = self.new_object(kind=obnamlib.FILEPART)
-                    filepart.data = x
-                    self.put_object(filepart)
-                    sfp = obnamlib.SubFilePart()
-                    sfp.filepartref = filepart.id
-                    sfp.offset = 0
-                    sfp.length = len(str(x))
-                    content_part.components += [sfp]
-                else: # pragma: no cover
-                    assert prevcont is not None
-                    for sftp in prevcont.find_fileparts(x[0], x[1]):
+                md5.update(data)
+                self.make_rsyncsigparts(content, siggen, rsync_block_size, data)
+
+                for x in deltagen.feed(data):
+                    assert type(x) in (str, tuple)
+                    if type(x) == str:
+                        filepart = self.new_object(kind=obnamlib.FILEPART)
+                        filepart.data = x
+                        self.put_object(filepart)
+                        sfp = obnamlib.SubFilePart()
+                        sfp.filepartref = filepart.id
+                        sfp.offset = 0
+                        sfp.length = len(str(x))
                         content_part.components += [sfp]
+                    else: # pragma: no cover
+                        assert prevcont is not None
+                        for sftp in prevcont.find_fileparts(x[0], x[1]):
+                            content_part.components += [sfp]
 
-            if not data:
-                break
+                if not data:
+                    break
 
         self.put_object(content_part)
         content.add_filecontentspartref(content_part.id)
