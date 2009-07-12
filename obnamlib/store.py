@@ -366,13 +366,14 @@ class Store(object):
         for contpart_ref in cont.filecontentspartrefs:
             contpart = self.get_object(host, contpart_ref)
             for c in contpart.components:
+                assert c.kind in (obnamlib.FILEPARTREF, obnamlib.SUBFILEPART)
                 if c.kind == obnamlib.FILEPARTREF:
                     part = self.get_object(host, str(c))
                     output.write(part.data)
-                elif c.kind == obnamlib.SUBFILEPART:
-                    raise Exception("unimplemented")
-                elif c.kind == obnamlib.FILECHUNK:
-                    raise Exception("unimplemented")
+                else:
+                    filepart = self.get_object(host, c.filepartref)
+                    data = filepart.find_strings(kind=obnamlib.FILECHUNK)[0]
+                    output.write(data[c.offset:c.offset + c.length])
 
     def make_rsyncsigparts(self, content, siggen, rsync_block_size, new_data):
         sigs = siggen.buffered_block_signature(new_data, rsync_block_size)
@@ -383,7 +384,7 @@ class Store(object):
             content.rsyncsigpartrefs += [rsyncsigpart.id]
 
     def put_contents(self, f, rsynclookuptable, chunk_size, rsync_block_size,
-                     prevgen_contentsref):
+                     prevcont):
         """Write contents of open file to store.
         
         The contents of the file will be split into chunks of `chunk_size`
@@ -411,7 +412,7 @@ class Store(object):
         deltagen = obnamlib.RsyncDeltaGenerator(rsync_block_size,
                                                 rsynclookuptable,
                                                 chunk_size)
-        
+
         while True:
             data = f.read(chunk_size)
 
@@ -419,19 +420,20 @@ class Store(object):
             self.make_rsyncsigparts(content, siggen, rsync_block_size, data)
 
             for x in deltagen.feed(data):
-                logging.debug("deltagen gave %s" % repr(x))
+                assert x.kind in (obnamlib.FILECHUNK, obnamlib.SUBFILEPART)
                 if x.kind == obnamlib.FILECHUNK:
                     filepart = self.new_object(kind=obnamlib.FILEPART)
                     filepart.components.append(x)
                     self.put_object(filepart)
-                    content_part.add_filepartref(filepart.id)
-                elif x.kind == obnamlib.SUBFILEPART:
-                    assert prevgen_contentsref is not None
-                    c = obnamlib.FileContentsRef(prevgen_contentsref)
-                    x.components += [c]
-                    content_part.components += [x]
-                else:
-                    raise Exception("wtf is deltagen returning? %s" % repr(x))
+                    sfp = obnamlib.SubFilePart()
+                    sfp.filepartref = filepart.id
+                    sfp.offset = 0
+                    sfp.length = len(str(x))
+                    content_part.components += [sfp]
+                else: # pragma: no cover
+                    assert prevcont is not None
+                    for sftp in prevcont.find_fileparts(x.offset, x.length):
+                        content_part.components += [sfp]
 
             if not data:
                 break

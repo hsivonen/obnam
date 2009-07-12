@@ -21,8 +21,10 @@ import obnamlib
 class SigBlockSize(obnamlib.Component):
 
     def __init__(self, block_size):
+        if type(block_size) == int:
+            block_size = obnamlib.varint.encode(block_size)
         obnamlib.Component.__init__(self, kind=obnamlib.SIGBLOCKSIZE, 
-                                    string=obnamlib.varint.encode(block_size))
+                                    string=block_size)
 
     @property
     def block_size(self):

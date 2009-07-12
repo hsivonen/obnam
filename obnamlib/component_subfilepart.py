@@ -21,22 +21,41 @@ import obnamlib
 class SubFilePart(obnamlib.CompositeComponent):
 
     composite_kind = obnamlib.SUBFILEPART
+    
+    def __init__(self, children=None):
+        obnamlib.CompositeComponent.__init__(self, children or [])
 
-    def __init__(self, offset, length):
-        offset = obnamlib.varint.encode(offset)
-        length = obnamlib.varint.encode(length)
-        children = [obnamlib.Offset(offset), obnamlib.Length(length)]
-        obnamlib.CompositeComponent.__init__(self, children)
+    def get_filepartref(self):
+        return self.first_string(kind=obnamlib.FILEPARTREF)
+
+    def set_filepartref(self, ref):
+        self.extract(kind=obnamlib.FILEPARTREF)
+        self.children += [obnamlib.FilePartRef(ref)]
+
+    filepartref = property(get_filepartref, set_filepartref)
         
     def getint(self, kind):
         s = self.first_string(kind=kind)
         return obnamlib.varint.decode(s, 0)[0]
         
-    @property
-    def offset(self):
+    def setint(self, kind, klass, value):
+        self.extract(kind=kind)
+        s = obnamlib.varint.encode(value)
+        self.children += [klass(s)]
+        
+    def get_offset(self):
         return self.getint(obnamlib.OFFSET)
         
-    @property
-    def length(self):
+    def set_offset(self, offset):
+        self.setint(obnamlib.OFFSET, obnamlib.Offset, offset)
+        
+    offset = property(get_offset, set_offset)
+        
+    def get_length(self):
         return self.getint(obnamlib.LENGTH)
+        
+    def set_length(self, length):
+        self.setint(obnamlib.LENGTH, obnamlib.Length, length)
+        
+    length = property(get_length, set_length)
 

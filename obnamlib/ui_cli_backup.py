@@ -133,28 +133,30 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
             return None
             
         for fgref in prevdir.fgrefs:
-            fg = self.store.get_object(fgref)
+            fg = self.store.get_object(self.host, fgref)
             if basename in fg.names:
-                fc = fg.get_file(basename)
-                cont = self.store.get_object(fc.contref)
+                st, contref, sigref, deltaref, symlink_target = \
+                    fg.get_file(basename)
+                cont = self.store.get_object(self.host, contref)
                 if cont.rsyncsigpartrefs:
                     table = obnamlib.RsyncLookupTable()
                     for ref in cont.rsyncsigpartrefs:
-                        o = self.store.get_object(ref)
+                        o = self.store.get_object(self.host, ref)
                         table.add_checksums(o.checksums)
                     return table
 
         return None
 
-    def get_filecontentsref(self, prevdir, basename): # pragma: no cover
+    def get_filecontents(self, prevdir, basename): # pragma: no cover
         if prevdir is None:
             return None
             
         for fgref in prevdir.fgrefs:
-            fg = self.store.get_object(fgref)
+            fg = self.store.get_object(self.host, fgref)
             if basename in fg.names:
-                fc = fg.get_file(basename)
-                return fc.contref
+                st, contref, sigref, deltaref, symlink_target = \
+                    fg.get_file(basename)
+                return self.store.get_object(self.host, contref)
 
         return None
 
@@ -164,10 +166,10 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         self.progress["files-found"] += 1
         basename = os.path.basename(path)
         table = self.get_rsyncsig_as_table(prevdir, basename)
-        contref = self.get_filecontentsref(prevdir, basename)
+        cont = self.get_filecontents(prevdir, basename)
         f = self.fs.open(path, "r")
         content = self.store.put_contents(f, table, self.PART_SIZE, 
-                                          self.RSYNC_SIZE, contref)
+                                          self.RSYNC_SIZE, cont)
         f.close()
         return self.new_file(os.path.basename(path), st, contref=content.id)
 
@@ -283,7 +285,7 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
             self.same_stat(prevdir.stat, st)):
             return prevdir
         else:
-            existing, others = self.find_existing_files(prevdir, dirname, 
+            existing, others = self.find_existing_files(prevdir, relative_path,
                                                         filenames)
             existing = [os.path.join(relative_path, x) for x in existing]
             others = [os.path.join(relative_path, x) for x in others]

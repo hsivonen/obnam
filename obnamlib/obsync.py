@@ -202,6 +202,10 @@ class RsyncDeltaGenerator(object):
         
         Generate obnamlib.FileChunk and obnamlib.SubFilePart objects.
         
+        NOTE: The SubFileParts that are returned have an INVALID reference
+        to the FilePart. The caller must create a new SubFilePart with
+        the correct reference.
+        
         """
 
         # Now we optimize. This is similar to peep-hole optimization in
@@ -224,17 +228,29 @@ class RsyncDeltaGenerator(object):
                     if new_offset == offset + length:
                         self.queue = [(offset, length + new_length)]
                     else:
-                        yield obnamlib.SubFilePart(offset, length)
+                        sfp = obnamlib.SubFilePart()
+                        sfp.filepartref = ""
+                        sfp.offset = offset
+                        sfp.length = length
+                        yield sfp
                         self.queue = [x]
                 else:
-                    yield obnamlib.SubFilePart(offset, length)
+                    sfp = obnamlib.SubFilePart()
+                    sfp.filepartref = ""
+                    sfp.offset = offset
+                    sfp.length = length
+                    yield sfp
                     self.queue = [x]
         if some_data == "" and self.queue:
             if type(self.queue[0]) == str:
                 yield obnamlib.FileChunk(''.join(self.queue))
             else:
                 offset, length = self.queue[0]
-                yield obnamlib.SubFilePart(offset, length)
+                sfp = obnamlib.SubFilePart()
+                sfp.filepartref = ""
+                sfp.offset = offset
+                sfp.length = length
+                yield sfp
 
 
 class RsyncPatcher(object):

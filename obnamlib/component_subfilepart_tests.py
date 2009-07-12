@@ -23,9 +23,16 @@ import obnamlib
 class SubFilePartTests(unittest.TestCase):
 
     def setUp(self):
+        self.ref = "ref"
         self.offset = 42
         self.length = 42*2
-        self.c = obnamlib.SubFilePart(self.offset, self.length)
+        self.c = obnamlib.SubFilePart()
+        self.c.filepartref = self.ref
+        self.c.offset = self.offset
+        self.c.length = self.length
+        
+    def test_sets_reference_correctly(self):
+        self.assertEqual(self.c.filepartref, self.ref)
         
     def test_sets_offset_correctly(self):
         self.assertEqual(self.c.offset, self.offset)

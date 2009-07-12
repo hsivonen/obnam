@@ -26,4 +26,4 @@ class FileContentsPart(obnamlib.Object):
     
     def add_filepartref(self, ref):
         self.components.append(obnamlib.FilePartRef(ref))
-    
+
