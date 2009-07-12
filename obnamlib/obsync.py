@@ -191,23 +191,32 @@ class RsyncDeltaGenerator(object):
         # First we collect just the raw data as single-character strings
         # and block numbers plus lengths in the old file. We'll optimize 
         # this list later.
-        
-        self.buf += some_data
-        while True:
-            if len(self.buf) >= self.block_size:
-                block_data = self.buf[:self.block_size]
-            elif some_data == "" and self.buf:
-                block_data = self.buf
-            else:
-                break
 
+        assert len(self.buf) < self.block_size        
+
+        self.buf += some_data
+
+        while len(self.buf) >= self.block_size:
+            block_data = self.buf[:self.block_size]
             block_number = self.lookup_table[block_data]
             if block_number is None:
-                yield block_data[0]
+                yield self.buf[0]
                 self.buf = self.buf[1:]
             else:
                 yield (block_number * self.block_size, len(block_data))
                 self.buf = self.buf[len(block_data):]
+
+        while self.buf and some_data == "":
+            block_number = self.lookup_table[self.buf]
+            if block_number is None:
+                yield self.buf[0]
+                self.buf = self.buf[1:]
+            else:
+                yield (block_number * self.block_size, len(self.buf))
+                self.buf = ""
+
+        assert len(self.buf) < self.block_size        
+            
 
     def feed(self, some_data):
         """Compute delta from RsyncSigParts to new_file.
