@@ -79,6 +79,17 @@ class RsyncLookupTableTests(unittest.TestCase):
         self.table = obnamlib.RsyncLookupTable()
         self.table.add_checksums(self.checksums)
 
+    def test_defaults_to_fast_getitem(self):
+        table = obnamlib.RsyncLookupTable()
+        self.assertEqual(table.wanted__getitem__, table.fast__getitem__)
+
+    def test_switches_to_real_getitem_when_checksums_have_been_added(self):
+        self.assertEqual(self.table.wanted__getitem__, 
+                         self.table.real__getitem__)
+
+    def test_fast_getitem_returns_None_always(self):
+        self.assertEqual(self.table.fast__getitem__(self.block1), None)
+
     def test_finds_first_block(self):
         self.assertEqual(self.table[self.block1], 0)
 
@@ -124,7 +135,7 @@ class RsyncDeltaGeneratorTests(unittest.TestCase):
                                                      self.table,
                                                      self.chunk_size)
 
-    def test_returns_single_subfilepart_for_no_difference(self):
+    def test_returns_single_tuple_for_no_difference(self):
         deltagen = obnamlib.RsyncDeltaGenerator(self.block_size,
                                                 self.table, 
                                                 self.chunk_size)
@@ -132,9 +143,9 @@ class RsyncDeltaGeneratorTests(unittest.TestCase):
         delta += list(deltagen.feed(""))
         self.assertEqual(len(delta), 1)
         c = delta[0]
-        self.assertEqual(c.kind, obnamlib.SUBFILEPART)
-        self.assertEqual(c.offset, 0)
-        self.assertEqual(c.length, len(self.old_data))
+        self.assertEqual(type(c), tuple)
+        self.assertEqual(c[0], 0)
+        self.assertEqual(c[1], len(self.old_data))
 
     def test_file_delta_computes_delta_correctly_for_changes(self):
         delta = list(self.deltagen.feed(self.new_file.read()))
@@ -142,17 +153,17 @@ class RsyncDeltaGeneratorTests(unittest.TestCase):
 
         self.assertEqual(len(delta), 2)
 
-        self.assertEqual(delta[0].kind, obnamlib.SUBFILEPART)
-        self.assertEqual(delta[0].offset, 0)
+        self.assertEqual(type(delta[0]), tuple)
+        self.assertEqual(delta[0][0], 0)
         # The algorithm only finds full blocks: new_data has junk after
         # the last partial block at the end of old_data, which is why
         # it isn't found.
         full_blocks = len(self.old_data) / self.block_size
-        self.assertEqual(delta[0].length, full_blocks * self.block_size)
+        self.assertEqual(delta[0][1], full_blocks * self.block_size)
 
-        self.assertEqual(delta[1].kind, obnamlib.FILECHUNK)
+        self.assertEqual(type(delta[1]), str)
         old_tail = self.old_data[full_blocks * self.block_size : ]
-        self.assertEqual(str(delta[1]), old_tail + self.additional_data)
+        self.assertEqual(delta[1], old_tail + self.additional_data)
 
     def test_file_delta_computes_delta_for_leading_changes(self):
         data = self.additional_data + self.old_data
@@ -165,12 +176,12 @@ class RsyncDeltaGeneratorTests(unittest.TestCase):
 
         self.assertEqual(len(delta), 2, delta)
 
-        self.assertEqual(delta[0].kind, obnamlib.FILECHUNK)
-        self.assertEqual(str(delta[0]), self.additional_data)
+        self.assertEqual(type(delta[0]), str)
+        self.assertEqual(delta[0], self.additional_data)
 
-        self.assertEqual(delta[1].kind, obnamlib.SUBFILEPART)
-        self.assertEqual(delta[1].offset, 0)
-        self.assertEqual(delta[1].length, len(self.old_data))
+        self.assertEqual(type(delta[1]), tuple)
+        self.assertEqual(delta[1][0], 0)
+        self.assertEqual(delta[1][1], len(self.old_data))
         
     def test_file_delta_computes_delta_for_duplicated_block(self):
         data = self.old_data[:self.block_size] + self.old_data
@@ -183,11 +194,11 @@ class RsyncDeltaGeneratorTests(unittest.TestCase):
 
         self.assertEqual(len(delta), 2, delta)
 
-        self.assertEqual(delta[0].kind, obnamlib.SUBFILEPART)
-        self.assertEqual(delta[0].offset, 0)
-        self.assertEqual(delta[0].length, self.block_size)
+        self.assertEqual(type(delta[0]), tuple)
+        self.assertEqual(delta[0][0], 0)
+        self.assertEqual(delta[0][1], self.block_size)
 
-        self.assertEqual(delta[1].kind, obnamlib.SUBFILEPART)
-        self.assertEqual(delta[1].offset, 0)
-        self.assertEqual(delta[1].length, len(self.old_data))
+        self.assertEqual(type(delta[1]), tuple)
+        self.assertEqual(delta[1][0], 0)
+        self.assertEqual(delta[1][1], len(self.old_data))
 

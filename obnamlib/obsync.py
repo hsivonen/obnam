@@ -127,6 +127,7 @@ class RsyncLookupTable(object):
         self.compute_weak = compute_weak or weak_checksum
         self.compute_strong = compute_strong or strong_checksum
         self.dict = {}
+        self.wanted__getitem__ = self.fast__getitem__
         
     def add_checksums(self, checksums):
         for block_number, c in enumerate(checksums):
@@ -135,8 +136,19 @@ class RsyncLookupTable(object):
             if weak not in self.dict:
                 self.dict[weak] = dict()
             self.dict[weak][strong] = block_number
+            self.wanted__getitem__ = self.real__getitem__
 
     def __getitem__(self, block_data):
+        return self.wanted__getitem__(block_data)
+
+    def fast__getitem__(self, block_data):
+        # This is the version of __getitem__ that gets called until there
+        # is some data. It will be used particularly when creating the
+        # first generation of a file. Since we know the table is empty,
+        # we can optimize away the computation of the weak checksum.
+        return None
+
+    def real__getitem__(self, block_data):
         weak = str(self.compute_weak(block_data))
         subdict = self.dict.get(weak)
         if subdict:
@@ -179,33 +191,40 @@ class RsyncDeltaGenerator(object):
         # First we collect just the raw data as single-character strings
         # and block numbers plus lengths in the old file. We'll optimize 
         # this list later.
-        
-        self.buf += some_data
-        while True:
-            if len(self.buf) >= self.block_size:
-                block_data = self.buf[:self.block_size]
-            elif some_data == "" and self.buf:
-                block_data = self.buf
-            else:
-                break
 
+        assert len(self.buf) < self.block_size        
+
+        self.buf += some_data
+
+        while len(self.buf) >= self.block_size:
+            block_data = self.buf[:self.block_size]
             block_number = self.lookup_table[block_data]
             if block_number is None:
-                yield block_data[0]
+                yield self.buf[0]
                 self.buf = self.buf[1:]
             else:
                 yield (block_number * self.block_size, len(block_data))
                 self.buf = self.buf[len(block_data):]
 
+        while self.buf and some_data == "":
+            block_number = self.lookup_table[self.buf]
+            if block_number is None:
+                yield self.buf[0]
+                self.buf = self.buf[1:]
+            else:
+                yield (block_number * self.block_size, len(self.buf))
+                self.buf = ""
+
+        assert len(self.buf) < self.block_size        
+            
+
     def feed(self, some_data):
         """Compute delta from RsyncSigParts to new_file.
         
-        Generate obnamlib.FileChunk and obnamlib.SubFilePart objects.
-        
-        NOTE: The SubFileParts that are returned have an INVALID reference
-        to the FilePart. The caller must create a new SubFilePart with
-        the correct reference.
-        
+        This is like simple_feed, but instead of single-character
+        strings, it returns longer ones. Also, references to adjacent
+        blocks are combines.
+
         """
 
         # Now we optimize. This is similar to peep-hole optimization in
@@ -219,7 +238,7 @@ class RsyncDeltaGenerator(object):
                 if type(x) == str:
                     self.queue.append(x)
                 else:
-                    yield obnamlib.FileChunk(''.join(self.queue))
+                    yield ''.join(self.queue)
                     self.queue = [x]
             else:
                 offset, length = self.queue[0]
@@ -228,29 +247,17 @@ class RsyncDeltaGenerator(object):
                     if new_offset == offset + length:
                         self.queue = [(offset, length + new_length)]
                     else:
-                        sfp = obnamlib.SubFilePart()
-                        sfp.filepartref = ""
-                        sfp.offset = offset
-                        sfp.length = length
-                        yield sfp
+                        yield (offset, length)
                         self.queue = [x]
                 else:
-                    sfp = obnamlib.SubFilePart()
-                    sfp.filepartref = ""
-                    sfp.offset = offset
-                    sfp.length = length
-                    yield sfp
+                    yield (offset, length)
                     self.queue = [x]
         if some_data == "" and self.queue:
             if type(self.queue[0]) == str:
-                yield obnamlib.FileChunk(''.join(self.queue))
+                yield ''.join(self.queue)
             else:
                 offset, length = self.queue[0]
-                sfp = obnamlib.SubFilePart()
-                sfp.filepartref = ""
-                sfp.offset = offset
-                sfp.length = length
-                yield sfp
+                yield offset, length
 
 
 class RsyncPatcher(object):
