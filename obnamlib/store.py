@@ -438,8 +438,6 @@ class Store(object):
             if not data:
                 break
 
-        self.make_rsyncsigparts(content, siggen, rsync_block_size, "")
-
         self.put_object(content_part)
         content.add_filecontentspartref(content_part.id)
         content.md5 = md5.digest()
