@@ -79,6 +79,17 @@ class RsyncLookupTableTests(unittest.TestCase):
         self.table = obnamlib.RsyncLookupTable()
         self.table.add_checksums(self.checksums)
 
+    def test_defaults_to_fast_getitem(self):
+        table = obnamlib.RsyncLookupTable()
+        self.assertEqual(table.wanted__getitem__, table.fast__getitem__)
+
+    def test_switches_to_real_getitem_when_checksums_have_been_added(self):
+        self.assertEqual(self.table.wanted__getitem__, 
+                         self.table.real__getitem__)
+
+    def test_fast_getitem_returns_None_always(self):
+        self.assertEqual(self.table.fast__getitem__(self.block1), None)
+
     def test_finds_first_block(self):
         self.assertEqual(self.table[self.block1], 0)
 

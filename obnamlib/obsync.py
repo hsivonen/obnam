@@ -127,6 +127,7 @@ class RsyncLookupTable(object):
         self.compute_weak = compute_weak or weak_checksum
         self.compute_strong = compute_strong or strong_checksum
         self.dict = {}
+        self.wanted__getitem__ = self.fast__getitem__
         
     def add_checksums(self, checksums):
         for block_number, c in enumerate(checksums):
@@ -135,8 +136,19 @@ class RsyncLookupTable(object):
             if weak not in self.dict:
                 self.dict[weak] = dict()
             self.dict[weak][strong] = block_number
+            self.wanted__getitem__ = self.real__getitem__
 
     def __getitem__(self, block_data):
+        return self.wanted__getitem__(block_data)
+
+    def fast__getitem__(self, block_data):
+        # This is the version of __getitem__ that gets called until there
+        # is some data. It will be used particularly when creating the
+        # first generation of a file. Since we know the table is empty,
+        # we can optimize away the computation of the weak checksum.
+        return None
+
+    def real__getitem__(self, block_data):
         weak = str(self.compute_weak(block_data))
         subdict = self.dict.get(weak)
         if subdict:
