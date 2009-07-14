@@ -36,6 +36,18 @@ class ObjectQueue(list):
     
     """
     
+    def __init__(self):
+        list.__init__(self)
+        self.cached_size = None
+
+    def append(self, value):
+        list.append(self, value)
+        self.cached_size = None
+
+    def __delslice__(self, i, j):
+        list.__delslice__(self, i, j)
+        self.cached_size = None
+    
     @property
     def unpushed_size(self):
         """Return approximate size of unpushed objects."""
@@ -47,10 +59,14 @@ class ObjectQueue(list):
             else:
                 return len(str(c))
 
+        if self.cached_size is not None: # pragma: no cover
+            return self.cached_size
+
         size = 0        
         for o in self:
             for c in o.components:
                 size += approx_size(c)
+        self.cached_size = size
         return size
     
 
