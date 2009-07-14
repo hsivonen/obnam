@@ -119,7 +119,7 @@ class StoreTests(unittest.TestCase):
         self.rw.put_object(obj)
         self.rw.push_objects(host)
         self.mox.VerifyAll()
-        self.assertEqual(self.rw.object_queue, [])
+        self.assertEqual(len(self.rw.object_queue), 0)
 
     def test_push_new_mappings_does_nothing_if_there_are_no_new_objects(self):
         host = self.mox.CreateMock(obnamlib.Host)
