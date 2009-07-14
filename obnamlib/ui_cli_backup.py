@@ -206,50 +206,63 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         self.store.put_object(dir)
         return dir
 
-    def find_reusable_filegroups(self, prevdir, dirname, filenames): # pragma: no cover
-        """Find filegroups that can be re-used from previous generation.
+    def find_reusables(self, prevdir, dirname, filenames): # pragma: no cover
+        """Find stuff that can be re-used from previous generation.
         
-        Return list of filegroups and list of filenames NOT in those groups.
+        Return four lists: filegroups that can be re-used as is; names of
+        files that still exist, but haven't changed; filenames that still
+        exist and _have_ changed; and new files.
         
         """
-        
-        filegroups = []
-        for fgref in prevdir.fgrefs:
-            fg = self.store.get_object(self.host, fgref)
-            for name in fg.names:
-                if (name not in filenames or
-                    not self.same_file(dirname, name, fg)):
-                    break
-            else:
-                filegroups.append(fg)
-                filenames = [x for x in filenames if x not in fg.names]
 
-        return filegroups, filenames
-        
-    def find_existing_files(self, prevdir, dirname, filenames): # pragma: no cover
-        """Find all filenames that also exist in prevdir.
-        
-        Return two lists: existing files, others.
-        
-        """
-        
-        existing = []
-        filenames = filenames[:]
+        filegroups = []
+        unchanged = []
+        changed = []
         
         for fgref in prevdir.fgrefs:
             fg = self.store.get_object(self.host, fgref)
+            
+            unchanged_in_fg = []
+            changed_in_fg = []
+
             for name in fg.names:
                 if name in filenames:
-                    existing.append(name)
-                    filenames.remove(name)
-        
-        return existing, filenames
+                    if self.same_file(dirname, name, fg):
+                        unchanged_in_fg.append(name)
+                    else:
+                        changed_in_fg.append(name)
+
+            if unchanged_in_fg == fg.names:
+                filegroups.append(fg)
+                filenames = [x for x in filenames if x not in fg.names]
+            else:
+                unchanged += unchanged_in_fg
+                changed += changed_in_fg
+                filenames = [x for x in filenames 
+                             if x not in unchanged_in_fg + changed_in_fg]
+
+        return filegroups, unchanged, changed, filenames
+
+    def create_filegroups(self, prevdir, basenames): # pragma: no cover
+        """Create new filegroups for unmodified files."""
+        if not basenames:
+            return []
+
+        new_fg = self.store.new_object(kind=obnamlib.FILEGROUP)
+        for fgref in prevdir.fgrefs:
+            fg = self.store.get_object(self.host, fgref)
+            for name in fg.names:
+                if name in basenames:
+                    st, contref, sigref, deltaref, symtgt = fg.get_file(name)
+                    new_fg.add_file(st, contref, sigref, deltaref, symtgt)
+        return [new_fg]
 
     def same_file(self, dirname, basename, fg): # pragma: no cover
         """Is the file on disk the same as in the filegroup?"""
         fullname = os.path.join(dirname, basename)
-        st = self.fs.lstat(fullname)
-        return self.same_stat(st, fg.get_stat(basename))
+        st1 = self.fs.lstat(fullname)
+        st2 = fg.get_stat(basename)
+        return self.same_stat(st1, st2)
 
     def same_filegroups(self, prevdir, filegroups): # pragma: no cover
         """Does prevdir have exactly those filegroups?"""
@@ -267,7 +280,7 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
                 stat1.st_uid   == stat2.st_uid and
                 stat1.st_gid   == stat2.st_gid and
                 stat1.st_size  == stat2.st_size and
-                stat1.st_mtime == stat2.st_mtime)
+                int(stat1.st_mtime) == int(stat2.st_mtime))
 
     def backup_existing_dir(self, prevdir, relative_path, st, subdirs, 
                             filenames): # pragma: no cover
@@ -275,22 +288,32 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
 
         logging.debug("Directory EXISTS in previous gen: %s" % relative_path)
 
-        filegroups, filenames = self.find_reusable_filegroups(prevdir, 
-                                                              relative_path,
-                                                              filenames)
+        (filegroups, 
+         unchanged, 
+         changed, 
+         new) = self.find_reusables(prevdir, relative_path, filenames)
+        logging.debug("backup_existing_dir: #filegroups: %d" % len(filegroups))
+        logging.debug("backup_existing_dir: unchanged: %s" % unchanged)
+        logging.debug("backup_existing_dir: changed: %s" % changed)
+        logging.debug("backup_existing_dir: new: %s" % new)
+
         self.progress["files-found"] += sum(len(fg.names) for fg in filegroups)
-        if (not filenames and
+
+        if (not unchanged and
+            not changed and
+            not new and
             self.same_filegroups(prevdir, filegroups) and
             self.same_subdirs(prevdir, subdirs) and
             self.same_stat(prevdir.stat, st)):
             return prevdir
         else:
-            existing, others = self.find_existing_files(prevdir, relative_path,
-                                                        filenames)
-            existing = [os.path.join(relative_path, x) for x in existing]
-            others = [os.path.join(relative_path, x) for x in others]
-            filegroups += self.backup_files_as_groups(prevdir, existing)
-            filegroups += self.backup_files_as_groups(prevdir, others)
+            unchanged = [os.path.join(relative_path, x) for x in unchanged]
+            filegroups += self.create_filegroups(prevdir, unchanged)
+
+            fullpaths = [os.path.join(relative_path, x)
+                         for x in changed + new]
+            filegroups += self.backup_files_as_groups(prevdir, fullpaths)
+
             return self.new_dir(relative_path, st, subdirs, filegroups)
 
     def backup_new_dir(self, relative_path, st, subdirs, filenames):
