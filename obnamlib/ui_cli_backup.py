@@ -215,33 +215,35 @@ bytes, or use suffixes kB, K, MB, M, GB, G.
         
         """
 
-        filegroups = []
+        reusable = []
         unchanged = []
         changed = []
         
-        for fgref in prevdir.fgrefs:
-            fg = self.store.get_object(self.host, fgref)
-            
+        filegroups = [self.store.get_object(self.host, fgref)
+                      for fgref in prevdir.fgrefs]
+        names = dict((fg, fg.names) for fg in filegroups)
+        
+        for fg in filegroups:
             unchanged_in_fg = []
             changed_in_fg = []
 
-            for name in fg.names:
+            for name in names[fg]:
                 if name in filenames:
                     if self.same_file(dirname, name, fg):
                         unchanged_in_fg.append(name)
                     else:
                         changed_in_fg.append(name)
 
-            if unchanged_in_fg == fg.names:
-                filegroups.append(fg)
-                filenames = [x for x in filenames if x not in fg.names]
+            if unchanged_in_fg == names[fg]:
+                reusable.append(fg)
+                filenames = [x for x in filenames if x not in names[fg]]
             else:
                 unchanged += unchanged_in_fg
                 changed += changed_in_fg
                 filenames = [x for x in filenames 
                              if x not in unchanged_in_fg + changed_in_fg]
 
-        return filegroups, unchanged, changed, filenames
+        return reusable, unchanged, changed, filenames
 
     def create_filegroups(self, prevdir, basenames): # pragma: no cover
         """Create new filegroups for unmodified files."""
