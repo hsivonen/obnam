@@ -121,7 +121,7 @@ class BlackBoxTest:
         self.assertEqual(name, stat1.st_blocks, stat2.st_blocks, "blocks")
         self.assertEqual(name, stat1.st_gid, stat2.st_gid, "gid")
         self.assertEqual(name, stat1.st_mode, stat2.st_mode, "mode")
-        self.assertEqual(name, stat1.st_mtime, stat2.st_mtime, "mtime")
+        self.assertEqual(name, int(stat1.st_mtime), int(stat2.st_mtime), "mtime")
         self.assertEqual(name, stat1.st_nlink, stat2.st_nlink, "nlink")
         self.assertEqual(name, stat1.st_size, stat2.st_size, "size")
         self.assertEqual(name, stat1.st_uid, stat2.st_uid, "uid")
