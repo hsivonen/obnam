@@ -27,7 +27,7 @@ class NotFound(obnamlib.Exception):
     pass
 
 
-class ObjectQueue(list):
+class ObjectQueue(object):
 
     """Queue of outgoing objects.
     
@@ -36,22 +36,31 @@ class ObjectQueue(list):
     
     """
     
-    @property
-    def unpushed_size(self):
-        """Return approximate size of unpushed objects."""
-        
-        def approx_size(c):
-            """Return approximate size of component."""
-            if obnamlib.cmp_kinds.is_composite(c.kind):
-                return sum(approx_size(kid) for kid in c.children)
-            else:
-                return len(str(c))
+    def __init__(self):
+        self.items = []
+        self.unpushed_size = 0
+    
+    def approx_size(self, c):
+        """Return approximate size of component."""
+        if obnamlib.cmp_kinds.is_composite(c.kind):
+            return sum(self.approx_size(kid) for kid in c.children)
+        else:
+            return len(str(c))
 
-        size = 0        
-        for o in self:
-            for c in o.components:
-                size += approx_size(c)
-        return size
+    def append(self, o):
+        size = sum(self.approx_size(c) for c in o.components)
+        self.items.append((o, size))
+        self.unpushed_size += size
+
+    def __len__(self):
+        return len(self.items)
+
+    def __getitem__(self, i):
+        return self.items[i][0]
+
+    def __delslice__(self, i, j):
+        del self.items[i:j]
+        self.unpushed_size = sum(x[1] for x in self.items)
     
 
 class Store(object):
