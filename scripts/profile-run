@@ -1,9 +1,0 @@
-#!/bin/sh
-# Setup a tree and store with 9 generations of data.
-
-n=9
-start=100m
-inc=5m
-
-genbackupdata test.tree --create $inc
-OBNAM_PROFILE=obnam.prof ./obnam backup --store test.store test.tree
