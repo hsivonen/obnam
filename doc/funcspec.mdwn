@@ -1,0 +1,165 @@
+Obnam Functional Specification
+==============================
+
+This is the functional specification document for Obnam, for the
+rewrite started on 2009-11-09. This document is structured as a
+description of each command that Obnam shall implement, plus
+some shared description of concepts and options.
+
+
+Filesystem access
+-----------------
+
+Backups will be made on some machine that can access both the files
+to be backed up, and the backup store. The files and store can be
+on a local filesystem, or accessed via SFTP.
+
+
+Configuration
+-------------
+
+Configuration will be made via configuration files or command line
+options or both. Command line options override configuration files.
+Configuration files are read from a list of pre-defined locations,
+or the list can be overriden via an environment variable, OBNAM_CONFIGS.
+If several config files are found, they are all read, and if they set
+the same values, the last one applies.
+
+    OBNAM_CONFIGS=~/.obnam/default.conf:~/.obnam/myconfig.conf
+
+Configuration file settings and long names for command line options are
+identical.
+
+
+Command line options
+--------------------
+
+The following options are supported.
+
+`--host=HOSTID` sets the name of the host in the backup store. The
+default is the hostname of the obnam is being run on.
+
+`--store=LOCATION` sets the location for the backup store. There is
+no default.
+
+`--generation=GENID` sets the generation being used. The default is
+the newest generation in the store.
+
+`--log=FILE` sets location for log file. Default is ~/.obnam/obnam.log.
+The log file gets rotated at each run, and the last 10 log files are
+kept.
+
+`--progress` turns on progress reporting. By default, there is no output
+unless there are errors. With this option, errors are still reported
+to the standard output.
+
+Above, and later in this document, `LOCATION` may be a pathname on the
+local filesystem or an sftp URL.
+
+
+Command: backup
+---------------
+
+The following command will back up:
+
+    obnam backup [--root=LOCATION]
+
+`--root=LOCATION` adds a location to list of roots to be backed up.
+Location may be a single file or a directory. There is no default value.
+
+
+Command: restore
+----------------
+
+The following command will restore files from the backup:
+
+    obnam restore [--restore-to=LOCATION] WHAT...
+
+`--restore-to=LOCATION` sets the directory where restored data gets
+put. There is no default value.
+
+`WHAT` is a pathname. If it refers to a directory, the entire directory
+tree is restored, otherwise only that file.
+
+
+Command: generations
+-------------------
+
+The following command will list all generations:
+
+    obnam generations [--long]
+
+The output is a list of generation ids suitable to be given to
+`--generation` as an argument. 
+
+`--long` will additionally output information about each generation:
+when it was finished, and whether it was a complete backup or a
+temporary snapshot.
+
+
+Command: ls
+-------------------
+
+The following command will list contents of a generation:
+
+    obnam ls [WHAT...]
+
+The output is formatted similarly to "ls -lAR".
+
+If one or more `WHAT` arguments are given, the corresponding files
+or directories are listed, similarly to the Unix `ls` command.
+
+
+Command: forget
+-------------------
+
+The following command will remove generations from the backup:
+
+    obnam forget [--auto] [--forget-policy=POLICY] [GENID...]
+
+Note that the `--generation` setting will **not** be used for this.
+
+`--auto` will cause generations to be removed according to the
+policy set by `--forget-policy=POLICY`. The policy is specified as
+a comma separated list of count/timespec pairs, where count is an
+integer and timespec specifies hour, day, week, month, or year by
+first letter. The count gives the number of newest backups to keep
+for the timespec. For example, "7d" would mean to keep the newest
+backup for each calendar day for the seven latest days, and 
+"7d,4w,12m" would extend that to additionally keep the newest backup
+for each calendar week for four week, and the newest backup for each
+calendar month for 12 months. A backup is kept if it matches any of
+the pairs.
+
+Note that the backup command will not forget any generations.
+
+
+Command: verify
+---------------
+
+The following command will verify that files have been backed
+up correctly:
+
+    obnam verify [--random] [WHAT...]
+
+This will choose some files (not directories) to verify, retrieve
+their data from the backup, and compare it to the data on the disk.
+The files are either specified by the user (`WHAT`) or chosen
+randomly`(`--random`).
+
+
+Command: fsck
+-------
+
+The following command will verify that the on-disk data structures
+in the backup store are correct:
+
+    obnam fsck [--check-data]
+
+It will, at minimum, verify that every directory and file in every
+generation can be found in the backup store, but does not actually
+restore and verify all the data.
+
+`--check-data` makes fsck check that all the data can be restored
+correctly (restored data has same checksum as stored for it).
+
