@@ -14,6 +14,13 @@ Backups will be made on some machine that can access both the files
 to be backed up, and the backup store. The files and store can be
 on a local filesystem, or accessed via SFTP.
 
+Except where limited by SFTP, all kinds of files and all of their
+attributes must be backed up and restored correctly, including filename
+regardless of encoding, all stat fields, access control list entries,
+and extended attributes. Exceptions are: st_atime, st_ctime.
+
+Sparse files will be backed up and restored as sparse files.
+
 
 Configuration
 -------------
@@ -21,11 +28,14 @@ Configuration
 Configuration will be made via configuration files or command line
 options or both. Command line options override configuration files.
 Configuration files are read from a list of pre-defined locations,
-or the list can be overriden via an environment variable, OBNAM_CONFIGS.
+or the list can be overriden via an environment variable, `OBNAM_CONFIGS`.
 If several config files are found, they are all read, and if they set
 the same values, the last one applies.
 
     OBNAM_CONFIGS=~/.obnam/default.conf:~/.obnam/myconfig.conf
+
+If `OBNAM_CONFIGS` is set to the empty string, no configuration files
+will be read.
 
 Configuration file settings and long names for command line options are
 identical.
@@ -49,6 +59,15 @@ the newest generation in the store.
 The log file gets rotated at each run, and the last 10 log files are
 kept.
 
+`--compress=METHOD` specifies how uploaded data is compressed (before it
+is encrypted). `METHOD` is one of `none`, `gzip`.
+
+`--sign-with=KEYID` sets the PGP key to use for signing uploaded data,
+and for verifying that data read from the backup store is signed with.
+
+`--encrypt-to=KEYID` sets the PGP key to use for encrypting/decrypting
+data in the backup store. Can be used multiple times.
+
 `--progress` turns on progress reporting. By default, there is no output
 unless there are errors. With this option, errors are still reported
 to the standard output.
@@ -62,10 +81,13 @@ Command: backup
 
 The following command will back up:
 
-    obnam backup [--root=LOCATION]
+    obnam backup [--root=LOCATION] [LOCATION...]
 
 `--root=LOCATION` adds a location to list of roots to be backed up.
 Location may be a single file or a directory. There is no default value.
+
+Locations may also be given as command line arguments. This is equivalent
+to giving them via options.
 
 
 Command: restore
