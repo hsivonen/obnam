@@ -14,4 +14,4 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from hooks import Hook
+from hooks import Hook, HookManager

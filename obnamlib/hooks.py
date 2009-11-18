@@ -47,3 +47,23 @@ class Hook(object):
         if callback_id in self.callbacks:
             self.callbacks.remove(callback_id)
 
+
+class HookManager(object):
+
+    '''Manage the set of hooks the application defines.'''
+    
+    def __init__(self):
+        self.hooks = {}
+        
+    def new(self, name):
+        pass
+
+    def add_callback(self, name, callback):
+        pass
+        
+    def remove_callback(self, name, callback_id):
+        pass
+        
+    def call(self, name, *args, **kwargs):
+        pass
+

@@ -53,3 +53,37 @@ class HookTests(unittest.TestCase):
         cb_id = self.hook.add_callback(self.callback)
         self.hook.remove_callback(cb_id)
         self.assertEqual(self.hook.callbacks, [])
+        
+        
+class HookManagerTests(unittest.TestCase):
+
+    def setUp(self):
+        self.hooks = obnamlib.HookManager()
+        self.hooks.new('foo')
+        
+    def callback(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+
+    def test_has_no_tests_initially(self):
+        hooks = obnamlib.HookManager()
+        self.assertEqual(hooks.hooks, {})
+        
+    def test_adds_new_hook(self):
+        self.assert_(self.hooks.hooks.has_key('foo'))
+        
+    def test_adds_callback(self):
+        self.hooks.add_callback('foo', self.callback)
+        self.assertEqual(self.hooks.hooks['foo'].callbacks, [self.callback])
+
+    def test_removes_callback(self):
+        cb_id = self.hooks.add_callback('foo', self.callback)
+        self.hooks.remove_callback('foo', cb_id)
+        self.assertEqual(self.hooks.hooks['foo'].callbacks, [])
+
+    def test_calls_callbacks(self):
+        self.hooks.add_callback('foo', self.callback)
+        self.hooks.call('foo', 'bar', kwarg='foobar')
+        self.assertEqual(self.args, ('bar',))
+        self.assertEqual(self.kwargs, { 'kwarg': 'foobar' })
+
