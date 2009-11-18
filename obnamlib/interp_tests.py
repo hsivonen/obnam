@@ -14,6 +14,19 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from hooks import Hook, HookManager
-from cfg import Configuration
-from interp import Interpreter
+import unittest
+
+import obnamlib
+
+
+class InterpreterTests(unittest.TestCase):
+
+    def callback(self, args):
+        self.args = args
+
+    def test_executes_registered_command(self):
+        interp = obnamlib.Interpreter()
+        interp.register('foo', self.callback)
+        interp.execute('foo', ['bar', 'foobar'])
+        self.assertEqual(self.args, ['bar', 'foobar'])
+

@@ -14,6 +14,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from hooks import Hook, HookManager
-from cfg import Configuration
-from interp import Interpreter
+class Interpreter(object):
+
+    '''A command interpreter for command line applications.'''
+    
+    def register(self, name, callback):
+        pass
+        
+    def execute(self, name, args):
+        pass
