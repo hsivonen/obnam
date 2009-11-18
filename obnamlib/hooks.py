@@ -56,14 +56,15 @@ class HookManager(object):
         self.hooks = {}
         
     def new(self, name):
-        pass
+        if name not in self.hooks:
+            self.hooks[name] = Hook(name)
 
     def add_callback(self, name, callback):
-        pass
+        return self.hooks[name].add_callback(callback)
         
     def remove_callback(self, name, callback_id):
-        pass
+        self.hooks[name].remove_callback(callback_id)
         
     def call(self, name, *args, **kwargs):
-        pass
+        self.hooks[name].call_callbacks(*args, **kwargs)
 
