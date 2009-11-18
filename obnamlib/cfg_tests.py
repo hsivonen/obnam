@@ -40,7 +40,7 @@ class ConfigurationTests(unittest.TestCase):
         self.assertEqual(self.cfg['list'], [])
 
     def test_parses_command_line(self):
-        self.cfg.load(args=['--foo', '--bar=foobar', '--list=a,b,c'])
+        self.cfg.load(args=['--foo', '--bar=foobar', '--list=a', '--list=b,c'])
         self.assertEqual(self.cfg['foo'], True)
         self.assertEqual(self.cfg['bar'], 'foobar')
         self.assertEqual(self.cfg['list'], ['a', 'b', 'c'])
