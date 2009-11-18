@@ -18,8 +18,12 @@ class Interpreter(object):
 
     '''A command interpreter for command line applications.'''
     
+    def __init__(self):
+        self.commands = {}
+    
     def register(self, name, callback):
-        pass
+        if name not in self.commands:
+            self.commands[name] = callback
         
     def execute(self, name, args):
-        pass
+        self.commands[name](args)
