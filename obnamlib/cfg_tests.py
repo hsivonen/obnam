@@ -26,6 +26,9 @@ class ConfigurationTests(unittest.TestCase):
         self.cfg.new_boolean(['foo'], 'foo help')
         self.cfg.new_string(['bar'], 'bar help')
 
+    def test_has_no_args_by_default(self):
+        self.assertEqual(self.cfg.args, [])
+
     def test_sets_boolean_to_false_by_default(self):
         self.assertEqual(self.cfg['foo'], False)
 
@@ -33,7 +36,7 @@ class ConfigurationTests(unittest.TestCase):
         self.assertEqual(self.cfg['bar'], '')
 
     def test_parses_command_line(self):
-        self.cfg.load(argv=['cmd', '--foo', '--bar=foobar'])
+        self.cfg.load(args=['--foo', '--bar=foobar'])
         self.assertEqual(self.cfg['foo'], True)
         self.assertEqual(self.cfg['bar'], 'foobar')
 

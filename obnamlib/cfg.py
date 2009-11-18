@@ -14,6 +14,22 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import optparse
+
+
+class Setting(object):
+
+    '''One setting.
+    
+    We don't use basic types to store settings so that we can more
+    easily have aliases for their names.
+    
+    '''
+    
+    def __init__(self, value):
+        self.value = value
+
+
 class Configuration(object):
 
     '''Handle configuration for the application.
@@ -47,16 +63,31 @@ class Configuration(object):
     '''
     
     def __init__(self, filenames):
-        pass
+        self.settings = {}
+        self.parser = optparse.OptionParser()
+        self.args = []
+
+    def new_setting(self, names, help, action, value):
+        setting = Setting(value)
+        for name in names:
+            self.settings[name] = setting
+
+        optnames = ['-%s' % name for name in names if len(name) == 1]
+        optnames += ['--%s' % name for name in names if len(name) > 1]
+        self.parser.add_option(*optnames, action=action, help=help)
 
     def new_boolean(self, names, help):
-        pass
+        self.new_setting(names, help, 'store_true', False)
         
     def new_string(self, names, help):
-        pass
+        self.new_setting(names, help, 'store', '')
 
     def __getitem__(self, name):
-        return None
+        return self.settings[name].value
         
-    def load(self, argv=None):
-        pass
+    def load(self, args=None):
+        opts, args = self.parser.parse_args(args=args)
+        for name in self.settings.keys():
+            if hasattr(opts, name):
+                self.settings[name].value = getattr(opts, name)
+
