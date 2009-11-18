@@ -35,15 +35,23 @@ class Hook(object):
         self.callbacks = []
         
     def add_callback(self, callback):
+        '''Add a callback to this hook.
+        
+        Return an identifier that can be used to remove this callback.
+
+        '''
+
         if callback not in self.callbacks:
             self.callbacks.append(callback)
         return callback
         
     def call_callbacks(self, *args, **kwargs):
+        '''Call all callbacks with the given arguments.'''
         for callback in self.callbacks:
             callback(*args, **kwargs)
         
     def remove_callback(self, callback_id):
+        '''Remove a specific callback.'''
         if callback_id in self.callbacks:
             self.callbacks.remove(callback_id)
 
@@ -56,15 +64,24 @@ class HookManager(object):
         self.hooks = {}
         
     def new(self, name):
+        '''Create a new hook.
+        
+        If a hook with that name already exists, nothing happens.
+        
+        '''
+
         if name not in self.hooks:
             self.hooks[name] = Hook(name)
 
     def add_callback(self, name, callback):
+        '''Add a callback to a named hook.'''
         return self.hooks[name].add_callback(callback)
         
     def remove_callback(self, name, callback_id):
+        '''Remove a specific callback from a named hook.'''
         self.hooks[name].remove_callback(callback_id)
         
     def call(self, name, *args, **kwargs):
+        '''Call callbacks for a named hook, using given arguments.'''
         self.hooks[name].call_callbacks(*args, **kwargs)
 
