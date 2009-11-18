@@ -14,5 +14,26 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from hooks import Hook, HookManager
-from cfg import Configuration
+import unittest
+
+import obnamlib
+
+
+class ConfigurationTests(unittest.TestCase):
+
+    def setUp(self):
+        self.cfg = obnamlib.Configuration([])
+        self.cfg.new_boolean(['foo'], 'foo help')
+        self.cfg.new_string(['bar'], 'bar help')
+
+    def test_sets_boolean_to_false_by_default(self):
+        self.assertEqual(self.cfg['foo'], False)
+
+    def test_sets_string_to_empty_by_default(self):
+        self.assertEqual(self.cfg['bar'], '')
+
+    def test_parses_command_line(self):
+        self.cfg.load(argv=['cmd', '--foo', '--bar=foobar'])
+        self.assertEqual(self.cfg['foo'], True)
+        self.assertEqual(self.cfg['bar'], 'foobar')
+
