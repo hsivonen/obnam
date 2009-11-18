@@ -82,6 +82,9 @@ class Configuration(object):
     def new_string(self, names, help):
         self.new_setting(names, help, 'store', '')
 
+    def new_list(self, names, help):
+        pass
+
     def __getitem__(self, name):
         return self.settings[name].value
         

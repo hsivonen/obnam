@@ -25,6 +25,7 @@ class ConfigurationTests(unittest.TestCase):
         self.cfg = obnamlib.Configuration([])
         self.cfg.new_boolean(['foo'], 'foo help')
         self.cfg.new_string(['bar'], 'bar help')
+        self.cfg.new_list(['list'], 'list help')
 
     def test_has_no_args_by_default(self):
         self.assertEqual(self.cfg.args, [])
@@ -35,8 +36,12 @@ class ConfigurationTests(unittest.TestCase):
     def test_sets_string_to_empty_by_default(self):
         self.assertEqual(self.cfg['bar'], '')
 
+    def test_sets_list_to_empty_list_by_default(self):
+        self.assertEqual(self.cfg['list'], [])
+
     def test_parses_command_line(self):
-        self.cfg.load(args=['--foo', '--bar=foobar'])
+        self.cfg.load(args=['--foo', '--bar=foobar', '--list=a,b,c'])
         self.assertEqual(self.cfg['foo'], True)
         self.assertEqual(self.cfg['bar'], 'foobar')
+        self.assertEqual(self.cfg['list'], ['a', 'b', 'c'])
 
