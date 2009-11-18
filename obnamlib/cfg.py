@@ -26,7 +26,8 @@ class Setting(object):
     
     '''
     
-    def __init__(self, value):
+    def __init__(self, kind, value):
+        self.kind = kind
         self.value = value
 
 
@@ -54,8 +55,11 @@ class Configuration(object):
     way to write changed settings to permanent storage.
     
     Normal long options are boolean settings: the value is either true
-    or false. False is the default. Other options have string values.
-    If the app needs a list, it needs to implement it via strings.
+    or false. False is the default. Other options have string values, or
+    are lists of strings. A list is given either as multiple command
+    line options ('--foo=bar --foo=foobar' would result in the
+    list ['bar', 'foobar']), or as a comma-and-maybe-also-space separated list
+    ('--foo=bar,foobar').
     
     FIXME: Everything about reading configuration from files above is
     total bullshit, that part hasn't been implemented yet.
@@ -67,8 +71,8 @@ class Configuration(object):
         self.parser = optparse.OptionParser()
         self.args = []
 
-    def new_setting(self, names, help, action, value):
-        setting = Setting(value)
+    def new_setting(self, kind, names, help, action, value):
+        setting = Setting(kind, value)
         for name in names:
             self.settings[name] = setting
 
@@ -77,13 +81,13 @@ class Configuration(object):
         self.parser.add_option(*optnames, action=action, help=help)
 
     def new_boolean(self, names, help):
-        self.new_setting(names, help, 'store_true', False)
+        self.new_setting('int', names, help, 'store_true', False)
         
     def new_string(self, names, help):
-        self.new_setting(names, help, 'store', '')
+        self.new_setting('str', names, help, 'store', '')
 
     def new_list(self, names, help):
-        pass
+        self.new_setting('list', names, help, 'append', [])
 
     def __getitem__(self, name):
         return self.settings[name].value
@@ -92,5 +96,11 @@ class Configuration(object):
         opts, args = self.parser.parse_args(args=args)
         for name in self.settings.keys():
             if hasattr(opts, name):
-                self.settings[name].value = getattr(opts, name)
+                value = getattr(opts, name)
+                if self.settings[name].kind == 'list':
+                    for item in value:
+                        item = [s.strip() for s in item.split(',')]
+                        self.settings[name].value += item
+                else:
+                    self.settings[name].value = value
 
