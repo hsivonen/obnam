@@ -35,11 +35,15 @@ class Hook(object):
         self.callbacks = []
         
     def add_callback(self, callback):
-        pass
+        if callback not in self.callbacks:
+            self.callbacks.append(callback)
+        return callback
         
     def call_callbacks(self, *args, **kwargs):
-        pass
+        for callback in self.callbacks:
+            callback(*args, **kwargs)
         
     def remove_callback(self, callback_id):
-        pass
+        if callback_id in self.callbacks:
+            self.callbacks.remove(callback_id)
 

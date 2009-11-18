@@ -37,11 +37,16 @@ class HookTests(unittest.TestCase):
     def test_adds_callback(self):
         self.hook.add_callback(self.callback)
         self.assertEqual(self.hook.callbacks, [self.callback])
+        
+    def test_adds_callback_only_once(self):
+        self.hook.add_callback(self.callback)
+        self.hook.add_callback(self.callback)
+        self.assertEqual(self.hook.callbacks, [self.callback])
 
     def test_calls_callback(self):
         self.hook.add_callback(self.callback)
         self.hook.call_callbacks('bar', kwarg='foobar')
-        self.assertEqual(self.args, ['bar'])
+        self.assertEqual(self.args, ('bar',))
         self.assertEqual(self.kwargs, { 'kwarg': 'foobar' })
 
     def test_removes_callback(self):
