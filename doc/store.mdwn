@@ -1,0 +1,281 @@
+Backup store design for Obnam
+=============================
+
+The backup store is where the the backed up data is stored in Obnam.
+This document discusses how the store is designed.
+
+At this time, the implementation of the store is not discussed. When
+this is being written, the goal is to work out the API for the store.
+
+
+Immutability
+------------
+
+Stuff in the store will not change, with few exception. Conceptually,
+the backup store forms a single tree of objects, and those objects
+are immutable. A generation that has been backed up, for example,
+will never change; it might be deleted, but won't change.
+
+The exception is the root of the tree.
+
+
+Locking
+-------
+
+The root of the store and the individual host objects may be locked.
+Locking is required for modification, but not for reading.
+
+When doing a restore, for example, no locking is required. However,
+readers may need to take care for data going missing suddenly, if 
+some other client is doing removals. This same care needs to be taken
+to guard against errors in the store's filesystem, so it should not
+cause undue burden.
+
+The store root is locked whenever a new host is added or changes
+to a host are commited. A host object is locked when a new generation
+gets backed up: only one backup per host may be done at a time.
+
+
+Use cases of the Store API
+--------------------------
+
+The Store API will be used in at least the following use cases:
+
+* backup: add new data, look up existing data (to avoid backing up something
+  that is already in the store)
+* restore: retrieve data from the store
+* list hosts
+* list generations
+* list contents of generations, either completely or partially
+* remove generations
+* check consistency of data structures
+
+Users will include both command line operations and continuous ones
+such as a FUSE filesystem for browsing backups and restoring data.
+
+
+Case study: backing up data
+---------------------------
+
+Backing a new file would happen like this, in the simplest case:
+
+    # Upload file data in chunks of suitable size.
+    chunks = []
+    for chunk_data in f.read_chunks(chunk_size):
+        chunkobj = obnamlib.Chunk(chunk_data)
+        store.put(chunkobj)
+        chunks.append(chunk)
+    
+    # Upload an object for the whole contents of the file.
+    filecontentsobj = obnamlib.FileContents(chunks)
+    store.put(filecontentsobj)
+    
+    # Finally, upload the file's metadata.
+    metadata = obnamlib.Metadata(stat, acl, xattr)
+    fileobj = obnamlib.File(filename, metadata, filecontentsobj)
+    store.put(fileobj)
+
+This does not, however, check whether the file might already exist
+in the store. There are three levels of checks we want to make:
+
+1. Does the file exist in the store, without modifications?
+1. Does the exact file contents exist in the store?
+1. For each chunk, does that exist in the store?
+
+For these, we need three kinds of lookup operations. For checking
+whether the file exists:
+
+    fileobj = store.find_file(filename, metadata)
+
+This looks up a file based on filename and metadata. The filename
+is needed because the basename is relevant for equality. The metadata
+contains all fields struct stat, plus ACL and xattr, and
+possibly other fields. The lookup will return a file that has
+the same basename, and the same relevant metadata. Not all metadata
+is relevant: for example, it does not matter if st_atime has changed.
+
+For checking whether the exact file contents exists, or a chunk exists,
+we use checksums. We use multiple checksums. which all need to match.
+For extra security, the caller may also retrieve the data and verify
+that it is an exact match.
+
+
+Checksums, rsync, and chunks
+----------------------------
+
+The rsync algorithm is based on having two checksums, a weak and a
+strong one. When backing up, we divide the data into chunks of, say,
+4096 bytes, and compute both checksums for each chunk. When backing
+up, we use the following algorithm:
+
+    chunk_size = 4096
+    read first chunk_size bytes into buffer
+    remembered = []
+    while len(buffer) == chunk_size:
+        if store has chunk with same weak checksum as buffer:
+            if store has chunk with same strong checksum as buffer:
+                get chunk from store
+                if chunk and buffer are identical:
+                    remembered.append(chunk)
+                    clear buffer
+        if buffer is not cleared:
+            upload first byte in buffer as a new chunk
+            remove first byte in buffer
+        read more data from file into buffer so it is chunk_size long
+    if buffer is not empty:
+        upload buffer as new chunk
+
+This means that any data that is already in the store will be reused,
+at 4096 byte granularity.
+
+The above pseudo-code is highly inefficient, since it upload the
+difference between the old and new versions of the file as one-byte
+chunks. This can obviously be optimized, but is left as an excercise
+to the reader. The idea is to collect consecutive one-byte chunks
+into full-size chunks.
+
+More interesting is that there needs to be a very efficient way of
+looking up chunks based on checksums. The weak checksum will, probably,
+be a 32-bit Adler checksum, since that is included in the Python
+standard library. The strong checksum will probably be MD5. It is not
+cryptographically secure, but that does not matter for this implementation,
+and it is quite fast.
+
+The same data structures can be used for looking up entire file contents.
+The data structure provides a mapping from checksum to object identifiers.
+One checksum should map to multiple identifiers, to handle checksum
+collisions. Collisions are particularly important for weak checksum,
+since there will be many such collisions for large data sets.
+
+
+Backup objects
+--------------
+
+Stuff that gets put into the backup store is packaged into "backup
+objects". A backup object may correspond to, say, a directory on the
+disk, or a chunk of data in a file, or it might be a generation.
+
+All backup objects have the same structure: they have some fields
+(which ones depends on the type of the object), and a systematic
+way of encoding the backup object as a string, and decoding it from
+a string. The string representation is essential so that the objects
+may be stored on disk.
+
+Each backup object has an identifier that is unique within the 
+backup store. The identifier is picked by the backup store when
+the object is put into it: the identifier does not exist until
+that time. This prevents cyclic references between objects or
+groups of objects.
+
+In theory, the identifier could be just an integer, which gets
+incremented every time a new object is added to the store. However,
+this would result in too much contention between hosts sharing
+the same backup store and doing backups concurrently.
+
+Thus, the identifier consists of two parts: a 32-bit numeric host
+identifier, and a sequential 64-bit counter for that host. The host 
+identifier is picked when the host is first added to the store.
+
+A backup object contains some data, accessed as attributes. The
+following types of data are supported:
+
+* blobs (strings of bytes)
+* integers (unsigned, unlimited size)
+* boolean values
+* an object identifier
+* a list of object identifiers
+
+
+Finding backup objects: an idea
+-------------------------------
+
+Backup objects are retrieved using their unique identifier, but
+first you need to find the identifier. We have already discussed
+a checksum based mapping for file content data. We further need
+something to look up things based on, for example, filename and
+metadata.
+
+A checksum based approach would work for this as well. To do the
+lookup, we get a filename and a metadata object. We encode both
+as strings, take a checksum of that, and look things up.
+
+
+Operations on the store root and hosts
+--------------------------------------
+
+There are only a handful of operations on the store root:
+
+* list existing hosts
+* open a host for use
+* add a new host
+* update an existing host
+* remove a host
+
+The first two do not require locking, the others do.
+
+Hosts are represented by backup objects of the obnamlib.Host type.
+A host is, essentially, a list of generations (just like a generation
+is a list of files and directories). There is perhaps a little bit of
+extra data, if that proves to be useful.
+
+Operations on host happen by manipulating the obnamlib.Host object.
+When all changes have been done, the updated host is uploaded to the
+store using the "update an existing host" operation above.
+
+When modifying data for a host, it is not necessary to keep the
+root locked all the time. Instead, first the host is locked, and
+modified as necessary, but the modifications are not yet commited.
+When it is time to commit, the root is also locked, then the new
+version of the host object is put into the root, and then both locks
+are opened.
+
+In pseudo-code:
+
+    lock host
+    make changes to host (new generation, remove generation, whatever)
+    lock root
+    put new host into root
+    unlock root
+    unlock host
+
+
+Making new generations
+----------------------
+
+Making a backup can be a long operation, and it may be aborted at any
+time. It would be practical to not have to start over in that case.
+Thus, while doing a backup, we should make a checkpoing every now and
+then. A checkpoint is, effectively, an incomplete generation. Making
+it visible to the user as a generation is useful so that they can
+easily retrieve data from the partial generation.
+
+We can achieve partial generations by doing copy-on-write updates on
+the previous generation. When backing up a directory, and it's time for
+a checkpoint, we just pretend we finished everything and that nothing
+else has changed in the filesystem. This percolates up to the root
+of the filesystem, and boom, we can push out a new generation.
+
+It gets slightly tricky when we want to continue the backup from the
+point of interruption, to avoid having to scan large directory trees
+for unchanged data, but that will be left as an excercise to the reader.
+
+From a store API point of view, we realize the following: when we're
+making a backup, we need to start a new generation that is a copy of
+the previous one. The copy is modified, and any modified parts get
+uploaded (unchanged ones don't need to be).
+
+To make these things easier for the store API user, the store itself
+will take care of making snapshots. The API user can just pretend
+it is making one generation. All the complexity will be hidden in
+the store.
+
+
+Removing data from the store
+----------------------------
+
+The store allows removal of objects in the store. This will automatically
+free up the data. If the object contained references to other objects,
+either reference counting or garbage collection will be used to remove
+any unreachable objects. Which one happens will be left as an excercise
+to the implementer.
+
