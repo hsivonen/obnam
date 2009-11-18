@@ -22,14 +22,11 @@ import obnamlib
 class HookTests(unittest.TestCase):
 
     def setUp(self):
-        self.hook = obnamlib.Hook('foo')
+        self.hook = obnamlib.Hook()
         
     def callback(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
-
-    def test_sets_name(self):
-        self.assertEqual(self.hook.name, 'foo')
 
     def test_has_no_callbacks_by_default(self):
         self.assertEqual(self.hook.callbacks, [])

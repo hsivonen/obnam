@@ -30,8 +30,7 @@ class Hook(object):
 
     '''A hook.'''
 
-    def __init__(self, name):
-        self.name = name
+    def __init__(self):
         self.callbacks = []
         
     def add_callback(self, callback):
@@ -71,7 +70,7 @@ class HookManager(object):
         '''
 
         if name not in self.hooks:
-            self.hooks[name] = Hook(name)
+            self.hooks[name] = Hook()
 
     def add_callback(self, name, callback):
         '''Add a callback to a named hook.'''
