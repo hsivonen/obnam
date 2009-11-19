@@ -86,6 +86,23 @@ class Plugin(object):
     @property
     def required_application_version(self):
         return '0.0.0'
+        
+    def enable_wrapper(self):
+        '''Enable plugin.
+        
+        The plugin manager will call this method, which then calls the
+        enable method. Plugins should implement the enable method.
+        The wrapper method is there to allow an application to provide
+        an extended base class that does some application specific
+        magic when plugins are enabled or disabled.
+        
+        '''
+        
+        self.enable()
+
+    def disable_wrapper(self):
+        '''Corresponds to enable_wrapper, but for disabling a plugin.'''
+        self.disable()
     
     def enable(self):
         '''Enable the plugin.'''
@@ -222,4 +239,16 @@ class PluginManager(object):
         '''Parse a string represenation of a version into list of ints.'''
         
         return [int(s) for s in version.split('.')]
+
+    def enable_plugins(self, plugins=None):
+        '''Enable all or selected plugins.'''
+        
+        for plugin in plugins or self.plugins:
+            plugin.enable_wrapper()
+
+    def disable_plugins(self, plugins=None):
+        '''Disable all or selected plugins.'''
+        
+        for plugin in plugins or self.plugins:
+            plugin.disable_wrapper()
 
