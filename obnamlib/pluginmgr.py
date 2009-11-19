@@ -94,26 +94,6 @@ class Plugin(object):
     def disable(self):
         '''Disable the plugin.'''
         raise Exception('Unimplemented')
-        
-    def enable_signal(self, obj, signal_name, callback):
-        '''Connect to a GObject signal.
-        
-        This will remember the id so that disable_signals may do its stuff.
-        
-        '''
-        
-        if not hasattr(self, 'gobject_connect_ids'):
-            self.gobject_connect_ids = list()
-        conn_id = obj.connect(signal_name, callback)
-        self.gobject_connect_ids.append((obj, conn_id))
-        
-    def disable_signals(self):
-        '''Disable all signals enabled with enable_signal.'''
-        if hasattr(self, 'gobject_connect_ids'):
-            for obj, conn_id in self.gobject_connect_ids:
-                obj.disconnect(conn_id)
-            del self.gobject_connect_ids[:]
-        
 
 
 class PluginManager(object):

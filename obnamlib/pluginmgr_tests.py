@@ -19,16 +19,6 @@ import unittest
 from pluginmgr import Plugin, PluginManager
 
 
-class MockGObject(object):
-
-    def connect(self, *args):
-        self.connect_args = args
-        return 42
-
-    def disconnect(self, *args):
-        self.disconnect_args = args
-
-
 class PluginTests(unittest.TestCase):
 
     def setUp(self):
@@ -51,17 +41,6 @@ class PluginTests(unittest.TestCase):
 
     def test_disable_raises_exception(self):
         self.assertRaises(Exception, self.plugin.disable)
-
-    def test_enables_signal(self):
-        obj = MockGObject()
-        self.plugin.enable_signal(obj, 'signal_name', 'callback')
-        self.assertEqual(obj.connect_args, ('signal_name', 'callback'))
-
-    def test_disables_signals(self):
-        obj = MockGObject()
-        self.plugin.enable_signal(obj, 'signal_name', 'callback')
-        self.plugin.disable_signals()
-        self.assertEqual(obj.disconnect_args, (42,))
 
 
 class PluginManagerInitialStateTests(unittest.TestCase):
