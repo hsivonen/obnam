@@ -1,2 +1,5 @@
+./setup.py
 ./obnamlib/__init__.py
 ./obnamlib/status.py
+./obnamlib/vfs.py
+./obnamlib/vfs_sftp.py

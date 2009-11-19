@@ -14,6 +14,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import _obnam
+
 from hooks import Hook, HookManager
 from cfg import Configuration
 from interp import Interpreter
+from vfs import VirtualFileSystem, VfsFactory
+from vfs_local import LocalFS
