@@ -3,3 +3,8 @@
 ./obnamlib/status.py
 ./obnamlib/vfs.py
 ./obnamlib/vfs_sftp.py
+./test-plugins/hello_plugin.py
+./test-plugins/oldhello_plugin.py
+./test-plugins/aaa_hello_plugin.py
+./test-plugins/wrongversion_plugin.py
+
