@@ -1,1 +1,2 @@
 ./obnamlib/__init__.py
+./obnamlib/status.py
