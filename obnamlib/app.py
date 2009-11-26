@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import logging
 import os
 
 import obnamlib
@@ -25,7 +26,10 @@ class App(object):
     
     def __init__(self):
         self.hooks = obnamlib.HookManager()
+        
         self.config = obnamlib.Configuration([])
+        self.config.new_string(['log'], 'name of log file')
+        self.config.log = 'obnam.log'
 
         self.pm = obnamlib.PluginManager()
         self.pm.locations = [self.plugins_dir()]
@@ -36,12 +40,21 @@ class App(object):
         
     def plugins_dir(self):
         return os.path.join(os.path.dirname(obnamlib.__file__), 'plugins')
+
+    def setup_logging(self):
+        formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+        handler = logging.FileHandler(self.config.log)
+        handler.setFormatter(formatter)
+        logger = logging.getLogger()
+        logger.setLevel(logging.DEBUG)
+        logger.addHandler(handler)
         
     def run(self):
         self.pm.load_plugins()
         self.pm.enable_plugins()
         self.hooks.call('plugins-loaded')
         self.config.load()
+        self.setup_logging()
         print 'args:', self.config.args
         self.hooks.call('shutdown')
 

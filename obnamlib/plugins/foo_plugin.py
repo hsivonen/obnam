@@ -14,18 +14,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import logging
+
 import obnamlib
 
 
 class FooPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
-        self.add_callback('plugins-loaded', self.plugins_loaded)
         self.add_callback('shutdown', self.shutdown)
         
-    def plugins_loaded(self):
-        print 'foo: plugins loaded'
-    
     def shutdown(self):
-        print 'foo: shutdown'
+        logging.info('foo: shutdown')
 
