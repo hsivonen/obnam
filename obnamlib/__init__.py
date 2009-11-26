@@ -17,6 +17,9 @@
 import _obnam
 from pluginmgr import PluginManager
 
+class AppException(Exception):
+    pass
+
 from hooks import Hook, HookManager
 from cfg import Configuration
 from interp import Interpreter

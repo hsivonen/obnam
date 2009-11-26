@@ -67,17 +67,17 @@ class SftpFS(obnamlib.VirtualFileSystem):
         known_hosts = os.path.expanduser('~/.ssh/known_hosts')
         keys = paramiko.util.load_host_keys(known_hosts)
         if hostname not in keys:
-            raise obnamlib.Exception("Host key for %s not found" % hostname)
+            raise obnamlib.AppException("Host key for %s not found" % hostname)
         elif not keys[hostname].has_key(key.get_name()):
-            raise obnamlib.Exception("Unknown host key for %s" % hostname)
+            raise obnamlib.AppException("Unknown host key for %s" % hostname)
         elif keys[hostname][key.get_name()] != key:
             print '*** WARNING: Host key has changed!!!'
-            raise obnamlib.Exception("Host key has changed for %s" % hostname)
+            raise obnamlib.AppException("Host key has changed for %s" % hostname)
     
     def authenticate(self, username):
         if self.authenticate_via_agent(username):
             return
-        raise obnamlib.Exception("Can't authenticate to SSH server.")
+        raise obnamlib.AppException("Can't authenticate to SSH server.")
 
     def authenticate_via_agent(self, username):
         agent = paramiko.Agent()
@@ -104,7 +104,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
             self.write_file(lockname, "")
         except IOError, e:
             if e.errno == errno.EEXIST:
-                raise obnamlib.Exception("Lock %s already exists" % lockname)
+                raise obnamlib.AppException("Lock %s already exists" % lockname)
             else:
                 raise
 
@@ -134,7 +134,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
         self.sftp.utime(self.join(relative_path), (atime, mtime))
 
     def link(self, existing, new):
-        raise obnamlib.Exception("Cannot link on SFTP. Sorry.")
+        raise obnamlib.AppException("Cannot link on SFTP. Sorry.")
 
     def readlink(self, relative_path):
         return self.sftp.readlink(self.join(relative_path))

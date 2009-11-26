@@ -34,6 +34,9 @@ class App(object):
         self.pm = obnamlib.PluginManager()
         self.pm.locations = [self.plugins_dir()]
         self.pm.plugin_arguments = (self,)
+        
+        self.interp = obnamlib.Interpreter()
+        self.register_command = self.interp.register
 
         self.hooks.new('plugins-loaded')
         self.hooks.new('shutdown')
@@ -55,6 +58,10 @@ class App(object):
         self.hooks.call('plugins-loaded')
         self.config.load()
         self.setup_logging()
-        print 'args:', self.config.args
+        if self.config.args:
+            self.interp.execute(self.config.args[0], self.config.args[1:])
+        else:
+            raise obnamlib.AppException('Usage error: '
+                                        'must give operation on command line')
         self.hooks.call('shutdown')
 
