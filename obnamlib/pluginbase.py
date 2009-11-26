@@ -14,12 +14,30 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import _obnam
-import pluginmgr
+import obnamlib
 
-from hooks import Hook, HookManager
-from cfg import Configuration
-from interp import Interpreter
-from pluginbase import ObnamPlugin
-from vfs import VirtualFileSystem, VfsFactory
-from vfs_local import LocalFS
+
+class ObnamPlugin(obnamlib.pluginmgr.Plugin):
+
+    '''Base class for plugins in Obnam.'''
+
+    def __init__(self, app):
+        self.app = app
+        self.callback_ids = []
+
+    def add_callback(self, name, callback):
+        cb_id = self.app.hooks.add_callback(name, callback)
+        self.callback_ids.append((name, cb_id))
+        
+    def disable_wrapper(self):
+        for name, cb_id in self.callback_ids:
+            self.app.hooks.remove_callback(name, cb_id)
+        self.callback_ids = []
+        self.disable()
+        
+    def enable(self):
+        pass
+        
+    def disable(self):
+        pass
+
