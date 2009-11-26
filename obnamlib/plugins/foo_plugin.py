@@ -23,6 +23,10 @@ class FooPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
         self.add_callback('shutdown', self.shutdown)
+        self.app.register_command('foo', self.foo)
+        
+    def foo(self, args):
+        print 'foo! args!', args
         
     def shutdown(self):
         logging.info('foo: shutdown')
