@@ -8,6 +8,10 @@ _obnam.so: _obnammodule.c
 	cp build/lib*/*.so .
 	rm -rf build
 
-check:
+check: all
 	python -m CoverageTestRunner --ignore-missing-from=without-tests
 	rm .coverage
+	
+clean:
+	rm -f _obnam.so obnamlib/*.pyc
+
