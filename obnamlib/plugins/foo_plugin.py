@@ -26,7 +26,7 @@ class FooPlugin(obnamlib.ObnamPlugin):
         self.app.register_command('foo', self.foo)
         
     def foo(self, args):
-        print 'foo! args!', args
+        self.app.hooks.call('status', 'foo! args = %s' % repr(args))
         
     def shutdown(self):
         logging.info('foo: shutdown')

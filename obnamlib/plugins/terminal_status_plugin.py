@@ -17,24 +17,17 @@
 import sys
 import time
 
-
-class Status(object):
-
-    '''Base class for informing user of current status of application.'''
-    
-    def progress(self, percent, message):
-        '''Show user that some progress is happening.'''
-        
-    def notify(self, message):
-        '''Notify user about something by displaying a message.'''
-
-    def finished(self):
-        '''No more status updates are needed.'''
+import obnamlib
 
 
 class TerminalStatus(object):
 
-    '''Update status to terminal.'''
+    '''Update status to terminal.
+    
+    This is not the plugin itself, this just takes care of updating things
+    to the terminal.
+    
+    '''
     
     def __init__(self):
         self.written = ''
@@ -78,11 +71,14 @@ class TerminalStatus(object):
         sys.stdout.flush()
 
 
-if __name__ == '__main__':
-    ts = TerminalStatus()
-    for pc in range(0, 100, 10):
-        ts.progress(pc, 'yo!')
-        time.sleep(1)
-        ts.notify('hmm...')
-    ts.finished()
+class TerminalStatusPlugin(obnamlib.ObnamPlugin):
+
+    def enable(self):
+        self.ts = TerminalStatus()
+        self.app.hooks.new('status')
+        self.add_callback('status', self.ts.notify)
+        self.add_callback('shutdown', self.ts.finished)
+        
+    def disable(self):
+        self.ts = None
 
