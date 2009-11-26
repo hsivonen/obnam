@@ -5,6 +5,7 @@
 ./obnamlib/vfs.py
 ./obnamlib/vfs_sftp.py
 ./obnamlib/plugins/foo_plugin.py
+./obnamlib/plugins/terminal_status_plugin.py
 ./test-plugins/hello_plugin.py
 ./test-plugins/oldhello_plugin.py
 ./test-plugins/aaa_hello_plugin.py
