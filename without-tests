@@ -1,8 +1,10 @@
 ./setup.py
 ./obnamlib/__init__.py
+./obnamlib/app.py
 ./obnamlib/status.py
 ./obnamlib/vfs.py
 ./obnamlib/vfs_sftp.py
+./obnamlib/plugins/foo_plugin.py
 ./test-plugins/hello_plugin.py
 ./test-plugins/oldhello_plugin.py
 ./test-plugins/aaa_hello_plugin.py

@@ -93,7 +93,7 @@ class Configuration(object):
         return self.settings[name].value
         
     def load(self, args=None):
-        opts, args = self.parser.parse_args(args=args)
+        opts, self.args = self.parser.parse_args(args=args)
         for name in self.settings.keys():
             if hasattr(opts, name):
                 value = getattr(opts, name)

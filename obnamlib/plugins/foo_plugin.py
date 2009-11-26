@@ -14,13 +14,18 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import _obnam
-from pluginmgr import PluginManager
+import obnamlib
 
-from hooks import Hook, HookManager
-from cfg import Configuration
-from interp import Interpreter
-from pluginbase import ObnamPlugin
-from vfs import VirtualFileSystem, VfsFactory
-from vfs_local import LocalFS
-from app import App
+
+class FooPlugin(obnamlib.ObnamPlugin):
+
+    def enable(self):
+        self.add_callback('plugins-loaded', self.plugins_loaded)
+        self.add_callback('shutdown', self.shutdown)
+        
+    def plugins_loaded(self):
+        print 'foo: plugins loaded'
+    
+    def shutdown(self):
+        print 'foo: shutdown'
+
