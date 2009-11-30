@@ -26,4 +26,5 @@ from interp import Interpreter
 from pluginbase import ObnamPlugin
 from vfs import VirtualFileSystem, VfsFactory
 from vfs_local import LocalFS
+from obj import BackupObject, TYPE_ID, TYPE_ID_LIST, TYPE_INT, TYPE_STR
 from app import App
