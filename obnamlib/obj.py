@@ -37,11 +37,13 @@ class BackupObject(object):
     
     '''
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.__dict__['values'] = dict()
         for name, kind in self.fields:
             self.values[name] = (kind, None)
         self.values['id'] = (TYPE_ID, None)
+        for name, value in kwargs.iteritems():
+            setattr(self, name, value)
     
     def __getattr__(self, name):
         if name in self.values:

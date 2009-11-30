@@ -102,4 +102,11 @@ class BackupObjectTests(unittest.TestCase):
         self.obj.baz = None
         self.assertEqual(self.obj.baz, None)
 
+    def test_sets_values_using_keyword_args_to_initializer(self):
+        obj = TestObject(foo='foo', bar=12765, foobar=[1, 2, 3],
+                         baz=4)
+        self.assertEqual(obj.foo, 'foo')
+        self.assertEqual(obj.bar, 12765)
+        self.assertEqual(obj.foobar, [1, 2, 3])
+        self.assertEqual(obj.baz, 4)
 
