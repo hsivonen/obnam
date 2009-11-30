@@ -42,6 +42,9 @@ class BackupObject(object):
         for name, kind in self.fields:
             self.values[name] = (kind, None)
         self.values['id'] = (TYPE_ID, None)
+        self.set_from_kwargs(**kwargs)
+
+    def set_from_kwargs(self, **kwargs):
         for name, value in kwargs.iteritems():
             setattr(self, name, value)
     
@@ -79,4 +82,20 @@ class BackupObject(object):
                                 (name, kind))
         else:
             raise Exception('Cannot set unknown field %s' % name)
+
+
+class MetadataObject(BackupObject):
+
+    '''Like BackupObject, but adds file/directory metadata fields.
+    
+    Fields for stat(2) fields are added to the object automatically.
+    
+    '''
+    
+    def __init__(self, **kwargs):
+        BackupObject.__init__(self)
+        stat_fields = ('st_mtime',)
+        for stat_field in stat_fields:
+            self.values[stat_field] = (TYPE_INT, None)
+        self.set_from_kwargs(**kwargs)
 

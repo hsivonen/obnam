@@ -110,3 +110,15 @@ class BackupObjectTests(unittest.TestCase):
         self.assertEqual(obj.foobar, [1, 2, 3])
         self.assertEqual(obj.baz, 4)
 
+
+class TestMetadataObject(obnamlib.MetadataObject):
+
+    fields = (('foo', obnamlib.TYPE_STR),)
+
+
+class MetadataObjectTests(unittest.TestCase):
+
+    def test_sets_mtime(self):
+        obj = TestMetadataObject(st_mtime=123)
+        self.assertEqual(obj.st_mtime, 123)
+
