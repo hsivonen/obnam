@@ -50,9 +50,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
     def backup_something(self, root):
         if self.fs.isdir(root):
-            self.backup_dir(root)
+            return self.backup_dir(root)
         else:
-            self.backup_file(root)
+            return self.backup_file(root)
 
     def backup_file(self, root):
         stat_result = self.fs.lstat(root)
@@ -82,7 +82,19 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         return chunks
 
     def backup_dir(self, root):
+        fileids = []
+        dirids = []
         for basename in self.fs.listdir(root):
             fullname = os.path.join(root, basename)
-            self.backup_something(fullname)
+            obj = self.backup_something(fullname)
+            if isinstance(obj, obnamlib.File):
+                fileids.append(obj.id)
+            else:
+                dirids.append(obj.id)
+        dirobj = obnamlib.Dir(basename=os.path.basename(root),
+                              metadata=self.fs.lstat(root),
+                              dirids=dirids,
+                              fileids=fileids)
+        self.store.put_object(dirobj)
+        return dirobj
 

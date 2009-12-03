@@ -18,6 +18,15 @@ from obnamlib import (BackupObject, TYPE_ID, TYPE_ID_LIST, TYPE_INT, TYPE_STR,
                       MetadataObject)
 
 
+class Dir(MetadataObject):
+
+    '''A directory.'''
+    
+    fields = (('basename', TYPE_STR),
+              ('dirids', TYPE_ID_LIST),
+              ('fileids', TYPE_ID_LIST))
+
+
 class Chunk(BackupObject):
 
     '''Some file data.'''
