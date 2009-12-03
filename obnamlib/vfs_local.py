@@ -51,6 +51,9 @@ class LocalFS(obnamlib.VirtualFileSystem):
     def lstat(self, relative_path):
         return os.lstat(self.join(relative_path))
 
+    def chown(self, relative_path, uid, gid): # pragma: no cover
+        os.chown(self.join(relative_path), uid, gid)
+
     def chmod(self, relative_path, mode):
         os.chmod(self.join(relative_path), mode)
 

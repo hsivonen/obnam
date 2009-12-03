@@ -97,5 +97,11 @@ class MetadataObject(BackupObject):
         stat_fields = ('st_mtime',)
         for stat_field in stat_fields:
             self.values[stat_field] = (TYPE_INT, None)
+        if 'metadata' in kwargs:
+            self.set_from_metadata(kwargs['metadata'])
+            del kwargs['metadata']
         self.set_from_kwargs(**kwargs)
+
+    def set_from_metadata(self, metadata):
+        self.st_mtime = int(metadata.st_mtime)
 

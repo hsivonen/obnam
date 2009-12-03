@@ -14,21 +14,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import _obnam
-from pluginmgr import PluginManager
+from obnamlib import (BackupObject, TYPE_ID, TYPE_ID_LIST, TYPE_INT, TYPE_STR,
+                      MetadataObject)
 
-class AppException(Exception):
-    pass
 
-from hooks import Hook, HookManager
-from cfg import Configuration
-from interp import Interpreter
-from pluginbase import ObnamPlugin
-from vfs import VirtualFileSystem, VfsFactory
-from vfs_local import LocalFS
-from metadata import read_metadata, set_metadata, Metadata
-from obj import (BackupObject, TYPE_ID, TYPE_ID_LIST, TYPE_INT, TYPE_STR,
-                 MetadataObject)
-from objs import *
-from store import Store
-from app import App
+class File(MetadataObject):
+
+    fields = (('basename', TYPE_STR),)
+

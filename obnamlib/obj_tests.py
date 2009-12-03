@@ -122,3 +122,9 @@ class MetadataObjectTests(unittest.TestCase):
         obj = TestMetadataObject(st_mtime=123)
         self.assertEqual(obj.st_mtime, 123)
 
+    def test_sets_metadata_via_initializer_argument(self):
+        metadata = obnamlib.Metadata()
+        metadata.st_mtime = 12765
+        obj = TestMetadataObject(metadata=metadata)
+        self.assertEqual(obj.st_mtime, metadata.st_mtime)
+

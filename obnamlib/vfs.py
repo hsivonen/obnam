@@ -84,6 +84,9 @@ class VirtualFileSystem(object):
     def lstat(self, relative_path):
         """Like os.lstat."""
 
+    def chown(self, relative_path, uid, gid):
+        '''Like os.chown.'''
+
     def chmod(self, relative_path, mode):
         """Like os.chmod."""
 

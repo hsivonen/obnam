@@ -1,0 +1,138 @@
+# Copyright (C) 2009  Lars Wirzenius
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+import os
+import stat
+import tempfile
+import unittest
+
+import obnamlib
+
+
+class FakeFS(object):
+
+    def __init__(self):
+        self.st_atime = 1
+        self.st_blocks = 2
+        self.st_dev = 3
+        self.st_gid = 4
+        self.st_ino = 5
+        self.st_mode = 6
+        self.st_mtime = 7
+        self.st_nlink = 8
+        self.st_size = 9
+        self.st_uid = 10
+        self.groupname = 'group'
+        self.username = 'user'
+
+    def lstat(self, filename):
+        return self
+
+    def getpwuid(self, uid):
+        return (self.username, None, self.st_uid, self.st_gid, 
+                None, None, None)
+    
+    def getgrgid(self, gid):
+        return (self.groupname, None, self.st_gid, None)
+
+    def fail_getpwuid(self, uid):
+        raise KeyError(uid)
+    
+    def fail_getgrgid(self, gid):
+        raise KeyError(gid)
+
+
+class ReadMetadataTests(unittest.TestCase):
+
+    def setUp(self):
+        self.fakefs = FakeFS()
+
+    def test_returns_stat_fields_correctly(self):
+        metadata = obnamlib.read_metadata(self.fakefs, 'foo', 
+                                          getpwuid=self.fakefs.getpwuid,
+                                          getgrgid=self.fakefs.getgrgid)
+        fields = ['st_atime', 'st_blocks', 'st_dev', 'st_gid', 'st_ino',
+                  'st_mode', 'st_mtime', 'st_nlink', 'st_size', 'st_uid',
+                  'groupname', 'username']
+        for field in fields:
+            self.assertEqual(getattr(metadata, field),
+                             getattr(self.fakefs, field),
+                             field)
+
+    def test_reads_username_as_None_if_lookup_fails(self):
+        metadata = obnamlib.read_metadata(self.fakefs, 'foo',
+                                          getpwuid=self.fakefs.fail_getpwuid,
+                                          getgrgid=self.fakefs.fail_getgrgid)
+        self.assertEqual(metadata.username, None)
+
+
+class SetMetadataTests(unittest.TestCase):
+
+    def setUp(self):
+        self.metadata = obnamlib.Metadata()
+        self.metadata.st_atime = 12765
+        self.metadata.st_mode = 42 | stat.S_IFREG
+        self.metadata.st_mtime = 10**9
+        self.metadata.st_uid = 1234
+        self.metadata.st_gid = 5678
+        
+        fd, self.filename = tempfile.mkstemp()
+        os.close(fd)
+        
+        self.fs = obnamlib.LocalFS('/')
+        self.fs.connect()
+
+        self.uid_set = None
+        self.gid_set = None
+        self.fs.chown = self.fake_chown
+
+        obnamlib.set_metadata(self.fs, self.filename, self.metadata)
+        
+        self.st = os.stat(self.filename)
+        
+    def tearDown(self):
+        self.fs.close()
+        os.remove(self.filename)
+
+    def fake_chown(self, filename, uid, gid):
+        self.uid_set = uid
+        self.gid_set = gid
+        
+    def test_sets_atime(self):
+        self.assertEqual(self.st.st_atime, self.metadata.st_atime)
+
+    def test_sets_mode(self):
+        self.assertEqual(self.st.st_mode, self.metadata.st_mode)
+
+    def test_sets_mtime(self):
+        self.assertEqual(self.st.st_mtime, self.metadata.st_mtime)
+
+    def test_does_not_set_uid_when_not_running_as_root(self):
+        self.assertEqual(self.st.st_uid, os.getuid())
+
+    def test_does_not_set_gid_when_not_running_as_root(self):
+        self.assertEqual(self.st.st_gid, os.getgid())
+
+    def test_sets_uid_when_running_as_root(self):
+        obnamlib.set_metadata(self.fs, self.filename, self.metadata,
+                              getuid=lambda: 0)
+        self.assertEqual(self.uid_set, self.metadata.st_uid)
+
+    def test_sets_gid_when_running_as_root(self):
+        obnamlib.set_metadata(self.fs, self.filename, self.metadata,
+                              getuid=lambda: 0)
+        self.assertEqual(self.gid_set, self.metadata.st_gid)
+

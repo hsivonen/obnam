@@ -4,6 +4,7 @@
 ./obnamlib/status.py
 ./obnamlib/vfs.py
 ./obnamlib/vfs_sftp.py
+./obnamlib/objs.py
 ./obnamlib/plugins/foo_plugin.py
 ./obnamlib/plugins/terminal_status_plugin.py
 ./test-plugins/hello_plugin.py
