@@ -16,6 +16,7 @@
 
 import logging
 import os
+import socket
 
 import obnamlib
 
@@ -28,11 +29,14 @@ class App(object):
         self.hooks = obnamlib.HookManager()
         
         self.config = obnamlib.Configuration([])
-        self.config.new_string(['log'], 'name of log file')
+        self.config.new_string(['log'], 'name of log file (%default)')
         self.config['log'] = 'obnam.log'
         self.config.new_string(['store'], 'name of backup store')
-        self.config.new_string(['chunk-size'], 'chunk size for file contents')
+        self.config.new_string(['chunk-size'], 
+                               'chunk size for file contents (%default)')
         self.config['chunk-size'] = 4096
+        self.config.new_string(['hostname'], 'name of host (%default)')
+        self.config['hostname'] = self.deduce_hostname()
 
         self.pm = obnamlib.PluginManager()
         self.pm.locations = [self.plugins_dir()]
@@ -43,6 +47,9 @@ class App(object):
 
         self.hooks.new('plugins-loaded')
         self.hooks.new('shutdown')
+        
+    def deduce_hostname(self):
+        return socket.gethostname()
         
     def plugins_dir(self):
         return os.path.join(os.path.dirname(obnamlib.__file__), 'plugins')

@@ -96,6 +96,7 @@ class Configuration(object):
 
     def __setitem__(self, name, value):
         self.settings[name].value = value
+        name = '_'.join(name.split('-'))
         self.parser.set_default(name, value)
         
     def load(self, args=None):
