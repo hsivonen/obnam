@@ -86,8 +86,12 @@ class Store(object):
         return self.latest_id
 
     def put_object(self, obj):
-        assert obj.id is None
-        obj.id = self.next_id()
+        if isinstance(obj, obnamlib.Root):
+            assert obj.id == 0, 'root object must have id 0'
+        else:
+            assert obj.id is None
+        if obj.id is None:
+            obj.id = self.next_id()
         encoded = self.codec.encode(obj)
         self.fs.write_file('%s.obj' % obj.id, encoded)
 

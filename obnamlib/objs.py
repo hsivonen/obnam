@@ -41,3 +41,26 @@ class File(MetadataObject):
     fields = (('basename', TYPE_STR),
               ('chunkids', TYPE_ID_LIST))
 
+
+class Generation(BackupObject):
+
+    '''Root of one generation.'''
+    
+    fields = (('fileids', TYPE_ID_LIST),
+              ('dirids', TYPE_ID_LIST))
+
+
+class Host(BackupObject):
+
+    '''Root of one host's objects.'''
+    
+    fields = (('hostname', TYPE_STR),
+              ('genids', TYPE_ID_LIST),)
+
+
+class Root(BackupObject):
+
+    '''The root of the object tree.'''
+    
+    fields = (('hostids', TYPE_ID_LIST),)
+

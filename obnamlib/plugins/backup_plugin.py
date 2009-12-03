@@ -41,12 +41,15 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.store = obnamlib.Store(storefs)
         self.done = 0
         self.total = 0
+        rootobjs = []
         for root in roots:
             self.fs = fsf.new(root)
             self.fs.connect()
-            self.backup_something(root)
+            rootobjs.append(self.backup_something(root))
             self.fs.close()
         self.app.hooks.call('progress-found-file', None, 0)
+        
+        self.finish(rootobjs)
 
     def backup_something(self, root):
         if self.fs.isdir(root):
@@ -97,4 +100,15 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                               fileids=fileids)
         self.store.put_object(dirobj)
         return dirobj
+
+    def finish(self, rootobjs):
+        fileids = [o.id for o in rootobjs if isinstance(o, obnamlib.File)]
+        dirids = [o.id for o in rootobjs if isinstance(o, obnamlib.Dir)]
+        gen = obnamlib.Generation(fileids=fileids, dirids=dirids)
+        self.store.put_object(gen)
+        host = obnamlib.Host(hostname='hostname', genids=[gen.id])
+        self.store.put_object(host)
+        rootobj = obnamlib.Root(hostids=[host.id])
+        rootobj.id = 0
+        self.store.put_object(rootobj)
 
