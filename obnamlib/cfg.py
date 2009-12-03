@@ -93,6 +93,10 @@ class Configuration(object):
 
     def __getitem__(self, name):
         return self.settings[name].value
+
+    def __setitem__(self, name, value):
+        self.settings[name].value = value
+        self.parser.set_default(name, value)
         
     def load(self, args=None):
         opts, self.args = self.parser.parse_args(args=args)

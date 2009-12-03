@@ -29,8 +29,10 @@ class App(object):
         
         self.config = obnamlib.Configuration([])
         self.config.new_string(['log'], 'name of log file')
-        self.config.log = 'obnam.log'
+        self.config['log'] = 'obnam.log'
         self.config.new_string(['store'], 'name of backup store')
+        self.config.new_string(['chunk-size'], 'chunk size for file contents')
+        self.config['chunk-size'] = 4096
 
         self.pm = obnamlib.PluginManager()
         self.pm.locations = [self.plugins_dir()]
@@ -47,7 +49,8 @@ class App(object):
 
     def setup_logging(self):
         formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-        handler = logging.FileHandler(self.config.log)
+        print 'log', self.config['log']
+        handler = logging.FileHandler(self.config['log'])
         handler.setFormatter(formatter)
         logger = logging.getLogger()
         logger.setLevel(logging.DEBUG)
