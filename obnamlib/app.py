@@ -30,6 +30,7 @@ class App(object):
         self.config = obnamlib.Configuration([])
         self.config.new_string(['log'], 'name of log file')
         self.config.log = 'obnam.log'
+        self.config.new_string(['store'], 'name of backup store')
 
         self.pm = obnamlib.PluginManager()
         self.pm.locations = [self.plugins_dir()]
