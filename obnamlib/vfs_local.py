@@ -16,7 +16,6 @@
 
 
 import errno
-import logging
 import os
 import tempfile
 
@@ -85,7 +84,6 @@ class LocalFS(obnamlib.VirtualFileSystem):
         os.makedirs(self.join(relative_path))
 
     def cat(self, relative_path):
-        logging.debug("LocalFS: Reading %s" % relative_path)
         f = self.open(relative_path, "r")
         chunks = []
         while True:
@@ -93,15 +91,11 @@ class LocalFS(obnamlib.VirtualFileSystem):
             if not chunk:
                 break
             chunks.append(chunk)
-#            self.progress["bytes-received"] += len(chunk)
         f.close()
         data = "".join(chunks)
-        logging.debug("LocalFS: %s had %d bytes" % (relative_path, len(data)))
         return data
 
     def write_file(self, relative_path, contents):
-        logging.debug("LocalFS: Writing %s (%d)" % 
-                      (relative_path, len(contents)))
         path = self.join(relative_path)
         dirname = os.path.dirname(path)
         if not os.path.exists(dirname):
@@ -111,7 +105,6 @@ class LocalFS(obnamlib.VirtualFileSystem):
         while pos < len(contents):
             chunk = contents[pos:pos+self.chunk_size]
             os.write(fd, chunk)
-#            self.progress["bytes-sent"] += len(chunk)
             pos += len(chunk)
         os.close(fd)
         try:
@@ -120,11 +113,8 @@ class LocalFS(obnamlib.VirtualFileSystem):
             os.remove(name)
             raise
         os.remove(name)
-        logging.debug("LocalFS: write_file updates bytes-sent")
 
     def overwrite_file(self, relative_path, contents):
-        logging.debug("LocalFS: Over-writing %s (%d)" % 
-                      (relative_path, len(contents)))
         path = self.join(relative_path)
         dirname = os.path.dirname(path)
         fd, name = tempfile.mkstemp(dir=dirname)
@@ -132,7 +122,6 @@ class LocalFS(obnamlib.VirtualFileSystem):
         while pos < len(contents):
             chunk = contents[pos:pos+self.chunk_size]
             os.write(fd, chunk)
-#            self.progress["bytes-sent"] += len(chunk)
             pos += len(chunk)
         os.close(fd)
 
