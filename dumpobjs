@@ -32,4 +32,4 @@ for objid in find_objids(fs):
     obj = store.get_object(objid)
     print 'id %s (%s):' % (obj.id, obj.__class__.__name__)
     for name in obj.fieldnames():
-        print '  %-10s %s' % (name, getattr(obj, name))
+        print '  %-10s %s' % (name, repr(getattr(obj, name)))
