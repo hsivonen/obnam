@@ -35,14 +35,30 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         fsf = obnamlib.VfsFactory()
         self.store = obnamlib.Store(fsf.new(self.app.config['store']))
 
+    def open_root(self):
+        return self.store.get_object(0)
+
+    def open_host(self):
+        hostname = self.app.config['hostname']
+        rootobj = self.open_root()
+        for hostid in rootobj.hostids:
+            hostobj = self.store.get_object(hostid)
+            if hostobj.hostname == hostname:
+                return hostobj
+        raise obnamlib.AppException('Host %s not found in store' % hostname)
+
     def hosts(self, args):
         self.open_store()
-        rootobj = self.store.get_object(0)
+        rootobj = self.open_root()
         for hostid in rootobj.hostids:
             hostobj = self.store.get_object(hostid)
             print hostobj.hostname
     
     def generations(self, args):
-        pass
+        self.open_store()
+        hostobj = self.open_host()
+        for genid in hostobj.genids:
+            print genid
+
     def ls(self, args):
         pass
