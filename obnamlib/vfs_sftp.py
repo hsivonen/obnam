@@ -118,6 +118,9 @@ class SftpFS(obnamlib.VirtualFileSystem):
     def lstat(self, relative_path):
         return self.sftp.lstat(self.join(relative_path))
 
+    def chown(self, relative_path, uid, gid):
+        self.sftp.chown(self.join(relative_path), uid, gid)
+
     def chmod(self, relative_path, mode):
         self.sftp.chmod(self.join(relative_path), mode)
 
