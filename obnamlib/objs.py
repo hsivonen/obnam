@@ -18,7 +18,17 @@ from obnamlib import (BackupObject, TYPE_ID, TYPE_ID_LIST, TYPE_INT, TYPE_STR,
                       MetadataObject)
 
 
+class Chunk(BackupObject):
+
+    '''Some file data.'''
+    
+    fields = (('data', TYPE_STR),)
+
+
 class File(MetadataObject):
 
-    fields = (('basename', TYPE_STR),)
+    '''A non-directory filesystem entry.'''
+
+    fields = (('basename', TYPE_STR),
+              ('chunkids', TYPE_ID_LIST))
 

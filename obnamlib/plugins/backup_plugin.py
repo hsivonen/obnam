@@ -16,6 +16,7 @@
 
 import logging
 import os
+import stat
 
 import obnamlib
 
@@ -35,15 +36,17 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         
     def backup(self, args):
         roots = self.app.config['root'] + args
-        self.app.hooks.call('status', 'roots %s' % roots)
         fsf = obnamlib.VfsFactory()
         storefs = fsf.new(self.app.config['store'])
         self.store = obnamlib.Store(storefs)
+        self.done = 0
+        self.total = 0
         for root in roots:
             self.fs = fsf.new(root)
             self.fs.connect()
             self.backup_something(root)
             self.fs.close()
+        self.app.hooks.call('progress-found-file', None, 0)
 
     def backup_something(self, root):
         if self.fs.isdir(root):
@@ -52,15 +55,33 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.backup_file(root)
 
     def backup_file(self, root):
-        self.app.hooks.call('status', 'backing up file %s' % root)
         stat_result = self.fs.lstat(root)
+        self.app.hooks.call('progress-found-file', root, stat_result.st_size)
+        if stat.S_ISREG(stat_result.st_mode):
+            chunks = self.backup_file_contents(root)
+        else:
+            chunks = []
         fileobj = obnamlib.File(basename=os.path.basename(root),
-                                metadata=stat_result)
+                                metadata=stat_result,
+                                chunkids=[c.id for c in chunks])
         self.store.put_object(fileobj)
         return fileobj
 
+    def backup_file_contents(self, filename):
+        chunks = []
+        f = self.fs.open(filename, 'r')
+        while True:
+            data = f.read(self.app.config['chunk-size'])
+            if not data:
+                break
+            chunk = obnamlib.Chunk(data=data)
+            self.store.put_object(chunk)
+            chunks.append(chunk)
+            self.app.hooks.call('progress-data-done', len(data))
+        f.close()
+        return chunks
+
     def backup_dir(self, root):
-        self.app.hooks.call('status', 'backing up dir %s' % root)
         for basename in self.fs.listdir(root):
             fullname = os.path.join(root, basename)
             self.backup_something(fullname)
