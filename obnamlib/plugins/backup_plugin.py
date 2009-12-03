@@ -48,7 +48,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             rootobjs.append(self.backup_something(root))
             self.fs.close()
         self.app.hooks.call('progress-found-file', None, 0)
-        
+
         self.finish(rootobjs)
 
     def backup_something(self, root):
@@ -106,7 +106,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         dirids = [o.id for o in rootobjs if isinstance(o, obnamlib.Dir)]
         gen = obnamlib.Generation(fileids=fileids, dirids=dirids)
         self.store.put_object(gen)
-        host = obnamlib.Host(hostname='hostname', genids=[gen.id])
+        host = obnamlib.Host(hostname=self.app.config['hostname'], 
+                             genids=[gen.id])
         self.store.put_object(host)
         rootobj = obnamlib.Root(hostids=[host.id])
         rootobj.id = 0
