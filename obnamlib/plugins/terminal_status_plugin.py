@@ -68,8 +68,9 @@ class TerminalStatus(object):
         self.write(cached, force=True)
 
     def finished(self):
-        self.write(self.cached, force=True)
-        sys.stdout.write('\n')
+        if self.cached:
+            self.write(self.cached, force=True)
+            sys.stdout.write('\n')
         sys.stdout.flush()
 
 
