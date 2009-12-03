@@ -110,6 +110,11 @@ class BackupObjectTests(unittest.TestCase):
         self.assertEqual(obj.foobar, [1, 2, 3])
         self.assertEqual(obj.baz, 4)
 
+    def test_reports_names_of_defined_fields(self):
+        obj = TestObject()
+        self.assertEqual(sorted(obj.fieldnames()),
+                         sorted(['id', 'foo', 'bar', 'foobar', 'baz']))
+
 
 class TestMetadataObject(obnamlib.MetadataObject):
 

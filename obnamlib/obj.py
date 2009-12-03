@@ -83,6 +83,9 @@ class BackupObject(object):
         else:
             raise Exception('Cannot set unknown field %s' % name)
 
+    def fieldnames(self):
+        return self.values.keys()
+
 
 class MetadataObject(BackupObject):
 
