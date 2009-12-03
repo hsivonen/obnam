@@ -49,7 +49,6 @@ class App(object):
 
     def setup_logging(self):
         formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-        print 'log', self.config['log']
         handler = logging.FileHandler(self.config['log'])
         handler.setFormatter(formatter)
         logger = logging.getLogger()
