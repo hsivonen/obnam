@@ -19,6 +19,12 @@ import os
 import pwd
 
 
+metadata_fields = (
+    'st_atime', 'st_blocks', 'st_dev', 'st_gid', 'st_ino', 'st_mode',
+    'st_mtime', 'st_nlink', 'st_size', 'st_uid', 'groupname', 'username',
+)
+
+
 class Metadata(object):
 
     '''Represent metadata for a filesystem entry.
@@ -53,35 +59,25 @@ class Metadata(object):
     '''
     
     def __init__(self):
-        self.st_atime = None
-        self.st_blocks = None
-        self.st_dev = None
-        self.st_gid = None
-        self.st_ino = None
-        self.st_mode = None
-        self.st_mtime = None
-        self.st_nlink = None
-        self.st_size = None
-        self.st_uid = None
-        self.groupname = None
-        self.username = None
+        for field in metadata_fields:
+            setattr(self, field, None)
 
 
 def read_metadata(fs, filename, getpwuid=None, getgrgid=None):
     '''Return object detailing metadata for a filesystem entry.'''
     metadata = Metadata()
     stat_result = fs.lstat(filename)
-    for field in dir(metadata):
+    for field in metadata_fields:
         if field.startswith('st_'):
             setattr(metadata, field, getattr(stat_result, field))
 
-    getpwuid = getpwuid or pwd.getpwuid
+    getgrgid = getgrgid or grp.getgrgid
     try:
         metadata.groupname = getgrgid(metadata.st_gid)[0]
     except KeyError:
         metadata.groupname = None
 
-    getgrgid = getgrgid or grp.getgrgid
+    getpwuid = getpwuid or pwd.getpwuid
     try:
         metadata.username = getpwuid(metadata.st_uid)[0]
     except KeyError:
