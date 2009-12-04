@@ -14,6 +14,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import obnamlib
+
+
 TYPE_ID = 'id'
 TYPE_ID_LIST = 'id-list'
 TYPE_INT = 'int'
@@ -55,20 +58,19 @@ class BackupObject(object):
         else:
             raise AttributeError(name)
 
+    types = {
+        TYPE_ID: (int, None),
+        TYPE_ID_LIST: (list, int),
+        TYPE_INT: (int, None),
+        TYPE_STR: (str, None),
+    }
+
     def compatible(self, kind, value):
-        if kind == TYPE_ID:
-            return type(value) == int
-        elif kind == TYPE_ID_LIST:
-            if type(value) != list:
-                return False
-            for item in value:
-                if type(item) != int:
-                    return False
-            return True
-        elif kind == TYPE_INT:
-            return type(value) == int
-        elif kind == TYPE_STR:
-            return type(value) == str
+        if kind in self.types:
+            main, sub = self.types[kind]
+            return (type(value) == main and
+                    (sub is None or
+                     [sub]*len(value) == [type(x) for x in value]))
         else: # pragma: no cover
             raise Exception('Unknown BackupObject field type %s' % kind)
 
@@ -97,14 +99,28 @@ class MetadataObject(BackupObject):
     
     def __init__(self, **kwargs):
         BackupObject.__init__(self)
-        stat_fields = ('st_mtime',)
-        for stat_field in stat_fields:
-            self.values[stat_field] = (TYPE_INT, None)
+        for field in obnamlib.metadata_fields:
+            if field.startswith('st_'):
+                self.values[field] = (TYPE_INT, None)
+        self.values['username'] = (TYPE_STR, None)
+        self.values['groupname'] = (TYPE_STR, None)
         if 'metadata' in kwargs:
             self.set_from_metadata(kwargs['metadata'])
             del kwargs['metadata']
         self.set_from_kwargs(**kwargs)
 
     def set_from_metadata(self, metadata):
-        self.st_mtime = int(metadata.st_mtime)
+        for field in obnamlib.metadata_fields:
+            kind, old_value = self.values[field]
+            value = getattr(metadata, field)
+            if value is not None:
+                value = self.convert(kind, value)
+            setattr(self, field, value)
+
+    def convert(self, kind, value):
+        if kind in self.types:
+            main, sub = self.types[kind]
+            return main(value)
+        else: # pragma: no cover
+            raise Exception('Unknown BackupObject field type %s' % kind)
 
