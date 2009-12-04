@@ -14,6 +14,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import stat
+import time
+
 import obnamlib
 
 
@@ -61,4 +64,52 @@ class ShowPlugin(obnamlib.ObnamPlugin):
             print genid
 
     def ls(self, args):
-        pass
+        self.open_store()
+        for genid_str in args:
+            gen = self.store.get_object(int(genid_str))
+            self.show_objects(None, gen.fileids, gen.dirids)
+    
+    def show_objects(self, dirname, fileids, dirids):
+        if dirname:
+            print '%s:' % dirname
+        fileobjs = [self.store.get_object(x) for x in fileids]
+        dirobjs = [self.store.get_object(x) for x in dirids]
+        items = [(x.basename, x) for x in fileobjs + dirobjs]
+        for basename, obj in sorted(items):
+            print self.format(obj)
+        for dirobj in dirobjs:
+            print
+            self.show_objects(dirobj.basename, dirobj.fileids, dirobj.dirids)
+
+    def format(self, obj):
+        perms = ['?'] + ['-'] * 9
+        tab = [
+            (stat.S_IFREG, 0, '-'),
+            (stat.S_IFDIR, 0, 'd'),
+            (stat.S_IRUSR, 1, 'r'),
+            (stat.S_IWUSR, 2, 'w'),
+            (stat.S_IXUSR, 3, 'x'),
+            (stat.S_IRGRP, 4, 'r'),
+            (stat.S_IWGRP, 5, 'w'),
+            (stat.S_IXGRP, 6, 'x'),
+            (stat.S_IROTH, 7, 'r'),
+            (stat.S_IWOTH, 8, 'w'),
+            (stat.S_IXOTH, 9, 'x'),
+        ]
+        mode = obj.st_mode or 0
+        for bitmap, offset, char in tab:
+            if (mode & bitmap) == bitmap:
+                perms[offset] = char
+        perms = ''.join(perms)
+        
+        timestamp = time.strftime('%Y-%m-%d %H:%M:%S', 
+                                  time.gmtime(obj.st_mtime))
+        return ('%s %2d %-8s %-8s %5d %s %s' % 
+                (perms, 
+                 obj.st_nlink or 0, 
+                 obj.username or '', 
+                 obj.groupname or '',
+                 obj.st_size or 0, 
+                 timestamp, 
+                 obj.basename or ''))
+
