@@ -58,14 +58,14 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             return self.backup_file(root)
 
     def backup_file(self, root):
-        stat_result = self.fs.lstat(root)
-        self.app.hooks.call('progress-found-file', root, stat_result.st_size)
-        if stat.S_ISREG(stat_result.st_mode):
+        metadata = obnamlib.read_metadata(self.fs, root)
+        self.app.hooks.call('progress-found-file', root, metadata.st_size)
+        if stat.S_ISREG(metadata.st_mode):
             chunks = self.backup_file_contents(root)
         else:
             chunks = []
         fileobj = obnamlib.File(basename=os.path.basename(root),
-                                metadata=stat_result,
+                                metadata=metadata,
                                 chunkids=[c.id for c in chunks])
         self.store.put_object(fileobj)
         return fileobj
@@ -95,7 +95,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             else:
                 dirids.append(obj.id)
         dirobj = obnamlib.Dir(basename=os.path.basename(root),
-                              metadata=self.fs.lstat(root),
+                              metadata=obnamlib.read_metadata(self.fs, root),
                               dirids=dirids,
                               fileids=fileids)
         self.store.put_object(dirobj)
