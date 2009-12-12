@@ -13,5 +13,5 @@ check: all
 	rm .coverage
 	
 clean:
-	rm -f _obnam.so obnamlib/*.pyc
+	rm -f _obnam.so obnamlib/*.pyc obnamlib/plugins/*.pyc testplugins/*.pyc
 

@@ -45,3 +45,7 @@ class ConfigurationTests(unittest.TestCase):
         self.assertEqual(self.cfg['bar'], 'foobar')
         self.assertEqual(self.cfg['list'], ['a', 'b', 'c'])
 
+    def test_sets_value(self):
+        self.cfg['foo'] = True
+        self.assertEqual(self.cfg['foo'], True)
+

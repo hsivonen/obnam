@@ -26,6 +26,8 @@ except obnamlib.AppException, e:
     logging.critical(str(e))
     sys.stderr.write('Error: %s\n' % str(e))
     sys.exit(1)
+except SystemExit, e:
+    sys.exit(e.code)
 except BaseException, e:
     logging.critical(traceback.format_exc())
     sys.stderr.write(traceback.format_exc())

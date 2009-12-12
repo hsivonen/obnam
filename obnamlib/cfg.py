@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import copy
 import optparse
 
 
@@ -72,13 +73,14 @@ class Configuration(object):
         self.args = []
 
     def new_setting(self, kind, names, help, action, value):
-        setting = Setting(kind, value)
+        setting = Setting(kind, copy.copy(value))
         for name in names:
             self.settings[name] = setting
 
         optnames = ['-%s' % name for name in names if len(name) == 1]
         optnames += ['--%s' % name for name in names if len(name) > 1]
-        self.parser.add_option(*optnames, action=action, help=help)
+        self.parser.add_option(*optnames, action=action, help=help,
+                               default=copy.copy(value))
 
     def new_boolean(self, names, help):
         self.new_setting('int', names, help, 'store_true', False)
@@ -91,6 +93,11 @@ class Configuration(object):
 
     def __getitem__(self, name):
         return self.settings[name].value
+
+    def __setitem__(self, name, value):
+        self.settings[name].value = value
+        name = '_'.join(name.split('-'))
+        self.parser.set_default(name, value)
         
     def load(self, args=None):
         opts, self.args = self.parser.parse_args(args=args)
