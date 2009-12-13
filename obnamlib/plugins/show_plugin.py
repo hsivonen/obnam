@@ -67,7 +67,13 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         self.open_store()
         for genid_str in args:
             gen = self.store.get_object(int(genid_str))
+            started = self.format_time(gen.started)
+            ended = self.format_time(gen.ended)
+            print 'Generation %s (%s - %s)' % (gen.id, started, ended)
             self.show_objects(None, gen.fileids, gen.dirids)
+    
+    def format_time(self, timestamp):
+        return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp))
     
     def show_objects(self, dirname, fileids, dirids):
         if dirname:

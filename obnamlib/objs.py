@@ -47,7 +47,9 @@ class Generation(BackupObject):
     '''Root of one generation.'''
     
     fields = (('fileids', TYPE_ID_LIST),
-              ('dirids', TYPE_ID_LIST))
+              ('dirids', TYPE_ID_LIST),
+              ('started', TYPE_INT),
+              ('ended', TYPE_INT))
 
 
 class Host(BackupObject):

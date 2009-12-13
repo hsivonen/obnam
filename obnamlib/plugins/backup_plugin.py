@@ -17,6 +17,7 @@
 import logging
 import os
 import stat
+import time
 
 import obnamlib
 
@@ -35,6 +36,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.app.config.new_list(['root'], 'what to backup')
         
     def backup(self, args):
+        started = int(time.time())
         roots = self.app.config['root'] + args
         fsf = obnamlib.VfsFactory()
         storefs = fsf.new(self.app.config['store'])
@@ -48,8 +50,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             rootobjs.append(self.backup_something(root))
             self.fs.close()
         self.app.hooks.call('progress-found-file', None, 0)
+        ended = int(time.time())
 
-        self.finish(rootobjs)
+        self.finish(rootobjs, started, ended)
 
     def backup_something(self, root):
         if self.fs.isdir(root):
@@ -101,10 +104,11 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.store.put_object(dirobj)
         return dirobj
 
-    def finish(self, rootobjs):
+    def finish(self, rootobjs, started, ended):
         fileids = [o.id for o in rootobjs if isinstance(o, obnamlib.File)]
         dirids = [o.id for o in rootobjs if isinstance(o, obnamlib.Dir)]
-        gen = obnamlib.Generation(fileids=fileids, dirids=dirids)
+        gen = obnamlib.Generation(fileids=fileids, dirids=dirids,
+                                  started=started, ended=ended)
         self.store.put_object(gen)
         host = obnamlib.Host(hostname=self.app.config['hostname'], 
                              genids=[gen.id])
