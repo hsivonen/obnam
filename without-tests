@@ -9,6 +9,8 @@
 ./obnamlib/plugins/foo_plugin.py
 ./obnamlib/plugins/backup_plugin.py
 ./obnamlib/plugins/terminal_status_plugin.py
+./obnamlib/plugins/restore_plugin.py
+./obnamlib/plugins/show_plugin.py
 ./test-plugins/hello_plugin.py
 ./test-plugins/oldhello_plugin.py
 ./test-plugins/aaa_hello_plugin.py
