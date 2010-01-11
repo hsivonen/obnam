@@ -38,9 +38,20 @@ class LocalFSTests(unittest.TestCase):
         self.assertEqual(self.fs.join("foo"), 
                          os.path.join(self.dirname, "foo"))
 
-    def test_join_treats_absolute_path_as_relative(self):
-        self.assertEqual(self.fs.join("/foo"), 
-                         os.path.join(self.dirname, "foo"))
+    def test_join_treats_absolute_path_as_absolute(self):
+        self.assertEqual(self.fs.join("/foo"), "/foo")
+
+    def test_getcwd_returns_dirname(self):
+        self.assertEqual(self.fs.getcwd(), self.dirname)
+
+    def test_chdir_changes_only_fs_cwd_not_process_cwd(self):
+        process_cwd = os.getcwd()
+        self.fs.chdir('/')
+        self.assertEqual(self.fs.getcwd(), '/')
+        self.assertEqual(os.getcwd(), process_cwd)
+
+    def test_chdir_to_nonexistent_raises_exception(self):
+        self.assertRaises(OSError, self.fs.chdir, '/foobar')
 
     def test_creates_lock_file(self):
         self.fs.lock("lock")
