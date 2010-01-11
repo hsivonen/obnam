@@ -27,6 +27,23 @@ class LocalFS(obnamlib.VirtualFileSystem):
     """A VFS implementation for local filesystems."""
     
     chunk_size = 1024 * 1024
+    
+    def __init__(self, baseurl):
+        obnamlib.VirtualFileSystem.__init__(self, baseurl)
+        
+        # We fake chdir so that it doesn't mess with the caller's 
+        # perception of current working directory. This also benefits
+        # unit tests. To do this, we store the baseurl as the cwd.
+        self.cwd = os.path.abspath(baseurl)
+
+    def getcwd(self):
+        return self.cwd
+        
+    def chdir(self, pathname):
+        newcwd = os.path.abspath(self.join(pathname))
+        if not os.path.isdir(newcwd):
+            raise OSError('%s is not a directory' % newcwd)
+        self.cwd = newcwd
 
     def lock(self, lockname):
         try:
@@ -41,50 +58,50 @@ class LocalFS(obnamlib.VirtualFileSystem):
         if self.exists(lockname):
             self.remove(lockname)
 
-    def join(self, relative_path):
-        return os.path.join(self.baseurl, relative_path.lstrip("/"))
+    def join(self, pathname):
+        return os.path.join(self.cwd, pathname)
 
-    def remove(self, relative_path):
-        os.remove(self.join(relative_path))
+    def remove(self, pathname):
+        os.remove(self.join(pathname))
 
-    def lstat(self, relative_path):
-        return os.lstat(self.join(relative_path))
+    def lstat(self, pathname):
+        return os.lstat(self.join(pathname))
 
-    def chown(self, relative_path, uid, gid): # pragma: no cover
-        os.chown(self.join(relative_path), uid, gid)
+    def chown(self, pathname, uid, gid): # pragma: no cover
+        os.chown(self.join(pathname), uid, gid)
 
-    def chmod(self, relative_path, mode):
-        os.chmod(self.join(relative_path), mode)
+    def chmod(self, pathname, mode):
+        os.chmod(self.join(pathname), mode)
 
-    def lutimes(self, relative_path, atime, mtime):
-        obnamlib._obnam.lutimes(self.join(relative_path), atime, mtime)
+    def lutimes(self, pathname, atime, mtime):
+        obnamlib._obnam.lutimes(self.join(pathname), atime, mtime)
 
     def link(self, existing, new):
         os.link(self.join(existing), self.join(new))
 
-    def readlink(self, relative_path):
-        return os.readlink(self.join(relative_path))
+    def readlink(self, pathname):
+        return os.readlink(self.join(pathname))
 
     def symlink(self, existing, new):
         os.symlink(existing, self.join(new))
 
-    def open(self, relative_path, mode):
-        return file(self.join(relative_path), mode)
+    def open(self, pathname, mode):
+        return file(self.join(pathname), mode)
 
-    def exists(self, relative_path):
-        return os.path.exists(self.join(relative_path))
+    def exists(self, pathname):
+        return os.path.exists(self.join(pathname))
 
-    def isdir(self, relative_path):
-        return os.path.isdir(self.join(relative_path))
+    def isdir(self, pathname):
+        return os.path.isdir(self.join(pathname))
 
-    def mkdir(self, relative_path):
-        os.mkdir(self.join(relative_path))
+    def mkdir(self, pathname):
+        os.mkdir(self.join(pathname))
 
-    def makedirs(self, relative_path):
-        os.makedirs(self.join(relative_path))
+    def makedirs(self, pathname):
+        os.makedirs(self.join(pathname))
 
-    def cat(self, relative_path):
-        f = self.open(relative_path, "r")
+    def cat(self, pathname):
+        f = self.open(pathname, "r")
         chunks = []
         while True:
             chunk = f.read(self.chunk_size)
@@ -95,8 +112,8 @@ class LocalFS(obnamlib.VirtualFileSystem):
         data = "".join(chunks)
         return data
 
-    def write_file(self, relative_path, contents):
-        path = self.join(relative_path)
+    def write_file(self, pathname, contents):
+        path = self.join(pathname)
         dirname = os.path.dirname(path)
         if not os.path.exists(dirname):
             os.makedirs(dirname)
@@ -114,8 +131,8 @@ class LocalFS(obnamlib.VirtualFileSystem):
             raise
         os.remove(name)
 
-    def overwrite_file(self, relative_path, contents):
-        path = self.join(relative_path)
+    def overwrite_file(self, pathname, contents):
+        path = self.join(pathname)
         dirname = os.path.dirname(path)
         fd, name = tempfile.mkstemp(dir=dirname)
         pos = 0
