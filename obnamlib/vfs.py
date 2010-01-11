@@ -53,6 +53,10 @@ class VirtualFileSystem(object):
     def close(self):
         """Close connection to filesystem."""
 
+    def abspath(self, pathname):
+        '''Return absolute version of pathname.'''
+        return os.path.join(self.getcwd(), pathname)
+
     def getcwd(self):
         """Return current working directory as absolute pathname."""
         

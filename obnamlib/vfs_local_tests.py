@@ -41,6 +41,13 @@ class LocalFSTests(unittest.TestCase):
     def test_join_treats_absolute_path_as_absolute(self):
         self.assertEqual(self.fs.join("/foo"), "/foo")
 
+    def test_abspath_returns_input_for_absolute_path(self):
+        self.assertEqual(self.fs.abspath('/foo/bar'), '/foo/bar')
+
+    def test_abspath_returns_absolute_path_for_relative_input(self):
+        self.assertEqual(self.fs.abspath('foo'),
+                         os.path.join(self.dirname, 'foo'))
+
     def test_getcwd_returns_dirname(self):
         self.assertEqual(self.fs.getcwd(), self.dirname)
 
