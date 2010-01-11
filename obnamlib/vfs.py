@@ -45,7 +45,7 @@ class VirtualFileSystem(object):
     """
 
     def __init__(self, baseurl):
-        self.baseurl = baseurl
+        pass
 
     def connect(self):
         """Connect to filesystem."""
@@ -53,8 +53,18 @@ class VirtualFileSystem(object):
     def close(self):
         """Close connection to filesystem."""
 
-    def listdir(self, relative_path):
-        """Return list of basenames of entities at relative_path."""
+    def abspath(self, pathname):
+        '''Return absolute version of pathname.'''
+        return os.path.abspath(os.path.join(self.getcwd(), pathname))
+
+    def getcwd(self):
+        """Return current working directory as absolute pathname."""
+        
+    def chdir(self, pathname):
+        """Change current working directory to pathname."""
+
+    def listdir(self, pathname):
+        """Return list of basenames of entities at pathname."""
 
     def lock(self, lockname):
         """Create a lock file with the given name."""
@@ -62,35 +72,35 @@ class VirtualFileSystem(object):
     def unlock(self, lockname):
         """Remove a lock file."""
 
-    def exists(self, relative_path):
+    def exists(self, pathname):
         """Does the file or directory exist?"""
 
-    def isdir(self, relative_path):
+    def isdir(self, pathname):
         """Is it a directory?"""
 
-    def mkdir(self, relative_path):
+    def mkdir(self, pathname):
         """Create a directory.
         
         Parent directories must already exist.
         
         """
         
-    def makedirs(self, relative_path):
+    def makedirs(self, pathname):
         """Create a directory, and missing parents."""
 
-    def remove(self, relative_path):
+    def remove(self, pathname):
         """Remove a file."""
 
-    def lstat(self, relative_path):
+    def lstat(self, pathname):
         """Like os.lstat."""
 
-    def chown(self, relative_path, uid, gid):
+    def chown(self, pathname, uid, gid):
         '''Like os.chown.'''
 
-    def chmod(self, relative_path, mode):
+    def chmod(self, pathname, mode):
         """Like os.chmod."""
 
-    def lutimes(self, relative_path, atime, mtime):
+    def lutimes(self, pathname, atime, mtime):
         """Like lutimes(2)."""
 
     def link(self, existing_path, new_path):
@@ -102,7 +112,7 @@ class VirtualFileSystem(object):
     def symlink(self, source, destination):
         """Like os.symlink."""
 
-    def open(self, relative_path, mode):
+    def open(self, pathname, mode):
         """Open a file, like the builtin open() or file() function.
 
         The return value is a file object like the ones returned
@@ -110,21 +120,21 @@ class VirtualFileSystem(object):
 
         """
 
-    def cat(self, relative_path):
+    def cat(self, pathname):
         """Return the contents of a file."""
 
-    def write_file(self, relative_path, contents):
+    def write_file(self, pathname, contents):
         """Write a new file.
 
         The file must not yet exist. The file is written atomically,
         so that the given name will only exist when the file is
         completely written.
         
-        Any directories in relative_path will be created if necessary.
+        Any directories in pathname will be created if necessary.
 
         """
 
-    def overwrite_file(self, relative_path, contents):
+    def overwrite_file(self, pathname, contents):
         """Like write_file, but overwrites existing file.
 
         The old file isn't immediately lost, it gets renamed with
