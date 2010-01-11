@@ -47,7 +47,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         for root in roots:
             self.fs = fsf.new(root)
             self.fs.connect()
-            rootobjs.append(self.backup_something(root))
+            rootobjs.append(self.backup_something(self.fs.abspath('.')))
             self.fs.close()
         self.app.hooks.call('progress-found-file', None, 0)
         ended = int(time.time())
