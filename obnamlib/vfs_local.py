@@ -34,15 +34,16 @@ class LocalFS(obnamlib.VirtualFileSystem):
         # We fake chdir so that it doesn't mess with the caller's 
         # perception of current working directory. This also benefits
         # unit tests. To do this, we store the baseurl as the cwd.
-        self.cwd = baseurl
+        self.cwd = os.path.abspath(baseurl)
 
     def getcwd(self):
         return self.cwd
         
     def chdir(self, pathname):
-        if not os.path.isdir(self.join(pathname)):
-            raise OSError('%s is not a directory' % pathname)
-        self.cwd = os.path.normpath(self.join(pathname))
+        newcwd = os.path.abspath(self.join(pathname))
+        if not os.path.isdir(newcwd):
+            raise OSError('%s is not a directory' % newcwd)
+        self.cwd = newcwd
 
     def lock(self, lockname):
         try:

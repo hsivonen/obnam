@@ -55,7 +55,7 @@ class VirtualFileSystem(object):
 
     def abspath(self, pathname):
         '''Return absolute version of pathname.'''
-        return os.path.join(self.getcwd(), pathname)
+        return os.path.abspath(os.path.join(self.getcwd(), pathname))
 
     def getcwd(self):
         """Return current working directory as absolute pathname."""
