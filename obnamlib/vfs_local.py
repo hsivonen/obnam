@@ -40,9 +40,9 @@ class LocalFS(obnamlib.VirtualFileSystem):
         return self.cwd
         
     def chdir(self, pathname):
-        if not os.path.isdir(pathname):
+        if not os.path.isdir(self.join(pathname)):
             raise OSError('%s is not a directory' % pathname)
-        self.cwd = pathname
+        self.cwd = os.path.normpath(self.join(pathname))
 
     def lock(self, lockname):
         try:
