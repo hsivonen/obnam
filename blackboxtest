@@ -38,6 +38,8 @@ class BlackBoxTest(object):
     def __init__(self):
         self.temproot = tempfile.mkdtemp()
         self.hostid = "hostid"
+        logging.debug('temproot = %s' % self.temproot)
+        logging.debug('hostid = %s' % self.hostid)
 
     def tempdir(self):
         """Create a new temporary directory, create its name.
@@ -46,10 +48,13 @@ class BlackBoxTest(object):
         
         """
         
-        return tempfile.mkdtemp(dir=self.temproot)
+        dirname = tempfile.mkdtemp(dir=self.temproot)
+        logging.debug('created directory %s' % dirname)
+        return dirname
 
     def clean(self):
         """Remove temporary files."""
+        logging.debug('removing temproot %s' % self.temproot)
         shutil.rmtree(self.temproot)
 
     def runcmd(self, argv):
@@ -59,6 +64,7 @@ class BlackBoxTest(object):
         
         """
 
+        logging.debug('executing %s' % argv)
         subprocess.check_call(argv)
 
     def obnam(self, args):
@@ -71,8 +77,9 @@ class BlackBoxTest(object):
 
     def create_file(self, root, relative, contents):
         """Create a new file with the desired contents."""
-        
+
         pathname = os.path.join(root, relative)
+        logging.debug('creating file %s' % pathname)        
         f = file(pathname, "w")
         f.write(contents)
         f.close()
@@ -80,6 +87,7 @@ class BlackBoxTest(object):
     def create_dir(self, pathname):
         """Create a new directory, return name."""
         fullname = os.path.join(self.temproot, pathname)
+        logging.debug('mkdir %s' % fullname)
         os.makedirs(fullname)
 
     def get_info(self, root, pathname):
@@ -195,6 +203,7 @@ class BlackBoxTest(object):
 
     def backup(self, store, data):
         """Back up a data directory to a store."""
+        logging.debug('backing up %s to %s' % (data, store))
         self.obnam(['--store', store, 'backup', data])
         
     def restore(self, store):
@@ -205,9 +214,8 @@ class BlackBoxTest(object):
         """
         
         restored = self.tempdir()
-        return restored
-        self.obnam(["restore", restored, 
-                     "--store", store, "--generation", "latest"])
+        logging.debug('restoring %s to %s' % (store, restored))
+        self.obnam(["restore", restored, "latest", "--store", store])
         return restored
 
 
@@ -242,7 +250,7 @@ class ObnamBlackBoxTests:
                 logging.error('test %s failed:\n%s' % 
                               (str(klass), traceback.format_exc()))
                 errors = True
-            test.clean()
+#            test.clean()
         if errors:
             logging.critical('blackboxtest ends in glorious failure')
             sys.exit(1)
