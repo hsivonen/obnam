@@ -25,14 +25,32 @@ class RestorePlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
         self.app.register_command('restore', self.restore)
+
+    def open_root(self):
+        return self.store.get_object(0)
+
+    def open_host(self):
+        hostname = self.app.config['hostname']
+        rootobj = self.open_root()
+        for hostid in rootobj.hostids:
+            hostobj = self.store.get_object(hostid)
+            if hostobj.hostname == hostname:
+                return hostobj
+        raise obnamlib.AppException('Host %s not found in store' % hostname)
+
+    def genid(self, genid_str):
+        if genid_str == 'latest':
+            return self.hostobj.genids[-1]
+        return int(genid_str)
         
     def restore(self, args):
         fsf = obnamlib.VfsFactory()
         self.store = obnamlib.Store(fsf.new(self.app.config['store']))
         self.fs = fsf.new(args[0])
+        self.hostobj = self.open_host()
         
         for genid_str in args[1:]:
-            gen = self.store.get_object(int(genid_str))
+            gen = self.store.get_object(self.genid(genid_str))
             self.restore_recursively(".", gen.dirids, gen.fileids)
     
     def restore_recursively(self, to_dir, dirids, fileids):
