@@ -154,6 +154,11 @@ class BlackBoxTest(object):
         
         self.assertEqual(relative, data1, data2, "content")
 
+    def report_contents(self, dirname, contents):
+        logging.debug('Contents of %s:' % dirname)
+        for name in sorted(contents.keys()):
+            logging.debug('  %s' % name)
+
     def verify(self, data, restored):
         """Verify that a restored directory is identical to the original.
         
@@ -174,12 +179,18 @@ class BlackBoxTest(object):
         
         for name, orig_stat in origs.iteritems():
             if name not in restoreds:
+                logging.error('file %s not in restored data' % name)
+                self.report_contents(data, origs)
+                self.report_contents(restored, restoreds)
                 raise Exception("%s not in restored data" % name)
             restored_stat = restoreds[name]
             self.assert_same_stat(name, orig_stat, restored_stat)
             self.assert_same_contents(name, data, restored_tree)
         for name, restored_stat in restoreds.iteritems():
             if name not in origs:
+                logging.error('spurious file %s in restored data' % name)
+                self.report_contents(data, origs)
+                self.report_contents(restored, restoreds)
                 raise Exception("spurious %s in restored data" % name)
 
     def backup(self, store, data):
@@ -218,19 +229,28 @@ class ObnamBlackBoxTests:
     """Main class for running black box tests of obnam."""
     
     def run(self):
+        logging.info('blackboxtest starts')
         errors = False
         tests = [RestoresIdenticalData]
         for klass in tests:
+            logging.info('running test %s' % str(klass))
             test = klass()
             try:
                 test.test()
             except Exception, e:
                 sys.stderr.write(traceback.format_exc())
+                logging.error('test %s failed:\n%s' % 
+                              (str(klass), traceback.format_exc()))
                 errors = True
             test.clean()
         if errors:
+            logging.critical('blackboxtest ends in glorious failure')
             sys.exit(1)
+        logging.info('blackboxtest ends, no problems')
 
 
 if __name__ == "__main__":
+    logging.basicConfig(filename='blackboxtest.log',
+                        level=logging.DEBUG,
+                        format='%(levelname)s: %(message)s')
     ObnamBlackBoxTests().run()
