@@ -98,8 +98,10 @@ class BlackBoxTest(object):
         
         """
         
+        root_base = os.path.basename(root)
+        del_prefix = root[:-len(root_base)]
         if pathname == root:
-            return ".", os.lstat(pathname)
+            return None
         assert pathname.startswith(root + os.sep), (pathname, root)
         return pathname[len(root + os.sep):], os.lstat(pathname)
 
@@ -118,7 +120,7 @@ class BlackBoxTest(object):
             for filename in filenames:
                 pathname = os.path.join(dirname, filename)
                 result.append(self.get_info(root, pathname))
-        return result
+        return [x for x in result if x]
 
     def assert_(self, name, condition, message):
         """Raise an exception if a condition is not met."""
@@ -182,8 +184,8 @@ class BlackBoxTest(object):
         
         origs = dict(self.find_everything(data))
         basename = os.path.basename(data)
-        restored_tree = os.path.join(restored, "." + data)
-        restoreds = dict(self.find_everything(restored_tree))
+        restored2 = os.path.join(restored, os.path.basename(data))
+        restoreds = dict(self.find_everything(restored2))
         
         for name, orig_stat in origs.iteritems():
             if name not in restoreds:
@@ -193,7 +195,7 @@ class BlackBoxTest(object):
                 raise Exception("%s not in restored data" % name)
             restored_stat = restoreds[name]
             self.assert_same_stat(name, orig_stat, restored_stat)
-            self.assert_same_contents(name, data, restored_tree)
+            self.assert_same_contents(name, data, restored2)
         for name, restored_stat in restoreds.iteritems():
             if name not in origs:
                 logging.error('spurious file %s in restored data' % name)
