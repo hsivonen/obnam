@@ -27,10 +27,22 @@ class LockFail(Exception):
     pass
 
 
+def require_root_lock(method):
+    '''Decorator for ensuring the store's root node is locked.'''
+    
+    def helper(self, *args, **kwargs):
+        if not self.got_root_lock:
+            raise LockFail('have not got lock on root node')
+        return method(self, *args, **kwargs)
+    
+    return helper
+
+
 class Store(object):
 
     def __init__(self, fs):
         self.fs = fs
+        self.got_root_lock = False
         
     def list_hosts(self):
         '''Return list of names of hosts using this store.'''
@@ -49,12 +61,15 @@ class Store(object):
         except OSError, e:
             if e.errno == errno.EEXIST:
                 raise LockFail('Lock file root.lock already exists')
+        self.got_root_lock = True
 
+    @require_root_lock
     def unlock_root(self):
         '''Unlock root node without committing changes made.'''
         self.fs.remove('root.lock')
+        self.got_root_lock = False
         
+    @require_root_lock
     def commit_root(self):
         '''Commit changes to root node, and unlock it.'''
-        self.fs.remove('root.lock')
-
+        self.unlock_root()
