@@ -20,6 +20,7 @@
 
 
 import errno
+import os
 
 import obnamlib
 
@@ -142,6 +143,14 @@ class Store(object):
         by commit_host() or unlock_host().
 
         '''
+        
+        lockname = os.path.join(hostname, 'lock')
+        try:
+            self.fs.write_file(lockname, '')
+        except OSError, e:
+            if e.errno == errno.EEXIST:
+                raise LockFail('Host %s is already locked' % hostname)
+        self.got_host_lock = True
 
     @require_host_lock
     def unlock_host(self):
@@ -150,4 +159,3 @@ class Store(object):
     @require_host_lock
     def commit_host(self):
         '''Commit changes to and unlock currently locked host.'''
-
