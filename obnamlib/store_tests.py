@@ -85,3 +85,17 @@ class StoreRootNodeTests(unittest.TestCase):
         self.store.lock_root()
         self.store.add_host('foo')
         self.assertRaises(obnamlib.Error, self.store.add_host, 'foo')
+        
+    def test_removing_host_without_root_lock_fails(self):
+        self.assertRaises(obnamlib.LockFail, self.store.remove_host, 'foo')
+        
+    def test_removing_nonexistent_host_fails(self):
+        self.store.lock_root()
+        self.assertRaises(obnamlib.Error, self.store.remove_host, 'foo')
+        
+    def test_removing_host_works(self):
+        self.store.lock_root()
+        self.store.add_host('foo')
+        self.store.remove_host('foo')
+        self.assertEqual(self.store.list_hosts(), [])
+

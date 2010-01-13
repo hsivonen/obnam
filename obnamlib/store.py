@@ -82,3 +82,11 @@ class Store(object):
         if self.fs.exists(hostname):
             raise obnamlib.Error('host %s already exists in store' % hostname)
         self.fs.mkdir(hostname)
+        
+    def remove_host(self, hostname):
+        '''Remove a host from the store.
+        
+        This removes all data related to the host, including all
+        actual file data unless other hosts also use it.
+        
+        '''
