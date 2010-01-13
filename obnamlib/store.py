@@ -20,7 +20,9 @@
 
 
 import errno
+import hashlib
 import os
+import pickle
 
 import obnamlib
 
@@ -76,6 +78,18 @@ def require_started_generation(method):
         return method(self, *args, **kwargs)
     
     return helper
+
+
+def checksum(data):
+    return hashlib.md5(data).hexdigest()
+
+
+def encode_metadata(metadata):
+    return pickle.dumps(metadata)
+    
+
+def decode_metadata(encoded):
+    return pickle.loads(encoded)
 
 
 class Store(object):
@@ -216,13 +230,17 @@ class Store(object):
         if self.new_generation is not None:
             raise obnamlib.Error('Cannot start two new generations')
         self.new_generation = 'static.id.for.now'
+        self.fs.mkdir(self.new_generation)
         return self.new_generation
         
     @require_open_host
     def listdir(self, gen, dirname):
         '''Return list of basenames in a directory within generation.'''
-        return []
+        return self.fs.listdir(os.path.join(gen, './' + dirname))
         
     @require_started_generation
     def create(self, gen, filename, metadata):
         '''Create a new (empty) file in the new generation.'''
+        self.fs.write_file(os.path.join(gen, './' + filename), 
+                           encode_metadata(metadata))
+
