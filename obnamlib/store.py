@@ -94,3 +94,4 @@ class Store(object):
         
         if not self.fs.isdir(hostname):
             raise obnamlib.Error('host %s does not exist' % hostname)
+        self.fs.rmtree(hostname)
