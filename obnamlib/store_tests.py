@@ -179,7 +179,7 @@ class StoreHostTests(unittest.TestCase):
     def test_starting_new_generation_works(self):
         self.store.lock_host('hostname')
         self.store.start_generation()
-        self.assert_(self.new_generation)
+        self.assert_(self.store.new_generation)
 
     def test_starting_second_new_generation_fails(self):
         self.store.lock_host('hostname')
