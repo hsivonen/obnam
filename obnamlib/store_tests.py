@@ -63,7 +63,7 @@ class StoreRootNodeTests(unittest.TestCase):
         self.assertRaises(obnamlib.LockFail, self.store.commit_root)
         
     def test_unlock_root_without_lock_fails(self):
-        self.assertRaises(obnamlib.LockFail, self.store.commit_root)
+        self.assertRaises(obnamlib.LockFail, self.store.unlock_root)
 
     def test_commit_when_locked_by_other_fails(self):
         self.other.lock_root()
@@ -98,4 +98,59 @@ class StoreRootNodeTests(unittest.TestCase):
         self.store.add_host('foo')
         self.store.remove_host('foo')
         self.assertEqual(self.store.list_hosts(), [])
+
+
+class StoreHostTests(unittest.TestCase):
+
+
+    def setUp(self):
+        self.tempdir = tempfile.mkdtemp()
+
+        self.fs = obnamlib.LocalFS(self.tempdir)
+        self.store = obnamlib.Store(self.fs)
+        self.store.lock_root()
+        self.store.add_host('hostname')
+        self.store.commit_root()
+        
+        self.otherfs = obnamlib.LocalFS(self.tempdir)
+        self.other = obnamlib.Store(self.otherfs)
+
+    def tearDown(self):
+        shutil.rmtree(self.tempdir)
+
+    def test_has_not_got_host_lock(self):
+        self.assertFalse(self.store.got_host_lock)
+
+    def test_locks_host(self):
+        self.store.lock_host('hostname')
+        self.assert_(self.store.got_host_lock)
+
+    def test_locking_host_twice_fails(self):
+        self.store.lock_host('hostname')
+        self.assertRaises(obnamlib.LockFail, self.store.lock_host, 
+                          'hostname')
+
+    def test_unlock_host_releases_lock(self):
+        self.store.lock_host('hostname')
+        self.store.unlock_host()
+        self.assertFalse(self.store.got_host_lock)
+
+    def test_commit_host_releases_lock(self):
+        self.store.lock_host('hostname')
+        self.store.commit_host()
+        self.assertFalse(self.store.got_host_lock)
+
+    def test_commit_host_without_lock_fails(self):
+        self.assertRaises(obnamlib.LockFail, self.store.commit_host)
+        
+    def test_unlock_host_without_lock_fails(self):
+        self.assertRaises(obnamlib.LockFail, self.store.unlock_host)
+
+    def test_commit_host_when_locked_by_other_fails(self):
+        self.other.lock_host('hostname')
+        self.assertRaises(obnamlib.LockFail, self.store.commit_host)
+
+    def test_unlock_host_when_locked_by_other_fails(self):
+        self.other.lock_host('hostname')
+        self.assertRaises(obnamlib.LockFail, self.store.unlock_host)
 

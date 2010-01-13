@@ -81,7 +81,7 @@ class Store(object):
         '''Lock root node.
         
         Raise obnamlib.LockFail if locking fails. Lock will be released
-        by commit() or unlock_root().
+        by commit_root() or unlock_root().
         
         '''
         
@@ -97,6 +97,7 @@ class Store(object):
         '''Unlock root node without committing changes made.'''
         self.fs.remove('root.lock')
         self.got_root_lock = False
+        self.got_host_lock = False
         
     @require_root_lock
     def commit_root(self):
@@ -122,3 +123,18 @@ class Store(object):
         if not self.fs.isdir(hostname):
             raise obnamlib.Error('host %s does not exist' % hostname)
         self.fs.rmtree(hostname)
+        
+    def lock_host(self, hostname):
+        '''Lock a host for exclusive write access.
+        
+        Raise obnamlib.LockFail if locking fails. Lock will be released
+        by commit_host() or unlock_host().
+
+        '''
+
+    def unlock_host(self):
+        '''Unlock currently locked host.'''
+        
+    def commit_host(self):
+        '''Commit changes to and unlock currently locked host.'''
+
