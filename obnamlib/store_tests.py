@@ -53,3 +53,10 @@ class StoreRootNodeTests(unittest.TestCase):
         self.store.unlock_root()
         self.store.lock_root()
         self.assert_(True)
+        
+    def test_commit_without_lock_fails(self):
+        self.assertRaises(obnamlib.LockFail, self.store.commit_root)
+        
+    def test_unlock_root_without_lock_fails(self):
+        self.assertRaises(obnamlib.LockFail, self.store.commit_root)
+
