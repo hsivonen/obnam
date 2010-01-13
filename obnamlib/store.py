@@ -84,6 +84,7 @@ class Store(object):
     def __init__(self, fs):
         self.fs = fs
         self.got_root_lock = False
+        self.got_host_lock = False
         
     def list_hosts(self):
         '''Return list of names of hosts using this store.'''
@@ -109,7 +110,6 @@ class Store(object):
         '''Unlock root node without committing changes made.'''
         self.fs.remove('root.lock')
         self.got_root_lock = False
-        self.got_host_lock = False
         
     @require_root_lock
     def commit_root(self):
