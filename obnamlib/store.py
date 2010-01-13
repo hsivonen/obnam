@@ -42,6 +42,33 @@ def require_root_lock(method):
 
 class Store(object):
 
+    '''Store backup data.
+    
+    Backup data is stored on a virtual file system
+    (obnamlib.VirtualFileSystem instance), in some form that
+    the API of this class does not care about.
+    
+    The store may contain data for several hosts that share 
+    encryption keys. Each host is identified by a name.
+    
+    The store has a "root" object, which is conceptually a list of
+    host names.
+    
+    Each host in turn is conceptually a list of generations,
+    which correspond to snapshots of the user data that existed
+    when the generation was created.
+    
+    Read-only access to the store does not require locking.
+    Write access may affect only the root object, or only a host's
+    own data, and thus locking may affect only the root, or only
+    the host.
+    
+    When a new generation is started, it is a copy-on-write clone
+    of the previous generation, and the caller needs to modify
+    the new generation to match the current state of user data.
+
+    '''
+
     def __init__(self, fs):
         self.fs = fs
         self.got_root_lock = False
