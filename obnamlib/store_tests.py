@@ -170,3 +170,19 @@ class StoreHostTests(unittest.TestCase):
     def test_listing_generations_fails_if_host_is_not_open(self):
         self.assertRaises(obnamlib.Error, self.store.list_generations)
 
+    def test_not_making_new_generation(self):
+        self.assertEqual(self.store.new_generation, None)
+
+    def test_starting_new_generation_without_lock_fails(self):
+        self.assertRaises(obnamlib.LockFail, self.store.start_generation)
+
+    def test_starting_new_generation_works(self):
+        self.store.lock_host('hostname')
+        self.store.start_generation()
+        self.assert_(self.new_generation)
+
+    def test_starting_second_new_generation_fails(self):
+        self.store.lock_host('hostname')
+        self.store.start_generation()
+        self.assertRaises(obnamlib.Error, self.store.start_generation)
+

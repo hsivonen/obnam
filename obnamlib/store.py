@@ -102,6 +102,7 @@ class Store(object):
         self.got_host_lock = False
         self.host_lockfile = None
         self.current_host = None
+        self.new_generation = None
         
     def list_hosts(self):
         '''Return list of names of hosts using this store.'''
@@ -192,3 +193,6 @@ class Store(object):
     def list_generations(self):
         '''List existing generations for currently open host.'''
         return []
+        
+    def start_generation(self):
+        '''Start a new generation.'''
