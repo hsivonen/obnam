@@ -40,6 +40,17 @@ def require_root_lock(method):
     return helper
 
 
+def require_host_lock(method):
+    '''Decorator for ensuring the currently open host is locked by us.'''
+    
+    def helper(self, *args, **kwargs):
+        if not self.got_host_lock:
+            raise LockFail('have not got lock on host')
+        return method(self, *args, **kwargs)
+    
+    return helper
+
+
 class Store(object):
 
     '''Store backup data.
@@ -132,9 +143,11 @@ class Store(object):
 
         '''
 
+    @require_host_lock
     def unlock_host(self):
         '''Unlock currently locked host.'''
-        
+
+    @require_host_lock
     def commit_host(self):
         '''Commit changes to and unlock currently locked host.'''
 
