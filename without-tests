@@ -5,7 +5,6 @@
 ./obnamlib/vfs.py
 ./obnamlib/vfs_sftp.py
 ./obnamlib/objs.py
-./obnamlib/store.py
 ./obnamlib/plugins/foo_plugin.py
 ./obnamlib/plugins/backup_plugin.py
 ./obnamlib/plugins/terminal_status_plugin.py
