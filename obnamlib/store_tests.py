@@ -191,3 +191,12 @@ class StoreHostTests(unittest.TestCase):
         gen = self.store.start_generation()
         self.assertEqual(self.store.listdir(gen, '/'), [])
 
+    def test_create_fails_unless_generation_is_started(self):
+        self.assertRaises(obnamlib.Error, self.store.create, None, '', None)
+
+    def test_create_adds_file(self):
+        self.store.lock_host('hostname')
+        gen = self.store.start_generation()
+        self.store.create(gen, '/foo', obnamlib.Metadata())
+        self.assertEqual(self.store.listdir(gen, '/'), ['foo'])
+

@@ -67,6 +67,17 @@ def require_open_host(method):
     return helper
 
 
+def require_started_generation(method):
+    '''Decorator for ensuring a new generation has been started. '''
+    
+    def helper(self, *args, **kwargs):
+        if self.new_generation is None:
+            raise obnamlib.Error('new generation has not started')
+        return method(self, *args, **kwargs)
+    
+    return helper
+
+
 class Store(object):
 
     '''Store backup data.
@@ -211,3 +222,7 @@ class Store(object):
     def listdir(self, gen, dirname):
         '''Return list of basenames in a directory within generation.'''
         return []
+        
+    @require_started_generation
+    def create(self, gen, filename, metadata):
+        '''Create a new (empty) file in the new generation.'''
