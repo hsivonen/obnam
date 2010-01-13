@@ -21,6 +21,8 @@
 
 import errno
 
+import obnamlib
+
 
 class LockFail(Exception):
 
@@ -77,3 +79,6 @@ class Store(object):
     @require_root_lock
     def add_host(self, hostname):
         '''Add a new host to the store.'''
+        if self.fs.exists(hostname):
+            raise obnamlib.Error('host %s already exists in store' % hostname)
+        self.fs.mkdir(hostname)
