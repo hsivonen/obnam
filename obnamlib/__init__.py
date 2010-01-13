@@ -20,6 +20,9 @@ from pluginmgr import PluginManager
 class AppException(Exception):
     pass
 
+class Error(Exception):
+    pass
+
 from hooks import Hook, HookManager
 from cfg import Configuration
 from interp import Interpreter

@@ -73,3 +73,6 @@ class Store(object):
     def commit_root(self):
         '''Commit changes to root node, and unlock it.'''
         self.unlock_root()
+        
+    def add_host(self, hostname):
+        '''Add a new host to the store.'''
