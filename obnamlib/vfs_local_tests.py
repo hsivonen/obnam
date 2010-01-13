@@ -148,6 +148,12 @@ class LocalFSTests(unittest.TestCase):
         self.fs.write_file('foo/bar', '')
         self.assertRaises(OSError, self.fs.rmdir, 'foo')
 
+    def test_rmtree_removes_directory_tree(self):
+        self.fs.mkdir('foo')
+        self.fs.write_file('foo/bar', '')
+        self.fs.rmtree('foo')
+        self.assertFalse(self.fs.exists('foo'))
+
     def test_lstat_returns_result(self):
         self.assert_(self.fs.lstat("."))
 

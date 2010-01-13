@@ -91,6 +91,13 @@ class VirtualFileSystem(object):
     def rmdir(self, pathname):
         '''Remove an empty directory.'''
 
+    def rmtree(self, dirname):
+        '''Remove a directory tree, including its contents.'''
+        for dirname, dirnames, basenames in self.depth_first(dirname):
+            for basename in basenames:
+                self.remove(os.path.join(dirname, basename))
+            self.rmdir(dirname)
+
     def remove(self, pathname):
         """Remove a file."""
 
