@@ -168,3 +168,6 @@ class Store(object):
         
     def open_host(self, hostname):
         '''Open a host for read-only operation.'''
+        
+    def list_generations(self):
+        '''List existing generations for currently open host.'''

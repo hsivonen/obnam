@@ -158,3 +158,15 @@ class StoreHostTests(unittest.TestCase):
         self.other.lock_host('hostname')
         self.store.open_host('hostname')
         self.assert_(True)
+        
+    def test_lists_no_generations_when_readonly(self):
+        self.store.open_host('hostname')
+        self.assertEqual(self.store.list_generations(), [])
+        
+    def test_lists_no_generations_when_locked(self):
+        self.store.lock_host('hostname')
+        self.assertEqual(self.store.list_generations(), [])
+        
+    def test_listing_generations_fails_if_host_is_not_open(self):
+        self.assertRaises(obnamlib.Error, self.store.list_generations)
+
