@@ -85,6 +85,7 @@ class Store(object):
         self.fs = fs
         self.got_root_lock = False
         self.got_host_lock = False
+        self.host_lockfile = None
         
     def list_hosts(self):
         '''Return list of names of hosts using this store.'''
@@ -151,11 +152,16 @@ class Store(object):
             if e.errno == errno.EEXIST:
                 raise LockFail('Host %s is already locked' % hostname)
         self.got_host_lock = True
+        self.host_lockfile = lockname
 
     @require_host_lock
     def unlock_host(self):
         '''Unlock currently locked host.'''
+        self.fs.remove(self.host_lockfile)
+        self.host_lockfile = None
+        self.got_host_lock = False
 
     @require_host_lock
     def commit_host(self):
         '''Commit changes to and unlock currently locked host.'''
+        self.unlock_host()
