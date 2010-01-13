@@ -48,7 +48,7 @@ class Store(object):
         
     def list_hosts(self):
         '''Return list of names of hosts using this store.'''
-        return []
+        return [x for x in self.fs.listdir('.') if self.fs.isdir(x)]
 
     def lock_root(self):
         '''Lock root node.
