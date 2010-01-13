@@ -165,3 +165,6 @@ class Store(object):
     def commit_host(self):
         '''Commit changes to and unlock currently locked host.'''
         self.unlock_host()
+        
+    def open_host(self, hostname):
+        '''Open a host for read-only operation.'''

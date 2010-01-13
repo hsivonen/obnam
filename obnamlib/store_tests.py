@@ -154,3 +154,7 @@ class StoreHostTests(unittest.TestCase):
         self.other.lock_host('hostname')
         self.assertRaises(obnamlib.LockFail, self.store.unlock_host)
 
+    def test_opens_host_even_when_locked_by_other(self):
+        self.other.lock_host('hostname')
+        self.store.open_host('hostname')
+        self.assert_(True)
