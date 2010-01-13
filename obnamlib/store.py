@@ -196,7 +196,12 @@ class Store(object):
         
     @require_host_lock
     def start_generation(self):
-        '''Start a new generation.'''
+        '''Start a new generation.
+        
+        The new generation is a copy-on-write clone of the previous
+        one (or empty, if first generation).
+        
+        '''
         if self.new_generation is not None:
             raise obnamlib.Error('Cannot start two new generations')
         self.new_generation = 'static.id.for.now'
