@@ -88,6 +88,9 @@ class VirtualFileSystem(object):
     def makedirs(self, pathname):
         """Create a directory, and missing parents."""
 
+    def rmdir(self, pathname):
+        '''Remove an empty directory.'''
+
     def remove(self, pathname):
         """Remove a file."""
 

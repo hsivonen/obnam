@@ -100,6 +100,9 @@ class LocalFS(obnamlib.VirtualFileSystem):
     def makedirs(self, pathname):
         os.makedirs(self.join(pathname))
 
+    def rmdir(self, pathname):
+        os.rmdir(self.join(pathname))
+
     def cat(self, pathname):
         f = self.open(pathname, "r")
         chunks = []

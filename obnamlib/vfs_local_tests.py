@@ -135,6 +135,19 @@ class LocalFSTests(unittest.TestCase):
         self.fs.makedirs("foo/bar")
         self.assert_(os.path.isdir(os.path.join(self.dirname, "foo/bar")))
 
+    def test_rmdir_removes_directory(self):
+        self.fs.mkdir('foo')
+        self.fs.rmdir('foo')
+        self.assertFalse(self.fs.exists('foo'))
+
+    def test_rmdir_raises_oserror_if_directory_does_not_exist(self):
+        self.assertRaises(OSError, self.fs.rmdir, 'foo')
+
+    def test_rmdir_raises_oserror_if_directory_is_not_empty(self):
+        self.fs.mkdir('foo')
+        self.fs.write_file('foo/bar', '')
+        self.assertRaises(OSError, self.fs.rmdir, 'foo')
+
     def test_lstat_returns_result(self):
         self.assert_(self.fs.lstat("."))
 
