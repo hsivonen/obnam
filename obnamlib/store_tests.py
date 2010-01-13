@@ -186,3 +186,8 @@ class StoreHostTests(unittest.TestCase):
         self.store.start_generation()
         self.assertRaises(obnamlib.Error, self.store.start_generation)
 
+    def test_new_generation_has_root_dir_only(self):
+        self.store.lock_host('hostname')
+        gen = self.store.start_generation()
+        self.assertEqual(self.store.listdir(gen, '/'), [])
+

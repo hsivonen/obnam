@@ -205,3 +205,9 @@ class Store(object):
         if self.new_generation is not None:
             raise obnamlib.Error('Cannot start two new generations')
         self.new_generation = 'static.id.for.now'
+        return self.new_generation
+        
+    @require_open_host
+    def listdir(self, gen, dirname):
+        '''Return list of basenames in a directory within generation.'''
+        return []
