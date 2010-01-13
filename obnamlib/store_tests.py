@@ -21,7 +21,7 @@ import unittest
 import obnamlib
 
 
-class StoreTests(unittest.TestCase):
+class StoreRootNodeTests(unittest.TestCase):
 
     def setUp(self):
         self.tempdir = tempfile.mkdtemp()
@@ -31,6 +31,6 @@ class StoreTests(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.tempdir)
 
-    def test_foo(self):
-        self.assert_(False)
+    def test_lists_no_hosts(self):
+        self.assertEqual(self.store.list_hosts(), [])
 
