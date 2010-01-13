@@ -25,8 +25,12 @@ class StoreRootNodeTests(unittest.TestCase):
 
     def setUp(self):
         self.tempdir = tempfile.mkdtemp()
+
         self.fs = obnamlib.LocalFS(self.tempdir)
         self.store = obnamlib.Store(self.fs)
+        
+        self.otherfs = obnamlib.LocalFS(self.tempdir)
+        self.other = obnamlib.Store(self.fs)
 
     def tearDown(self):
         shutil.rmtree(self.tempdir)
@@ -59,4 +63,12 @@ class StoreRootNodeTests(unittest.TestCase):
         
     def test_unlock_root_without_lock_fails(self):
         self.assertRaises(obnamlib.LockFail, self.store.commit_root)
+
+    def test_commit_when_locked_by_other_fails(self):
+        self.other.lock_root()
+        self.assertRaises(obnamlib.LockFail, self.store.commit_root)
+
+    def test_unlock_root_when_locked_by_other_fails(self):
+        self.other.lock_root()
+        self.assertRaises(obnamlib.LockFail, self.store.unlock_root)
 
