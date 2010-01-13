@@ -194,5 +194,6 @@ class Store(object):
         '''List existing generations for currently open host.'''
         return []
         
+    @require_host_lock
     def start_generation(self):
         '''Start a new generation.'''
