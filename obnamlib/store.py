@@ -83,6 +83,7 @@ class Store(object):
             raise obnamlib.Error('host %s already exists in store' % hostname)
         self.fs.mkdir(hostname)
         
+    @require_root_lock
     def remove_host(self, hostname):
         '''Remove a host from the store.
         
