@@ -91,3 +91,6 @@ class Store(object):
         actual file data unless other hosts also use it.
         
         '''
+        
+        if not self.fs.isdir(hostname):
+            raise obnamlib.Error('host %s does not exist' % hostname)
