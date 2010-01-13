@@ -197,20 +197,29 @@ class StoreHostTests(unittest.TestCase):
     def test_create_adds_file(self):
         self.store.lock_host('hostname')
         gen = self.store.start_generation()
-        self.store.create(gen, '/foo', obnamlib.Metadata())
+        self.store.create('/foo', obnamlib.Metadata())
         self.assertEqual(self.store.listdir(gen, '/'), ['foo'])
 
     def test_remove_removes_file(self):
         self.store.lock_host('hostname')
         gen = self.store.start_generation()
-        self.store.create(gen, '/foo', obnamlib.Metadata())
-        self.store.remove(gen, '/foo')
+        self.store.create('/foo', obnamlib.Metadata())
+        self.store.remove('/foo')
         self.assertEqual(self.store.listdir(gen, '/'), [])
 
     def test_remove_removes_directory_tree(self):
         self.store.lock_host('hostname')
         gen = self.store.start_generation()
-        self.store.create(gen, '/foo/bar', obnamlib.Metadata())
-        self.store.remove(gen, '/foo')
+        self.store.create('/foo/bar', obnamlib.Metadata())
+        self.store.remove('/foo')
         self.assertEqual(self.store.listdir(gen, '/'), [])
+
+    def test_get_metadata_works(self):
+        metadata = obnamlib.Metadata()
+        metadata.st_size = 123
+        self.store.lock_host('hostname')
+        gen = self.store.start_generation()
+        self.store.create('/foo', metadata)
+        received = self.store.get_metadata(gen, '/foo')
+        self.assertEqual(metadata.st_size, received.st_size)
 
