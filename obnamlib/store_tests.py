@@ -34,3 +34,22 @@ class StoreRootNodeTests(unittest.TestCase):
     def test_lists_no_hosts(self):
         self.assertEqual(self.store.list_hosts(), [])
 
+    def test_locks_root_node(self):
+        self.store.lock_root()
+        self.assert_(True)
+        
+    def test_locking_root_node_twice_fails(self):
+        self.store.lock_root()
+        self.assertRaises(obnamlib.LockFail, self.store.lock_root)
+        
+    def test_commit_releases_lock(self):
+        self.store.lock_root()
+        self.store.commit_root()
+        self.store.lock_root()
+        self.assert_(True)
+        
+    def test_unlock_releases_lock(self):
+        self.store.lock_root()
+        self.store.unlock_root()
+        self.store.lock_root()
+        self.assert_(True)

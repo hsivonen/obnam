@@ -22,6 +22,11 @@
 import obnamlib
 
 
+class LockFail(Exception):
+
+    pass
+
+
 class Store(object):
 
     def __init__(self, fs):
@@ -30,4 +35,18 @@ class Store(object):
     def list_hosts(self):
         '''Return list of names of hosts using this store.'''
         return []
+
+    def lock_root(self):
+        '''Lock root node.
+        
+        Raise obnamlib.LockFail if locking fails. Lock will be released
+        by commit() or unlock_root().
+        
+        '''
+
+    def unlock_root(self):
+        '''Unlock root node without committing changes made.'''
+        
+    def commit_root(self):
+        '''Commit changes to root node, and unlock it.'''
 
