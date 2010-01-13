@@ -200,3 +200,17 @@ class StoreHostTests(unittest.TestCase):
         self.store.create(gen, '/foo', obnamlib.Metadata())
         self.assertEqual(self.store.listdir(gen, '/'), ['foo'])
 
+    def test_remove_removes_file(self):
+        self.store.lock_host('hostname')
+        gen = self.store.start_generation()
+        self.store.create(gen, '/foo', obnamlib.Metadata())
+        self.store.remove(gen, '/foo')
+        self.assertEqual(self.store.listdir(gen, '/'), [])
+
+    def test_remove_removes_directory_tree(self):
+        self.store.lock_host('hostname')
+        gen = self.store.start_generation()
+        self.store.create(gen, '/foo/bar', obnamlib.Metadata())
+        self.store.remove(gen, '/foo')
+        self.assertEqual(self.store.listdir(gen, '/'), [])
+

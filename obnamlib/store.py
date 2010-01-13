@@ -232,15 +232,26 @@ class Store(object):
         self.new_generation = 'static.id.for.now'
         self.fs.mkdir(self.new_generation)
         return self.new_generation
+
+    def genpath(self, filename):
+        return os.path.join(self.new_generation, './' + filename)
         
     @require_open_host
     def listdir(self, gen, dirname):
         '''Return list of basenames in a directory within generation.'''
-        return self.fs.listdir(os.path.join(gen, './' + dirname))
+        return self.fs.listdir(self.genpath(dirname))
         
     @require_started_generation
     def create(self, gen, filename, metadata):
         '''Create a new (empty) file in the new generation.'''
-        self.fs.write_file(os.path.join(gen, './' + filename), 
-                           encode_metadata(metadata))
+        self.fs.write_file(self.genpath(filename), encode_metadata(metadata))
+
+    @require_started_generation
+    def remove(self, gen, filename):
+        '''Remove file or directory or directory tree from generation.'''
+        x = self.genpath(filename)
+        if self.fs.isdir(x):
+            self.fs.rmtree(x)
+        else:
+            self.fs.remove(self.genpath(filename))
 
