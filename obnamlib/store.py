@@ -74,5 +74,6 @@ class Store(object):
         '''Commit changes to root node, and unlock it.'''
         self.unlock_root()
         
+    @require_root_lock
     def add_host(self, hostname):
         '''Add a new host to the store.'''
