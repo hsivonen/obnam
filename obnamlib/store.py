@@ -52,6 +52,21 @@ def require_host_lock(method):
     return helper
 
 
+def require_open_host(method):
+    '''Decorator for ensuring store has an open host.
+    
+    Host may be read/write (locked) or read-only.
+    
+    '''
+    
+    def helper(self, *args, **kwargs):
+        if self.current_host is None:
+            raise obnamlib.Error('host is not open')
+        return method(self, *args, **kwargs)
+    
+    return helper
+
+
 class Store(object):
 
     '''Store backup data.
@@ -86,6 +101,7 @@ class Store(object):
         self.got_root_lock = False
         self.got_host_lock = False
         self.host_lockfile = None
+        self.current_host = None
         
     def list_hosts(self):
         '''Return list of names of hosts using this store.'''
@@ -153,6 +169,7 @@ class Store(object):
                 raise LockFail('Host %s is already locked' % hostname)
         self.got_host_lock = True
         self.host_lockfile = lockname
+        self.current_host = hostname
 
     @require_host_lock
     def unlock_host(self):
@@ -160,6 +177,7 @@ class Store(object):
         self.fs.remove(self.host_lockfile)
         self.host_lockfile = None
         self.got_host_lock = False
+        self.current_host = None
 
     @require_host_lock
     def commit_host(self):
@@ -168,6 +186,9 @@ class Store(object):
         
     def open_host(self, hostname):
         '''Open a host for read-only operation.'''
+        self.current_host = hostname
         
+    @require_open_host
     def list_generations(self):
         '''List existing generations for currently open host.'''
+        return []
