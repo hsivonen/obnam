@@ -19,7 +19,7 @@
 # IS TOTALLY STUPID.
 
 
-import obnamlib
+import errno
 
 
 class LockFail(Exception):
@@ -43,10 +43,18 @@ class Store(object):
         by commit() or unlock_root().
         
         '''
+        
+        try:
+            self.fs.write_file('root.lock', '')
+        except OSError, e:
+            if e.errno == errno.EEXIST:
+                raise LockFail('Lock file root.lock already exists')
 
     def unlock_root(self):
         '''Unlock root node without committing changes made.'''
+        self.fs.remove('root.lock')
         
     def commit_root(self):
         '''Commit changes to root node, and unlock it.'''
+        self.fs.remove('root.lock')
 
