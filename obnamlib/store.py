@@ -325,6 +325,9 @@ class Store(object):
                 chunkids.append(chunkid)
         return chunkids
 
+    def _chunk_group_filename(self, cgid):
+        return os.path.join('chunkgroups', cgid)
+
     @require_started_generation
     def put_chunk_group(self, chunkids, checksum):
         '''Put a new chunk group in the store.
@@ -333,13 +336,36 @@ class Store(object):
         
         '''
 
+        i = 0
+        while True:
+            i += 1
+            cgid = '%d' % i
+            filename = self._chunk_group_filename(cgid)
+            if not self.fs.exists(filename):
+                break
+        data = ''.join('%s\n' % x for x in [checksum] + chunkids)
+        self.fs.write_file(filename, data)
+        return cgid
+
     @require_open_host
     def get_chunk_group(self, cgid):
         '''Return list of chunk ids in the given chunk group.'''
-        return []
+
+        filename = self._chunk_group_filename(cgid)
+        data = self.fs.cat(filename)
+        lines = data.splitlines()
+        return lines[1:]
         
     @require_open_host
     def find_chunk_groups(self, checksum):
         '''Return list of ids of chunk groups with given checksum.'''
-        return []
+        
+        cgids = []
+        for cgid in self.fs.listdir('chunkgroups'):
+            filename = self._chunk_group_filename(cgid)
+            data = self.fs.cat(filename)
+            lines = data.splitlines()
+            if lines[0] == checksum:
+                cgids.append(cgid)
+        return cgids
 
