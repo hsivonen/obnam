@@ -271,6 +271,9 @@ class Store(object):
         else:
             self.fs.remove(x)
 
+    def _chunk_filename(self, chunkid):
+        return os.path.join('chunks', chunkid)
+
     @require_started_generation
     def put_chunk(self, data, checksum):
         '''Put chunk of data into store.
@@ -282,6 +285,10 @@ class Store(object):
         expensive, we micro-optimize a little bit by passing it as
         an argument.
         
+        If the same data is already in the store, it will be put there
+        a second time. It is the caller's responsibility to check
+        that the data is not already in the store.
+        
         Return the unique identifier of the new chunk.
         
         '''
@@ -289,17 +296,18 @@ class Store(object):
         i = 0
         while True:
             i += 1
-            filename = os.path.join('chunks', '%d' % i)
+            chunkid = '%d' % i
+            filename = self._chunk_filename(chunkid)
             if not self.fs.exists(filename):
                 break
         self.fs.write_file(filename, data)
-        return '%d' % i
+        return chunkid
         
     @require_open_host
     def get_chunk(self, chunkid):
         '''Return data of chunk with given id.'''
         
-        return self.fs.cat(os.path.join('chunks', chunkid))
+        return self.fs.cat(self._chunk_filename(chunkid))
         
     @require_open_host
     def find_chunks(self, checksum):
@@ -308,6 +316,12 @@ class Store(object):
         Because of hash collisions, the list may be longer than one.
         
         '''
-        
-        return []
+
+        chunkids = []
+        for chunkid in self.fs.listdir('chunks'):
+            filename = self._chunk_filename(chunkid)
+            data = self.fs.cat(filename)
+            if self.checksum(data) == checksum:
+                chunkids.append(chunkid)
+        return chunkids
 

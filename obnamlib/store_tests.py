@@ -251,12 +251,14 @@ class StoreChunkTests(unittest.TestCase):
         self.assertEqual(self.store.get_chunk(chunkid), 'data')
         
     def test_find_chunks_finds_what_put_chunk_puts(self):
-        chunkid = self.store.put_chunk('data', 'checksum')
-        self.assertEqual(self.store.find_chunks('checksum'), [chunkid])
+        checksum = self.store.checksum('data')
+        chunkid = self.store.put_chunk('data', checksum)
+        self.assertEqual(self.store.find_chunks(checksum), [chunkid])
         
     def test_handles_checksum_collision(self):
-        chunkid1 = self.store.put_chunk('data1', 'checksum')
-        chunkid2 = self.store.put_chunk('data2', 'checksum')
-        self.assertEqual(set(self.store.find_chunks('checksum')),
-                         set(['chunkid1', 'chunkid2']))
+        checksum = self.store.checksum('data')
+        chunkid1 = self.store.put_chunk('data', checksum)
+        chunkid2 = self.store.put_chunk('data', checksum)
+        self.assertEqual(set(self.store.find_chunks(checksum)),
+                         set([chunkid1, chunkid2]))
 
