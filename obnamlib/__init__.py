@@ -30,8 +30,5 @@ from pluginbase import ObnamPlugin
 from vfs import VirtualFileSystem, VfsFactory
 from vfs_local import LocalFS
 from metadata import read_metadata, set_metadata, Metadata, metadata_fields
-from obj import (BackupObject, TYPE_ID, TYPE_ID_LIST, TYPE_INT, TYPE_STR,
-                 MetadataObject)
-from objs import *
 from store import Store, LockFail
 from app import App
