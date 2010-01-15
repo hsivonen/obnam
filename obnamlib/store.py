@@ -286,6 +286,15 @@ class Store(object):
         
         '''
         
+        i = 0
+        while True:
+            i += 1
+            filename = os.path.join('chunks', '%d' % i)
+            if not self.fs.exists(filename):
+                break
+        self.fs.write_file(filename, data)
+        return '%d' % i
+        
     @require_open_host
     def get_chunk(self, chunkid):
         '''Return data of chunk with given id.'''
