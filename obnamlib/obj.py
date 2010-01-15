@@ -104,6 +104,8 @@ class MetadataObject(BackupObject):
                 self.values[field] = (TYPE_INT, None)
         self.values['username'] = (TYPE_STR, None)
         self.values['groupname'] = (TYPE_STR, None)
+        self.values['chunks'] = (TYPE_ID_LIST, None)
+        self.values['chunk_groups'] = (TYPE_ID_LIST, None)
         if 'metadata' in kwargs:
             self.set_from_metadata(kwargs['metadata'])
             del kwargs['metadata']
