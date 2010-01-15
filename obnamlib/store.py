@@ -299,6 +299,8 @@ class Store(object):
     def get_chunk(self, chunkid):
         '''Return data of chunk with given id.'''
         
+        return self.fs.cat(os.path.join('chunks', chunkid))
+        
     @require_open_host
     def find_chunks(self, checksum):
         '''Return identifiers of chunks with given checksum.
