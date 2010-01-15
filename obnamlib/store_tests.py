@@ -15,6 +15,7 @@
 
 
 import shutil
+import stat
 import tempfile
 import unittest
 
@@ -114,6 +115,9 @@ class StoreHostTests(unittest.TestCase):
         
         self.otherfs = obnamlib.LocalFS(self.tempdir)
         self.other = obnamlib.Store(self.otherfs)
+        
+        self.dir_mode = obnamlib.Metadata()
+        self.dir_mode.st_mode = stat.S_IFDIR | 0777
 
     def tearDown(self):
         shutil.rmtree(self.tempdir)
@@ -199,6 +203,19 @@ class StoreHostTests(unittest.TestCase):
         gen = self.store.start_generation()
         self.store.create('/foo', obnamlib.Metadata())
         self.assertEqual(self.store.listdir(gen, '/'), ['foo'])
+
+    def test_create_adds_dir(self):
+        self.store.lock_host('hostname')
+        gen = self.store.start_generation()
+        self.store.create('/foo', self.dir_mode)
+        self.assertEqual(self.store.listdir(gen, '/foo'), [])
+
+    def test_create_adds_dir_after_file_in_it(self):
+        self.store.lock_host('hostname')
+        gen = self.store.start_generation()
+        self.store.create('/foo/bar', obnamlib.Metadata())
+        self.store.create('/foo', self.dir_mode)
+        self.assertEqual(self.store.listdir(gen, '/foo'), ['bzr'])
 
     def test_remove_removes_file(self):
         self.store.lock_host('hostname')
