@@ -23,6 +23,7 @@ import errno
 import hashlib
 import os
 import pickle
+import stat
 
 import obnamlib
 
@@ -248,19 +249,32 @@ class Store(object):
     @require_open_host
     def listdir(self, gen, dirname):
         '''Return list of basenames in a directory within generation.'''
-        return self.fs.listdir(self.genpath(gen, dirname))
+        return [x for x in self.fs.listdir(self.genpath(gen, dirname))
+                if x != '.metadata']
 
     @require_open_host
     def get_metadata(self, gen, filename):
         '''Return metadata for a file in a generation.'''
-        encoded = self.fs.cat(self.genpath(gen, filename))
+        path = self.genpath(gen, filename)
+        if self.fs.isdir(path):
+            encoded = self.fs.cat(os.path.join(path, '.metadata'))
+        else:
+            encoded = self.fs.cat(self.genpath(gen, filename))
         return decode_metadata(encoded)
         
     @require_started_generation
     def create(self, filename, metadata):
         '''Create a new (empty) file in the new generation.'''
-        self.fs.write_file(self.genpath(self.new_generation, filename), 
-                           encode_metadata(metadata))
+
+        path = self.genpath(self.new_generation, filename)
+        encoded = encode_metadata(metadata)
+        if metadata.st_mode is not None and stat.S_ISDIR(metadata.st_mode):
+            if not self.fs.exists(path):
+                self.fs.makedirs(path)
+            metaname = os.path.join(path, '.metadata')
+            self.fs.write_file(metaname, encoded)
+        else:
+            self.fs.write_file(path, encoded)
 
     @require_started_generation
     def remove(self, filename):
