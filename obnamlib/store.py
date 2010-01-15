@@ -214,6 +214,7 @@ class Store(object):
         self.host_lockfile = None
         self.got_host_lock = False
         self.current_host = None
+        self.new_generation = None
 
     @require_host_lock
     def commit_host(self):
@@ -227,7 +228,8 @@ class Store(object):
     @require_open_host
     def list_generations(self):
         '''List existing generations for currently open host.'''
-        return []
+        return [x for x in self.fs.listdir(self.current_host)
+                if self.fs.isdir(os.path.join(self.current_host, x))]
         
     @require_host_lock
     def start_generation(self):
@@ -240,11 +242,18 @@ class Store(object):
         if self.new_generation is not None:
             raise obnamlib.Error('Cannot start two new generations')
         self.new_generation = 'static.id.for.now'
-        self.fs.mkdir(self.new_generation)
+        self.fs.mkdir(os.path.join(self.current_host, self.new_generation))
         return self.new_generation
 
+    @require_host_lock
+    def remove_generation(self, gen):
+        '''Remove a committed generation.'''
+        if gen == self.new_generation:
+            raise obnamlib.Error('cannot remove started generation')
+        self.fs.rmtree(os.path.join(self.current_host, gen))
+
     def genpath(self, gen, filename):
-        return os.path.join(gen, './' + filename)
+        return os.path.join(self.current_host, gen, './' + filename)
         
     @require_open_host
     def listdir(self, gen, dirname):

@@ -182,13 +182,31 @@ class StoreHostTests(unittest.TestCase):
 
     def test_starting_new_generation_works(self):
         self.store.lock_host('hostname')
-        self.store.start_generation()
+        gen = self.store.start_generation()
         self.assert_(self.store.new_generation)
+        self.assertEqual(self.store.new_generation, gen)
+        self.assertEqual(self.store.list_generations(),  [gen])
 
     def test_starting_second_new_generation_fails(self):
         self.store.lock_host('hostname')
         self.store.start_generation()
         self.assertRaises(obnamlib.Error, self.store.start_generation)
+
+    def test_removing_generation_works(self):
+        self.store.lock_host('hostname')
+        gen = self.store.start_generation()
+        self.store.commit_host()
+        self.store.lock_host('hostname')
+        self.store.remove_generation(gen)
+        self.store.commit_host()
+        self.store.open_host('hostname')
+        self.assertEqual(self.store.list_generations(), [])
+
+    def test_removing_started_generation_fails(self):
+        self.store.lock_host('hostname')
+        gen = self.store.start_generation()
+        self.assertRaises(obnamlib.Error,
+                          self.store.remove_generation, gen)
 
     def test_new_generation_has_root_dir_only(self):
         self.store.lock_host('hostname')
