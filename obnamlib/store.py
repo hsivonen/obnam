@@ -352,11 +352,12 @@ class Store(object):
         '''
 
         chunkids = []
-        for chunkid in self.fs.listdir('chunks'):
-            filename = self._chunk_filename(chunkid)
-            data = self.fs.cat(filename)
-            if self.checksum(data) == checksum:
-                chunkids.append(chunkid)
+        if self.fs.exists('chunks'):
+            for chunkid in self.fs.listdir('chunks'):
+                filename = self._chunk_filename(chunkid)
+                data = self.fs.cat(filename)
+                if self.checksum(data) == checksum:
+                    chunkids.append(chunkid)
         return chunkids
 
     def _chunk_group_filename(self, cgid):
@@ -395,12 +396,13 @@ class Store(object):
         '''Return list of ids of chunk groups with given checksum.'''
         
         cgids = []
-        for cgid in self.fs.listdir('chunkgroups'):
-            filename = self._chunk_group_filename(cgid)
-            data = self.fs.cat(filename)
-            lines = data.splitlines()
-            if lines[0] == checksum:
-                cgids.append(cgid)
+        if self.fs.exists('chunkgroups'):
+            for cgid in self.fs.listdir('chunkgroups'):
+                filename = self._chunk_group_filename(cgid)
+                data = self.fs.cat(filename)
+                lines = data.splitlines()
+                if lines[0] == checksum:
+                    cgids.append(cgid)
         return cgids
 
     @require_open_host
