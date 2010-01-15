@@ -260,11 +260,13 @@ class Store(object):
         '''Return list of basenames in a directory within generation.'''
         return [x for x in self.fs.listdir(self.genpath(gen, dirname))
                 if x != '.metadata']
-
+        
     @require_open_host
     def get_metadata(self, gen, filename):
         '''Return metadata for a file in a generation.'''
         path = self.genpath(gen, filename)
+        if not self.fs.exists(path):
+            raise obnamlib.Error('%s does not exist' % filename)
         if self.fs.isdir(path):
             encoded = self.fs.cat(os.path.join(path, '.metadata'))
         else:

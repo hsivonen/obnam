@@ -265,6 +265,12 @@ class StoreHostTests(unittest.TestCase):
         received = self.store.get_metadata(gen, '/foo')
         self.assertEqual(metadata.st_size, received.st_size)
 
+    def test_get_metadata_raises_exception_if_file_does_not_exist(self):
+        self.store.lock_host('hostname')
+        gen = self.store.start_generation()
+        self.assertRaises(obnamlib.Error, self.store.get_metadata,
+                          gen, '/foo')
+
 
 class StoreChunkTests(unittest.TestCase):
 
