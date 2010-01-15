@@ -261,20 +261,29 @@ class Store(object):
         else:
             encoded = self.fs.cat(self.genpath(gen, filename))
         return decode_metadata(encoded)
-        
-    @require_started_generation
-    def create(self, filename, metadata):
-        '''Create a new (empty) file in the new generation.'''
 
+    @require_started_generation
+    def _set_metadata(self, gen, filename, metadata):
+        '''Internal, do not use.'''
         path = self.genpath(self.new_generation, filename)
         encoded = encode_metadata(metadata)
         if metadata.st_mode is not None and stat.S_ISDIR(metadata.st_mode):
             if not self.fs.exists(path):
                 self.fs.makedirs(path)
             metaname = os.path.join(path, '.metadata')
-            self.fs.write_file(metaname, encoded)
+            self.fs.overwrite_file(metaname, encoded)
         else:
-            self.fs.write_file(path, encoded)
+            metaname = path
+            
+        if self.fs.exists(metaname):
+            self.fs.remove(metaname)
+        self.fs.write_file(metaname, encoded)
+        
+    @require_started_generation
+    def create(self, filename, metadata):
+        '''Create a new (empty) file in the new generation.'''
+
+        self._set_metadata(self.new_generation, filename, metadata)
 
     @require_started_generation
     def remove(self, filename):
@@ -386,18 +395,41 @@ class Store(object):
     @require_open_host
     def get_file_chunks(self, gen, filename):
         '''Return list of ids of chunks belonging to a file.'''
-        return []
+        metadata = self.get_metadata(gen, filename)
+        return metadata.chunks or []
 
     @require_started_generation
-    def set_file_chunks(self, gen, filename, chunkids):
-        '''Set ids of chunks belonging to a file.'''
+    def set_file_chunks(self, filename, chunkids):
+        '''Set ids of chunks belonging to a file.
+        
+        File must be in the started generation.
+        
+        '''
+        
+        metadata = self.get_metadata(self.new_generation, filename)
+        if metadata.chunk_groups:
+            raise obnamlib.Error('file %s already has chunk groups' % 
+                                 filename)
+        metadata.chunks = chunkids
+        self._set_metadata(self.new_generation, filename, metadata)
 
     @require_open_host
     def get_file_chunk_groups(self, gen, filename):
         '''Return list of ids of chunk groups belonging to a file.'''
-        return []
+        metadata = self.get_metadata(gen, filename)
+        return metadata.chunk_groups or []
 
     @require_started_generation
-    def set_file_chunk_groups(self, gen, filename, cgids):
-        '''Set ids of chunk groups belonging to a file.'''
+    def set_file_chunk_groups(self, filename, cgids):
+        '''Set ids of chunk groups belonging to a file.
+        
+        File must be in the started generation.
+        
+        '''
+
+        metadata = self.get_metadata(self.new_generation, filename)
+        if metadata.chunks:
+            raise obnamlib.Error('file %s already has chunks' % filename)
+        metadata.chunk_groups = cgids
+        self._set_metadata(self.new_generation, filename, metadata)
 
