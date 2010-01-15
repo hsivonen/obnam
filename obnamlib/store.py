@@ -80,7 +80,7 @@ def require_started_generation(method):
     return helper
 
 
-def checksum(data):
+def checksum(data): # pragma: no cover
     return hashlib.md5(data).hexdigest()
 
 
