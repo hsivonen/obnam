@@ -262,3 +262,38 @@ class StoreChunkTests(unittest.TestCase):
         self.assertEqual(set(self.store.find_chunks(checksum)),
                          set([chunkid1, chunkid2]))
 
+
+class StoreChunkGroupTests(unittest.TestCase):
+
+    def setUp(self):
+        self.tempdir = tempfile.mkdtemp()
+
+        self.fs = obnamlib.LocalFS(self.tempdir)
+        self.store = obnamlib.Store(self.fs)
+        self.store.lock_root()
+        self.store.add_host('hostname')
+        self.store.commit_root()
+        self.store.lock_host('hostname')
+        self.store.start_generation()
+
+    def tearDown(self):
+        shutil.rmtree(self.tempdir)
+
+    def test_put_chunk_group_returns_id(self):
+        self.assertNotEqual(self.store.put_chunk_group(['1'], 'checksum'), 
+                            None)
+        
+    def test_get_chunk_group_retrieves_what_put_chunk_puts(self):
+        cgid = self.store.put_chunk_group(['1', '2'], 'checksum')
+        self.assertEqual(self.store.get_chunk_group(cgid), ['1', '2'])
+        
+    def test_find_chunk_groups_finds_what_put_chunk_group_puts(self):
+        cgid = self.store.put_chunk_group(['1', '2'], 'checksum')
+        self.assertEqual(self.store.find_chunk_groups('checksum'), [cgid])
+        
+    def test_handles_checksum_collision(self):
+        cgid1 = self.store.put_chunk_group(['1', '2'], 'checksum')
+        cgid2 = self.store.put_chunk_group(['3', '4'], 'checksum')
+        self.assertEqual(set(self.store.find_chunk_groups('checksum')),
+                         set([cgid1, cgid2]))
+

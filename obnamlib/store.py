@@ -325,3 +325,21 @@ class Store(object):
                 chunkids.append(chunkid)
         return chunkids
 
+    @require_started_generation
+    def put_chunk_group(self, chunkids, checksum):
+        '''Put a new chunk group in the store.
+        
+        Return identifier of new group.
+        
+        '''
+
+    @require_open_host
+    def get_chunk_group(self, cgid):
+        '''Return list of chunk ids in the given chunk group.'''
+        return []
+        
+    @require_open_host
+    def find_chunk_groups(self, checksum):
+        '''Return list of ids of chunk groups with given checksum.'''
+        return []
+
