@@ -80,10 +80,6 @@ def require_started_generation(method):
     return helper
 
 
-def checksum(data): # pragma: no cover
-    return hashlib.md5(data).hexdigest()
-
-
 def encode_metadata(metadata):
     return pickle.dumps(metadata)
     
@@ -128,6 +124,19 @@ class Store(object):
         self.host_lockfile = None
         self.current_host = None
         self.new_generation = None
+
+    def checksum(self, data):
+        '''Return checksum of data.
+        
+        The checksum is (currently) MD5.
+        
+        Return a non-binary string (hexdigest) form of the checksum
+        so that it can easily be used for filenames, or printed to
+        log files, or whatever.
+        
+        '''
+
+        return hashlib.md5(data).hexdigest()
         
     def list_hosts(self):
         '''Return list of names of hosts using this store.'''

@@ -240,6 +240,9 @@ class StoreChunkTests(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.tempdir)
 
+    def test_checksum_returns_checksum(self):
+        self.assertNotEqual(self.store.checksum('data'), None)
+
     def test_put_chunk_returns_id(self):
         self.assertNotEqual(self.store.put_chunk('data', 'checksum'), None)
         
