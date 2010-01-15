@@ -383,3 +383,21 @@ class Store(object):
                 cgids.append(cgid)
         return cgids
 
+    @require_open_host
+    def get_file_chunks(self, gen, filename):
+        '''Return list of ids of chunks belonging to a file.'''
+        return []
+
+    @require_started_generation
+    def set_file_chunks(self, gen, filename, chunkids):
+        '''Set ids of chunks belonging to a file.'''
+
+    @require_open_host
+    def get_file_chunk_groups(self, gen, filename):
+        '''Return list of ids of chunk groups belonging to a file.'''
+        return []
+
+    @require_started_generation
+    def set_file_chunk_groups(self, gen, filename, cgids):
+        '''Set ids of chunk groups belonging to a file.'''
+

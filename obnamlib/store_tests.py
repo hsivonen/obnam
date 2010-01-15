@@ -321,3 +321,48 @@ class StoreChunkGroupTests(unittest.TestCase):
         self.assertEqual(set(self.store.find_chunk_groups('checksum')),
                          set([cgid1, cgid2]))
 
+
+class StoreGetSetChunksAndGroupsTests(unittest.TestCase):
+
+    def setUp(self):
+        self.tempdir = tempfile.mkdtemp()
+
+        self.fs = obnamlib.LocalFS(self.tempdir)
+        self.store = obnamlib.Store(self.fs)
+        self.store.lock_root()
+        self.store.add_host('hostname')
+        self.store.commit_root()
+        self.store.lock_host('hostname')
+        self.gen = self.store.start_generation()
+        self.store.create('/foo', obnamlib.Metadata())
+
+    def tearDown(self):
+        shutil.rmtree(self.tempdir)
+
+    def test_file_has_no_chunks(self):
+        self.assertEqual(self.store.get_file_chunks(self.gen, '/foo'), [])
+        
+    def test_file_has_no_chunk_groups(self):
+        self.assertEqual(self.store.get_file_chunk_groups(self.gen, '/foo'),
+                         [])
+
+    def test_sets_chunks_for_file(self):
+        self.store.set_file_chunks(self.gen, '/foo', ['1', '2'])
+        self.assertEqual(self.store.get_file_chunks(self.gen, '/foo'), 
+                         ['1', '2'])
+
+    def test_sets_chunk_groups_for_file(self):
+        self.store.set_file_chunk_groups(self.gen, '/foo', ['1', '2'])
+        self.assertEqual(self.store.get_file_chunk_groups(self.gen, '/foo'), 
+                         ['1', '2'])
+
+    def test_setting_chunks_after_groups_fails(self):
+        self.store.set_file_chunk_groups(self.gen, '/foo', ['1', '2'])
+        self.assertRaises(obnamlib.Error, self.store.set_file_chunks,
+                           self.gen, '/foo', ['1', '2'])
+
+    def test_setting_chunk_groups_after_chunks_fails(self):
+        self.store.set_file_chunks(self.gen, '/foo', ['1', '2'])
+        self.assertRaises(obnamlib.Error, self.store.set_file_chunk_groups,
+                           self.gen, '/foo', ['1', '2'])
+
