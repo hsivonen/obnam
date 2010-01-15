@@ -262,3 +262,32 @@ class Store(object):
         else:
             self.fs.remove(x)
 
+    @require_started_generation
+    def put_chunk(self, data, checksum):
+        '''Put chunk of data into store.
+        
+        checksum is the checksum of the data, and must be the same
+        value as returned by self.checksum(data). However, since all
+        known use cases require the caller to know the checksum before
+        calling this method, and since computing checksums is
+        expensive, we micro-optimize a little bit by passing it as
+        an argument.
+        
+        Return the unique identifier of the new chunk.
+        
+        '''
+        
+    @require_open_host
+    def get_chunk(self, chunkid):
+        '''Return data of chunk with given id.'''
+        
+    @require_open_host
+    def find_chunks(self, checksum):
+        '''Return identifiers of chunks with given checksum.
+        
+        Because of hash collisions, the list may be longer than one.
+        
+        '''
+        
+        return []
+

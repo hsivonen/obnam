@@ -223,3 +223,37 @@ class StoreHostTests(unittest.TestCase):
         received = self.store.get_metadata(gen, '/foo')
         self.assertEqual(metadata.st_size, received.st_size)
 
+
+class StoreChunkTests(unittest.TestCase):
+
+    def setUp(self):
+        self.tempdir = tempfile.mkdtemp()
+
+        self.fs = obnamlib.LocalFS(self.tempdir)
+        self.store = obnamlib.Store(self.fs)
+        self.store.lock_root()
+        self.store.add_host('hostname')
+        self.store.commit_root()
+        self.store.lock_host('hostname')
+        self.store.start_generation()
+
+    def tearDown(self):
+        shutil.rmtree(self.tempdir)
+
+    def test_put_chunk_returns_id(self):
+        self.assertNotEqual(self.store.put_chunk('data', 'checksum'), None)
+        
+    def test_get_chunk_retrieves_what_put_chunk_puts(self):
+        chunkid = self.store.put_chunk('data', 'checksum')
+        self.assertEqual(self.store.get_chunk(chunkid), 'data')
+        
+    def test_find_chunks_finds_what_put_chunk_puts(self):
+        chunkid = self.store.put_chunk('data', 'checksum')
+        self.assertEqual(self.store.find_chunks('checksum'), [chunkid])
+        
+    def test_handles_checksum_collision(self):
+        chunkid1 = self.store.put_chunk('data1', 'checksum')
+        chunkid2 = self.store.put_chunk('data2', 'checksum')
+        self.assertEqual(set(self.store.find_chunks('checksum')),
+                         set(['chunkid1', 'chunkid2']))
+
