@@ -49,10 +49,20 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.fs = fsf.new(root)
             self.fs.connect()
             self.backup_something(self.fs.abspath('.'))
+            self.backup_parents('.')
             self.fs.close()
         self.store.commit_host()
 
         self.app.hooks.call('progress-found-file', None, 0)
+
+    def backup_parents(self, root):
+        '''Back up parents of root, non-recursively.'''
+        root = self.fs.abspath(root)
+        while root != '/':
+            parent = os.path.dirname(root)
+            metadata = obnamlib.read_metadata(self.fs, root)
+            self.store.create(root, metadata)
+            root = parent
 
     def backup_something(self, root):
         if self.fs.isdir(root):
