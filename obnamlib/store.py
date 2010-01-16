@@ -282,7 +282,9 @@ class Store(object):
             if not self.fs.exists(path):
                 self.fs.makedirs(path)
             metaname = os.path.join(path, '.metadata')
-            self.fs.overwrite_file(metaname, encoded)
+            if self.fs.exists(metaname): # pragma: no cover
+                self.fs.remove(metaname)
+            self.fs.write_file(metaname, encoded)
         else:
             metaname = path
             
