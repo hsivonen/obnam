@@ -42,7 +42,8 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         return genspec
     
     def restore_recursively(self, gen, to_dir, root):
-        self.fs.makedirs('./' + root)
+        if not self.fs.exists('./' + root):
+            self.fs.makedirs('./' + root)
         for basename in self.store.listdir(gen, root):
             full = os.path.join(root, basename)
             metadata = self.store.get_metadata(gen, full)
