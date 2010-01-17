@@ -25,50 +25,38 @@ class RestorePlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
         self.app.register_command('restore', self.restore)
-
-    def open_root(self):
-        return self.store.get_object(0)
-
-    def open_host(self):
-        hostname = self.app.config['hostname']
-        rootobj = self.open_root()
-        for hostid in rootobj.hostids:
-            hostobj = self.store.get_object(hostid)
-            if hostobj.hostname == hostname:
-                return hostobj
-        raise obnamlib.AppException('Host %s not found in store' % hostname)
-
-    def genid(self, genid_str):
-        if genid_str == 'latest':
-            return self.hostobj.genids[-1]
-        return int(genid_str)
         
     def restore(self, args):
         fsf = obnamlib.VfsFactory()
         self.store = obnamlib.Store(fsf.new(self.app.config['store']))
+        self.store.open_host(self.app.config['hostname'])
         self.fs = fsf.new(args[0])
-        self.hostobj = self.open_host()
         
-        for genid_str in args[1:]:
-            gen = self.store.get_object(self.genid(genid_str))
-            self.restore_recursively(".", gen.dirids, gen.fileids)
-    
-    def restore_recursively(self, to_dir, dirids, fileids):
-        for fileid in fileids:
-            self.restore_file(to_dir, fileid)
-        for dirid in dirids:
-            dirobj = self.store.get_object(dirid)
-            dirname = os.path.join(to_dir, dirobj.basename)
-            if not self.fs.exists(dirname):
-                self.fs.mkdir(dirname)
-            self.restore_recursively(dirname, dirobj.dirids,dirobj.fileids)
+        for genspec in args[1:]:
+            gen = self.genid(genspec)
+            self.restore_recursively(gen, '.', '/')
 
-    def restore_file(self, dirname, fileid):
-        fileobj = self.store.get_object(fileid)
-        filename = os.path.join(dirname, fileobj.basename)
-        f = self.fs.open(filename, 'w')
-        for chunkid in fileobj.chunkids:
-            chunk = self.store.get_object(chunkid)
-            f.write(chunk.data)
+    def genid(self, genspec):
+        if genspec == 'latest':
+            return self.store.list_generations()[-1]
+        return genspec
+    
+    def restore_recursively(self, gen, to_dir, root):
+        self.fs.makedirs('./' + root)
+        for basename in self.store.listdir(gen, root):
+            full = os.path.join(root, basename)
+            metadata = self.store.get_metadata(gen, full)
+            if stat.S_ISDIR(metadata.st_mode):
+                self.restore_recursively(gen, to_dir, full)
+            else:
+                self.restore_file(gen, to_dir, full)
+
+    def restore_file(self, gen, to_dir, filename):
+        chunkids = self.store.get_file_chunks(gen, filename)
+        to_filename = os.path.join(to_dir, './' + filename)
+        f = self.fs.open(to_filename, 'w')
+        for chunkid in chunkids:
+            data = self.store.get_chunk(chunkid)
+            f.write(data)
         f.close()
 
