@@ -187,10 +187,17 @@ class StoreHostTests(unittest.TestCase):
         self.assertEqual(self.store.new_generation, gen)
         self.assertEqual(self.store.list_generations(),  [gen])
 
-    def test_starting_second_new_generation_fails(self):
+    def test_starting_second_concurrent_new_generation_fails(self):
         self.store.lock_host('hostname')
         self.store.start_generation()
         self.assertRaises(obnamlib.Error, self.store.start_generation)
+
+    def test_second_generation_has_different_id_from_first(self):
+        self.store.lock_host('hostname')
+        gen = self.store.start_generation()
+        self.store.commit_host()
+        self.store.lock_host('hostname')
+        self.assertNotEqual(gen, self.store.start_generation())
 
     def test_removing_generation_works(self):
         self.store.lock_host('hostname')

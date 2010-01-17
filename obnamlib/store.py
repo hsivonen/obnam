@@ -243,8 +243,15 @@ class Store(object):
         '''
         if self.new_generation is not None:
             raise obnamlib.Error('Cannot start two new generations')
-        self.new_generation = 'static.id.for.now'
-        self.fs.mkdir(os.path.join(self.current_host, self.new_generation))
+        i = 0
+        while True:
+            i += 1
+            gen = 'gen-%d' % i
+            name = os.path.join(self.current_host, gen)
+            if not self.fs.exists(name):
+                break
+        self.new_generation = gen
+        self.fs.mkdir(name)
         return self.new_generation
 
     @require_host_lock
