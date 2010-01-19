@@ -22,13 +22,6 @@ import time
 import obnamlib
 
 
-# Implementation plan:
-# 1. Back up everything, every time.
-# 2. Back up only changed files, but completely.
-# 3. Back up changes using rsync + looking up of chunks via checksums.
-
-
-
 class BackupPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
