@@ -1,4 +1,4 @@
-# Copyright (C) 2009  Lars Wirzenius
+# Copyright (C) 2009, 2010  Lars Wirzenius
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import os
 import stat
 import time
 
@@ -37,57 +38,49 @@ class ShowPlugin(obnamlib.ObnamPlugin):
     def open_store(self):
         fsf = obnamlib.VfsFactory()
         self.store = obnamlib.Store(fsf.new(self.app.config['store']))
-
-    def open_root(self):
-        return self.store.get_object(0)
-
-    def open_host(self):
-        hostname = self.app.config['hostname']
-        rootobj = self.open_root()
-        for hostid in rootobj.hostids:
-            hostobj = self.store.get_object(hostid)
-            if hostobj.hostname == hostname:
-                return hostobj
-        raise obnamlib.AppException('Host %s not found in store' % hostname)
+        self.store.open_host(self.app.config['hostname'])
 
     def hosts(self, args):
         self.open_store()
-        rootobj = self.open_root()
-        for hostid in rootobj.hostids:
-            hostobj = self.store.get_object(hostid)
-            print hostobj.hostname
+        for hostname in self.store.list_hosts():
+            print hostname
     
     def generations(self, args):
         self.open_store()
-        hostobj = self.open_host()
-        for genid in hostobj.genids:
-            print genid
+        for gen in self.store.list_generations():
+            print gen
 
     def ls(self, args):
         self.open_store()
-        for genid_str in args:
-            gen = self.store.get_object(int(genid_str))
-            started = self.format_time(gen.started)
-            ended = self.format_time(gen.ended)
-            print 'Generation %s (%s - %s)' % (gen.id, started, ended)
-            self.show_objects(None, gen.fileids, gen.dirids)
+        for gen in args:
+            started = self.format_time(0)
+            ended = self.format_time(0)
+            print 'Generation %s (%s - %s)' % (gen, started, ended)
+            self.show_objects(gen, '/')
     
     def format_time(self, timestamp):
         return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp))
     
-    def show_objects(self, dirname, fileids, dirids):
-        if dirname:
-            print '%s:' % dirname
-        fileobjs = [self.store.get_object(x) for x in fileids]
-        dirobjs = [self.store.get_object(x) for x in dirids]
-        items = [(x.basename, x) for x in fileobjs + dirobjs]
-        for basename, obj in sorted(items):
-            print self.format(obj)
-        for dirobj in dirobjs:
-            print
-            self.show_objects(dirobj.basename, dirobj.fileids, dirobj.dirids)
+    def isdir(self, gen, filename):
+        metadata = self.store.get_metadata(gen, filename)
+        return stat.S_ISDIR(metadata.st_mode)
+    
+    def show_objects(self, gen, dirname):
+        print
+        print '%s:' % dirname
+        subdirs = []
+        for basename in self.store.listdir(gen, dirname):
+            full = os.path.join(dirname, basename)
+            print self.format(gen, dirname, basename)
+            if self.isdir(gen, full):
+                subdirs.append(full)
+        for subdir in subdirs:
+            self.show_objects(gen, subdir)
 
-    def format(self, obj):
+    def format(self, gen, dirname, basename):
+        full = os.path.join(dirname, basename)
+        metadata = self.store.get_metadata(gen, full)
+
         perms = ['?'] + ['-'] * 9
         tab = [
             (stat.S_IFREG, 0, '-'),
@@ -102,20 +95,20 @@ class ShowPlugin(obnamlib.ObnamPlugin):
             (stat.S_IWOTH, 8, 'w'),
             (stat.S_IXOTH, 9, 'x'),
         ]
-        mode = obj.st_mode or 0
+        mode = metadata.st_mode or 0
         for bitmap, offset, char in tab:
             if (mode & bitmap) == bitmap:
                 perms[offset] = char
         perms = ''.join(perms)
         
         timestamp = time.strftime('%Y-%m-%d %H:%M:%S', 
-                                  time.gmtime(obj.st_mtime))
+                                  time.gmtime(metadata.st_mtime))
         return ('%s %2d %-8s %-8s %5d %s %s' % 
                 (perms, 
-                 obj.st_nlink or 0, 
-                 obj.username or '', 
-                 obj.groupname or '',
-                 obj.st_size or 0, 
+                 metadata.st_nlink or 0, 
+                 metadata.username or '', 
+                 metadata.groupname or '',
+                 metadata.st_size or 0, 
                  timestamp, 
-                 obj.basename or ''))
+                 basename or ''))
 

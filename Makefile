@@ -11,7 +11,7 @@ _obnam.so: _obnammodule.c
 check: all
 	python -m CoverageTestRunner --ignore-missing-from=without-tests
 	rm .coverage
-	python blackboxtest
+#	python blackboxtest
 	
 clean:
 	rm -f _obnam.so obnamlib/*.pyc obnamlib/plugins/*.pyc testplugins/*.pyc

@@ -36,84 +36,75 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.app.config.new_list(['root'], 'what to backup')
         
     def backup(self, args):
-        started = int(time.time())
         roots = self.app.config['root'] + args
         fsf = obnamlib.VfsFactory()
         storefs = fsf.new(self.app.config['store'])
         self.store = obnamlib.Store(storefs)
         self.done = 0
         self.total = 0
-        rootobjs = []
+
+        self.store.lock_host(self.app.config['hostname'])
+        self.store.start_generation()
         for root in roots:
             self.fs = fsf.new(root)
             self.fs.connect()
-            rootobjs.append(self.backup_something(self.fs.abspath('.')))
+            self.backup_something(self.fs.abspath('.'))
+            self.backup_parents('.')
             self.fs.close()
-        self.app.hooks.call('progress-found-file', None, 0)
-        ended = int(time.time())
+        self.store.commit_host()
 
-        self.finish(rootobjs, started, ended)
+        self.app.hooks.call('progress-found-file', None, 0)
+
+    def backup_parents(self, root):
+        '''Back up parents of root, non-recursively.'''
+        root = self.fs.abspath(root)
+        while root != '/':
+            parent = os.path.dirname(root)
+            metadata = obnamlib.read_metadata(self.fs, root)
+            self.store.create(root, metadata)
+            root = parent
 
     def backup_something(self, root):
         if self.fs.isdir(root):
-            return self.backup_dir(root)
+            self.backup_dir(root)
         else:
-            return self.backup_file(root)
+            self.backup_file(root)
 
     def backup_file(self, root):
         metadata = obnamlib.read_metadata(self.fs, root)
         self.app.hooks.call('progress-found-file', root, metadata.st_size)
+        self.store.create(root, metadata)
         if stat.S_ISREG(metadata.st_mode):
-            chunks = self.backup_file_contents(root)
-        else:
-            chunks = []
-        fileobj = obnamlib.File(basename=os.path.basename(root),
-                                metadata=metadata,
-                                chunkids=[c.id for c in chunks])
-        self.store.put_object(fileobj)
-        return fileobj
+            self.backup_file_contents(root)
 
     def backup_file_contents(self, filename):
-        chunks = []
+        # FIXME: This should try to re-use chunks.
+        # FIXME: This should use/create chunk groups when possible.
+        # FIXME: This should handle chunk/chunk group collisions
+        chunkids = []
         f = self.fs.open(filename, 'r')
         while True:
             data = f.read(self.app.config['chunk-size'])
             if not data:
                 break
-            chunk = obnamlib.Chunk(data=data)
-            self.store.put_object(chunk)
-            chunks.append(chunk)
+            checksum = self.store.checksum(data)
+            chunkid = self.store.put_chunk(data, checksum)
+            chunkids.append(chunkid)
             self.app.hooks.call('progress-data-done', len(data))
         f.close()
-        return chunks
+        self.store.set_file_chunks(filename, chunkids)
 
     def backup_dir(self, root):
-        fileids = []
-        dirids = []
+        # FIXME: This should attempt to reuse existing data rather than
+        # removing the directory that was in the previous generation.
+        try:
+            self.store.get_metadata(self.store.new_generation, root)
+        except obnamlib.Error:
+            pass
+        else:
+            self.store.remove(root)
+        metadata = obnamlib.read_metadata(self.fs, root)
+        self.store.create(root, metadata)
         for basename in self.fs.listdir(root):
             fullname = os.path.join(root, basename)
-            obj = self.backup_something(fullname)
-            if isinstance(obj, obnamlib.File):
-                fileids.append(obj.id)
-            else:
-                dirids.append(obj.id)
-        dirobj = obnamlib.Dir(basename=os.path.basename(root),
-                              metadata=obnamlib.read_metadata(self.fs, root),
-                              dirids=dirids,
-                              fileids=fileids)
-        self.store.put_object(dirobj)
-        return dirobj
-
-    def finish(self, rootobjs, started, ended):
-        fileids = [o.id for o in rootobjs if isinstance(o, obnamlib.File)]
-        dirids = [o.id for o in rootobjs if isinstance(o, obnamlib.Dir)]
-        gen = obnamlib.Generation(fileids=fileids, dirids=dirids,
-                                  started=started, ended=ended)
-        self.store.put_object(gen)
-        host = obnamlib.Host(hostname=self.app.config['hostname'], 
-                             genids=[gen.id])
-        self.store.put_object(host)
-        rootobj = obnamlib.Root(hostids=[host.id])
-        rootobj.id = 0
-        self.store.put_object(rootobj)
-
+            self.backup_something(fullname)

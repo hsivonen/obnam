@@ -22,6 +22,7 @@ import pwd
 metadata_fields = (
     'st_atime', 'st_blocks', 'st_dev', 'st_gid', 'st_ino', 'st_mode',
     'st_mtime', 'st_nlink', 'st_size', 'st_uid', 'groupname', 'username',
+    'chunks', 'chunk_groups',
 )
 
 
@@ -55,6 +56,10 @@ class Metadata(object):
     Additionally, the fields 'groupname' and 'username' are stored. They
     contain the textual names that correspond to st_gid and st_uid. When
     restoring, the names will be preferred by default.
+    
+    Further, the fields 'chunks' and 'chunk_groups' are used internally
+    to store a list of chunks (or chunk groups) which relate to this
+    file. They are non-None only for regular files and symlinks.
     
     '''
     

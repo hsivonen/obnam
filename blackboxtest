@@ -184,7 +184,7 @@ class BlackBoxTest(object):
         
         origs = dict(self.find_everything(data))
         basename = os.path.basename(data)
-        restored2 = os.path.join(restored, os.path.basename(data))
+        restored2 = os.path.join(restored, './' + data)
         restoreds = dict(self.find_everything(restored2))
         
         for name, orig_stat in origs.iteritems():
