@@ -1,0 +1,111 @@
+Roadmap for Obnam development
+=============================
+
+This is not really a roadmap, sorry. It does contain some plans
+for what will hopefully happen, but without dates attached. It also
+has notes for what might be good ideas to do some day in the future.
+
+
+Simply bugs, to be fixed
+------------------------
+
+* blackboxtest sometimes fails because of one-second mtime differences.
+
+* Progress reporting assumes an 80 character wide terminal. It should
+  query the width and react to changes (via SIGWINCH).
+
+* If a file suddenly goes missing in the middle of a backup run,
+  this should not be a fatal error. It should be reported, but it should
+  not make the backup abort.
+
+
+Needs to be done soon
+----------------------
+
+* Generations need to store their start and end times.
+
+* A Store.isdir method so that it is not necessary to Store.get_metadata
+  and test st_mode. obnamlib.Metadata needs an isdir method as well.
+
+* Write tests for obnam for changing root node or host data without 
+  committing: there should be no effect then.
+
+* obnamlib.Metadata initilizer should accept keyword args to set
+  specific fields.
+
+
+Sensible ideas
+--------------
+
+* Extended attributes and ACLs should be supported.
+
+* Write a plugin to do error correcting codes on data stored in
+  the backup store.
+
+* LocalFS should use posix_fadvise to avoid data being cached.
+  Data that just gets backed up probably does not need to be in the 
+  cache.
+
+* When we cache backup metadata locally, use the cachedir specification
+  to mark the cache directories. Also, add an option to avoid such
+  directories from being backed up.
+    - http://www.bford.info/cachedir/
+
+* Have SftpFS use ssh(1) when available, rather than just paramiko,
+  to speed things up. bzr does this.
+
+* Progress reporting should show transfer speeds, and estimate the
+  remaining time.
+
+* When backing up a file, see if it keeps changing and if so, do
+  something sensible about it. For example, log files, especially
+  obnam's own log file.
+
+* Should store the full resolution timestamp, not round it to a whole
+  second.
+  
+* It would be cool if obnam could measure its own performance, using
+  some lightweight measurements such as utimes, and report this at
+  the end of the run in the log file. This would make it easier to
+  notice when performance slides, or (if log files are kept), look
+  back in history to whenit started to slide.
+
+* Use my assert-licenses tool in "make check" to verify that all
+  files have the correct license.
+  
+* "obnam --help" should list all commands.
+
+* Virtual file system implementations should be moved into plugins.
+
+* Add a VfsFactory instance as part of the App object. There's no
+  point in making every plugin, for example, instantiate one themselves.
+
+
+Wild ideas
+----------
+
+* Key management needs to be designed. Which keys, on which machines,
+  how are they changed, should a passphrase be used, etc.
+
+* From Andreas Barth: there should be an easy, efficient way to see
+  what has changed from generation to generation.
+
+* From Andreas Barth, Robert Collins: there should be a way to 
+  expire (forget) old generations on the server, without storing
+  the encryption key on the server.
+
+* To find the limits of usefulness of de-duplication at the block
+  level, write a program to find out how many blocks are shared
+  among files in a directory tree. For a given block size, should
+  find how many copies of each block exist at any offset in all
+  the files on the filesystem.
+
+* Suggestion from Robert Collins, for store on-disk data structure.
+  Each generation would produce a single file, in which all the
+  data is encrypted, but there's cleartext outwards references to
+  other blocks, and counts of those references. This will make it
+  possible to expire data without decyprting data.
+
+* When running performance tests, clear caches first.
+  http://smackerelofopinion.blogspot.com/
+  2009/07/dropping-page-andor-inode-cache-on.html
