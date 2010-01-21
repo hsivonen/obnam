@@ -51,6 +51,8 @@ class RestorePlugin(obnamlib.ObnamPlugin):
                 self.restore_recursively(gen, to_dir, full)
             else:
                 self.restore_file(gen, to_dir, full)
+        metadata = self.store.get_metadata(gen, root)
+        obnamlib.set_metadata(self.fs, './' + root, metadata)
 
     def restore_file(self, gen, to_dir, filename):
         chunkids = self.store.get_file_chunks(gen, filename)
@@ -60,4 +62,6 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             data = self.store.get_chunk(chunkid)
             f.write(data)
         f.close()
+        metadata = self.store.get_metadata(gen, filename)
+        obnamlib.set_metadata(self.fs, to_filename, metadata)
 
