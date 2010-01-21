@@ -71,6 +71,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         '''
         
         metadata = obnamlib.read_metadata(self.fs, root)
+        logging.debug('backup_file: metadata.st_mtime=%s' % repr(metadata.st_mtime))
         self.app.hooks.call('progress-found-file', root, metadata.st_size)
         self.store.create(root, metadata)
         if stat.S_ISREG(metadata.st_mode):

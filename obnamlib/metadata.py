@@ -74,7 +74,7 @@ def read_metadata(fs, filename, getpwuid=None, getgrgid=None):
     stat_result = fs.lstat(filename)
     for field in metadata_fields:
         if field.startswith('st_'):
-            setattr(metadata, field, getattr(stat_result, field))
+            setattr(metadata, field, int(getattr(stat_result, field)))
 
     getgrgid = getgrgid or grp.getgrgid
     try:
