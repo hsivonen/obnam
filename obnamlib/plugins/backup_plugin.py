@@ -51,10 +51,12 @@ class BackupPlugin(obnamlib.ObnamPlugin):
     def backup_parents(self, root):
         '''Back up parents of root, non-recursively.'''
         root = self.fs.abspath(root)
-        while root != '/':
+        while True:
             parent = os.path.dirname(root)
             metadata = obnamlib.read_metadata(self.fs, root)
             self.store.create(root, metadata)
+            if root == parent:
+                break
             root = parent
 
     def backup_something(self, root):
