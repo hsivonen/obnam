@@ -249,6 +249,18 @@ class TwoBackupRoots(BlackBoxTest):
         self.verify(data, restored)
 
 
+class Symlink(BlackBoxTest):
+
+    def test(self):
+        data = self.tempdir()
+        self.create_file(data, 'target', 'content1')
+        os.symlink('target', os.path.join(data, 'symlink'))
+        store = self.tempdir()
+        self.backup(store, [data])
+        restored = self.restore(store)
+        self.verify(data, restored)
+
+
 class ObnamBlackBoxTests:
 
     """Main class for running black box tests of obnam."""
