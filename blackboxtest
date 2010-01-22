@@ -84,11 +84,12 @@ class BlackBoxTest(object):
         f.write(contents)
         f.close()
 
-    def create_dir(self, pathname):
+    def create_dir(self, root, pathname):
         """Create a new directory, return name."""
-        fullname = os.path.join(self.temproot, pathname)
+        fullname = os.path.join(root, pathname)
         logging.debug('mkdir %s' % fullname)
         os.makedirs(fullname)
+        return fullname
 
     def get_info(self, root, pathname):
         """Get the information about a given file.
@@ -234,16 +235,16 @@ class RestoresIdenticalData(BlackBoxTest):
         self.verify(data, restored)
 
 
-class BacksUpTwoRoots(BlackBoxTest):
+class TwoBackupRoots(BlackBoxTest):
 
     def test(self):
         data = self.tempdir()
-        root1 = os.path.join(data, 'root1')
-        root2 = os.path.join(data, 'root2')
+        root1 = self.create_dir(data, 'root1')
+        root2 = self.create_dir(data, 'root2')
         self.create_file(root1, 'file1', 'content1')
         self.create_file(root2, 'file2', 'content2')
         store = self.tempdir()
-        self.backup(store, data)
+        self.backup(store, [root1, root2])
         restored = self.restore(store)
         self.verify(data, restored)
 
@@ -255,7 +256,7 @@ class ObnamBlackBoxTests:
     def run(self):
         logging.info('blackboxtest starts')
         errors = False
-        tests = [RestoresIdenticalData]
+        tests = [RestoresIdenticalData, TwoBackupRoots]
         for klass in tests:
             logging.info('running test %s' % str(klass))
             test = klass()
