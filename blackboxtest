@@ -252,11 +252,18 @@ class TwoBackupRoots(BlackBoxTest):
 class ObnamBlackBoxTests:
 
     """Main class for running black box tests of obnam."""
+
+    def find_tests(self):
+        g = globals()
+        return [g[x] for x in g
+                if x != 'BlackBoxTest' and
+                   type(g[x]) == type(object) and 
+                   issubclass(g[x], BlackBoxTest)]
     
     def run(self):
         logging.info('blackboxtest starts')
         errors = False
-        tests = [RestoresIdenticalData, TwoBackupRoots]
+        tests = self.find_tests()
         for klass in tests:
             logging.info('running test %s' % str(klass))
             test = klass()
