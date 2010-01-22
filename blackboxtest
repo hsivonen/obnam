@@ -203,10 +203,10 @@ class BlackBoxTest(object):
                 self.report_contents(restored, restoreds)
                 raise Exception("spurious %s in restored data" % name)
 
-    def backup(self, store, data):
+    def backup(self, store, datas):
         """Back up a data directory to a store."""
-        logging.debug('backing up %s to %s' % (data, store))
-        self.obnam(['--store', store, 'backup', data])
+        logging.debug('backing up %s to %s' % (datas, store))
+        self.obnam(['--store', store, 'backup'] + datas)
         
     def restore(self, store):
         """Restore the newest generation from a store.
@@ -228,6 +228,20 @@ class RestoresIdenticalData(BlackBoxTest):
     def test(self):
         data = self.tempdir()
         self.create_file(data, "foo", "foo")
+        store = self.tempdir()
+        self.backup(store, [data])
+        restored = self.restore(store)
+        self.verify(data, restored)
+
+
+class BacksUpTwoRoots(BlackBoxTest):
+
+    def test(self):
+        data = self.tempdir()
+        root1 = os.path.join(data, 'root1')
+        root2 = os.path.join(data, 'root2')
+        self.create_file(root1, 'file1', 'content1')
+        self.create_file(root2, 'file2', 'content2')
         store = self.tempdir()
         self.backup(store, data)
         restored = self.restore(store)
