@@ -30,7 +30,9 @@ class LocalFS(obnamlib.VirtualFileSystem):
     
     def __init__(self, baseurl):
         obnamlib.VirtualFileSystem.__init__(self, baseurl)
-        
+        self.reinit(baseurl)
+
+    def reinit(self, baseurl):
         # We fake chdir so that it doesn't mess with the caller's 
         # perception of current working directory. This also benefits
         # unit tests. To do this, we store the baseurl as the cwd.
@@ -38,7 +40,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
 
     def getcwd(self):
         return self.cwd
-        
+
     def chdir(self, pathname):
         newcwd = os.path.abspath(self.join(pathname))
         if not os.path.isdir(newcwd):

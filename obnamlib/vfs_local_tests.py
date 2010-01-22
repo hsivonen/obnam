@@ -51,6 +51,10 @@ class LocalFSTests(unittest.TestCase):
     def test_abspath_normalizes_path(self):
         self.assertEqual(self.fs.abspath('foo/..'), self.dirname)
 
+    def test_reinit_works(self):
+        self.fs.reinit('.')
+        self.assertEqual(self.fs.cwd, os.getcwd())
+
     def test_getcwd_returns_dirname(self):
         self.assertEqual(self.fs.getcwd(), self.dirname)
 

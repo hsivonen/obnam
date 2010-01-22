@@ -1,4 +1,4 @@
-# Copyright (C) 2008  Lars Wirzenius <liw@liw.fi>
+# Copyright (C) 2008, 2010  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -52,6 +52,15 @@ class VirtualFileSystem(object):
         
     def close(self):
         """Close connection to filesystem."""
+
+    def reinit(self, new_baseurl):
+        '''Go back to the beginning.
+        
+        This behaves like instantiating a new instance, but possibly
+        faster for things like SftpFS. If there is a network
+        connection already open, it will be reused.
+        
+        '''
 
     def abspath(self, pathname):
         '''Return absolute version of pathname.'''

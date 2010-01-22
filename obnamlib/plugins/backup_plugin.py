@@ -38,11 +38,16 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         self.store.lock_host(self.app.config['hostname'])
         self.store.start_generation()
+        self.fs = None
         for root in roots:
-            self.fs = fsf.new(root)
-            self.fs.connect()
+            if not self.fs:
+                self.fs = fsf.new(root)
+                self.fs.connect()
+            else:
+                self.fs.reinit(root)
             self.backup_something(self.fs.abspath('.'))
             self.backup_parents('.')
+        if self.fs:
             self.fs.close()
         self.store.commit_host()
 
