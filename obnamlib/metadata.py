@@ -17,12 +17,13 @@
 import grp
 import os
 import pwd
+import stat
 
 
 metadata_fields = (
     'st_atime', 'st_blocks', 'st_dev', 'st_gid', 'st_ino', 'st_mode',
     'st_mtime', 'st_nlink', 'st_size', 'st_uid', 'groupname', 'username',
-    'chunks', 'chunk_groups',
+    'chunks', 'chunk_groups', 'target',
 )
 
 
@@ -52,6 +53,8 @@ class Metadata(object):
         st_rdev     no      no use (correct me if I'm wrong about this)
         st_size     yes     user needs it to see size of file in backup
         st_uid      yes     used to restored ownership
+
+    The field 'target' stores the target of a symlink.
         
     Additionally, the fields 'groupname' and 'username' are stored. They
     contain the textual names that correspond to st_gid and st_uid. When
@@ -75,6 +78,11 @@ def read_metadata(fs, filename, getpwuid=None, getgrgid=None):
     for field in metadata_fields:
         if field.startswith('st_'):
             setattr(metadata, field, int(getattr(stat_result, field)))
+
+    if stat.S_ISLNK(stat_result.st_mode):
+        metadata.target = fs.readlink(filename)
+    else:
+        metadata.target = ''
 
     getgrgid = getgrgid or grp.getgrgid
     try:
@@ -103,8 +111,11 @@ def set_metadata(fs, filename, metadata, getuid=None):
     
     '''
 
-    fs.lutimes(filename, metadata.st_atime, metadata.st_mtime)
-    fs.chmod(filename, metadata.st_mode)
+    if stat.S_ISLNK(metadata.st_mode):
+        fs.symlink(metadata.target, filename)
+    else:
+        fs.lutimes(filename, metadata.st_atime, metadata.st_mtime)
+        fs.chmod(filename, metadata.st_mode)
 
     getuid = getuid or os.getuid
     if getuid() == 0:

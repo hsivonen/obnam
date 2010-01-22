@@ -55,6 +55,17 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         obnamlib.set_metadata(self.fs, './' + root, metadata)
 
     def restore_file(self, gen, to_dir, filename):
+        metadata = self.store.get_metadata(gen, filename)
+        if stat.S_ISLNK(metadata.st_mode):
+            self.restore_symlink(gen, to_dir, filename, metadata)
+        else:
+            self.restore_regular_file(gen, to_dir, filename, metadata)
+        
+    def restore_symlink(self, gen, to_dir, filename, metadata):
+        to_filename = os.path.join(to_dir, './' + filename)
+        obnamlib.set_metadata(self.fs, to_filename, metadata)
+        
+    def restore_regular_file(self, gen, to_dir, filename, metadata):
         chunkids = self.store.get_file_chunks(gen, filename)
         to_filename = os.path.join(to_dir, './' + filename)
         f = self.fs.open(to_filename, 'w')
@@ -62,6 +73,5 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             data = self.store.get_chunk(chunkid)
             f.write(data)
         f.close()
-        metadata = self.store.get_metadata(gen, filename)
         obnamlib.set_metadata(self.fs, to_filename, metadata)
 

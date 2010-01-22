@@ -85,6 +85,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         tab = [
             (stat.S_IFREG, 0, '-'),
             (stat.S_IFDIR, 0, 'd'),
+            (stat.S_IFLNK, 0, 'l'),
             (stat.S_IRUSR, 1, 'r'),
             (stat.S_IWUSR, 2, 'w'),
             (stat.S_IXUSR, 3, 'x'),
@@ -103,6 +104,12 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         
         timestamp = time.strftime('%Y-%m-%d %H:%M:%S', 
                                   time.gmtime(metadata.st_mtime))
+
+        if stat.S_ISLNK(metadata.st_mode):
+            name = '%s -> %s' % (basename, metadata.target)
+        else:
+            name = basename
+
         return ('%s %2d %-8s %-8s %5d %s %s' % 
                 (perms, 
                  metadata.st_nlink or 0, 
@@ -110,5 +117,5 @@ class ShowPlugin(obnamlib.ObnamPlugin):
                  metadata.groupname or '',
                  metadata.st_size or 0, 
                  timestamp, 
-                 basename or ''))
+                 name))
 

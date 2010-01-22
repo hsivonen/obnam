@@ -37,9 +37,13 @@ class FakeFS(object):
         self.st_uid = 10
         self.groupname = 'group'
         self.username = 'user'
+        self.target = 'target'
 
     def lstat(self, filename):
         return self
+
+    def readlink(self, filename):
+        return 'target'
 
     def getpwuid(self, uid):
         return (self.username, None, self.st_uid, self.st_gid, 
@@ -67,6 +71,17 @@ class ReadMetadataTests(unittest.TestCase):
         fields = ['st_atime', 'st_blocks', 'st_dev', 'st_gid', 'st_ino',
                   'st_mode', 'st_mtime', 'st_nlink', 'st_size', 'st_uid',
                   'groupname', 'username']
+        for field in fields:
+            self.assertEqual(getattr(metadata, field),
+                             getattr(self.fakefs, field),
+                             field)
+
+    def test_returns_symlink_fields_correctly(self):
+        self.fakefs.st_mode |= stat.S_IFLNK;
+        metadata = obnamlib.read_metadata(self.fakefs, 'foo', 
+                                          getpwuid=self.fakefs.getpwuid,
+                                          getgrgid=self.fakefs.getgrgid)
+        fields = ['st_mode', 'target']
         for field in fields:
             self.assertEqual(getattr(metadata, field),
                              getattr(self.fakefs, field),
@@ -136,3 +151,9 @@ class SetMetadataTests(unittest.TestCase):
                               getuid=lambda: 0)
         self.assertEqual(self.gid_set, self.metadata.st_gid)
 
+    def test_sets_symlink_target(self):
+        self.fs.remove(self.filename)
+        self.metadata.st_mode = 0777 | stat.S_IFLNK;
+        self.metadata.target = 'target'
+        obnamlib.set_metadata(self.fs, self.filename, self.metadata)
+        self.assertEqual(self.fs.readlink(self.filename), 'target')
