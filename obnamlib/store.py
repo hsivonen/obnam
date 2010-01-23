@@ -236,8 +236,9 @@ class Store(object):
     @require_open_host
     def list_generations(self):
         '''List existing generations for currently open host.'''
-        return [x for x in self.fs.listdir(self.current_host)
-                if self.fs.isdir(os.path.join(self.current_host, x))]
+        return sorted(x for
+                      x in self.fs.listdir(self.current_host)
+                      if self.fs.isdir(os.path.join(self.current_host, x)))
         
     @require_host_lock
     def start_generation(self):
@@ -252,7 +253,7 @@ class Store(object):
         i = 0
         while True:
             i += 1
-            gen = 'gen-%d' % i
+            gen = 'gen-%09d' % i
             name = os.path.join(self.current_host, gen)
             if not self.fs.exists(name):
                 break
