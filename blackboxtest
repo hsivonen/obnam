@@ -225,7 +225,8 @@ class BlackBoxTest(object):
         
         restored = self.tempdir()
         logging.debug('restoring %s to %s' % (store, restored))
-        self.obnam(["restore", '--to', restored, "latest", "--store", store])
+        self.obnam(["restore", '--to', restored, 
+                    '--generation', "latest", "--store", store])
         return restored
 
 

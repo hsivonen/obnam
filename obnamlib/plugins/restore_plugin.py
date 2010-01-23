@@ -33,8 +33,16 @@ class RestorePlugin(obnamlib.ObnamPlugin):
     def enable(self):
         self.app.register_command('restore', self.restore)
         self.app.config.new_string(['to'], 'where to restore')
+        self.app.config.new_string(['generation'], 
+                                   'which generation to restore')
 
     def restore(self, args):
+        logging.debug('restoring generation %s' % 
+                        self.app.config['generation'])
+        if not self.app.config['generation']:
+            raise obnamlib.AppException('--generation option must be used '
+                                        'with restore')
+
         logging.debug('restoring to %s' % self.app.config['to'])
         if not self.app.config['to']:
             raise obnamlib.AppException('--to option must be used '
@@ -45,9 +53,8 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         self.store.open_host(self.app.config['hostname'])
         self.fs = fsf.new(self.app.config['to'])
         
-        for genspec in args:
-            gen = self.genid(genspec)
-            self.restore_recursively(gen, '.', '/')
+        gen = self.genid(self.app.config['generation'])
+        self.restore_recursively(gen, '.', '/')
 
     def genid(self, genspec):
         if genspec == 'latest':
