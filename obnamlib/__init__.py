@@ -23,6 +23,9 @@ class AppException(Exception):
 class Error(Exception):
     pass
 
+CHUNK_SIZE = 4096
+CHUNK_GROUP_SIZE = 16
+
 from hooks import Hook, HookManager
 from cfg import Configuration
 from interp import Interpreter

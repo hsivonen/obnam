@@ -137,8 +137,14 @@ class Store(object):
         
         '''
 
-        return hashlib.md5(data).hexdigest()
-        
+        checksummer = self.new_checksummer()
+        checksummer.update(data)
+        return checksummer.hexdigest()
+
+    def new_checksummer(self):
+        '''Return a new checksum algorithm.'''
+        return hashlib.md5()
+
     def list_hosts(self):
         '''Return list of names of hosts using this store.'''
         return [x 

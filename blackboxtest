@@ -280,6 +280,26 @@ class ReusesChunks(BlackBoxTest):
                          'only one chunk when all files are identical')
 
 
+class UsesChunkGroups(BlackBoxTest):
+
+    def test(self):
+        data = self.tempdir()
+        ngroups = 2
+        nbytes = obnamlib.CHUNK_SIZE * obnamlib.CHUNK_GROUP_SIZE * ngroups
+        self.create_file(data, 'file', 'x' * nbytes)
+        store = self.tempdir()
+        self.backup(store, [data])
+        restored = self.restore(store)
+        self.verify(data, restored)
+        fsf = obnamlib.VfsFactory()
+        fs = fsf.new(store)
+        s = obnamlib.Store(fs)
+        s.open_host(self.hostid)
+        self.assertEqual('UsesChunkGroups', len(s.list_chunk_groups()), 
+                         ngroups,
+                         'must use %d chunk groups' % ngroups)
+
+
 class ObnamBlackBoxTests:
 
     """Main class for running black box tests of obnam."""

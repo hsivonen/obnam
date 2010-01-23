@@ -66,12 +66,23 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         obnamlib.set_metadata(self.fs, to_filename, metadata)
         
     def restore_regular_file(self, gen, to_dir, filename, metadata):
-        chunkids = self.store.get_file_chunks(gen, filename)
         to_filename = os.path.join(to_dir, './' + filename)
         f = self.fs.open(to_filename, 'w')
+
+        chunkids = self.store.get_file_chunks(gen, filename)
+        if chunkids:
+            self.restore_chunks(f, chunkids)
+        else:
+            cgids = self.store.get_file_chunk_groups(gen, filename)
+            for cgid in cgids:
+                chunkids = self.store.get_chunk_group(cgid)
+                self.restore_chunks(f, chunkids)
+
+        f.close()
+        obnamlib.set_metadata(self.fs, to_filename, metadata)
+
+    def restore_chunks(self, f, chunkids):
         for chunkid in chunkids:
             data = self.store.get_chunk(chunkid)
             f.write(data)
-        f.close()
-        obnamlib.set_metadata(self.fs, to_filename, metadata)
 
