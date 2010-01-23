@@ -261,6 +261,25 @@ class Symlink(BlackBoxTest):
         self.verify(data, restored)
 
 
+class ReusesChunks(BlackBoxTest):
+
+    def test(self):
+        data = self.tempdir()
+        n = 100
+        for i in range(n):
+            self.create_file(data, 'target%d' % i, 'content1')
+        store = self.tempdir()
+        self.backup(store, [data])
+        restored = self.restore(store)
+        self.verify(data, restored)
+        fsf = obnamlib.VfsFactory()
+        fs = fsf.new(store)
+        s = obnamlib.Store(fs)
+        s.open_host(self.hostid)
+        self.assertEqual('ReusesChunks', len(s.list_chunks()), 1,
+                         'only one chunk when all files are identical')
+
+
 class ObnamBlackBoxTests:
 
     """Main class for running black box tests of obnam."""
