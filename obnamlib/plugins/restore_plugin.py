@@ -32,14 +32,20 @@ class RestorePlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
         self.app.register_command('restore', self.restore)
-        
+        self.app.config.new_string(['to'], 'where to restore')
+
     def restore(self, args):
+        logging.debug('restoring to %s' % self.app.config['to'])
+        if not self.app.config['to']:
+            raise obnamlib.AppException('--to option must be used '
+                                        'with restore')
+    
         fsf = obnamlib.VfsFactory()
         self.store = obnamlib.Store(fsf.new(self.app.config['store']))
         self.store.open_host(self.app.config['hostname'])
-        self.fs = fsf.new(args[0])
+        self.fs = fsf.new(self.app.config['to'])
         
-        for genspec in args[1:]:
+        for genspec in args:
             gen = self.genid(genspec)
             self.restore_recursively(gen, '.', '/')
 
