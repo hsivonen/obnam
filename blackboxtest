@@ -84,6 +84,13 @@ class BlackBoxTest(object):
         f.write(contents)
         f.close()
 
+    def remove_file(self, root, relative):
+        """Remove a file."""
+
+        pathname = os.path.join(root, relative)
+        logging.debug('removing file %s' % pathname)        
+        os.remove(pathname)
+
     def create_dir(self, root, pathname):
         """Create a new directory, return name."""
         fullname = os.path.join(root, pathname)
@@ -245,6 +252,20 @@ class TwoBackupRoots(BlackBoxTest):
         self.create_file(root2, 'file2', 'content2')
         store = self.tempdir()
         self.backup(store, [root1, root2])
+        restored = self.restore(store)
+        self.verify(data, restored)
+
+
+class TwoGenerations(BlackBoxTest):
+
+    def test(self):
+        data = self.tempdir()
+        self.create_file(data, "foo", "foo")
+        store = self.tempdir()
+        self.backup(store, [data])
+        self.create_file(data, 'bar', 'bar')
+        self.remove_file(data, 'foo')
+        self.backup(store, [data])
         restored = self.restore(store)
         self.verify(data, restored)
 
