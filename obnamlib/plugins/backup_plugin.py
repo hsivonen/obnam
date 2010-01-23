@@ -92,12 +92,20 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             data = f.read(self.app.config['chunk-size'])
             if not data:
                 break
-            checksum = self.store.checksum(data)
-            chunkid = self.store.put_chunk(data, checksum)
-            chunkids.append(chunkid)
+            chunkids.append(self.backup_file_chunk(data))
             self.app.hooks.call('progress-data-done', len(data))
         f.close()
         self.store.set_file_chunks(filename, chunkids)
+
+    def backup_file_chunk(self, data):
+        '''Back up a chunk of data by putting it into the store.'''
+        checksum = self.store.checksum(data)
+        existing = self.store.find_chunks(checksum)
+        if existing:
+            chunkid = existing[0]
+        else:
+            chunkid = self.store.put_chunk(data, checksum)
+        return chunkid
 
     def backup_dir(self, root):
         '''Back up a directory, and everything in it.'''
