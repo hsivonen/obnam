@@ -320,6 +320,16 @@ class StoreChunkTests(unittest.TestCase):
         self.assertEqual(set(self.store.find_chunks(checksum)),
                          set([chunkid1, chunkid2]))
 
+    def test_returns_no_chunks_initially(self):
+        self.assertEqual(self.store.list_chunks(), [])
+        
+    def test_returns_chunks_after_they_exist(self):
+        checksum = self.store.checksum('data')
+        chunkids = []
+        for i in range(2):
+            chunkids.append(self.store.put_chunk('data', checksum))
+        self.assertEqual(self.store.list_chunks(), chunkids)
+
 
 class StoreChunkGroupTests(unittest.TestCase):
 
@@ -357,6 +367,15 @@ class StoreChunkGroupTests(unittest.TestCase):
         cgid2 = self.store.put_chunk_group(['3', '4'], 'checksum')
         self.assertEqual(set(self.store.find_chunk_groups('checksum')),
                          set([cgid1, cgid2]))
+
+    def test_returns_no_chunk_groups_initially(self):
+        self.assertEqual(self.store.list_chunk_groups(), [])
+        
+    def test_returns_chunk_groups_after_they_exist(self):
+        cgids = []
+        for i in range(2):
+            cgids.append(self.store.put_chunk_group(['1'], 'checksum'))
+        self.assertEqual(self.store.list_chunk_groups(), cgids)
 
 
 class StoreGetSetChunksAndGroupsTests(unittest.TestCase):

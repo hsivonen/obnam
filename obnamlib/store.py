@@ -371,6 +371,14 @@ class Store(object):
                     chunkids.append(chunkid)
         return chunkids
 
+    @require_open_host
+    def list_chunks(self):
+        '''Return list of ids of all chunks in store.'''
+        if self.fs.exists('chunks'):
+            return self.fs.listdir('chunks')
+        else:
+            return []
+
     def _chunk_group_filename(self, cgid):
         return os.path.join('chunkgroups', cgid)
 
@@ -415,6 +423,14 @@ class Store(object):
                 if lines[0] == checksum:
                     cgids.append(cgid)
         return cgids
+
+    @require_open_host
+    def list_chunk_groups(self):
+        '''Return list of ids of all chunk groups in store.'''
+        if self.fs.exists('chunkgroups'):
+            return self.fs.listdir('chunkgroups')
+        else:
+            return []
 
     @require_open_host
     def get_file_chunks(self, gen, filename):
