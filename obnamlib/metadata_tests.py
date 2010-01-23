@@ -157,3 +157,13 @@ class SetMetadataTests(unittest.TestCase):
         self.metadata.target = 'target'
         obnamlib.set_metadata(self.fs, self.filename, self.metadata)
         self.assertEqual(self.fs.readlink(self.filename), 'target')
+
+    def test_sets_symlink_mtime_perms(self):
+        self.fs.remove(self.filename)
+        self.metadata.st_mode = 0777 | stat.S_IFLNK;
+        self.metadata.target = 'target'
+        obnamlib.set_metadata(self.fs, self.filename, self.metadata)
+        st = os.lstat(self.filename)
+        self.assertEqual(st.st_mode, self.metadata.st_mode)
+        self.assertEqual(st.st_mtime, self.metadata.st_mtime)
+

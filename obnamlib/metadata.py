@@ -114,8 +114,8 @@ def set_metadata(fs, filename, metadata, getuid=None):
     if stat.S_ISLNK(metadata.st_mode):
         fs.symlink(metadata.target, filename)
     else:
-        fs.lutimes(filename, metadata.st_atime, metadata.st_mtime)
         fs.chmod(filename, metadata.st_mode)
+    fs.lutimes(filename, metadata.st_atime, metadata.st_mtime)
 
     getuid = getuid or os.getuid
     if getuid() == 0:
