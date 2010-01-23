@@ -32,9 +32,6 @@ class App(object):
         self.config.new_string(['log'], 'name of log file (%default)')
         self.config['log'] = 'obnam.log'
         self.config.new_string(['store'], 'name of backup store')
-        self.config.new_string(['chunk-size'], 
-                               'chunk size for file contents (%default)')
-        self.config['chunk-size'] = 4096
         self.config.new_string(['hostname'], 'name of host (%default)')
         self.config['hostname'] = self.deduce_hostname()
 

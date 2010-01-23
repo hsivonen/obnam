@@ -91,7 +91,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         groupsum = self.store.new_checksummer()
         f = self.fs.open(filename, 'r')
         while True:
-            data = f.read(self.app.config['chunk-size'])
+            data = f.read(obnamlib.CHUNK_SIZE)
             if not data:
                 break
             chunkids.append(self.backup_file_chunk(data))
