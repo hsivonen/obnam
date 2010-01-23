@@ -127,12 +127,22 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
     def backup_dir(self, root):
         '''Back up a directory, and everything in it.'''
+
+        # If the directory already exists in the backup store, 
+        # remove the files that no longer exist in the live data.
+
+        new_basenames = self.fs.listdir(root)
         try:
             self.store.get_metadata(self.store.new_generation, root)
         except obnamlib.Error:
             pass
         else:
-            self.store.remove(root)
+            old_basenames = self.store.listdir(self.store.new_generation, 
+                                               root)
+            for old in old_basenames:
+                if old not in new_basenames:
+                    self.store.remove(os.path.join(root, old))
+
         metadata = obnamlib.read_metadata(self.fs, root)
         self.store.create(root, metadata)
         for basename in self.fs.listdir(root):
