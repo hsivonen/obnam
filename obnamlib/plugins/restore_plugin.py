@@ -53,14 +53,9 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         self.store.open_host(self.app.config['hostname'])
         self.fs = fsf.new(self.app.config['to'])
         
-        gen = self.genid(self.app.config['generation'])
+        gen = self.store.genspec(self.app.config['generation'])
         self.restore_recursively(gen, '.', '/')
 
-    def genid(self, genspec):
-        if genspec == 'latest':
-            return self.store.list_generations()[-1]
-        return genspec
-    
     def restore_recursively(self, gen, to_dir, root):
         if not self.fs.exists('./' + root):
             self.fs.makedirs('./' + root)

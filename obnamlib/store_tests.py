@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import os
 import shutil
 import stat
 import tempfile
@@ -421,4 +422,45 @@ class StoreGetSetChunksAndGroupsTests(unittest.TestCase):
         self.store.set_file_chunks('/foo', ['1', '2'])
         self.assertRaises(obnamlib.Error, self.store.set_file_chunk_groups,
                            '/foo', ['1', '2'])
+
+
+class StoreGenspecTests(unittest.TestCase):
+
+    def setUp(self):
+        self.tempdir = tempfile.mkdtemp()
+
+        storedir = os.path.join(self.tempdir, 'store')
+        fs = obnamlib.VfsFactory().new(storedir)
+        self.store = obnamlib.Store(fs)
+        self.store.lock_host('hostname')
+
+    def tearDown(self):
+        shutil.rmtree(self.tempdir)
+
+    def backup(self):
+        gen = self.store.start_generation()
+        self.store.commit_host()
+        self.store.lock_host('hostname')
+        return gen
+
+    def test_latest_raises_error_if_there_are_no_generations(self):
+        self.assertRaises(obnamlib.Error, self.store.genspec, 'latest')
+
+    def test_latest_returns_only_generation(self):
+        gen = self.backup()
+        self.assertEqual(self.store.genspec('latest'), gen)
+
+    def test_latest_returns_newest_generation(self):
+        self.backup()
+        gen = self.backup()
+        self.assertEqual(self.store.genspec('latest'), gen)
+
+    def test_other_spec_returns_itself(self):
+        gen = self.backup()
+        self.assertEqual(self.store.genspec(gen), gen)
+
+    def test_nonexistent_spec_raises_error(self):
+        gen = self.backup()
+        self.assertNotEqual(gen, 'foo')
+        self.assertRaises(obnamlib.Error, self.store.genspec, 'foo')
 

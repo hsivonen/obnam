@@ -480,3 +480,16 @@ class Store(object):
         metadata.chunk_groups = cgids
         self._set_metadata(self.new_generation, filename, metadata)
 
+    @require_open_host
+    def genspec(self, spec):
+        '''Interpret a generation specification.'''
+
+        gens = self.list_generations()
+        if not gens:
+            raise obnamlib.Error('No generations')
+        if spec == 'latest':
+            return gens[-1]
+        elif spec in gens:
+            return spec
+        else:
+            raise obnamlib.Error('Generation %s not found' % spec)
