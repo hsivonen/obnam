@@ -283,6 +283,19 @@ class Symlink(BlackBoxTest):
         self.verify(data, restored)
 
 
+class Hardlink(BlackBoxTest):
+
+    def test(self):
+        data = self.tempdir()
+        self.create_file(data, 'target', 'content1')
+        os.link(os.path.join(data, 'target'), 
+                os.path.join(data, 'hardlink'))
+        store = self.tempdir()
+        self.backup(store, [data])
+        restored = self.restore(store)
+        self.verify(data, restored)
+
+
 class ReusesChunks(BlackBoxTest):
 
     def test(self):

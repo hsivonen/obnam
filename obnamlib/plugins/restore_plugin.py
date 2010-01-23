@@ -21,6 +21,35 @@ import stat
 import obnamlib
 
 
+class Hardlinks(object):
+
+    '''Keep track of inodes with unrestored hardlinks.'''
+    
+    def __init__(self):
+        self.inodes = dict()
+        
+    def key(self, metadata):
+        return '%s:%s' % (metadata.st_dev, metadata.st_ino)
+        
+    def add(self, filename, metadata):
+        self.inodes[self.key(metadata)] = (filename, metadata.st_nlink)
+        
+    def filename(self, metadata):
+        key = self.key(metadata)
+        if key in self.inodes:
+            return self.inodes[key][0]
+        else:
+            return None
+        
+    def forget(self, metadata):
+        key = self.key(metadata)
+        filename, nlinks = self.inodes[key]
+        if nlinks <= 2:
+            del self.inodes[key]
+        else:
+            self.inodes[key] = (filename, nlinks - 1)
+
+
 class RestorePlugin(obnamlib.ObnamPlugin):
 
     # A note about the implementation: we need to make sure all the
@@ -52,11 +81,14 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         self.store = obnamlib.Store(fsf.new(self.app.config['store']))
         self.store.open_host(self.app.config['hostname'])
         self.fs = fsf.new(self.app.config['to'])
+
+        self.hardlinks = Hardlinks()
         
         gen = self.store.genspec(self.app.config['generation'])
         self.restore_recursively(gen, '.', '/')
 
     def restore_recursively(self, gen, to_dir, root):
+        logging.debug('restoring dir %s' % root)
         if not self.fs.exists('./' + root):
             self.fs.makedirs('./' + root)
         for basename in self.store.listdir(gen, root):
@@ -73,14 +105,32 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         metadata = self.store.get_metadata(gen, filename)
         if stat.S_ISLNK(metadata.st_mode):
             self.restore_symlink(gen, to_dir, filename, metadata)
+        elif metadata.st_nlink > 1:
+            link = self.hardlinks.filename(metadata)
+            if link:
+                self.restore_hardlink(to_dir, filename, link, metadata)
+            else:
+                self.hardlinks.add(filename, metadata)
+                self.restore_regular_file(gen, to_dir, filename, metadata)
         else:
             self.restore_regular_file(gen, to_dir, filename, metadata)
+    
+    def restore_hardlink(self, to_dir, filename, link, metadata):
+        logging.debug('restoring hardlink %s to %s' % (filename, link))
+        to_filename = os.path.join(to_dir, './' + filename)
+        to_link = os.path.join(to_dir, './' + link)
+        logging.debug('to_filename: %s' % to_filename)
+        logging.debug('to_link: %s' % to_link)
+        self.fs.link(to_link, to_filename)
+        self.hardlinks.forget(metadata)
         
     def restore_symlink(self, gen, to_dir, filename, metadata):
+        logging.debug('restoring symlink %s' % filename)
         to_filename = os.path.join(to_dir, './' + filename)
         obnamlib.set_metadata(self.fs, to_filename, metadata)
         
     def restore_regular_file(self, gen, to_dir, filename, metadata):
+        logging.debug('restoring regular %s' % filename)
         to_filename = os.path.join(to_dir, './' + filename)
         f = self.fs.open(to_filename, 'w')
 
