@@ -71,6 +71,7 @@ class BlackBoxTest(object):
         '''Run obnam, adding default options to args.'''
         
         self.runcmd(['./obnam', 
+                     '--quiet',
                      '--log', '%s/obnam.log' % self.temproot,
                      '--hostname', self.hostid] +
                     args)
