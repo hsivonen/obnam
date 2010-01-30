@@ -92,6 +92,7 @@ class TerminalStatusPlugin(obnamlib.ObnamPlugin):
         self.add_callback('progress-found-file', self.found_file_cb)
         self.add_callback('progress-data-done', self.data_done_cb)
         self.add_callback('shutdown', self.ts.finished)
+        self.app.config.new_boolean(['quiet'], 'be silent')
         self.current = ''
         self.num_files = 0
         self.total_data = 0
@@ -122,6 +123,8 @@ class TerminalStatusPlugin(obnamlib.ObnamPlugin):
             return '0'
 
     def update(self):
+        if self.app.config['quiet']:
+            return
         factor, unit = self.find_unit(min(self.total_data, self.data_done))
         total = self.scale(factor, self.total_data)
         done = self.scale(factor, self.data_done)
