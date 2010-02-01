@@ -1,0 +1,171 @@
+.TH OBNAM 1
+.SH NAME
+obnam \- make, restore, and manipulate backups
+.SH SYNOPSIS
+.B obnam
+.RI [ options ]
+.I command
+.IR args ...
+.SH DESCRIPTION
+.B obnam
+makes, restores, manipulates, and otherwise deals with backups.
+It can store backups on a local disk or to a server via sftp.
+Every backup generation looks like a fresh snapshot,
+but is really incremental:
+the user does not need to worry whether it's a full backup or not.
+Only changed data is backed up,
+and if a chunk of data is already backed up in another file,
+that data is re-used.
+.PP
+The place where backed up data is placed is called the
+backup store, or
+.I store
+for short.
+A store may be, for example, a directory on an sftp server,
+or a directory on a USB hard disk.
+A single store may contain backups from several hosts.
+Their data will intermingle as if they were using separate stores,
+but if one host backs up a file, the others may re-use the data.
+.PP
+.B obnam 
+command line syntax consists of a 
+.I command
+possibly followed by arguments.
+The commands are:
+.BR backup ,
+.BR restore ,
+.BR hosts ,
+.BR generations ,
+.BR ls .
+.IP \(bu
+.B backup
+makes a new backup.
+The first time it is run, it makes a full backup,
+after that an incremental one.
+.IP \(bu
+.B restore
+is the opposite of a backup.
+It copies backed up data from the backup store to a target directory.
+.IP \(bu
+.B hosts
+lists the hosts that are backed up to the store.
+.IP \(bu
+.B generations
+lists every backup generation for a given host.
+.IP \(bu
+.B ls
+lists the contents of a given generation, similar to 
+.BR ls -lAR .
+.SS URL syntax
+Whenever obnam accepts a URL, it can be either a local pathname,
+or an 
+.B sftp
+URL.
+An sftp URL has the following form:
+.IP
+.BI sftp:// domain\fR[\fB:\fIport\fR] / path
+.PP
+where 
+.I domain
+is a normal Internetl domain name,
+.I port
+is an optional port number,
+and
+.I path
+is a pathname on the server side.
+Like
+.BR bzr (1),
+but unlike the sftp URL standard,
+the pathname is absolute,
+unless it starts with
+.B /~/
+in which case it is relative to the user's home directory on the server.
+.PP
+See the EXAMPLES section for examples of URLs.
+.SS Generation specifications
+When not using the latest generation,
+you will need to specify which one you need.
+This will be done with the
+.B --generation
+option,
+which takes a generation specification as its argument.
+The specification is either the word
+.IR latest ,
+meaning the latest generation (also the default),
+or a number.
+See the
+.B generations
+command to see what generations are available,
+and what their numbers are.
+.SH OPTIONS
+.TP
+.BR -h ", " --help
+Show a summary of options.
+.TP
+.BR --log =\fIFILE
+Log debug and other messages to
+.IR FILE .
+.TP
+.BR --store =\fIURL
+Store backups in
+.IR URL ,
+which may be either a pathname or an 
+.B sftp
+URL.
+See above for a description of URL syntax.
+.TP
+.BR --hostname =\fIHOSTNAME
+Set name of host to use.
+Default is the hostname of the machine where obnam runs.
+This is used to determine which part of the backup store to put backups in.
+.TP
+.BR --to =\fIDIR
+Restore files to
+.IR DIR .
+This is only used with the
+.B restore
+command.
+.TP
+.BR --generation =\fIGENSPEC
+Use generation specified by
+.IR GENSPEC .
+See above for ways to specify a generation.
+Default is
+.IR latest .
+.TP
+.BR --quiet
+Do not report progress when running.
+This is helpful when running obnam non-interactively,
+for example from 
+.BR cron (8).
+.TP
+.BR --root =\fDIR
+Back up 
+.IR DIR .
+This is only relevant with the
+.B backup
+command.
+.SH "EXIT STATUS"
+.B obnam
+will exit with zero if everything went well,
+and non-zero otherwise.
+.SH ENVIRONMENT
+.B obnam
+will pass on the environment it gets from its parent,
+without modification.
+It does not obey any unusual environment variables,
+but it does obey the usual ones when running external programs,
+creating temporary variables, etc.
+.SH FILES
+There will some day be a configuration file, which will be documented here.
+.SH EXAMPLE
+To back up your home directory to a server:
+.IP
+.nf
+obnam backup --store sftp://your.server/~/backups $HOME
+.PP
+To restore your latest backup from the server:
+.IP
+.nf
+obnam restore --store sftp://your.server/~/backups \\
+--to /var/tmp/my.home.dir
