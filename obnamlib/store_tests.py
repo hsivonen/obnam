@@ -200,6 +200,23 @@ class StoreHostTests(unittest.TestCase):
         self.store.lock_host('hostname')
         self.assertNotEqual(gen, self.store.start_generation())
 
+    def test_new_generation_has_start_time_only(self):
+        self.store.lock_host('hostname')
+        gen = self.store.start_generation()
+        start, end = self.store.get_generation_times(gen)
+        self.assertNotEqual(start, None)
+        self.assertEqual(end, None)
+
+    def test_commited_generation_has_start_and_end_times(self):
+        self.store.lock_host('hostname')
+        gen = self.store.start_generation()
+        self.store.commit_host()
+        self.store.open_host('hostname')
+        start, end = self.store.get_generation_times(gen)
+        self.assertNotEqual(start, None)
+        self.assertNotEqual(end, None)
+        self.assert_(start <= end)
+
     def test_removing_generation_works(self):
         self.store.lock_host('hostname')
         gen = self.store.start_generation()

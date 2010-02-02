@@ -16,6 +16,7 @@
 
 import os
 import stat
+import sys
 import time
 
 import obnamlib
@@ -48,7 +49,11 @@ class ShowPlugin(obnamlib.ObnamPlugin):
     def generations(self, args):
         self.open_store()
         for gen in self.store.list_generations():
-            print gen
+            start, end = self.store.get_generation_times(gen)
+            sys.stdout.write('%s\t%s .. %s\n' %
+                             (gen, 
+                              self.format_time(start), 
+                              self.format_time(end)))
 
     def ls(self, args):
         self.open_store()

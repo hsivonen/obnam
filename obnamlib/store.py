@@ -226,6 +226,9 @@ class Store(object):
     @require_host_lock
     def commit_host(self):
         '''Commit changes to and unlock currently locked host.'''
+        if self.new_generation is not None:
+            name = os.path.join(self.current_host, self.new_generation)
+            self.fs.write_file(name + '.end', '')
         self.unlock_host()
         
     def open_host(self, hostname):
@@ -258,6 +261,7 @@ class Store(object):
                 break
         self.new_generation = gen
         self.fs.mkdir(name)
+        self.fs.write_file(name + '.start', '')
         return self.new_generation
 
     @require_host_lock
@@ -266,6 +270,26 @@ class Store(object):
         if gen == self.new_generation:
             raise obnamlib.Error('cannot remove started generation')
         self.fs.rmtree(os.path.join(self.current_host, gen))
+
+    @require_open_host
+    def get_generation_times(self, gen):
+        '''Return start and end times of a generation.
+        
+        An unfinished generation has no end time, so None is returned.
+        
+        '''
+
+        start = None
+        end = None
+        
+        name = os.path.join(self.current_host, gen)
+        try:
+            start = self.fs.lstat(name + '.start').st_mtime
+            end = self.fs.lstat(name + '.end').st_mtime
+        except OSError:
+            pass
+
+        return start, end
 
     def genpath(self, gen, filename):
         return os.path.join(self.current_host, gen, './' + filename)
