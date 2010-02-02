@@ -14,7 +14,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import fcntl
+import signal
+import struct
 import sys
+import termios
 import time
 
 import obnamlib
@@ -34,7 +38,32 @@ class TerminalStatus(object):
         self.cached = ''
         self.when = 0
         self.freq = 1.0
-        self.width = 79 # FIXME: Should query terminal and react to SIGWINCH
+        
+        self.width = self.get_terminal_width() - 1
+        signal.signal(signal.SIGWINCH, self.sigwinch_handler)
+
+    def get_terminal_width(self):
+        '''Return width of terminal in characters.
+
+        If this fails, assume 80.
+        
+        Borrowed and adapted from bzrlib.
+        
+        '''
+        
+        try:
+            s = struct.pack('HHHH', 0, 0, 0, 0)
+            x = fcntl.ioctl(1, termios.TIOCGWINSZ, s)
+            return struct.unpack('HHHH', x)[1]
+        except IOError:
+            return 80
+
+    def sigwinch_handler(self, signum, frame):
+        # Clear the terminal from old stuff, using the old width.
+        self.clear()
+        # Subtract one from actual terminal width to avoid wrapping
+        # by printing to the last character position in the line.
+        self.width = self.get_terminal_width() - 1
 
     def raw_write(self, msg):
         if sys.stdout.isatty():

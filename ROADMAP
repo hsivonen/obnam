@@ -9,9 +9,6 @@ has notes for what might be good ideas to do some day in the future.
 Simply bugs, to be fixed
 ------------------------
 
-* Progress reporting assumes an 80 character wide terminal. It should
-  query the width and react to changes (via SIGWINCH).
-
 * If a file suddenly goes missing in the middle of a backup run,
   this should not be a fatal error. It should be reported, but it should
   not make the backup abort.
