@@ -62,9 +62,6 @@ Sensible ideas
 
 * Virtual file system implementations should be moved into plugins.
 
-* Add a VfsFactory instance as part of the App object. There's no
-  point in making every plugin, for example, instantiate one themselves.
-  
 * Add option to verify that there is no hash collision when chunks
   or chunk groups have the same hash.
 

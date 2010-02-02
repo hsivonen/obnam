@@ -37,8 +37,8 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         self.app.register_command('ls', self.ls)
 
     def open_store(self):
-        fsf = obnamlib.VfsFactory()
-        self.store = obnamlib.Store(fsf.new(self.app.config['store']))
+        fs = self.app.fsf.new(self.app.config['store'])
+        self.store = obnamlib.Store(fs)
         self.store.open_host(self.app.config['hostname'])
 
     def hosts(self, args):

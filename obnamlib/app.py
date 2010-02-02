@@ -45,6 +45,8 @@ class App(object):
         self.hooks.new('plugins-loaded')
         self.hooks.new('shutdown')
         
+        self.fsf = obnamlib.VfsFactory()
+        
     def deduce_hostname(self):
         return socket.gethostname()
         

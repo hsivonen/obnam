@@ -30,8 +30,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         
     def backup(self, args):
         roots = self.app.config['root'] + args
-        fsf = obnamlib.VfsFactory()
-        storefs = fsf.new(self.app.config['store'])
+        storefs = self.app.fsf.new(self.app.config['store'])
         self.store = obnamlib.Store(storefs)
         self.done = 0
         self.total = 0
@@ -41,7 +40,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.fs = None
         for root in roots:
             if not self.fs:
-                self.fs = fsf.new(root)
+                self.fs = self.app.fsf.new(root)
                 self.fs.connect()
             else:
                 self.fs.reinit(root)
