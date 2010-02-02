@@ -15,8 +15,6 @@ Simply bugs, to be fixed
 Needs to be done soon
 ----------------------
 
-* Generations need to store their start and end times.
-
 * Write tests for obnam for changing root node or host data without 
   committing: there should be no effect then.
 
