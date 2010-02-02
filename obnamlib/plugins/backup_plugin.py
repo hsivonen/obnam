@@ -1,4 +1,4 @@
-# Copyright (C) 2009  Lars Wirzenius
+# Copyright (C) 2009, 2010  Lars Wirzenius
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -65,10 +65,16 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             root = parent
 
     def backup_something(self, root):
-        if self.fs.isdir(root):
-            self.backup_dir(root)
-        else:
-            self.backup_file(root)
+        try:
+            if self.fs.isdir(root):
+                self.backup_dir(root)
+            else:
+                self.backup_file(root)
+        except OSError, e:
+            logging.error('Could not back up %s: %s' % (root, e.strerror))
+            self.app.hooks.call('error-message', 
+                                 'Could not back up %s: %s' %
+                                    (root, e.strerror))
 
     def backup_file(self, root):
         '''Back up a non-directory.
@@ -145,6 +151,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         metadata = obnamlib.read_metadata(self.fs, root)
         self.store.create(root, metadata)
-        for basename in self.fs.listdir(root):
+        for basename in self.fs.listdir(root) + ['not-exist']:
             fullname = os.path.join(root, basename)
             self.backup_something(fullname)

@@ -117,9 +117,11 @@ class TerminalStatusPlugin(obnamlib.ObnamPlugin):
         self.app.hooks.new('status')
         self.app.hooks.new('progress-found-file')
         self.app.hooks.new('progress-data-done')
+        self.app.hooks.new('error-message')
         self.add_callback('status', self.ts.notify)
         self.add_callback('progress-found-file', self.found_file_cb)
         self.add_callback('progress-data-done', self.data_done_cb)
+        self.add_callback('error-message', self.error_message_cb)
         self.add_callback('shutdown', self.ts.finished)
         self.app.config.new_boolean(['quiet'], 'be silent')
         self.current = ''
@@ -139,6 +141,14 @@ class TerminalStatusPlugin(obnamlib.ObnamPlugin):
     def data_done_cb(self, amount):
         self.data_done += amount
         self.update()
+
+    def error_message_cb(self, msg):
+        if self.app.config['quiet']:
+            sys.stderr.write('Error: %s\n' % msg)
+        else:
+            self.ts.clear()
+            sys.stderr.write('Error: %s\n' % msg)
+            self.update()
 
     def find_unit(self, bytes):
         for factor, unit in self.units:
