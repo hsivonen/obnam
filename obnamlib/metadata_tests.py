@@ -73,6 +73,10 @@ class MetadataTests(unittest.TestCase):
         metadata = obnamlib.Metadata(st_mode=stat.S_IFDIR)
         self.assert_(metadata.isdir())
 
+    def test_isdir_returns_false_when_st_mode_is_not_set(self):
+        metadata = obnamlib.Metadata()
+        self.assertFalse(metadata.isdir())
+
 
 class ReadMetadataTests(unittest.TestCase):
 

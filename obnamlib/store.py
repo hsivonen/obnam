@@ -23,7 +23,6 @@ import errno
 import hashlib
 import os
 import pickle
-import stat
 
 import obnamlib
 
@@ -294,7 +293,7 @@ class Store(object):
         '''Internal, do not use.'''
         path = self.genpath(self.new_generation, filename)
         encoded = encode_metadata(metadata)
-        if metadata.st_mode is not None and stat.S_ISDIR(metadata.st_mode):
+        if metadata.isdir():
             if not self.fs.exists(path):
                 self.fs.makedirs(path)
             metaname = os.path.join(path, '.metadata')

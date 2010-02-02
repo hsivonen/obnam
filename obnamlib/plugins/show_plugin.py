@@ -63,7 +63,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
     
     def isdir(self, gen, filename):
         metadata = self.store.get_metadata(gen, filename)
-        return stat.S_ISDIR(metadata.st_mode)
+        return metadata.isdir()
     
     def show_objects(self, gen, dirname):
         print

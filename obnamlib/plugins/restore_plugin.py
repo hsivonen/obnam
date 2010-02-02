@@ -94,7 +94,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         for basename in self.store.listdir(gen, root):
             full = os.path.join(root, basename)
             metadata = self.store.get_metadata(gen, full)
-            if stat.S_ISDIR(metadata.st_mode):
+            if metadata.isdir():
                 self.restore_recursively(gen, to_dir, full)
             else:
                 self.restore_file(gen, to_dir, full)
