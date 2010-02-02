@@ -72,6 +72,9 @@ class Metadata(object):
         for field, value in kwargs.iteritems():
             setattr(self, field, value)
 
+    def isdir(self):
+        return stat.S_ISDIR(self.st_mode)
+
 
 def read_metadata(fs, filename, getpwuid=None, getgrgid=None):
     '''Return object detailing metadata for a filesystem entry.'''

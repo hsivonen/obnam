@@ -65,6 +65,14 @@ class MetadataTests(unittest.TestCase):
         metadata = obnamlib.Metadata(st_mtime=123)
         self.assertEqual(metadata.st_mtime, 123)
 
+    def test_isdir_returns_false_for_regular_file(self):
+        metadata = obnamlib.Metadata(st_mode=stat.S_IFREG)
+        self.assertFalse(metadata.isdir())
+
+    def test_isdir_returns_true_for_directory(self):
+        metadata = obnamlib.Metadata(st_mode=stat.S_IFDIR)
+        self.assert_(metadata.isdir())
+
 
 class ReadMetadataTests(unittest.TestCase):
 
