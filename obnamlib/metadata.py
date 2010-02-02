@@ -66,9 +66,11 @@ class Metadata(object):
     
     '''
     
-    def __init__(self):
+    def __init__(self, **kwargs):
         for field in metadata_fields:
             setattr(self, field, None)
+        for field, value in kwargs.iteritems():
+            setattr(self, field, value)
 
 
 def read_metadata(fs, filename, getpwuid=None, getgrgid=None):

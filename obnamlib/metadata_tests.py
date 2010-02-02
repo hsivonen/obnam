@@ -59,6 +59,13 @@ class FakeFS(object):
         raise KeyError(gid)
 
 
+class MetadataTests(unittest.TestCase):
+
+    def test_sets_mtime_from_kwarg(self):
+        metadata = obnamlib.Metadata(st_mtime=123)
+        self.assertEqual(metadata.st_mtime, 123)
+
+
 class ReadMetadataTests(unittest.TestCase):
 
     def setUp(self):
