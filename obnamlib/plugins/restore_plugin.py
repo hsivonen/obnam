@@ -16,7 +16,6 @@
 
 import logging
 import os
-import stat
 
 import obnamlib
 
@@ -103,7 +102,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
 
     def restore_file(self, gen, to_dir, filename):
         metadata = self.store.get_metadata(gen, filename)
-        if stat.S_ISLNK(metadata.st_mode):
+        if metadata.islink():
             self.restore_symlink(gen, to_dir, filename, metadata)
         elif metadata.st_nlink > 1:
             link = self.hardlinks.filename(metadata)

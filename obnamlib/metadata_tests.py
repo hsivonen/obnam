@@ -77,6 +77,18 @@ class MetadataTests(unittest.TestCase):
         metadata = obnamlib.Metadata()
         self.assertFalse(metadata.isdir())
 
+    def test_islink_returns_false_for_regular_file(self):
+        metadata = obnamlib.Metadata(st_mode=stat.S_IFREG)
+        self.assertFalse(metadata.islink())
+
+    def test_islink_returns_true_for_symlink(self):
+        metadata = obnamlib.Metadata(st_mode=stat.S_IFLNK)
+        self.assert_(metadata.islink())
+
+    def test_islink_returns_false_when_st_mode_is_not_set(self):
+        metadata = obnamlib.Metadata()
+        self.assertFalse(metadata.islink())
+
 
 class ReadMetadataTests(unittest.TestCase):
 

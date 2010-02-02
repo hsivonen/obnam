@@ -75,6 +75,9 @@ class Metadata(object):
     def isdir(self):
         return self.st_mode is not None and stat.S_ISDIR(self.st_mode)
 
+    def islink(self):
+        return self.st_mode is not None and stat.S_ISLNK(self.st_mode)
+
 
 def read_metadata(fs, filename, getpwuid=None, getgrgid=None):
     '''Return object detailing metadata for a filesystem entry.'''

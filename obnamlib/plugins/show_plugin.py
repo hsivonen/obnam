@@ -105,7 +105,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         timestamp = time.strftime('%Y-%m-%d %H:%M:%S', 
                                   time.gmtime(metadata.st_mtime))
 
-        if stat.S_ISLNK(metadata.st_mode):
+        if metadata.islink():
             name = '%s -> %s' % (basename, metadata.target)
         else:
             name = basename
