@@ -151,6 +151,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         metadata = obnamlib.read_metadata(self.fs, root)
         self.store.create(root, metadata)
-        for basename in self.fs.listdir(root) + ['not-exist']:
+        for basename in self.fs.listdir(root):
             fullname = os.path.join(root, basename)
             self.backup_something(fullname)
