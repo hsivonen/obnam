@@ -18,8 +18,6 @@ Needs to be done soon
 * Write tests for obnam for changing root node or host data without 
   committing: there should be no effect then.
 
-* Restore should be able to restore individual files.
-
 
 Sensible ideas
 --------------

@@ -76,6 +76,11 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             raise obnamlib.AppException('--to option must be used '
                                         'with restore')
     
+        logging.debug('restoring what: %s' % repr(args))
+        if not args:
+            logging.debug('no args given, so restoring everything')
+            args = ['/']
+    
         fs = self.app.fsf.new(self.app.config['store'])
         self.store = obnamlib.Store(fs)
         self.store.open_host(self.app.config['hostname'])
@@ -84,7 +89,15 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         self.hardlinks = Hardlinks()
         
         gen = self.store.genspec(self.app.config['generation'])
-        self.restore_recursively(gen, '.', '/')
+        for arg in args:
+            metadata = self.store.get_metadata(gen, arg)
+            if metadata.isdir():
+                self.restore_recursively(gen, '.', arg)
+            else:
+                dirname = os.path.dirname(arg)
+                if not self.fs.exists('./' + dirname):
+                    self.fs.makedirs('./' + dirname)
+                self.restore_file(gen, '.', arg)
 
     def restore_recursively(self, gen, to_dir, root):
         logging.debug('restoring dir %s' % root)

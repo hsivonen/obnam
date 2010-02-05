@@ -217,7 +217,7 @@ class BlackBoxTest(object):
         logging.debug('backing up %s to %s' % (datas, store))
         self.obnam(['--store', store, 'backup'] + datas)
         
-    def restore(self, store):
+    def restore(self, store, args=None):
         """Restore the newest generation from a store.
         
         Return name of directorey with restored data.
@@ -227,7 +227,8 @@ class BlackBoxTest(object):
         restored = self.tempdir()
         logging.debug('restoring %s to %s' % (store, restored))
         self.obnam(["restore", '--to', restored, 
-                    '--generation', "latest", "--store", store])
+                    '--generation', "latest", "--store", store] +
+                    (args or []))
         return restored
 
 
@@ -242,6 +243,27 @@ class RestoresIdenticalData(BlackBoxTest):
         self.backup(store, [data])
         restored = self.restore(store)
         self.verify(data, restored)
+
+
+class RestoresIndividualFile(BlackBoxTest):
+
+    '''Verify restore can restore individual files.'''
+    
+    def test(self):
+        data = self.tempdir()
+        self.create_file(data, 'foo', 'foo')
+        self.create_file(data, 'bar', 'bar')
+        store = self.tempdir()
+        self.backup(store, [data])
+        barpath = os.path.join(data, 'bar')
+        logging.debug('bar path is %s' % barpath)
+        restored = self.restore(store, [barpath])
+        restored2 = os.path.join(restored, './' + data)
+        restoreds = dict(self.find_everything(restored2))
+        self.report_contents(restored, restoreds)
+        self.assertEqual('RestoresIndividualFiles',
+                         restoreds.keys(), ['bar'], 
+                         'Must restore bar and nothing else')
 
 
 class TwoBackupRoots(BlackBoxTest):
