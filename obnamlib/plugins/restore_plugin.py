@@ -63,6 +63,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         self.app.config.new_string(['to'], 'where to restore')
         self.app.config.new_string(['generation'], 
                                    'which generation to restore')
+        self.app.config['generation'] = 'latest'
 
     def restore(self, args):
         logging.debug('restoring generation %s' % 
