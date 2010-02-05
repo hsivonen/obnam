@@ -12,17 +12,32 @@ Simply bugs, to be fixed
 * Nothing right now.
 
 
-Needs to be done soon
-----------------------
+Needs to be done for feature completeness before proper Store implementation
+----------------------------------------------------------------------------
+
+I will want to finish all of these before I start working on a proper
+(production-level) implementation of the Store class. This is so that
+I know what exactly how the Store class will be used.
 
 * Write tests for obnam for changing root node or host data without 
   committing: there should be no effect then.
 
+* Implement a "verify" command, which verifies that some files are
+  the same in the backup and in the live data set. Files can be
+  specified by the user, chosen randomly, or all of them can be tested.
+  
+* Implement an "fsck" command, which verifies the data structures of the
+  backup store.
+  
+* Implement a "forget" command, which removes specific generations and
+  frees up disk space in the backup store. The user should be able to
+  specify a policy for what generations to keep.
+
+* Extended attributes and ACLs should be supported.
+
 
 Sensible ideas
 --------------
-
-* Extended attributes and ACLs should be supported.
 
 * Write a plugin to do error correcting codes on data stored in
   the backup store.
