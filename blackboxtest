@@ -131,6 +131,26 @@ class BlackBoxTest(object):
                 result.append(self.get_info(root, pathname))
         return [x for x in result if x]
 
+    def assertWorks(self, func, *args, **kwargs):
+        '''Make sure calling function/method does not raise exceptions.'''
+        try:
+            func(*args, **kwargs)
+        except Exception, e:
+            raise Exception('Calling %s raised exception' % repr(func))
+
+    def assertRaises(self, exc, func, *args, **kwargs):
+        '''Make sure calling function/method does raise an exception.'''
+        try:
+            func(*args, **kwargs)
+        except exc:
+            pass
+        except BaseException, e:
+            raise Exception('Calling %s raised wrong exception %s' % 
+                            (repr(func), repr(e)))
+        else:
+            raise Exception('Calling %s did not raise exception' % 
+                            repr(func))
+
     def assert_(self, name, condition, message):
         """Raise an exception if a condition is not met."""
         if not condition:
@@ -356,6 +376,38 @@ class UsesChunkGroups(BlackBoxTest):
         self.assertEqual('UsesChunkGroups', len(s.list_chunk_groups()), 
                          ngroups,
                          'must use %d chunk groups' % ngroups)
+
+
+class VerifiesUnchangedBackup(BlackBoxTest):
+
+    '''Make backup, verify it immediately, make sure it works.'''
+    
+    def test(self):
+        data = self.tempdir()
+        self.create_file(data, 'foo', 'foo')
+        self.create_file(data, 'bar', 'bar')
+        store = self.tempdir()
+        self.backup(store, [data])
+        self.assertWorks(self.obnam, 
+                         ['verify', '--root', data, '--store', store])
+
+
+class VerifyFindsProblemWithChangedData(BlackBoxTest):
+
+    '''Make backup, change data, verify it, make sure it fails.'''
+    
+    def test(self):
+        data = self.tempdir()
+        self.create_file(data, 'foo', 'foo')
+        self.create_file(data, 'bar', 'bar')
+        store = self.tempdir()
+        self.backup(store, [data])
+        self.remove_file(data, 'foo')
+        self.remove_file(data, 'bar')
+        self.create_file(data, 'foo', 'changed data')
+        self.assertRaises(subprocess.CalledProcessError,
+                          self.obnam,
+                          ['verify', '--root', data, '--store', store])
 
 
 class ObnamBlackBoxTests:

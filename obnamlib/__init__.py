@@ -32,6 +32,7 @@ from interp import Interpreter
 from pluginbase import ObnamPlugin
 from vfs import VirtualFileSystem, VfsFactory
 from vfs_local import LocalFS
-from metadata import read_metadata, set_metadata, Metadata, metadata_fields
+from metadata import (read_metadata, set_metadata, Metadata, metadata_fields,
+                      metadata_verify_fields)
 from store import Store, LockFail
 from app import App

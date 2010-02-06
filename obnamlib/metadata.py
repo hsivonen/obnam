@@ -20,10 +20,13 @@ import pwd
 import stat
 
 
-metadata_fields = (
-    'st_atime', 'st_blocks', 'st_dev', 'st_gid', 'st_ino', 'st_mode',
-    'st_mtime', 'st_nlink', 'st_size', 'st_uid', 'groupname', 'username',
-    'chunks', 'chunk_groups', 'target',
+metadata_verify_fields = (
+    'st_mode', 'st_mtime', 'st_nlink', 'st_size', 'st_uid', 
+    'groupname', 'username', 'target',
+)
+metadata_fields = metadata_verify_fields + (
+    'st_blocks', 'st_dev', 'st_gid', 'st_ino',  'st_atime', 
+    'chunks', 'chunk_groups',
 )
 
 
