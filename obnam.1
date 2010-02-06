@@ -84,11 +84,17 @@ By default verification happens on all files.
 You can also specify the files to be verified by listing them on the
 command line.
 .PP
-The output has one file per line of output, with the word "OK" or
-"ERROR" prepended.
-Note that files with newline characters in their names will break
-the output.
-(People with weird filenames lose until they file bugs and patches.)
+The output lists files that fail verification for some reason.
+If you verify everything, it is likely that some files (e.g.,
+parent directories of backup root) may have changed without it
+being a problem.
+Note that you will need to specify the whole path to the files
+or directories to be verified, not relative to the backup root.
+You still need to specify at least one of the backup roots via
+the
+.B --root
+option so that obnam will find the filesystem, in case it is
+a remote one.
 .SS "URL syntax"
 Whenever obnam accepts a URL, it can be either a local pathname,
 or an 
