@@ -16,6 +16,7 @@
 
 import logging
 import os
+import stat
 
 import obnamlib
 
@@ -26,103 +27,88 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         self.app.register_command('verify', self.verify)
 
     def verify(self, args):
-        logging.info('NOT IMPLEMENTED: verify')
-        return
-        logging.debug('restoring generation %s' % 
+        logging.debug('verifying generation %s' % 
                         self.app.config['generation'])
         if not self.app.config['generation']:
             raise obnamlib.AppException('--generation option must be used '
-                                        'with restore')
+                                        'with verify')
 
-        logging.debug('restoring to %s' % self.app.config['to'])
-        if not self.app.config['to']:
-            raise obnamlib.AppException('--to option must be used '
-                                        'with restore')
-    
-        logging.debug('restoring what: %s' % repr(args))
+        if not self.app.config['root']:
+            raise obnamlib.AppException('--root option must be used '
+                                        'with verify')
+
+        logging.debug('verifying what: %s' % repr(args))
         if not args:
-            logging.debug('no args given, so restoring everything')
+            logging.debug('no args given, so verifying everything')
             args = ['/']
     
         fs = self.app.fsf.new(self.app.config['store'])
+        fs.connect()
         self.store = obnamlib.Store(fs)
         self.store.open_host(self.app.config['hostname'])
-        self.fs = self.app.fsf.new(self.app.config['to'])
+        self.fs = self.app.fsf.new(self.app.config['root'][0])
+        self.fs.connect()
+        self.fs.reinit('/')
 
-        self.hardlinks = Hardlinks()
-        
         gen = self.store.genspec(self.app.config['generation'])
         for arg in args:
             metadata = self.store.get_metadata(gen, arg)
             if metadata.isdir():
-                self.restore_recursively(gen, '.', arg)
+                self.verify_recursively(gen, arg)
             else:
-                dirname = os.path.dirname(arg)
-                if not self.fs.exists('./' + dirname):
-                    self.fs.makedirs('./' + dirname)
-                self.restore_file(gen, '.', arg)
+                self.verify_file(gen, arg)
 
-    def restore_recursively(self, gen, to_dir, root):
-        logging.debug('restoring dir %s' % root)
-        if not self.fs.exists('./' + root):
-            self.fs.makedirs('./' + root)
+    def fail(self, filename, reason):
+        logging.error('verify failure for %s: %s' % (filename, reason))
+        self.app.hooks.call('error-message',
+                            'verify failure: %s: %s' % (filename, reason))
+
+    def verify_recursively(self, gen, root):
+        logging.debug('verifying dir %s' % root)
+        self.verify_metadata(gen, root)
         for basename in self.store.listdir(gen, root):
             full = os.path.join(root, basename)
             metadata = self.store.get_metadata(gen, full)
             if metadata.isdir():
-                self.restore_recursively(gen, to_dir, full)
+                self.verify_recursively(gen, full)
             else:
-                self.restore_file(gen, to_dir, full)
-        metadata = self.store.get_metadata(gen, root)
-        obnamlib.set_metadata(self.fs, './' + root, metadata)
+                self.verify_file(gen, full)
 
-    def restore_file(self, gen, to_dir, filename):
+    def verify_metadata(self, gen, filename):
+        backed_up = self.store.get_metadata(gen, filename)
+        live_data = obnamlib.read_metadata(self.fs, filename)
+        for field in obnamlib.metadata_verify_fields:
+            if getattr(backed_up, field) != getattr(live_data, field):
+                self.fail(filename, 'metadata change: %s' % field)
+
+    def verify_file(self, gen, filename):
+        self.verify_metadata(gen, filename)
         metadata = self.store.get_metadata(gen, filename)
-        if metadata.islink():
-            self.restore_symlink(gen, to_dir, filename, metadata)
-        elif metadata.st_nlink > 1:
-            link = self.hardlinks.filename(metadata)
-            if link:
-                self.restore_hardlink(to_dir, filename, link, metadata)
-            else:
-                self.hardlinks.add(filename, metadata)
-                self.restore_regular_file(gen, to_dir, filename, metadata)
-        else:
-            self.restore_regular_file(gen, to_dir, filename, metadata)
+        if stat.S_ISREG(metadata.st_mode):
+            self.verify_regular_file(gen, filename, metadata)
     
-    def restore_hardlink(self, to_dir, filename, link, metadata):
-        logging.debug('restoring hardlink %s to %s' % (filename, link))
-        to_filename = os.path.join(to_dir, './' + filename)
-        to_link = os.path.join(to_dir, './' + link)
-        logging.debug('to_filename: %s' % to_filename)
-        logging.debug('to_link: %s' % to_link)
-        self.fs.link(to_link, to_filename)
-        self.hardlinks.forget(metadata)
-        
-    def restore_symlink(self, gen, to_dir, filename, metadata):
-        logging.debug('restoring symlink %s' % filename)
-        to_filename = os.path.join(to_dir, './' + filename)
-        obnamlib.set_metadata(self.fs, to_filename, metadata)
-        
-    def restore_regular_file(self, gen, to_dir, filename, metadata):
-        logging.debug('restoring regular %s' % filename)
-        to_filename = os.path.join(to_dir, './' + filename)
-        f = self.fs.open(to_filename, 'w')
+    def verify_regular_file(self, gen, filename, metadata):
+        logging.debug('verifying regular %s' % filename)
+        f = self.fs.open(filename, 'r')
 
         chunkids = self.store.get_file_chunks(gen, filename)
         if chunkids:
-            self.restore_chunks(f, chunkids)
+            if not self.verify_chunks(f, chunkids):
+                self.fail(filename, 'data changed')
         else:
             cgids = self.store.get_file_chunk_groups(gen, filename)
             for cgid in cgids:
                 chunkids = self.store.get_chunk_group(cgid)
-                self.restore_chunks(f, chunkids)
+                if not self.verify_chunks(f, chunkids):
+                    self.fail(filename, 'data changed')
 
         f.close()
-        obnamlib.set_metadata(self.fs, to_filename, metadata)
 
-    def restore_chunks(self, f, chunkids):
+    def verify_chunks(self, f, chunkids):
         for chunkid in chunkids:
-            data = self.store.get_chunk(chunkid)
-            f.write(data)
+            backed_up = self.store.get_chunk(chunkid)
+            live_data = f.read(len(backed_up))
+            if backed_up != live_data:
+                return False
+        return True
 
