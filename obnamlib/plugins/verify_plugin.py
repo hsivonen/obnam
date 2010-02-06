@@ -20,14 +20,7 @@ import os
 import obnamlib
 
 
-class RestorePlugin(obnamlib.ObnamPlugin):
-
-    # A note about the implementation: we need to make sure all the
-    # files we restore go into the target directory. We do this by
-    # prefixing all filenames we write to with './', and then using
-    # os.path.join to put the target directory name at the beginning.
-    # The './' business is necessary because os.path.join(a,b) returns
-    # just b if b is an absolute path.
+class VerifyPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
         self.app.register_command('verify', self.verify)
