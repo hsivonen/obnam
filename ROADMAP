@@ -21,10 +21,6 @@ I know what exactly how the Store class will be used.
 
 * Write tests for obnam for changing root node or host data without 
   committing: there should be no effect then.
-
-* Implement a "verify" command, which verifies that some files are
-  the same in the backup and in the live data set. Files can be
-  specified by the user, chosen randomly, or all of them can be tested.
   
 * Implement an "fsck" command, which verifies the data structures of the
   backup store.
@@ -79,6 +75,8 @@ Sensible ideas
 
 * Add option to verify that there is no hash collision when chunks
   or chunk groups have the same hash.
+
+* Make verify be able to choose files to verify randomly.
 
 
 Wild ideas
