@@ -17,8 +17,16 @@
 import logging
 import os
 import stat
+import sys
 
 import obnamlib
+
+
+class Fail(Exception):
+
+    def __init__(self, filename, reason):
+        self.filename = filename
+        self.reason = reason
 
 
 class VerifyPlugin(obnamlib.ObnamPlugin):
@@ -50,18 +58,27 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         self.fs.connect()
         self.fs.reinit('/')
 
+        self.failed = False
         gen = self.store.genspec(self.app.config['generation'])
         for arg in args:
             metadata = self.store.get_metadata(gen, arg)
-            if metadata.isdir():
-                self.verify_recursively(gen, arg)
-            else:
-                self.verify_file(gen, arg)
+            try:
+                if metadata.isdir():
+                    self.verify_recursively(gen, arg)
+                else:
+                    self.verify_file(gen, arg)
+            except Fail, e:
+                self.log_fail(e)
 
-    def fail(self, filename, reason):
-        logging.error('verify failure for %s: %s' % (filename, reason))
+        if self.failed:
+            sys.exit(1)
+
+    def log_fail(self, e):
+        logging.error('verify failure for %s: %s' % (e.filename, e.reason))
         self.app.hooks.call('error-message',
-                            'verify failure: %s: %s' % (filename, reason))
+                            'verify failure: %s: %s' % 
+                            (e.filename, e.reason))
+        self.failed = True
 
     def verify_recursively(self, gen, root):
         logging.debug('verifying dir %s' % root)
@@ -69,17 +86,23 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         for basename in self.store.listdir(gen, root):
             full = os.path.join(root, basename)
             metadata = self.store.get_metadata(gen, full)
-            if metadata.isdir():
-                self.verify_recursively(gen, full)
-            else:
-                self.verify_file(gen, full)
+            try:
+                if metadata.isdir():
+                    self.verify_recursively(gen, full)
+                else:
+                    self.verify_file(gen, full)
+            except Fail, e:
+                self.log_fail(e)
 
     def verify_metadata(self, gen, filename):
         backed_up = self.store.get_metadata(gen, filename)
-        live_data = obnamlib.read_metadata(self.fs, filename)
+        try:
+            live_data = obnamlib.read_metadata(self.fs, filename)
+        except OSError, e:
+            raise Fail(filename, 'missing or inaccessible: %s' % e.strerror)
         for field in obnamlib.metadata_verify_fields:
             if getattr(backed_up, field) != getattr(live_data, field):
-                self.fail(filename, 'metadata change: %s' % field)
+                raise Fail(filename, 'metadata change: %s' % field)
 
     def verify_file(self, gen, filename):
         self.verify_metadata(gen, filename)
@@ -94,13 +117,13 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         chunkids = self.store.get_file_chunks(gen, filename)
         if chunkids:
             if not self.verify_chunks(f, chunkids):
-                self.fail(filename, 'data changed')
+                raise Fail(filename, 'data changed')
         else:
             cgids = self.store.get_file_chunk_groups(gen, filename)
             for cgid in cgids:
                 chunkids = self.store.get_chunk_group(cgid)
                 if not self.verify_chunks(f, chunkids):
-                    self.fail(filename, 'data changed')
+                    raise Fail(filename, 'data changed')
 
         f.close()
 
