@@ -5,7 +5,7 @@ obnam \- make, restore, and manipulate backups
 .B obnam
 .RI [ options ]
 .I command
-.IR args ...
+.RI [ args ]...
 .SH DESCRIPTION
 .B obnam
 makes, restores, manipulates, and otherwise deals with backups.
@@ -36,7 +36,9 @@ The commands are:
 .BR restore ,
 .BR hosts ,
 .BR generations ,
-.BR ls .
+.BR ls ,
+and
+.BR verify .
 .IP \(bu
 .B backup
 makes a new backup.
@@ -56,7 +58,38 @@ lists every backup generation for a given host.
 .B ls
 lists the contents of a given generation, similar to 
 .BR ls -lAR .
-.SS URL syntax
+.IP \(bu
+.B verify
+compares data in the backup with actual user data,
+and makes sures they are identical.
+It is most useful to run immediately after a backup,
+to check that it actually worked.
+It can be run at any time,
+but if the user data has changed,
+verification fails even though the backup is OK.
+.SS "Verifying backups"
+What good is a backup system you cannot rely on?
+How can you rely on something you cannot test?
+The
+.B "obnam verify"
+command checks that data in the backup store matches actual user data.
+It retrieves one or more files from the store and compares them to
+the user data.
+This is essentialy the same as doing a restore,
+then comparing restored files with the original files using 
+.BR cmp (1),
+but easier to use.
+.PP
+By default verification happens on all files.
+You can also specify the files to be verified by listing them on the
+command line.
+.PP
+The output has one file per line of output, with the word "OK" or
+"ERROR" prepended.
+Note that files with newline characters in their names will break
+the output.
+(People with weird filenames lose until they file bugs and patches.)
+.SS "URL syntax"
 Whenever obnam accepts a URL, it can be either a local pathname,
 or an 
 .B sftp
@@ -82,7 +115,7 @@ unless it starts with
 in which case it is relative to the user's home directory on the server.
 .PP
 See the EXAMPLES section for examples of URLs.
-.SS Generation specifications
+.SS "Generation specifications"
 When not using the latest generation,
 you will need to specify which one you need.
 This will be done with the
@@ -169,3 +202,9 @@ To restore your latest backup from the server:
 .nf
 obnam restore --store sftp://your.server/~/backups \\
 --to /var/tmp/my.home.dir
+.PP
+To check that the backup worked:
+.IP
+.nf
+obnam verify --store sftp://your.server/~/backups /path/to/file
+
