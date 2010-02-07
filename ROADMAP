@@ -78,6 +78,14 @@ Sensible ideas
 
 * Make verify be able to choose files to verify randomly.
 
+* Implement a --no-act (alias --dry-run) option which prevents obnam
+  from doing anything destructive (essentially: no writes). For
+  backups, it would do everything except write operations to the store
+  (including locking etc). For restore, everything except actually
+  writing out the files to the target directory. For forget, it would
+  just list what it would remove. For fsck, it would just report
+  problems. It's OK to do any amount of reading.
+
 
 Wild ideas
 ----------
