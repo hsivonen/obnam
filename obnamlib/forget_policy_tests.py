@@ -1,4 +1,4 @@
-# Copyright (C) 2009  Lars Wirzenius
+# Copyright (C) 2010  Lars Wirzenius
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,26 +14,24 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import _obnam
-from pluginmgr import PluginManager
+import unittest
 
-class AppException(Exception):
-    pass
+import obnamlib
 
-class Error(Exception):
-    pass
 
-CHUNK_SIZE = 4096
-CHUNK_GROUP_SIZE = 16
+class ForgetPolicyTests(unittest.TestCase):
 
-from hooks import Hook, HookManager
-from cfg import Configuration
-from interp import Interpreter
-from pluginbase import ObnamPlugin
-from vfs import VirtualFileSystem, VfsFactory
-from vfs_local import LocalFS
-from metadata import (read_metadata, set_metadata, Metadata, metadata_fields,
-                      metadata_verify_fields)
-from store import Store, LockFail
-from forget_policy import ForgetPolicy
-from app import App
+    def setUp(self):
+        self.fp = obnamlib.ForgetPolicy()
+
+    def test_raises_error_for_empty_string(self):
+        self.assertRaises(obnamlib.Error, self.fp.parse, '')
+
+    def test_parses_single_rule(self):
+        self.assertEqual(self.fp.parse('7d'),
+                         { 'hourly': 0,
+                           'daily': 7,
+                           'weekly': 0,
+                           'monthly': 0,
+                           'yearly': 0 })
+
