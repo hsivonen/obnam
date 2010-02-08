@@ -30,6 +30,9 @@ I know what exactly how the Store class will be used.
   specify a policy for what generations to keep.
 
 * Extended attributes and ACLs should be supported.
+  * acl(5), lsattr(1)
+  * python-acls
+  * python-xattrs
 
 
 Sensible ideas
