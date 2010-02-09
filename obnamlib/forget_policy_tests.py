@@ -27,6 +27,9 @@ class ForgetPolicyTests(unittest.TestCase):
     def test_raises_error_for_empty_string(self):
         self.assertRaises(obnamlib.Error, self.fp.parse, '')
 
+    def test_raises_error_for_unknown_period(self):
+        self.assertRaises(obnamlib.Error, self.fp.parse, '7x')
+
     def test_parses_single_rule(self):
         self.assertEqual(self.fp.parse('7d'),
                          { 'hourly': 0,
