@@ -46,12 +46,29 @@ class ForgetPolicy(object):
         
         '''
         
-        m = self.rule_pat.match(optarg)
+        remaining = optarg
+        m = self.rule_pat.match(remaining)
         if not m:
             raise obnamlib.Error('Forget policy syntax error: %s' % optarg)
-        count = int(m.group('count'))
-        period = self.periods[m.group('period')]
+
+        result = dict((y, None) for x, y in self.periods.iteritems())
+        while m:
+            count = int(m.group('count'))
+            period = self.periods[m.group('period')]
+            if result[period] is not None:
+                raise obnamlib.Error('Forget policy may not '
+                                     'duplicate period (%s): %s' % 
+                                     (period, optarg))
+            result[period] = count
+            remaining = remaining[m.end():]
+            if not remaining:
+                break
+            if not remaining.startswith(','):
+                raise obnamlib.Error('Forget policy must have rules '
+                                     'separated by commas: %s' % optarg)
+            remaining = remaining[1:]
+            m = self.rule_pat.match(remaining)
         
-        result = dict((y, 0) for x, y in self.periods.iteritems())
-        result[period] = count
+        result.update((x, 0) for x, y in result.iteritems() if y is None)
         return result
+

@@ -30,6 +30,12 @@ class ForgetPolicyTests(unittest.TestCase):
     def test_raises_error_for_unknown_period(self):
         self.assertRaises(obnamlib.Error, self.fp.parse, '7x')
 
+    def test_raises_error_if_period_is_duplicated(self):
+        self.assertRaises(obnamlib.Error, self.fp.parse, '1h,2h')
+
+    def test_raises_error_rules_not_separated_by_comma(self):
+        self.assertRaises(obnamlib.Error, self.fp.parse, '1h 2d')
+
     def test_parses_single_rule(self):
         self.assertEqual(self.fp.parse('7d'),
                          { 'hourly': 0,
@@ -37,4 +43,12 @@ class ForgetPolicyTests(unittest.TestCase):
                            'weekly': 0,
                            'monthly': 0,
                            'yearly': 0 })
+
+    def test_parses_multiple_rules(self):
+        self.assertEqual(self.fp.parse('1h,2d,3w,4m,255y'),
+                         { 'hourly': 1,
+                           'daily': 2,
+                           'weekly': 3,
+                           'monthly': 4,
+                           'yearly': 255 })
 
