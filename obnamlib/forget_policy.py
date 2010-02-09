@@ -72,3 +72,49 @@ class ForgetPolicy(object):
         result.update((x, 0) for x, y in result.iteritems() if y is None)
         return result
 
+    def last_in_each_period(self, period, genlist):
+        formats = {
+            'hourly': '%Y-%m-%d %H',
+            'daily': '%Y-%m-%d',
+            'weekly': '%Y-%W',
+            'monthly': '%Y-%m',
+            'yearly': '%Y',
+        }
+    
+        matches = []
+        for genid, dt in genlist:
+            formatted = dt.strftime(formats[period])
+            if not matches:
+                matches.append((genid, formatted))
+            elif matches[-1][1] == formatted:
+                matches[-1] = (genid, formatted)
+            else:
+                matches.append((genid, formatted))
+        return [genid for genid, formatted in matches]
+
+    def match(self, rules, genlist):
+        '''Match a parsed ruleset against a list of generations and times.
+        
+        The ruleset should be of the form returned by the parse method.
+        
+        genlist should be a list of generation identifiers and timestamps.
+        Identifiers can be anything, timestamps should be an instance
+        of datetime.datetime, with no time zone (it is ignored).
+        
+        genlist should be in ascending order by time: oldest one first.
+        
+        Return value is all those pairs from genlist that should be
+        kept (i.e., which match the rules).
+        
+        '''
+
+        result_ids = set()
+        for period in rules:
+            genids = self.last_in_each_period(period, genlist)
+            if rules[period]:
+                for genid in genids[-rules[period]:]:
+                    result_ids.add(genid)
+
+        return [(genid, dt) for genid, dt in genlist
+                if genid in result_ids]
+
