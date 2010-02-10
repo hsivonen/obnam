@@ -36,7 +36,7 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
 
         if args:
             for genid in args:
-                self.store.remove_generation(genid)
+                self.remove(genid)
         elif self.app.config['keep']:
             genlist = []
             dt = datetime.datetime(1970, 1, 1, 0, 0, 0)
@@ -51,7 +51,13 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
 
             for genid, dt in genlist:
                 if genid not in keepids:
-                    self.store.remove_generation(genid)
+                    self.remove(genid)
 
         self.store.commit_host()
+
+    def remove(self, genid):
+        if self.app.config['pretend']:
+            self.app.hooks.call('status', 'pretending to remove %s' % genid)
+        else:
+            self.store.remove_generation(genid)
 
