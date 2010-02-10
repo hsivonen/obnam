@@ -37,8 +37,9 @@ The commands are:
 .BR hosts ,
 .BR generations ,
 .BR ls ,
+.BR verify ,
 and
-.BR verify .
+.BR forget .
 .IP \(bu
 .B backup
 makes a new backup.
@@ -67,6 +68,18 @@ to check that it actually worked.
 It can be run at any time,
 but if the user data has changed,
 verification fails even though the backup is OK.
+.IP \(bu
+.B forget
+removes backup generations that are no longer wanted,
+so that they don't use disk space.
+Note that after a backup generation is removed
+the data can't be restored anymore.
+You can either specify the generations to remove by listing them
+on the command line,
+or use the
+.B --keep
+option to specify a policy for what to keep (everything else will
+be removed).
 .SS "Verifying backups"
 What good is a backup system you cannot rely on?
 How can you rely on something you cannot test?
@@ -136,6 +149,78 @@ See the
 .B generations
 command to see what generations are available,
 and what their numbers are.
+.SS "Policy for keeping and removing backup generations"
+The
+.B forget
+command can follow a policy to automatically keep some and remove
+other backup generations.
+The policy is set with the
+.BR --keep =\fIPOLICY
+option.
+.PP
+.I POLICY
+is comma-separated list of rules.
+Each rule consists of a count and a time period.
+The time periods are 
+.BR h ,
+.BR d ,
+.BR w ,
+.BR m ,
+and
+.BR y ,
+for hour, day, week, month, and year.
+.PP
+A policy of
+.I 30d
+means to keep the latest backup for each day, for thirty days.
+Any backups in between will be removed,
+as will any backups older than thirty days.
+.PP
+As an example, assume backups are taken every hour, on the hour:
+at 00:00, 01:00, 02:00, and so on, until 23:00.
+If the
+.B forget
+command is run at 23:15, with the above policy,
+it will keep the backup taken at 23:00 on each day,
+and remove every other backup that day.
+It will also remove backups older than 30 days.
+.PP
+Note that obnam will only inspect timestamps in the backup store,
+and does not care what the actual current time is.
+This means that if you stop making new backups,
+the existing ones won't be removed automatically.
+In essence, obnam pretends the current time is just after the
+latest backup when 
+.B forget
+is run.
+.PP
+The rules can be given in any order,
+but will be sorted to ascending order of time period before applied.
+(It is an error to give two rules for the same period.)
+A backup generation is kept if it matches any rule.
+.PP
+For example, assume the same backup frequence as above,
+but a policy of
+.IR 30d,52w .
+This will keep the newest daily backup for each day for thirty days,
+.I and
+the newest weekly backup for 52 weeks.
+Because the hourly backups will be removed daily,
+before they have a chance to get saved by a weekly rule,
+the effect is that the 23:00 o'clock backup for each day is
+saved for a month,
+and the 23:00 backup on Sundays is saved for a year.
+.PP
+If no policy is given,
+.B forget
+will keep everything.
+.PP
+A typical policy might be
+.IR 72h,7d,5w,12m ,
+to keep hourly backups for three days,
+daily backups for a week,
+weekly backups for a month,
+and monthly backups for a year.
 .SH OPTIONS
 .TP
 .BR -h ", " --help
@@ -184,6 +269,22 @@ Back up
 This is only relevant with the
 .B backup
 command.
+.TP
+.BR --keep =\fIPOLICY
+Specify which generations the
+.B forget
+command will keep.
+Everything else will be removed.
+See above for a description of
+.IR POLICY .
+.TP
+.BR --pretend
+Pretend to do things, but don't actually do them, if they change anything.
+Report what would have been done.
+Currently only applies to the
+.B forget
+command,
+which will list the generations that would be removed.
 .SH "EXIT STATUS"
 .B obnam
 will exit with zero if everything went well,
@@ -213,4 +314,9 @@ To check that the backup worked:
 .IP
 .nf
 obnam verify --store sftp://your.server/~/backups /path/to/file
-
+.PP
+To remove old backups, keeping the newest backup for each day for
+ten years:
+.IP
+.nf
+obnam forget --store sftp://your.server/~/backups --keep 3650d

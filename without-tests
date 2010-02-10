@@ -16,3 +16,4 @@
 ./test-plugins/aaa_hello_plugin.py
 ./test-plugins/wrongversion_plugin.py
 
+./obnamlib/plugins/forget_plugin.py
