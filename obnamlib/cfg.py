@@ -91,19 +91,22 @@ class Configuration(object):
     def new_list(self, names, help):
         self.new_setting('list', names, help, 'append', [])
 
+    def make_attribute_name(self, name):
+        return '_'.join(name.split('-'))
+
     def __getitem__(self, name):
         return self.settings[name].value
 
     def __setitem__(self, name, value):
         self.settings[name].value = value
-        name = '_'.join(name.split('-'))
-        self.parser.set_default(name, value)
+        self.parser.set_default(self.make_attribute_name(name), value)
         
     def load(self, args=None):
         opts, self.args = self.parser.parse_args(args=args)
         for name in self.settings.keys():
-            if hasattr(opts, name):
-                value = getattr(opts, name)
+            attr = self.make_attribute_name(name)
+            if hasattr(opts, attr):
+                value = getattr(opts, attr)
                 if self.settings[name].kind == 'list':
                     for item in value:
                         item = [s.strip() for s in item.split(',')]

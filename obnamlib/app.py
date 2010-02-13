@@ -34,7 +34,7 @@ class App(object):
         self.config.new_string(['store'], 'name of backup store')
         self.config.new_string(['hostname'], 'name of host (%default)')
         self.config['hostname'] = self.deduce_hostname()
-        self.config.new_boolean(['pretend'],
+        self.config.new_boolean(['pretend', 'dry-run', 'no-act'],
                                 'do not write or remove anything, just '
                                 'pretend to do that')
 
