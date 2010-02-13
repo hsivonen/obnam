@@ -414,17 +414,18 @@ class ObnamBlackBoxTests:
 
     """Main class for running black box tests of obnam."""
 
-    def find_tests(self):
+    def find_tests(self, wanted):
         g = globals()
         return [g[x] for x in g
                 if x != 'BlackBoxTest' and
                    type(g[x]) == type(object) and 
-                   issubclass(g[x], BlackBoxTest)]
+                   issubclass(g[x], BlackBoxTest) and
+                   (not wanted or x in wanted)]
     
     def run(self):
         logging.info('blackboxtest starts')
         errors = False
-        tests = self.find_tests()
+        tests = self.find_tests(sys.argv[1:])
         for klass in tests:
             logging.info('running test %s' % str(klass))
             test = klass()
