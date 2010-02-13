@@ -54,54 +54,49 @@ class ForgetPolicyParseTests(unittest.TestCase):
                            'yearly': 255 })
 
 
-times = []
-for year in range(2009, 2010):
-    for month in range(1, 13):
-        for day in range(1, 29):
-            for hour in range(24):
-                for minute in range(58, 60):
-                    dt = datetime.datetime(year, month, day,
-                                            hour, minute)
-                    times.append(dt)
-enumerated_times = list(enumerate(times))
-
-
 class ForgetPolicyMatchTests(unittest.TestCase):
 
     def setUp(self):
         self.fp = obnamlib.ForgetPolicy()
 
-    def match(self, spec):
+    def match2(self, spec, times):
         rules = self.fp.parse(spec)
-        return [time 
-                for i, time in self.fp.match(rules, enumerated_times)]
+        return [dt for i, dt in self.fp.match(rules, list(enumerate(times)))]
 
     def test_hourly_matches(self):
-        self.assertEqual(self.match('1h'),
-                         [dt for dt in times if dt.minute == 59][-1:])
+        h0m0 =  datetime.datetime(2000, 1, 1, 0, 0)
+        h0m59 = datetime.datetime(2000, 1, 1, 0, 59)
+        h1m0 =  datetime.datetime(2000, 1, 1, 1, 0)
+        h1m59 = datetime.datetime(2000, 1, 1, 1, 59)
+        self.assertEqual(self.match2('1h', [h0m0, h0m59, h1m0, h1m59]),
+                         [h1m59])
 
     def test_daily_matches(self):
-        self.assertEqual(self.match('1d'),
-                         [dt for dt in times 
-                          if dt.hour == 23 and dt.minute == 59][-1:])
+        d1h0 =  datetime.datetime(2000, 1, 1, 0, 0)
+        d1h23 = datetime.datetime(2000, 1, 1, 23, 0)
+        d2h0 =  datetime.datetime(2000, 1, 2, 0, 0)
+        d2h23 = datetime.datetime(2000, 1, 2, 23, 0)
+        self.assertEqual(self.match2('1d', [d1h0, d1h23, d2h0, d2h23]),
+                         [d2h23])
 
     # Not testing weekly matching, since I can't figure out to make
     # a sensible test case right now.
 
     def test_monthly_matches(self):
-        self.assertEqual(self.match('1m'),
-                         [dt for dt in times 
-                          if dt.day == 28 and 
-                             dt.hour == 23 and 
-                             dt.minute == 59][-1:])
+        m1d1 =  datetime.datetime(2000, 1, 1, 0, 0)
+        m1d28 = datetime.datetime(2000, 1, 28, 0, 0)
+        m2d1 =  datetime.datetime(2000, 2, 1, 0, 0)
+        m2d28 = datetime.datetime(2000, 2, 28, 0, 0)
+        self.assertEqual(self.match2('1m', [m1d1, m1d28, m2d1, m2d28]),
+                         [m2d28])
 
     def test_yearly_matches(self):
-        self.assertEqual(self.match('1y'),
-                         [dt for dt in times 
-                          if dt.month == 12 and
-                             dt.day == 28 and 
-                             dt.hour == 23 and 
-                             dt.minute == 59][-1:])
+        y1m1 =  datetime.datetime(2000, 1, 1, 0, 0)
+        y1m12 = datetime.datetime(2000, 12, 1, 0, 0)
+        y2m1 =  datetime.datetime(2001, 1, 1, 0, 0)
+        y2m12 = datetime.datetime(2001, 12, 1, 0, 0)
+        self.assertEqual(self.match2('1y', [y1m1, y1m12, y2m1, y2m12]),
+                         [y2m12])
 
     def test_hourly_and_daily_match_together(self):
         d1h0m0 = datetime.datetime(2000, 1, 1, 0, 0)
