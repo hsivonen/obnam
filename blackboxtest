@@ -22,6 +22,7 @@
 
 import logging
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -57,7 +58,7 @@ class BlackBoxTest(object):
         logging.debug('removing temproot %s' % self.temproot)
         shutil.rmtree(self.temproot)
 
-    def runcmd(self, argv):
+    def runcmd(self, argv, stderr_ignore=None):
         """Run an external command.
         
         If the command fails (non-zero exit), raise an exception.
@@ -65,16 +66,25 @@ class BlackBoxTest(object):
         """
 
         logging.debug('executing %s' % argv)
-        subprocess.check_call(argv)
+        
+        p = subprocess.Popen(argv, stderr=subprocess.PIPE)
+        stdout, stderr = p.communicate()
+        if stderr_ignore:
+            lines = [line for line in stderr.splitlines()
+                     if not re.match(stderr_ignore, line)]
+            stderr = ''.join(lines)
+        sys.stderr.write(stderr)
+        if p.returncode != 0:
+            raise subprocess.CalledProcessError(p.returncode, argv)
 
-    def obnam(self, args):
+    def obnam(self, args, stderr_ignore=None):
         '''Run obnam, adding default options to args.'''
         
         self.runcmd(['./obnam', 
                      '--quiet',
                      '--log', '%s/obnam.log' % self.temproot,
                      '--hostname', self.hostid] +
-                    args)
+                    args, stderr_ignore=stderr_ignore)
 
     def create_file(self, root, relative, contents):
         """Create a new file with the desired contents."""
@@ -407,7 +417,8 @@ class VerifyFindsProblemWithChangedData(BlackBoxTest):
         self.create_file(data, 'foo', 'changed data')
         self.assertRaises(subprocess.CalledProcessError,
                           self.obnam,
-                          ['verify', '--root', data, '--store', store])
+                          ['verify', '--root', data, '--store', store],
+                          r'^Error: verify failure')
 
 
 class ObnamBlackBoxTests:
