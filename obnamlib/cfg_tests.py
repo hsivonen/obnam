@@ -49,3 +49,9 @@ class ConfigurationTests(unittest.TestCase):
         self.cfg['foo'] = True
         self.assertEqual(self.cfg['foo'], True)
 
+    def test_handles_option_names_with_dashes(self):
+        cfg = obnamlib.Configuration([])
+        cfg.new_boolean(['foo-bar'], '')
+        cfg.load(args=['--foo-bar'])
+        self.assertEqual(cfg['foo-bar'], True)
+
