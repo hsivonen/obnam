@@ -55,3 +55,6 @@ class ConfigurationTests(unittest.TestCase):
         cfg.load(args=['--foo-bar'])
         self.assertEqual(cfg['foo-bar'], True)
 
+    def test_converts_names_to_attributes_correctly(self):
+        self.assertEqual(self.cfg.make_attribute_name('foo'), 'foo')
+        self.assertEqual(self.cfg.make_attribute_name('foo-bar'), 'foo_bar')
