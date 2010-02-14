@@ -456,6 +456,21 @@ class ForgetWithoutArgumentsRemovesNothing(BlackBoxTest):
         self.assertEqual('ForgetWithoutArguments',
                          genids, self.generations(store),
                          'forget should remove nothing by default')
+
+class ForgetRemovesSpecifiedGenerations(BlackBoxTest):
+
+    def test(self):
+        data = self.tempdir()
+        self.create_file(data, 'foo', 'foo')
+        self.create_file(data, 'bar', 'bar')
+        store = self.tempdir()
+        self.backup(store, [data])
+        self.backup(store, [data])
+        genids = self.generations(store)
+        self.forget(store, genids=genids[:1])
+        self.assertEqual('ForgetRemovesSpecifiedGenerations',
+                         genids[1:], self.generations(store),
+                         'forget should exactly the specified generations')
         
 
 
