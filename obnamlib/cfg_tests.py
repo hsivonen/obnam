@@ -58,3 +58,11 @@ class ConfigurationTests(unittest.TestCase):
     def test_converts_names_to_attributes_correctly(self):
         self.assertEqual(self.cfg.make_attribute_name('foo'), 'foo')
         self.assertEqual(self.cfg.make_attribute_name('foo-bar'), 'foo_bar')
+        
+    def test_raises_error_if_option_is_unset(self):
+        self.assertRaises(obnamlib.Error, self.cfg.require, 'foo')
+        
+    def test_does_not_raise_error_if_option_is_set(self):
+        self.cfg.load(['--foo'])
+        self.assertEqual(self.cfg.require('foo'), None)
+

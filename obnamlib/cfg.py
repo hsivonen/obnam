@@ -17,6 +17,8 @@
 import copy
 import optparse
 
+import obnamlib
+
 
 class Setting(object):
 
@@ -114,3 +116,8 @@ class Configuration(object):
                 else:
                     self.settings[name].value = value
 
+    def require(self, name):
+        '''Make sure the named option is set.'''
+        
+        if not self[name]:
+            raise obnamlib.Error('you must use option --%s' % name)
