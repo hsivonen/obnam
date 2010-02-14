@@ -38,8 +38,9 @@ The commands are:
 .BR generations ,
 .BR ls ,
 .BR verify ,
+.BR forget ,
 and
-.BR forget .
+.BR fsck .
 .IP \(bu
 .B backup
 makes a new backup.
@@ -80,6 +81,12 @@ or use the
 .B --keep
 option to specify a policy for what to keep (everything else will
 be removed).
+.IP \(bu
+.B fsck
+checks the internal consistency of the backup store.
+It verifies that all hosts, generations, directories, files, and
+all file contents still exists in the backup store.
+It may take quite a long time to run.
 .SS "Verifying backups"
 What good is a backup system you cannot rely on?
 How can you rely on something you cannot test?
