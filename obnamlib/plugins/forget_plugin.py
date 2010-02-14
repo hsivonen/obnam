@@ -30,6 +30,9 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
                                    'when forgetting')
 
     def forget(self, args):
+        self.app.config.require('store')
+        self.app.config.require('hostname')
+
         fs = self.app.fsf.new(self.app.config['store'])
         self.store = obnamlib.Store(fs)
         self.store.lock_host(self.app.config['hostname'])
