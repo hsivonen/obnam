@@ -81,6 +81,9 @@ class Metadata(object):
     def islink(self):
         return self.st_mode is not None and stat.S_ISLNK(self.st_mode)
 
+    def isfile(self):
+        return self.st_mode is not None and stat.S_ISREG(self.st_mode)
+
 
 def read_metadata(fs, filename, getpwuid=None, getgrgid=None):
     '''Return object detailing metadata for a filesystem entry.'''

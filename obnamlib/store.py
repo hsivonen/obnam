@@ -385,6 +385,11 @@ class Store(object):
         return self.fs.cat(self._chunk_filename(chunkid))
         
     @require_open_host
+    def chunk_exists(self, chunkid):
+        '''Does a chunk exist in the store?'''
+        return self.fs.exists(self._chunk_filename(chunkid))
+        
+    @require_open_host
     def find_chunks(self, checksum):
         '''Return identifiers of chunks with given checksum.
         
