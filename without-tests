@@ -17,3 +17,4 @@
 ./test-plugins/wrongversion_plugin.py
 
 ./obnamlib/plugins/forget_plugin.py
+./obnamlib/plugins/fsck_plugin.py

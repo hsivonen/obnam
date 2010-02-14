@@ -244,10 +244,14 @@ class BlackBoxTest(object):
                 self.report_contents(restored, restoreds)
                 raise Exception("spurious %s in restored data" % name)
 
+    def fsck(self, store):
+        self.obnam(['fsck', '--store', store])
+
     def backup(self, store, datas):
         """Back up a data directory to a store."""
         logging.debug('backing up %s to %s' % (datas, store))
         self.obnam(['--store', store, 'backup'] + datas)
+        self.fsck(store)
         
     def restore(self, store, args=None):
         """Restore the newest generation from a store.
