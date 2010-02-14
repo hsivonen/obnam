@@ -118,7 +118,7 @@ class TerminalStatusPlugin(obnamlib.ObnamPlugin):
         self.app.hooks.new('progress-found-file')
         self.app.hooks.new('progress-data-done')
         self.app.hooks.new('error-message')
-        self.add_callback('status', self.ts.notify)
+        self.add_callback('status', self.status_cb)
         self.add_callback('progress-found-file', self.found_file_cb)
         self.add_callback('progress-data-done', self.data_done_cb)
         self.add_callback('error-message', self.error_message_cb)
@@ -141,6 +141,10 @@ class TerminalStatusPlugin(obnamlib.ObnamPlugin):
     def data_done_cb(self, amount):
         self.data_done += amount
         self.update()
+
+    def status_cb(self, msg):
+        if not self.app.config['quiet']:
+            self.ts.notify(msg)
 
     def error_message_cb(self, msg):
         if self.app.config['quiet']:
