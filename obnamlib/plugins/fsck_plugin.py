@@ -56,4 +56,41 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         '''Check a generation.'''
         logging.debug('Checking generation %s' % genid)
         self.app.hooks.call('status', 'Checking generation %s' % genid)
+        self.check_dir(genid, '/')
+
+    def check_dir(self, genid, dirname):
+        '''Check a directory.'''
+        logging.debug('Checking directory %s' % dirname)
+        self.app.hooks.call('status', 'Checking dir %s' % dirname)
+        self.store.get_metadata(genid, dirname)
+        for basename in self.store.listdir(genid, dirname):
+            pathname = os.path.join(dirname, basename)
+            metadata = self.store.get_metadata(genid, pathname)
+            if metadata.isdir():
+                self.check_dir(genid, pathname)
+            else:
+                self.check_file(genid, pathname)
+                
+    def check_file(self, genid, filename):
+        '''Check a non-directory.'''
+        logging.debug('Checking file %s' % filename)
+        self.app.hooks.call('status', 'Checking file %s' % filename)
+        metadata = self.store.get_metadata(genid, filename)
+        if metadata.isfile():
+            for cgid in metadata.chunk_groups or []:
+                self.check_chunk_group(cgid)
+            for chunkid in metadata.chunks or []:
+                self.check_chunk(chunkid)
+
+    def check_chunk_group(self, cgid):
+        '''Check a chunk group.'''
+        logging.debug('Checking chunk group %s' % cgid)
+        for chunkid in self.store.get_chunk_group(cgid):
+            self.check_chunk(chunkid)
+
+    def check_chunk(self, chunkid):
+        '''Check a chunk.'''
+        logging.debug('Checking chunk %s' % chunkid)
+        # FIXME: Need way to find if chunk exists without downloading it.
+        self.store.get_chunk(chunkid)
 
