@@ -67,7 +67,8 @@ class BlackBoxTest(object):
 
         logging.debug('executing %s' % argv)
         
-        p = subprocess.Popen(argv, stderr=subprocess.PIPE)
+        p = subprocess.Popen(argv, stdout=subprocess.PIPE, 
+                             stderr=subprocess.PIPE)
         stdout, stderr = p.communicate()
         if stderr_ignore:
             lines = [line for line in stderr.splitlines()
@@ -76,15 +77,16 @@ class BlackBoxTest(object):
         sys.stderr.write(stderr)
         if p.returncode != 0:
             raise subprocess.CalledProcessError(p.returncode, argv)
+        return stdout
 
     def obnam(self, args, stderr_ignore=None):
         '''Run obnam, adding default options to args.'''
         
-        self.runcmd(['./obnam', 
-                     '--quiet',
-                     '--log', '%s/obnam.log' % self.temproot,
-                     '--hostname', self.hostid] +
-                    args, stderr_ignore=stderr_ignore)
+        return self.runcmd(['./obnam', 
+                            '--quiet',
+                            '--log', '%s/obnam.log' % self.temproot,
+                            '--hostname', self.hostid] +
+                           args, stderr_ignore=stderr_ignore)
 
     def create_file(self, root, relative, contents):
         """Create a new file with the desired contents."""
@@ -261,6 +263,28 @@ class BlackBoxTest(object):
                     (args or []))
         return restored
 
+    def generations(self, store):
+        '''Return all generation ids.'''
+        
+        logging.debug('Looking up generations in %s' % store)
+        stdout = self.obnam(['generations', '--store', store])
+        return [line.split()[0] for line in stdout.splitlines()]
+
+    def forget(self, store, genids=None, keep=None, pretend=False):
+        '''Forget specific generations.'''
+        
+        logging.debug('Forgetting in %s' % store)
+        logging.debug('genids: %s' % genids)
+        logging.debug('keep: %s' % keep)
+        args = []
+        if genids is not None:
+            args += genids
+        if keep is not None:
+            args += ['--keep', keep]
+        if pretend:
+            args += ['--pretend']
+        self.obnam(['forget', '--store', store] + args)
+
 
 class RestoresIdenticalData(BlackBoxTest):
 
@@ -419,6 +443,69 @@ class VerifyFindsProblemWithChangedData(BlackBoxTest):
                           self.obnam,
                           ['verify', '--root', data, '--store', store],
                           r'^Error: verify failure')
+
+class ForgetWithoutArgumentsRemovesNothing(BlackBoxTest):
+
+    def test(self):
+        data = self.tempdir()
+        self.create_file(data, 'foo', 'foo')
+        self.create_file(data, 'bar', 'bar')
+        store = self.tempdir()
+        self.backup(store, [data])
+        self.backup(store, [data])
+        genids = self.generations(store)
+        self.forget(store)
+        self.assertEqual('ForgetWithoutArguments',
+                         genids, self.generations(store),
+                         'forget should remove nothing by default')
+
+class ForgetRemovesSpecifiedGenerations(BlackBoxTest):
+
+    def test(self):
+        data = self.tempdir()
+        self.create_file(data, 'foo', 'foo')
+        self.create_file(data, 'bar', 'bar')
+        store = self.tempdir()
+        self.backup(store, [data])
+        self.backup(store, [data])
+        genids = self.generations(store)
+        self.forget(store, genids=genids[:1])
+        self.assertEqual('ForgetRemovesSpecifiedGenerations',
+                         genids[1:], self.generations(store),
+                         'forget should exactly the specified generations')
+
+
+class ForgetRemovesAccordingToPolicy(BlackBoxTest):
+
+    def test(self):
+        data = self.tempdir()
+        self.create_file(data, 'foo', 'foo')
+        self.create_file(data, 'bar', 'bar')
+        store = self.tempdir()
+        self.backup(store, [data])
+        self.backup(store, [data])
+        genids = self.generations(store)
+        self.forget(store, keep='1d')
+        self.assertEqual('ForgetRemovesAccordingToPolicy',
+                         genids[1:], self.generations(store),
+                         'forget should remove according to policy')
+
+
+class ForgetPretends(BlackBoxTest):
+
+    def test(self):
+        data = self.tempdir()
+        self.create_file(data, 'foo', 'foo')
+        self.create_file(data, 'bar', 'bar')
+        store = self.tempdir()
+        self.backup(store, [data])
+        self.backup(store, [data])
+        genids = self.generations(store)
+        self.forget(store, keep='1d', pretend=True)
+        self.assertEqual('ForgetPretends',
+                         genids, self.generations(store),
+                         'forget should obey --pretend')
+        
 
 
 class ObnamBlackBoxTests:
