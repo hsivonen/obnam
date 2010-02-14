@@ -22,13 +22,6 @@ I know what exactly how the Store class will be used.
 * Write tests for obnam for changing root node or host data without 
   committing: there should be no effect then.
   
-* Implement an "fsck" command, which verifies the data structures of the
-  backup store.
-  
-* Implement a "forget" command, which removes specific generations and
-  frees up disk space in the backup store. The user should be able to
-  specify a policy for what generations to keep.
-
 * Extended attributes and ACLs should be supported.
   * acl(5), lsattr(1)
   * python-acls
