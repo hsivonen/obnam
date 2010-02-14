@@ -66,16 +66,14 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         self.app.config['generation'] = 'latest'
 
     def restore(self, args):
+        self.app.config.require('store')
+        self.app.config.require('hostname')
+        self.app.config.require('generation')
+        self.app.config.require('to')
+
         logging.debug('restoring generation %s' % 
                         self.app.config['generation'])
-        if not self.app.config['generation']:
-            raise obnamlib.AppException('--generation option must be used '
-                                        'with restore')
-
         logging.debug('restoring to %s' % self.app.config['to'])
-        if not self.app.config['to']:
-            raise obnamlib.AppException('--to option must be used '
-                                        'with restore')
     
         logging.debug('restoring what: %s' % repr(args))
         if not args:
