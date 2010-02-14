@@ -91,6 +91,5 @@ class FsckPlugin(obnamlib.ObnamPlugin):
     def check_chunk(self, chunkid):
         '''Check a chunk.'''
         logging.debug('Checking chunk %s' % chunkid)
-        # FIXME: Need way to find if chunk exists without downloading it.
-        self.store.get_chunk(chunkid)
+        self.store.chunk_exists(chunkid)
 
