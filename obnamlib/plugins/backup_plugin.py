@@ -30,6 +30,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         
     def backup(self, args):
         self.app.config.require('store')
+        self.app.config.require('hostname')
+
         roots = self.app.config['root'] + args
         storefs = self.app.fsf.new(self.app.config['store'])
         self.store = obnamlib.Store(storefs)
