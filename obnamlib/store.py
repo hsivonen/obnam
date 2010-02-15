@@ -124,6 +124,7 @@ class Store(object):
         self.host_lockfile = None
         self.current_host = None
         self.new_generation = None
+        self.removed_hosts = []
 
     def checksum(self, data):
         '''Return checksum of data.
@@ -148,7 +149,9 @@ class Store(object):
         '''Return list of names of hosts using this store.'''
         return [x 
                 for x in self.fs.listdir('.') 
-                if x not in ['chunks', 'chunk_groups'] and self.fs.isdir(x)]
+                if x not in ['chunks', 'chunk_groups'] and 
+                   x not in self.removed_hosts and
+                   self.fs.isdir(x)]
 
     def lock_root(self):
         '''Lock root node.
@@ -165,6 +168,7 @@ class Store(object):
                 raise LockFail('Lock file root.lock already exists')
         self.got_root_lock = True
         self.added_hosts = []
+        self.removed_hosts = []
 
     @require_root_lock
     def unlock_root(self):
@@ -172,6 +176,7 @@ class Store(object):
         for hostname in self.added_hosts:
             self.fs.rmtree(hostname)
         self.added_hosts = []
+        self.removed_hosts = []
         self.fs.remove('root.lock')
         self.got_root_lock = False
         
@@ -179,6 +184,8 @@ class Store(object):
     def commit_root(self):
         '''Commit changes to root node, and unlock it.'''
         self.added_hosts = []
+        for hostname in self.removed_hosts:
+            self.fs.rmtree(hostname)
         self.unlock_root()
         
     @require_root_lock
@@ -198,9 +205,9 @@ class Store(object):
         
         '''
         
-        if not self.fs.isdir(hostname):
+        if hostname not in self.list_hosts():
             raise obnamlib.Error('host %s does not exist' % hostname)
-        self.fs.rmtree(hostname)
+        self.removed_hosts.append(hostname)
         
     def lock_host(self, hostname):
         '''Lock a host for exclusive write access.

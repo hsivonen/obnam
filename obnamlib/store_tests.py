@@ -106,12 +106,28 @@ class StoreRootNodeTests(unittest.TestCase):
         self.store.add_host('foo')
         self.store.remove_host('foo')
         self.assertEqual(self.store.list_hosts(), [])
+        
+    def test_removing_host_persists_past_commit(self):
+        self.store.lock_root()
+        self.store.add_host('foo')
+        self.store.remove_host('foo')
+        self.store.commit_root()
+        self.assertEqual(self.store.list_hosts(), [])
 
     def test_adding_host_without_commit_does_not_happen(self):
         self.store.lock_root()
         self.store.add_host('foo')
         self.store.unlock_root()
         self.assertEqual(self.store.list_hosts(), [])
+
+    def test_removing_host_without_commit_does_not_happen(self):
+        self.store.lock_root()
+        self.store.add_host('foo')
+        self.store.commit_root()
+        self.store.lock_root()
+        self.store.remove_host('foo')
+        self.store.unlock_root()
+        self.assertEqual(self.store.list_hosts(), ['foo'])
 
 
 class StoreHostTests(unittest.TestCase):
