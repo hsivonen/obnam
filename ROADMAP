@@ -21,15 +21,15 @@ I know what exactly how the Store class will be used.
 
 * Write tests for obnam for changing root node or host data without 
   committing: there should be no effect then.
+
+
+Sensible ideas
+--------------
   
 * Extended attributes and ACLs should be supported.
   * acl(5), lsattr(1)
   * python-acls
   * python-xattrs
-
-
-Sensible ideas
---------------
 
 * Write a plugin to do error correcting codes on data stored in
   the backup store.
