@@ -164,16 +164,21 @@ class Store(object):
             if e.errno == errno.EEXIST:
                 raise LockFail('Lock file root.lock already exists')
         self.got_root_lock = True
+        self.added_hosts = []
 
     @require_root_lock
     def unlock_root(self):
         '''Unlock root node without committing changes made.'''
+        for hostname in self.added_hosts:
+            self.fs.rmtree(hostname)
+        self.added_hosts = []
         self.fs.remove('root.lock')
         self.got_root_lock = False
         
     @require_root_lock
     def commit_root(self):
         '''Commit changes to root node, and unlock it.'''
+        self.added_hosts = []
         self.unlock_root()
         
     @require_root_lock
@@ -182,6 +187,7 @@ class Store(object):
         if self.fs.exists(hostname):
             raise obnamlib.Error('host %s already exists in store' % hostname)
         self.fs.mkdir(hostname)
+        self.added_hosts.append(hostname)
         
     @require_root_lock
     def remove_host(self, hostname):
@@ -233,6 +239,8 @@ class Store(object):
         
     def open_host(self, hostname):
         '''Open a host for read-only operation.'''
+        if not self.fs.isdir(hostname):
+            raise obnamlib.Error('%s is not an existing host' % hostname)
         self.current_host = hostname
         
     @require_open_host

@@ -83,6 +83,12 @@ class StoreRootNodeTests(unittest.TestCase):
         self.store.add_host('foo')
         self.assertEqual(self.store.list_hosts(), ['foo'])
         
+    def test_adds_host_that_persists_after_commit(self):
+        self.store.lock_root()
+        self.store.add_host('foo')
+        self.store.commit_root()
+        self.assertEqual(self.store.list_hosts(), ['foo'])
+        
     def test_adding_existing_host_fails(self):
         self.store.lock_root()
         self.store.add_host('foo')
@@ -99,6 +105,12 @@ class StoreRootNodeTests(unittest.TestCase):
         self.store.lock_root()
         self.store.add_host('foo')
         self.store.remove_host('foo')
+        self.assertEqual(self.store.list_hosts(), [])
+
+    def test_adding_host_without_commit_does_not_happen(self):
+        self.store.lock_root()
+        self.store.add_host('foo')
+        self.store.unlock_root()
         self.assertEqual(self.store.list_hosts(), [])
 
 
@@ -158,6 +170,9 @@ class StoreHostTests(unittest.TestCase):
     def test_unlock_host_when_locked_by_other_fails(self):
         self.other.lock_host('hostname')
         self.assertRaises(obnamlib.LockFail, self.store.unlock_host)
+
+    def test_opens_host_fails_if_host_does_not_exist(self):
+        self.assertRaises(obnamlib.Error, self.store.open_host, 'bad')
 
     def test_opens_host_even_when_locked_by_other(self):
         self.other.lock_host('hostname')
