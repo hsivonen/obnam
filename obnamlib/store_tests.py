@@ -248,6 +248,13 @@ class StoreHostTests(unittest.TestCase):
         self.assertNotEqual(end, None)
         self.assert_(start <= end)
 
+    def test_adding_generation_without_committing_does_not_add_it(self):
+        self.store.lock_host('hostname')
+        self.store.start_generation()
+        self.store.unlock_host()
+        self.store.open_host('hostname')
+        self.assertEqual(self.store.list_generations(), [])
+
     def test_removing_generation_works(self):
         self.store.lock_host('hostname')
         gen = self.store.start_generation()

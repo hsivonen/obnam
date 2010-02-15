@@ -226,15 +226,19 @@ class Store(object):
         self.got_host_lock = True
         self.host_lockfile = lockname
         self.current_host = hostname
+        self.added_generations = []
 
     @require_host_lock
     def unlock_host(self):
-        '''Unlock currently locked host.'''
+        '''Unlock currently locked host, without committing changes.'''
+        self.new_generation = None
+        for genid in self.added_generations:
+            self.remove_generation(genid)
+        self.added_generations = []
         self.fs.remove(self.host_lockfile)
         self.host_lockfile = None
         self.got_host_lock = False
         self.current_host = None
-        self.new_generation = None
 
     @require_host_lock
     def commit_host(self):
@@ -242,6 +246,7 @@ class Store(object):
         if self.new_generation is not None:
             name = os.path.join(self.current_host, self.new_generation)
             self.fs.write_file(name + '.end', '')
+        self.added_generations = []
         self.unlock_host()
         
     def open_host(self, hostname):
@@ -277,6 +282,7 @@ class Store(object):
         self.new_generation = gen
         self.fs.mkdir(name)
         self.fs.write_file(name + '.start', '')
+        self.added_generations.append(self.new_generation)
         return self.new_generation
 
     @require_host_lock
