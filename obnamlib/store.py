@@ -125,6 +125,7 @@ class Store(object):
         self.current_host = None
         self.new_generation = None
         self.removed_hosts = []
+        self.removed_generations = []
 
     def checksum(self, data):
         '''Return checksum of data.
@@ -227,14 +228,16 @@ class Store(object):
         self.host_lockfile = lockname
         self.current_host = hostname
         self.added_generations = []
+        self.removed_generations = []
 
     @require_host_lock
     def unlock_host(self):
         '''Unlock currently locked host, without committing changes.'''
         self.new_generation = None
         for genid in self.added_generations:
-            self.remove_generation(genid)
+            self._really_remove_generation(genid)
         self.added_generations = []
+        self.removed_generations = []
         self.fs.remove(self.host_lockfile)
         self.host_lockfile = None
         self.got_host_lock = False
@@ -247,6 +250,8 @@ class Store(object):
             name = os.path.join(self.current_host, self.new_generation)
             self.fs.write_file(name + '.end', '')
         self.added_generations = []
+        for genid in self.removed_generations:
+            self._really_remove_generation(genid)
         self.unlock_host()
         
     def open_host(self, hostname):
@@ -258,9 +263,10 @@ class Store(object):
     @require_open_host
     def list_generations(self):
         '''List existing generations for currently open host.'''
-        return sorted(x for
-                      x in self.fs.listdir(self.current_host)
-                      if self.fs.isdir(os.path.join(self.current_host, x)))
+        return sorted(x 
+                      for x in self.fs.listdir(self.current_host)
+                      if x not in self.removed_generations and
+                         self.fs.isdir(os.path.join(self.current_host, x)))
         
     @require_host_lock
     def start_generation(self):
@@ -286,11 +292,22 @@ class Store(object):
         return self.new_generation
 
     @require_host_lock
+    def _really_remove_generation(self, gen):
+        '''Really remove a committed generation.
+        
+        This is not part of the public API.
+        
+        This does not make any safety checks.
+        
+        '''
+        self.fs.rmtree(os.path.join(self.current_host, gen))
+
+    @require_host_lock
     def remove_generation(self, gen):
         '''Remove a committed generation.'''
         if gen == self.new_generation:
             raise obnamlib.Error('cannot remove started generation')
-        self.fs.rmtree(os.path.join(self.current_host, gen))
+        self.removed_generations.append(gen)
 
     @require_open_host
     def get_generation_times(self, gen):

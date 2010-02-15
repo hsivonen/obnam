@@ -271,6 +271,16 @@ class StoreHostTests(unittest.TestCase):
         self.assertRaises(obnamlib.Error,
                           self.store.remove_generation, gen)
 
+    def test_removing_without_committing_does_not_remove(self):
+        self.store.lock_host('hostname')
+        gen = self.store.start_generation()
+        self.store.commit_host()
+        self.store.lock_host('hostname')
+        self.store.remove_generation(gen)
+        self.store.unlock_host()
+        self.store.open_host('hostname')
+        self.assertEqual(self.store.list_generations(), [gen])
+
     def test_new_generation_has_root_dir_only(self):
         self.store.lock_host('hostname')
         gen = self.store.start_generation()
