@@ -124,6 +124,8 @@ class Store(object):
         self.host_lockfile = None
         self.current_host = None
         self.new_generation = None
+        self.removed_hosts = []
+        self.removed_generations = []
 
     def checksum(self, data):
         '''Return checksum of data.
@@ -148,7 +150,9 @@ class Store(object):
         '''Return list of names of hosts using this store.'''
         return [x 
                 for x in self.fs.listdir('.') 
-                if x not in ['chunks', 'chunk_groups'] and self.fs.isdir(x)]
+                if x not in ['chunks', 'chunk_groups'] and 
+                   x not in self.removed_hosts and
+                   self.fs.isdir(x)]
 
     def lock_root(self):
         '''Lock root node.
@@ -164,16 +168,25 @@ class Store(object):
             if e.errno == errno.EEXIST:
                 raise LockFail('Lock file root.lock already exists')
         self.got_root_lock = True
+        self.added_hosts = []
+        self.removed_hosts = []
 
     @require_root_lock
     def unlock_root(self):
         '''Unlock root node without committing changes made.'''
+        for hostname in self.added_hosts:
+            self.fs.rmtree(hostname)
+        self.added_hosts = []
+        self.removed_hosts = []
         self.fs.remove('root.lock')
         self.got_root_lock = False
         
     @require_root_lock
     def commit_root(self):
         '''Commit changes to root node, and unlock it.'''
+        self.added_hosts = []
+        for hostname in self.removed_hosts:
+            self.fs.rmtree(hostname)
         self.unlock_root()
         
     @require_root_lock
@@ -182,6 +195,7 @@ class Store(object):
         if self.fs.exists(hostname):
             raise obnamlib.Error('host %s already exists in store' % hostname)
         self.fs.mkdir(hostname)
+        self.added_hosts.append(hostname)
         
     @require_root_lock
     def remove_host(self, hostname):
@@ -192,9 +206,9 @@ class Store(object):
         
         '''
         
-        if not self.fs.isdir(hostname):
+        if hostname not in self.list_hosts():
             raise obnamlib.Error('host %s does not exist' % hostname)
-        self.fs.rmtree(hostname)
+        self.removed_hosts.append(hostname)
         
     def lock_host(self, hostname):
         '''Lock a host for exclusive write access.
@@ -213,15 +227,21 @@ class Store(object):
         self.got_host_lock = True
         self.host_lockfile = lockname
         self.current_host = hostname
+        self.added_generations = []
+        self.removed_generations = []
 
     @require_host_lock
     def unlock_host(self):
-        '''Unlock currently locked host.'''
+        '''Unlock currently locked host, without committing changes.'''
+        self.new_generation = None
+        for genid in self.added_generations:
+            self._really_remove_generation(genid)
+        self.added_generations = []
+        self.removed_generations = []
         self.fs.remove(self.host_lockfile)
         self.host_lockfile = None
         self.got_host_lock = False
         self.current_host = None
-        self.new_generation = None
 
     @require_host_lock
     def commit_host(self):
@@ -229,18 +249,24 @@ class Store(object):
         if self.new_generation is not None:
             name = os.path.join(self.current_host, self.new_generation)
             self.fs.write_file(name + '.end', '')
+        self.added_generations = []
+        for genid in self.removed_generations:
+            self._really_remove_generation(genid)
         self.unlock_host()
         
     def open_host(self, hostname):
         '''Open a host for read-only operation.'''
+        if not self.fs.isdir(hostname):
+            raise obnamlib.Error('%s is not an existing host' % hostname)
         self.current_host = hostname
         
     @require_open_host
     def list_generations(self):
         '''List existing generations for currently open host.'''
-        return sorted(x for
-                      x in self.fs.listdir(self.current_host)
-                      if self.fs.isdir(os.path.join(self.current_host, x)))
+        return sorted(x 
+                      for x in self.fs.listdir(self.current_host)
+                      if x not in self.removed_generations and
+                         self.fs.isdir(os.path.join(self.current_host, x)))
         
     @require_host_lock
     def start_generation(self):
@@ -262,14 +288,26 @@ class Store(object):
         self.new_generation = gen
         self.fs.mkdir(name)
         self.fs.write_file(name + '.start', '')
+        self.added_generations.append(self.new_generation)
         return self.new_generation
+
+    @require_host_lock
+    def _really_remove_generation(self, gen):
+        '''Really remove a committed generation.
+        
+        This is not part of the public API.
+        
+        This does not make any safety checks.
+        
+        '''
+        self.fs.rmtree(os.path.join(self.current_host, gen))
 
     @require_host_lock
     def remove_generation(self, gen):
         '''Remove a committed generation.'''
         if gen == self.new_generation:
             raise obnamlib.Error('cannot remove started generation')
-        self.fs.rmtree(os.path.join(self.current_host, gen))
+        self.removed_generations.append(gen)
 
     @require_open_host
     def get_generation_times(self, gen):

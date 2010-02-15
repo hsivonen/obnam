@@ -83,6 +83,12 @@ class StoreRootNodeTests(unittest.TestCase):
         self.store.add_host('foo')
         self.assertEqual(self.store.list_hosts(), ['foo'])
         
+    def test_adds_host_that_persists_after_commit(self):
+        self.store.lock_root()
+        self.store.add_host('foo')
+        self.store.commit_root()
+        self.assertEqual(self.store.list_hosts(), ['foo'])
+        
     def test_adding_existing_host_fails(self):
         self.store.lock_root()
         self.store.add_host('foo')
@@ -100,6 +106,28 @@ class StoreRootNodeTests(unittest.TestCase):
         self.store.add_host('foo')
         self.store.remove_host('foo')
         self.assertEqual(self.store.list_hosts(), [])
+        
+    def test_removing_host_persists_past_commit(self):
+        self.store.lock_root()
+        self.store.add_host('foo')
+        self.store.remove_host('foo')
+        self.store.commit_root()
+        self.assertEqual(self.store.list_hosts(), [])
+
+    def test_adding_host_without_commit_does_not_happen(self):
+        self.store.lock_root()
+        self.store.add_host('foo')
+        self.store.unlock_root()
+        self.assertEqual(self.store.list_hosts(), [])
+
+    def test_removing_host_without_commit_does_not_happen(self):
+        self.store.lock_root()
+        self.store.add_host('foo')
+        self.store.commit_root()
+        self.store.lock_root()
+        self.store.remove_host('foo')
+        self.store.unlock_root()
+        self.assertEqual(self.store.list_hosts(), ['foo'])
 
 
 class StoreHostTests(unittest.TestCase):
@@ -159,6 +187,9 @@ class StoreHostTests(unittest.TestCase):
         self.other.lock_host('hostname')
         self.assertRaises(obnamlib.LockFail, self.store.unlock_host)
 
+    def test_opens_host_fails_if_host_does_not_exist(self):
+        self.assertRaises(obnamlib.Error, self.store.open_host, 'bad')
+
     def test_opens_host_even_when_locked_by_other(self):
         self.other.lock_host('hostname')
         self.store.open_host('hostname')
@@ -217,6 +248,13 @@ class StoreHostTests(unittest.TestCase):
         self.assertNotEqual(end, None)
         self.assert_(start <= end)
 
+    def test_adding_generation_without_committing_does_not_add_it(self):
+        self.store.lock_host('hostname')
+        self.store.start_generation()
+        self.store.unlock_host()
+        self.store.open_host('hostname')
+        self.assertEqual(self.store.list_generations(), [])
+
     def test_removing_generation_works(self):
         self.store.lock_host('hostname')
         gen = self.store.start_generation()
@@ -232,6 +270,16 @@ class StoreHostTests(unittest.TestCase):
         gen = self.store.start_generation()
         self.assertRaises(obnamlib.Error,
                           self.store.remove_generation, gen)
+
+    def test_removing_without_committing_does_not_remove(self):
+        self.store.lock_host('hostname')
+        gen = self.store.start_generation()
+        self.store.commit_host()
+        self.store.lock_host('hostname')
+        self.store.remove_generation(gen)
+        self.store.unlock_host()
+        self.store.open_host('hostname')
+        self.assertEqual(self.store.list_generations(), [gen])
 
     def test_new_generation_has_root_dir_only(self):
         self.store.lock_host('hostname')
