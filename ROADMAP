@@ -12,15 +12,11 @@ Simply bugs, to be fixed
 * Nothing right now.
 
 
-Needs to be done for feature completeness before proper Store implementation
-----------------------------------------------------------------------------
+B-tree Store implementation
+----------------------------
 
-I will want to finish all of these before I start working on a proper
-(production-level) implementation of the Store class. This is so that
-I know what exactly how the Store class will be used.
-
-* Write tests for obnam for changing root node or host data without 
-  committing: there should be no effect then.
+* Implement the functional B-trees the btrfs filesystem uses, and
+  then use them for a new implementation of the Store class.
 
 
 Sensible ideas
