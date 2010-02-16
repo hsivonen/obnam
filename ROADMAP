@@ -9,7 +9,10 @@ has notes for what might be good ideas to do some day in the future.
 Simply bugs, to be fixed
 ------------------------
 
-* Nothing right now.
+* blackboxtest is ugly code, could do with some heavy refactoring
+  to clean it up. The goal is to make the code so simple and
+  straightforward it is clear that it works, and what each test
+  does.
 
 
 B-tree Store implementation
@@ -77,6 +80,12 @@ Sensible ideas
   writing out the files to the target directory. For forget, it would
   just list what it would remove. For fsck, it would just report
   problems. It's OK to do any amount of reading.
+
+* "obnam restore" should verify checksums of restored data.
+
+* Generations should store counts of files and directories, and total
+  size, and size of added data in that generation, and maybe other 
+  statistics.
 
 
 Wild ideas
