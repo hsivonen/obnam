@@ -86,6 +86,9 @@ Sensible ideas
 * Generations should store counts of files and directories, and total
   size, and size of added data in that generation, and maybe other 
   statistics.
+  
+* "obnam backup" should do checkpoints every so often when doing
+  a big backup.
 
 
 Wild ideas
