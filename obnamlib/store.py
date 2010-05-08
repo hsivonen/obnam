@@ -617,6 +617,7 @@ class Store(object):
             raise obnamlib.Error('%s is not an existing host' % hostname)
         self.current_host = hostname
         self.genstore = GenerationStore(self.fs, hostname)
+        self.genstore.init_forest()
         
     @require_open_host
     def list_generations(self):
