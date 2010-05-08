@@ -555,9 +555,6 @@ class Store(object):
     @require_root_lock
     def unlock_root(self):
         '''Unlock root node without committing changes made.'''
-        for hostname in self.added_hosts:
-            if self.fs.exists(hostname):
-                self.fs.rmtree(hostname) # FIXME
         self.added_hosts = []
         self.removed_hosts = []
         self.fs.remove('root.lock')
@@ -571,7 +568,7 @@ class Store(object):
         self.added_hosts = []
         for hostname in self.removed_hosts:
             if self.fs.exists(hostname):
-                self.fs.rmtree(hostname) # FIXME
+                self.fs.rmtree(hostname)
             self.hostlist.remove_host(hostname)
         self.hostlist.commit()
         self.unlock_root()
