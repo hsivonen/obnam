@@ -143,7 +143,7 @@ class HostList(object):
             self.forest = btree.Forest(ns)
         return True
 
-    def require_forest(self):
+    def require_forest(self): # pragma: no cover
         if not self.init_forest(create=True):
             raise obnamlib.Error('Cannot initialize %s as host list' %
                                  (os.path.join(self.fs.getcwd(), 'hostlist')))
