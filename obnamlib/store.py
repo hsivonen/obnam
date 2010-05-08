@@ -327,7 +327,7 @@ class GenerationStore(object):
         for t in self.forest.trees:
             if t.lookup(key) == genid:
                 return t
-        raise KeyError(genid)
+        raise KeyError('Unknown generation %s' % genid)
 
     def list_generations(self):
         if self.forest:
