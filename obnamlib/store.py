@@ -111,7 +111,7 @@ class NodeStoreVfs(btree.NodeStoreDisk):
     def remove_file(self, filename):
         self.fs.remove(filename)
 
-    def listdir(self, dirname):
+    def listdir(self, dirname): # pragma: no cover
         return self.fs.listdir(dirname)
 
 
