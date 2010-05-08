@@ -223,6 +223,7 @@ class Store(object):
         self.host_lockfile = None
         self.current_host = None
         self.new_generation = None
+        self.added_hosts = []
         self.removed_hosts = []
         self.removed_generations = []
 
