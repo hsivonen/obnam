@@ -239,6 +239,7 @@ class GenerationStore(object):
 
     FILE_NAME = 0
     FILE_METADATA = 1
+    FILE_DIRLEN = 2
     
     def __init__(self, fs, hostname):
         self.fs = fs
@@ -246,6 +247,10 @@ class GenerationStore(object):
         self.forest = None
         self.curgen = None
         self.key_bytes = len(self.key('', 0, 0))
+
+    def hash_name(self, filename):
+        '''Return hash of filename suitable for use as main key.'''
+        return hashlib.md5(filename).digest()[:8]
 
     def hashkey(self, mainhash, subtype, subkey):
         '''Like key, but main key's hash is given.'''
@@ -281,8 +286,7 @@ class GenerationStore(object):
 
         '''
 
-        mainhash = hashlib.md5(mainkey).digest()[:8]
-        return self.hashkey(mainhash, subtype, subkey)
+        return self.hashkey(self.hash_name(mainkey), subtype, subkey)
 
     def genkey(self, subkey):
         '''Generate key for generation metadata.'''
@@ -379,6 +383,18 @@ class GenerationStore(object):
     def create(self, filename, metadata):
         self._remove_filename_data(filename)
         self.set_metadata(filename, metadata)
+
+        # Add to parent's contents.
+        parent = os.path.dirname(filename)
+        if parent != filename: # root dir is its own parent
+            dirlenkey = self.key(parent, self.FILE, self.FILE_DIRLEN)
+            try:
+                dirlen = self._lookup_int(self.curgen, dirlenkey)
+            except KeyError:
+                dirlen = 0
+            h = self.hash_name(filename)
+            self.curgen.insert(self.key(parent, self.DIR_CONTENTS, dirlen), h)
+            self._insert_int(self.curgen, dirlenkey, dirlen + 1)
 
     def get_metadata(self, genid, filename):
         tree = self.find_generation(genid)
@@ -687,15 +703,10 @@ class Store(object):
         return decode_metadata(encoded)
 
     @require_started_generation
-    def _set_metadata(self, gen, filename, metadata):
-        '''Internal, do not use.'''
-        encoded = encode_metadata(metadata)
-        self.genstore.set_metadata(filename, encoded)
-        
-    @require_started_generation
     def create(self, filename, metadata):
         '''Create a new (empty) file in the new generation.'''
-        self._set_metadata(self.new_generation, filename, metadata)
+        encoded = encode_metadata(metadata)
+        self.genstore.create(filename, encoded)
 
     @require_started_generation
     def remove(self, filename):

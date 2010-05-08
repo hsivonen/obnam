@@ -307,6 +307,7 @@ class StoreHostTests(unittest.TestCase):
     def test_create_adds_file(self):
         self.store.lock_host('hostname')
         gen = self.store.start_generation()
+        self.store.create('/', self.dir_meta)
         self.store.create('/foo', obnamlib.Metadata())
         self.assertEqual(self.store.listdir(gen, '/'), ['foo'])
 
