@@ -139,6 +139,20 @@ class StoreRootNodeTests(unittest.TestCase):
         self.store.unlock_root()
         self.assertEqual(self.store.list_hosts(), ['foo'])
 
+    def test_removing_host_that_has_data_removes_the_data_as_well(self):
+        self.store.lock_root()
+        self.store.add_host('foo')
+        self.store.commit_root()
+        self.store.lock_host('foo')
+        self.store.start_generation()
+        self.store.create('/', obnamlib.Metadata())
+        self.store.commit_host()
+        self.store.lock_root()
+        self.store.remove_host('foo')
+        self.store.commit_root()
+        self.assertEqual(self.store.list_hosts(), [])
+        self.assertFalse(self.fs.exists('foo'))
+
 
 class StoreHostTests(unittest.TestCase):
 
