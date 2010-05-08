@@ -493,13 +493,13 @@ class StoreGetSetChunksAndGroupsTests(unittest.TestCase):
 
     def test_sets_chunks_for_file(self):
         self.store.set_file_chunks('/foo', [1, 2])
-        self.assertEqual(self.store.get_file_chunks(self.gen, '/foo'), 
-                         [1, 2])
+        chunkids = self.store.get_file_chunks(self.gen, '/foo')
+        self.assertEqual(sorted(chunkids), [1, 2])
 
     def test_sets_chunk_groups_for_file(self):
-        self.store.set_file_chunks('/foo', [1, 2])
-        self.assertEqual(self.store.get_file_chunk_groups(self.gen, '/foo'), 
-                         [1, 2])
+        self.store.set_file_chunk_groups('/foo', [1, 2])
+        cgids = self.store.get_file_chunk_groups(self.gen, '/foo')
+        self.assertEqual(sorted(cgids), [1, 2])
 
 
 class StoreGenspecTests(unittest.TestCase):
