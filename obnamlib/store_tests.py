@@ -311,6 +311,14 @@ class StoreHostTests(unittest.TestCase):
         self.store.create('/foo', obnamlib.Metadata())
         self.assertEqual(self.store.listdir(gen, '/'), ['foo'])
 
+    def test_create_adds_two_files(self):
+        self.store.lock_host('hostname')
+        gen = self.store.start_generation()
+        self.store.create('/', self.dir_meta)
+        self.store.create('/foo', obnamlib.Metadata())
+        self.store.create('/bar', obnamlib.Metadata())
+        self.assertEqual(sorted(self.store.listdir(gen, '/')), ['bar', 'foo'])
+
     def test_create_adds_dir(self):
         self.store.lock_host('hostname')
         gen = self.store.start_generation()

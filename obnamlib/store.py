@@ -263,10 +263,6 @@ class GenerationStore(object):
 
         return struct.pack(fmt, mainhash, subtype, subkey)
 
-    def unkey(self, key):
-        '''Split a key into its components.'''
-        return struct.unpack('!8sB8s', key)
-
     def unkey_int(self, key):
         '''Split a key into its components, with subkey being an integer.'''
         return struct.unpack('!8sBQ', key)
