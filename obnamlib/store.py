@@ -132,7 +132,7 @@ class HostList(object):
         return struct.pack('!Q', intkey)
 
     def init_forest(self):
-        if self.forest is not None:
+        if self.forest is None:
             if not self.fs.exists('hostlist'):
                 return False
             codec = btree.NodeCodec(self.key_bytes)
