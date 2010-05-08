@@ -119,7 +119,7 @@ class HostList(object):
 
     '''Store list of hosts.'''
 
-    key_size = 8 # 64-bit counter as key
+    key_bytes = 8 # 64-bit counter as key
     node_size = 4096 # typical size of disk block
 
     def __init__(self, fs):
@@ -131,17 +131,20 @@ class HostList(object):
     def key(self, intkey):
         return struct.pack('!Q', intkey)
 
-    def init_forest(self):
+    def init_forest(self, create=False):
         if self.forest is None:
-            if not self.fs.exists('hostlist'):
+            if create:
+                if not self.fs.exists('hostlist'):
+                    self.fs.mkdir('hostlist')
+            elif not self.fs.exists('hostlist'):
                 return False
             codec = btree.NodeCodec(self.key_bytes)
-            ns = btree.NodeStoreVfs(self.fs, 'hostlist', self.node_size, codec)
+            ns = NodeStoreVfs(self.fs, 'hostlist', self.node_size, codec)
             self.forest = btree.Forest(ns)
         return True
 
     def require_forest(self):
-        if not self.init_forest():
+        if not self.init_forest(create=True):
             raise obnamlib.Error('Cannot initialize %s as host list' %
                                  (os.path.join(self.fs.getcwd(), 'hostlist')))
 
