@@ -301,21 +301,19 @@ class GenerationStore(object):
     def _insert_int(self, tree, key, value):
         return tree.insert(key, struct.pack('!Q', value))
 
-    def init_forest(self, create=False):
+    def init_forest(self):
         if self.forest is None:
-            exists = self.fs.exists(self.dirname)
-            if not exists:
-                if create:
-                    self.fs.mkdir(self.dirname)
-                else:
-                    return False
+            if not self.fs.exists(self.dirname):
+                return False
             codec = btree.NodeCodec(self.key_bytes)
             ns = NodeStoreVfs(self.fs, self.dirname, self.node_size, codec)
             self.forest = btree.Forest(ns)
         return True
 
     def require_forest(self): # pragma: no cover
-        if not self.init_forest(create=True):
+        if not self.fs.exists(self.dirname):
+            self.fs.mkdir(dirname)
+        if not self.init_forest():
             name = os.path.join(self.fs.getcwd(), self.dirname)
             raise obnamlib.Error('Cannot initialize %s as host list' % name)
 
