@@ -96,7 +96,8 @@ class StoreRootNodeTests(unittest.TestCase):
         self.store.lock_root()
         self.store.add_host('foo')
         self.store.commit_root()
-        self.assertEqual(self.store.list_hosts(), ['foo'])
+        s2 = obnamlib.Store(self.fs)
+        self.assertEqual(s2.list_hosts(), ['foo'])
         
     def test_adding_existing_host_fails(self):
         self.store.lock_root()
