@@ -408,8 +408,9 @@ class GenerationStore(object):
         tree = self.find_generation(genid)
         minkey = self.key(filename, self.FILE_CHUNKS, 0)
         maxkey = self.key(filename, self.FILE_CHUNKS, self.SUBKEY_MAX)
-        return [struct.unpack('!Q', value)
-                for key, value in tree.lookup_range(minkey, maxkey)]
+        pairs = tree.lookup_range(minkey, maxkey)
+        return [struct.unpack('!Q', value)[0]
+                for key, value in pairs]
     
     def set_file_chunks(self, filename, chunkids):
         minkey = self.key(filename, self.FILE_CHUNKS, 0)
@@ -423,7 +424,7 @@ class GenerationStore(object):
         tree = self.find_generation(genid)
         minkey = self.key(filename, self.FILE_CHUNK_GROUPS, 0)
         maxkey = self.key(filename, self.FILE_CHUNK_GROUPS, self.SUBKEY_MAX)
-        return [struct.unpack('!Q', value)
+        return [struct.unpack('!Q', value)[0]
                 for key, value in tree.lookup_range(minkey, maxkey)]
 
     def set_file_chunk_groups(self, filename, cgids):
