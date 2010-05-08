@@ -269,9 +269,14 @@ class StoreHostTests(unittest.TestCase):
         self.store.lock_host('hostname')
         gen = self.store.start_generation()
         self.store.commit_host()
+
+        self.store.open_host('hostname')
+        self.assertEqual(self.store.list_generations(), [1])
+
         self.store.lock_host('hostname')
         self.store.remove_generation(gen)
         self.store.commit_host()
+
         self.store.open_host('hostname')
         self.assertEqual(self.store.list_generations(), [])
 
