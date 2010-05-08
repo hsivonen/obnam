@@ -24,6 +24,7 @@ import errno
 import hashlib
 import os
 import pickle
+import struct
 
 import obnamlib
 
