@@ -81,8 +81,8 @@ class Configuration(object):
 
         optnames = ['-%s' % name for name in names if len(name) == 1]
         optnames += ['--%s' % name for name in names if len(name) > 1]
-        self.parser.add_option(*optnames, action=action, help=help,
-                               default=copy.copy(value))
+        self.parser.add_option(action=action, help=help,
+                               default=copy.copy(value), *optnames)
 
     def new_boolean(self, names, help):
         self.new_setting('int', names, help, 'store_true', False)
