@@ -25,6 +25,7 @@ import hashlib
 import os
 import pickle
 import struct
+import time
 
 import obnamlib
 
@@ -252,6 +253,7 @@ class GenerationStore(object):
         if type(subkey) == int:
             fmt = '!8sBQ'
         else:
+            assert type(subkey) == str
             subkey = (subkey + '\0' * 8)[:8]
             fmt = '!8sB8s'
 
@@ -286,12 +288,18 @@ class GenerationStore(object):
         '''Generate key for generation metadata.'''
         return self.key('generation', self.GEN_META, subkey)
 
+    def _lookup_int(self, tree, key):
+        return struct.unpack('!Q', tree.lookup(key))
+
+    def _insert_int(self, tree, key, value):
+        return tree.insert(key, struct.pack('!Q', value))
+
     def init_forest(self, create=False):
         if self.forest is None:
-            exists = self.fs.exists(self.generations)
+            exists = self.fs.exists(self.dirname)
             if not exists:
                 if create:
-                    self.fs.mkdir(self.generations)
+                    self.fs.mkdir(self.dirname)
                 else:
                     return False
             codec = btree.NodeCodec(self.key_bytes)
@@ -306,6 +314,12 @@ class GenerationStore(object):
 
     def commit(self):
         if self.forest:
+            if self.curgen:
+                now = int(time.time())
+                self._insert_int(self.curgen, 
+                                 self.genkey(self.GEN_META_ENDED), 
+                                 now)
+                self.curgen = None
             self.forest.commit()
 
     def find_generation(self, genid):
@@ -316,8 +330,11 @@ class GenerationStore(object):
         raise KeyError(genid)
 
     def list_generations(self):
-        key = self.genkey(self.GEN_META_ID)
-        return [t.lookup(key) for t in self.forest.trees]
+        if self.forest:
+            key = self.genkey(self.GEN_META_ID)
+            return [self._lookup_int(t, key) for t in self.forest.trees]
+        else:
+            return []
 
     def start_generation(self):
         assert self.curgen is None
@@ -326,18 +343,28 @@ class GenerationStore(object):
         else:
             old = None
         self.curgen = self.forest.new_tree(old=old)
+        gen_id = self.forest.new_id()
+        now = int(time.time())
+        self._insert_int(self.curgen, self.genkey(self.GEN_META_ID), gen_id)
+        self._insert_int(self.curgen, self.genkey(self.GEN_META_STARTED), now)
 
-    def remove_generation(self, tree):
+    def remove_generation(self, genid):
+        tree = self.find_generation(genid)
         if tree == self.curgen:
             self.curgen = None
         self.forest.remove_tree(tree)
 
-    def _lookup_time(self, tree, what):
-        key = self.genkey(what)
-        encoded = tree.lookup(key)
-        return int(encoded)
+    def get_generation_id(self, tree):
+        return self._lookup_int(tree, self.genkey(self.GEN_META_ID))
 
-    def get_generation_times(self, tree):
+    def _lookup_time(self, tree, what):
+        try:
+            return self._lookup_int(tree, self.genkey(what))
+        except KeyError:
+            return None
+
+    def get_generation_times(self, genid):
+        tree = self.find_generation(genid)
         return (self._lookup_time(tree, self.GEN_META_STARTED),
                 self._lookup_time(tree, self.GEN_META_ENDED))
 
@@ -356,13 +383,15 @@ class GenerationStore(object):
         self.curgen.insert(self.key(filename, self.FILE, self.FILE_METADATA),
                            metadata)
 
-    def get_metadata(self, tree, filename):
+    def get_metadata(self, genid, filename):
+        tree = self.find_generation(genid)
         return tree.lookup(self.key(filename, self.FILE, self.FILE_METADATA))
 
     def remove(self, filename):
         self._remove_filename_data(self.curgen, filename)
 
-    def listdir(self, tree, dirname):
+    def listdir(self, genid, dirname):
+        tree = self.find_generation(genid)
         minkey = self.key(dirname, self.DIR_CONTENTS, 0)
         maxkey = self.key(dirname, self.DIR_CONTENTS, self.SUBKEY_MAX)
         basenames = []
@@ -372,33 +401,35 @@ class GenerationStore(object):
             basenames.append(os.path.basename(pathname))
         return basenames
 
-    def get_file_chunks(self, tree, filename):
+    def get_file_chunks(self, genid, filename):
+        tree = self.find_generation(genid)
         minkey = self.key(filename, self.FILE_CHUNKS, 0)
         maxkey = self.key(filename, self.FILE_CHUNKS, self.SUBKEY_MAX)
         return [struct.unpack('!Q', value)
                 for key, value in tree.lookup_range(minkey, maxkey)]
     
-    def set_file_chunks(self, tree, filename, chunkids):
+    def set_file_chunks(self, filename, chunkids):
         minkey = self.key(filename, self.FILE_CHUNKS, 0)
         maxkey = self.key(filename, self.FILE_CHUNKS, self.SUBKEY_MAX)
-        tree.remove_range(minkey, maxkey)
+        self.curgen.remove_range(minkey, maxkey)
         for i, chunkid in enumerate(chunkids):
-            tree.insert(self.key(filename, self.FILE_CHUNKS, i),
-                        struct.pack('!Q', chunkid))
+            self.curgen.insert(self.key(filename, self.FILE_CHUNKS, i),
+                               struct.pack('!Q', chunkid))
         
-    def get_file_chunk_groups(self, tree, filename):
+    def get_file_chunk_groups(self, genid, filename):
+        tree = self.find_generation(genid)
         minkey = self.key(filename, self.FILE_CHUNK_GROUPS, 0)
         maxkey = self.key(filename, self.FILE_CHUNK_GROUPS, self.SUBKEY_MAX)
         return [struct.unpack('!Q', value)
                 for key, value in tree.lookup_range(minkey, maxkey)]
 
-    def set_file_chunk_groups(self, tree, filename, cgids):
+    def set_file_chunk_groups(self, filename, cgids):
         minkey = self.key(filename, self.FILE_CHUNK_GROUPS, 0)
         maxkey = self.key(filename, self.FILE_CHUNK_GROUPS, self.SUBKEY_MAX)
-        tree.remove_range(minkey, maxkey)
+        self.curgen.remove_range(minkey, maxkey)
         for i, cgid in enumerate(cgids):
-            tree.insert(self.key(filename, self.FILE_CHUNK_GROUPS, i),
-                        struct.pack('!Q', cgid))
+            self.curgen.insert(self.key(filename, self.FILE_CHUNK_GROUPS, i),
+                               struct.pack('!Q', cgid))
 
 
 class Store(object):
@@ -492,7 +523,8 @@ class Store(object):
     def unlock_root(self):
         '''Unlock root node without committing changes made.'''
         for hostname in self.added_hosts:
-            self.fs.rmtree(hostname)
+            if self.fs.exists(hostname):
+                self.fs.rmtree(hostname) # FIXME
         self.added_hosts = []
         self.removed_hosts = []
         self.fs.remove('root.lock')
@@ -505,7 +537,8 @@ class Store(object):
             self.hostlist.add_host(hostname)
         self.added_hosts = []
         for hostname in self.removed_hosts:
-            self.fs.rmtree(hostname)
+            if self.fs.exists(hostname):
+                self.fs.rmtree(hostname) # FIXME
             self.hostlist.remove_host(hostname)
         self.hostlist.commit()
         self.unlock_root()
@@ -515,7 +548,6 @@ class Store(object):
         '''Add a new host to the store.'''
         if hostname in self.list_hosts():
             raise obnamlib.Error('host %s already exists in store' % hostname)
-        self.fs.mkdir(hostname) # FIXME
         self.added_hosts.append(hostname)
         
     @require_root_lock
@@ -555,6 +587,7 @@ class Store(object):
     @require_host_lock
     def unlock_host(self):
         '''Unlock currently locked host, without committing changes.'''
+        self.genstore = None # FIXME: This should remove uncommitted data.
         self.new_generation = None
         for genid in self.added_generations:
             self._really_remove_generation(genid)
@@ -564,14 +597,10 @@ class Store(object):
         self.host_lockfile = None
         self.got_host_lock = False
         self.current_host = None
-        self.genstore = None # FIXME: This should remove uncommitted data.
 
     @require_host_lock
     def commit_host(self):
         '''Commit changes to and unlock currently locked host.'''
-        if self.new_generation is not None:
-            name = os.path.join(self.current_host, self.new_generation)
-            self.fs.write_file(name + '.end', '')
         self.added_generations = []
         for genid in self.removed_generations:
             self._really_remove_generation(genid)
@@ -588,10 +617,7 @@ class Store(object):
     @require_open_host
     def list_generations(self):
         '''List existing generations for currently open host.'''
-        return sorted(x 
-                      for x in self.fs.listdir(self.current_host)
-                      if x not in self.removed_generations and
-                         self.fs.isdir(os.path.join(self.current_host, x)))
+        return self.genstore.list_generations()
         
     @require_host_lock
     def start_generation(self):
@@ -603,16 +629,10 @@ class Store(object):
         '''
         if self.new_generation is not None:
             raise obnamlib.Error('Cannot start two new generations')
-        i = 0
-        while True:
-            i += 1
-            gen = 'gen-%09d' % i
-            name = os.path.join(self.current_host, gen)
-            if not self.fs.exists(name):
-                break
-        self.new_generation = gen
-        self.fs.mkdir(name)
-        self.fs.write_file(name + '.start', '')
+        self.genstore.require_forest()
+        self.genstore.start_generation()
+        self.new_generation = \
+            self.genstore.get_generation_id(self.genstore.curgen)
         self.added_generations.append(self.new_generation)
         return self.new_generation
 
@@ -625,7 +645,8 @@ class Store(object):
         This does not make any safety checks.
         
         '''
-        self.fs.rmtree(os.path.join(self.current_host, gen))
+
+        self.genstore.remove_generation(gen)
 
     @require_host_lock
     def remove_generation(self, gen):
@@ -642,72 +663,38 @@ class Store(object):
         
         '''
 
-        start = None
-        end = None
-        
-        name = os.path.join(self.current_host, gen)
-        try:
-            start = self.fs.lstat(name + '.start').st_mtime
-            end = self.fs.lstat(name + '.end').st_mtime
-        except OSError:
-            pass
+        return self.genstore.get_generation_times(gen)
 
-        return start, end
-
-    def genpath(self, gen, filename):
-        return os.path.join(self.current_host, gen, './' + filename)
-        
     @require_open_host
     def listdir(self, gen, dirname):
         '''Return list of basenames in a directory within generation.'''
-        return [x for x in self.fs.listdir(self.genpath(gen, dirname))
-                if x != '.metadata']
+        return self.genstore.listdir(gen, dirname)
         
     @require_open_host
     def get_metadata(self, gen, filename):
         '''Return metadata for a file in a generation.'''
-        path = self.genpath(gen, filename)
-        if not self.fs.exists(path):
+
+        try:
+            encoded = self.genstore.get_metadata(gen, filename)
+        except KeyError:
             raise obnamlib.Error('%s does not exist' % filename)
-        if self.fs.isdir(path):
-            encoded = self.fs.cat(os.path.join(path, '.metadata'))
-        else:
-            encoded = self.fs.cat(self.genpath(gen, filename))
         return decode_metadata(encoded)
 
     @require_started_generation
     def _set_metadata(self, gen, filename, metadata):
         '''Internal, do not use.'''
-        path = self.genpath(self.new_generation, filename)
         encoded = encode_metadata(metadata)
-        if metadata.isdir():
-            if not self.fs.exists(path):
-                self.fs.makedirs(path)
-            metaname = os.path.join(path, '.metadata')
-            if self.fs.exists(metaname): # pragma: no cover
-                self.fs.remove(metaname)
-            self.fs.write_file(metaname, encoded)
-        else:
-            metaname = path
-            
-        if self.fs.exists(metaname):
-            self.fs.remove(metaname)
-        self.fs.write_file(metaname, encoded)
+        self.genstore.set_metadata(self.new_generation, filename, encoded)
         
     @require_started_generation
     def create(self, filename, metadata):
         '''Create a new (empty) file in the new generation.'''
-
         self._set_metadata(self.new_generation, filename, metadata)
 
     @require_started_generation
     def remove(self, filename):
         '''Remove file or directory or directory tree from generation.'''
-        x = self.genpath(self.new_generation, filename)
-        if self.fs.isdir(x):
-            self.fs.rmtree(x)
-        else:
-            self.fs.remove(x)
+        self.genstore.remove(filename)
 
     def _chunk_filename(self, chunkid):
         return os.path.join('chunks', chunkid)
@@ -833,8 +820,7 @@ class Store(object):
     @require_open_host
     def get_file_chunks(self, gen, filename):
         '''Return list of ids of chunks belonging to a file.'''
-        metadata = self.get_metadata(gen, filename)
-        return metadata.chunks or []
+        return self.genstore.get_file_chunks(gen, filename)
 
     @require_started_generation
     def set_file_chunks(self, filename, chunkids):
@@ -844,18 +830,12 @@ class Store(object):
         
         '''
         
-        metadata = self.get_metadata(self.new_generation, filename)
-        if metadata.chunk_groups:
-            raise obnamlib.Error('file %s already has chunk groups' % 
-                                 filename)
-        metadata.chunks = chunkids
-        self._set_metadata(self.new_generation, filename, metadata)
+        self.genstore.set_file_chunks(filename, chunkids)
 
     @require_open_host
     def get_file_chunk_groups(self, gen, filename):
         '''Return list of ids of chunk groups belonging to a file.'''
-        metadata = self.get_metadata(gen, filename)
-        return metadata.chunk_groups or []
+        return self.genstore.get_file_chunk_groups(gen, filename)
 
     @require_started_generation
     def set_file_chunk_groups(self, filename, cgids):
@@ -865,11 +845,7 @@ class Store(object):
         
         '''
 
-        metadata = self.get_metadata(self.new_generation, filename)
-        if metadata.chunks:
-            raise obnamlib.Error('file %s already has chunks' % filename)
-        metadata.chunk_groups = cgids
-        self._set_metadata(self.new_generation, filename, metadata)
+        self.genstore.set_file_chunk_groups(filename, cgids)
 
     @require_open_host
     def genspec(self, spec):
