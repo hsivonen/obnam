@@ -217,7 +217,6 @@ class GenerationStore(object):
 
     '''
 
-    dirname = 'generations'
     node_size = 64 * 1024
 
     TYPE_MAX = 255
@@ -240,8 +239,9 @@ class GenerationStore(object):
     FILE_NAME = 0
     FILE_METADATA = 1
     
-    def __init__(self, fs):
+    def __init__(self, fs, hostname):
         self.fs = fs
+        self.dirname = hostname # FIXME: This needs to handle evil hostnames
         self.forest = None
         self.curgen = None
         self.key_bytes = len(self.key('', 0, 0))
@@ -441,7 +441,7 @@ class Store(object):
         self.added_hosts = []
         self.removed_hosts = []
         self.removed_generations = []
-        self.genstore = GenerationStore(self.fs)
+        self.genstore = None
 
     def checksum(self, data):
         '''Return checksum of data.
@@ -515,7 +515,7 @@ class Store(object):
         '''Add a new host to the store.'''
         if hostname in self.list_hosts():
             raise obnamlib.Error('host %s already exists in store' % hostname)
-        self.fs.mkdir(hostname)
+        self.fs.mkdir(hostname) # FIXME
         self.added_hosts.append(hostname)
         
     @require_root_lock
