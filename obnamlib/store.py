@@ -19,6 +19,7 @@
 # IS TOTALLY STUPID.
 
 
+import btree
 import errno
 import hashlib
 import os
@@ -88,6 +89,99 @@ def decode_metadata(encoded):
     return pickle.loads(encoded)
 
 
+class NodeStoreVfs(btree.NodeStoreDisk):
+
+    def __init__(self, fs, dirname, node_size, codec):
+        btree.NodeStoreDisk.__init__(self, dirname, node_size, codec)
+        self.fs = fs
+
+    def read_file(self, filename):
+        return self.fs.cat(filename)
+
+    def write_file(self, filename, contents):
+        self.fs.write_file(filename, contents)
+
+    def file_exists(self, filename):
+        return self.fs.exists(filename)
+
+    def rename_file(self, old, new):
+        self.fs.rename(old, new)
+
+    def remove_file(self, filename):
+        self.fs.remove(filename)
+
+    def listdir(self, dirname):
+        return self.fs.listdir(dirname)
+
+
+class HostList(object):
+
+    '''Store list of hosts.'''
+
+    key_size = 8 # 64-bit counter as key
+    node_size = 4096 # typical size of disk block
+
+    def __init__(self, fs):
+        self.fs = fs
+        self.forest = None
+        self.minkey = self.key(0)
+        self.maxkey = self.key(2**64-1)
+
+    def key(self, intkey):
+        return struct.pack('!Q', intkey)
+
+    def init_forest(self):
+        if self.forest is not None:
+            if not self.fs.exists('hostlist'):
+                return False
+            codec = btree.NodeCodec(self.key_bytes)
+            ns = btree.NodeStoreVfs(self.fs, 'hostlist', self.node_size, codec)
+            self.forest = btree.Forest(ns)
+        return True
+
+    def require_forest(self):
+        if not self.init_forest():
+            raise obnamlib.Error('Cannot initialize %s as host list' %
+                                 (os.path.join(self.fs.getcwd(), 'hostlist')))
+
+    def pairs(self):
+        if self.forest.trees:
+            t = self.forest.trees[-1]
+            return t.lookup_range(self.minkey, self.maxkey)
+        else:
+            return []
+
+    def list_hosts(self):
+        if not self.init_forest():
+            return []
+        return [value for key, value in self.pairs()]
+
+    def add_host(self, hostname):
+        self.require_forest()
+        if not self.forest.trees:
+            t = self.forest.new_tree()
+            hostnum = 0
+        else:
+            t = self.forest.new_tree(old=self.forest.trees[-1])
+            pairs = t.lookup_range(self.minkey, self.maxkey)
+            biggest = max(key for key, value in pairs)
+            hostnum = 1 + struct.unpack('!Q', biggest)
+        t.insert(self.key(hostnum), hostname)
+
+    def remove_host(self, hostname):
+        self.require_forest()
+        if self.forest.trees:
+            t = self.forest.new_tree(old=self.forest.trees[-1])
+            for key, value in t.lookup_range(self.minkey, self.maxkey):
+                if value == hostname:
+                    t.remove(key)
+                    break
+
+    def commit(self):
+        self.require_forest()
+        self.forest.commit()
+
+
 class Store(object):
 
     '''Store backup data.
@@ -120,6 +214,7 @@ class Store(object):
     def __init__(self, fs):
         self.fs = fs
         self.got_root_lock = False
+        self.hostlist = HostList(fs)
         self.got_host_lock = False
         self.host_lockfile = None
         self.current_host = None
