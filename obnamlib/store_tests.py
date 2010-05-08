@@ -285,6 +285,11 @@ class StoreHostTests(unittest.TestCase):
         self.store.lock_host('hostname')
         gen = self.store.start_generation()
         self.store.commit_host()
+
+        self.store.open_host('hostname')
+        self.assertEqual(self.store.list_generations(), [gen])
+        self.store.unlock_host()
+
         self.store.lock_host('hostname')
         self.store.remove_generation(gen)
         self.store.unlock_host()
@@ -487,24 +492,14 @@ class StoreGetSetChunksAndGroupsTests(unittest.TestCase):
                          [])
 
     def test_sets_chunks_for_file(self):
-        self.store.set_file_chunks('/foo', ['1', '2'])
+        self.store.set_file_chunks('/foo', [1, 2])
         self.assertEqual(self.store.get_file_chunks(self.gen, '/foo'), 
-                         ['1', '2'])
+                         [1, 2])
 
     def test_sets_chunk_groups_for_file(self):
-        self.store.set_file_chunk_groups('/foo', ['1', '2'])
+        self.store.set_file_chunks('/foo', [1, 2])
         self.assertEqual(self.store.get_file_chunk_groups(self.gen, '/foo'), 
-                         ['1', '2'])
-
-    def test_setting_chunks_after_groups_fails(self):
-        self.store.set_file_chunk_groups('/foo', ['1', '2'])
-        self.assertRaises(obnamlib.Error, self.store.set_file_chunks,
-                           '/foo', ['1', '2'])
-
-    def test_setting_chunk_groups_after_chunks_fails(self):
-        self.store.set_file_chunks('/foo', ['1', '2'])
-        self.assertRaises(obnamlib.Error, self.store.set_file_chunk_groups,
-                           '/foo', ['1', '2'])
+                         [1, 2])
 
 
 class StoreGenspecTests(unittest.TestCase):

@@ -384,14 +384,14 @@ class GenerationStore(object):
         tree = self.find_generation(genid)
         return tree.lookup(self.key(filename, self.FILE, self.FILE_METADATA))
 
-    def set_metadata(self, filename, metadata):
+    def set_metadata(self, filename, encoded_metadata):
         self.curgen.insert(self.key(filename, self.FILE, self.FILE_NAME),
                            filename)
         self.curgen.insert(self.key(filename, self.FILE, self.FILE_METADATA),
-                           metadata)
+                           encoded_metadata)
 
     def remove(self, filename):
-        self._remove_filename_data(self.curgen, filename)
+        self._remove_filename_data(filename)
 
     def listdir(self, genid, dirname):
         tree = self.find_generation(genid)
@@ -591,10 +591,10 @@ class Store(object):
     @require_host_lock
     def unlock_host(self):
         '''Unlock currently locked host, without committing changes.'''
-        self.genstore = None # FIXME: This should remove uncommitted data.
         self.new_generation = None
         for genid in self.added_generations:
             self._really_remove_generation(genid)
+        self.genstore = None # FIXME: This should remove uncommitted data.
         self.added_generations = []
         self.removed_generations = []
         self.fs.remove(self.host_lockfile)
@@ -688,7 +688,7 @@ class Store(object):
     def _set_metadata(self, gen, filename, metadata):
         '''Internal, do not use.'''
         encoded = encode_metadata(metadata)
-        self.genstore.set_metadata(self.new_generation, filename, encoded)
+        self.genstore.set_metadata(filename, encoded)
         
     @require_started_generation
     def create(self, filename, metadata):
