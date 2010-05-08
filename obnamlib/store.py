@@ -550,6 +550,7 @@ class Store(object):
         self.current_host = hostname
         self.added_generations = []
         self.removed_generations = []
+        self.genstore = GenerationStore(self.fs, hostname)
 
     @require_host_lock
     def unlock_host(self):
@@ -563,6 +564,7 @@ class Store(object):
         self.host_lockfile = None
         self.got_host_lock = False
         self.current_host = None
+        self.genstore = None # FIXME: This should remove uncommitted data.
 
     @require_host_lock
     def commit_host(self):
@@ -573,6 +575,7 @@ class Store(object):
         self.added_generations = []
         for genid in self.removed_generations:
             self._really_remove_generation(genid)
+        self.genstore.commit()
         self.unlock_host()
         
     def open_host(self, hostname):
@@ -580,6 +583,7 @@ class Store(object):
         if not self.fs.isdir(hostname):
             raise obnamlib.Error('%s is not an existing host' % hostname)
         self.current_host = hostname
+        self.genstore = GenerationStore(self.fs, hostname)
         
     @require_open_host
     def list_generations(self):
