@@ -289,7 +289,7 @@ class GenerationStore(object):
         return self.key('generation', self.GEN_META, subkey)
 
     def _lookup_int(self, tree, key):
-        return struct.unpack('!Q', tree.lookup(key))
+        return struct.unpack('!Q', tree.lookup(key))[0]
 
     def _insert_int(self, tree, key, value):
         return tree.insert(key, struct.pack('!Q', value))
