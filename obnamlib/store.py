@@ -148,7 +148,7 @@ class HostList(object):
             raise obnamlib.Error('Cannot initialize %s as host list' %
                                  (os.path.join(self.fs.getcwd(), 'hostlist')))
 
-    def pairs(self):
+    def pairs(self): # pragma: no cover
         if self.forest.trees:
             t = self.forest.trees[-1]
             return t.lookup_range(self.minkey, self.maxkey)
