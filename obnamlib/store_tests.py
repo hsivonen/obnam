@@ -83,6 +83,15 @@ class StoreRootNodeTests(unittest.TestCase):
         self.store.add_host('foo')
         self.assertEqual(self.store.list_hosts(), ['foo'])
         
+    def test_adds_two_hosts_across_commits(self):
+        self.store.lock_root()
+        self.store.add_host('foo')
+        self.store.commit_root()
+        self.store.lock_root()
+        self.store.add_host('bar')
+        self.store.commit_root()
+        self.assertEqual(sorted(self.store.list_hosts()), ['bar', 'foo'])
+        
     def test_adds_host_that_persists_after_commit(self):
         self.store.lock_root()
         self.store.add_host('foo')

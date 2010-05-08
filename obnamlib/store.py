@@ -100,7 +100,7 @@ class NodeStoreVfs(btree.NodeStoreDisk):
         return self.fs.cat(filename)
 
     def write_file(self, filename, contents):
-        self.fs.write_file(filename, contents)
+        self.fs.overwrite_file(filename, contents)
 
     def file_exists(self, filename):
         return self.fs.exists(filename)
@@ -169,7 +169,7 @@ class HostList(object):
             t = self.forest.new_tree(old=self.forest.trees[-1])
             pairs = t.lookup_range(self.minkey, self.maxkey)
             biggest = max(key for key, value in pairs)
-            hostnum = 1 + struct.unpack('!Q', biggest)
+            hostnum = 1 + struct.unpack('!Q', biggest)[0]
         t.insert(self.key(hostnum), hostname)
 
     def remove_host(self, hostname):
