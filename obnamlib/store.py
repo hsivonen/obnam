@@ -378,10 +378,7 @@ class GenerationStore(object):
     def _remove_filename_data(self, filename):
         minkey = self.key(filename, 0, 0)
         maxkey = self.key(filename, self.TYPE_MAX, self.SUBKEY_MAX)
-        try:
-            self.curgen.remove_range(minkey, maxkey)
-        except KeyError:
-            pass
+        self.curgen.remove_range(minkey, maxkey)
 
         # Also remove from parent's contents.
         parent = os.path.dirname(filename)
