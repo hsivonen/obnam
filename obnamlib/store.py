@@ -186,6 +186,221 @@ class HostList(object):
         self.forest.commit()
 
 
+class GenerationStore(object):
+
+    '''Store generations.
+
+    We store things in the B-tree forest as follows:
+
+    * each generation is a tree; each tree is a generation
+    * tree key is constructed from three parts: a main key, a subkey type,
+      and the subkey itself
+      * the main key is a hash of a string, and is 64 bits
+      * the subkey type is 8 bits
+      * the subkey is a string and is 64 bits
+    * the string for the main key is either a fully qualified pathname, 
+      for filesystem objects, or the string "generation" for generation
+      metadata
+    * a filesystem object's metadata (inode data, etc) is stored as a blob,
+      in a specific subkey
+    * a regular file's contents are stored using chunks, which are stored
+      outside of the tree
+      * each chunk has an id
+      * the chunk ids are stored in the tree, using a dedicated subkey type,
+        with the subkey being the ordinal for each subkey: 0, 1, 2, ...
+    * a directory's contents are stored by storing the main key (the hash,
+      not the input to the hash function) for each filesystem object in the
+      directory
+      * similar to chunks in files
+      * dedicated subkey type
+      * subkey is ordinal
+
+    '''
+
+    dirname = 'generations'
+    node_size = 64 * 1024
+
+    TYPE_MAX = 255
+    SUBKEY_MAX = struct.pack('!Q', 2**64-1)
+
+    # Subkey types.
+
+    GEN_META = 0
+    FILE = 1
+    FILE_CHUNKS = 2
+    FILE_CHUNK_GROUPS = 3
+    DIR_CONTENTS = 4
+
+    # Subkey values when they are fixed.
+
+    GEN_META_ID = 0
+    GEN_META_STARTED = 1
+    GEN_META_ENDED = 2
+
+    FILE_NAME = 0
+    FILE_METADATA = 1
+    
+    def __init__(self, fs):
+        self.fs = fs
+        self.forest = None
+        self.curgen = None
+        self.key_bytes = len(self.key('', 0, 0))
+
+    def hashkey(self, mainhash, subtype, subkey):
+        '''Like key, but main key's hash is given.'''
+        
+        if type(subkey) == int:
+            fmt = '!8sBQ'
+        else:
+            subkey = (subkey + '\0' * 8)[:8]
+            fmt = '!8sB8s'
+
+        return struct.pack(fmt, mainkey, subtype, subkey)
+
+    def key(self, mainkey, subtype, subkey):
+        '''Compute a full key.
+
+        The full key consists of three parts:
+
+        * a hash of mainkey (64 bits)
+        * the subkey type (8 bits)
+        * type subkey (64 bits)
+
+        These are catenated.
+
+        mainkey must be a string.
+
+        subtype must be an integer in the range 0.255, inclusive.
+
+        subkey must be either a string or an integer. If it is a string,
+        it will be padded with NUL bytes at the end, if it is less than
+        8 bytes, and truncated, if longer. If it is an integer, it will
+        be converted as a string, and the value must fit into 64 bits.
+
+        '''
+
+        mainhash = hashlib.md5(mainkey)[:8]
+        return self.hashkey(mainhash, subtype, subkey)
+
+    def genkey(self, subkey):
+        '''Generate key for generation metadata.'''
+        return self.key('generation', self.GEN_META, subkey)
+
+    def init_forest(self, create=False):
+        if self.forest is None:
+            exists = self.fs.exists(self.generations)
+            if not exists:
+                if create:
+                    self.fs.mkdir(self.generations)
+                else:
+                    return False
+            codec = btree.NodeCodec(self.key_bytes)
+            ns = NodeStoreVfs(self.fs, 'hostlist', self.node_size, codec)
+            self.forest = btree.Forest(ns)
+        return True
+
+    def require_forest(self): # pragma: no cover
+        if not self.init_forest(create=True):
+            name = os.path.join(self.fs.getcwd(), self.dirname)
+            raise obnamlib.Error('Cannot initialize %s as host list' % name)
+
+    def commit(self):
+        if self.forest:
+            self.forest.commit()
+
+    def find_generation(self, genid):
+        key = self.genkey(self.GEN_META_ID)
+        for t in self.forest.trees:
+            if t.lookup(key) == genid:
+                return t
+        raise KeyError(genid)
+
+    def list_generations(self):
+        key = self.genkey(self.GEN_META_ID)
+        return [t.lookup(key) for t in self.forest.trees]
+
+    def start_generation(self):
+        assert self.curgen is None
+        if self.forest.trees:
+            old = self.forest.trees[-1]
+        else:
+            old = None
+        self.curgen = self.forest.new_tree(old=old)
+
+    def remove_generation(self, tree):
+        if tree == self.curgen:
+            self.curgen = None
+        self.forest.remove_tree(tree)
+
+    def _lookup_time(self, tree, what):
+        key = self.genkey(what)
+        encoded = tree.lookup(key)
+        return int(encoded)
+
+    def get_generation_times(self, tree):
+        return (self._lookup_time(tree, self.GEN_META_STARTED),
+                self._lookup_time(tree, self.GEN_META_ENDED))
+
+    def _remove_filename_data(self, filename):
+        minkey = self.key(filename, 0, 0)
+        maxkey = self.key(filename, self.TYPE_MAX, self.SUBKEY_MAX)
+        try:
+            self.curgen.remove_range(minkey, maxkey)
+        except KeyError:
+            pass
+
+    def create(self, filename, metadata):
+        self._remove_filename_data(filename)
+        self.curgen.insert(self.key(filename, self.FILE, self.FILE_NAME),
+                           filename)
+        self.curgen.insert(self.key(filename, self.FILE, self.FILE_METADATA),
+                           metadata)
+
+    def get_metadata(self, tree, filename):
+        return tree.lookup(self.key(filename, self.FILE, self.FILE_METADATA))
+
+    def remove(self, filename):
+        self._remove_filename_data(self.curgen, filename)
+
+    def listdir(self, tree, dirname):
+        minkey = self.key(dirname, self.DIR_CONTENTS, 0)
+        maxkey = self.key(dirname, self.DIR_CONTENTS, self.SUBKEY_MAX)
+        basenames = []
+        for key, value in tree.lookup_range(minkey, maxkey):
+            namekey = self.hashkey(value, self.FILE, self.FILE_NAME)
+            pathname = tree.lookup(namekey)
+            basenames.append(os.path.basename(pathname))
+        return basenames
+
+    def get_file_chunks(self, tree, filename):
+        minkey = self.key(filename, self.FILE_CHUNKS, 0)
+        maxkey = self.key(filename, self.FILE_CHUNKS, self.SUBKEY_MAX)
+        return [struct.unpack('!Q', value)
+                for key, value in tree.lookup_range(minkey, maxkey)]
+    
+    def set_file_chunks(self, tree, filename, chunkids):
+        minkey = self.key(filename, self.FILE_CHUNKS, 0)
+        maxkey = self.key(filename, self.FILE_CHUNKS, self.SUBKEY_MAX)
+        tree.remove_range(minkey, maxkey)
+        for i, chunkid in enumerate(chunkids):
+            tree.insert(self.key(filename, self.FILE_CHUNKS, i),
+                        struct.pack('!Q', chunkid))
+        
+    def get_file_chunk_groups(self, tree, filename):
+        minkey = self.key(filename, self.FILE_CHUNK_GROUPS, 0)
+        maxkey = self.key(filename, self.FILE_CHUNK_GROUPS, self.SUBKEY_MAX)
+        return [struct.unpack('!Q', value)
+                for key, value in tree.lookup_range(minkey, maxkey)]
+
+    def set_file_chunk_groups(self, tree, filename, cgids):
+        minkey = self.key(filename, self.FILE_CHUNK_GROUPS, 0)
+        maxkey = self.key(filename, self.FILE_CHUNK_GROUPS, self.SUBKEY_MAX)
+        tree.remove_range(minkey, maxkey)
+        for i, cgid in enumerate(cgids):
+            tree.insert(self.key(filename, self.FILE_CHUNK_GROUPS, i),
+                        struct.pack('!Q', cgid))
+
+
 class Store(object):
 
     '''Store backup data.
@@ -226,6 +441,7 @@ class Store(object):
         self.added_hosts = []
         self.removed_hosts = []
         self.removed_generations = []
+        self.genstore = GenerationStore(self.fs)
 
     def checksum(self, data):
         '''Return checksum of data.
