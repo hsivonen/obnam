@@ -255,7 +255,7 @@ class GenerationStore(object):
             subkey = (subkey + '\0' * 8)[:8]
             fmt = '!8sB8s'
 
-        return struct.pack(fmt, mainkey, subtype, subkey)
+        return struct.pack(fmt, mainhash, subtype, subkey)
 
     def key(self, mainkey, subtype, subkey):
         '''Compute a full key.
@@ -279,7 +279,7 @@ class GenerationStore(object):
 
         '''
 
-        mainhash = hashlib.md5(mainkey)[:8]
+        mainhash = hashlib.md5(mainkey).digest()[:8]
         return self.hashkey(mainhash, subtype, subkey)
 
     def genkey(self, subkey):
