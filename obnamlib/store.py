@@ -275,9 +275,13 @@ class Store(object):
     @require_root_lock
     def commit_root(self):
         '''Commit changes to root node, and unlock it.'''
+        for hostname in self.added_hosts:
+            self.hostlist.add_host(hostname)
         self.added_hosts = []
         for hostname in self.removed_hosts:
             self.fs.rmtree(hostname)
+            self.hostlist.remove_host(hostname)
+        self.hostlist.commit()
         self.unlock_root()
         
     @require_root_lock
