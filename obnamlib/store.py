@@ -303,7 +303,7 @@ class GenerationStore(object):
                 else:
                     return False
             codec = btree.NodeCodec(self.key_bytes)
-            ns = NodeStoreVfs(self.fs, 'hostlist', self.node_size, codec)
+            ns = NodeStoreVfs(self.fs, self.dirname, self.node_size, codec)
             self.forest = btree.Forest(ns)
         return True
 
@@ -378,14 +378,17 @@ class GenerationStore(object):
 
     def create(self, filename, metadata):
         self._remove_filename_data(filename)
-        self.curgen.insert(self.key(filename, self.FILE, self.FILE_NAME),
-                           filename)
-        self.curgen.insert(self.key(filename, self.FILE, self.FILE_METADATA),
-                           metadata)
+        self.set_metadata(filename, metadata)
 
     def get_metadata(self, genid, filename):
         tree = self.find_generation(genid)
         return tree.lookup(self.key(filename, self.FILE, self.FILE_METADATA))
+
+    def set_metadata(self, filename, metadata):
+        self.curgen.insert(self.key(filename, self.FILE, self.FILE_NAME),
+                           filename)
+        self.curgen.insert(self.key(filename, self.FILE, self.FILE_METADATA),
+                           metadata)
 
     def remove(self, filename):
         self._remove_filename_data(self.curgen, filename)
@@ -583,6 +586,7 @@ class Store(object):
         self.added_generations = []
         self.removed_generations = []
         self.genstore = GenerationStore(self.fs, hostname)
+        self.genstore.require_forest()
 
     @require_host_lock
     def unlock_host(self):
