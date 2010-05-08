@@ -66,6 +66,9 @@ class LocalFS(obnamlib.VirtualFileSystem):
     def remove(self, pathname):
         os.remove(self.join(pathname))
 
+    def rename(self, old, new):
+        os.rename(self.join(old), self.join(new))
+
     def lstat(self, pathname):
         return os.lstat(self.join(pathname))
 

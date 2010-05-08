@@ -110,6 +110,9 @@ class VirtualFileSystem(object):
     def remove(self, pathname):
         """Remove a file."""
 
+    def rename(self, old, new):
+        """Rename a file."""
+
     def lstat(self, pathname):
         """Like os.lstat."""
 
