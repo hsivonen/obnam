@@ -513,7 +513,7 @@ class Store(object):
     @require_root_lock
     def add_host(self, hostname):
         '''Add a new host to the store.'''
-        if self.fs.exists(hostname):
+        if hostname in self.list_hosts():
             raise obnamlib.Error('host %s already exists in store' % hostname)
         self.fs.mkdir(hostname)
         self.added_hosts.append(hostname)
