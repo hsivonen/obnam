@@ -400,7 +400,6 @@ class GenerationStore(object):
                     break
 
     def create(self, filename, metadata):
-        self._remove_filename_data(filename)
         self.set_metadata(filename, metadata)
 
         # Add to parent's contents.
