@@ -243,11 +243,7 @@ class Store(object):
 
     def list_hosts(self):
         '''Return list of names of hosts using this store.'''
-        return [x 
-                for x in self.fs.listdir('.') 
-                if x not in ['chunks', 'chunk_groups'] and 
-                   x not in self.removed_hosts and
-                   self.fs.isdir(x)]
+        return self.hostlist.list_hosts()
 
     def lock_root(self):
         '''Lock root node.
