@@ -580,7 +580,7 @@ class Store(object):
         
     def open_host(self, hostname):
         '''Open a host for read-only operation.'''
-        if not self.fs.isdir(hostname):
+        if hostname not in self.list_hosts():
             raise obnamlib.Error('%s is not an existing host' % hostname)
         self.current_host = hostname
         self.genstore = GenerationStore(self.fs, hostname)
