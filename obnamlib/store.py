@@ -722,7 +722,7 @@ class Store(object):
         self.genstore.remove(filename)
 
     def _chunk_filename(self, chunkid):
-        return os.path.join('chunks', chunkid)
+        return os.path.join('chunks', '%d' % chunkid)
 
     @require_started_generation
     def put_chunk(self, data, checksum):
@@ -743,10 +743,9 @@ class Store(object):
         
         '''
         
-        i = 0
+        chunkid = 0
         while True:
-            i += 1
-            chunkid = '%d' % i
+            chunkid += 1
             filename = self._chunk_filename(chunkid)
             if not self.fs.exists(filename):
                 break
@@ -775,6 +774,7 @@ class Store(object):
         chunkids = []
         if self.fs.exists('chunks'):
             for chunkid in self.fs.listdir('chunks'):
+                chunkid = int(chunkid)
                 filename = self._chunk_filename(chunkid)
                 data = self.fs.cat(filename)
                 if self.checksum(data) == checksum:
@@ -785,7 +785,7 @@ class Store(object):
     def list_chunks(self):
         '''Return list of ids of all chunks in store.'''
         if self.fs.exists('chunks'):
-            return self.fs.listdir('chunks')
+            return [int(x) for x in self.fs.listdir('chunks')]
         else:
             return []
 
