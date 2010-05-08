@@ -244,7 +244,12 @@ class Store(object):
 
     def list_hosts(self):
         '''Return list of names of hosts using this store.'''
-        return self.hostlist.list_hosts()
+
+        listed = set(self.hostlist.list_hosts())
+        added = set(self.added_hosts)
+        removed = set(self.removed_hosts)
+        hosts = listed.union(added).difference(removed)
+        return list(hosts)
 
     def lock_root(self):
         '''Lock root node.
