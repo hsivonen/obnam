@@ -393,19 +393,23 @@ class GenerationStore(object):
     def create(self, filename, metadata):
         self.set_metadata(filename, metadata)
 
-        # Add to parent's contents.
+        # Add to parent's contents, unless already there.
         parent = os.path.dirname(filename)
         if parent != filename: # root dir is its own parent
-            h = self.hash_name(filename)
-            minkey = self.key(parent, self.DIR_CONTENTS, 0)
-            maxkey = self.key(parent, self.DIR_CONTENTS, self.SUBKEY_MAX)
-            pairs = self.curgen.lookup_range(minkey, maxkey)
-            if pairs:
-                a, b, maxindex = self.unkey_int(pairs[-1][0])
-                index = maxindex + 1
-            else:
-                index = 0
-            self.curgen.insert(self.key(parent, self.DIR_CONTENTS, index), h)
+            basename = os.path.basename(filename)
+            genid = self.get_generation_id(self.curgen)
+            if basename not in self.listdir(genid, parent):
+                minkey = self.key(parent, self.DIR_CONTENTS, 0)
+                maxkey = self.key(parent, self.DIR_CONTENTS, self.SUBKEY_MAX)
+                pairs = self.curgen.lookup_range(minkey, maxkey)
+                if pairs:
+                    a, b, maxindex = self.unkey_int(pairs[-1][0])
+                    index = maxindex + 1
+                else:
+                    index = 0
+                key = self.key(parent, self.DIR_CONTENTS, index)
+                h = self.hash_name(filename)
+                self.curgen.insert(key, h)
 
     def get_metadata(self, genid, filename):
         tree = self.find_generation(genid)
