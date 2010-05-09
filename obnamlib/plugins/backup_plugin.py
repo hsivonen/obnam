@@ -29,17 +29,25 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.app.config.new_list(['root'], 'what to backup')
         
     def backup(self, args):
+        logging.debug('backup starts')
+
         self.app.config.require('store')
         self.app.config.require('hostname')
 
         roots = self.app.config['root'] + args
-        storefs = self.app.fsf.new(self.app.config['store'])
+        logging.debug('backup roots: %s' % roots)
+
+        storepath = self.app.config['store']
+        logging.debug('store: %s' % storepath)
+        storefs = self.app.fsf.new(storepath)
         self.store = obnamlib.Store(storefs)
         self.done = 0
         self.total = 0
 
         hostname = self.app.config['hostname']
+        logging.debug('hostname: %s' % hostname)
         if hostname not in self.store.list_hosts():
+            logging.debug('adding host %s' % hostname)
             self.store.lock_root()
             self.store.add_host(hostname)
             self.store.commit_root()
@@ -48,6 +56,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.store.start_generation()
         self.fs = None
         for root in roots:
+            logging.debug('backing up root %s' % root)
             if not self.fs:
                 self.fs = self.app.fsf.new(root)
                 self.fs.connect()
@@ -61,9 +70,12 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         self.app.hooks.call('progress-found-file', None, 0)
 
+        logging.debug('backup finished')
+
     def backup_parents(self, root):
         '''Back up parents of root, non-recursively.'''
         root = self.fs.abspath(root)
+        logging.debug('backing up parents of %s' % root)
         while True:
             parent = os.path.dirname(root)
             metadata = obnamlib.read_metadata(self.fs, root)
@@ -73,6 +85,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             root = parent
 
     def backup_something(self, root):
+        logging.debug('backup_something: %s' % root)
         try:
             if self.fs.isdir(root):
                 self.backup_dir(root)
@@ -91,6 +104,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         
         '''
         
+        logging.debug('backup_file: %s' % root)
         metadata = obnamlib.read_metadata(self.fs, root)
         logging.debug('backup_file: metadata.st_mtime=%s' % repr(metadata.st_mtime))
         self.app.hooks.call('progress-found-file', root, metadata.st_size)
@@ -100,6 +114,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
     def backup_file_contents(self, filename):
         '''Back up contents of a regular file.'''
+        logging.debug('backup_file_contents: %s' % filename)
         chunkids = []
         cgids = []
         groupsum = self.store.new_checksummer()
@@ -144,6 +159,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         # If the directory already exists in the backup store, 
         # remove the files that no longer exist in the live data.
+
+        logging.debug('backup_dir: %s' % root)
 
         new_basenames = self.fs.listdir(root)
         try:
