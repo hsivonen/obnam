@@ -60,6 +60,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
     def ls(self, args):
         self.open_store()
         for gen in args:
+            gen = int(gen)
             started = self.format_time(0)
             ended = self.format_time(0)
             print 'Generation %s (%s - %s)' % (gen, started, ended)
