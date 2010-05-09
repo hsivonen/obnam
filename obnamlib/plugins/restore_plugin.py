@@ -80,8 +80,8 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             logging.debug('no args given, so restoring everything')
             args = ['/']
     
-        fs = self.app.fsf.new(self.app.config['store'])
-        self.store = obnamlib.Store(fs)
+        storefs = self.app.fsf.new(self.app.config['store'])
+        self.store = obnamlib.Store(storefs)
         self.store.open_host(self.app.config['hostname'])
         self.fs = self.app.fsf.new(self.app.config['to'])
 
