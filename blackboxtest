@@ -84,7 +84,7 @@ class BlackBoxTest(object):
         
         return self.runcmd(['./obnam', 
                             '--quiet',
-                            '--log', '%s/obnam.log' % self.temproot,
+                            '--log', 'blackboxtest-obnam.log',
                             '--hostname', self.hostid] +
                            args, stderr_ignore=stderr_ignore)
 
