@@ -817,7 +817,7 @@ class Store(object):
         filename = self._chunk_group_filename(cgid)
         data = self.fs.cat(filename)
         lines = data.splitlines()
-        return lines[1:]
+        return [int(x) for x in lines[1:]]
         
     @require_open_host
     def find_chunk_groups(self, checksum):

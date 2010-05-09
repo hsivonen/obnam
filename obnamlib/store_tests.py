@@ -459,23 +459,23 @@ class StoreChunkGroupTests(unittest.TestCase):
         shutil.rmtree(self.tempdir)
 
     def test_put_chunk_group_returns_id(self):
-        self.assertNotEqual(self.store.put_chunk_group(['1'], 'checksum'), 
+        self.assertNotEqual(self.store.put_chunk_group([1], 'checksum'), 
                             None)
         
     def test_get_chunk_group_retrieves_what_put_chunk_puts(self):
-        cgid = self.store.put_chunk_group(['1', '2'], 'checksum')
-        self.assertEqual(self.store.get_chunk_group(cgid), ['1', '2'])
+        cgid = self.store.put_chunk_group([1, 2], 'checksum')
+        self.assertEqual(self.store.get_chunk_group(cgid), [1, 2])
         
     def test_find_chunk_groups_finds_what_put_chunk_group_puts(self):
-        cgid = self.store.put_chunk_group(['1', '2'], 'checksum')
+        cgid = self.store.put_chunk_group([1, 2], 'checksum')
         self.assertEqual(self.store.find_chunk_groups('checksum'), [cgid])
         
     def test_find_chunk_groups_finds_nothing_if_nothing_is_put(self):
         self.assertEqual(self.store.find_chunk_groups('checksum'), [])
         
     def test_handles_checksum_collision(self):
-        cgid1 = self.store.put_chunk_group(['1', '2'], 'checksum')
-        cgid2 = self.store.put_chunk_group(['3', '4'], 'checksum')
+        cgid1 = self.store.put_chunk_group([1, 2], 'checksum')
+        cgid2 = self.store.put_chunk_group([3, 4], 'checksum')
         self.assertEqual(set(self.store.find_chunk_groups('checksum')),
                          set([cgid1, cgid2]))
 
@@ -485,7 +485,7 @@ class StoreChunkGroupTests(unittest.TestCase):
     def test_returns_chunk_groups_after_they_exist(self):
         cgids = []
         for i in range(2):
-            cgids.append(self.store.put_chunk_group(['1'], 'checksum'))
+            cgids.append(self.store.put_chunk_group([1], 'checksum'))
         self.assertEqual(sorted(self.store.list_chunk_groups()), 
                          sorted(cgids))
 
