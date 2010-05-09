@@ -15,5 +15,5 @@ check: all
 	
 clean:
 	rm -f _obnam.so obnamlib/*.pyc obnamlib/plugins/*.pyc testplugins/*.pyc
-	rm -f blackboxtest.log
+	rm -f blackboxtest.log blackboxtest-obnam.log
 

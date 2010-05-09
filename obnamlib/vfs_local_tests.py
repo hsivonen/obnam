@@ -158,6 +158,17 @@ class LocalFSTests(unittest.TestCase):
         self.fs.rmtree('foo')
         self.assertFalse(self.fs.exists('foo'))
 
+    def test_remove_removes_file(self):
+        self.fs.write_file('foo', '')
+        self.fs.remove('foo')
+        self.assertFalse(self.fs.exists('foo'))
+
+    def test_rename_renames_file(self):
+        self.fs.write_file('foo', 'xxx')
+        self.fs.rename('foo', 'bar')
+        self.assertFalse(self.fs.exists('foo'))
+        self.assertEqual(self.fs.cat('bar'), 'xxx')
+
     def test_lstat_returns_result(self):
         self.assert_(self.fs.lstat("."))
 

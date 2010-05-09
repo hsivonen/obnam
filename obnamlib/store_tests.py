@@ -83,11 +83,21 @@ class StoreRootNodeTests(unittest.TestCase):
         self.store.add_host('foo')
         self.assertEqual(self.store.list_hosts(), ['foo'])
         
+    def test_adds_two_hosts_across_commits(self):
+        self.store.lock_root()
+        self.store.add_host('foo')
+        self.store.commit_root()
+        self.store.lock_root()
+        self.store.add_host('bar')
+        self.store.commit_root()
+        self.assertEqual(sorted(self.store.list_hosts()), ['bar', 'foo'])
+        
     def test_adds_host_that_persists_after_commit(self):
         self.store.lock_root()
         self.store.add_host('foo')
         self.store.commit_root()
-        self.assertEqual(self.store.list_hosts(), ['foo'])
+        s2 = obnamlib.Store(self.fs)
+        self.assertEqual(s2.list_hosts(), ['foo'])
         
     def test_adding_existing_host_fails(self):
         self.store.lock_root()
@@ -128,6 +138,20 @@ class StoreRootNodeTests(unittest.TestCase):
         self.store.remove_host('foo')
         self.store.unlock_root()
         self.assertEqual(self.store.list_hosts(), ['foo'])
+
+    def test_removing_host_that_has_data_removes_the_data_as_well(self):
+        self.store.lock_root()
+        self.store.add_host('foo')
+        self.store.commit_root()
+        self.store.lock_host('foo')
+        self.store.start_generation()
+        self.store.create('/', obnamlib.Metadata())
+        self.store.commit_host()
+        self.store.lock_root()
+        self.store.remove_host('foo')
+        self.store.commit_root()
+        self.assertEqual(self.store.list_hosts(), [])
+        self.assertFalse(self.fs.exists('foo'))
 
 
 class StoreHostTests(unittest.TestCase):
@@ -259,9 +283,14 @@ class StoreHostTests(unittest.TestCase):
         self.store.lock_host('hostname')
         gen = self.store.start_generation()
         self.store.commit_host()
+
+        self.store.open_host('hostname')
+        self.assertEqual(self.store.list_generations(), [1])
+
         self.store.lock_host('hostname')
         self.store.remove_generation(gen)
         self.store.commit_host()
+
         self.store.open_host('hostname')
         self.assertEqual(self.store.list_generations(), [])
 
@@ -292,8 +321,27 @@ class StoreHostTests(unittest.TestCase):
     def test_create_adds_file(self):
         self.store.lock_host('hostname')
         gen = self.store.start_generation()
+        self.store.create('/', self.dir_meta)
         self.store.create('/foo', obnamlib.Metadata())
         self.assertEqual(self.store.listdir(gen, '/'), ['foo'])
+
+    def test_create_adds_two_files(self):
+        self.store.lock_host('hostname')
+        gen = self.store.start_generation()
+        self.store.create('/', self.dir_meta)
+        self.store.create('/foo', obnamlib.Metadata())
+        self.store.create('/bar', obnamlib.Metadata())
+        self.assertEqual(sorted(self.store.listdir(gen, '/')), ['bar', 'foo'])
+
+    def test_create_adds_lots_of_files(self):
+        n = 100
+        self.store.lock_host('hostname')
+        gen = self.store.start_generation()
+        pathnames = ['/%d' % i for i in range(n)]
+        for pathname in pathnames:
+            self.store.create(pathname, obnamlib.Metadata())
+        self.assertEqual(sorted(self.store.listdir(gen, '/')), 
+                         sorted(os.path.basename(x) for x in pathnames))
 
     def test_create_adds_dir(self):
         self.store.lock_host('hostname')
@@ -372,7 +420,7 @@ class StoreChunkTests(unittest.TestCase):
         self.assertEqual(self.store.get_chunk(chunkid), 'data')
         
     def test_chunk_does_not_exist(self):
-        self.assertFalse(self.store.chunk_exists('foo'))
+        self.assertFalse(self.store.chunk_exists(1234))
         
     def test_chunk_exists_after_it_is_put(self):
         chunkid = self.store.put_chunk('chunk', 'checksum')
@@ -421,23 +469,23 @@ class StoreChunkGroupTests(unittest.TestCase):
         shutil.rmtree(self.tempdir)
 
     def test_put_chunk_group_returns_id(self):
-        self.assertNotEqual(self.store.put_chunk_group(['1'], 'checksum'), 
+        self.assertNotEqual(self.store.put_chunk_group([1], 'checksum'), 
                             None)
         
     def test_get_chunk_group_retrieves_what_put_chunk_puts(self):
-        cgid = self.store.put_chunk_group(['1', '2'], 'checksum')
-        self.assertEqual(self.store.get_chunk_group(cgid), ['1', '2'])
+        cgid = self.store.put_chunk_group([1, 2], 'checksum')
+        self.assertEqual(self.store.get_chunk_group(cgid), [1, 2])
         
     def test_find_chunk_groups_finds_what_put_chunk_group_puts(self):
-        cgid = self.store.put_chunk_group(['1', '2'], 'checksum')
+        cgid = self.store.put_chunk_group([1, 2], 'checksum')
         self.assertEqual(self.store.find_chunk_groups('checksum'), [cgid])
         
     def test_find_chunk_groups_finds_nothing_if_nothing_is_put(self):
         self.assertEqual(self.store.find_chunk_groups('checksum'), [])
         
     def test_handles_checksum_collision(self):
-        cgid1 = self.store.put_chunk_group(['1', '2'], 'checksum')
-        cgid2 = self.store.put_chunk_group(['3', '4'], 'checksum')
+        cgid1 = self.store.put_chunk_group([1, 2], 'checksum')
+        cgid2 = self.store.put_chunk_group([3, 4], 'checksum')
         self.assertEqual(set(self.store.find_chunk_groups('checksum')),
                          set([cgid1, cgid2]))
 
@@ -447,7 +495,7 @@ class StoreChunkGroupTests(unittest.TestCase):
     def test_returns_chunk_groups_after_they_exist(self):
         cgids = []
         for i in range(2):
-            cgids.append(self.store.put_chunk_group(['1'], 'checksum'))
+            cgids.append(self.store.put_chunk_group([1], 'checksum'))
         self.assertEqual(sorted(self.store.list_chunk_groups()), 
                          sorted(cgids))
 
@@ -477,24 +525,14 @@ class StoreGetSetChunksAndGroupsTests(unittest.TestCase):
                          [])
 
     def test_sets_chunks_for_file(self):
-        self.store.set_file_chunks('/foo', ['1', '2'])
-        self.assertEqual(self.store.get_file_chunks(self.gen, '/foo'), 
-                         ['1', '2'])
+        self.store.set_file_chunks('/foo', [1, 2])
+        chunkids = self.store.get_file_chunks(self.gen, '/foo')
+        self.assertEqual(sorted(chunkids), [1, 2])
 
     def test_sets_chunk_groups_for_file(self):
-        self.store.set_file_chunk_groups('/foo', ['1', '2'])
-        self.assertEqual(self.store.get_file_chunk_groups(self.gen, '/foo'), 
-                         ['1', '2'])
-
-    def test_setting_chunks_after_groups_fails(self):
-        self.store.set_file_chunk_groups('/foo', ['1', '2'])
-        self.assertRaises(obnamlib.Error, self.store.set_file_chunks,
-                           '/foo', ['1', '2'])
-
-    def test_setting_chunk_groups_after_chunks_fails(self):
-        self.store.set_file_chunks('/foo', ['1', '2'])
-        self.assertRaises(obnamlib.Error, self.store.set_file_chunk_groups,
-                           '/foo', ['1', '2'])
+        self.store.set_file_chunk_groups('/foo', [1, 2])
+        cgids = self.store.get_file_chunk_groups(self.gen, '/foo')
+        self.assertEqual(sorted(cgids), [1, 2])
 
 
 class StoreGenspecTests(unittest.TestCase):
@@ -530,10 +568,14 @@ class StoreGenspecTests(unittest.TestCase):
 
     def test_other_spec_returns_itself(self):
         gen = self.backup()
-        self.assertEqual(self.store.genspec(gen), gen)
+        self.assertEqual(self.store.genspec(str(gen)), gen)
 
-    def test_nonexistent_spec_raises_error(self):
+    def test_noninteger_spec_raises_error(self):
         gen = self.backup()
         self.assertNotEqual(gen, 'foo')
         self.assertRaises(obnamlib.Error, self.store.genspec, 'foo')
+
+    def test_nonexistent_spec_raises_error(self):
+        gen = self.backup()
+        self.assertRaises(obnamlib.Error, self.store.genspec, 1234)
 
