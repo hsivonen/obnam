@@ -38,7 +38,13 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.done = 0
         self.total = 0
 
-        self.store.lock_host(self.app.config['hostname'])
+        hostname = self.app.config['hostname']
+        if hostname not in self.store.list_hosts():
+            self.store.lock_root()
+            self.store.add_host(hostname)
+            self.store.commit_root()
+
+        self.store.lock_host(hostname)
         self.store.start_generation()
         self.fs = None
         for root in roots:
