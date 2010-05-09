@@ -558,10 +558,14 @@ class StoreGenspecTests(unittest.TestCase):
 
     def test_other_spec_returns_itself(self):
         gen = self.backup()
-        self.assertEqual(self.store.genspec(gen), gen)
+        self.assertEqual(self.store.genspec(str(gen)), gen)
 
-    def test_nonexistent_spec_raises_error(self):
+    def test_noninteger_spec_raises_error(self):
         gen = self.backup()
         self.assertNotEqual(gen, 'foo')
         self.assertRaises(obnamlib.Error, self.store.genspec, 'foo')
+
+    def test_nonexistent_spec_raises_error(self):
+        gen = self.backup()
+        self.assertRaises(obnamlib.Error, self.store.genspec, 1234)
 

@@ -881,7 +881,12 @@ class Store(object):
             raise obnamlib.Error('No generations')
         if spec == 'latest':
             return gens[-1]
-        elif spec in gens:
-            return spec
         else:
-            raise obnamlib.Error('Generation %s not found' % spec)
+            try:
+                intspec = int(spec)
+            except ValueError:
+                raise obnamlib.Error('Generation %s is not an integer' % spec)
+            if intspec in gens:
+                return intspec
+            else:
+                raise obnamlib.Error('Generation %s not found' % spec)
