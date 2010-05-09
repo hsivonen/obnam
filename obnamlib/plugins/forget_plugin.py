@@ -39,7 +39,7 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
 
         if args:
             for genid in args:
-                self.remove(genid)
+                self.remove(int(genid))
         elif self.app.config['keep']:
             genlist = []
             dt = datetime.datetime(1970, 1, 1, 0, 0, 0)
