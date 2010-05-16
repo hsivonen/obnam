@@ -1,46 +1,25 @@
 #!/usr/bin/python
-# Copyright (C) 2009  Lars Wirzenius
-#
+# Copyright 2010  Lars Wirzenius
+# 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-#
+# 
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-#
+# 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import logging
-import os
+import pstats
 import sys
-import traceback
 
-import obnamlib
-
-
-def main():
-    try:
-        obnamlib.App().run()
-    except obnamlib.AppException, e:
-        logging.critical(str(e))
-        sys.stderr.write('Error: %s\n' % str(e))
-        sys.exit(1)
-    except SystemExit, e:
-        sys.exit(e.code)
-    except BaseException, e:
-        logging.critical(traceback.format_exc())
-        sys.stderr.write(traceback.format_exc())
-        sys.exit(1)
-
-
-if __name__ == '__main__':
-    if os.environ.get('OBNAM_PROFILE') == 'yes':
-        import cProfile
-        cProfile.run('main()', 'obnam.prof')
-    else:
-        main()
+p = pstats.Stats(sys.argv[1])
+p.strip_dirs()
+p.sort_stats('time')
+p.print_stats()
+p.print_callees()
