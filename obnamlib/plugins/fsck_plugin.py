@@ -77,9 +77,9 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         self.app.hooks.call('status', 'Checking file %s' % filename)
         metadata = self.store.get_metadata(genid, filename)
         if metadata.isfile():
-            for cgid in metadata.chunk_groups or []:
+            for cgid in self.store.get_file_chunk_groups(genid, filename):
                 self.check_chunk_group(cgid)
-            for chunkid in metadata.chunks or []:
+            for chunkid in self.store.get_file_chunk_groups(genid, filename):
                 self.check_chunk(chunkid)
 
     def check_chunk_group(self, cgid):
