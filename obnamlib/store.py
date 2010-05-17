@@ -24,6 +24,7 @@ import errno
 import hashlib
 import os
 import pickle
+import random
 import struct
 import time
 
@@ -747,9 +748,8 @@ class Store(object):
         
         '''
         
-        chunkid = 0
         while True:
-            chunkid += 1
+            chunkid = random.randint(0, 2**64 - 1)
             filename = self._chunk_filename(chunkid)
             if not self.fs.exists(filename):
                 break
