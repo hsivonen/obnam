@@ -117,6 +117,38 @@ class NodeStoreVfs(btree.NodeStoreDisk):
         return self.fs.listdir(dirname)
 
 
+class StoreTree(object):
+
+    '''A B-tree within a Store.'''
+
+    def __init__(self, fs, dirname, key_bytes, node_size):
+        self.fs = fs
+        self.dirname = dirname
+        self.key_bytes = key_bytes
+        self.node_size = node_size
+        self.forest = None
+
+    def init_forest(self):
+        if self.forest is None:
+            if not self.fs.exists(self.dirname):
+                return False
+            codec = btree.NodeCodec(self.key_bytes)
+            ns = NodeStoreVfs(self.fs, self.dirname, self.node_size, codec)
+            self.forest = btree.Forest(ns)
+        return True
+
+    def require_forest(self):
+        if not self.fs.exists(self.dirname):
+            self.fs.mkdir(self.dirname)
+        self.init_forest()
+        assert self.forest is not None
+
+    def commit(self):
+        if self.forest:
+            self.require_forest()
+            self.forest.commit()
+
+
 class HostList(object):
 
     '''Store list of hosts.'''
@@ -466,6 +498,77 @@ class GenerationStore(object):
         for i, cgid in enumerate(cgids):
             self.curgen.insert(self.key(filename, self.FILE_CHUNK_GROUPS, i),
                                struct.pack('!Q', cgid))
+
+
+class ChecksumTree(StoreTree):
+
+    '''Store map of checksum to integer id.
+
+    The checksum might be, for example, an MD5 one (as returned by
+    hashlib.md5().digest()). The id would be a chunk or chunk group
+    id.
+
+    '''
+
+    def __init__(self, fs, name, checksum_length):
+        self.sumlen = checksum_length
+        key_bytes = self.sumlen + 2
+        StoreTree.__init__(self, fs, name, key_bytes, 64*1024)
+        self.max_counter = 2**16 - 1
+
+    def key(self, checksum, counter):
+        return struct.pack('!%dsH' % self.sumlen, checksum, counter)
+
+    def unkey(self, key):
+        return struct.unpack('!%dsH' % self.sumlen, key)
+
+    def idstr(self, identifier):
+        return struct.pack('!Q', identifier)
+
+    def idunstr(self, idstr):
+        return struct.unpack('!Q', idstr)[0]
+
+    def add(self, checksum, identifier):
+        self.require_forest()
+        if self.forest.trees:
+            t = self.forest.new_tree(self.forest.trees[-1])
+            pairs = t.lookup_range(self.key(checksum, 0),
+                                   self.key(checksum, self.max_counter))
+            idstr = self.idstr(identifier)
+            biggest = ''
+            for key, value in pairs:
+                biggest = max(biggest, key)
+                if value == idstr:
+                    break
+            else:
+                if biggest:
+                    dummy, counter = self.unkey(biggest)
+                else:
+                    counter = 0
+                t.insert(self.key(checksum, counter + 1), idstr)
+        else:
+            t = self.forest.new_tree()
+            t.insert(self.key(checksum, 0), self.idstr(identifier))
+
+    def find(self, checksum):
+        if self.init_forest() and self.forest.trees:
+            t = self.forest.trees[-1]
+            pairs = t.lookup_range(self.key(checksum, 0),
+                                   self.key(checksum, self.max_counter))
+            return [self.idunstr(value) for key, value in pairs]
+        else:
+            return []
+
+    def remove(self, checksum, identifier):
+        self.require_forest()
+        if self.forest.trees:
+            t = self.forest.new_tree(self.forest.trees[-1])
+            pairs = t.lookup_range(self.key(checksum, 0),
+                                   self.key(checksum, self.max_counter))
+            idstr = self.idstr(identifier)
+            for key, value in pairs:
+                if value == idstr:
+                    t.remove(key)
 
 
 class Store(object):
