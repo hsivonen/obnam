@@ -149,7 +149,7 @@ class StoreTree(object):
             self.forest.commit()
 
 
-class HostList(object):
+class HostList(StoreTree):
 
     '''Store list of hosts.'''
 
@@ -157,30 +157,13 @@ class HostList(object):
     node_size = 4096 # typical size of disk block
 
     def __init__(self, fs):
-        self.fs = fs
-        self.forest = None
+        StoreTree.__init__(self, fs, 'hostlist', self.key_bytes, 
+                           self.node_size)
         self.minkey = self.key(0)
         self.maxkey = self.key(2**64-1)
 
     def key(self, intkey):
         return struct.pack('!Q', intkey)
-
-    def init_forest(self, create=False):
-        if self.forest is None:
-            if create:
-                if not self.fs.exists('hostlist'):
-                    self.fs.mkdir('hostlist')
-            elif not self.fs.exists('hostlist'):
-                return False
-            codec = btree.NodeCodec(self.key_bytes)
-            ns = NodeStoreVfs(self.fs, 'hostlist', self.node_size, codec)
-            self.forest = btree.Forest(ns)
-        return True
-
-    def require_forest(self): # pragma: no cover
-        if not self.init_forest(create=True):
-            raise obnamlib.Error('Cannot initialize %s as host list' %
-                                 (os.path.join(self.fs.getcwd(), 'hostlist')))
 
     def pairs(self): # pragma: no cover
         if self.forest.trees:
@@ -214,10 +197,6 @@ class HostList(object):
                 if value == hostname:
                     t.remove(key)
                     break
-
-    def commit(self):
-        self.require_forest()
-        self.forest.commit()
 
 
 class GenerationStore(object):
