@@ -199,7 +199,7 @@ class HostList(StoreTree):
                     break
 
 
-class GenerationStore(object):
+class GenerationStore(StoreTree):
 
     '''Store generations.
 
@@ -253,11 +253,10 @@ class GenerationStore(object):
     FILE_METADATA = 1
     
     def __init__(self, fs, hostname):
-        self.fs = fs
-        self.dirname = hostname # FIXME: This needs to handle evil hostnames
-        self.forest = None
+        key_bytes = len(self.key('', 0, 0))
+        # FIXME: We should handle evil hostnames.
+        StoreTree.__init__(self, fs, hostname, key_bytes, self.node_size)
         self.curgen = None
-        self.key_bytes = len(self.key('', 0, 0))
 
     def hash_name(self, filename):
         '''Return hash of filename suitable for use as main key.'''
@@ -312,22 +311,6 @@ class GenerationStore(object):
 
     def _insert_int(self, tree, key, value):
         return tree.insert(key, struct.pack('!Q', value))
-
-    def init_forest(self):
-        if self.forest is None:
-            if not self.fs.exists(self.dirname):
-                return False
-            codec = btree.NodeCodec(self.key_bytes)
-            ns = NodeStoreVfs(self.fs, self.dirname, self.node_size, codec)
-            self.forest = btree.Forest(ns)
-        return True
-
-    def require_forest(self): # pragma: no cover
-        if not self.fs.exists(self.dirname):
-            self.fs.mkdir(dirname)
-        if not self.init_forest():
-            name = os.path.join(self.fs.getcwd(), self.dirname)
-            raise obnamlib.Error('Cannot initialize %s as host list' % name)
 
     def commit(self):
         if self.forest:
