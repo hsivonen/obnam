@@ -575,6 +575,7 @@ class Store(object):
         self.removed_generations = []
         self.genstore = None
         self.chunksums = ChecksumTree(fs, 'chunksums', len(self.checksum('')))
+        self.groupsums = ChecksumTree(fs, 'groupsums', len(self.checksum('')))
 
     def checksum(self, data):
         '''Return checksum of data.
@@ -706,6 +707,7 @@ class Store(object):
             self._really_remove_generation(genid)
         self.genstore.commit()
         self.chunksums.commit()
+        self.groupsums.commit()
         self.unlock_host()
         
     def open_host(self, hostname):
@@ -872,6 +874,7 @@ class Store(object):
                 break
         data = ''.join('%s\n' % x for x in [checksum] + chunkids)
         self.fs.write_file(filename, data)
+        self.groupsums.add(checksum, cgid)
         return cgid
 
     @require_open_host
@@ -886,17 +889,7 @@ class Store(object):
     @require_open_host
     def find_chunk_groups(self, checksum):
         '''Return list of ids of chunk groups with given checksum.'''
-        
-        cgids = []
-        if self.fs.exists('chunkgroups'):
-            for cgid in self.fs.listdir('chunkgroups'):
-                cgid = int(cgid)
-                filename = self._chunk_group_filename(cgid)
-                data = self.fs.cat(filename)
-                lines = data.splitlines()
-                if lines[0] == checksum:
-                    cgids.append(cgid)
-        return cgids
+        return self.groupsums.find(checksum)
 
     @require_open_host
     def list_chunk_groups(self):
