@@ -542,23 +542,47 @@ class ChunkGroupTree(StoreTree):
 
     '''
 
+    # We store things in the tree using a key consisting of three elements:
+    # 1. a 'meta' flag
+    # 2. the chunk group id
+    # 3. a counter
+    # The value corresponding to a key is the chunk id, if meta is false.
+    # If meta is true, the counter is 0, and value is empty.
+    #
+    # A true meta flag is used to list chunk groups so that it is fast
+    # to find all chunk groups, and to check if a particular one exists.
+    # This allows for a chunk group with no chunks, just in case that
+    # edge case is useful.
+
     def __init__(self, fs):
-        StoreTree.__init__(self, fs, 'chunkgroups', len(self.key(0, 0)), 
-                           64*1024)
+        StoreTree.__init__(self, fs, 'chunkgroups', 
+                           len(self.key(False, 0, 0)), 64*1024)
         self.max_id = 2**64 - 1
 
-    def key(self, cgid, chunkid):
-        return struct.pack('!QQ', cgid, chunkid)
+    def key(self, meta, cgid, counter):
+        return struct.pack('!cQQ', '1' if meta else '0', cgid, counter)
 
     def unkey(self, key):
-        return struct.unpack('!QQ', key)
+        return struct.unpack('!cQQ', key)[1:]
+
+    def group_exists(self, cgid):
+        '''Does a chunk group exist?'''
+        if self.init_forest() and self.forest.trees:
+            t = self.forest.trees[-1]
+            try:
+                t.lookup(self.key(True, cgid, 0))
+            except KeyError:
+                pass
+            else:
+                return True
+        return False
 
     def list_chunk_groups(self):
         '''List all chunk group ids.'''
         if self.init_forest() and self.forest.trees:
             t = self.forest.trees[-1]
-            pairs = t.lookup_range(self.key(0, 0), 
-                                   self.key(self.max_id, self.max_id))
+            pairs = t.lookup_range(self.key(True, 0, 0), 
+                                   self.key(True, self.max_id, 0))
             return list(set(self.unkey(key)[0] for key, value in pairs))
         else:
             return []
@@ -567,9 +591,9 @@ class ChunkGroupTree(StoreTree):
         '''List all chunks in a chunk group.'''
         if self.init_forest() and self.forest.trees:
             t = self.forest.trees[-1]
-            pairs = t.lookup_range(self.key(cgid, 0),
-                                   self.key(cgid, self.max_id))
-            return [self.unkey(key)[1] for key, value in pairs]
+            pairs = t.lookup_range(self.key(False, cgid, 0),
+                                   self.key(False, cgid, self.max_id))
+            return [struct.unpack('!Q', value)[0] for key, value in pairs]
         else:
             return []
 
@@ -580,16 +604,19 @@ class ChunkGroupTree(StoreTree):
             t = self.forest.trees[-1]
         else:
             t = self.forest.new_tree()
-        for chunkid in chunkids:
-            t.insert(self.key(cgid, chunkid), '')
+        t.insert(self.key(True, cgid, 0), '')
+        for counter, chunkid in enumerate(chunkids):
+            t.insert(self.key(False, cgid, counter), 
+                     struct.pack('!Q', chunkid))
 
     def remove(self, cgid):
         '''Remove a chunk group.'''
         self.require_forest()
         if self.forest.trees:
             t = self.forest.trees[-1]
-            t.remove_range(self.key(cgid, 0), 
-                           self.key(cgid, self.max_id))
+            t.remove(self.key(True, cgid, 0))
+            t.remove_range(self.key(False, cgid, 0), 
+                           self.key(False, cgid, self.max_id))
 
 
 class Store(object):
@@ -635,6 +662,7 @@ class Store(object):
         self.genstore = None
         self.chunksums = ChecksumTree(fs, 'chunksums', len(self.checksum('')))
         self.groupsums = ChecksumTree(fs, 'groupsums', len(self.checksum('')))
+        self.chunkgroups = ChunkGroupTree(fs)
 
     def checksum(self, data):
         '''Return checksum of data.
@@ -767,6 +795,7 @@ class Store(object):
         self.genstore.commit()
         self.chunksums.commit()
         self.groupsums.commit()
+        self.chunkgroups.commit()
         self.unlock_host()
         
     def open_host(self, hostname):
@@ -888,13 +917,12 @@ class Store(object):
     @require_open_host
     def get_chunk(self, chunkid):
         '''Return data of chunk with given id.'''
-        
         return self.fs.cat(self._chunk_filename(chunkid))
         
     @require_open_host
     def chunk_exists(self, chunkid):
-        return self.fs.exists(self._chunk_filename(chunkid))
         '''Does a chunk exist in the store?'''
+        return self.fs.exists(self._chunk_filename(chunkid))
         
     @require_open_host
     def find_chunks(self, checksum):
@@ -914,9 +942,6 @@ class Store(object):
         else:
             return []
 
-    def _chunk_group_filename(self, cgid):
-        return os.path.join('chunkgroups', '%d' % cgid)
-
     @require_started_generation
     def put_chunk_group(self, chunkids, checksum):
         '''Put a new chunk group in the store.
@@ -928,23 +953,17 @@ class Store(object):
         cgid = 0
         while True:
             cgid += 1
-            filename = self._chunk_group_filename(cgid)
-            if not self.fs.exists(filename):
+            if not self.chunkgroups.group_exists(cgid):
                 break
-        data = ''.join('%s\n' % x for x in [checksum] + chunkids)
-        self.fs.write_file(filename, data)
+        self.chunkgroups.add(cgid, chunkids)
         self.groupsums.add(checksum, cgid)
         return cgid
 
     @require_open_host
     def get_chunk_group(self, cgid):
         '''Return list of chunk ids in the given chunk group.'''
+        return self.chunkgroups.list_chunk_group_chunks(cgid)
 
-        filename = self._chunk_group_filename(cgid)
-        data = self.fs.cat(filename)
-        lines = data.splitlines()
-        return [int(x) for x in lines[1:]]
-        
     @require_open_host
     def find_chunk_groups(self, checksum):
         '''Return list of ids of chunk groups with given checksum.'''
@@ -953,10 +972,7 @@ class Store(object):
     @require_open_host
     def list_chunk_groups(self):
         '''Return list of ids of all chunk groups in store.'''
-        if self.fs.exists('chunkgroups'):
-            return [int(x) for x in self.fs.listdir('chunkgroups')]
-        else:
-            return []
+        return self.chunkgroups.list_chunk_groups()
 
     @require_open_host
     def get_file_chunks(self, gen, filename):

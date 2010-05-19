@@ -78,8 +78,12 @@ class ChunkGroupTreeTests(unittest.TestCase):
     def test_no_chunks_for_nonexistent_group(self):
         self.assertEqual(self.tree.list_chunk_group_chunks(1), [])
 
+    def test_chunk_group_does_not_exist_initially(self):
+        self.assertFalse(self.tree.group_exists(1))
+
     def test_adds_chunk_group(self):
         self.tree.add(1, [1, 2, 3])
+        self.assert_(self.tree.group_exists(1))
         self.assertEqual(self.tree.list_chunk_groups(), [1])
         self.assertEqual(self.tree.list_chunk_group_chunks(1), [1, 2, 3])
 
@@ -89,6 +93,14 @@ class ChunkGroupTreeTests(unittest.TestCase):
         self.assertEqual(sorted(self.tree.list_chunk_groups()), [1, 2])
         self.assertEqual(self.tree.list_chunk_group_chunks(1), [1, 2, 3])
         self.assertEqual(self.tree.list_chunk_group_chunks(2), [4, 5, 6])
+
+    def test_adds_chunk_group_with_duplicate_chunks(self):
+        self.tree.add(1, [2, 2])
+        self.assertEqual(self.tree.list_chunk_group_chunks(1), [2, 2])
+
+    def test_adds_chunk_group_without_chunks(self):
+        self.tree.add(1, [])
+        self.assertEqual(self.tree.list_chunk_group_chunks(1), [])
 
     def test_removes_chunk_group(self):
         self.tree.add(1, [1, 2, 3])
