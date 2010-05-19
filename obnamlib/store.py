@@ -574,6 +574,7 @@ class Store(object):
         self.removed_hosts = []
         self.removed_generations = []
         self.genstore = None
+        self.chunksums = ChecksumTree(fs, 'chunksums', len(self.checksum('')))
 
     def checksum(self, data):
         '''Return checksum of data.
@@ -704,6 +705,7 @@ class Store(object):
         for genid in self.removed_generations:
             self._really_remove_generation(genid)
         self.genstore.commit()
+        self.chunksums.commit()
         self.unlock_host()
         
     def open_host(self, hostname):
@@ -819,6 +821,7 @@ class Store(object):
             if not self.fs.exists(filename):
                 break
         self.fs.write_file(filename, data)
+        self.chunksums.add(self.checksum(data), chunkid)
         return chunkid
         
     @require_open_host
@@ -829,8 +832,8 @@ class Store(object):
         
     @require_open_host
     def chunk_exists(self, chunkid):
-        '''Does a chunk exist in the store?'''
         return self.fs.exists(self._chunk_filename(chunkid))
+        '''Does a chunk exist in the store?'''
         
     @require_open_host
     def find_chunks(self, checksum):
@@ -840,15 +843,7 @@ class Store(object):
         
         '''
 
-        chunkids = []
-        if self.fs.exists('chunks'):
-            for chunkid in self.fs.listdir('chunks'):
-                chunkid = int(chunkid)
-                filename = self._chunk_filename(chunkid)
-                data = self.fs.cat(filename)
-                if self.checksum(data) == checksum:
-                    chunkids.append(chunkid)
-        return chunkids
+        return self.chunksums.find(checksum)
 
     @require_open_host
     def list_chunks(self):
