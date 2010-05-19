@@ -117,7 +117,39 @@ class NodeStoreVfs(btree.NodeStoreDisk):
         return self.fs.listdir(dirname)
 
 
-class HostList(object):
+class StoreTree(object):
+
+    '''A B-tree within a Store.'''
+
+    def __init__(self, fs, dirname, key_bytes, node_size):
+        self.fs = fs
+        self.dirname = dirname
+        self.key_bytes = key_bytes
+        self.node_size = node_size
+        self.forest = None
+
+    def init_forest(self):
+        if self.forest is None:
+            if not self.fs.exists(self.dirname):
+                return False
+            codec = btree.NodeCodec(self.key_bytes)
+            ns = NodeStoreVfs(self.fs, self.dirname, self.node_size, codec)
+            self.forest = btree.Forest(ns)
+        return True
+
+    def require_forest(self):
+        if not self.fs.exists(self.dirname):
+            self.fs.mkdir(self.dirname)
+        self.init_forest()
+        assert self.forest is not None
+
+    def commit(self):
+        if self.forest:
+            self.require_forest()
+            self.forest.commit()
+
+
+class HostList(StoreTree):
 
     '''Store list of hosts.'''
 
@@ -125,30 +157,13 @@ class HostList(object):
     node_size = 4096 # typical size of disk block
 
     def __init__(self, fs):
-        self.fs = fs
-        self.forest = None
+        StoreTree.__init__(self, fs, 'hostlist', self.key_bytes, 
+                           self.node_size)
         self.minkey = self.key(0)
         self.maxkey = self.key(2**64-1)
 
     def key(self, intkey):
         return struct.pack('!Q', intkey)
-
-    def init_forest(self, create=False):
-        if self.forest is None:
-            if create:
-                if not self.fs.exists('hostlist'):
-                    self.fs.mkdir('hostlist')
-            elif not self.fs.exists('hostlist'):
-                return False
-            codec = btree.NodeCodec(self.key_bytes)
-            ns = NodeStoreVfs(self.fs, 'hostlist', self.node_size, codec)
-            self.forest = btree.Forest(ns)
-        return True
-
-    def require_forest(self): # pragma: no cover
-        if not self.init_forest(create=True):
-            raise obnamlib.Error('Cannot initialize %s as host list' %
-                                 (os.path.join(self.fs.getcwd(), 'hostlist')))
 
     def pairs(self): # pragma: no cover
         if self.forest.trees:
@@ -183,12 +198,8 @@ class HostList(object):
                     t.remove(key)
                     break
 
-    def commit(self):
-        self.require_forest()
-        self.forest.commit()
 
-
-class GenerationStore(object):
+class GenerationStore(StoreTree):
 
     '''Store generations.
 
@@ -242,11 +253,10 @@ class GenerationStore(object):
     FILE_METADATA = 1
     
     def __init__(self, fs, hostname):
-        self.fs = fs
-        self.dirname = hostname # FIXME: This needs to handle evil hostnames
-        self.forest = None
+        key_bytes = len(self.key('', 0, 0))
+        # FIXME: We should handle evil hostnames.
+        StoreTree.__init__(self, fs, hostname, key_bytes, self.node_size)
         self.curgen = None
-        self.key_bytes = len(self.key('', 0, 0))
 
     def hash_name(self, filename):
         '''Return hash of filename suitable for use as main key.'''
@@ -301,22 +311,6 @@ class GenerationStore(object):
 
     def _insert_int(self, tree, key, value):
         return tree.insert(key, struct.pack('!Q', value))
-
-    def init_forest(self):
-        if self.forest is None:
-            if not self.fs.exists(self.dirname):
-                return False
-            codec = btree.NodeCodec(self.key_bytes)
-            ns = NodeStoreVfs(self.fs, self.dirname, self.node_size, codec)
-            self.forest = btree.Forest(ns)
-        return True
-
-    def require_forest(self): # pragma: no cover
-        if not self.fs.exists(self.dirname):
-            self.fs.mkdir(dirname)
-        if not self.init_forest():
-            name = os.path.join(self.fs.getcwd(), self.dirname)
-            raise obnamlib.Error('Cannot initialize %s as host list' % name)
 
     def commit(self):
         if self.forest:
@@ -468,6 +462,163 @@ class GenerationStore(object):
                                struct.pack('!Q', cgid))
 
 
+class ChecksumTree(StoreTree):
+
+    '''Store map of checksum to integer id.
+
+    The checksum might be, for example, an MD5 one (as returned by
+    hashlib.md5().digest()). The id would be a chunk or chunk group
+    id.
+
+    '''
+
+    def __init__(self, fs, name, checksum_length):
+        self.sumlen = checksum_length
+        key_bytes = self.sumlen + 2
+        StoreTree.__init__(self, fs, name, key_bytes, 64*1024)
+        self.max_counter = 2**16 - 1
+
+    def key(self, checksum, counter):
+        return struct.pack('!%dsH' % self.sumlen, checksum, counter)
+
+    def unkey(self, key):
+        return struct.unpack('!%dsH' % self.sumlen, key)
+
+    def idstr(self, identifier):
+        return struct.pack('!Q', identifier)
+
+    def idunstr(self, idstr):
+        return struct.unpack('!Q', idstr)[0]
+
+    def add(self, checksum, identifier):
+        self.require_forest()
+        if self.forest.trees:
+            t = self.forest.new_tree(self.forest.trees[-1])
+            pairs = t.lookup_range(self.key(checksum, 0),
+                                   self.key(checksum, self.max_counter))
+            idstr = self.idstr(identifier)
+            biggest = ''
+            for key, value in pairs:
+                biggest = max(biggest, key)
+                if value == idstr:
+                    break
+            else:
+                if biggest:
+                    dummy, counter = self.unkey(biggest)
+                else:
+                    counter = 0
+                t.insert(self.key(checksum, counter + 1), idstr)
+        else:
+            t = self.forest.new_tree()
+            t.insert(self.key(checksum, 0), self.idstr(identifier))
+
+    def find(self, checksum):
+        if self.init_forest() and self.forest.trees:
+            t = self.forest.trees[-1]
+            pairs = t.lookup_range(self.key(checksum, 0),
+                                   self.key(checksum, self.max_counter))
+            return [self.idunstr(value) for key, value in pairs]
+        else:
+            return []
+
+    def remove(self, checksum, identifier):
+        self.require_forest()
+        if self.forest.trees:
+            t = self.forest.new_tree(self.forest.trees[-1])
+            pairs = t.lookup_range(self.key(checksum, 0),
+                                   self.key(checksum, self.max_counter))
+            idstr = self.idstr(identifier)
+            for key, value in pairs:
+                if value == idstr:
+                    t.remove(key)
+
+
+class ChunkGroupTree(StoreTree):
+
+    '''Store chunk groups.
+
+    A chunk group maps an identifier (integer) to a list of chunk ids
+    (integers).
+
+    '''
+
+    # We store things in the tree using a key consisting of three elements:
+    # 1. a 'meta' flag
+    # 2. the chunk group id
+    # 3. a counter
+    # The value corresponding to a key is the chunk id, if meta is false.
+    # If meta is true, the counter is 0, and value is empty.
+    #
+    # A true meta flag is used to list chunk groups so that it is fast
+    # to find all chunk groups, and to check if a particular one exists.
+    # This allows for a chunk group with no chunks, just in case that
+    # edge case is useful.
+
+    def __init__(self, fs):
+        StoreTree.__init__(self, fs, 'chunkgroups', 
+                           len(self.key(False, 0, 0)), 64*1024)
+        self.max_id = 2**64 - 1
+
+    def key(self, meta, cgid, counter):
+        return struct.pack('!cQQ', '1' if meta else '0', cgid, counter)
+
+    def unkey(self, key):
+        return struct.unpack('!cQQ', key)[1:]
+
+    def group_exists(self, cgid):
+        '''Does a chunk group exist?'''
+        if self.init_forest() and self.forest.trees:
+            t = self.forest.trees[-1]
+            try:
+                t.lookup(self.key(True, cgid, 0))
+            except KeyError:
+                pass
+            else:
+                return True
+        return False
+
+    def list_chunk_groups(self):
+        '''List all chunk group ids.'''
+        if self.init_forest() and self.forest.trees:
+            t = self.forest.trees[-1]
+            pairs = t.lookup_range(self.key(True, 0, 0), 
+                                   self.key(True, self.max_id, 0))
+            return list(set(self.unkey(key)[0] for key, value in pairs))
+        else:
+            return []
+
+    def list_chunk_group_chunks(self, cgid):
+        '''List all chunks in a chunk group.'''
+        if self.init_forest() and self.forest.trees:
+            t = self.forest.trees[-1]
+            pairs = t.lookup_range(self.key(False, cgid, 0),
+                                   self.key(False, cgid, self.max_id))
+            return [struct.unpack('!Q', value)[0] for key, value in pairs]
+        else:
+            return []
+
+    def add(self, cgid, chunkids):
+        '''Add a chunk group.'''
+        self.require_forest()
+        if self.forest.trees:
+            t = self.forest.trees[-1]
+        else:
+            t = self.forest.new_tree()
+        t.insert(self.key(True, cgid, 0), '')
+        for counter, chunkid in enumerate(chunkids):
+            t.insert(self.key(False, cgid, counter), 
+                     struct.pack('!Q', chunkid))
+
+    def remove(self, cgid):
+        '''Remove a chunk group.'''
+        self.require_forest()
+        if self.forest.trees:
+            t = self.forest.trees[-1]
+            t.remove(self.key(True, cgid, 0))
+            t.remove_range(self.key(False, cgid, 0), 
+                           self.key(False, cgid, self.max_id))
+
+
 class Store(object):
 
     '''Store backup data.
@@ -509,6 +660,9 @@ class Store(object):
         self.removed_hosts = []
         self.removed_generations = []
         self.genstore = None
+        self.chunksums = ChecksumTree(fs, 'chunksums', len(self.checksum('')))
+        self.groupsums = ChecksumTree(fs, 'groupsums', len(self.checksum('')))
+        self.chunkgroups = ChunkGroupTree(fs)
 
     def checksum(self, data):
         '''Return checksum of data.
@@ -639,6 +793,9 @@ class Store(object):
         for genid in self.removed_generations:
             self._really_remove_generation(genid)
         self.genstore.commit()
+        self.chunksums.commit()
+        self.groupsums.commit()
+        self.chunkgroups.commit()
         self.unlock_host()
         
     def open_host(self, hostname):
@@ -754,12 +911,12 @@ class Store(object):
             if not self.fs.exists(filename):
                 break
         self.fs.write_file(filename, data)
+        self.chunksums.add(self.checksum(data), chunkid)
         return chunkid
         
     @require_open_host
     def get_chunk(self, chunkid):
         '''Return data of chunk with given id.'''
-        
         return self.fs.cat(self._chunk_filename(chunkid))
         
     @require_open_host
@@ -775,15 +932,7 @@ class Store(object):
         
         '''
 
-        chunkids = []
-        if self.fs.exists('chunks'):
-            for chunkid in self.fs.listdir('chunks'):
-                chunkid = int(chunkid)
-                filename = self._chunk_filename(chunkid)
-                data = self.fs.cat(filename)
-                if self.checksum(data) == checksum:
-                    chunkids.append(chunkid)
-        return chunkids
+        return self.chunksums.find(checksum)
 
     @require_open_host
     def list_chunks(self):
@@ -792,9 +941,6 @@ class Store(object):
             return [int(x) for x in self.fs.listdir('chunks')]
         else:
             return []
-
-    def _chunk_group_filename(self, cgid):
-        return os.path.join('chunkgroups', '%d' % cgid)
 
     @require_started_generation
     def put_chunk_group(self, chunkids, checksum):
@@ -807,44 +953,26 @@ class Store(object):
         cgid = 0
         while True:
             cgid += 1
-            filename = self._chunk_group_filename(cgid)
-            if not self.fs.exists(filename):
+            if not self.chunkgroups.group_exists(cgid):
                 break
-        data = ''.join('%s\n' % x for x in [checksum] + chunkids)
-        self.fs.write_file(filename, data)
+        self.chunkgroups.add(cgid, chunkids)
+        self.groupsums.add(checksum, cgid)
         return cgid
 
     @require_open_host
     def get_chunk_group(self, cgid):
         '''Return list of chunk ids in the given chunk group.'''
+        return self.chunkgroups.list_chunk_group_chunks(cgid)
 
-        filename = self._chunk_group_filename(cgid)
-        data = self.fs.cat(filename)
-        lines = data.splitlines()
-        return [int(x) for x in lines[1:]]
-        
     @require_open_host
     def find_chunk_groups(self, checksum):
         '''Return list of ids of chunk groups with given checksum.'''
-        
-        cgids = []
-        if self.fs.exists('chunkgroups'):
-            for cgid in self.fs.listdir('chunkgroups'):
-                cgid = int(cgid)
-                filename = self._chunk_group_filename(cgid)
-                data = self.fs.cat(filename)
-                lines = data.splitlines()
-                if lines[0] == checksum:
-                    cgids.append(cgid)
-        return cgids
+        return self.groupsums.find(checksum)
 
     @require_open_host
     def list_chunk_groups(self):
         '''Return list of ids of all chunk groups in store.'''
-        if self.fs.exists('chunkgroups'):
-            return [int(x) for x in self.fs.listdir('chunkgroups')]
-        else:
-            return []
+        return self.chunkgroups.list_chunk_groups()
 
     @require_open_host
     def get_file_chunks(self, gen, filename):

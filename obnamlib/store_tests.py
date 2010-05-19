@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import hashlib
 import os
 import shutil
 import stat
@@ -21,6 +22,90 @@ import tempfile
 import unittest
 
 import obnamlib
+
+
+class ChecksumTreeTests(unittest.TestCase):
+
+    def setUp(self):
+        self.tempdir = tempfile.mkdtemp()
+        fs = obnamlib.LocalFS(self.tempdir)
+        self.checksum = hashlib.md5('foo').digest()
+        self.tree = obnamlib.store.ChecksumTree(fs, 'x', len(self.checksum))
+
+    def tearDown(self):
+        self.tree.commit()
+        shutil.rmtree(self.tempdir)
+
+    def test_is_empty_initially(self):
+        self.assertEqual(self.tree.find(self.checksum), [])
+
+    def test_finds_checksums(self):
+        self.tree.add(self.checksum, 1)
+        self.tree.add(self.checksum, 2)
+        self.assertEqual(sorted(self.tree.find(self.checksum)), [1, 2])
+
+    def test_finds_only_the_right_checksums(self):
+        self.tree.add(self.checksum, 1)
+        self.tree.add(self.checksum, 2)
+        self.tree.add(hashlib.md5('bar').digest(), 3)
+        self.assertEqual(sorted(self.tree.find(self.checksum)), [1, 2])
+
+    def test_removes_checksum(self):
+        self.tree.add(self.checksum, 1)
+        self.tree.add(self.checksum, 2)
+        self.tree.remove(self.checksum, 2)
+        self.assertEqual(self.tree.find(self.checksum), [1])
+
+    def test_adds_same_id_only_once(self):
+        self.tree.add(self.checksum, 1)
+        self.tree.add(self.checksum, 1)
+        self.assertEqual(self.tree.find(self.checksum), [1])
+
+
+class ChunkGroupTreeTests(unittest.TestCase):
+
+    def setUp(self):
+        self.tempdir = tempfile.mkdtemp()
+        fs = obnamlib.LocalFS(self.tempdir)
+        self.tree = obnamlib.store.ChunkGroupTree(fs)
+
+    def tearDown(self):
+        shutil.rmtree(self.tempdir)
+
+    def test_is_empty_initially(self):
+        self.assertEqual(self.tree.list_chunk_groups(), [])
+
+    def test_no_chunks_for_nonexistent_group(self):
+        self.assertEqual(self.tree.list_chunk_group_chunks(1), [])
+
+    def test_chunk_group_does_not_exist_initially(self):
+        self.assertFalse(self.tree.group_exists(1))
+
+    def test_adds_chunk_group(self):
+        self.tree.add(1, [1, 2, 3])
+        self.assert_(self.tree.group_exists(1))
+        self.assertEqual(self.tree.list_chunk_groups(), [1])
+        self.assertEqual(self.tree.list_chunk_group_chunks(1), [1, 2, 3])
+
+    def test_adds_two_chunk_groups(self):
+        self.tree.add(1, [1, 2, 3])
+        self.tree.add(2, [4, 5, 6])
+        self.assertEqual(sorted(self.tree.list_chunk_groups()), [1, 2])
+        self.assertEqual(self.tree.list_chunk_group_chunks(1), [1, 2, 3])
+        self.assertEqual(self.tree.list_chunk_group_chunks(2), [4, 5, 6])
+
+    def test_adds_chunk_group_with_duplicate_chunks(self):
+        self.tree.add(1, [2, 2])
+        self.assertEqual(self.tree.list_chunk_group_chunks(1), [2, 2])
+
+    def test_adds_chunk_group_without_chunks(self):
+        self.tree.add(1, [])
+        self.assertEqual(self.tree.list_chunk_group_chunks(1), [])
+
+    def test_removes_chunk_group(self):
+        self.tree.add(1, [1, 2, 3])
+        self.tree.remove(1)
+        self.assertEqual(self.tree.list_chunk_groups(), [])
 
 
 class StoreRootNodeTests(unittest.TestCase):
