@@ -533,6 +533,65 @@ class ChecksumTree(StoreTree):
                     t.remove(key)
 
 
+class ChunkGroupTree(StoreTree):
+
+    '''Store chunk groups.
+
+    A chunk group maps an identifier (integer) to a list of chunk ids
+    (integers).
+
+    '''
+
+    def __init__(self, fs):
+        StoreTree.__init__(self, fs, 'chunkgroups', len(self.key(0, 0)), 
+                           64*1024)
+        self.max_id = 2**64 - 1
+
+    def key(self, cgid, chunkid):
+        return struct.pack('!QQ', cgid, chunkid)
+
+    def unkey(self, key):
+        return struct.unpack('!QQ', key)
+
+    def list_chunk_groups(self):
+        '''List all chunk group ids.'''
+        if self.init_forest() and self.forest.trees:
+            t = self.forest.trees[-1]
+            pairs = t.lookup_range(self.key(0, 0), 
+                                   self.key(self.max_id, self.max_id))
+            return list(set(self.unkey(key)[0] for key, value in pairs))
+        else:
+            return []
+
+    def list_chunk_group_chunks(self, cgid):
+        '''List all chunks in a chunk group.'''
+        if self.init_forest() and self.forest.trees:
+            t = self.forest.trees[-1]
+            pairs = t.lookup_range(self.key(cgid, 0),
+                                   self.key(cgid, self.max_id))
+            return [self.unkey(key)[1] for key, value in pairs]
+        else:
+            return []
+
+    def add(self, cgid, chunkids):
+        '''Add a chunk group.'''
+        self.require_forest()
+        if self.forest.trees:
+            t = self.forest.trees[-1]
+        else:
+            t = self.forest.new_tree()
+        for chunkid in chunkids:
+            t.insert(self.key(cgid, chunkid), '')
+
+    def remove(self, cgid):
+        '''Remove a chunk group.'''
+        self.require_forest()
+        if self.forest.trees:
+            t = self.forest.trees[-1]
+            t.remove_range(self.key(cgid, 0), 
+                           self.key(cgid, self.max_id))
+
+
 class Store(object):
 
     '''Store backup data.
