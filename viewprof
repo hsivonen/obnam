@@ -18,8 +18,17 @@
 import pstats
 import sys
 
+if len(sys.argv) not in [2, 3]:
+    sys.stderr.write('Usage: viewprof foo.prof [sort-order]\n')
+    sys.exit(1)
+
+if len(sys.argv) == 3:
+    order = sys.argv[2]
+else:
+    order = 'time'
+
 p = pstats.Stats(sys.argv[1])
 p.strip_dirs()
-p.sort_stats('time')
+p.sort_stats(order)
 p.print_stats()
 p.print_callees()
