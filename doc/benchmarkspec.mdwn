@@ -1,0 +1,69 @@
+Benchmarking obnam
+==================
+
+
+Terminology
+-----------
+
+Live data: the data being backed up. The data in user's home directories,
+etc.
+
+Backup store: the location where the backups are stored.
+
+
+Discussion
+----------
+
+A benchmark for Obnam should provide some indication of how well it will
+perform in real life. However, since real-life conditions vary a lot,
+the benchmark will by necessity be artificial.
+
+The main indication of performance for a backup program is fast it
+transfers data to or from the backup store. Specifically, the amount
+of actual file data; all data on top of data is to be considered
+overhead. Thus, for a given amount of live data to back up, the
+performance will be expressed as a transfer speed: bytes per second.
+
+For a full backup, the amount of file data is easy: the sum of the
+lengths of all files in the live data.
+
+For an incremental backup, you need to somehow figure out how much
+new data there is. Deleted data should count as zero size: no new
+file data needs to be transferred to the backup store when a file is
+deleted from the live data.
+
+The other big performance factor for backups is how much space the
+backup store uses. Measuring the total size after generation seems
+sensible. Note that I am assuming that all generations are put in the
+same store, since that is the underlying assumption for disk-to-disk
+and online backups. The assumption may break down for tape backups.
+
+
+What to measure
+---------------
+
+1. Backup transfer speed.
+   - amount of new live data divided by duration of backup run
+2. Backup store size.
+   - total disk space use (number of blocks used, a la du(1))
+
+
+Benchmark setup
+---------------
+
+I have a utility, genbackupdata, which can generate test data for
+backup benchmarking. It accepts options to tell how much new data
+to generate, which takes care of figuring out how much live data
+there is for incremental backups.
+
+The benchmark will then basically be as follows:
+
+* Generate X amount of live data.
+* Back it up, full backup. Measure.
+* Generate Y amount of more live data.
+* Back it up, incremental backup. Measure.
+* Repeat incremental backup a sufficient number of times.
+* Report.
+
+I have another utility, seivot, which basically does this. It will need
+a wrapper and/or modifications to be perfect, but that's easy to arrange.
