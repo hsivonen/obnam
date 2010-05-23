@@ -950,9 +950,8 @@ class Store(object):
         
         '''
 
-        cgid = 0
         while True:
-            cgid += 1
+            cgid = random.randint(0, 2**64 - 1)
             if not self.chunkgroups.group_exists(cgid):
                 break
         self.chunkgroups.add(cgid, chunkids)
