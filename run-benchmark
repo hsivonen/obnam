@@ -15,10 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
+SEIVOT=seivot
 REVISION=$(cd "$BRANCH" && bzr revno)
 
-seivot \
+$SEIVOT \
     --output="obnam.seivot" \
     --program=obnam \
     --revision="$REVISION" \
@@ -27,5 +27,5 @@ seivot \
     --fullcmd="$(pwd)/obnam --log /dev/null --store \$STORE backup \$DATA" \
     --generations=10 \
     measure
-seivot report --output="obnam.png" obnam.seivot
+$SEIVOT report --output="obnam.png" obnam.seivot
 
