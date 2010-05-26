@@ -541,36 +541,34 @@ class ChunkGroupTree(StoreTree):
     (integers).
 
     '''
-
-    # We store things in the tree using a key consisting of three elements:
-    # 1. a 'meta' flag
-    # 2. the chunk group id
-    # 3. a counter
-    # The value corresponding to a key is the chunk id, if meta is false.
-    # If meta is true, the counter is 0, and value is empty.
-    #
-    # A true meta flag is used to list chunk groups so that it is fast
-    # to find all chunk groups, and to check if a particular one exists.
-    # This allows for a chunk group with no chunks, just in case that
-    # edge case is useful.
+    
+    # We store things using the chunk group id as tkey key. The ids of
+    # the chunks are stored as the value, as a blob, using struct.
 
     def __init__(self, fs):
         StoreTree.__init__(self, fs, 'chunkgroups', 
-                           len(self.key(False, 0, 0)), 64*1024)
+                           len(self.key(0)), 64*1024)
         self.max_id = 2**64 - 1
 
-    def key(self, meta, cgid, counter):
-        return struct.pack('!cQQ', '1' if meta else '0', cgid, counter)
+    def key(self, cgid):
+        return struct.pack('!Q', cgid)
 
     def unkey(self, key):
-        return struct.unpack('!cQQ', key)[1:]
+        return struct.unpack('!Q', key)[0]
+
+    def blob(self, chunkids):
+        return struct.pack('!' + 'Q' * len(chunkids), *chunkids)
+        
+    def unblob(self, blob):
+        n = len(blob) / struct.calcsize('Q')
+        return struct.unpack('!' + 'Q' * n, blob)
 
     def group_exists(self, cgid):
         '''Does a chunk group exist?'''
         if self.init_forest() and self.forest.trees:
             t = self.forest.trees[-1]
             try:
-                t.lookup(self.key(True, cgid, 0))
+                t.lookup(self.key(cgid))
             except KeyError:
                 pass
             else:
@@ -581,9 +579,8 @@ class ChunkGroupTree(StoreTree):
         '''List all chunk group ids.'''
         if self.init_forest() and self.forest.trees:
             t = self.forest.trees[-1]
-            pairs = t.lookup_range(self.key(True, 0, 0), 
-                                   self.key(True, self.max_id, 0))
-            return list(set(self.unkey(key)[0] for key, value in pairs))
+            pairs = t.lookup_range(self.key(0), self.key(self.max_id))
+            return list(self.unkey(key) for key, value in pairs)
         else:
             return []
 
@@ -591,9 +588,8 @@ class ChunkGroupTree(StoreTree):
         '''List all chunks in a chunk group.'''
         if self.init_forest() and self.forest.trees:
             t = self.forest.trees[-1]
-            pairs = t.lookup_range(self.key(False, cgid, 0),
-                                   self.key(False, cgid, self.max_id))
-            return [struct.unpack('!Q', value)[0] for key, value in pairs]
+            blob = t.lookup(self.key(cgid))
+            return list(self.unblob(blob))
         else:
             return []
 
@@ -604,19 +600,15 @@ class ChunkGroupTree(StoreTree):
             t = self.forest.trees[-1]
         else:
             t = self.forest.new_tree()
-        t.insert(self.key(True, cgid, 0), '')
-        for counter, chunkid in enumerate(chunkids):
-            t.insert(self.key(False, cgid, counter), 
-                     struct.pack('!Q', chunkid))
+        blob = self.blob(chunkids)
+        t.insert(self.key(cgid), blob)
 
     def remove(self, cgid):
         '''Remove a chunk group.'''
         self.require_forest()
         if self.forest.trees:
             t = self.forest.trees[-1]
-            t.remove(self.key(True, cgid, 0))
-            t.remove_range(self.key(False, cgid, 0), 
-                           self.key(False, cgid, self.max_id))
+            t.remove(self.key(cgid))
 
 
 class Store(object):
