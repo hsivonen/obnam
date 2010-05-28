@@ -110,7 +110,7 @@ class NodeStoreVfs(btree.NodeStoreDisk):
     def rename_file(self, old, new):
         self.fs.rename(old, new)
 
-    def remove_file(self, filename):
+    def remove_file(self, filename): # pragma: no cover
         self.fs.remove(filename)
 
     def listdir(self, dirname): # pragma: no cover
@@ -493,7 +493,7 @@ class ChecksumTree(StoreTree):
     def add(self, checksum, identifier):
         self.require_forest()
         if self.forest.trees:
-            t = self.forest.new_tree(self.forest.trees[-1])
+            t = self.forest.trees[-1]
             pairs = t.lookup_range(self.key(checksum, 0),
                                    self.key(checksum, self.max_counter))
             idstr = self.idstr(identifier)
