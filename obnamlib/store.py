@@ -493,7 +493,7 @@ class ChecksumTree(StoreTree):
     def add(self, checksum, identifier):
         self.require_forest()
         if self.forest.trees:
-            t = self.forest.new_tree(self.forest.trees[-1])
+            t = self.forest.trees[-1]
             pairs = t.lookup_range(self.key(checksum, 0),
                                    self.key(checksum, self.max_counter))
             idstr = self.idstr(identifier)
