@@ -474,15 +474,15 @@ class ChecksumTree(StoreTree):
 
     def __init__(self, fs, name, checksum_length):
         self.sumlen = checksum_length
-        key_bytes = self.sumlen + 2
+        key_bytes = len(self.key('', 0))
         StoreTree.__init__(self, fs, name, key_bytes, 64*1024)
-        self.max_counter = 2**16 - 1
+        self.max_counter = 2**64 - 1
 
     def key(self, checksum, counter):
-        return struct.pack('!%dsH' % self.sumlen, checksum, counter)
+        return struct.pack('!%dsQ' % self.sumlen, checksum, counter)
 
     def unkey(self, key):
-        return struct.unpack('!%dsH' % self.sumlen, key)
+        return struct.unpack('!%dsQ' % self.sumlen, key)
 
     def idstr(self, identifier):
         return struct.pack('!Q', identifier)
