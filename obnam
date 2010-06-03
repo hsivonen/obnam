@@ -39,8 +39,11 @@ def main():
 
 
 if __name__ == '__main__':
-    if os.environ.get('OBNAM_PROFILE') == 'yes':
+    profname = os.environ.get('OBNAM_PROFILE')
+    if profname:
         import cProfile
-        cProfile.run('main()', 'obnam.prof')
+        if profname == 'yes':
+            profname = 'obnam.prof'
+        cProfile.run('main()', profname)
     else:
         main()
