@@ -164,7 +164,10 @@ class LocalFS(obnamlib.VirtualFileSystem):
             pass
         os.rename(name, path)
         if not make_backup:
-            os.remove(bak)
+            try:
+                os.remove(bak)
+            except OSError:
+                pass
 
     def listdir(self, dirname):
         return os.listdir(self.join(dirname))
