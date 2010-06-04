@@ -97,6 +97,10 @@ class NodeStoreVfs(btree.NodeStoreDisk):
     def __init__(self, fs, dirname, node_size, codec):
         btree.NodeStoreDisk.__init__(self, dirname, node_size, codec)
         self.fs = fs
+        
+    def mkdir(self, dirname):
+        if not self.fs.exists(dirname):
+            self.fs.mkdir(dirname)
 
     def read_file(self, filename):
         return self.fs.cat(filename)
