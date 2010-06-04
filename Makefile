@@ -14,7 +14,7 @@ check: all
 	python blackboxtest
 	
 clean:
-	rm -f _obnam.so obnamlib/*.pyc obnamlib/plugins/*.pyc testplugins/*.pyc
+	rm -f _obnam.so obnamlib/*.pyc obnamlib/plugins/*.pyc test-plugins/*.pyc
 	rm -f blackboxtest.log blackboxtest-obnam.log obnam.prof
 	rm -f obnam-new-data.png obnam-store.png obnam-xfer.png obnam.seivot
 
