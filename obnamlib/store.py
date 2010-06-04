@@ -102,7 +102,7 @@ class NodeStoreVfs(btree.NodeStoreDisk):
         return self.fs.cat(filename)
 
     def write_file(self, filename, contents):
-        self.fs.overwrite_file(filename, contents)
+        self.fs.overwrite_file(filename, contents, make_backup=False)
 
     def file_exists(self, filename):
         return self.fs.exists(filename)
