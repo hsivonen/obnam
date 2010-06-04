@@ -140,7 +140,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
             raise
         os.remove(name)
 
-    def overwrite_file(self, pathname, contents):
+    def overwrite_file(self, pathname, contents, make_backup=True):
         path = self.join(pathname)
         dirname = os.path.dirname(path)
         fd, name = tempfile.mkstemp(dir=dirname)
@@ -163,6 +163,8 @@ class LocalFS(obnamlib.VirtualFileSystem):
         except OSError:
             pass
         os.rename(name, path)
+        if not make_backup:
+            os.remove(bak)
 
     def listdir(self, dirname):
         return os.listdir(self.join(dirname))

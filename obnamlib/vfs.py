@@ -156,11 +156,12 @@ class VirtualFileSystem(object):
 
         """
 
-    def overwrite_file(self, pathname, contents):
+    def overwrite_file(self, pathname, contents, make_backup=True):
         """Like write_file, but overwrites existing file.
 
         The old file isn't immediately lost, it gets renamed with
-        a backup suffix.
+        a backup suffix. The backup file is removed if make_backup is
+        set to False (default is True).
 
         """
 
