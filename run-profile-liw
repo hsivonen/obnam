@@ -25,18 +25,20 @@ die()
     exit 1
 }
 
-[ $# = 1 ] || die "Usage: $0 livedata"
+[ $# -ge 2 ] || die "Usage: $0 livedata mailaddress..."
 
 DATA="/media/livedata/$1"
 STORE="/media/store/profile-$1"
 LOG="/media/store/profile-$1.log"
 export OBNAM_PROFILE="/media/store/profile-$1.prof"
 REPORT="/media/store/profile-$1.report"
-ADDRS="liw@liw.fi"
+
+shift 1
+ADDRS="$@"
 
 rm -rf "$STORE" "$LOG" "$OBNAM_PROFILE"
 ./obnam --store "$STORE" --log "$LOG" backup "$DATA"
-./viewprof "$OBNAM_PROFILE" > "$REPORT"
+./viewprof "$OBNAM_PROFILE" cumulative > "$REPORT"
 biabam "$OBNAM_PROFILE" -s "obnam profile for live data set $x" $ADDRS \
     < "$REPORT"
 
