@@ -31,6 +31,10 @@ class App(object):
         self.config = obnamlib.Configuration([])
         self.config.new_string(['log'], 'name of log file (%default)')
         self.config['log'] = 'obnam.log'
+        self.config.new_string(['log-level'], 
+                               'log level, one of debug, info, warning, '
+                               'error, critical (%default)')
+        self.config['log-level'] = 'info'
         self.config.new_string(['store'], 'name of backup store')
         self.config.new_string(['hostname'], 'name of host (%default)')
         self.config['hostname'] = self.deduce_hostname()
@@ -61,7 +65,16 @@ class App(object):
         handler = logging.FileHandler(self.config['log'])
         handler.setFormatter(formatter)
         logger = logging.getLogger()
-        logger.setLevel(logging.DEBUG)
+        levels = {
+            'debug': logging.DEBUG,
+            'info': logging.INFO,
+            'warning': logging.WARNING,
+            'error': logging.ERROR,
+            'critical': logging.CRITICAL,
+        }
+        level_name = self.config['log-level']
+        level = levels.get(level_name.lower(), logging.DEBUG)
+        logger.setLevel(level)
         logger.addHandler(handler)
         
     def run(self):
