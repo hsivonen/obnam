@@ -480,48 +480,29 @@ class ChecksumTree(StoreTree):
         self.sumlen = checksum_length
         key_bytes = len(self.key('', 0))
         StoreTree.__init__(self, fs, name, key_bytes, 64*1024)
-        self.max_counter = 2**64 - 1
+        self.max_id = 2**64 - 1
 
-    def key(self, checksum, counter):
-        return struct.pack('!%dsQ' % self.sumlen, checksum, counter)
+    def key(self, checksum, number):
+        return struct.pack('!%dsQ' % self.sumlen, checksum, number)
 
     def unkey(self, key):
         return struct.unpack('!%dsQ' % self.sumlen, key)
 
-    def idstr(self, identifier):
-        return struct.pack('!Q', identifier)
-
-    def idunstr(self, idstr):
-        return struct.unpack('!Q', idstr)[0]
-
     def add(self, checksum, identifier):
         self.require_forest()
+        key = self.key(checksum, identifier)
         if self.forest.trees:
             t = self.forest.trees[-1]
-            pairs = t.lookup_range(self.key(checksum, 0),
-                                   self.key(checksum, self.max_counter))
-            idstr = self.idstr(identifier)
-            biggest = ''
-            for key, value in pairs:
-                biggest = max(biggest, key)
-                if value == idstr:
-                    break
-            else:
-                if biggest:
-                    dummy, counter = self.unkey(biggest)
-                else:
-                    counter = 0
-                t.insert(self.key(checksum, counter + 1), idstr)
         else:
             t = self.forest.new_tree()
-            t.insert(self.key(checksum, 0), self.idstr(identifier))
+        t.insert(key, '')
 
     def find(self, checksum):
         if self.init_forest() and self.forest.trees:
             t = self.forest.trees[-1]
             pairs = t.lookup_range(self.key(checksum, 0),
-                                   self.key(checksum, self.max_counter))
-            return [self.idunstr(value) for key, value in pairs]
+                                   self.key(checksum, self.max_id))
+            return [self.unkey(key)[1] for key, value in pairs]
         else:
             return []
 
@@ -529,12 +510,7 @@ class ChecksumTree(StoreTree):
         self.require_forest()
         if self.forest.trees:
             t = self.forest.new_tree(self.forest.trees[-1])
-            pairs = t.lookup_range(self.key(checksum, 0),
-                                   self.key(checksum, self.max_counter))
-            idstr = self.idstr(identifier)
-            for key, value in pairs:
-                if value == idstr:
-                    t.remove(key)
+            t.remove(self.key(checksum, identifier))
 
 
 class ChunkGroupTree(StoreTree):
