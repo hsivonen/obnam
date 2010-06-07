@@ -59,9 +59,11 @@ do
     size=$(echo "$pair" | sed 's:/.*::')
     inc=$(echo "$pair" | sed 's:.*/::')
     echo "Benchmark run for size $size inc $inc"
-    data="obnam-$OBNAM_REVNO-$BTREE_REVNO-$size.seivot"
+    basename="obnam-$OBNAM_REVNO-$BTREE_REVNO-$size"
+    data="$basename.seivot"
     desc="obnam (r$OBNAM_REVNO) and btree (r$BTREE_REVNO)"
     desc="$desc for live data size $size with $inc increments"
+    export OBNAM_PROFILE="$basename.prof"
     $SEIVOT \
         --output="$data" \
         --description="$desc" \
@@ -70,7 +72,10 @@ do
         --start-size=$size \
         --inc-size=$inc \
         --generations=5 \
-        --fullcmd="env PYTHONPATH=$BTREE_BRANCH $OBNAM_BRANCH/obnam --log /dev/null --store \$STORE backup \$DATA" \
+        --fullcmd="env PYTHONPATH=$BTREE_BRANCH $OBNAM_BRANCH/obnam \
+                   --log /dev/null --store \$STORE backup \$DATA" \
     measure
-    $SEIVOT report --output="obnam-$OBNAM_REVNO-$BTREE_REVNO-$size.png" "$data"
+    $SEIVOT report --output="$basename.png" "$data"
+    ./viewprof "$OBNAM_PROFILE" cumulative > "$basename-cumulative.txt"
+    ./viewprof "$OBNAM_PROFILE" time > "$basename-time.txt"
 done
