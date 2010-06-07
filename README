@@ -1,0 +1,117 @@
+Obnam, a backup program
+=======================
+
+Obnam is a backup program. It is currently ALPHA quality, meaning that
+some things work, but many things don't, there are probably a lot of bugs,
+and if you rely on it, you will turn bitter and hateful, and will abandon
+all hope for civilisation, move into the rain forest, and talk to birds
+for the rest of your life.
+
+In other words, don't use it for anything real yet.
+
+
+Installation
+------------
+
+The source tree contains packaging for Debian. Run "debuild -us -uc" to
+build an installation package.
+
+On other systems, using the setup.py file might work: run
+"python setup.py --help" for advice. If not, please tell me how to fix it.
+
+You need to install my B-tree and LRU libraries, which you can get from:
+
+    http://liw.fi/btree/
+    http://liw.fi/python-lru/
+
+
+Use
+---
+
+To get a quick help summary of options:
+
+    ./obnam --help
+    
+To make a backup:
+
+    ./obnam backup --store /tmp/mybackup $HOME
+
+For more information, see the manual page:
+
+    man -l obnam.1 
+
+
+Hacking
+-------
+
+To build:
+
+    make
+    
+To run automatic tests:
+
+    make check
+    
+You need my CoverageTestRunner to run tests, get it from:
+
+    http://liw.fi/coverage-test-runner/
+
+A couple of scripts exist to run benchmarks and profiles:
+
+    ./run-benchmark
+    ./run-profile
+    ./viewprof obnam.prof cumulative | less -S
+
+The canonical version control repository for obnam itself is at:
+
+    http://code.liw.fi/obnam/bzr/
+
+The rewrite4 branch is currently the main one.
+
+If you make any changes, I welcome patches, either as plain diffs, bzr
+bundles, or public repositories I can merge from.
+
+The code layout is roughly like this:
+
+    obnamlib/               # all the real code
+    obnamlib/plugins/       # the plugin code (see pluginmgr.py)
+    obnam                   # script to invoke obnam
+    _obnammodule.c          # wrapper around some system calls
+
+In obnamlib, every code module has a corresponding test module,
+and "make check" uses CoverageTestRunner to run them pairwise. For
+each pair, test coverage must be 100% or the test will fail.
+Mark statements that should not be included in coverage test with
+"# pragma: no cover", if you really, really can't write a test.
+without-tests lists modules that have no test modules.
+
+
+Feedback
+--------
+
+I welcome bug fixes, enhancements, bug reports, suggestions, requests,
+and other feedback. I prefer e-mail (mailto:liw@liw.fi).
+
+
+Legal stuff
+-----------
+
+Most of the code is written by Lars Wirzenius. (Please provide patches
+so that can change.)
+
+The code is covered by the GNU General Public License, version 3 or later.
+
+Copyright 2010  Lars Wirzenius
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+ 
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
