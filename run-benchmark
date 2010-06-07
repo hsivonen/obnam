@@ -52,7 +52,7 @@ fi
 
 SIZES="1m/1m 10m/1m"
 OBNAM_REVNO=$(cd "$OBNAM_BRANCH" && bzr revno)
-BTREE_REVNO=$(cd "$OBNAM_BRANCH" && bzr revno)
+BTREE_REVNO=$(cd "$BTREE_BRANCH" && bzr revno)
 
 for pair in $SIZES
 do
