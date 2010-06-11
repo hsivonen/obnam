@@ -51,6 +51,7 @@ then
 fi
 
 SIZES="1m/1m 10m/1m 100m/10m 1000m/100m 10000m/100m"
+GENERATIONS=5
 OBNAM_REVNO=$(cd "$OBNAM_BRANCH" && bzr revno)
 BTREE_REVNO=$(cd "$BTREE_BRANCH" && bzr revno)
 
@@ -63,7 +64,6 @@ do
     data="$basename.seivot"
     desc="obnam (r$OBNAM_REVNO) and btree (r$BTREE_REVNO)"
     desc="$desc for live data size $size with $inc increments"
-    export OBNAM_PROFILE="$basename.prof"
     $SEIVOT \
         --output="$data" \
         --description="$desc" \
@@ -71,11 +71,17 @@ do
         --revision="$OBNAM_REVNO and $BTREE_REVNO" \
         --start-size=$size \
         --inc-size=$inc \
-        --generations=5 \
-        --fullcmd="env PYTHONPATH=$BTREE_BRANCH $OBNAM_BRANCH/obnam \
-                   --log /dev/null --store \$STORE backup \$DATA" \
+        --generations=$GENERATIONS \
+        --fullcmd="env OBNAM_PROFILE=obnam.prof \
+                   PYTHONPATH=$BTREE_BRANCH $OBNAM_BRANCH/obnam \
+                   --log /dev/null --store \$STORE backup \$DATA && \
+                   cp obnam.prof $basename-\$GEN.prof && \
+                   $(pwd)/viewprof obnam.prof cumulative \
+                    > $basename-\$GEN-cumulative.txt && \
+                   $(pwd)/viewprof obnam.prof time \
+                    > $basename-\$GEN-time.txt && \
+                   rm -f obnam.prof \
+                    " \
     measure
     $SEIVOT report --output="$basename.png" "$data"
-    ./viewprof "$OBNAM_PROFILE" cumulative > "$basename-cumulative.txt"
-    ./viewprof "$OBNAM_PROFILE" time > "$basename-time.txt"
 done
