@@ -65,7 +65,7 @@ class TerminalStatusPlugin(obnamlib.ObnamPlugin):
             self.ts.notify(msg)
 
     def error_message_cb(self, msg):
-        self.ts.notify(msg)
+        self.ts.notify('Error: %s' % msg)
 
     def shutdown_cb(self):
         self.ts.finish()
