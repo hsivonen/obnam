@@ -50,6 +50,7 @@ class App(object):
         self.register_command = self.interp.register
 
         self.hooks.new('plugins-loaded')
+        self.hooks.new('config-loaded')
         self.hooks.new('shutdown')
         
         self.fsf = obnamlib.VfsFactory()
@@ -82,6 +83,7 @@ class App(object):
         self.pm.enable_plugins()
         self.hooks.call('plugins-loaded')
         self.config.load()
+        self.hooks.call('config-loaded')
         self.setup_logging()
         if self.config.args:
             self.interp.execute(self.config.args[0], self.config.args[1:])

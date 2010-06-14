@@ -32,27 +32,32 @@ class TerminalStatusPlugin(obnamlib.ObnamPlugin):
 
         self.ts = ttystatus.TerminalStatus(period=0.25)
         self.ts['data_done'] = 0
-        self.ts.add(ttystatus.ElapsedTime())
-        self.ts.add(ttystatus.Literal(' '))
-        self.ts.add(ttystatus.Counter('current'))
-        self.ts.add(ttystatus.Literal(' files; '))
-        self.ts.add(ttystatus.ByteSize('data_done'))
-        self.ts.add(ttystatus.Literal(' '))
-        self.ts.add(ttystatus.Pathname('current'))
 
         self.app.hooks.new('status')
         self.app.hooks.new('progress-found-file')
         self.app.hooks.new('progress-data-done')
         self.app.hooks.new('error-message')
+
         self.add_callback('status', self.status_cb)
         self.add_callback('progress-found-file', self.found_file_cb)
         self.add_callback('progress-data-done', self.data_done_cb)
         self.add_callback('error-message', self.error_message_cb)
+        self.add_callback('config-loaded', self.config_loaded_cb)
         self.add_callback('shutdown', self.shutdown_cb)
         
     def disable(self):
         self.ts.finish()
         self.ts = None
+
+    def config_loaded_cb(self):
+        if not self.app.config['quiet']:
+            self.ts.add(ttystatus.ElapsedTime())
+            self.ts.add(ttystatus.Literal(' '))
+            self.ts.add(ttystatus.Counter('current'))
+            self.ts.add(ttystatus.Literal(' files; '))
+            self.ts.add(ttystatus.ByteSize('data_done'))
+            self.ts.add(ttystatus.Literal(' '))
+            self.ts.add(ttystatus.Pathname('current'))
 
     def found_file_cb(self, filename, size):
         self.ts['current'] = filename
@@ -69,4 +74,3 @@ class TerminalStatusPlugin(obnamlib.ObnamPlugin):
 
     def shutdown_cb(self):
         self.ts.finish()
-
