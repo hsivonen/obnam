@@ -68,8 +68,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.fs.close()
         self.store.commit_host()
 
-        self.app.hooks.call('progress-found-file', None, 0)
-
         logging.debug('backup finished')
 
     def backup_parents(self, root):

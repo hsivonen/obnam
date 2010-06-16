@@ -250,6 +250,15 @@ class LocalFSTests(unittest.TestCase):
         self.fs.overwrite_file("foo", "foobar")
         self.assertEqual(self.fs.cat("foo.bak"), "bar")
 
+    def test_overwrite_removes_bak_file(self):
+        self.fs.write_file("foo", "bar")
+        self.fs.overwrite_file("foo", "foobar", make_backup=False)
+        self.assertFalse(self.fs.exists("foo.bak"))
+
+    def test_overwrite_is_ok_without_bak(self):
+        self.fs.overwrite_file("foo", "foobar", make_backup=False)
+        self.assertFalse(self.fs.exists("foo.bak"))
+
     def test_overwrite_replaces_existing_file(self):
         self.fs.write_file("foo", "bar")
         self.fs.overwrite_file("foo", "foobar")

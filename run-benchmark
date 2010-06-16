@@ -15,17 +15,73 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+set -e
+
+die()
+{
+    echo "$@" 1>&2
+    exit 1
+}
+
 SEIVOT=seivot
-REVISION=$(cd "$BRANCH" && bzr revno)
+OBNAM_BRANCH="."
+BTREE_BRANCH="$HOME/btree/trunk"
 
-$SEIVOT \
-    --output="obnam.seivot" \
-    --program=obnam \
-    --revision="$REVISION" \
-    --start-size=1m \
-    --inc-size=100k \
-    --fullcmd="$(pwd)/obnam --log /dev/null --store \$STORE backup \$DATA" \
-    --generations=10 \
+if [ $# -ge 1 ]
+then
+    OBNAM_BRANCH="$1"
+    shift
+fi
+
+if [ $# -ge 1 ]
+then
+    BTREE_BRANCH="$1"
+    shift
+fi
+
+if [ $# -ge 1 ]
+then
+    SEIVOT="$1"
+    shift
+fi
+
+if [ $# != 0 ]
+then
+    die "Usage: $0 [obnam-branch [btree-branch [path/to/seivot]]]"
+fi
+
+SIZES="1m/1m 10m/1m 100m/10m 1000m/100m 10000m/100m"
+GENERATIONS=5
+OBNAM_REVNO=$(cd "$OBNAM_BRANCH" && bzr revno)
+BTREE_REVNO=$(cd "$BTREE_BRANCH" && bzr revno)
+
+for pair in $SIZES
+do
+    size=$(echo "$pair" | sed 's:/.*::')
+    inc=$(echo "$pair" | sed 's:.*/::')
+    echo "Benchmark run for size $size inc $inc"
+    basename="obnam-$OBNAM_REVNO-$BTREE_REVNO-$size"
+    data="$basename.seivot"
+    desc="obnam (r$OBNAM_REVNO) and btree (r$BTREE_REVNO)"
+    desc="$desc for live data size $size with $inc increments"
+    $SEIVOT \
+        --output="$data" \
+        --description="$desc" \
+        --program="obnam+btree" \
+        --revision="$OBNAM_REVNO and $BTREE_REVNO" \
+        --start-size=$size \
+        --inc-size=$inc \
+        --generations=$GENERATIONS \
+        --fullcmd="env OBNAM_PROFILE=obnam.prof \
+                   PYTHONPATH=$BTREE_BRANCH $OBNAM_BRANCH/obnam \
+                   --log /dev/null --store \$STORE backup \$DATA && \
+                   cp obnam.prof $basename-\$GEN.prof && \
+                   $(pwd)/viewprof obnam.prof cumulative \
+                    > $basename-\$GEN-cumulative.txt && \
+                   $(pwd)/viewprof obnam.prof time \
+                    > $basename-\$GEN-time.txt && \
+                   rm -f obnam.prof \
+                    " \
     measure
-$SEIVOT report --output="obnam.png" obnam.seivot
-
+    $SEIVOT report --output="$basename.png" "$data"
+done

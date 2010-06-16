@@ -31,6 +31,10 @@ class App(object):
         self.config = obnamlib.Configuration([])
         self.config.new_string(['log'], 'name of log file (%default)')
         self.config['log'] = 'obnam.log'
+        self.config.new_string(['log-level'], 
+                               'log level, one of debug, info, warning, '
+                               'error, critical (%default)')
+        self.config['log-level'] = 'info'
         self.config.new_string(['store'], 'name of backup store')
         self.config.new_string(['hostname'], 'name of host (%default)')
         self.config['hostname'] = self.deduce_hostname()
@@ -46,6 +50,7 @@ class App(object):
         self.register_command = self.interp.register
 
         self.hooks.new('plugins-loaded')
+        self.hooks.new('config-loaded')
         self.hooks.new('shutdown')
         
         self.fsf = obnamlib.VfsFactory()
@@ -61,7 +66,16 @@ class App(object):
         handler = logging.FileHandler(self.config['log'])
         handler.setFormatter(formatter)
         logger = logging.getLogger()
-        logger.setLevel(logging.DEBUG)
+        levels = {
+            'debug': logging.DEBUG,
+            'info': logging.INFO,
+            'warning': logging.WARNING,
+            'error': logging.ERROR,
+            'critical': logging.CRITICAL,
+        }
+        level_name = self.config['log-level']
+        level = levels.get(level_name.lower(), logging.DEBUG)
+        logger.setLevel(level)
         logger.addHandler(handler)
         
     def run(self):
@@ -69,6 +83,7 @@ class App(object):
         self.pm.enable_plugins()
         self.hooks.call('plugins-loaded')
         self.config.load()
+        self.hooks.call('config-loaded')
         self.setup_logging()
         if self.config.args:
             self.interp.execute(self.config.args[0], self.config.args[1:])
