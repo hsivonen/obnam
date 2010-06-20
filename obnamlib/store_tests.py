@@ -661,6 +661,6 @@ class StoreGenspecTests(unittest.TestCase):
         self.assertRaises(obnamlib.Error, self.store.genspec, 'foo')
 
     def test_nonexistent_spec_raises_error(self):
-        gen = self.backup()
+        self.backup()
         self.assertRaises(obnamlib.Error, self.store.genspec, 1234)
 

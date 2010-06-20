@@ -16,8 +16,6 @@
 
 import logging
 import os
-import stat
-import time
 
 import obnamlib
 

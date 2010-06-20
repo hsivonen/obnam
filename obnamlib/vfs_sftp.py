@@ -16,7 +16,6 @@
 
 
 import errno
-import getpass
 import logging
 import os
 import pwd
