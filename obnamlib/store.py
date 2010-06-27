@@ -278,10 +278,6 @@ class GenerationStore(StoreTree):
 
         return struct.pack(fmt, mainhash, subtype, subkey)
 
-    def unkey_int(self, key):
-        '''Split a key into its components, with subkey being an integer.'''
-        return struct.unpack('!8sBQ', key)
-
     def key(self, mainkey, subtype, subkey):
         '''Compute a full key.
 
@@ -380,14 +376,9 @@ class GenerationStore(StoreTree):
         # Also remove from parent's contents.
         parent = os.path.dirname(filename)
         if parent != filename: # root dir is its own parent
-            h = self.hash_name(filename)
-            minkey = self.key(parent, self.DIR_CONTENTS, 0)
-            maxkey = self.key(parent, self.DIR_CONTENTS, self.SUBKEY_MAX)
-            pairs = self.curgen.lookup_range(minkey, maxkey)
-            for key, value in pairs:
-                if value == h:
-                    self.curgen.remove(key)
-                    break
+            subkey = self.hash_name(filename)
+            key = self.key(parent, self.DIR_CONTENTS, subkey)
+            self.curgen.remove_range(key, key)
 
     def create(self, filename, metadata):
         self.set_metadata(filename, metadata)
@@ -398,17 +389,9 @@ class GenerationStore(StoreTree):
             basename = os.path.basename(filename)
             genid = self.get_generation_id(self.curgen)
             if basename not in self.listdir(genid, parent):
-                minkey = self.key(parent, self.DIR_CONTENTS, 0)
-                maxkey = self.key(parent, self.DIR_CONTENTS, self.SUBKEY_MAX)
-                pairs = self.curgen.lookup_range(minkey, maxkey)
-                if pairs:
-                    a, b, maxindex = self.unkey_int(pairs[-1][0])
-                    index = maxindex + 1
-                else:
-                    index = 0
-                key = self.key(parent, self.DIR_CONTENTS, index)
-                h = self.hash_name(filename)
-                self.curgen.insert(key, h)
+                subkey = self.hash_name(filename)
+                key = self.key(parent, self.DIR_CONTENTS, subkey)
+                self.curgen.insert(key, basename)
 
     def get_metadata(self, genid, filename):
         tree = self.find_generation(genid)
@@ -429,9 +412,7 @@ class GenerationStore(StoreTree):
         maxkey = self.key(dirname, self.DIR_CONTENTS, self.SUBKEY_MAX)
         basenames = []
         for key, value in tree.lookup_range(minkey, maxkey):
-            namekey = self.hashkey(value, self.FILE, self.FILE_NAME)
-            pathname = tree.lookup(namekey)
-            basenames.append(os.path.basename(pathname))
+            basenames.append(value)
         return basenames
 
     def get_file_chunks(self, genid, filename):
