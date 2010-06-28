@@ -867,7 +867,8 @@ class Store(object):
             if not self.fs.exists(filename):
                 break
         dirname = os.path.dirname(filename)
-        self.fs.makedirs(dirname)
+        if not self.fs.exists(dirname):
+            self.fs.makedirs(dirname)
         self.fs.write_file(filename, data)
         self.chunksums.add(self.checksum(data), chunkid)
         return chunkid
