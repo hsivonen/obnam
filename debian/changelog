@@ -1,0 +1,6 @@
+obnam (0.10) squeeze; urgency=low
+
+  * Initial packaging. This is not intended to be uploaded to Debian, so
+    no closing of an ITP bug.
+
+ -- Lars Wirzenius <liw@liw.fi>  Tue, 29 Jun 2010 16:21:31 +1200

@@ -18,11 +18,11 @@
 from distutils.core import setup, Extension
 
 setup(name='obnam',
-      version='0.0.0',
+      version='0.10',
       description='Backup software',
       author='Lars Wirzenius',
       author_email='liw@liw.fi',
-      url='http://braawi.org/obnam.html',
+      url='http://braawi.org/obnam/',
       packages=['obnamlib'],
       ext_modules=[Extension('_obnam', sources=['_obnammodule.c'])],
      )

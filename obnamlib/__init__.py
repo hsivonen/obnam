@@ -14,6 +14,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+version = '0.10'
+
+
 import _obnam
 from pluginmgr import PluginManager
 

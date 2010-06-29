@@ -1,0 +1,19 @@
+Source: obnam
+Maintainer: Lars Wirzenius <liw@liw.fi>
+Section: python
+Priority: optional
+Standards-Version: 3.8.4
+Build-Depends: debhelper (>= 7.3.8), python-support (>= 1.0.3), 
+    python (>= 2.5), extrautils, python-coverage-test-runner, 
+    python-btree (>= 0.10), python-all-dev, python-ttystatus
+Homepage: http://braawi.org/obnam/
+
+Package: obnam
+Architecture: all
+Depends: ${python:Depends}, ${misc:Depends}, python (>= 2.5),
+    python-btree (>= 0.10), python-ttystatus
+Description: online backup application
+ Obnam makes backups.
+ .
+ This Debian package description is woefully inadequate. Please help
+ me improve it.
