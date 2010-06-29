@@ -873,6 +873,7 @@ class Store(object):
             filename = self._chunk_filename(chunkid)
             if not self.fs.exists(filename):
                 break
+            self.prev_chunkid = random_chunkid() # pragma: no cover
         self.prev_chunkid = chunkid
         dirname = os.path.dirname(filename)
         if not self.fs.exists(dirname):
