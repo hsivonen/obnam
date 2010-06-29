@@ -16,6 +16,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 from distutils.core import setup, Extension
+import glob
 
 setup(name='obnam',
       version='0.10',
@@ -23,6 +24,8 @@ setup(name='obnam',
       author='Lars Wirzenius',
       author_email='liw@liw.fi',
       url='http://braawi.org/obnam/',
+      scripts=['obnam'],
       packages=['obnamlib'],
       ext_modules=[Extension('_obnam', sources=['_obnammodule.c'])],
+      data_files=[('share/man/man1', glob.glob('*.1'))],
      )
