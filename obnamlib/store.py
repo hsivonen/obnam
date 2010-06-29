@@ -616,6 +616,7 @@ class Store(object):
         self.chunksums = ChecksumTree(fs, 'chunksums', len(self.checksum('')))
         self.groupsums = ChecksumTree(fs, 'groupsums', len(self.checksum('')))
         self.chunkgroups = ChunkGroupTree(fs)
+        self.prev_chunkid = None
 
     def checksum(self, data):
         '''Return checksum of data.
@@ -838,9 +839,8 @@ class Store(object):
 
     def _chunk_filename(self, chunkid):
         basename = '%06d' % chunkid
-        subdir_1 = basename[-6:-3]
-        subdir_2 = basename[-3:]
-        return os.path.join('chunks', subdir_1, subdir_2, basename)
+        subdir = '%d' % (chunkid / 10000)
+        return os.path.join('chunks', subdir, basename)
 
     @require_started_generation
     def put_chunk(self, data, checksum):
@@ -861,11 +861,19 @@ class Store(object):
         
         '''
         
+        max_chunkid = 2**64 - 1
+        def random_chunkid():
+            return random.randint(0, max_chunkid)
+        
+        if self.prev_chunkid is None:
+            self.prev_chunkid = random_chunkid()
         while True:
-            chunkid = random.randint(0, 2**64 - 1)
+            chunkid = (self.prev_chunkid + 1) % max_chunkid
             filename = self._chunk_filename(chunkid)
             if not self.fs.exists(filename):
                 break
+            self.prev_chunkid = random_chunkid() # pragma: no cover
+        self.prev_chunkid = chunkid
         dirname = os.path.dirname(filename)
         if not self.fs.exists(dirname):
             self.fs.makedirs(dirname)
