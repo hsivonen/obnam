@@ -839,9 +839,8 @@ class Store(object):
 
     def _chunk_filename(self, chunkid):
         basename = '%06d' % chunkid
-        subdir_1 = basename[-6:-3]
-        subdir_2 = basename[-3:]
-        return os.path.join('chunks', subdir_1, subdir_2, basename)
+        subdir = '%d' % (chunkid / 10000)
+        return os.path.join('chunks', subdir, basename)
 
     @require_started_generation
     def put_chunk(self, data, checksum):
