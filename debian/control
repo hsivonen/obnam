@@ -9,9 +9,9 @@ Build-Depends: debhelper (>= 7.3.8), python-support (>= 1.0.3),
 Homepage: http://braawi.org/obnam/
 
 Package: obnam
-Architecture: all
-Depends: ${python:Depends}, ${misc:Depends}, python (>= 2.5),
-    python-btree (>= 0.10), python-ttystatus
+Architecture: any
+Depends: ${shlibs:Depends}, ${python:Depends}, ${misc:Depends}, 
+    python (>= 2.5), python-btree (>= 0.10), python-ttystatus
 Description: online backup application
  Obnam makes backups.
  .

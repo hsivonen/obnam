@@ -1,5 +1,8 @@
 PYTHON = python
 
+prefix = /usr/local
+bindir = $(prefix)/bin
+
 all: _obnam.so
 
 _obnam.so: _obnammodule.c
@@ -17,4 +20,3 @@ clean:
 	rm -f _obnam.so obnamlib/*.pyc obnamlib/plugins/*.pyc test-plugins/*.pyc
 	rm -f blackboxtest.log blackboxtest-obnam.log obnam.prof
 	rm -f obnam-new-data.png obnam-store.png obnam-xfer.png obnam.seivot
-
