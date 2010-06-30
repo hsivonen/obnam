@@ -387,10 +387,13 @@ class GenerationStore(StoreTree):
         parent = os.path.dirname(filename)
         if parent != filename: # root dir is its own parent
             basename = os.path.basename(filename)
-            genid = self.get_generation_id(self.curgen)
-            if basename not in self.listdir(genid, parent):
-                subkey = self.hash_name(filename)
-                key = self.key(parent, self.DIR_CONTENTS, subkey)
+            subkey = self.hash_name(filename)
+            key = self.key(parent, self.DIR_CONTENTS, subkey)
+            # We could just insert, but that would cause unnecessary
+            # churn in the tree if nothing changes.
+            try:
+                self.curgen.lookup(key)
+            except KeyError:
                 self.curgen.insert(key, basename)
 
     def get_metadata(self, genid, filename):
