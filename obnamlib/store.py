@@ -847,8 +847,8 @@ class Store(object):
         self.genstore.remove(filename)
 
     def _chunk_filename(self, chunkid):
-        basename = '%06d' % chunkid
-        subdir = '%d' % (chunkid / 10000)
+        basename = '%x' % chunkid
+        subdir = '%d' % (chunkid / (2**13))
         return os.path.join('chunks', subdir, basename)
 
     @require_started_generation
@@ -917,7 +917,7 @@ class Store(object):
         if self.fs.exists('chunks'):
             for dirname, subdirs, basenames in self.fs.depth_first('chunks'):
                 for basename in basenames:
-                    result.append(int(basename))
+                    result.append(int(basename, 16))
         return result
 
     @require_started_generation
