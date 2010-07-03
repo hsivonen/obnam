@@ -26,6 +26,16 @@ class BackupPlugin(obnamlib.ObnamPlugin):
     def enable(self):
         self.app.register_command('backup', self.backup)
         self.app.config.new_list(['root'], 'what to backup')
+        self.app.config.new_processed(['checkpoint'],
+                                      'make a checkpoint after a given size, '
+                                      'default unit is MiB (%default)',
+                                      self.parse_checkpoint_size)
+        self.app.config['checkpoint'] = '10 MiB'
+
+    def parse_checkpoint_size(self, value):
+        p = obnamlib.ByteSizeParser()
+        p.set_default_unit('MiB')
+        return p.parse(value)
         
     def backup(self, args):
         logging.debug('backup starts')
