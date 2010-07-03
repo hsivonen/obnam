@@ -282,6 +282,22 @@ class StoreHostTests(unittest.TestCase):
         self.store.commit_host()
         self.assertFalse(self.store.got_host_lock)
 
+    def test_commit_does_not_mark_as_checkpoint_by_default(self):
+        self.store.lock_host('hostname')
+        self.store.start_generation()
+        genid = self.store.new_generation
+        self.store.commit_host()
+        self.store.open_host('hostname')
+        self.assertFalse(self.store.get_is_checkpoint(genid))
+
+    def test_commit_marks_as_checkpoint_when_requested(self):
+        self.store.lock_host('hostname')
+        self.store.start_generation()
+        genid = self.store.new_generation
+        self.store.commit_host(checkpoint=True)
+        self.store.open_host('hostname')
+        self.assert_(self.store.get_is_checkpoint(genid))
+
     def test_commit_host_without_lock_fails(self):
         self.assertRaises(obnamlib.LockFail, self.store.commit_host)
         

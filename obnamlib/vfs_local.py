@@ -138,6 +138,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
             os.remove(name)
             raise
         os.remove(name)
+        self.written += len(contents)
 
     def overwrite_file(self, pathname, contents, make_backup=True):
         path = self.join(pathname)
@@ -167,6 +168,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
                 os.remove(bak)
             except OSError:
                 pass
+        self.written += len(contents)
 
     def listdir(self, dirname):
         return os.listdir(self.join(dirname))

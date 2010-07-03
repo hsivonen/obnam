@@ -26,9 +26,20 @@ class BackupPlugin(obnamlib.ObnamPlugin):
     def enable(self):
         self.app.register_command('backup', self.backup)
         self.app.config.new_list(['root'], 'what to backup')
+        self.app.config.new_processed(['checkpoint'],
+                                      'make a checkpoint after a given size, '
+                                      'default unit is MiB (%default)',
+                                      self.parse_checkpoint_size)
+        self.app.config['checkpoint'] = '10 MiB'
+
+    def parse_checkpoint_size(self, value):
+        p = obnamlib.ByteSizeParser()
+        p.set_default_unit('MiB')
+        return p.parse(value)
         
     def backup(self, args):
         logging.debug('backup starts')
+        logging.debug('checkpoints every %s' % self.app.config['checkpoint'])
 
         self.app.config.require('store')
         self.app.config.require('hostname')
@@ -40,8 +51,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         logging.debug('store: %s' % storepath)
         storefs = self.app.fsf.new(storepath)
         self.store = obnamlib.Store(storefs)
-        self.done = 0
-        self.total = 0
 
         hostname = self.app.config['hostname']
         logging.debug('hostname: %s' % hostname)
@@ -76,6 +85,14 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     self.app.hooks.call('error-message', 
                                         'Could not back up %s: %s' %
                                         (pathname, e.strerror))
+                if storefs.written >= self.app.config['checkpoint']:
+                    logging.debug('Making checkpoint')
+                    self.backup_parents('.')
+                    self.store.commit_host(checkpoint=True)
+                    self.store.lock_host(hostname)
+                    self.store.start_generation()
+                    storefs.written = 0
+
             self.backup_parents('.')
 
         if self.fs:
@@ -171,7 +188,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.store.set_file_chunk_groups(filename, cgids)
         else:
             self.store.set_file_chunks(filename, chunkids)
-            
 
     def backup_file_chunk(self, data):
         '''Back up a chunk of data by putting it into the store.'''

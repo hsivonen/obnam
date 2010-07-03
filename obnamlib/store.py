@@ -252,6 +252,7 @@ class GenerationStore(StoreTree):
     GEN_META_ID = 0
     GEN_META_STARTED = 1
     GEN_META_ENDED = 2
+    GEN_META_IS_CHECKPOINT = 3
 
     FILE_NAME = 0
     FILE_METADATA = 1
@@ -347,6 +348,16 @@ class GenerationStore(StoreTree):
         now = int(time.time())
         self._insert_int(self.curgen, self.genkey(self.GEN_META_ID), gen_id)
         self._insert_int(self.curgen, self.genkey(self.GEN_META_STARTED), now)
+
+    def set_current_generation_is_checkpoint(self, is_checkpoint):
+        value = 1 if is_checkpoint else 0
+        key = self.genkey(self.GEN_META_IS_CHECKPOINT)
+        self._insert_int(self.curgen, key, value)
+
+    def get_is_checkpoint(self, genid):
+        tree = self.find_generation(genid)
+        key = self.genkey(self.GEN_META_IS_CHECKPOINT)
+        return self._lookup_int(tree, key)
 
     def remove_generation(self, genid):
         tree = self.find_generation(genid)
@@ -750,8 +761,10 @@ class Store(object):
         self.current_host = None
 
     @require_host_lock
-    def commit_host(self):
+    def commit_host(self, checkpoint=False):
         '''Commit changes to and unlock currently locked host.'''
+        if self.new_generation:
+            self.genstore.set_current_generation_is_checkpoint(checkpoint)
         self.added_generations = []
         for genid in self.removed_generations:
             self._really_remove_generation(genid)
@@ -773,6 +786,11 @@ class Store(object):
     def list_generations(self):
         '''List existing generations for currently open host.'''
         return self.genstore.list_generations()
+        
+    @require_open_host
+    def get_is_checkpoint(self, genid):
+        '''Is a generation a checkpoint one?'''
+        return self.genstore.get_is_checkpoint(genid)
         
     @require_host_lock
     def start_generation(self):

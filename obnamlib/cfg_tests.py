@@ -66,3 +66,10 @@ class ConfigurationTests(unittest.TestCase):
         self.cfg.load(['--foo'])
         self.assertEqual(self.cfg.require('foo'), None)
 
+    def test_calls_callback_for_processed_option(self):
+        def callback(value):
+            return int(value)
+        self.cfg.new_processed(['size'], 'size help', callback)
+        self.cfg.load(['--size=123'])
+        self.assertEqual(self.cfg['size'], 123)
+
