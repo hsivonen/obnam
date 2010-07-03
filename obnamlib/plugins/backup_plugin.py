@@ -39,6 +39,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         
     def backup(self, args):
         logging.debug('backup starts')
+        logging.debug('checkpoints every %s' % self.app.config['checkpoint'])
 
         self.app.config.require('store')
         self.app.config.require('hostname')
@@ -86,6 +87,14 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     self.app.hooks.call('error-message', 
                                         'Could not back up %s: %s' %
                                         (pathname, e.strerror))
+                if storefs.written >= self.app.config['checkpoint']:
+                    logging.debug('Making checkpoint')
+                    self.backup_parents('.')
+                    self.store.commit_host()
+                    self.store.lock_host(hostname)
+                    self.store.start_generation()
+                    self.fs.written = 0
+
             self.backup_parents('.')
 
         if self.fs:
@@ -181,7 +190,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.store.set_file_chunk_groups(filename, cgids)
         else:
             self.store.set_file_chunks(filename, chunkids)
-            
 
     def backup_file_chunk(self, data):
         '''Back up a chunk of data by putting it into the store.'''
