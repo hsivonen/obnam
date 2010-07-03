@@ -51,8 +51,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         logging.debug('store: %s' % storepath)
         storefs = self.app.fsf.new(storepath)
         self.store = obnamlib.Store(storefs)
-        self.done = 0
-        self.total = 0
 
         hostname = self.app.config['hostname']
         logging.debug('hostname: %s' % hostname)
