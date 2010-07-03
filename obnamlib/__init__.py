@@ -29,6 +29,8 @@ class Error(Exception):
 CHUNK_SIZE = 4096
 CHUNK_GROUP_SIZE = 16
 
+from sizeparse import ByteSizeParser
+
 from hooks import Hook, HookManager
 from cfg import Configuration
 from interp import Interpreter
