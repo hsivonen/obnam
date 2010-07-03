@@ -73,6 +73,7 @@ class Configuration(object):
         self.settings = {}
         self.parser = optparse.OptionParser()
         self.args = []
+        self.processors = {}
 
     def new_setting(self, kind, names, help, action, value):
         setting = Setting(kind, copy.copy(value))
@@ -89,6 +90,10 @@ class Configuration(object):
         
     def new_string(self, names, help):
         self.new_setting('str', names, help, 'store', '')
+        
+    def new_processed(self, names, help, callback):
+        self.new_string(names, help)
+        self.processors[names[0]] = callback
 
     def new_list(self, names, help):
         self.new_setting('list', names, help, 'append', [])
@@ -114,6 +119,8 @@ class Configuration(object):
                         item = [s.strip() for s in item.split(',')]
                         self.settings[name].value += item
                 else:
+                    if name in self.processors:
+                        value = self.processors[name](value)
                     self.settings[name].value = value
 
     def require(self, name):
