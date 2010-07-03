@@ -91,7 +91,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     self.store.commit_host()
                     self.store.lock_host(hostname)
                     self.store.start_generation()
-                    self.fs.written = 0
+                    storefs.written = 0
 
             self.backup_parents('.')
 
