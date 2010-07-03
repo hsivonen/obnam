@@ -43,13 +43,16 @@ class ByteSizeParser(object):
                      r'(?P<unit>[kmg]?i?b?)?$', re.I)
     
     units = {
-        'b': ('B', 1),
-        'kb': ('kB', 1000),
-        'kib': ('KiB', 1024),
-        'mb': ('kB', 1000**2),
-        'mib': ('KiB', 1024**2),
-        'gb': ('GB', 1000**3),
-        'gib': ('GiB', 1024**3),
+        'b': 1,
+        'k': 1000,
+        'kb': 1000,
+        'kib': 1024,
+        'm': 1000**2,
+        'mb': 1000**2,
+        'mib': 1024**2,
+        'g': 1000**3,
+        'gb': 1000**3,
+        'gib': 1024**3,
     }
     
     def __init__(self):
@@ -70,5 +73,5 @@ class ByteSizeParser(object):
             unit = self.default_unit
         elif unit.lower() not in self.units:
             raise UnitNameError(unit)
-        unit_name, factor = self.units[unit.lower()]
+        factor = self.units[unit.lower()]
         return size * factor

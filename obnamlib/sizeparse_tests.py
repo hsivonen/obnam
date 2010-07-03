@@ -37,17 +37,26 @@ class ByteSizeParserTests(unittest.TestCase):
     def test_parses_size_with_byte_unit(self):
         self.assertEqual(self.p.parse('123 B'), 123)
         
+    def test_parses_size_with_kilo_unit(self):
+        self.assertEqual(self.p.parse('123 k'), 123 * 1000)
+        
     def test_parses_size_with_kilobyte_unit(self):
         self.assertEqual(self.p.parse('123 kB'), 123 * 1000)
         
     def test_parses_size_with_kibibyte_unit(self):
         self.assertEqual(self.p.parse('123 KiB'), 123 * 1024)
         
+    def test_parses_size_with_mega_unit(self):
+        self.assertEqual(self.p.parse('123 m'), 123 * 1000**2)
+        
     def test_parses_size_with_megabyte_unit(self):
         self.assertEqual(self.p.parse('123 MB'), 123 * 1000**2)
         
     def test_parses_size_with_mebibyte_unit(self):
         self.assertEqual(self.p.parse('123 MiB'), 123 * 1024**2)
+        
+    def test_parses_size_with_giga_unit(self):
+        self.assertEqual(self.p.parse('123 g'), 123 * 1000**3)
         
     def test_parses_size_with_gigabyte_unit(self):
         self.assertEqual(self.p.parse('123 GB'), 123 * 1000**3)
