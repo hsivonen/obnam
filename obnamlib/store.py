@@ -100,7 +100,7 @@ class NodeStoreVfs(btree.NodeStoreDisk):
         
     def mkdir(self, dirname):
         if not self.fs.exists(dirname):
-            self.fs.mkdir(dirname)
+            self.fs.makedirs(dirname)
 
     def read_file(self, filename):
         return self.fs.cat(filename)
