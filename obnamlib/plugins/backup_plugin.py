@@ -62,10 +62,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             else:
                 self.fs.reinit(root)
             absroot = self.fs.abspath('.')
-            for pathname in self.find_files(absroot):
+            for pathname, metadata in self.find_files(absroot):
                 logging.debug('backing up %s' % pathname)
                 try:
-                    metadata = self.backup_metadata(pathname)
+                    self.backup_metadata(pathname, metadata)
                     if stat.S_ISDIR(metadata.st_mode):
                         self.backup_dir_contents(pathname)
                     elif stat.S_ISREG(metadata.st_mode):
@@ -98,13 +98,15 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             needed = False
             for basename in basenames:
                 pathname = os.path.join(dirname, basename)
-                if self.needs_backup(pathname):
-                    yield pathname
+                metadata = obnamlib.read_metadata(self.fs, pathname)
+                if self.needs_backup(pathname, metadata):
+                    yield pathname, metadata
                     needed = True
-            if needed or self.needs_backup(dirname):
-                yield dirname
+            metadata = obnamlib.read_metadata(self.fs, dirname)
+            if needed or self.needs_backup(dirname, metadata):
+                yield dirname, metadata
 
-    def needs_backup(self, pathname):
+    def needs_backup(self, pathname, current):
         '''Does a given file need to be backed up?'''
         
         try:
@@ -113,7 +115,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             # File does not exist in the previous generation, so it
             # does need to be backed up.
             return True
-        current = obnamlib.read_metadata(self.fs, pathname)
         return (current.st_mtime != old.st_mtime or
                 current.st_mode != old.st_mode or
                 current.st_nlink != old.st_nlink or
@@ -133,14 +134,12 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 break
             root = parent
 
-    def backup_metadata(self, pathname):
+    def backup_metadata(self, pathname, metadata):
         '''Back up metadata for a filesystem object'''
         
         logging.debug('backup_metadata: %s' % pathname)
-        metadata = obnamlib.read_metadata(self.fs, pathname)
         self.app.hooks.call('progress-found-file', pathname, metadata.st_size)
         self.store.create(pathname, metadata)
-        return metadata
 
     def backup_file_contents(self, filename):
         '''Back up contents of a regular file.'''
