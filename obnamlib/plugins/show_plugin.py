@@ -52,10 +52,16 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         self.open_store()
         for gen in self.store.list_generations():
             start, end = self.store.get_generation_times(gen)
-            sys.stdout.write('%s\t%s .. %s\n' %
+            is_checkpoint = self.store.get_is_checkpoint(gen)
+            if is_checkpoint:
+                checkpoint = ' (checkpoint)'
+            else:
+                checkpoint = ''
+            sys.stdout.write('%s\t%s .. %s%s\n' %
                              (gen, 
                               self.format_time(start), 
-                              self.format_time(end)))
+                              self.format_time(end),
+                              checkpoint))
 
     def ls(self, args):
         self.open_store()
