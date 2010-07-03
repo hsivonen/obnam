@@ -55,3 +55,29 @@ class ByteSizeParserTests(unittest.TestCase):
     def test_parses_size_with_gibibyte_unit(self):
         self.assertEqual(self.p.parse('123 GiB'), 123 * 1024**3)
 
+    def test_raises_error_for_empty_string(self):
+        self.assertRaises(obnamlib.SizeSyntaxError, self.p.parse, '')
+
+    def test_raises_error_for_missing_size(self):
+        self.assertRaises(obnamlib.SizeSyntaxError, self.p.parse, 'KiB')
+
+    def test_raises_error_for_bad_unit(self):
+        self.assertRaises(obnamlib.SizeSyntaxError, self.p.parse, '1 km')
+
+    def test_raises_error_for_bad_unit_thats_similar_to_real_one(self):
+        self.assertRaises(obnamlib.UnitNameError, self.p.parse, '1 ib')
+
+    def test_raises_error_for_bad_default_unit(self):
+        self.assertRaises(obnamlib.UnitNameError, 
+                          self.p.set_default_unit, 'km')
+
+    def test_size_syntax_error_includes_input_string(self):
+        text = 'asdf asdf'
+        e = obnamlib.SizeSyntaxError(text)
+        self.assert_(text in str(e), str(e))
+
+    def test_unit_name_error_includes_input_string(self):
+        text = 'asdf asdf'
+        e = obnamlib.UnitNameError(text)
+        self.assert_(text in str(e), str(e))
+
