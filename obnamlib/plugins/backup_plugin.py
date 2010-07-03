@@ -54,20 +54,73 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.store.lock_host(hostname)
         self.store.start_generation()
         self.fs = None
+
         for root in roots:
-            logging.debug('backing up root %s' % root)
             if not self.fs:
                 self.fs = self.app.fsf.new(root)
                 self.fs.connect()
             else:
                 self.fs.reinit(root)
-            self.backup_something(self.fs.abspath('.'))
+            absroot = self.fs.abspath('.')
+            for pathname, metadata in self.find_files(absroot):
+                logging.debug('backing up %s' % pathname)
+                try:
+                    self.backup_metadata(pathname, metadata)
+                    if stat.S_ISDIR(metadata.st_mode):
+                        self.backup_dir_contents(pathname)
+                    elif stat.S_ISREG(metadata.st_mode):
+                        self.backup_file_contents(pathname)
+                except OSError, e:
+                    logging.error('Could not back up %s: %s' % 
+                                  (pathname, e.strerror))
+                    self.app.hooks.call('error-message', 
+                                        'Could not back up %s: %s' %
+                                        (pathname, e.strerror))
             self.backup_parents('.')
+
         if self.fs:
             self.fs.close()
         self.store.commit_host()
 
         logging.debug('backup finished')
+
+    def find_files(self, root):
+        '''Find all files and directories that need to be backed up.
+        
+        This is a generator.
+        
+        The caller should not recurse through directories, just backup
+        the directory itself (name, metadata, file list).
+        
+        '''
+
+        for dirname, subdirs, basenames in self.fs.depth_first(root):
+            needed = False
+            for basename in basenames:
+                pathname = os.path.join(dirname, basename)
+                metadata = obnamlib.read_metadata(self.fs, pathname)
+                if self.needs_backup(pathname, metadata):
+                    yield pathname, metadata
+                    needed = True
+            metadata = obnamlib.read_metadata(self.fs, dirname)
+            if needed or self.needs_backup(dirname, metadata):
+                yield dirname, metadata
+
+    def needs_backup(self, pathname, current):
+        '''Does a given file need to be backed up?'''
+        
+        try:
+            old = self.store.get_metadata(self.store.new_generation, pathname)
+        except obnamlib.Error:
+            # File does not exist in the previous generation, so it
+            # does need to be backed up.
+            return True
+        return (current.st_mtime != old.st_mtime or
+                current.st_mode != old.st_mode or
+                current.st_nlink != old.st_nlink or
+                current.st_size != old.st_size or
+                current.st_uid != old.st_uid or
+                current.st_gid != old.st_gid)
 
     def backup_parents(self, root):
         '''Back up parents of root, non-recursively.'''
@@ -81,33 +134,12 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 break
             root = parent
 
-    def backup_something(self, root):
-        logging.debug('backup_something: %s' % root)
-        try:
-            if self.fs.isdir(root):
-                self.backup_dir(root)
-            else:
-                self.backup_file(root)
-        except OSError, e:
-            logging.error('Could not back up %s: %s' % (root, e.strerror))
-            self.app.hooks.call('error-message', 
-                                 'Could not back up %s: %s' %
-                                    (root, e.strerror))
-
-    def backup_file(self, root):
-        '''Back up a non-directory.
+    def backup_metadata(self, pathname, metadata):
+        '''Back up metadata for a filesystem object'''
         
-        If it is a regular file, also back up its contents.
-        
-        '''
-        
-        logging.debug('backup_file: %s' % root)
-        metadata = obnamlib.read_metadata(self.fs, root)
-        logging.debug('backup_file: metadata.st_mtime=%s' % repr(metadata.st_mtime))
-        self.app.hooks.call('progress-found-file', root, metadata.st_size)
-        self.store.create(root, metadata)
-        if stat.S_ISREG(metadata.st_mode):
-            self.backup_file_contents(root)
+        logging.debug('backup_metadata: %s' % pathname)
+        self.app.hooks.call('progress-found-file', pathname, metadata.st_size)
+        self.store.create(pathname, metadata)
 
     def backup_file_contents(self, filename):
         '''Back up contents of a regular file.'''
@@ -151,28 +183,21 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             chunkid = self.store.put_chunk(data, checksum)
         return chunkid
 
-    def backup_dir(self, root):
-        '''Back up a directory, and everything in it.'''
-
-        # If the directory already exists in the backup store, 
-        # remove the files that no longer exist in the live data.
+    def backup_dir_contents(self, root):
+        '''Back up the list of files in a directory.'''
 
         logging.debug('backup_dir: %s' % root)
 
         new_basenames = self.fs.listdir(root)
         try:
-            self.store.get_metadata(self.store.new_generation, root)
-        except obnamlib.Error:
-            pass
-        else:
             old_basenames = self.store.listdir(self.store.new_generation, 
                                                root)
-            for old in old_basenames:
-                if old not in new_basenames:
-                    self.store.remove(os.path.join(root, old))
+        except obnamlib.Error:
+            old_basenames = []
 
-        metadata = obnamlib.read_metadata(self.fs, root)
-        self.store.create(root, metadata)
-        for basename in self.fs.listdir(root):
-            fullname = os.path.join(root, basename)
-            self.backup_something(fullname)
+        for old in old_basenames:
+            if old not in new_basenames:
+                self.store.remove(os.path.join(root, old))
+        # Files that are created after the previous generation will be
+        # added to the directory when they are backed up, so we don't
+        # need to worry about them here.
