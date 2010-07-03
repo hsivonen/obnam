@@ -263,6 +263,17 @@ class LocalFSTests(unittest.TestCase):
         self.fs.write_file("foo", "bar")
         self.fs.overwrite_file("foo", "foobar")
         self.assertEqual(self.fs.cat("foo"), "foobar")
+    
+    def test_has_written_nothing_initially(self):
+        self.assertEqual(self.fs.written, 0)
+    
+    def test_write_updates_written(self):
+        self.fs.write_file('foo', 'foo')
+        self.assertEqual(self.fs.written, 3)
+    
+    def test_overwrite_updates_written(self):
+        self.fs.overwrite_file('foo', 'foo')
+        self.assertEqual(self.fs.written, 3)
 
 
 class DepthFirstTests(unittest.TestCase):
