@@ -35,7 +35,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                                       'make a checkpoint after a given size, '
                                       'default unit is MiB (%default)',
                                       self.parse_checkpoint_size)
-        self.app.config['checkpoint'] = '10 MiB'
+        self.app.config['checkpoint'] = '1 GiB'
 
     def parse_checkpoint_size(self, value):
         p = obnamlib.ByteSizeParser()
