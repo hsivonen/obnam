@@ -55,7 +55,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         storepath = self.app.config['store']
         logging.debug('store: %s' % storepath)
         storefs = self.app.fsf.new(storepath)
-        self.store = obnamlib.Store(storefs)
+        self.store = obnamlib.Store(storefs, self.app.config['node-size'])
 
         hostname = self.app.config['hostname']
         logging.debug('hostname: %s' % hostname)
@@ -190,13 +190,15 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         cgids = []
         groupsum = self.store.new_checksummer()
         f = self.fs.open(filename, 'r')
+        chunk_size = int(self.app.config['chunk-size'])
+        chunk_group_size = int(self.app.config['chunk-group-size'])
         while True:
-            data = f.read(obnamlib.CHUNK_SIZE)
+            data = f.read(chunk_size)
             if not data:
                 break
             chunkids.append(self.backup_file_chunk(data))
             groupsum.update(data)
-            if len(chunkids) == obnamlib.CHUNK_GROUP_SIZE:
+            if len(chunkids) == chunk_group_size:
                 checksum = groupsum.hexdigest()
                 cgid = self.store.put_chunk_group(chunkids, checksum)
                 cgids.append(cgid)

@@ -158,11 +158,9 @@ class HostList(StoreTree):
     '''Store list of hosts.'''
 
     key_bytes = 8 # 64-bit counter as key
-    node_size = 4096 # typical size of disk block
 
-    def __init__(self, fs):
-        StoreTree.__init__(self, fs, 'hostlist', self.key_bytes, 
-                           self.node_size)
+    def __init__(self, fs, node_size):
+        StoreTree.__init__(self, fs, 'hostlist', self.key_bytes, node_size)
         self.minkey = self.key(0)
         self.maxkey = self.key(2**64-1)
 
@@ -234,8 +232,6 @@ class GenerationStore(StoreTree):
 
     '''
 
-    node_size = 64 * 1024
-
     TYPE_MAX = 255
     SUBKEY_MAX = struct.pack('!Q', 2**64-1)
 
@@ -257,10 +253,10 @@ class GenerationStore(StoreTree):
     FILE_NAME = 0
     FILE_METADATA = 1
     
-    def __init__(self, fs, hostname):
+    def __init__(self, fs, hostname, node_size):
         key_bytes = len(self.key('', 0, 0))
         # FIXME: We should handle evil hostnames.
-        StoreTree.__init__(self, fs, hostname, key_bytes, self.node_size)
+        StoreTree.__init__(self, fs, hostname, key_bytes, node_size)
         self.curgen = None
 
     def hash_name(self, filename):
@@ -477,10 +473,10 @@ class ChecksumTree(StoreTree):
 
     '''
 
-    def __init__(self, fs, name, checksum_length):
+    def __init__(self, fs, name, checksum_length, node_size):
         self.sumlen = checksum_length
         key_bytes = len(self.key('', 0))
-        StoreTree.__init__(self, fs, name, key_bytes, 64*1024)
+        StoreTree.__init__(self, fs, name, key_bytes, node_size)
         self.max_id = 2**64 - 1
 
     def key(self, checksum, number):
@@ -526,9 +522,9 @@ class ChunkGroupTree(StoreTree):
     # We store things using the chunk group id as tkey key. The ids of
     # the chunks are stored as the value, as a blob, using struct.
 
-    def __init__(self, fs):
+    def __init__(self, fs, node_size):
         StoreTree.__init__(self, fs, 'chunkgroups', 
-                           len(self.key(0)), 64*1024)
+                           len(self.key(0)), node_size)
         self.max_id = 2**64 - 1
 
     def key(self, cgid):
@@ -621,10 +617,11 @@ class Store(object):
 
     '''
 
-    def __init__(self, fs):
+    def __init__(self, fs, node_size):
         self.fs = fs
+        self.node_size = node_size
         self.got_root_lock = False
-        self.hostlist = HostList(fs)
+        self.hostlist = HostList(fs, node_size)
         self.got_host_lock = False
         self.host_lockfile = None
         self.current_host = None
@@ -633,9 +630,11 @@ class Store(object):
         self.removed_hosts = []
         self.removed_generations = []
         self.genstore = None
-        self.chunksums = ChecksumTree(fs, 'chunksums', len(self.checksum('')))
-        self.groupsums = ChecksumTree(fs, 'groupsums', len(self.checksum('')))
-        self.chunkgroups = ChunkGroupTree(fs)
+        self.chunksums = ChecksumTree(fs, 'chunksums', len(self.checksum('')),
+                                      node_size)
+        self.groupsums = ChecksumTree(fs, 'groupsums', len(self.checksum('')),
+                                      node_size)
+        self.chunkgroups = ChunkGroupTree(fs, node_size)
         self.prev_chunkid = None
 
     def checksum(self, data):
@@ -743,7 +742,7 @@ class Store(object):
         self.current_host = hostname
         self.added_generations = []
         self.removed_generations = []
-        self.genstore = GenerationStore(self.fs, hostname)
+        self.genstore = GenerationStore(self.fs, hostname, self.node_size)
         self.genstore.require_forest()
 
     @require_host_lock
@@ -779,7 +778,7 @@ class Store(object):
         if hostname not in self.list_hosts():
             raise obnamlib.Error('%s is not an existing host' % hostname)
         self.current_host = hostname
-        self.genstore = GenerationStore(self.fs, hostname)
+        self.genstore = GenerationStore(self.fs, hostname, self.node_size)
         self.genstore.init_forest()
         
     @require_open_host

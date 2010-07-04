@@ -42,6 +42,22 @@ class App(object):
                                 'do not write or remove anything, just '
                                 'pretend to do that')
 
+        self.config.new_bytesize(['node-size'],
+                                 'size of B-tree nodes on disk '
+                                 '(default: %default)')
+        self.config['node-size'] = '%s' % obnamlib.DEFAULT_NODE_SIZE
+
+        self.config.new_bytesize(['chunk-size'],
+                                 'size of chunks of file data backed up '
+                                 '(default: %default)')
+        self.config['chunk-size'] = '%s' % obnamlib.DEFAULT_CHUNK_SIZE
+
+        self.config.new_bytesize(['chunk-group-size'],
+                                 'number of chunks per chunk group '
+                                 '(default: %default)')
+        self.config['chunk-group-size'] = \
+            '%s' % obnamlib.DEFAULT_CHUNK_GROUP_SIZE
+
         self.pm = obnamlib.PluginManager()
         self.pm.locations = [self.plugins_dir()]
         self.pm.plugin_arguments = (self,)

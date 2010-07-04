@@ -81,7 +81,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             args = ['/']
     
         storefs = self.app.fsf.new(self.app.config['store'])
-        self.store = obnamlib.Store(storefs)
+        self.store = obnamlib.Store(storefs, self.app.config['node-size'])
         self.store.open_host(self.app.config['hostname'])
         self.fs = self.app.fsf.new(self.app.config['to'])
 

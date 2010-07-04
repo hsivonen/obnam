@@ -390,7 +390,7 @@ class ReusesChunks(BlackBoxTest):
         self.verify(data, restored)
         fsf = obnamlib.VfsFactory()
         fs = fsf.new(store)
-        s = obnamlib.Store(fs)
+        s = obnamlib.Store(fs, obnamlib.DEFAULT_NODE_SIZE)
         s.open_host(self.hostid)
         self.assertEqual('ReusesChunks', len(s.list_chunks()), 1,
                          'only one chunk when all files are identical')
@@ -401,7 +401,9 @@ class UsesChunkGroups(BlackBoxTest):
     def test(self):
         data = self.tempdir()
         ngroups = 2
-        nbytes = obnamlib.CHUNK_SIZE * obnamlib.CHUNK_GROUP_SIZE * ngroups
+        nbytes = (obnamlib.DEFAULT_CHUNK_SIZE * 
+                  obnamlib.DEFAULT_CHUNK_GROUP_SIZE * 
+                  ngroups)
         self.create_file(data, 'file', 'x' * nbytes)
         store = self.tempdir()
         self.backup(store, [data])
@@ -409,7 +411,7 @@ class UsesChunkGroups(BlackBoxTest):
         self.verify(data, restored)
         fsf = obnamlib.VfsFactory()
         fs = fsf.new(store)
-        s = obnamlib.Store(fs)
+        s = obnamlib.Store(fs, obnamlib.DEFAULT_NODE_SIZE)
         s.open_host(self.hostid)
         self.assertEqual('UsesChunkGroups', len(s.list_chunk_groups()), 
                          ngroups,
