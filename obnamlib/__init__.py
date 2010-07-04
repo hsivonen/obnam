@@ -26,6 +26,7 @@ class AppException(Exception):
 class Error(Exception):
     pass
 
+DEFAULT_NODE_SIZE = 64 * 1024
 DEFAULT_CHUNK_SIZE = 4096
 DEFAULT_CHUNK_GROUP_SIZE = 16
 

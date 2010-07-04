@@ -27,7 +27,7 @@ def find_objids(fs):
 
 
 fs = obnamlib.LocalFS(sys.argv[1])
-store = obnamlib.Store(fs)
+store = obnamlib.Store(fs, obnamlib.DEFAULT_NODE_SIZE)
 for objid in find_objids(fs):
     obj = store.get_object(objid)
     print 'id %s (%s):' % (obj.id, obj.__class__.__name__)

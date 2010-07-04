@@ -31,7 +31,7 @@ class FsckPlugin(obnamlib.ObnamPlugin):
 
         storefs = self.app.fsf.new(self.app.config['store'])
         storefs.connect()
-        self.store = obnamlib.Store(storefs)
+        self.store = obnamlib.Store(storefs, self.app.config['node-size'])
         
         self.check_root()
 

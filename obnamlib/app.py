@@ -42,6 +42,11 @@ class App(object):
                                 'do not write or remove anything, just '
                                 'pretend to do that')
 
+        self.config.new_bytesize(['node-size'],
+                                 'size of B-tree nodes on disk '
+                                 '(default: %default)')
+        self.config['node-size'] = '%s' % obnamlib.DEFAULT_NODE_SIZE
+
         self.config.new_bytesize(['chunk-size'],
                                  'size of chunks of file data backed up '
                                  '(default: %default)')
