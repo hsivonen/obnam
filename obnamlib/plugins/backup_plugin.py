@@ -16,6 +16,7 @@
 
 import logging
 import os
+import re
 import stat
 
 import obnamlib
@@ -26,6 +27,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
     def enable(self):
         self.app.register_command('backup', self.backup)
         self.app.config.new_list(['root'], 'what to backup')
+        self.app.config.new_list(['exclude'], 
+                                 'regular expression for pathnames to '
+                                 'exclude from backup (can be used multiple '
+                                 'times)')
         self.app.config.new_processed(['checkpoint'],
                                       'make a checkpoint after a given size, '
                                       'default unit is MiB (%default)',
@@ -63,6 +68,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.store.lock_host(hostname)
         self.store.start_generation()
         self.fs = None
+        
+        self.exclude_pats = [re.compile(x) for x in self.app.config['exclude']]
 
         for root in roots:
             if not self.fs:
@@ -111,7 +118,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         
         '''
 
-        for dirname, subdirs, basenames in self.fs.depth_first(root):
+        generator = self.fs.depth_first(root, prune=self.prune)
+        for dirname, subdirs, basenames in generator:
             needed = False
             for basename in basenames:
                 pathname = os.path.join(dirname, basename)
@@ -122,6 +130,23 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             metadata = obnamlib.read_metadata(self.fs, dirname)
             if needed or self.needs_backup(dirname, metadata):
                 yield dirname, metadata
+
+    def prune(self, dirname, subdirs, filenames):
+        '''Remove unwanted things.'''
+
+        def prune_list(items):
+            delete = []
+            for pat in self.exclude_pats:
+                for item in items:
+                    path = os.path.join(dirname, item)
+                    if pat.search(path):
+                        delete.append(item)
+            for path in delete:
+                i = items.index(path)
+                del items[i]
+            
+        prune_list(subdirs)
+        prune_list(filenames)
 
     def needs_backup(self, pathname, current):
         '''Does a given file need to be backed up?'''
