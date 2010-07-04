@@ -73,3 +73,13 @@ class ConfigurationTests(unittest.TestCase):
         self.cfg.load(['--size=123'])
         self.assertEqual(self.cfg['size'], 123)
 
+    def test_handles_unadorned_bytesize(self):
+        self.cfg.new_bytesize(['size'], 'size help')
+        self.cfg.load(['--size=123'])
+        self.assertEqual(self.cfg['size'], 123)
+
+    def test_handles_bytesize_with_units(self):
+        self.cfg.new_bytesize(['size'], 'size help')
+        self.cfg.load(['--size=123KiB'])
+        self.assertEqual(self.cfg['size'], 123*1024)
+

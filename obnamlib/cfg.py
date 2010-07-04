@@ -95,6 +95,12 @@ class Configuration(object):
         self.new_string(names, help)
         self.processors[names[0]] = callback
 
+    def new_bytesize(self, names, help):
+        def callback(value):
+            p = obnamlib.ByteSizeParser()
+            return p.parse(value)
+        self.new_processed(names, help, callback)
+
     def new_list(self, names, help):
         self.new_setting('list', names, help, 'append', [])
 
