@@ -26,8 +26,8 @@ class AppException(Exception):
 class Error(Exception):
     pass
 
-CHUNK_SIZE = 4096
-CHUNK_GROUP_SIZE = 16
+DEFAULT_CHUNK_SIZE = 4096
+DEFAULT_CHUNK_GROUP_SIZE = 16
 
 from sizeparse import SizeSyntaxError, UnitNameError, ByteSizeParser
 

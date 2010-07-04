@@ -401,7 +401,9 @@ class UsesChunkGroups(BlackBoxTest):
     def test(self):
         data = self.tempdir()
         ngroups = 2
-        nbytes = obnamlib.CHUNK_SIZE * obnamlib.CHUNK_GROUP_SIZE * ngroups
+        nbytes = (obnamlib.DEFAULT_CHUNK_SIZE * 
+                  obnamlib.DEFAULT_CHUNK_GROUP_SIZE * 
+                  ngroups)
         self.create_file(data, 'file', 'x' * nbytes)
         store = self.tempdir()
         self.backup(store, [data])
