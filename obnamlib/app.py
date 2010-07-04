@@ -47,6 +47,12 @@ class App(object):
                                  '(default: %default)')
         self.config['chunk-size'] = '%s' % obnamlib.DEFAULT_CHUNK_SIZE
 
+        self.config.new_bytesize(['chunk-group-size'],
+                                 'number of chunks per chunk group '
+                                 '(default: %default)')
+        self.config['chunk-group-size'] = \
+            '%s' % obnamlib.DEFAULT_CHUNK_GROUP_SIZE
+
         self.pm = obnamlib.PluginManager()
         self.pm.locations = [self.plugins_dir()]
         self.pm.plugin_arguments = (self,)
