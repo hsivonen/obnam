@@ -58,6 +58,12 @@ class App(object):
         self.config['chunk-group-size'] = \
             '%s' % obnamlib.DEFAULT_CHUNK_GROUP_SIZE
 
+        self.config.new_bytesize(['upload-queue-size'],
+                                 'length of upload queue for B-tree nodes '
+                                 '(default: %default)')
+        self.config['upload-queue-size'] = \
+            '%s' % obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE
+
         self.pm = obnamlib.PluginManager()
         self.pm.locations = [self.plugins_dir()]
         self.pm.plugin_arguments = (self,)

@@ -34,7 +34,8 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
         self.app.config.require('hostname')
 
         fs = self.app.fsf.new(self.app.config['store'])
-        self.store = obnamlib.Store(fs, self.app.config['node-size'])
+        self.store = obnamlib.Store(fs, self.app.config['node-size'], 
+                                    self.app.config['upload-queue-size'])
         self.store.lock_host(self.app.config['hostname'])
 
         if args:

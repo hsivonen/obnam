@@ -40,7 +40,8 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         self.app.config.require('store')
         self.app.config.require('hostname')
         fs = self.app.fsf.new(self.app.config['store'])
-        self.store = obnamlib.Store(fs, self.app.config['node-size'])
+        self.store = obnamlib.Store(fs, self.app.config['node-size'], 
+                                    self.app.config['node-size'])
         self.store.open_host(self.app.config['hostname'])
 
     def hosts(self, args):

@@ -31,7 +31,8 @@ class ChecksumTreeTests(unittest.TestCase):
         fs = obnamlib.LocalFS(self.tempdir)
         self.checksum = hashlib.md5('foo').digest()
         self.tree = obnamlib.store.ChecksumTree(fs, 'x', len(self.checksum), 
-                                                obnamlib.DEFAULT_NODE_SIZE)
+                                                obnamlib.DEFAULT_NODE_SIZE,
+                                        obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE)
 
     def tearDown(self):
         self.tree.commit()
@@ -69,7 +70,8 @@ class ChunkGroupTreeTests(unittest.TestCase):
         self.tempdir = tempfile.mkdtemp()
         fs = obnamlib.LocalFS(self.tempdir)
         self.tree = obnamlib.store.ChunkGroupTree(fs, 
-                                                  obnamlib.DEFAULT_NODE_SIZE)
+                      obnamlib.DEFAULT_NODE_SIZE, 
+                      obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE)
 
     def tearDown(self):
         shutil.rmtree(self.tempdir)
@@ -116,10 +118,12 @@ class StoreRootNodeTests(unittest.TestCase):
         self.tempdir = tempfile.mkdtemp()
 
         self.fs = obnamlib.LocalFS(self.tempdir)
-        self.store = obnamlib.Store(self.fs, obnamlib.DEFAULT_NODE_SIZE)
+        self.store = obnamlib.Store(self.fs, obnamlib.DEFAULT_NODE_SIZE,
+                                    obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE)
         
         self.otherfs = obnamlib.LocalFS(self.tempdir)
-        self.other = obnamlib.Store(self.fs, obnamlib.DEFAULT_NODE_SIZE)
+        self.other = obnamlib.Store(self.fs, obnamlib.DEFAULT_NODE_SIZE,
+                                    obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE)
 
     def tearDown(self):
         shutil.rmtree(self.tempdir)
@@ -183,7 +187,8 @@ class StoreRootNodeTests(unittest.TestCase):
         self.store.lock_root()
         self.store.add_host('foo')
         self.store.commit_root()
-        s2 = obnamlib.Store(self.fs, obnamlib.DEFAULT_NODE_SIZE)
+        s2 = obnamlib.Store(self.fs, obnamlib.DEFAULT_NODE_SIZE,
+                            obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE)
         self.assertEqual(s2.list_hosts(), ['foo'])
         
     def test_adding_existing_host_fails(self):
@@ -248,13 +253,15 @@ class StoreHostTests(unittest.TestCase):
         self.tempdir = tempfile.mkdtemp()
 
         self.fs = obnamlib.LocalFS(self.tempdir)
-        self.store = obnamlib.Store(self.fs, obnamlib.DEFAULT_NODE_SIZE)
+        self.store = obnamlib.Store(self.fs, obnamlib.DEFAULT_NODE_SIZE,
+                                    obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE)
         self.store.lock_root()
         self.store.add_host('hostname')
         self.store.commit_root()
         
         self.otherfs = obnamlib.LocalFS(self.tempdir)
-        self.other = obnamlib.Store(self.otherfs, obnamlib.DEFAULT_NODE_SIZE)
+        self.other = obnamlib.Store(self.otherfs, obnamlib.DEFAULT_NODE_SIZE,
+                                    obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE)
         
         self.dir_meta = obnamlib.Metadata()
         self.dir_meta.st_mode = stat.S_IFDIR | 0777
@@ -502,7 +509,8 @@ class StoreChunkTests(unittest.TestCase):
         self.tempdir = tempfile.mkdtemp()
 
         self.fs = obnamlib.LocalFS(self.tempdir)
-        self.store = obnamlib.Store(self.fs, obnamlib.DEFAULT_NODE_SIZE)
+        self.store = obnamlib.Store(self.fs, obnamlib.DEFAULT_NODE_SIZE,
+                                    obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE)
         self.store.lock_root()
         self.store.add_host('hostname')
         self.store.commit_root()
@@ -561,7 +569,8 @@ class StoreChunkGroupTests(unittest.TestCase):
         self.tempdir = tempfile.mkdtemp()
 
         self.fs = obnamlib.LocalFS(self.tempdir)
-        self.store = obnamlib.Store(self.fs, obnamlib.DEFAULT_NODE_SIZE)
+        self.store = obnamlib.Store(self.fs, obnamlib.DEFAULT_NODE_SIZE,
+                                    obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE)
         self.store.lock_root()
         self.store.add_host('hostname')
         self.store.commit_root()
@@ -609,7 +618,8 @@ class StoreGetSetChunksAndGroupsTests(unittest.TestCase):
         self.tempdir = tempfile.mkdtemp()
 
         self.fs = obnamlib.LocalFS(self.tempdir)
-        self.store = obnamlib.Store(self.fs, obnamlib.DEFAULT_NODE_SIZE)
+        self.store = obnamlib.Store(self.fs, obnamlib.DEFAULT_NODE_SIZE,
+                                    obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE)
         self.store.lock_root()
         self.store.add_host('hostname')
         self.store.commit_root()
@@ -645,7 +655,8 @@ class StoreGenspecTests(unittest.TestCase):
 
         storedir = os.path.join(self.tempdir, 'store')
         fs = obnamlib.VfsFactory().new(storedir)
-        self.store = obnamlib.Store(fs, obnamlib.DEFAULT_NODE_SIZE)
+        self.store = obnamlib.Store(fs, obnamlib.DEFAULT_NODE_SIZE,
+                                    obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE)
         self.store.lock_host('hostname')
 
     def tearDown(self):
