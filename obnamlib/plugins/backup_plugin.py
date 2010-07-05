@@ -125,6 +125,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             for basename in basenames:
                 pathname = os.path.join(dirname, basename)
                 metadata = obnamlib.read_metadata(self.fs, pathname)
+                self.app.hooks.call('progress-found-file', pathname, metadata)
                 if self.needs_backup(pathname, metadata):
                     yield pathname, metadata
                     needed = True
@@ -181,7 +182,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         '''Back up metadata for a filesystem object'''
         
         logging.debug('backup_metadata: %s' % pathname)
-        self.app.hooks.call('progress-found-file', pathname, metadata.st_size)
         self.store.create(pathname, metadata)
 
     def backup_file_contents(self, filename):
@@ -205,7 +205,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 cgids.append(cgid)
                 chunkids = []
                 groupsum = self.store.new_checksummer()
-            self.app.hooks.call('progress-data-done', len(data))
+            self.app.hooks.call('progress-data-uploaded', len(data))
         f.close()
         
         if cgids:

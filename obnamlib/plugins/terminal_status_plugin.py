@@ -14,6 +14,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import os
+import stat
 import ttystatus
 
 import obnamlib
@@ -25,16 +27,16 @@ class TerminalStatusPlugin(obnamlib.ObnamPlugin):
         self.app.config.new_boolean(['quiet'], 'be silent')
 
         self.ts = ttystatus.TerminalStatus(period=0.25)
-        self.ts['data_done'] = 0
+        self.ts['uploaded-bytes'] = 0
 
         self.app.hooks.new('status')
         self.app.hooks.new('progress-found-file')
-        self.app.hooks.new('progress-data-done')
+        self.app.hooks.new('progress-data-uploaded')
         self.app.hooks.new('error-message')
 
         self.add_callback('status', self.status_cb)
         self.add_callback('progress-found-file', self.found_file_cb)
-        self.add_callback('progress-data-done', self.data_done_cb)
+        self.add_callback('progress-data-uploaded', self.data_uploaded_cb)
         self.add_callback('error-message', self.error_message_cb)
         self.add_callback('config-loaded', self.config_loaded_cb)
         self.add_callback('shutdown', self.shutdown_cb)
@@ -47,17 +49,24 @@ class TerminalStatusPlugin(obnamlib.ObnamPlugin):
         if not self.app.config['quiet']:
             self.ts.add(ttystatus.ElapsedTime())
             self.ts.add(ttystatus.Literal(' '))
-            self.ts.add(ttystatus.Counter('current'))
-            self.ts.add(ttystatus.Literal(' files; '))
-            self.ts.add(ttystatus.ByteSize('data_done'))
-            self.ts.add(ttystatus.Literal(' '))
-            self.ts.add(ttystatus.Pathname('current'))
+            self.ts.add(ttystatus.Counter('current-file'))
+            self.ts.add(ttystatus.Literal(' files found; '))
+            self.ts.add(ttystatus.ByteSize('uploaded-bytes'))
+            self.ts.add(ttystatus.Literal(' uploaded '))
+            self.ts.add(ttystatus.Pathname('current-dir'))
 
-    def found_file_cb(self, filename, size):
-        self.ts['current'] = filename
+    def found_file_cb(self, filename, metadata):
+        self.ts['current-file'] = filename
+        if stat.S_ISDIR(metadata.st_mode):
+            dirname = filename
+        else:
+            dirname = os.path.dirname(filename)
+        if not dirname.endswith(os.sep):
+            dirname += os.sep
+        self.ts['current-dir'] = dirname
         
-    def data_done_cb(self, amount):
-        self.ts['data_done'] += amount
+    def data_uploaded_cb(self, amount):
+        self.ts['uploaded-bytes'] += amount
 
     def status_cb(self, msg):
         if not self.app.config['quiet']:
