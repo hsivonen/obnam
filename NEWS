@@ -4,6 +4,30 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
+Version 0.11, released 2010-07-05; an ALPHA release
+---------------------------------...----------------
+
+* Speed optimizations:
+  - chunk identifiers are now sequential, except for the first one, or
+    when there's a collision
+  - chunks are now stored in a more sensible directory hierarchy (instead
+    of one per directory, on average)
+  - adding files to a directory in the backup store is now faster
+  - only store a file's metadata that if it is changed
+* New --exclude=regexp option to exclude files based on pathnames
+* Obnam now makes checkpoints during backups. If a backup is aborted
+  in the middle and then re-started, it will continue from the latest
+  checkpoint rather than from the beginning of the previous backup run.
+  - New option --checkpoint to set the interval between checkpoints.
+    Defaults to 1 GiB.
+* Options for various B-tree settings. This is mostly useful for finding
+  the optimal set of defaults, but may be useful in other situations for
+  some people.
+  - New options --chunk-group-size, --chunk-size, --node-size,
+    --upload-queue-size.
+* Somewhat better progress reporting during backups.
+
+
 Version 0.10, released 2010-06-29; an ALPHA release
 ---------------------------------------------------
 
