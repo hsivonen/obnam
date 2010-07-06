@@ -35,13 +35,6 @@ class LocalFSTests(obnamlib.VfsTests, unittest.TestCase):
         self.fs.close()
         shutil.rmtree(self.dirname)
 
-    def test_exists_returns_false_for_nonexistent_file(self):
-        self.assertFalse(self.fs.exists("foo"))
-
-    def test_exists_returns_true_for_existing_file(self):
-        file(os.path.join(self.dirname, "foo"), "w").close()
-        self.assert_(self.fs.exists("foo"))
-
     def test_isdir_returns_false_for_nonexistent_file(self):
         self.assertFalse(self.fs.isdir("foo"))
 

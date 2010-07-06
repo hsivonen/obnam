@@ -309,3 +309,11 @@ class VfsTests(object): # pragma: no cover
         self.fs.lock('lock')
         self.fs.unlock('lock')
         self.assertFalse(self.fs.exists('lock'))
+
+    def test_exists_returns_false_for_nonexistent_file(self):
+        self.assertFalse(self.fs.exists('foo'))
+
+    def test_exists_returns_true_for_existing_file(self):
+        self.fs.write_file('foo', '')
+        self.assert_(self.fs.exists('foo'))
+
