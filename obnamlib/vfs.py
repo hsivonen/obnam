@@ -233,7 +233,13 @@ class VfsTests(object): # pragma: no cover
     The test sub-class should define a setUp method that sets the following:
     
     * self.fs to an instance of the API implementation sub-class
+    * self.basepath to the path to the base of the filesystem
+    
+    basepath must be operable as a pathname using os.path tools.
     
     '''
 
-    pass
+    def test_joins_relative_path_ok(self):
+        self.assertEqual(self.fs.join('foo'), 
+                         os.path.join(self.basepath, 'foo'))
+
