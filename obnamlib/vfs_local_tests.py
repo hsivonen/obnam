@@ -24,7 +24,7 @@ import unittest
 import obnamlib
 
 
-class LocalFSTests(unittest.TestCase):
+class LocalFSTests(obnamlib.VfsTests, unittest.TestCase):
 
     def setUp(self):
         self.dirname = tempfile.mkdtemp()
