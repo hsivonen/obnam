@@ -35,35 +35,6 @@ class LocalFSTests(obnamlib.VfsTests, unittest.TestCase):
         self.fs.close()
         shutil.rmtree(self.dirname)
 
-    def test_reinit_works(self):
-        self.fs.reinit('.')
-        self.assertEqual(self.fs.cwd, os.getcwd())
-
-    def test_getcwd_returns_dirname(self):
-        self.assertEqual(self.fs.getcwd(), self.dirname)
-
-    def test_chdir_changes_only_fs_cwd_not_process_cwd(self):
-        process_cwd = os.getcwd()
-        self.fs.chdir('/')
-        self.assertEqual(self.fs.getcwd(), '/')
-        self.assertEqual(os.getcwd(), process_cwd)
-
-    def test_chdir_to_nonexistent_raises_exception(self):
-        self.assertRaises(OSError, self.fs.chdir, '/foobar')
-
-    def test_chdir_to_relative_works(self):
-        pathname = os.path.join(self.dirname, 'foo')
-        os.mkdir(pathname)
-        self.fs.chdir('foo')
-        self.assertEqual(self.fs.getcwd(), pathname)
-
-    def test_chdir_to_dotdot_works(self):
-        pathname = os.path.join(self.dirname, 'foo')
-        os.mkdir(pathname)
-        self.fs.chdir('foo')
-        self.fs.chdir('..')
-        self.assertEqual(self.fs.getcwd(), self.dirname)
-
     def test_creates_lock_file(self):
         self.fs.lock("lock")
         self.assert_(self.fs.exists("lock"))

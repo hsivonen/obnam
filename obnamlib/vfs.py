@@ -23,7 +23,7 @@ import obnamlib
 
 class VirtualFileSystem(object):
 
-    """A virtual filesystem interface.
+    '''A virtual filesystem interface.
     
     The backup program needs to access both local and remote files.
     To make it easier to support all kinds of files both locally and
@@ -42,16 +42,16 @@ class VirtualFileSystem(object):
     slashes, and an initial slash indicating the root of the
     filesystem (in this case, the base URL).
 
-    """
+    '''
 
     def __init__(self, baseurl):
         self.written = 0
 
     def connect(self):
-        """Connect to filesystem."""
+        '''Connect to filesystem.'''
         
     def close(self):
-        """Close connection to filesystem."""
+        '''Close connection to filesystem.'''
 
     def reinit(self, new_baseurl):
         '''Go back to the beginning.
@@ -67,35 +67,35 @@ class VirtualFileSystem(object):
         return os.path.abspath(os.path.join(self.getcwd(), pathname))
 
     def getcwd(self):
-        """Return current working directory as absolute pathname."""
+        '''Return current working directory as absolute pathname.'''
         
     def chdir(self, pathname):
-        """Change current working directory to pathname."""
+        '''Change current working directory to pathname.'''
 
     def listdir(self, pathname):
-        """Return list of basenames of entities at pathname."""
+        '''Return list of basenames of entities at pathname.'''
 
     def lock(self, lockname):
-        """Create a lock file with the given name."""
+        '''Create a lock file with the given name.'''
 
     def unlock(self, lockname):
-        """Remove a lock file."""
+        '''Remove a lock file.'''
 
     def exists(self, pathname):
-        """Does the file or directory exist?"""
+        '''Does the file or directory exist?'''
 
     def isdir(self, pathname):
-        """Is it a directory?"""
+        '''Is it a directory?'''
 
     def mkdir(self, pathname):
-        """Create a directory.
+        '''Create a directory.
         
         Parent directories must already exist.
         
-        """
+        '''
         
     def makedirs(self, pathname):
-        """Create a directory, and missing parents."""
+        '''Create a directory, and missing parents.'''
 
     def rmdir(self, pathname):
         '''Remove an empty directory.'''
@@ -108,45 +108,45 @@ class VirtualFileSystem(object):
             self.rmdir(dirname)
 
     def remove(self, pathname):
-        """Remove a file."""
+        '''Remove a file.'''
 
     def rename(self, old, new):
-        """Rename a file."""
+        '''Rename a file.'''
 
     def lstat(self, pathname):
-        """Like os.lstat."""
+        '''Like os.lstat.'''
 
     def chown(self, pathname, uid, gid):
         '''Like os.chown.'''
 
     def chmod(self, pathname, mode):
-        """Like os.chmod."""
+        '''Like os.chmod.'''
 
     def lutimes(self, pathname, atime, mtime):
-        """Like lutimes(2)."""
+        '''Like lutimes(2).'''
 
     def link(self, existing_path, new_path):
-        """Like os.link."""
+        '''Like os.link.'''
 
     def readlink(self, symlink):
-        """Like os.readlink."""
+        '''Like os.readlink.'''
 
     def symlink(self, source, destination):
-        """Like os.symlink."""
+        '''Like os.symlink.'''
 
     def open(self, pathname, mode):
-        """Open a file, like the builtin open() or file() function.
+        '''Open a file, like the builtin open() or file() function.
 
         The return value is a file object like the ones returned
         by the builtin open() function.
 
-        """
+        '''
 
     def cat(self, pathname):
-        """Return the contents of a file."""
+        '''Return the contents of a file.'''
 
     def write_file(self, pathname, contents):
-        """Write a new file.
+        '''Write a new file.
 
         The file must not yet exist. The file is written atomically,
         so that the given name will only exist when the file is
@@ -154,19 +154,19 @@ class VirtualFileSystem(object):
         
         Any directories in pathname will be created if necessary.
 
-        """
+        '''
 
     def overwrite_file(self, pathname, contents, make_backup=True):
-        """Like write_file, but overwrites existing file.
+        '''Like write_file, but overwrites existing file.
 
         The old file isn't immediately lost, it gets renamed with
         a backup suffix. The backup file is removed if make_backup is
         set to False (default is True).
 
-        """
+        '''
 
     def depth_first(self, top, prune=None):
-        """Walk a directory tree depth-first, except for unwanted subdirs.
+        '''Walk a directory tree depth-first, except for unwanted subdirs.
         
         This is, essentially, 'os.walk(top, topdown=False)', except that
         if the prune argument is set, we call it before descending to 
@@ -178,15 +178,15 @@ class VirtualFileSystem(object):
         and must modify the two lists _in_place_. For example:
         
         def prune(dirname, dirnames, filenames):
-            if ".bzr" in dirnames:
-                dirnames.remove(".bzr")
+            if '.bzr' in dirnames:
+                dirnames.remove('.bzr')
         
         The dirnames and filenames lists contain basenames, relative to
         dirname.
         
         top is relative to VFS root, and so is the returned directory name.
         
-        """
+        '''
 
         names = self.listdir(top)
         dirs = []
@@ -207,12 +207,12 @@ class VirtualFileSystem(object):
         
 class VfsFactory:
 
-    """Create new instances of VirtualFileSystem."""
+    '''Create new instances of VirtualFileSystem.'''
     
     def new(self, url):
-        """Create a new VFS appropriate for a given URL."""
+        '''Create a new VFS appropriate for a given URL.'''
         scheme, netloc, path, params, query, fragment = urlparse.urlparse(url)
-        if scheme == "sftp":
+        if scheme == 'sftp':
             return obnamlib.SftpFS(url)
         else:
             return obnamlib.LocalFS(url)
@@ -237,7 +237,7 @@ class VfsTests(object): # pragma: no cover
     
     basepath must be operable as a pathname using os.path tools. If
     the VFS implemenation operates remotely and wants to operate on a
-    URL like "http://domain/path" as the baseurl, then basepath must be
+    URL like 'http://domain/path' as the baseurl, then basepath must be
     just the path portion of the URL.
     
     '''
@@ -258,4 +258,33 @@ class VfsTests(object): # pragma: no cover
 
     def test_abspath_normalizes_path(self):
         self.assertEqual(self.fs.abspath('foo/..'), self.dirname)
+
+    def test_reinit_works(self):
+        self.fs.reinit('.')
+        self.assertEqual(self.fs.cwd, os.getcwd())
+
+    def test_getcwd_returns_dirname(self):
+        self.assertEqual(self.fs.getcwd(), self.dirname)
+
+    def test_chdir_changes_only_fs_cwd_not_process_cwd(self):
+        process_cwd = os.getcwd()
+        self.fs.chdir('/')
+        self.assertEqual(self.fs.getcwd(), '/')
+        self.assertEqual(os.getcwd(), process_cwd)
+
+    def test_chdir_to_nonexistent_raises_exception(self):
+        self.assertRaises(OSError, self.fs.chdir, '/foobar')
+
+    def test_chdir_to_relative_works(self):
+        pathname = os.path.join(self.dirname, 'foo')
+        os.mkdir(pathname)
+        self.fs.chdir('foo')
+        self.assertEqual(self.fs.getcwd(), pathname)
+
+    def test_chdir_to_dotdot_works(self):
+        pathname = os.path.join(self.dirname, 'foo')
+        os.mkdir(pathname)
+        self.fs.chdir('foo')
+        self.fs.chdir('..')
+        self.assertEqual(self.fs.getcwd(), self.dirname)
 
