@@ -366,3 +366,105 @@ class VfsTests(object): # pragma: no cover
         self.fs.remove('foo')
         self.assertFalse(self.fs.exists('foo'))
 
+    def test_rename_renames_file(self):
+        self.fs.write_file('foo', 'xxx')
+        self.fs.rename('foo', 'bar')
+        self.assertFalse(self.fs.exists('foo'))
+        self.assertEqual(self.fs.cat('bar'), 'xxx')
+
+    def test_lstat_returns_result(self):
+        self.assert_(self.fs.lstat('.'))
+
+    def test_chmod_sets_permissions_correctly(self):
+        self.fs.mkdir('foo')
+        self.fs.chmod('foo', 0777)
+        self.assertEqual(self.fs.lstat('foo').st_mode & 0777, 0777)
+
+    def test_lutimes_sets_times_correctly(self):
+        self.fs.mkdir('foo')
+        self.fs.lutimes('foo', 1, 2)
+        self.assertEqual(self.fs.lstat('foo').st_atime, 1)
+        self.assertEqual(self.fs.lstat('foo').st_mtime, 2)
+
+    def test_link_creates_hard_link(self):
+        self.fs.write_file('foo', 'foo')
+        self.fs.link('foo', 'bar')
+        st1 = self.fs.lstat('foo')
+        st2 = self.fs.lstat('bar')
+        self.assertEqual(st1, st2)
+
+    def test_symlink_creates_soft_link(self):
+        self.fs.symlink('foo', 'bar')
+        target = self.fs.readlink('bar')
+        self.assertEqual(target, 'foo')
+
+    def test_opens_existing_file_ok(self):
+        self.fs.write_file('foo', '')
+        self.assert_(self.fs.open('foo', 'w'))
+
+    def test_open_fails_for_nonexistent_file(self):
+        self.assertRaises(IOError, self.fs.open, 'foo', 'r')
+
+    def test_cat_reads_existing_file_ok(self):
+        self.fs.write_file('foo', 'bar')
+        self.assertEqual(self.fs.cat('foo'), 'bar')
+
+    def test_cat_fails_for_nonexistent_file(self):
+        self.assertRaises(IOError, self.fs.cat, 'foo')
+
+    def test_write_fails_if_file_exists_already(self):
+        self.fs.write_file('foo', 'bar')
+        self.assertRaises(OSError, self.fs.write_file, 'foo', 'foobar')
+
+    def test_write_creates_missing_directories(self):
+        self.fs.write_file('foo/bar', 'yo')
+        self.assertEqual(self.fs.cat('foo/bar'), 'yo')
+
+    def test_write_leaves_existing_file_intact(self):
+        self.fs.write_file('foo', 'bar')
+        try:
+            self.fs.write_file('foo', 'foobar')
+        except OSError:
+            pass
+        self.assertEqual(self.fs.cat('foo'), 'bar')
+
+    def test_overwrite_creates_new_file_ok(self):
+        self.fs.overwrite_file('foo', 'bar')
+        self.assertEqual(self.fs.cat('foo'), 'bar')
+
+    def test_overwrite_renames_existing_file(self):
+        self.fs.write_file('foo', 'bar')
+        self.fs.overwrite_file('foo', 'foobar')
+        self.assert_(self.fs.exists('foo.bak'))
+
+    def test_overwrite_removes_existing_bak_file(self):
+        self.fs.write_file('foo', 'bar')
+        self.fs.write_file('foo.bak', 'baz')
+        self.fs.overwrite_file('foo', 'foobar')
+        self.assertEqual(self.fs.cat('foo.bak'), 'bar')
+
+    def test_overwrite_removes_bak_file(self):
+        self.fs.write_file('foo', 'bar')
+        self.fs.overwrite_file('foo', 'foobar', make_backup=False)
+        self.assertFalse(self.fs.exists('foo.bak'))
+
+    def test_overwrite_is_ok_without_bak(self):
+        self.fs.overwrite_file('foo', 'foobar', make_backup=False)
+        self.assertFalse(self.fs.exists('foo.bak'))
+
+    def test_overwrite_replaces_existing_file(self):
+        self.fs.write_file('foo', 'bar')
+        self.fs.overwrite_file('foo', 'foobar')
+        self.assertEqual(self.fs.cat('foo'), 'foobar')
+    
+    def test_has_written_nothing_initially(self):
+        self.assertEqual(self.fs.written, 0)
+    
+    def test_write_updates_written(self):
+        self.fs.write_file('foo', 'foo')
+        self.assertEqual(self.fs.written, 3)
+    
+    def test_overwrite_updates_written(self):
+        self.fs.overwrite_file('foo', 'foo')
+        self.assertEqual(self.fs.written, 3)
+
