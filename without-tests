@@ -18,3 +18,4 @@
 
 ./obnamlib/plugins/forget_plugin.py
 ./obnamlib/plugins/fsck_plugin.py
+./obnamlib/plugins/vfs_local_plugin.py

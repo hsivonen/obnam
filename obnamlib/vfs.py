@@ -42,7 +42,7 @@ class VirtualFileSystem(object):
     for the relative paths: directory components separated by
     slashes, and an initial slash indicating the root of the
     filesystem (in this case, the base URL).
-
+    
     '''
 
     def __init__(self, baseurl):
@@ -209,14 +209,21 @@ class VirtualFileSystem(object):
 class VfsFactory:
 
     '''Create new instances of VirtualFileSystem.'''
-    
+
+    def __init__(self):
+        self.implementations = {}
+        
+    def register(self, scheme, implementation):
+        if scheme in self.implementations:
+            raise obnamlib.Error('URL scheme %s already registered' % scheme)
+        self.implementations[scheme] = implementation
+
     def new(self, url):
         '''Create a new VFS appropriate for a given URL.'''
         scheme, netloc, path, params, query, fragment = urlparse.urlparse(url)
-        if scheme == 'sftp':
-            return obnamlib.SftpFS(url)
-        else:
-            return obnamlib.LocalFS(url)
+        if scheme in self.implementations:
+            return self.implementations[scheme](url)
+        raise obnamlib.Error('Unknown VFS type %s' % url)
             
             
 class VfsTests(object): # pragma: no cover
