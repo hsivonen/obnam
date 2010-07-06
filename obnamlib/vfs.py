@@ -328,3 +328,41 @@ class VfsTests(object): # pragma: no cover
         self.fs.mkdir('foo')
         self.assert_(self.fs.isdir('foo'))
 
+    def test_mkdir_raises_oserror_if_directory_exists(self):
+        self.assertRaises(OSError, self.fs.mkdir, '.')
+
+    def test_mkdir_raises_oserror_if_parent_does_not_exist(self):
+        self.assertRaises(OSError, self.fs.mkdir, 'foo/bar')
+    
+    def test_makedirs_creates_directory_when_parent_exists(self):
+        self.fs.makedirs('foo')
+        self.assert_(self.fs.isdir('foo'))
+    
+    def test_makedirs_creates_directory_when_parent_does_not_exist(self):
+        self.fs.makedirs('foo/bar')
+        self.assert_(self.fs.isdir('foo/bar'))
+
+    def test_rmdir_removes_directory(self):
+        self.fs.mkdir('foo')
+        self.fs.rmdir('foo')
+        self.assertFalse(self.fs.exists('foo'))
+
+    def test_rmdir_raises_oserror_if_directory_does_not_exist(self):
+        self.assertRaises(OSError, self.fs.rmdir, 'foo')
+
+    def test_rmdir_raises_oserror_if_directory_is_not_empty(self):
+        self.fs.mkdir('foo')
+        self.fs.write_file('foo/bar', '')
+        self.assertRaises(OSError, self.fs.rmdir, 'foo')
+
+    def test_rmtree_removes_directory_tree(self):
+        self.fs.mkdir('foo')
+        self.fs.write_file('foo/bar', '')
+        self.fs.rmtree('foo')
+        self.assertFalse(self.fs.exists('foo'))
+
+    def test_remove_removes_file(self):
+        self.fs.write_file('foo', '')
+        self.fs.remove('foo')
+        self.assertFalse(self.fs.exists('foo'))
+
