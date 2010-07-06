@@ -317,3 +317,14 @@ class VfsTests(object): # pragma: no cover
         self.fs.write_file('foo', '')
         self.assert_(self.fs.exists('foo'))
 
+    def test_isdir_returns_false_for_nonexistent_file(self):
+        self.assertFalse(self.fs.isdir('foo'))
+
+    def test_isdir_returns_false_for_nondir(self):
+        self.fs.write_file('foo', '')
+        self.assertFalse(self.fs.isdir('foo'))
+
+    def test_isdir_returns_true_for_existing_dir(self):
+        self.fs.mkdir('foo')
+        self.assert_(self.fs.isdir('foo'))
+
