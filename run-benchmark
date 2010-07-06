@@ -76,9 +76,9 @@ do
                    PYTHONPATH=$BTREE_BRANCH $OBNAM_BRANCH/obnam \
                    --log $basename-\$GEN.log --store \$STORE backup \$DATA && \
                    cp obnam.prof $basename-\$GEN.prof && \
-                   $(pwd)/viewprof obnam.prof cumulative \
+                   viewprof obnam.prof cumulative \
                     > $basename-\$GEN-cumulative.txt && \
-                   $(pwd)/viewprof obnam.prof time \
+                   viewprof obnam.prof time \
                     > $basename-\$GEN-time.txt && \
                    rm -f obnam.prof \
                     " \
