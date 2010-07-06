@@ -50,7 +50,7 @@ then
     die "Usage: $0 [obnam-branch [btree-branch [path/to/seivot]]]"
 fi
 
-SIZES="1m/1m 10m/1m 100m/10m 1000m/100m"
+SIZES="100m/10m 1000m/100m 10000m/1000m"
 GENERATIONS=5
 OBNAM_REVNO=$(cd "$OBNAM_BRANCH" && bzr revno)
 BTREE_REVNO=$(cd "$BTREE_BRANCH" && bzr revno)
