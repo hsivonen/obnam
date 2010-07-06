@@ -216,3 +216,24 @@ class VfsFactory:
             return obnamlib.SftpFS(url)
         else:
             return obnamlib.LocalFS(url)
+            
+            
+class VfsTests(object): # pragma: no cover
+
+    '''Re-useable tests for VirtualFileSystem implementations.
+    
+    The base class can't be usefully instantiated itself.
+    Instead you are supposed to sub-class it and implement the API in
+    a suitable way for yourself.
+    
+    This class implements a number of tests that the API implementation
+    must pass. The implementation's own test class should inherit from
+    this class, and unittest.TestCase.
+    
+    The test sub-class should define a setUp method that sets the following:
+    
+    * self.fs to an instance of the API implementation sub-class
+    
+    '''
+
+    pass
