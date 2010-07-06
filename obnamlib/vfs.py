@@ -241,6 +241,9 @@ class VfsTests(object): # pragma: no cover
     URL like 'http://domain/path' as the baseurl, then basepath must be
     just the path portion of the URL.
     
+    The directory indicated by basepath must exist, but must be empty
+    at start.
+    
     '''
 
     def test_joins_relative_path_ok(self):
@@ -255,17 +258,17 @@ class VfsTests(object): # pragma: no cover
 
     def test_abspath_returns_absolute_path_for_relative_input(self):
         self.assertEqual(self.fs.abspath('foo'),
-                         os.path.join(self.dirname, 'foo'))
+                         os.path.join(self.basepath, 'foo'))
 
     def test_abspath_normalizes_path(self):
-        self.assertEqual(self.fs.abspath('foo/..'), self.dirname)
+        self.assertEqual(self.fs.abspath('foo/..'), self.basepath)
 
     def test_reinit_works(self):
         self.fs.reinit('.')
         self.assertEqual(self.fs.cwd, os.getcwd())
 
     def test_getcwd_returns_dirname(self):
-        self.assertEqual(self.fs.getcwd(), self.dirname)
+        self.assertEqual(self.fs.getcwd(), self.basepath)
 
     def test_chdir_changes_only_fs_cwd_not_process_cwd(self):
         process_cwd = os.getcwd()
@@ -277,17 +280,17 @@ class VfsTests(object): # pragma: no cover
         self.assertRaises(OSError, self.fs.chdir, '/foobar')
 
     def test_chdir_to_relative_works(self):
-        pathname = os.path.join(self.dirname, 'foo')
+        pathname = os.path.join(self.basepath, 'foo')
         os.mkdir(pathname)
         self.fs.chdir('foo')
         self.assertEqual(self.fs.getcwd(), pathname)
 
     def test_chdir_to_dotdot_works(self):
-        pathname = os.path.join(self.dirname, 'foo')
+        pathname = os.path.join(self.basepath, 'foo')
         os.mkdir(pathname)
         self.fs.chdir('foo')
         self.fs.chdir('..')
-        self.assertEqual(self.fs.getcwd(), self.dirname)
+        self.assertEqual(self.fs.getcwd(), self.basepath)
 
     def test_creates_lock_file(self):
         self.fs.lock('lock')
@@ -467,4 +470,29 @@ class VfsTests(object): # pragma: no cover
     def test_overwrite_updates_written(self):
         self.fs.overwrite_file('foo', 'foo')
         self.assertEqual(self.fs.written, 3)
+
+    def set_up_depth_first(self):
+        self.dirs = ['foo', 'foo/bar', 'foobar']
+        self.dirs = [os.path.join(self.basepath, x) for x in self.dirs]
+        for dirname in self.dirs:
+            self.fs.mkdir(dirname)
+        self.dirs.insert(0, self.basepath)
+    
+    def test_depth_first_finds_all_dirs(self):
+        self.set_up_depth_first()
+        dirs = [x[0] for x in self.fs.depth_first(self.basepath)]
+        self.failUnlessEqual(sorted(dirs), sorted(self.dirs))
+
+    def prune(self, dirname, dirnames, filenames):
+        if 'foo' in dirnames:
+            dirnames.remove('foo')
+
+    def test_depth_first_finds_all_airs_except_the_pruned_one(self):
+        self.set_up_depth_first()
+        correct = [x 
+                   for x in self.dirs 
+                   if not x.endswith('/foo') and not '/foo/' in x]
+        dirs = [x[0] 
+                for x in self.fs.depth_first(self.basepath, prune=self.prune)]
+        self.failUnlessEqual(sorted(dirs), sorted(correct))
 
