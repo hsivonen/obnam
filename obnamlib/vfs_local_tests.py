@@ -35,19 +35,6 @@ class LocalFSTests(obnamlib.VfsTests, unittest.TestCase):
         self.fs.close()
         shutil.rmtree(self.dirname)
 
-    def test_join_treats_absolute_path_as_absolute(self):
-        self.assertEqual(self.fs.join("/foo"), "/foo")
-
-    def test_abspath_returns_input_for_absolute_path(self):
-        self.assertEqual(self.fs.abspath('/foo/bar'), '/foo/bar')
-
-    def test_abspath_returns_absolute_path_for_relative_input(self):
-        self.assertEqual(self.fs.abspath('foo'),
-                         os.path.join(self.dirname, 'foo'))
-
-    def test_abspath_normalizes_path(self):
-        self.assertEqual(self.fs.abspath('foo/..'), self.dirname)
-
     def test_reinit_works(self):
         self.fs.reinit('.')
         self.assertEqual(self.fs.cwd, os.getcwd())

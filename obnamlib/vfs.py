@@ -235,11 +235,27 @@ class VfsTests(object): # pragma: no cover
     * self.fs to an instance of the API implementation sub-class
     * self.basepath to the path to the base of the filesystem
     
-    basepath must be operable as a pathname using os.path tools.
+    basepath must be operable as a pathname using os.path tools. If
+    the VFS implemenation operates remotely and wants to operate on a
+    URL like "http://domain/path" as the baseurl, then basepath must be
+    just the path portion of the URL.
     
     '''
 
     def test_joins_relative_path_ok(self):
         self.assertEqual(self.fs.join('foo'), 
                          os.path.join(self.basepath, 'foo'))
+
+    def test_join_treats_absolute_path_as_absolute(self):
+        self.assertEqual(self.fs.join('/foo'), '/foo')
+
+    def test_abspath_returns_input_for_absolute_path(self):
+        self.assertEqual(self.fs.abspath('/foo/bar'), '/foo/bar')
+
+    def test_abspath_returns_absolute_path_for_relative_input(self):
+        self.assertEqual(self.fs.abspath('foo'),
+                         os.path.join(self.dirname, 'foo'))
+
+    def test_abspath_normalizes_path(self):
+        self.assertEqual(self.fs.abspath('foo/..'), self.dirname)
 
