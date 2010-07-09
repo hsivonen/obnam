@@ -263,6 +263,7 @@ class GenerationStore(StoreTree):
         StoreTree.__init__(self, fs, hostname, key_bytes, node_size,
                            upload_queue_size)
         self.curgen = None
+        self.known_generations = dict()
 
     def hash_name(self, filename):
         '''Return hash of filename suitable for use as main key.'''
@@ -325,9 +326,13 @@ class GenerationStore(StoreTree):
             self.forest.commit()
 
     def find_generation(self, genid):
+        if genid in self.known_generations: # pragma: no cover
+            return self.known_generations[genid]
+
         key = self.genkey(self.GEN_META_ID)
         for t in self.forest.trees:
             if self._lookup_int(t, key) == genid:
+                self.known_generations[genid] = t
                 return t
         raise KeyError('Unknown generation %s' % genid) # pragma: no cover
 
