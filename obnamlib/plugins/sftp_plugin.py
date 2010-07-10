@@ -239,6 +239,8 @@ class SftpFS(obnamlib.VirtualFileSystem):
         return ''.join(chunks)
 
     def write_file(self, pathname, contents):
+        if self.exists(pathname):
+            raise OSError(errno.EEXIST, 'File exists', pathname)
         self._write_helper(pathname, 'wx', contents)
 
     def overwrite_file(self, pathname, contents, make_backup=True):
