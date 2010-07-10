@@ -19,6 +19,7 @@ import errno
 import logging
 import os
 import pwd
+import random
 import stat
 import urlparse
 
@@ -244,9 +245,42 @@ class SftpFS(obnamlib.VirtualFileSystem):
             raise OSError(errno.EEXIST, 'File exists', pathname)
         self._write_helper(pathname, 'wx', contents)
 
-    def overwrite_file(self, pathname, contents, make_backup=True):
-        self._write_helper(pathname, 'w', contents)
+    def _tempfile(self, dirname):
+        '''Generate a filename that does not exist.
+        
+        This is _not_ as safe as tempfile.mkstemp. Plenty of race
+        conditions. But seems to be as good as SFTP will allow.
+        
+        '''
+        
+        while True:
+            i = random.randint(0, 2**64-1)
+            basename = 'tmp.%x' % i
+            pathname = os.path.join(dirname, basename)
+            if not self.exists(pathname):
+                return pathname
 
+    def overwrite_file(self, pathname, contents, make_backup=True):
+        dirname = os.path.dirname(pathname)
+        tempname = self._tempfile(dirname)
+        self._write_helper(pathname, 'wx', contents)
+
+        # Rename existing to have a .bak suffix. If _that_ file already
+        # exists, remove that.
+        bak = pathname + ".bak"
+        try:
+            self.remove(bak)
+        except OSError:
+            pass
+        if self.exists(pathname):
+            self.rename(pathname, bak)
+        self.rename(tempname, pathname)
+        if not make_backup:
+            try:
+                self.remove(bak)
+            except OSError:
+                pass
+        
     def _write_helper(self, pathname, mode, contents):
         dirname = os.path.dirname(pathname)
         if dirname:
