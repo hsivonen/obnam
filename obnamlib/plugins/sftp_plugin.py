@@ -22,7 +22,15 @@ import pwd
 import stat
 import urlparse
 
-import paramiko
+# As of 2010-07-10, Debian's paramiko package triggers
+# RandomPool_DeprecationWarning. This will eventually be fixed. Until
+# then, there is no point in spewing the warning to the user, who can't
+# do nothing.
+# http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=586925
+import warnings
+with warnings.catch_warnings():
+    warnings.simplefilter('ignore')
+    import paramiko
 
 import obnamlib
 
@@ -31,9 +39,13 @@ class SftpFS(obnamlib.VirtualFileSystem):
 
     """A VFS implementation for SFTP."""
 
-    def __init__(self, baseurl, progress):
-        obnamlib.VirtualFileSystem.__init__(self, baseurl, progress)
+    def __init__(self, baseurl):
+        obnamlib.VirtualFileSystem.__init__(self, baseurl)
+        self.reinit(baseurl)
         self.first_lutimes = True
+
+    def reinit(self, baseurl):
+        self.baseurl = baseurl
 
     def connect(self):
         user = host = port = path = None
@@ -49,7 +61,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
         else:
             host = netloc
             port = 22
-        if path.startswith("/~/"):
+        if path.startswith('/~/'):
             path = path[3:]
         self.basepath = path
         self.transport = paramiko.Transport((host, port))
@@ -201,4 +213,10 @@ class SftpFS(obnamlib.VirtualFileSystem):
 
     def overwrite_file(self, relative_path, contents):
         self.write_helper(relative_path, 'w', contents)
+
+
+class SftpPlugin(obnamlib.ObnamPlugin):
+
+    def enable(self):
+        self.app.fsf.register('sftp', SftpFS)
 

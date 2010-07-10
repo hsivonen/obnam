@@ -1,0 +1,48 @@
+#!/usr/bin/python
+# Copyright 2010  Lars Wirzenius
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+'''Test SftpFS.
+
+This can't be part of the normal unit tests, since it requires access
+to a (real) ssh server.
+
+'''
+
+
+import os
+import unittest
+
+import obnamlib
+import obnamlib.plugins.sftp_plugin
+
+
+class SftpTests(unittest.TestCase):
+
+    def setUp(self):
+        self.baseurl = os.environ['OBNAM_SFTP_TEST']
+        self.fs = obnamlib.plugins.sftp_plugin.SftpFS(self.baseurl)
+        self.fs.connect()
+        
+    def tearDown(self):
+        self.fs.close()
+        
+    def test_ok(self):
+        self.assert_(True)
+        
+        
+if __name__ == '__main__':
+    unittest.main()

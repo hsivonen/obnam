@@ -3,7 +3,6 @@
 ./obnamlib/app.py
 ./obnamlib/status.py
 ./obnamlib/vfs.py
-./obnamlib/vfs_sftp.py
 ./obnamlib/objs.py
 ./obnamlib/plugins/foo_plugin.py
 ./obnamlib/plugins/backup_plugin.py
@@ -15,7 +14,9 @@
 ./test-plugins/oldhello_plugin.py
 ./test-plugins/aaa_hello_plugin.py
 ./test-plugins/wrongversion_plugin.py
-
 ./obnamlib/plugins/forget_plugin.py
 ./obnamlib/plugins/fsck_plugin.py
 ./obnamlib/plugins/vfs_local_plugin.py
+./obnamlib/plugins/sftp_plugin.py
+
+./obnamlib/plugins/__init__.py
