@@ -378,6 +378,9 @@ class VfsTests(object): # pragma: no cover
     def test_lstat_returns_result(self):
         self.assert_(self.fs.lstat('.'))
 
+    def test_lstat_raises_oserror_for_nonexistent_entry(self):
+        self.assertRaises(OSError, self.fs.lstat, 'notexists')
+
     def test_chmod_sets_permissions_correctly(self):
         self.fs.mkdir('foo')
         self.fs.chmod('foo', 0777)

@@ -182,7 +182,10 @@ class SftpFS(obnamlib.VirtualFileSystem):
         self.sftp.rename(old, new)
     
     def lstat(self, pathname):
-        return self.sftp.lstat(pathname)
+        try:
+            return self.sftp.lstat(pathname)
+        except IOError, e:
+            raise OSError(e.errno, e.strerror, pathname)
 
     def chown(self, pathname, uid, gid):
         self.sftp.chown(pathname, uid, gid)
