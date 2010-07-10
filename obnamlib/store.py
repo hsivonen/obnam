@@ -86,6 +86,7 @@ def require_started_generation(method):
 numeric_fields = [x for x in obnamlib.metadata_fields if x.startswith('st_')]
 string_fields = [x for x in obnamlib.metadata_fields 
                  if x not in numeric_fields]
+all_fields = numeric_fields + string_fields
 num_numeric = len(numeric_fields)
 metadata_format = struct.Struct('!Q' + 'Q' * len(obnamlib.metadata_fields))
 
@@ -102,6 +103,14 @@ def encode_metadata(metadata):
     return metadata_format.pack(*fields) + string
     
 
+def flagtonone(flags, values):
+    for i, value in enumerate(values):
+        if flags & (1 << i):
+            yield value
+        else:
+            yield None
+
+
 def decode_metadata(encoded):
     buf = buffer(encoded)
     items = metadata_format.unpack_from(buf)
@@ -116,14 +125,7 @@ def decode_metadata(encoded):
         append(encoded[offset:offset + length])
         offset += length
 
-    def flagtonone(values):
-        for i, value in enumerate(values):
-            if flags & (1 << i):
-                yield value
-            else:
-                yield None
-
-    args = dict(zip(numeric_fields + string_fields, flagtonone(values)))
+    args = dict(zip(all_fields, flagtonone(flags, values)))
     return obnamlib.Metadata(**args)
 
 
