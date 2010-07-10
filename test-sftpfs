@@ -40,6 +40,9 @@ class SftpTests(unittest.TestCase, obnamlib.VfsTests):
     def tearDown(self):
         self.fs.close()
         
+    def test_initial_cwd_is_basepath(self):
+        self.assertEqual(self.fs.getcwd(), self.fs.basepath)
+        
         
 if __name__ == '__main__':
     unittest.main()
