@@ -52,6 +52,9 @@ class SftpTests(unittest.TestCase, obnamlib.VfsTests):
         
     def test_initial_cwd_is_basepath(self):
         self.assertEqual(self.fs.getcwd(), self.fs.path)
+
+    def test_link_creates_hard_link(self):
+        pass # sftp does not support hardlinking, so not testing it
         
         
 if __name__ == '__main__':
