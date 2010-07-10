@@ -105,10 +105,11 @@ class VirtualFileSystem(object):
 
     def rmtree(self, dirname):
         '''Remove a directory tree, including its contents.'''
-        for dirname, dirnames, basenames in self.depth_first(dirname):
-            for basename in basenames:
-                self.remove(os.path.join(dirname, basename))
-            self.rmdir(dirname)
+        if self.isdir(dirname):
+            for dirname, dirnames, basenames in self.depth_first(dirname):
+                for basename in basenames:
+                    self.remove(os.path.join(dirname, basename))
+                self.rmdir(dirname)
 
     def remove(self, pathname):
         '''Remove a file.'''
@@ -334,11 +335,18 @@ class VfsTests(object): # pragma: no cover
         self.fs.mkdir('foo')
         self.assert_(self.fs.isdir('foo'))
 
+    def test_listdir_raises_oserror_if_directory_does_not_exist(self):
+        self.assertRaises(OSError, self.fs.listdir, 'foo')
+
     def test_mkdir_raises_oserror_if_directory_exists(self):
         self.assertRaises(OSError, self.fs.mkdir, '.')
 
     def test_mkdir_raises_oserror_if_parent_does_not_exist(self):
         self.assertRaises(OSError, self.fs.mkdir, 'foo/bar')
+    
+    def test_makedirs_raises_oserror_when_directory_exists(self):
+        self.fs.mkdir('foo')
+        self.assertRaises(OSError, self.fs.makedirs, 'foo')
     
     def test_makedirs_creates_directory_when_parent_exists(self):
         self.fs.makedirs('foo')
@@ -367,16 +375,31 @@ class VfsTests(object): # pragma: no cover
         self.fs.rmtree('foo')
         self.assertFalse(self.fs.exists('foo'))
 
+    def test_rmtree_is_silent_when_target_does_not_exist(self):
+        self.assertEqual(self.fs.rmtree('foo'), None)
+
     def test_remove_removes_file(self):
         self.fs.write_file('foo', '')
         self.fs.remove('foo')
         self.assertFalse(self.fs.exists('foo'))
+
+    def test_remove_raises_oserror_if_file_does_not_exist(self):
+        self.assertRaises(OSError, self.fs.remove, 'foo')
 
     def test_rename_renames_file(self):
         self.fs.write_file('foo', 'xxx')
         self.fs.rename('foo', 'bar')
         self.assertFalse(self.fs.exists('foo'))
         self.assertEqual(self.fs.cat('bar'), 'xxx')
+
+    def test_rename_raises_oserror_if_file_does_not_exist(self):
+        self.assertRaises(OSError, self.fs.rename, 'foo', 'bar')
+
+    def test_rename_works_if_target_exists(self):
+        self.fs.write_file('foo', 'foo')
+        self.fs.write_file('bar', 'bar')
+        self.fs.rename('foo', 'bar')
+        self.assertEqual(self.fs.cat('bar'), 'foo')
 
     def test_lstat_returns_result(self):
         self.assert_(self.fs.lstat('.'))
@@ -389,11 +412,17 @@ class VfsTests(object): # pragma: no cover
         self.fs.chmod('foo', 0777)
         self.assertEqual(self.fs.lstat('foo').st_mode & 0777, 0777)
 
+    def test_chmod_raises_oserror_for_nonexistent_entry(self):
+        self.assertRaises(OSError, self.fs.chmod, 'notexists', 0)
+
     def test_lutimes_sets_times_correctly(self):
         self.fs.mkdir('foo')
         self.fs.lutimes('foo', 1, 2)
         self.assertEqual(self.fs.lstat('foo').st_atime, 1)
         self.assertEqual(self.fs.lstat('foo').st_mtime, 2)
+
+    def test_lutimes_raises_oserror_for_nonexistent_entry(self):
+        self.assertRaises(OSError, self.fs.lutimes, 'notexists', 1, 2)
 
     def test_link_creates_hard_link(self):
         self.fs.write_file('foo', 'foo')
@@ -406,6 +435,10 @@ class VfsTests(object): # pragma: no cover
         self.fs.symlink('foo', 'bar')
         target = self.fs.readlink('bar')
         self.assertEqual(target, 'foo')
+
+    def test_symlink_raises_oserror_if_name_exists(self):
+        self.fs.write_file('foo', 'foo')
+        self.assertRaises(OSError, self.fs.symlink, 'bar', 'foo')
 
     def test_opens_existing_file_ok(self):
         self.fs.write_file('foo', '')
@@ -509,4 +542,7 @@ class VfsTests(object): # pragma: no cover
         dirs = [x[0] 
                 for x in self.fs.depth_first(self.basepath, prune=self.prune)]
         self.failUnlessEqual(sorted(dirs), sorted(correct))
+
+    def test_depth_first_raises_oserror_if_directory_does_not_exist(self):
+        self.assertRaises(OSError, list, self.fs.depth_first('notexist'))
 
