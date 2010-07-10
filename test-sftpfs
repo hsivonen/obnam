@@ -39,7 +39,7 @@ class SftpTests(unittest.TestCase, obnamlib.VfsTests):
 
     def setUp(self):
         self.basepath = tempfile.mkdtemp()
-        baseurl = 'sftp://localhost/%s' % self.basepath
+        baseurl = 'sftp://localhost%s' % self.basepath
         self.fs = obnamlib.plugins.sftp_plugin.SftpFS(baseurl)
         self.fs.connect()
         
