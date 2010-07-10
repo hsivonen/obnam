@@ -388,8 +388,7 @@ class ReusesChunks(BlackBoxTest):
         self.backup(store, [data])
         restored = self.restore(store)
         self.verify(data, restored)
-        fsf = obnamlib.VfsFactory()
-        fs = fsf.new(store)
+        fs = obnamlib.LocalFS(store)
         s = obnamlib.Store(fs, obnamlib.DEFAULT_NODE_SIZE, 
                            obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE)
         s.open_host(self.hostid)
@@ -410,8 +409,7 @@ class UsesChunkGroups(BlackBoxTest):
         self.backup(store, [data])
         restored = self.restore(store)
         self.verify(data, restored)
-        fsf = obnamlib.VfsFactory()
-        fs = fsf.new(store)
+        fs = obnamlib.LocalFS(store)
         s = obnamlib.Store(fs, obnamlib.DEFAULT_NODE_SIZE,
                            obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE)
         s.open_host(self.hostid)

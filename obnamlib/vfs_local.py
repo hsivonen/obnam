@@ -79,7 +79,9 @@ class LocalFS(obnamlib.VirtualFileSystem):
         os.chmod(self.join(pathname), mode)
 
     def lutimes(self, pathname, atime, mtime):
-        obnamlib._obnam.lutimes(self.join(pathname), atime, mtime)
+        ret = obnamlib._obnam.lutimes(self.join(pathname), atime, mtime)
+        if ret != 0:
+            raise OSError(ret, errno.errorcode[ret], pathname)
 
     def link(self, existing, new):
         os.link(self.join(existing), self.join(new))
@@ -116,6 +118,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
             if not chunk:
                 break
             chunks.append(chunk)
+            self.bytes_read += len(chunk)
         f.close()
         data = "".join(chunks)
         return data
@@ -131,6 +134,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
             chunk = contents[pos:pos+self.chunk_size]
             os.write(fd, chunk)
             pos += len(chunk)
+            self.bytes_written += len(chunk)
         os.close(fd)
         try:
             os.link(name, path)
@@ -138,7 +142,6 @@ class LocalFS(obnamlib.VirtualFileSystem):
             os.remove(name)
             raise
         os.remove(name)
-        self.written += len(contents)
 
     def overwrite_file(self, pathname, contents, make_backup=True):
         path = self.join(pathname)
@@ -149,6 +152,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
             chunk = contents[pos:pos+self.chunk_size]
             os.write(fd, chunk)
             pos += len(chunk)
+            self.bytes_written += len(chunk)
         os.close(fd)
 
         # Rename existing to have a .bak suffix. If _that_ file already
@@ -168,7 +172,6 @@ class LocalFS(obnamlib.VirtualFileSystem):
                 os.remove(bak)
             except OSError:
                 pass
-        self.written += len(contents)
 
     def listdir(self, dirname):
         return os.listdir(self.join(dirname))

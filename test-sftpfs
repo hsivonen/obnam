@@ -1,0 +1,61 @@
+#!/usr/bin/python
+# Copyright 2010  Lars Wirzenius
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+'''Test SftpFS.
+
+This can't be part of the normal unit tests, since it requires access
+to a (real) ssh server.
+
+To run these tests, you must arrange for localhost to be able to accept
+ssh connections using the ssh agent.
+
+'''
+
+
+import os
+import shutil
+import tempfile
+import unittest
+
+import obnamlib
+import obnamlib.plugins.sftp_plugin
+
+
+class SftpTests(unittest.TestCase, obnamlib.VfsTests):
+
+    def setUp(self):
+        self.basepath = tempfile.mkdtemp()
+        baseurl = 'sftp://localhost%s' % self.basepath
+        self.fs = obnamlib.plugins.sftp_plugin.SftpFS(baseurl)
+        self.fs.connect()
+        
+    def tearDown(self):
+        self.fs.close()
+        shutil.rmtree(self.basepath)
+        
+    def test_sets_path_to_absolute_path(self):
+        self.assert_(self.fs.path.startswith('/'))
+        
+    def test_initial_cwd_is_basepath(self):
+        self.assertEqual(self.fs.getcwd(), self.fs.path)
+
+    def test_link_creates_hard_link(self):
+        pass # sftp does not support hardlinking, so not testing it
+        
+        
+if __name__ == '__main__':
+    unittest.main()

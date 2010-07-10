@@ -55,6 +55,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         storepath = self.app.config['store']
         logging.debug('store: %s' % storepath)
         storefs = self.app.fsf.new(storepath)
+        storefs.connect()
         self.store = obnamlib.Store(storefs, self.app.config['node-size'],
                                     self.app.config['upload-queue-size'])
 
@@ -93,13 +94,13 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     self.app.hooks.call('error-message', 
                                         'Could not back up %s: %s' %
                                         (pathname, e.strerror))
-                if storefs.written >= self.app.config['checkpoint']:
+                if storefs.bytes_written >= self.app.config['checkpoint']:
                     logging.debug('Making checkpoint')
                     self.backup_parents('.')
                     self.store.commit_host(checkpoint=True)
                     self.store.lock_host(hostname)
                     self.store.start_generation()
-                    storefs.written = 0
+                    storefs.bytes_written = 0
 
             self.backup_parents('.')
 
