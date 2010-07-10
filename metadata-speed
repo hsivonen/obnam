@@ -1,0 +1,48 @@
+#!/usr/bin/python
+# Copyright 2010  Lars Wirzenius
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+import os
+import random
+import shutil
+import sys
+import time
+
+import obnamlib
+
+
+def measure(n, func):
+    start = time.clock()
+    for i in range(n):
+        func()
+    end = time.clock()
+    return end - start
+
+
+def main():
+    n = int(sys.argv[1])
+    fs = obnamlib.LocalFS('.')
+    fs.connect()
+    metadata = obnamlib.read_metadata(fs, '.')
+    encoded = obnamlib.store.encode_metadata(metadata)
+    calibrate = measure(n, lambda: None)
+    encode = measure(n, lambda: obnamlib.store.encode_metadata(metadata))
+    decode = measure(n, lambda: obnamlib.store.decode_metadata(encoded))
+    print 'encode: %.1f s' % (n/(encode - calibrate))
+    print 'decode: %.1f s' % (n/(decode - calibrate))
+
+if __name__ == '__main__':
+    main()
