@@ -30,7 +30,7 @@ import obnamlib
 import obnamlib.plugins.sftp_plugin
 
 
-class SftpTests(unittest.TestCase):
+class SftpTests(unittest.TestCase, obnamlib.VfsTests):
 
     def setUp(self):
         self.baseurl = os.environ['OBNAM_SFTP_TEST']
@@ -39,9 +39,6 @@ class SftpTests(unittest.TestCase):
         
     def tearDown(self):
         self.fs.close()
-        
-    def test_ok(self):
-        self.assert_(True)
         
         
 if __name__ == '__main__':
