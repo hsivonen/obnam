@@ -51,6 +51,7 @@ To build:
 To run automatic tests:
 
     make check
+    python test-sftpfs # Read it first, though. Requires ssh setup.
     
 You need my CoverageTestRunner to run tests, get it from:
 
