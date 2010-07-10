@@ -178,7 +178,10 @@ class SftpFS(obnamlib.VirtualFileSystem):
         self.mkdir(pathname)
 
     def rmdir(self, pathname):
-        self.sftp.rmdir(pathname)
+        try:
+            self.sftp.rmdir(pathname)
+        except IOError, e:
+            raise OSError(e.errno, e.strerror, pathname)
         
     def remove(self, pathname):
         self.sftp.remove(pathname)
