@@ -23,7 +23,6 @@ import btree
 import errno
 import hashlib
 import os
-import pickle
 import random
 import struct
 import time
@@ -84,12 +83,50 @@ def require_started_generation(method):
     return helper
 
 
+numeric_fields = [x for x in obnamlib.metadata_fields if x.startswith('st_')]
+string_fields = [x for x in obnamlib.metadata_fields 
+                 if x not in numeric_fields]
+all_fields = numeric_fields + string_fields
+num_numeric = len(numeric_fields)
+metadata_format = struct.Struct('!Q' + 'Q' * len(obnamlib.metadata_fields))
+
+
 def encode_metadata(metadata):
-    return pickle.dumps(metadata)
+    flags = 0
+    for i, name in enumerate(obnamlib.metadata_fields):
+        if getattr(metadata, name) is not None:
+            flags |= (1 << i)
+    fields = ([flags] +
+              [getattr(metadata, x) or 0 for x in numeric_fields] +
+              [len(getattr(metadata, x) or '') for x in string_fields])
+    string = ''.join(getattr(metadata, x) or '' for x in string_fields)
+    return metadata_format.pack(*fields) + string
     
 
+def flagtonone(flags, values):
+    for i, value in enumerate(values):
+        if flags & (1 << i):
+            yield value
+        else:
+            yield None
+
+
 def decode_metadata(encoded):
-    return pickle.loads(encoded)
+    buf = buffer(encoded)
+    items = metadata_format.unpack_from(buf)
+
+    flags = items[0]
+    values = list(items[1:len(numeric_fields)+1])
+    lengths = items[len(numeric_fields)+1:]
+    
+    offset = metadata_format.size
+    append = values.append
+    for length in lengths:
+        append(encoded[offset:offset + length])
+        offset += length
+
+    args = dict(zip(all_fields, flagtonone(flags, values)))
+    return obnamlib.Metadata(**args)
 
 
 class NodeStoreVfs(btree.NodeStoreDisk):
