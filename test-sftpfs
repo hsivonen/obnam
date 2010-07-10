@@ -48,7 +48,7 @@ class SftpTests(unittest.TestCase, obnamlib.VfsTests):
         shutil.rmtree(self.basepath)
         
     def test_sets_path_to_absolute_path(self):
-        self.assertEqual(self.fs.path.startswith('/'))
+        self.assert_(self.fs.path.startswith('/'))
         
     def test_initial_cwd_is_basepath(self):
         self.assertEqual(self.fs.getcwd(), self.fs.path)
