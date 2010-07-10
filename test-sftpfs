@@ -38,14 +38,14 @@ import obnamlib.plugins.sftp_plugin
 class SftpTests(unittest.TestCase, obnamlib.VfsTests):
 
     def setUp(self):
-        self.dirname = tempfile.mkdtemp()
-        baseurl = 'sftp://localhost/%s' % self.dirname
+        self.basepath = tempfile.mkdtemp()
+        baseurl = 'sftp://localhost/%s' % self.basepath
         self.fs = obnamlib.plugins.sftp_plugin.SftpFS(baseurl)
         self.fs.connect()
         
     def tearDown(self):
         self.fs.close()
-        shutil.rmtree(self.dirname)
+        shutil.rmtree(self.basepath)
         
     def test_initial_cwd_is_basepath(self):
         self.assertEqual(self.fs.getcwd(), self.fs.basepath)
