@@ -39,6 +39,23 @@ import obnamlib
 DEFAULT_SSH_PORT = 22
 
 
+def ioerror_to_oserror(method):
+    '''Decorator to convert an IOError exception to OSError.
+    
+    Python's os.* raise OSError, mostly, but paramiko's corresponding
+    methods raise IOError. This decorator fixes that.
+    
+    '''
+    
+    def helper(self, filename, *args, **kwargs):
+        try:
+            return method(self, filename, *args, **kwargs)
+        except IOError, e:
+            raise OSError(e.errno, e.strerror, filename)
+    
+    return helper
+
+
 class SftpFS(obnamlib.VirtualFileSystem):
 
     '''A VFS implementation for SFTP.
@@ -125,12 +142,11 @@ class SftpFS(obnamlib.VirtualFileSystem):
     def getcwd(self):
         return self.sftp.getcwd()
 
+    @ioerror_to_oserror
     def chdir(self, pathname):
-        try:
-            self.sftp.chdir(pathname)
-        except IOError, e:
-            raise OSError(e.errno, e.strerror, pathname)
+        self.sftp.chdir(pathname)
 
+    @ioerror_to_oserror
     def listdir(self, pathname):
         return self.sftp.listdir(pathname)
 
@@ -164,44 +180,44 @@ class SftpFS(obnamlib.VirtualFileSystem):
         else:
             return stat.S_ISDIR(st.st_mode)
 
+    @ioerror_to_oserror
     def mkdir(self, pathname):
-        try:
-            self.sftp.mkdir(pathname)
-        except IOError, e:
-            raise OSError(e.errno, e.strerror, pathname)
+        self.sftp.mkdir(pathname)
         
+    @ioerror_to_oserror
     def makedirs(self, pathname):
-        if self.isdir(pathname):
-            return
         parent = os.path.dirname(pathname)
         if parent and parent != pathname:
             self.makedirs(parent)
         self.mkdir(pathname)
 
+    @ioerror_to_oserror
     def rmdir(self, pathname):
-        try:
-            self.sftp.rmdir(pathname)
-        except IOError, e:
-            raise OSError(e.errno, e.strerror, pathname)
+        self.sftp.rmdir(pathname)
         
+    @ioerror_to_oserror
     def remove(self, pathname):
         self.sftp.remove(pathname)
 
+    @ioerror_to_oserror
     def rename(self, old, new):
+        if self.exists(new):
+            self.remove(new)
         self.sftp.rename(old, new)
     
+    @ioerror_to_oserror
     def lstat(self, pathname):
-        try:
-            return self.sftp.lstat(pathname)
-        except IOError, e:
-            raise OSError(e.errno, e.strerror, pathname)
+        return self.sftp.lstat(pathname)
 
+    @ioerror_to_oserror
     def chown(self, pathname, uid, gid):
         self.sftp.chown(pathname, uid, gid)
         
+    @ioerror_to_oserror
     def chmod(self, pathname, mode):
         self.sftp.chmod(pathname, mode)
         
+    @ioerror_to_oserror
     def lutimes(self, pathname, atime, mtime):
         # FIXME: This does not work for symlinks!
         # Sftp does not have a way of doing that. This means if the restore
@@ -220,6 +236,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
     def readlink(self, symlink):
         return self.sftp.readlink(symlink)
 
+    @ioerror_to_oserror
     def symlink(self, source, destination):
         self.sftp.symlink(source, destination)
 
@@ -263,7 +280,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
     def overwrite_file(self, pathname, contents, make_backup=True):
         dirname = os.path.dirname(pathname)
         tempname = self._tempfile(dirname)
-        self._write_helper(pathname, 'wx', contents)
+        self._write_helper(tempname, 'wx', contents)
 
         # Rename existing to have a .bak suffix. If _that_ file already
         # exists, remove that.
@@ -283,7 +300,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
         
     def _write_helper(self, pathname, mode, contents):
         dirname = os.path.dirname(pathname)
-        if dirname:
+        if dirname and not self.exists(dirname):
             self.makedirs(dirname)
         f = self.open(pathname, mode)
         chunk_size = 32 * 1024
