@@ -187,7 +187,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
     @ioerror_to_oserror
     def makedirs(self, pathname):
         parent = os.path.dirname(pathname)
-        if parent and parent != pathname:
+        if parent and parent != pathname and not self.exists(parent):
             self.makedirs(parent)
         self.mkdir(pathname)
 
