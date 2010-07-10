@@ -235,6 +235,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
             if not chunk:
                 break
             chunks.append(chunk)
+            self.bytes_read += len(chunk)
         f.close()
         return ''.join(chunks)
 
@@ -255,6 +256,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
         for pos in range(0, len(contents), chunk_size):
             chunk = contents[pos:pos + chunk_size]
             f.write(chunk)
+            self.bytes_written += len(chunk)
         f.close()
 
 
