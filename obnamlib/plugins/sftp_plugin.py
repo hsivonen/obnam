@@ -35,87 +35,103 @@ with warnings.catch_warnings():
 import obnamlib
 
 
+DEFAULT_SSH_PORT = 22
+
+
 class SftpFS(obnamlib.VirtualFileSystem):
 
-    """A VFS implementation for SFTP."""
+    '''A VFS implementation for SFTP.
+    
+    
+    
+    '''
 
     def __init__(self, baseurl):
         obnamlib.VirtualFileSystem.__init__(self, baseurl)
         self.reinit(baseurl)
-        self.first_lutimes = True
-
-    def reinit(self, baseurl):
-        self.baseurl = baseurl
-
+        
     def connect(self):
-        user = host = port = path = None
-        scheme, netloc, path, query, fragment = urlparse.urlsplit(self.baseurl)
-        assert scheme == "sftp", "wrong scheme in %s" % self.baseurl
-        if "@" in netloc:
-            user, netloc = netloc.split("@", 1)
-        else:
-            user = self.get_username()
-        if ":" in netloc:
-            host, port = netloc.split(":", 1)
-            port = int(port)
-        else:
-            host = netloc
-            port = 22
-        if path.startswith('/~/'):
-            path = path[3:]
-        self.basepath = path
-        self.transport = paramiko.Transport((host, port))
+        self.transport = paramiko.Transport((self.host, self.port))
         self.transport.connect()
-        self.check_host_key(host)
-        self.authenticate(user)
+        self._check_host_key(self.host)
+        self._authenticate(self.user)
         self.sftp = paramiko.SFTPClient.from_transport(self.transport)
+        self.chdir(self.path)
 
-    def get_username(self):
-        return pwd.getpwuid(os.getuid()).pw_name
-
-    def check_host_key(self, hostname):
+    def _check_host_key(self, hostname):
         key = self.transport.get_remote_server_key()
         known_hosts = os.path.expanduser('~/.ssh/known_hosts')
         keys = paramiko.util.load_host_keys(known_hosts)
         if hostname not in keys:
-            raise obnamlib.AppException("Host key for %s not found" % hostname)
+            raise obnamlib.AppException('Host not in known_hosts: %s' % 
+                                        hostname)
         elif not keys[hostname].has_key(key.get_name()):
-            raise obnamlib.AppException("Unknown host key for %s" % hostname)
+            raise obnamlib.AppException('No host key for %s' % hostname)
         elif keys[hostname][key.get_name()] != key:
-            print '*** WARNING: Host key has changed!!!'
-            raise obnamlib.AppException("Host key has changed for %s" % hostname)
+            raise obnamlib.AppException('Host key has changed for %s' % 
+                                        hostname)
     
-    def authenticate(self, username):
-        if self.authenticate_via_agent(username):
-            return
-        raise obnamlib.AppException("Can't authenticate to SSH server.")
-
-    def authenticate_via_agent(self, username):
+    def _authenticate(self, username):
         agent = paramiko.Agent()
         agent_keys = agent.get_keys()
         for key in agent_keys:
             try:
                 self.transport.auth_publickey(username, key)
-                return True
+                return
             except paramiko.SSHException:
                 pass
-        return False
-    
+        raise obnamlib.AppException('Can\'t authenticate to SSH server '
+                                    'using agent.')
+
     def close(self):
+        self.sftp.close()
         self.transport.close()
 
-    def join(self, relative_path):
-        return os.path.join(self.basepath, relative_path.lstrip("/"))
+    def reinit(self, baseurl):
+        scheme, netloc, path, query, fragment = urlparse.urlsplit(baseurl)
 
-    def listdir(self, relative_path):
-        return self.sftp.listdir(self.join(relative_path))
+        if scheme != 'sftp':
+            raise obnamlib.Error('SftpFS used with non-sftp URL: %s' % baseurl)
+
+        if '@' in netloc:
+            user, netloc = netloc.split('@', 1)
+        else:
+            user = self._get_username()
+
+        if ':' in netloc:
+            host, port = netloc.split(':', 1)
+            port = int(port)
+        else:
+            host = netloc
+            port = DEFAULT_SSH_PORT
+
+        if path.startswith('/~/'):
+            path = path[3:]
+
+        self.host = host
+        self.port = port
+        self.user = user
+        self.path = path
+
+    def _get_username(self):
+        return pwd.getpwuid(os.getuid()).pw_name
+
+    def getcwd(self):
+        return self.sftp.getcwd()
+
+    def chdir(self, pathname):
+        self.sftp.chdir(pathname)
+
+    def listdir(self, pathname):
+        return self.sftp.listdir(pathname)
 
     def lock(self, lockname):
         try:
-            self.write_file(lockname, "")
+            self.write_file(lockname, '')
         except IOError, e:
             if e.errno == errno.EEXIST:
-                raise obnamlib.AppException("Lock %s already exists" % lockname)
+                raise obnamlib.AppException('Lock %s already exists' % 
+                                            lockname)
             else:
                 raise
 
@@ -123,69 +139,80 @@ class SftpFS(obnamlib.VirtualFileSystem):
         if self.exists(lockname):
             self.remove(lockname)
 
-    def remove(self, relative_path):
-        self.sftp.remove(self.join(relative_path))
+    def exists(self, pathname):
+        try:
+            self.lstat(pathname)
+        except OSError:
+            return False
+        else:
+            return True
 
-    def lstat(self, relative_path):
-        return self.sftp.lstat(self.join(relative_path))
+    def isdir(self, pathname):
+        try:
+            st = self.lstat(pathname)
+        except OSError:
+            return False
+        else:
+            return stat.S_ISDIR(st.st_mode)
 
-    def chown(self, relative_path, uid, gid):
-        self.sftp.chown(self.join(relative_path), uid, gid)
+    def mkdir(self, pathname):
+        try:
+            self.sftp.mkdir(pathname)
+        except IOError, e:
+            raise OSError(e.errno, e.strerror, pathname)
+        
+    def makedirs(self, pathname):
+        if self.isdir(pathname):
+            return
+        parent = os.path.dirname(pathname)
+        if parent and parent != pathname:
+            self.makedirs(parent)
+        self.mkdir(pathname)
 
-    def chmod(self, relative_path, mode):
-        self.sftp.chmod(self.join(relative_path), mode)
+    def rmdir(self, pathname):
+        self.sftp.rmdir(pathname)
+        
+    def remove(self, pathname):
+        self.sftp.remove(pathname)
 
-    def lutimes(self, relative_path, atime, mtime):
+    def rename(self, old, new):
+        self.sftp.rename(old, new)
+    
+    def lstat(self, pathname):
+        return self.sftp.lstat(pathname)
+
+    def chown(self, pathname, uid, gid):
+        self.sftp.chown(pathname, uid, gid)
+        
+    def chmod(self, pathname, mode):
+        self.sftp.chown(pathname, mode)
+        
+    def lutimes(self, pathname, atime, mtime):
         # FIXME: This does not work for symlinks!
         # Sftp does not have a way of doing that. This means if the restore
         # target is over sftp, symlinks and their targets will have wrong
         # mtimes.
-        if self.first_lutimes:
-            logging.warning("lutimes used over SFTP, this does not work "
-                            "against symlinks (warning appears only first "
-                            "time)")
-            self.first_lutimes = False
-        self.sftp.utime(self.join(relative_path), (atime, mtime))
+        if getattr(self, 'lutimes_warned', False):
+            logging.warning('lutimes used over SFTP, this does not work '
+                            'against symlinks (warning appears only first '
+                            'time)')
+            self.lutimes_warned = True
+        self.sftp.utime(pathname, (atime, mtime))
 
-    def link(self, existing, new):
-        raise obnamlib.AppException("Cannot link on SFTP. Sorry.")
+    def link(self, existing_path, new_path):
+        raise obnamlib.AppException('Cannot hardlink on SFTP. Sorry.')
 
-    def readlink(self, relative_path):
-        return self.sftp.readlink(self.join(relative_path))
+    def readlink(self, symlink):
+        return self.sftp.readlink(symlink)
 
-    def symlink(self, existing, new):
-        self.sftp.symlink(existing, self.join(new))
+    def symlink(self, source, destination):
+        self.sftp.symlink(source, destination)
 
-    def open(self, relative_path, mode):
-        return self.sftp.file(self.join(relative_path), mode)
+    def open(self, pathname, mode):
+        return self.sftp.file(pathname, mode)
 
-    def exists(self, relative_path):
-        try:
-            self.lstat(relative_path)
-            return True
-        except IOError:
-            return False
-
-    def isdir(self, relative_path):
-        try:
-            st = self.lstat(relative_path)
-        except IOError:
-            return False
-        return stat.S_ISDIR(st.st_mode)
-
-    def mkdir(self, relative_path):
-        self.sftp.mkdir(self.join(relative_path))
-
-    def makedirs(self, relative_path):
-        if self.isdir(relative_path):
-            return
-        parent = os.path.dirname(relative_path)
-        if parent and parent != relative_path:
-            self.makedirs(parent)
-        self.mkdir(relative_path)
-
-    def cat(self, relative_path):
-        f = self.open(relative_path, "r")
+    def cat(self, pathname):
+        f = self.open(pathname, 'r')
         chunks = []
         while True:
             # 32 KiB is the chunk size that gives me the fastest speed
@@ -194,25 +221,23 @@ class SftpFS(obnamlib.VirtualFileSystem):
             if not chunk:
                 break
             chunks.append(chunk)
-            self.progress["bytes-received"] += len(chunk)
         f.close()
-        return "".join(chunks)
+        return ''.join(chunks)
 
-    def write_helper(self, relative_path, mode, contents):
-        self.makedirs(os.path.dirname(relative_path))
-        f = self.open(relative_path, mode)
+    def write_file(self, pathname, contents):
+        self._write_helper(pathname, 'wx', contents)
+
+    def overwrite_file(self, pathname, contents, make_backup=True):
+        self._write_helper(pathname, 'w', contents)
+
+    def _write_helper(self, pathname, mode, contents):
+        self.makedirs(pathname)
+        f = self.open(pathname, mode)
         chunk_size = 32 * 1024
         for pos in range(0, len(contents), chunk_size):
             chunk = contents[pos:pos + chunk_size]
             f.write(chunk)
-            self.progress["bytes-sent"] += len(chunk)
         f.close()
-
-    def write_file(self, relative_path, contents):
-        self.write_helper(relative_path, 'wx', contents)
-
-    def overwrite_file(self, relative_path, contents):
-        self.write_helper(relative_path, 'w', contents)
 
 
 class SftpPlugin(obnamlib.ObnamPlugin):
