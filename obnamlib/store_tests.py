@@ -24,6 +24,30 @@ import unittest
 import obnamlib
 
 
+class MetadataCodingTests(unittest.TestCase):
+
+    def test_round_trip(self):
+        metadata = obnamlib.metadata.Metadata(st_mode=1, 
+                                              st_mtime=2, 
+                                              st_nlink=3,
+                                              st_size=4, 
+                                              st_uid=5, 
+                                              st_blocks=6, 
+                                              st_dev=7,
+                                              st_gid=8, 
+                                              st_ino=9,  
+                                              st_atime=10, 
+                                              groupname='group',
+                                              username='user',
+                                              target='target')
+        encoded = obnamlib.store.encode_metadata(metadata)
+        decoded = obnamlib.store.decode_metadata(encoded)
+        for name in dir(metadata):
+            if name in obnamlib.metadata.metadata_fields:
+                self.assertEqual(getattr(metadata, name), 
+                                 getattr(decoded, name))
+
+
 class ChecksumTreeTests(unittest.TestCase):
 
     def setUp(self):
