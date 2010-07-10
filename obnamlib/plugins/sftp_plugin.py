@@ -245,7 +245,9 @@ class SftpFS(obnamlib.VirtualFileSystem):
         self._write_helper(pathname, 'w', contents)
 
     def _write_helper(self, pathname, mode, contents):
-        self.makedirs(pathname)
+        dirname = os.path.dirname(pathname)
+        if dirname:
+            self.makedirs(dirname)
         f = self.open(pathname, mode)
         chunk_size = 32 * 1024
         for pos in range(0, len(contents), chunk_size):
