@@ -34,3 +34,11 @@ class LocalFSTests(obnamlib.VfsTests, unittest.TestCase):
         self.fs.close()
         shutil.rmtree(self.basepath)
 
+    def test_joins_relative_path_ok(self):
+        self.assertEqual(self.fs.join('foo'), 
+                         os.path.join(self.basepath, 'foo'))
+
+    def test_join_treats_absolute_path_as_absolute(self):
+        self.assertEqual(self.fs.join('/foo'), '/foo')
+
+
