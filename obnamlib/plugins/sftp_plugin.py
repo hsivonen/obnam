@@ -120,7 +120,10 @@ class SftpFS(obnamlib.VirtualFileSystem):
         return self.sftp.getcwd()
 
     def chdir(self, pathname):
-        self.sftp.chdir(pathname)
+        try:
+            self.sftp.chdir(pathname)
+        except IOError, e:
+            raise OSError(e.errno, e.strerror, pathname)
 
     def listdir(self, pathname):
         return self.sftp.listdir(pathname)
