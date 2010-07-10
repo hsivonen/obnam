@@ -35,6 +35,7 @@
 
 
 #define _XOPEN_SOURCE 600
+#include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 
@@ -72,6 +73,8 @@ lutimes_wrapper(PyObject *self, PyObject *args)
     tv[1].tv_sec = mtime;
     tv[1].tv_usec = 0;
     ret = lutimes(filename, tv);
+    if (ret == -1)
+        ret = errno;
     return Py_BuildValue("i", ret);
 }
 
