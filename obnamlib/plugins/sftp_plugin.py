@@ -48,6 +48,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
 
     def __init__(self, baseurl):
         obnamlib.VirtualFileSystem.__init__(self, baseurl)
+        self.sftp = None
         self.reinit(baseurl)
         
     def connect(self):
@@ -86,6 +87,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
     def close(self):
         self.sftp.close()
         self.transport.close()
+        self.sftp = None
 
     def reinit(self, baseurl):
         scheme, netloc, path, query, fragment = urlparse.urlsplit(baseurl)
@@ -112,6 +114,9 @@ class SftpFS(obnamlib.VirtualFileSystem):
         self.port = port
         self.user = user
         self.path = path
+        
+        if self.sftp:
+            self.sftp.chdir(path)
 
     def _get_username(self):
         return pwd.getpwuid(os.getuid()).pw_name
