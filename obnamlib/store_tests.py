@@ -45,7 +45,19 @@ class MetadataCodingTests(unittest.TestCase):
         for name in dir(metadata):
             if name in obnamlib.metadata.metadata_fields:
                 self.assertEqual(getattr(metadata, name), 
-                                 getattr(decoded, name))
+                                 getattr(decoded, name),
+                                 'attribute %s must be equal (%s vs %s)' % 
+                                    (name, getattr(metadata, name),
+                                     getattr(decoded, name)))
+
+    def test_round_trip_for_None_values(self):
+        metadata = obnamlib.metadata.Metadata()
+        encoded = obnamlib.store.encode_metadata(metadata)
+        decoded = obnamlib.store.decode_metadata(encoded)
+        for name in dir(metadata):
+            if name in obnamlib.metadata.metadata_fields:
+                self.assertEqual(getattr(decoded, name), None,
+                                 'attribute %s must be None' % name)
 
 
 class ChecksumTreeTests(unittest.TestCase):
