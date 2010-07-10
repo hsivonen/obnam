@@ -47,7 +47,8 @@ class VirtualFileSystem(object):
 
     def __init__(self, baseurl):
         self.baseurl = baseurl
-        self.written = 0
+        self.bytes_read = 0
+        self.bytes_written = 0
 
     def connect(self):
         '''Connect to filesystem.'''
@@ -419,6 +420,14 @@ class VfsTests(object): # pragma: no cover
 
     def test_cat_fails_for_nonexistent_file(self):
         self.assertRaises(IOError, self.fs.cat, 'foo')
+    
+    def test_has_read_nothing_initially(self):
+        self.assertEqual(self.fs.bytes_read, 0)
+    
+    def test_cat_updates_bytes_read(self):
+        self.fs.write_file('foo', 'bar')
+        self.fs.cat('foo')
+        self.assertEqual(self.fs.bytes_read, 3)
 
     def test_write_fails_if_file_exists_already(self):
         self.fs.write_file('foo', 'bar')
@@ -466,15 +475,15 @@ class VfsTests(object): # pragma: no cover
         self.assertEqual(self.fs.cat('foo'), 'foobar')
     
     def test_has_written_nothing_initially(self):
-        self.assertEqual(self.fs.written, 0)
+        self.assertEqual(self.fs.bytes_written, 0)
     
     def test_write_updates_written(self):
         self.fs.write_file('foo', 'foo')
-        self.assertEqual(self.fs.written, 3)
+        self.assertEqual(self.fs.bytes_written, 3)
     
     def test_overwrite_updates_written(self):
         self.fs.overwrite_file('foo', 'foo')
-        self.assertEqual(self.fs.written, 3)
+        self.assertEqual(self.fs.bytes_written, 3)
 
     def set_up_depth_first(self):
         self.dirs = ['foo', 'foo/bar', 'foobar']
