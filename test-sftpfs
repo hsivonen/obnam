@@ -20,10 +20,15 @@
 This can't be part of the normal unit tests, since it requires access
 to a (real) ssh server.
 
+To run these tests, you must arrange for localhost to be able to accept
+ssh connections using the ssh agent.
+
 '''
 
 
 import os
+import shutil
+import tempfile
 import unittest
 
 import obnamlib
@@ -33,12 +38,14 @@ import obnamlib.plugins.sftp_plugin
 class SftpTests(unittest.TestCase, obnamlib.VfsTests):
 
     def setUp(self):
-        self.baseurl = os.environ['OBNAM_SFTP_TEST']
-        self.fs = obnamlib.plugins.sftp_plugin.SftpFS(self.baseurl)
+        self.dirname = tempfile.mkdtemp()
+        baseurl = 'sftp://localhost/%s' % self.dirname
+        self.fs = obnamlib.plugins.sftp_plugin.SftpFS(baseurl)
         self.fs.connect()
         
     def tearDown(self):
         self.fs.close()
+        shutil.rmtree(self.dirname)
         
     def test_initial_cwd_is_basepath(self):
         self.assertEqual(self.fs.getcwd(), self.fs.basepath)
