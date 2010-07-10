@@ -46,6 +46,7 @@ class VirtualFileSystem(object):
     '''
 
     def __init__(self, baseurl):
+        self.baseurl = baseurl
         self.written = 0
 
     def connect(self):
@@ -264,8 +265,9 @@ class VfsTests(object): # pragma: no cover
         self.assertEqual(self.fs.abspath('foo/..'), self.basepath)
 
     def test_reinit_works(self):
-        self.fs.reinit('.')
-        self.assertEqual(self.fs.cwd, os.getcwd())
+        self.fs.chdir('/')
+        self.fs.reinit(self.fs.baseurl)
+        self.assertEqual(self.fs.getcwd(), self.basepath)
 
     def test_getcwd_returns_dirname(self):
         self.assertEqual(self.fs.getcwd(), self.basepath)
