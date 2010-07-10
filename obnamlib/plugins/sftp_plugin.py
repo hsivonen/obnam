@@ -188,7 +188,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
         self.sftp.chown(pathname, uid, gid)
         
     def chmod(self, pathname, mode):
-        self.sftp.chown(pathname, mode)
+        self.sftp.chmod(pathname, mode)
         
     def lutimes(self, pathname, atime, mtime):
         # FIXME: This does not work for symlinks!
