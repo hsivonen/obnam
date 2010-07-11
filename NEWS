@@ -4,8 +4,22 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
+Version 0.12, released 2010-07-11; an ALPHA release
+----------------------------------------------------
+
+* NOTE: This version makes incompatible changes to the way data is stored
+  on-disk. Backups made with older versions are NOT supported. Sorry.
+* The run-benchmark script has dropped some smaller sizes (they're too
+  fast to be interesting), and adds a 10 GiB test size.
+* Various speed optimizations. Most importantly, the way file metadata
+  (results of lstat(2)) are encoded has changed. This is the incompatible
+  change from above. It's much faster now, though.
+* Preliminary support for using SFTP for the backup store added. Hasn't
+  been used much yet, so might well be very buggy.
+
+
 Version 0.11, released 2010-07-05; an ALPHA release
----------------------------------...----------------
+----------------------------------------------------
 
 * Speed optimizations:
   - chunk identifiers are now sequential, except for the first one, or

@@ -2,7 +2,7 @@ Source: obnam
 Maintainer: Lars Wirzenius <liw@liw.fi>
 Section: python
 Priority: optional
-Standards-Version: 3.8.4
+Standards-Version: 3.9.0
 Build-Depends: debhelper (>= 7.3.8), python-support (>= 1.0.3), 
     python (>= 2.5), extrautils, python-coverage-test-runner, 
     python-btree (>= 0.10), python-all-dev, python-ttystatus
@@ -12,7 +12,7 @@ XS-Python-Version: >= 2.5
 Package: obnam
 Architecture: any
 Depends: ${shlibs:Depends}, ${python:Depends}, ${misc:Depends}, 
-    python (>= 2.5), python-btree (>= 0.10), python-ttystatus
+    python (>= 2.5), python-btree (>= 0.12), python-ttystatus
 XB-Python-Version: ${python:Versions}
 Description: online backup application
  Obnam makes backups.
