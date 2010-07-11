@@ -43,7 +43,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         return p.parse(value)
         
     def backup(self, args):
-        logging.debug('backup starts')
+        logging.info('Backup starts')
+
         logging.debug('checkpoints every %s' % self.app.config['checkpoint'])
 
         self.app.config.require('store')
@@ -73,6 +74,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         
         self.exclude_pats = [re.compile(x) for x in self.app.config['exclude']]
 
+        last_checkpoint = 0
         for root in roots:
             if not self.fs:
                 self.fs = self.app.fsf.new(root)
@@ -94,13 +96,14 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     self.app.hooks.call('error-message', 
                                         'Could not back up %s: %s' %
                                         (pathname, e.strerror))
-                if storefs.bytes_written >= self.app.config['checkpoint']:
+                if (last_checkpoint + storefs.bytes_written >= 
+                    self.app.config['checkpoint']):
                     logging.debug('Making checkpoint')
                     self.backup_parents('.')
                     self.store.commit_host(checkpoint=True)
                     self.store.lock_host(hostname)
                     self.store.start_generation()
-                    storefs.bytes_written = 0
+                    last_checkpoint = storefs.bytes_written
 
             self.backup_parents('.')
 
@@ -109,7 +112,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.store.commit_host()
         storefs.close()
 
-        logging.debug('backup finished')
+        logging.info('Backup finished.')
 
     def find_files(self, root):
         '''Find all files and directories that need to be backed up.
