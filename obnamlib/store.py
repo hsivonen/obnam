@@ -14,11 +14,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-# NOTE: THIS IS EXTREMELY NOT INTENDED TO BE PRODUCTION READY. THIS
-# WHOLE MODULE EXISTS ONLY TO PLAY WITH THE INTERFACE. THE IMPLEMENTATION
-# IS TOTALLY STUPID.
-
-
 import btree
 import errno
 import hashlib
@@ -269,7 +264,7 @@ class GenerationStore(StoreTree):
       directory
       * similar to chunks in files
       * dedicated subkey type
-      * subkey is ordinal
+      * subkey is hash of directory entry's full pathname
 
     '''
 
