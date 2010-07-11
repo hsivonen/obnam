@@ -19,9 +19,11 @@ build an installation package.
 On other systems, using the setup.py file might work: run
 "python setup.py --help" for advice. If not, please tell me how to fix it.
 
-You need to install my B-tree and LRU libraries, which you can get from:
+You need to install my B-tree, ttystatus, and LRU libraries, which you 
+can get from:
 
     http://liw.fi/btree/
+    http://liw.fi/ttystatus/
     http://liw.fi/python-lru/
 
 
@@ -44,6 +46,13 @@ For more information, see the manual page:
 Hacking
 -------
 
+The canonical version control repository for obnam itself is at:
+
+    http://code.liw.fi/obnam/bzr/
+
+The 'trunk' branch is the main development one. Note that the URL points
+at a bzr repository, it is not useful to browse it by hand.
+
 To build:
 
     make
@@ -60,14 +69,12 @@ You need my CoverageTestRunner to run tests, get it from:
 A couple of scripts exist to run benchmarks and profiles:
 
     ./run-benchmark
-    ./run-profile
-    ./viewprof obnam.prof cumulative | less -S
+    viewprof obnam.prof cumulative | less -S
+    
+viewprof is a little helper script I wrote, around the Python pstats module.
+You can use your own, or get mine from:
 
-The canonical version control repository for obnam itself is at:
-
-    http://code.liw.fi/obnam/bzr/
-
-The rewrite4 branch is currently the main one.
+    http://liw.fi/extrautils/
 
 If you make any changes, I welcome patches, either as plain diffs, bzr
 bundles, or public repositories I can merge from.
@@ -92,6 +99,9 @@ Feedback
 
 I welcome bug fixes, enhancements, bug reports, suggestions, requests,
 and other feedback. I prefer e-mail (mailto:liw@liw.fi).
+
+It would be helpful if you can run "make clean check" before submitting
+a patch, but it is not strictly required.
 
 
 Legal stuff
