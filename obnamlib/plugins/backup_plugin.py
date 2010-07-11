@@ -107,6 +107,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         if self.fs:
             self.fs.close()
         self.store.commit_host()
+        storefs.close()
 
         logging.debug('backup finished')
 

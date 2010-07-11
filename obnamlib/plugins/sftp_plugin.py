@@ -106,6 +106,8 @@ class SftpFS(obnamlib.VirtualFileSystem):
         self.sftp.close()
         self.transport.close()
         self.sftp = None
+        logging.info('VFS %s closing down; bytes_read=%d bytes_written=%d' %
+                     (self.baseurl, self.bytes_read, self.bytes_written))
 
     def reinit(self, baseurl):
         scheme, netloc, path, query, fragment = urlparse.urlsplit(baseurl)

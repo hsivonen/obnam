@@ -16,6 +16,7 @@
 
 
 import errno
+import logging
 import os
 import tempfile
 
@@ -37,6 +38,10 @@ class LocalFS(obnamlib.VirtualFileSystem):
         # perception of current working directory. This also benefits
         # unit tests. To do this, we store the baseurl as the cwd.
         self.cwd = os.path.abspath(baseurl)
+
+    def close(self):
+        logging.info('VFS %s closing down; bytes_read=%d bytes_written=%d' %
+                     (self.baseurl, self.bytes_read, self.bytes_written))
 
     def getcwd(self):
         return self.cwd
