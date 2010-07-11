@@ -107,10 +107,12 @@ class App(object):
         self.config.load()
         self.hooks.call('config-loaded')
         self.setup_logging()
+        logging.info('Obnam %s starts' % obnamlib.version)
         if self.config.args:
             self.interp.execute(self.config.args[0], self.config.args[1:])
         else:
             raise obnamlib.AppException('Usage error: '
                                         'must give operation on command line')
         self.hooks.call('shutdown')
+        logging.info('Obnam ends')
 
