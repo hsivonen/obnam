@@ -25,7 +25,7 @@ setup(name='obnam',
       author_email='liw@liw.fi',
       url='http://braawi.org/obnam/',
       scripts=['obnam'],
-      packages=['obnamlib'],
+      packages=['obnamlib', 'obnamlib.plugins'],
       ext_modules=[Extension('_obnam', sources=['_obnammodule.c'])],
       data_files=[('share/man/man1', glob.glob('*.1'))],
      )

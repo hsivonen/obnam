@@ -3,6 +3,7 @@ obnam (0.12) squeeze; urgency=low
   * New upstream release.
     - speed optimizations, resulting in incompatible on-disk data structures
     - preliminary SFTP support
+    - includes plugins in .deb (via fix in setup.py)
   * debian/control: Bumped Standards-Version. No other changed needed.
   * debian/control: Bumped required version of python-btree.
 
