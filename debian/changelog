@@ -1,3 +1,9 @@
+obnam (0.12.1) squeeze; urgency=low
+
+  * debian/control: Add python-paramiko as build and run-time dependency.
+
+ -- Lars Wirzenius <liw@liw.fi>  Sun, 11 Jul 2010 20:06:48 +1200
+
 obnam (0.12) squeeze; urgency=low
 
   * New upstream release.
