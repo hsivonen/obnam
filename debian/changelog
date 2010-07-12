@@ -1,3 +1,15 @@
+obnam (0.13) squeeze; urgency=low
+
+  * New upstream release.
+    - checkpointing bugfix
+    - upload speed displayed during backups
+    - posix_fadvise used when reading/writing data to local filesystem
+    - --lru-size option
+  * debian/control: Upgrade dependencies (run-time and build-time) for
+    python-btree and python-ttystatus.
+
+ -- Lars Wirzenius <liw@liw.fi>  Tue, 13 Jul 2010 09:21:43 +1200
+
 obnam (0.12.1) squeeze; urgency=low
 
   * debian/control: Add python-paramiko as build and run-time dependency.

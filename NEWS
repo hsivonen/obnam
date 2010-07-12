@@ -4,6 +4,22 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
+
+Version 0.13, released 2010-07-13; an ALPHA release
+----------------------------------------------------
+
+* Bug fix: a mistake in 0.12 caused checkpoints to happen after each
+  file after the first checkpoint. Now they happen at the right intervals
+  again.
+* Upload speed is now displayed during backups.
+* Obnam now tells the kernel that it shouldn't cache data it reads or
+  writes. It is not likely that data being backed up is going to be
+  needed again any time soon, so there's no point in caching it.
+  (The posix_fadvise call is used for this.)
+* New --lru-size option sets size of LRU cache for nodes in memory.
+  The obnam default is large enough to suit large backups. This uses more
+  memory, but is faster than btree's small default of 100.
+
 Version 0.12, released 2010-07-11; an ALPHA release
 ----------------------------------------------------
 
