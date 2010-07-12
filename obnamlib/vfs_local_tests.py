@@ -40,5 +40,3 @@ class LocalFSTests(obnamlib.VfsTests, unittest.TestCase):
 
     def test_join_treats_absolute_path_as_absolute(self):
         self.assertEqual(self.fs.join('/foo'), '/foo')
-
-

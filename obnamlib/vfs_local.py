@@ -115,17 +115,27 @@ class LocalFS(obnamlib.VirtualFileSystem):
     def rmdir(self, pathname):
         os.rmdir(self.join(pathname))
 
-    def cat(self, pathname):
-        f = self.open(pathname, "r")
+    def cat(self, pathname, osopen=os.open):
+        pathname = self.join(pathname)
+        try:
+            fd = osopen(pathname, os.O_RDONLY)
+        except OSError, e:
+            if e.errno == errno.ENOENT:
+                raise IOError(e.errno, e.strerror, pathname)
+            else:
+                raise # pragma: no cover
         chunks = []
+        offset = 0
         while True:
-            chunk = f.read(self.chunk_size)
+            chunk = os.read(fd, self.chunk_size)
             if not chunk:
                 break
+            obnamlib._obnam.fadvise_dontneed(fd, offset, len(chunk))
+            offset += len(chunk)
             chunks.append(chunk)
             self.bytes_read += len(chunk)
-        f.close()
-        data = "".join(chunks)
+        os.close(fd)
+        data = ''.join(chunks)
         return data
 
     def write_file(self, pathname, contents):
