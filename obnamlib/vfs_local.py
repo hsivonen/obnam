@@ -23,6 +23,17 @@ import tempfile
 import obnamlib
 
 
+class LocalFSFile(file):
+
+    def read(self, amount=-1):
+        offset = self.tell()
+        data = file.read(self, amount)
+        if data:
+            fd = self.fileno()
+            obnamlib._obnam.fadvise_dontneed(fd, offset, len(data))
+        return data
+
+
 class LocalFS(obnamlib.VirtualFileSystem):
 
     """A VFS implementation for local filesystems."""
@@ -98,7 +109,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
         os.symlink(existing, self.join(new))
 
     def open(self, pathname, mode):
-        return file(self.join(pathname), mode)
+        return LocalFSFile(self.join(pathname), mode)
 
     def exists(self, pathname):
         return os.path.exists(self.join(pathname))
@@ -115,26 +126,17 @@ class LocalFS(obnamlib.VirtualFileSystem):
     def rmdir(self, pathname):
         os.rmdir(self.join(pathname))
 
-    def cat(self, pathname, osopen=os.open):
+    def cat(self, pathname):
         pathname = self.join(pathname)
-        try:
-            fd = osopen(pathname, os.O_RDONLY)
-        except OSError, e:
-            if e.errno == errno.ENOENT:
-                raise IOError(e.errno, e.strerror, pathname)
-            else:
-                raise # pragma: no cover
+        f = self.open(pathname, 'rb')
         chunks = []
-        offset = 0
         while True:
-            chunk = os.read(fd, self.chunk_size)
+            chunk = f.read(self.chunk_size)
             if not chunk:
                 break
-            obnamlib._obnam.fadvise_dontneed(fd, offset, len(chunk))
-            offset += len(chunk)
             chunks.append(chunk)
             self.bytes_read += len(chunk)
-        os.close(fd)
+        f.close()
         data = ''.join(chunks)
         return data
 
