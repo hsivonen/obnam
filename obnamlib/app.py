@@ -64,6 +64,11 @@ class App(object):
         self.config['upload-queue-size'] = \
             '%s' % obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE
 
+        self.config.new_bytesize(['lru-size'],
+                                 'size of LRU cache for B-tree nodes '
+                                 '(default: %default)')
+        self.config['lru-size'] = '%s' % obnamlib.DEFAULT_LRU_SIZE
+
         self.pm = obnamlib.PluginManager()
         self.pm.locations = [self.plugins_dir()]
         self.pm.plugin_arguments = (self,)

@@ -58,7 +58,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         storefs = self.app.fsf.new(storepath)
         storefs.connect()
         self.store = obnamlib.Store(storefs, self.app.config['node-size'],
-                                    self.app.config['upload-queue-size'])
+                                    self.app.config['upload-queue-size'],
+                                    self.app.config['lru-size'])
 
         hostname = self.app.config['hostname']
         logging.debug('hostname: %s' % hostname)

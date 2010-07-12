@@ -83,7 +83,8 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         storefs = self.app.fsf.new(self.app.config['store'])
         storefs.connect()
         self.store = obnamlib.Store(storefs, self.app.config['node-size'], 
-                                    self.app.config['node-size'])
+                                    self.app.config['upload-queue-size'],
+                                    self.app.config['lru-size'])
         self.store.open_host(self.app.config['hostname'])
         self.fs = self.app.fsf.new(self.app.config['to'])
         self.fs.connect()

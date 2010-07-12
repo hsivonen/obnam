@@ -50,7 +50,8 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         fs = self.app.fsf.new(self.app.config['store'])
         fs.connect()
         self.store = obnamlib.Store(fs, self.app.config['node-size'], 
-                                    self.app.config['node-size'])
+                                    self.app.config['upload-queue-size'],
+                                    self.app.config['lru-size'])
         self.store.open_host(self.app.config['hostname'])
         self.fs = self.app.fsf.new(self.app.config['root'][0])
         self.fs.connect()
