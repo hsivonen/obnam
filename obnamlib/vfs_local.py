@@ -33,6 +33,12 @@ class LocalFSFile(file):
             obnamlib._obnam.fadvise_dontneed(fd, offset, len(data))
         return data
 
+    def write(self, data):
+        offset = self.tell()
+        file.write(self, data)
+        fd = self.fileno()
+        obnamlib._obnam.fadvise_dontneed(fd, offset, len(data))
+
 
 class LocalFS(obnamlib.VirtualFileSystem):
 
@@ -141,36 +147,18 @@ class LocalFS(obnamlib.VirtualFileSystem):
         return data
 
     def write_file(self, pathname, contents):
+        tempname = self._write_to_tempfile(pathname, contents)
         path = self.join(pathname)
-        dirname = os.path.dirname(path)
-        if not os.path.exists(dirname):
-            os.makedirs(dirname)
-        fd, name = tempfile.mkstemp(dir=dirname)
-        pos = 0
-        while pos < len(contents):
-            chunk = contents[pos:pos+self.chunk_size]
-            os.write(fd, chunk)
-            pos += len(chunk)
-            self.bytes_written += len(chunk)
-        os.close(fd)
         try:
-            os.link(name, path)
+            os.link(tempname, path)
         except OSError:
-            os.remove(name)
+            os.remove(tempname)
             raise
-        os.remove(name)
+        os.remove(tempname)
 
     def overwrite_file(self, pathname, contents, make_backup=True):
+        tempname = self._write_to_tempfile(pathname, contents)
         path = self.join(pathname)
-        dirname = os.path.dirname(path)
-        fd, name = tempfile.mkstemp(dir=dirname)
-        pos = 0
-        while pos < len(contents):
-            chunk = contents[pos:pos+self.chunk_size]
-            os.write(fd, chunk)
-            pos += len(chunk)
-            self.bytes_written += len(chunk)
-        os.close(fd)
 
         # Rename existing to have a .bak suffix. If _that_ file already
         # exists, remove that.
@@ -183,12 +171,31 @@ class LocalFS(obnamlib.VirtualFileSystem):
             os.link(path, bak)
         except OSError:
             pass
-        os.rename(name, path)
+        os.rename(tempname, path)
         if not make_backup:
             try:
                 os.remove(bak)
             except OSError:
                 pass
+                
+    def _write_to_tempfile(self, pathname, contents):
+        path = self.join(pathname)
+        dirname = os.path.dirname(path)
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+
+        fd, tempname = tempfile.mkstemp(dir=dirname)
+        os.close(fd)
+        f = self.open(tempname, 'wb')
+
+        pos = 0
+        while pos < len(contents):
+            chunk = contents[pos:pos+self.chunk_size]
+            f.write(chunk)
+            pos += len(chunk)
+            self.bytes_written += len(chunk)
+        f.close()
+        return tempname
 
     def listdir(self, dirname):
         return os.listdir(self.join(dirname))
