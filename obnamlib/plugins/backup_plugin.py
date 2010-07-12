@@ -76,6 +76,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.exclude_pats = [re.compile(x) for x in self.app.config['exclude']]
 
         last_checkpoint = 0
+        interval = self.app.config['checkpoint']
+
         for root in roots:
             if not self.fs:
                 self.fs = self.app.fsf.new(root)
@@ -97,14 +99,15 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     self.app.hooks.call('error-message', 
                                         'Could not back up %s: %s' %
                                         (pathname, e.strerror))
-                if (last_checkpoint + storefs.bytes_written >= 
-                    self.app.config['checkpoint']):
+                if storefs.bytes_written - last_checkpoint >= interval:
                     logging.debug('Making checkpoint')
                     self.backup_parents('.')
                     self.store.commit_host(checkpoint=True)
                     self.store.lock_host(hostname)
                     self.store.start_generation()
                     last_checkpoint = storefs.bytes_written
+                    self.app.hooks.call('status', 'Made checkpoint: %d' % 
+                                                  storefs.bytes_written)
 
             self.backup_parents('.')
 
