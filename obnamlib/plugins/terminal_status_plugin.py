@@ -50,9 +50,11 @@ class TerminalStatusPlugin(obnamlib.ObnamPlugin):
             self.ts.add(ttystatus.ElapsedTime())
             self.ts.add(ttystatus.Literal(' '))
             self.ts.add(ttystatus.Counter('current-file'))
-            self.ts.add(ttystatus.Literal(' files found; '))
+            self.ts.add(ttystatus.Literal(' files; '))
             self.ts.add(ttystatus.ByteSize('uploaded-bytes'))
-            self.ts.add(ttystatus.Literal(' uploaded '))
+            self.ts.add(ttystatus.Literal(' up ('))
+            self.ts.add(ttystatus.ByteSpeed('uploaded-bytes'))
+            self.ts.add(ttystatus.Literal(') '))
             self.ts.add(ttystatus.Pathname('current-dir'))
 
     def found_file_cb(self, filename, metadata):
