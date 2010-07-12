@@ -106,8 +106,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     self.store.lock_host(hostname)
                     self.store.start_generation()
                     last_checkpoint = storefs.bytes_written
-                    self.app.hooks.call('status', 'Made checkpoint: %d' % 
-                                                  storefs.bytes_written)
 
             self.backup_parents('.')
 
