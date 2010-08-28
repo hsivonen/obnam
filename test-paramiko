@@ -1,0 +1,57 @@
+# Copyright 2010  Lars Wirzenius
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+'''Test paramiko by doing an sftp copy from localhost.'''
+
+
+import os
+import paramiko
+import pwd
+import tempfile
+import time
+
+
+username = pwd.getpwuid(os.getuid()).pw_name
+host = 'localhost'
+port = 22
+path = '/tmp/zeroes'
+
+transport = paramiko.Transport((host, port))
+transport.connect()
+agent = paramiko.Agent()
+agent_keys = agent.get_keys()
+for key in agent_keys:
+    try:
+        transport.auth_publickey(username, key)
+        break
+    except paramiko.SSHException:
+        pass
+else:
+    raise Exception('no auth')
+sftp = paramiko.SFTPClient.from_transport(transport)
+
+n = 0
+f = sftp.open(path)
+start = time.time()
+while True:
+    data = f.read(32*1024)
+    if not data:
+        break
+    n += len(data)
+end = time.time()
+
+duration = end - start
+print duration, 8 * n / duration / 1024 / 1024
