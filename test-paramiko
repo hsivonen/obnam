@@ -39,10 +39,11 @@ class SSHSubprocess(object):
         return os.read(self.proc.stdout.fileno(), count)
 
     def close(self):
-        _close_ssh_proc(self.proc)
-
-    def get_filelike_channels(self):
-        return (self.proc.stdout, self.proc.stdin)
+        for func in [proc.stdin.close, proc.stdout.close, proc.wait]:
+            try:
+                func()
+            except OSError:
+                pass
 
 
 class SocketAsChannelAdapter(object):
