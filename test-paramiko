@@ -20,14 +20,16 @@
 import os
 import paramiko
 import pwd
+import socket
 import subprocess
 import sys
 import tempfile
 import time
 
 
-class SSHSubprocess(object):
-    """A socket-like object that talks to an ssh subprocess via pipes."""
+class SSHChannelAdapter(object):
+
+    '''Take an ssh subprocess and pretend it is a paramiko Channel.'''
 
     def __init__(self, proc):
         self.proc = proc
@@ -36,31 +38,8 @@ class SSHSubprocess(object):
         return os.write(self.proc.stdin.fileno(), data)
 
     def recv(self, count):
-        return os.read(self.proc.stdout.fileno(), count)
-
-    def close(self):
-        for func in [proc.stdin.close, proc.stdout.close, proc.wait]:
-            try:
-                func()
-            except OSError:
-                pass
-
-
-class SocketAsChannelAdapter(object):
-    """Simple wrapper for a socket that pretends to be a paramiko Channel."""
-
-    def __init__(self, sock):
-        self.__socket = sock
-
-    def get_name(self):
-        return "bzr SocketAsChannelAdapter"
-
-    def send(self, data):
-        return self.__socket.send(data)
-
-    def recv(self, n):
         try:
-            return self.__socket.recv(n)
+            return os.read(self.proc.stdout.fileno(), count)
         except socket.error, e:
             if e.args[0] in (errno.EPIPE, errno.ECONNRESET, errno.ECONNABORTED,
                              errno.EBADF):
@@ -69,16 +48,15 @@ class SocketAsChannelAdapter(object):
                 return ''
             raise
 
-    def recv_ready(self):
-        # TODO: jam 20051215 this function is necessary to support the
-        # pipelined() function. In reality, it probably should use
-        # poll() or select() to actually return if there is data
-        # available, otherwise we probably don't get any benefit
-        return True
+    def get_name(self):
+        return 'obnam SSHChannelAdapter'
 
     def close(self):
-        self.__socket.close()
-
+        for func in [proc.stdin.close, proc.stdout.close, proc.wait]:
+            try:
+                func()
+            except OSError:
+                pass
 
 
 username = pwd.getpwuid(os.getuid()).pw_name
@@ -116,8 +94,7 @@ except OSError:
         raise Exception('no auth')
     sftp = paramiko.SFTPClient.from_transport(transport)
 else:
-    sock = SSHSubprocess(proc)
-    sftp = paramiko.SFTPClient(SocketAsChannelAdapter(sock))
+    sftp = paramiko.SFTPClient(SSHChannelAdapter(proc))
 
 n = 0
 f = sftp.open(path)
