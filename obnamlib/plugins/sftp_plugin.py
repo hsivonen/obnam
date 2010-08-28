@@ -20,6 +20,7 @@ import logging
 import os
 import pwd
 import random
+import socket
 import stat
 import subprocess
 import urlparse
