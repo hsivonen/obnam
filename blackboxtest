@@ -17,7 +17,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-"""Run some black box tests of obnam."""
+'''Run some black box tests of obnam.'''
 
 
 import logging
@@ -28,8 +28,218 @@ import subprocess
 import sys
 import tempfile
 import traceback
+import unittest
 
 import obnamlib
+
+
+class ObnamTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.hostid = 'hostid'
+        self.tempdir = tempfile.mkdtemp()
+        self.data = self.mkdir('data')
+        self.store = self.mkdir('store')
+        self.restored = self.mkdir('restored')
+        
+    def tearDown(self):
+        shutil.rmtree(self.tempdir)
+
+    def mkdir(self, dirname):
+        abs_dirname = os.path.join(self.tempdir, dirname)
+        os.makedirs(abs_dirname)
+        return abs_dirname
+
+    def runcmd(self, argv, stderr_ignore=None):
+        '''Run an external command.
+        
+        If the command fails (non-zero exit), raise an exception.
+        
+        If stderr_ignore is not None, it must be a string with a
+        regexp for lines in stderr to ignore.
+        
+        '''
+
+        logging.debug('executing %s' % argv)
+        
+        p = subprocess.Popen(argv, stdout=subprocess.PIPE, 
+                             stderr=subprocess.PIPE)
+        stdout, stderr = p.communicate()
+        if stderr_ignore:
+            lines = [line for line in stderr.splitlines()
+                     if not re.match(stderr_ignore, line)]
+            stderr = ''.join(lines)
+        sys.stderr.write(stderr)
+        if p.returncode != 0:
+            raise subprocess.CalledProcessError(p.returncode, argv)
+        return stdout
+
+    def obnam(self, args, stderr_ignore=None):
+        '''Run obnam, adding default options to args.'''
+        return self.runcmd(['./obnam', 
+                            '--quiet',
+                            '--log', 'blackboxtest-obnam.log',
+                            '--hostname', self.hostid] +
+                           args, stderr_ignore=stderr_ignore)
+
+    def backup(self):
+        '''Back up the data directory to the store.'''
+
+        logging.debug('backing up %s to %s' % (self.data, self.store))
+        self.obnam(['--store', self.store, 'backup', self.data])
+        
+    def restore(self):
+        '''Restore the newest generation from a store.
+        
+        Data is restored to self.restored.
+        
+        '''
+        
+        logging.debug('restoring %s to %s' % (self.store, self.restored))
+        self.obnam(['restore', '--to', self.restored, 
+                    '--generation=latest', '--store', self.store])
+
+    def create_file(self, dirname, relative, contents):
+        '''Create a new file with the desired contents.'''
+
+        pathname = os.path.join(dirname, relative)
+        logging.debug('creating file %s' % pathname)        
+        f = open(pathname, 'w')
+        f.write(contents)
+        f.close()
+
+
+    def get_info(self, root, pathname):
+        '''Get the information about a given file.
+        
+        Return a tuple (relativepath, stat) where relativepath is the
+        path relative to root, and stat is the result of os.lstat.
+        
+        '''
+        
+        root_base = os.path.basename(root)
+        del_prefix = root[:-len(root_base)]
+        if pathname == root:
+            return None
+        assert pathname.startswith(root + os.sep), (pathname, root)
+        return pathname[len(root + os.sep):], os.lstat(pathname)
+
+    def find_everything(self, root):
+        '''Find all filesystem objects inside a directory tree.
+        
+        Return list of (pathname, stat) tuples. The pathname will be
+        relative to the root of the directory tree. The stat tuples
+        will be the result of os.lstat for each pathname.
+        
+        '''
+        
+        result = []
+        for dirname, dirnames, filenames in os.walk(root):
+            result.append(self.get_info(root, dirname))
+            for filename in filenames:
+                pathname = os.path.join(dirname, filename)
+                result.append(self.get_info(root, pathname))
+        return [x for x in result if x]
+
+    def assert_equal_stat_fields(self, filename, stat1, stat2, fieldname):
+        field1 = getattr(stat1, fieldname)
+        field2 = getattr(stat2, fieldname)
+        self.assertEqual(field1, field2,
+                         '%s stat field %s difference: %s vs %s' %
+                         (filename, fieldname, repr(field1), repr(field2)))
+
+    def assert_same_stat(self, name, stat1, stat2):
+        '''Are two stat results effectively identical?'''
+        
+        class Fake(object):
+        
+            def __init__(self, stat_result):
+                self.st = stat_result
+                
+            def __getattr__(self, name):
+                if name == 'st_mtime':
+                    return int(getattr(self.st, name))
+                else:
+                    return getattr(self.st, name)
+
+        self.assert_equal_stat_fields(name, stat1, stat2, 'st_blocks')
+        self.assert_equal_stat_fields(name, stat1, stat2, 'st_gid')
+        self.assert_equal_stat_fields(name, stat1, stat2, 'st_mode')
+        self.assert_equal_stat_fields(name, Fake(stat1), Fake(stat2), 'st_mtime')
+        self.assert_equal_stat_fields(name, stat1, stat2, 'st_nlink')
+        self.assert_equal_stat_fields(name, stat1, stat2, 'st_size')
+        self.assert_equal_stat_fields(name, stat1, stat2, 'st_uid')
+
+    def assert_same_contents(self, relative, root1, root2):
+        '''Verify that file contents has been restored correctly.'''
+        
+        path1 = os.path.join(root1, relative)
+        path2 = os.path.join(root2, relative)
+        
+        if not os.path.isfile(path1):
+            return True
+        
+        f1 = open(path1, 'r')
+        f2 = open(path2, 'r')
+        
+        data1 = f1.read()
+        data2 = f2.read()
+        
+        f1.close()
+        f2.close()
+        
+        self.assertEqual(data1, data2, 
+                         'contents of %s and %s differ' % (path1, path2))
+
+    def report_contents(self, dirname, contents):
+        logging.debug('Contents of %s:' % dirname)
+        for name in sorted(contents.keys()):
+            logging.debug('  %s' % name)
+
+    def assert_restored_correctly(self):
+        '''Verify that a restored directory is identical to the original.
+        
+        Raise an exception for the first error found.
+        
+        We need to play a little trick. When we backup /foo/bar/foobar,
+        the backup will contain entries for /, /foo, and /foo/bar, and
+        when we restore the backup, it will put foobar into 
+        $TARGET/foo/bar/foobar. Thus, to verify data, we need to append
+        data to restored.
+        
+        '''
+        
+        origs = dict(self.find_everything(self.data))
+        basename = os.path.basename(self.data)
+        restored2 = os.path.join(self.restored, './' + self.data)
+        restoreds = dict(self.find_everything(restored2))
+        
+        for name, orig_stat in origs.iteritems():
+            if name not in restoreds:
+                logging.error('file %s not in restored data' % name)
+                self.report_contents(self.data, origs)
+                self.report_contents(self.restored, restoreds)
+                raise Exception('%s not in restored data' % name)
+            restored_stat = restoreds[name]
+            self.assert_same_stat(name, orig_stat, restored_stat)
+            self.assert_same_contents(name, self.data, restored2)
+        for name, restored_stat in restoreds.iteritems():
+            if name not in origs:
+                logging.error('spurious file %s in restored data' % name)
+                self.report_contents(self.data, origs)
+                self.report_contents(self.restored, restoreds)
+                raise Exception('spurious %s in restored data' % name)
+
+
+class ObnamTests(ObnamTestCase):
+
+    '''Generate some data, backup, restore. Result should be identical.'''
+    
+    def test_restores_identical_data(self):
+        self.create_file(self.data, 'foo', 'foo')
+        self.backup()
+        self.restore()
+        self.assert_restored_correctly()
 
 
 class BlackBoxTest(object):
@@ -290,19 +500,6 @@ class BlackBoxTest(object):
         self.obnam(['forget', '--store', store] + args)
 
 
-class RestoresIdenticalData(BlackBoxTest):
-
-    """Generate some data, backup, restore. Result should be identical."""
-    
-    def test(self):
-        data = self.tempdir()
-        self.create_file(data, "foo", "foo")
-        store = self.tempdir()
-        self.backup(store, [data])
-        restored = self.restore(store)
-        self.verify(data, restored)
-
-
 class RestoresIndividualFile(BlackBoxTest):
 
     '''Verify restore can restore individual files.'''
@@ -553,4 +750,4 @@ if __name__ == "__main__":
     logging.basicConfig(filename='blackboxtest.log',
                         level=logging.DEBUG,
                         format='%(levelname)s: %(message)s')
-    ObnamBlackBoxTests().run()
+    unittest.main()
