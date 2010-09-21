@@ -252,61 +252,6 @@ class BlackBoxTest(object):
         logging.debug('temproot = %s' % self.temproot)
         logging.debug('hostid = %s' % self.hostid)
 
-    def tempdir(self):
-        """Create a new temporary directory, create its name.
-        
-        The clean() method will remove this directory.
-        
-        """
-        
-        dirname = tempfile.mkdtemp(dir=self.temproot)
-        logging.debug('created directory %s' % dirname)
-        return dirname
-
-    def clean(self):
-        """Remove temporary files."""
-        logging.debug('removing temproot %s' % self.temproot)
-        shutil.rmtree(self.temproot)
-
-    def runcmd(self, argv, stderr_ignore=None):
-        """Run an external command.
-        
-        If the command fails (non-zero exit), raise an exception.
-        
-        """
-
-        logging.debug('executing %s' % argv)
-        
-        p = subprocess.Popen(argv, stdout=subprocess.PIPE, 
-                             stderr=subprocess.PIPE)
-        stdout, stderr = p.communicate()
-        if stderr_ignore:
-            lines = [line for line in stderr.splitlines()
-                     if not re.match(stderr_ignore, line)]
-            stderr = ''.join(lines)
-        sys.stderr.write(stderr)
-        if p.returncode != 0:
-            raise subprocess.CalledProcessError(p.returncode, argv)
-        return stdout
-
-    def obnam(self, args, stderr_ignore=None):
-        '''Run obnam, adding default options to args.'''
-        
-        return self.runcmd(['./obnam', 
-                            '--quiet',
-                            '--log', 'blackboxtest-obnam.log',
-                            '--hostname', self.hostid] +
-                           args, stderr_ignore=stderr_ignore)
-
-    def create_file(self, root, relative, contents):
-        """Create a new file with the desired contents."""
-
-        pathname = os.path.join(root, relative)
-        logging.debug('creating file %s' % pathname)        
-        f = file(pathname, "w")
-        f.write(contents)
-        f.close()
-
     def remove_file(self, root, relative):
         """Remove a file."""
 
@@ -320,38 +265,6 @@ class BlackBoxTest(object):
         logging.debug('mkdir %s' % fullname)
         os.makedirs(fullname)
         return fullname
-
-    def get_info(self, root, pathname):
-        """Get the information about a given file.
-        
-        Return a tuple (relativepath, stat) where relativepath is the
-        path relative to root, and stat is the result of os.lstat.
-        
-        """
-        
-        root_base = os.path.basename(root)
-        del_prefix = root[:-len(root_base)]
-        if pathname == root:
-            return None
-        assert pathname.startswith(root + os.sep), (pathname, root)
-        return pathname[len(root + os.sep):], os.lstat(pathname)
-
-    def find_everything(self, root):
-        """Find all filesystem objects inside a directory tree.
-        
-        Return list of (pathname, stat) tuples. The pathname will be
-        relative to the root of the directory tree. The stat tuples
-        will be the result of os.lstat for each pathname.
-        
-        """
-        
-        result = []
-        for dirname, dirnames, filenames in os.walk(root):
-            result.append(self.get_info(root, dirname))
-            for filename in filenames:
-                pathname = os.path.join(dirname, filename)
-                result.append(self.get_info(root, pathname))
-        return [x for x in result if x]
 
     def assertWorks(self, func, *args, **kwargs):
         '''Make sure calling function/method does not raise exceptions.'''
