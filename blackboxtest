@@ -711,41 +711,6 @@ class ForgetPretends(BlackBoxTest):
                          genids, self.generations(store),
                          'forget should obey --pretend')
         
-
-
-class ObnamBlackBoxTests:
-
-    """Main class for running black box tests of obnam."""
-
-    def find_tests(self, wanted):
-        g = globals()
-        return [g[x] for x in g
-                if x != 'BlackBoxTest' and
-                   type(g[x]) == type(object) and 
-                   issubclass(g[x], BlackBoxTest) and
-                   (not wanted or x in wanted)]
-    
-    def run(self):
-        logging.info('blackboxtest starts')
-        errors = False
-        tests = self.find_tests(sys.argv[1:])
-        for klass in tests:
-            logging.info('running test %s' % str(klass))
-            test = klass()
-            try:
-                test.test()
-            except Exception, e:
-                sys.stderr.write(traceback.format_exc())
-                logging.error('test %s failed:\n%s' % 
-                              (str(klass), traceback.format_exc()))
-                errors = True
-#            test.clean()
-        if errors:
-            logging.critical('blackboxtest ends in glorious failure')
-            sys.exit(1)
-        logging.info('blackboxtest ends, no problems')
-
-
 if __name__ == "__main__":
     logging.basicConfig(filename='blackboxtest.log',
                         level=logging.DEBUG,
