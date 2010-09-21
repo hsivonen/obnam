@@ -24,6 +24,7 @@ import logging
 import os
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -88,7 +89,7 @@ class ObnamTestCase(unittest.TestCase):
         logging.debug('backing up %s to %s' % (self.data, self.store))
         self.obnam(['--store', self.store, 'backup', self.data])
         
-    def restore(self):
+    def restore(self, pathnames=None):
         '''Restore the newest generation from a store.
         
         Data is restored to self.restored.
@@ -97,7 +98,8 @@ class ObnamTestCase(unittest.TestCase):
         
         logging.debug('restoring %s to %s' % (self.store, self.restored))
         self.obnam(['restore', '--to', self.restored, 
-                    '--generation=latest', '--store', self.store])
+                    '--generation=latest', '--store', self.store] +
+                   (pathnames or []))
 
     def create_file(self, dirname, relative, contents):
         '''Create a new file with the desired contents.'''
@@ -176,8 +178,13 @@ class ObnamTestCase(unittest.TestCase):
         path1 = os.path.join(root1, relative)
         path2 = os.path.join(root2, relative)
         
-        if not os.path.isfile(path1):
-            return True
+        self.assertFilesEqual(path1, path2)
+
+    def assertFilesEqual(self, path1, path2):
+        '''Verify that file contents are equal.'''
+        
+        self.assert_(os.path.isfile(path1))
+        self.assert_(os.path.isfile(path2))
         
         f1 = open(path1, 'r')
         f2 = open(path2, 'r')
@@ -233,13 +240,25 @@ class ObnamTestCase(unittest.TestCase):
 
 class ObnamTests(ObnamTestCase):
 
-    '''Generate some data, backup, restore. Result should be identical.'''
-    
     def test_restores_identical_data(self):
         self.create_file(self.data, 'foo', 'foo')
         self.backup()
         self.restore()
         self.assert_restored_correctly()
+
+    def test_restores_individual_file(self):
+        self.create_file(self.data, 'foo', 'foo')
+        self.create_file(self.data, 'bar', 'bar')
+        self.backup()
+        bar_orig = os.path.join(self.data, 'bar')
+        self.restore([bar_orig])
+        restored_files = [os.path.join(self.restored, x)
+                          for x, y in self.find_everything(self.restored)
+                          if stat.S_ISREG(y.st_mode)]
+        bar_restored = os.path.join(self.restored, './' + bar_orig)
+        bar_restored = os.path.normpath(bar_restored)
+        self.assertEqual(restored_files, [bar_restored])
+        self.assertFilesEqual(bar_orig, bar_restored)
 
 
 class BlackBoxTest(object):
@@ -411,27 +430,6 @@ class BlackBoxTest(object):
         if pretend:
             args += ['--pretend']
         self.obnam(['forget', '--store', store] + args)
-
-
-class RestoresIndividualFile(BlackBoxTest):
-
-    '''Verify restore can restore individual files.'''
-    
-    def test(self):
-        data = self.tempdir()
-        self.create_file(data, 'foo', 'foo')
-        self.create_file(data, 'bar', 'bar')
-        store = self.tempdir()
-        self.backup(store, [data])
-        barpath = os.path.join(data, 'bar')
-        logging.debug('bar path is %s' % barpath)
-        restored = self.restore(store, [barpath])
-        restored2 = os.path.join(restored, './' + data)
-        restoreds = dict(self.find_everything(restored2))
-        self.report_contents(restored, restoreds)
-        self.assertEqual('RestoresIndividualFiles',
-                         restoreds.keys(), ['bar'], 
-                         'Must restore bar and nothing else')
 
 
 class TwoBackupRoots(BlackBoxTest):
