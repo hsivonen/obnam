@@ -42,9 +42,17 @@ class ObnamTestCase(unittest.TestCase):
         self.data = self.mkdir('data')
         self.store = self.mkdir('store')
         self.restored = self.mkdir('restored')
+        self.setUpHook()
+        
+    def setUpHook(self):
+        pass
         
     def tearDown(self):
+        self.tearDownHook()
         shutil.rmtree(self.tempdir)
+
+    def tearDownHook(self):
+        pass
 
     def mkdir(self, dirname):
         abs_dirname = os.path.join(self.tempdir, dirname)
@@ -238,18 +246,18 @@ class ObnamTestCase(unittest.TestCase):
                 raise Exception('spurious %s in restored data' % name)
 
 
-class ObnamTests(ObnamTestCase):
+class RestoreTests(ObnamTestCase):
+
+    def setUpHook(self):
+        self.create_file(self.data, 'foo', 'foo')
+        self.create_file(self.data, 'bar', 'bar')
+        self.backup()
 
     def test_restores_identical_data(self):
-        self.create_file(self.data, 'foo', 'foo')
-        self.backup()
         self.restore()
         self.assert_restored_correctly()
 
     def test_restores_individual_file(self):
-        self.create_file(self.data, 'foo', 'foo')
-        self.create_file(self.data, 'bar', 'bar')
-        self.backup()
         bar_orig = os.path.join(self.data, 'bar')
         self.restore([bar_orig])
         restored_files = [os.path.join(self.restored, x)
