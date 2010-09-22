@@ -166,6 +166,16 @@ class ObnamTestCase(unittest.TestCase):
                 result.append(self.get_info(root, pathname))
         return [x for x in result if x]
 
+    def open_store(self):
+        '''Open the store.'''
+
+        fs = obnamlib.LocalFS(self.store)
+        s = obnamlib.Store(fs, obnamlib.DEFAULT_NODE_SIZE,
+                           obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
+                           obnamlib.DEFAULT_LRU_SIZE)
+        s.open_host(self.hostid)
+        return s
+
     def assert_equal_stat_fields(self, filename, stat1, stat2, fieldname):
         field1 = getattr(stat1, fieldname)
         field2 = getattr(stat2, fieldname)
@@ -334,11 +344,7 @@ class BackupTests(ObnamTestCase):
             self.create_file(self.data, 'target%d' % i, 'content1')
         self.backup()
 
-        fs = obnamlib.LocalFS(self.store)
-        s = obnamlib.Store(fs, obnamlib.DEFAULT_NODE_SIZE, 
-                           obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
-                           obnamlib.DEFAULT_LRU_SIZE)
-        s.open_host(self.hostid)
+        s = self.open_store()
         self.assertEqual(len(s.list_chunks()), 1)
 
     def test_uses_chunk_groups(self):
@@ -349,11 +355,7 @@ class BackupTests(ObnamTestCase):
         self.create_file(self.data, 'file', 'x' * nbytes)
         self.backup()
 
-        fs = obnamlib.LocalFS(self.store)
-        s = obnamlib.Store(fs, obnamlib.DEFAULT_NODE_SIZE,
-                           obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
-                           obnamlib.DEFAULT_LRU_SIZE)
-        s.open_host(self.hostid)
+        s = self.open_store()
         self.assertEqual(len(s.list_chunk_groups()), ngroups)
 
 
