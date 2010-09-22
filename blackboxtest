@@ -407,38 +407,28 @@ class VerifyTests(ObnamTestCase):
 
 class ForgetTests(ObnamTestCase):
 
-    def test_removes_nothing_when_given_no_args(self):
+    def setUpHook(self):
         self.create_file(self.data, 'foo', 'foo')
         self.create_file(self.data, 'bar', 'bar')
         self.backup()
         self.backup()
+
+    def test_removes_nothing_when_given_no_args(self):
         genids = self.generations()
         self.forget()
         self.assertEqual(genids, self.generations())
 
     def test_removes_specified_generations(self):
-        self.create_file(self.data, 'foo', 'foo')
-        self.create_file(self.data, 'bar', 'bar')
-        self.backup()
-        self.backup()
         genids = self.generations()
         self.forget(genids=genids[:1])
         self.assertEqual(genids[1:], self.generations())
 
     def test_removes_according_to_policy(self):
-        self.create_file(self.data, 'foo', 'foo')
-        self.create_file(self.data, 'bar', 'bar')
-        self.backup()
-        self.backup()
         genids = self.generations()
         self.forget(keep='1d')
         self.assertEqual(genids[1:], self.generations())
 
     def test_pretends(self):
-        self.create_file(self.data, 'foo', 'foo')
-        self.create_file(self.data, 'bar', 'bar')
-        self.backup()
-        self.backup()
         genids = self.generations()
         self.forget(keep='1d', pretend=True)
         self.assertEqual(genids, self.generations())
