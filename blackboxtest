@@ -416,6 +416,15 @@ class ForgetTests(ObnamTestCase):
         self.forget()
         self.assertEqual(genids, self.generations())
 
+    def test_removes_specified_generations(self):
+        self.create_file(self.data, 'foo', 'foo')
+        self.create_file(self.data, 'bar', 'bar')
+        self.backup()
+        self.backup()
+        genids = self.generations()
+        self.forget(genids=genids[:1])
+        self.assertEqual(genids[1:], self.generations())
+
 
 class BlackBoxTest(object):
 
@@ -449,21 +458,6 @@ class BlackBoxTest(object):
 
     def fsck(self, store):
         self.obnam(['fsck', '--store', store])
-
-class ForgetRemovesSpecifiedGenerations(BlackBoxTest):
-
-    def test(self):
-        data = self.tempdir()
-        self.create_file(data, 'foo', 'foo')
-        self.create_file(data, 'bar', 'bar')
-        store = self.tempdir()
-        self.backup(store, [data])
-        self.backup(store, [data])
-        genids = self.generations(store)
-        self.forget(store, genids=genids[:1])
-        self.assertEqual('ForgetRemovesSpecifiedGenerations',
-                         genids[1:], self.generations(store),
-                         'forget should exactly the specified generations')
 
 
 class ForgetRemovesAccordingToPolicy(BlackBoxTest):
