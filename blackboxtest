@@ -111,9 +111,10 @@ class ObnamTestCase(unittest.TestCase):
                     '--generation=latest', '--store', self.store] +
                    (pathnames or []))
 
-    def verify(self):
+    def verify(self, stderr_ignore=None):
         '''Run 'obnam verify' on the store.'''
-        self.obnam(['verify', '--root', self.data, '--store', self.store])
+        self.obnam(['verify', '--root', self.data, '--store', self.store],
+                   stderr_ignore=stderr_ignore)
 
     def create_file(self, dirname, relative, contents):
         '''Create a new file with the desired contents.'''
@@ -371,6 +372,16 @@ class VerifyTests(ObnamTestCase):
         self.backup()
         self.verify()
 
+    def test_notices_changed_data(self):
+        self.create_file(self.data, 'foo', 'foo')
+        self.create_file(self.data, 'bar', 'bar')
+        self.backup()
+        self.remove_file(self.data, 'foo')
+        self.remove_file(self.data, 'bar')
+        self.create_file(self.data, 'foo', 'changed data')
+        self.assertRaises(subprocess.CalledProcessError, self.verify,
+                          r'^Error: verify failure')
+
 
 class BlackBoxTest(object):
 
@@ -426,25 +437,6 @@ class BlackBoxTest(object):
         if pretend:
             args += ['--pretend']
         self.obnam(['forget', '--store', store] + args)
-
-
-class VerifyFindsProblemWithChangedData(BlackBoxTest):
-
-    '''Make backup, change data, verify it, make sure it fails.'''
-    
-    def test(self):
-        data = self.tempdir()
-        self.create_file(data, 'foo', 'foo')
-        self.create_file(data, 'bar', 'bar')
-        store = self.tempdir()
-        self.backup(store, [data])
-        self.remove_file(data, 'foo')
-        self.remove_file(data, 'bar')
-        self.create_file(data, 'foo', 'changed data')
-        self.assertRaises(subprocess.CalledProcessError,
-                          self.obnam,
-                          ['verify', '--root', data, '--store', store],
-                          r'^Error: verify failure')
 
 class ForgetWithoutArgumentsRemovesNothing(BlackBoxTest):
 
