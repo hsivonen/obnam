@@ -434,6 +434,15 @@ class ForgetTests(ObnamTestCase):
         self.forget(keep='1d')
         self.assertEqual(genids[1:], self.generations())
 
+    def test_pretends(self):
+        self.create_file(self.data, 'foo', 'foo')
+        self.create_file(self.data, 'bar', 'bar')
+        self.backup()
+        self.backup()
+        genids = self.generations()
+        self.forget(keep='1d', pretend=True)
+        self.assertEqual(genids, self.generations())
+
 
 class BlackBoxTest(object):
 
@@ -468,21 +477,6 @@ class BlackBoxTest(object):
     def fsck(self, store):
         self.obnam(['fsck', '--store', store])
 
-
-class ForgetPretends(BlackBoxTest):
-
-    def test(self):
-        data = self.tempdir()
-        self.create_file(data, 'foo', 'foo')
-        self.create_file(data, 'bar', 'bar')
-        store = self.tempdir()
-        self.backup(store, [data])
-        self.backup(store, [data])
-        genids = self.generations(store)
-        self.forget(store, keep='1d', pretend=True)
-        self.assertEqual('ForgetPretends',
-                         genids, self.generations(store),
-                         'forget should obey --pretend')
         
 if __name__ == "__main__":
     logging.basicConfig(filename='blackboxtest.log',
