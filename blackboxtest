@@ -36,6 +36,19 @@ import obnamlib
 
 class ObnamTestCase(unittest.TestCase):
 
+    '''Base class for obnam test cases.
+    
+    We use the unittest framework even though these are black box tests,
+    not unit tests. unittest makes implementation of these black box
+    tests convenient, even though that might not be true for all black
+    box tests.
+    
+    This base class provides a fresh environment for each test, and
+    cleans up afterwards. It provides helpers for doing the usual
+    backup operations, and for verifyting results.
+
+    '''
+
     def setUp(self):
         self.hostid = 'hostid'
         self.tempdir = tempfile.mkdtemp()
