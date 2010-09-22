@@ -313,6 +313,13 @@ class BackupTests(ObnamTestCase):
         self.restore()
         self.assert_restored_correctly()
 
+    def test_handles_symlink(self):
+        self.create_file(self.data, 'target', 'content1')
+        os.symlink('target', os.path.join(self.data, 'symlink'))
+        self.backup()
+        self.restore()
+        self.assert_restored_correctly()
+
 
 class BlackBoxTest(object):
 
@@ -368,18 +375,6 @@ class BlackBoxTest(object):
         if pretend:
             args += ['--pretend']
         self.obnam(['forget', '--store', store] + args)
-
-
-class Symlink(BlackBoxTest):
-
-    def test(self):
-        data = self.tempdir()
-        self.create_file(data, 'target', 'content1')
-        os.symlink('target', os.path.join(data, 'symlink'))
-        store = self.tempdir()
-        self.backup(store, [data])
-        restored = self.restore(store)
-        self.verify(data, restored)
 
 
 class Hardlink(BlackBoxTest):
