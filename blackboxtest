@@ -341,6 +341,21 @@ class BackupTests(ObnamTestCase):
         s.open_host(self.hostid)
         self.assertEqual(len(s.list_chunks()), 1)
 
+    def test_uses_chunk_groups(self):
+        ngroups = 2
+        nbytes = (obnamlib.DEFAULT_CHUNK_SIZE * 
+                  obnamlib.DEFAULT_CHUNK_GROUP_SIZE * 
+                  ngroups)
+        self.create_file(self.data, 'file', 'x' * nbytes)
+        self.backup()
+
+        fs = obnamlib.LocalFS(self.store)
+        s = obnamlib.Store(fs, obnamlib.DEFAULT_NODE_SIZE,
+                           obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
+                           obnamlib.DEFAULT_LRU_SIZE)
+        s.open_host(self.hostid)
+        self.assertEqual(len(s.list_chunk_groups()), ngroups)
+
 
 class BlackBoxTest(object):
 
@@ -396,29 +411,6 @@ class BlackBoxTest(object):
         if pretend:
             args += ['--pretend']
         self.obnam(['forget', '--store', store] + args)
-
-
-class UsesChunkGroups(BlackBoxTest):
-
-    def test(self):
-        data = self.tempdir()
-        ngroups = 2
-        nbytes = (obnamlib.DEFAULT_CHUNK_SIZE * 
-                  obnamlib.DEFAULT_CHUNK_GROUP_SIZE * 
-                  ngroups)
-        self.create_file(data, 'file', 'x' * nbytes)
-        store = self.tempdir()
-        self.backup(store, [data])
-        restored = self.restore(store)
-        self.verify(data, restored)
-        fs = obnamlib.LocalFS(store)
-        s = obnamlib.Store(fs, obnamlib.DEFAULT_NODE_SIZE,
-                           obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
-                           obnamlib.DEFAULT_LRU_SIZE)
-        s.open_host(self.hostid)
-        self.assertEqual('UsesChunkGroups', len(s.list_chunk_groups()), 
-                         ngroups,
-                         'must use %d chunk groups' % ngroups)
 
 
 class VerifiesUnchangedBackup(BlackBoxTest):
