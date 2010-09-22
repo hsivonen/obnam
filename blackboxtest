@@ -111,6 +111,10 @@ class ObnamTestCase(unittest.TestCase):
                     '--generation=latest', '--store', self.store] +
                    (pathnames or []))
 
+    def verify(self):
+        '''Run 'obnam verify' on the store.'''
+        self.obnam(['verify', '--root', self.data, '--store', self.store])
+
     def create_file(self, dirname, relative, contents):
         '''Create a new file with the desired contents.'''
 
@@ -359,6 +363,15 @@ class BackupTests(ObnamTestCase):
         self.assertEqual(len(s.list_chunk_groups()), ngroups)
 
 
+class VerifyTests(ObnamTestCase):
+
+    def test_accepts_unchanged_backup(self):
+        self.create_file(self.data, 'foo', 'foo')
+        self.create_file(self.data, 'bar', 'bar')
+        self.backup()
+        self.verify()
+
+
 class BlackBoxTest(object):
 
     """Base class for black box tests of Obnam."""
@@ -413,20 +426,6 @@ class BlackBoxTest(object):
         if pretend:
             args += ['--pretend']
         self.obnam(['forget', '--store', store] + args)
-
-
-class VerifiesUnchangedBackup(BlackBoxTest):
-
-    '''Make backup, verify it immediately, make sure it works.'''
-    
-    def test(self):
-        data = self.tempdir()
-        self.create_file(data, 'foo', 'foo')
-        self.create_file(data, 'bar', 'bar')
-        store = self.tempdir()
-        self.backup(store, [data])
-        self.assertWorks(self.obnam, 
-                         ['verify', '--root', data, '--store', store])
 
 
 class VerifyFindsProblemWithChangedData(BlackBoxTest):
