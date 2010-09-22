@@ -91,11 +91,13 @@ class ObnamTestCase(unittest.TestCase):
                             '--hostname', self.hostid] +
                            args, stderr_ignore=stderr_ignore)
 
-    def backup(self):
+    def backup(self, roots=None):
         '''Back up the data directory to the store.'''
 
-        logging.debug('backing up %s to %s' % (self.data, self.store))
-        self.obnam(['--store', self.store, 'backup', self.data])
+        if roots is None:
+            roots = [self.data]
+        logging.debug('backing up %s to %s' % (roots, self.store))
+        self.obnam(['--store', self.store, 'backup'] + roots)
         
     def restore(self, pathnames=None):
         '''Restore the newest generation from a store.
@@ -118,6 +120,12 @@ class ObnamTestCase(unittest.TestCase):
         f.write(contents)
         f.close()
 
+    def create_dir(self, root, pathname):
+        '''Create a new directory, return name.'''
+        fullname = os.path.join(root, pathname)
+        logging.debug('mkdir %s' % fullname)
+        os.makedirs(fullname)
+        return fullname
 
     def get_info(self, root, pathname):
         '''Get the information about a given file.
@@ -188,11 +196,19 @@ class ObnamTestCase(unittest.TestCase):
         
         self.assertFilesEqual(path1, path2)
 
+    def assertFileExists(self, path):
+        self.assert_(os.path.exists(path), '%s does not exist' % path)
+
+    def assertIsRegularFile(self, path):
+        self.assert_(os.path.isfile(path), '%s is not a regular file' % path)
+
     def assertFilesEqual(self, path1, path2):
         '''Verify that file contents are equal.'''
-        
-        self.assert_(os.path.isfile(path1))
-        self.assert_(os.path.isfile(path2))
+
+        self.assertFileExists(path1)
+        self.assertFileExists(path2)
+        self.assertIsRegularFile(path1)
+        self.assertIsRegularFile(path2)
         
         f1 = open(path1, 'r')
         f2 = open(path2, 'r')
@@ -237,7 +253,8 @@ class ObnamTestCase(unittest.TestCase):
                 raise Exception('%s not in restored data' % name)
             restored_stat = restoreds[name]
             self.assert_same_stat(name, orig_stat, restored_stat)
-            self.assert_same_contents(name, self.data, restored2)
+            if stat.S_ISREG(orig_stat.st_mode):
+                self.assert_same_contents(name, self.data, restored2)
         for name, restored_stat in restoreds.iteritems():
             if name not in origs:
                 logging.error('spurious file %s in restored data' % name)
@@ -269,6 +286,18 @@ class RestoreTests(ObnamTestCase):
         self.assertFilesEqual(bar_orig, bar_restored)
 
 
+class BackupTests(ObnamTestCase):
+
+    def test_handles_two_roots(self):
+        root1 = self.create_dir(self.data, 'root1')
+        root2 = self.create_dir(self.data, 'root2')
+        self.create_file(root1, 'file1', 'content1')
+        self.create_file(root2, 'file2', 'content2')
+        self.backup([root1, root2])
+        self.restore()
+        self.assert_restored_correctly()
+
+
 class BlackBoxTest(object):
 
     """Base class for black box tests of Obnam."""
@@ -285,13 +314,6 @@ class BlackBoxTest(object):
         pathname = os.path.join(root, relative)
         logging.debug('removing file %s' % pathname)        
         os.remove(pathname)
-
-    def create_dir(self, root, pathname):
-        """Create a new directory, return name."""
-        fullname = os.path.join(root, pathname)
-        logging.debug('mkdir %s' % fullname)
-        os.makedirs(fullname)
-        return fullname
 
     def assertWorks(self, func, *args, **kwargs):
         '''Make sure calling function/method does not raise exceptions.'''
@@ -438,20 +460,6 @@ class BlackBoxTest(object):
         if pretend:
             args += ['--pretend']
         self.obnam(['forget', '--store', store] + args)
-
-
-class TwoBackupRoots(BlackBoxTest):
-
-    def test(self):
-        data = self.tempdir()
-        root1 = self.create_dir(data, 'root1')
-        root2 = self.create_dir(data, 'root2')
-        self.create_file(root1, 'file1', 'content1')
-        self.create_file(root2, 'file2', 'content2')
-        store = self.tempdir()
-        self.backup(store, [root1, root2])
-        restored = self.restore(store)
-        self.verify(data, restored)
 
 
 class TwoGenerations(BlackBoxTest):
