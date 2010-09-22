@@ -116,6 +116,28 @@ class ObnamTestCase(unittest.TestCase):
         self.obnam(['verify', '--root', self.data, '--store', self.store],
                    stderr_ignore=stderr_ignore)
 
+    def generations(self):
+        '''Return all generation ids.'''
+        
+        logging.debug('Looking up generations in %s' % self.store)
+        stdout = self.obnam(['generations', '--store', self.store])
+        return [line.split()[0] for line in stdout.splitlines()]
+
+    def forget(self, genids=None, keep=None, pretend=False):
+        '''Forget specific generations.'''
+        
+        logging.debug('Forgetting in %s' % self.store)
+        logging.debug('genids: %s' % genids)
+        logging.debug('keep: %s' % keep)
+        args = []
+        if genids is not None:
+            args += genids
+        if keep is not None:
+            args += ['--keep', keep]
+        if pretend:
+            args += ['--pretend']
+        self.obnam(['forget', '--store', self.store] + args)
+
     def create_file(self, dirname, relative, contents):
         '''Create a new file with the desired contents.'''
 
@@ -383,6 +405,18 @@ class VerifyTests(ObnamTestCase):
                           r'^Error: verify failure')
 
 
+class ForgetTests(ObnamTestCase):
+
+    def test_removes_nothing_when_given_no_args(self):
+        self.create_file(self.data, 'foo', 'foo')
+        self.create_file(self.data, 'bar', 'bar')
+        self.backup()
+        self.backup()
+        genids = self.generations()
+        self.forget()
+        self.assertEqual(genids, self.generations())
+
+
 class BlackBoxTest(object):
 
     """Base class for black box tests of Obnam."""
@@ -415,43 +449,6 @@ class BlackBoxTest(object):
 
     def fsck(self, store):
         self.obnam(['fsck', '--store', store])
-
-    def generations(self, store):
-        '''Return all generation ids.'''
-        
-        logging.debug('Looking up generations in %s' % store)
-        stdout = self.obnam(['generations', '--store', store])
-        return [line.split()[0] for line in stdout.splitlines()]
-
-    def forget(self, store, genids=None, keep=None, pretend=False):
-        '''Forget specific generations.'''
-        
-        logging.debug('Forgetting in %s' % store)
-        logging.debug('genids: %s' % genids)
-        logging.debug('keep: %s' % keep)
-        args = []
-        if genids is not None:
-            args += genids
-        if keep is not None:
-            args += ['--keep', keep]
-        if pretend:
-            args += ['--pretend']
-        self.obnam(['forget', '--store', store] + args)
-
-class ForgetWithoutArgumentsRemovesNothing(BlackBoxTest):
-
-    def test(self):
-        data = self.tempdir()
-        self.create_file(data, 'foo', 'foo')
-        self.create_file(data, 'bar', 'bar')
-        store = self.tempdir()
-        self.backup(store, [data])
-        self.backup(store, [data])
-        genids = self.generations(store)
-        self.forget(store)
-        self.assertEqual('ForgetWithoutArguments',
-                         genids, self.generations(store),
-                         'forget should remove nothing by default')
 
 class ForgetRemovesSpecifiedGenerations(BlackBoxTest):
 
