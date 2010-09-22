@@ -328,6 +328,19 @@ class BackupTests(ObnamTestCase):
         self.restore()
         self.assert_restored_correctly()
 
+    def test_reuses_chunk(self):
+        n = 100
+        for i in range(n):
+            self.create_file(self.data, 'target%d' % i, 'content1')
+        self.backup()
+
+        fs = obnamlib.LocalFS(self.store)
+        s = obnamlib.Store(fs, obnamlib.DEFAULT_NODE_SIZE, 
+                           obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
+                           obnamlib.DEFAULT_LRU_SIZE)
+        s.open_host(self.hostid)
+        self.assertEqual(len(s.list_chunks()), 1)
+
 
 class BlackBoxTest(object):
 
@@ -383,26 +396,6 @@ class BlackBoxTest(object):
         if pretend:
             args += ['--pretend']
         self.obnam(['forget', '--store', store] + args)
-
-
-class ReusesChunks(BlackBoxTest):
-
-    def test(self):
-        data = self.tempdir()
-        n = 100
-        for i in range(n):
-            self.create_file(data, 'target%d' % i, 'content1')
-        store = self.tempdir()
-        self.backup(store, [data])
-        restored = self.restore(store)
-        self.verify(data, restored)
-        fs = obnamlib.LocalFS(store)
-        s = obnamlib.Store(fs, obnamlib.DEFAULT_NODE_SIZE, 
-                           obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
-                           obnamlib.DEFAULT_LRU_SIZE)
-        s.open_host(self.hostid)
-        self.assertEqual('ReusesChunks', len(s.list_chunks()), 1,
-                         'only one chunk when all files are identical')
 
 
 class UsesChunkGroups(BlackBoxTest):
