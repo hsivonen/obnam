@@ -120,6 +120,13 @@ class ObnamTestCase(unittest.TestCase):
         f.write(contents)
         f.close()
 
+    def remove_file(self, root, relative):
+        '''Remove a file.'''
+
+        pathname = os.path.join(root, relative)
+        logging.debug('removing file %s' % pathname)        
+        os.remove(pathname)
+
     def create_dir(self, root, pathname):
         '''Create a new directory, return name.'''
         fullname = os.path.join(root, pathname)
@@ -288,6 +295,15 @@ class RestoreTests(ObnamTestCase):
 
 class BackupTests(ObnamTestCase):
 
+    def test_makes_two_generations(self):
+        self.create_file(self.data, 'foo', 'foo')
+        self.backup()
+        self.create_file(self.data, 'bar', 'bar')
+        self.remove_file(self.data, 'foo')
+        self.backup()
+        self.restore()
+        self.assert_restored_correctly()
+
     def test_handles_two_roots(self):
         root1 = self.create_dir(self.data, 'root1')
         root2 = self.create_dir(self.data, 'root2')
@@ -307,13 +323,6 @@ class BlackBoxTest(object):
         self.hostid = "hostid"
         logging.debug('temproot = %s' % self.temproot)
         logging.debug('hostid = %s' % self.hostid)
-
-    def remove_file(self, root, relative):
-        """Remove a file."""
-
-        pathname = os.path.join(root, relative)
-        logging.debug('removing file %s' % pathname)        
-        os.remove(pathname)
 
     def assertWorks(self, func, *args, **kwargs):
         '''Make sure calling function/method does not raise exceptions.'''
@@ -460,20 +469,6 @@ class BlackBoxTest(object):
         if pretend:
             args += ['--pretend']
         self.obnam(['forget', '--store', store] + args)
-
-
-class TwoGenerations(BlackBoxTest):
-
-    def test(self):
-        data = self.tempdir()
-        self.create_file(data, "foo", "foo")
-        store = self.tempdir()
-        self.backup(store, [data])
-        self.create_file(data, 'bar', 'bar')
-        self.remove_file(data, 'foo')
-        self.backup(store, [data])
-        restored = self.restore(store)
-        self.verify(data, restored)
 
 
 class Symlink(BlackBoxTest):
