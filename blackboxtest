@@ -98,6 +98,7 @@ class ObnamTestCase(unittest.TestCase):
             roots = [self.data]
         logging.debug('backing up %s to %s' % (roots, self.store))
         self.obnam(['--store', self.store, 'backup'] + roots)
+        self.obnam(['fsck', '--store', self.store])
         
     def restore(self, pathnames=None):
         '''Restore the newest generation from a store.
@@ -434,41 +435,7 @@ class ForgetTests(ObnamTestCase):
         self.assertEqual(genids, self.generations())
 
 
-class BlackBoxTest(object):
-
-    """Base class for black box tests of Obnam."""
-    
-    def __init__(self):
-        self.temproot = tempfile.mkdtemp()
-        self.hostid = "hostid"
-        logging.debug('temproot = %s' % self.temproot)
-        logging.debug('hostid = %s' % self.hostid)
-
-    def assertWorks(self, func, *args, **kwargs):
-        '''Make sure calling function/method does not raise exceptions.'''
-        try:
-            func(*args, **kwargs)
-        except Exception, e:
-            raise Exception('Calling %s raised exception' % repr(func))
-
-    def assertRaises(self, exc, func, *args, **kwargs):
-        '''Make sure calling function/method does raise an exception.'''
-        try:
-            func(*args, **kwargs)
-        except exc:
-            pass
-        except BaseException, e:
-            raise Exception('Calling %s raised wrong exception %s' % 
-                            (repr(func), repr(e)))
-        else:
-            raise Exception('Calling %s did not raise exception' % 
-                            repr(func))
-
-    def fsck(self, store):
-        self.obnam(['fsck', '--store', store])
-
-        
-if __name__ == "__main__":
+if __name__ == '__main__':
     logging.basicConfig(filename='blackboxtest.log',
                         level=logging.DEBUG,
                         format='%(levelname)s: %(message)s')
