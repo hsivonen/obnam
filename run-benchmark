@@ -66,10 +66,11 @@ do
     size=$(echo "$pair" | sed 's:/.*::')
     inc=$(echo "$pair" | sed 's:.*/::')
     echo "Benchmark run for size $size inc $inc"
-    basename="obnam-$OBNAM_REVNO-$BTREE_REVNO-$size"
+    basename="benchmark-result/obnam-$OBNAM_REVNO-$BTREE_REVNO-$size"
     data="$basename.seivot"
     desc="obnam (r$OBNAM_REVNO) and btree (r$BTREE_REVNO)"
     desc="$desc for live data size $size with $inc increments"
+    mkdir -p benchmark-result
     $SEIVOT \
         --output="$data" \
         --description="$desc" \
