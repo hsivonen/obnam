@@ -27,6 +27,7 @@ SEIVOT=seivot
 OBNAM_BRANCH="."
 BTREE_BRANCH="$HOME/btree/trunk"
 SIZES="100m/10m 1000m/100m 10000m/1000m"
+WIKI="$HOME/braawi.org"
 
 if [ $# -ge 1 ]
 then
@@ -48,13 +49,19 @@ fi
 
 if [ $# -ge 1 ]
 then
+    WIKI="$1"
+    shift
+fi
+
+if [ $# -ge 1 ]
+then
     SEIVOT="$1"
     shift
 fi
 
 if [ $# != 0 ]
 then
-    die "Usage: $0 [obnam-branch [btree-branch [sizes [[path/to/seivot]]]]"
+    die "Usage: $0 [obnam-branch [btree-branch [sizes [wiki-root [path/to/seivot]]]]]"
 fi
 
 GENERATIONS=5
@@ -66,11 +73,12 @@ do
     size=$(echo "$pair" | sed 's:/.*::')
     inc=$(echo "$pair" | sed 's:.*/::')
     echo "Benchmark run for size $size inc $inc"
-    basename="benchmark-result/obnam-$OBNAM_REVNO-$BTREE_REVNO-$size"
+    results="$WIKI/obnam/benchmarks/$OBNAM_REVNO-$BTREE_REVNO"
+    mkdir -p "$results"
+    basename="$results/obnam-$size"
     data="$basename.seivot"
     desc="obnam (r$OBNAM_REVNO) and btree (r$BTREE_REVNO)"
     desc="$desc for live data size $size with $inc increments"
-    mkdir -p benchmark-result
     $SEIVOT \
         --output="$data" \
         --description="$desc" \
@@ -89,6 +97,17 @@ do
                     > $basename-\$GEN-time.txt && \
                    rm -f obnam.prof \
                     " \
-    measure
-#    $SEIVOT report --output="$basename.png" "$data"
+        measure
+(cd "$results/.."
+    cat <<eof > "$OBNAM_REVNO-$BTREE_REVNO.mdwn"
+[[!meta title="Obnam r$OBNAM_REVNO with btree r$BTREE_REVNO"]]
+
+Benchmark result: Obnam r$OBNAM_REVNO with btree r$BTREE_REVNO
+-------------------------------------------------------
+
+$(ls "$OBNAM_REVNO-$BTREE_REVNO"/* |
+  awk '{ sub(/^.*\//, "", $1); 
+         printf "* <a href=\"%s\">%s</a>\n", $1, $1 }')
+eof
+)
 done
