@@ -287,7 +287,7 @@ class StoreRootNodeTests(unittest.TestCase):
         self.assertFalse(self.fs.exists('foo'))
 
 
-class StoreclientTests(unittest.TestCase):
+class StoreClientTests(unittest.TestCase):
 
 
     def setUp(self):
@@ -323,6 +323,9 @@ class StoreclientTests(unittest.TestCase):
         self.store.lock_client('client_name')
         self.assertRaises(obnamlib.LockFail, self.store.lock_client, 
                           'client_name')
+
+    def test_locking_nonexistent_client_fails(self):
+        self.assertRaises(obnamlib.LockFail, self.store.lock_client, 'foo')
 
     def test_unlock_client_releases_lock(self):
         self.store.lock_client('client_name')
@@ -704,6 +707,9 @@ class StoreGenspecTests(unittest.TestCase):
         self.store = obnamlib.Store(fs, obnamlib.DEFAULT_NODE_SIZE,
                                     obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
                                     obnamlib.DEFAULT_LRU_SIZE)
+        self.store.lock_root()
+        self.store.add_client('client_name')
+        self.store.commit_root()
         self.store.lock_client('client_name')
 
     def tearDown(self):

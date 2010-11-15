@@ -356,10 +356,9 @@ class GenerationStore(StoreTree):
     FILE_NAME = 0
     FILE_METADATA = 1
     
-    def __init__(self, fs, client_name, node_size, upload_queue_size, lru_size):
+    def __init__(self, fs, client_id, node_size, upload_queue_size, lru_size):
         key_bytes = len(self.key('', 0, 0))
-        # FIXME: We should handle evil client_names.
-        StoreTree.__init__(self, fs, client_name, key_bytes, node_size,
+        StoreTree.__init__(self, fs, client_id, key_bytes, node_size,
                            upload_queue_size, lru_size)
         self.curgen = None
         self.known_generations = dict()
@@ -812,8 +811,9 @@ class Store(object):
             self.clientlist.add_client(client_name)
         self.added_clients = []
         for client_name in self.removed_clients:
-            if self.fs.exists(client_name):
-                self.fs.rmtree(client_name)
+            client_id = self.clientlist.get_client_id(client_name)
+            if client_id is not None and self.fs.exists(client_id):
+                self.fs.rmtree(client_id)
             self.clientlist.remove_client(client_name)
         self.clientlist.commit()
         self.unlock_root()
@@ -846,8 +846,12 @@ class Store(object):
         by commit_client() or unlock_client().
 
         '''
+
+        client_id = self.clientlist.get_client_id(client_name)
+        if client_id is None:
+            raise LockFail('client %s does not exit' % client_name)
         
-        lockname = os.path.join(client_name, 'lock')
+        lockname = os.path.join(client_id, 'lock')
         try:
             self.fs.write_file(lockname, '')
         except OSError, e:
@@ -858,7 +862,7 @@ class Store(object):
         self.current_client = client_name
         self.added_generations = []
         self.removed_generations = []
-        self.genstore = GenerationStore(self.fs, client_name, self.node_size, 
+        self.genstore = GenerationStore(self.fs, client_id, self.node_size, 
                                         self.upload_queue_size, self.lru_size)
         self.genstore.require_forest()
 
@@ -892,10 +896,11 @@ class Store(object):
         
     def open_client(self, client_name):
         '''Open a client for read-only operation.'''
-        if client_name not in self.list_clients():
+        client_id = self.clientlist.get_client_id(client_name)
+        if client_id is None:
             raise obnamlib.Error('%s is not an existing client' % client_name)
         self.current_client = client_name
-        self.genstore = GenerationStore(self.fs, client_name, self.node_size,
+        self.genstore = GenerationStore(self.fs, client_id, self.node_size,
                                         self.upload_queue_size, self.lru_size)
         self.genstore.init_forest()
         
