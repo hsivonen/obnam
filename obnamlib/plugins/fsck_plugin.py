@@ -41,14 +41,14 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         '''Check the root node.'''
         logging.debug('Checking root node')
         self.app.hooks.call('status', 'Checking root node')
-        for host in self.store.list_hosts():
-            self.check_host(host)
+        for client in self.store.list_clients():
+            self.check_client(client)
     
-    def check_host(self, hostname):
-        '''Check a host.'''
-        logging.debug('Checking host %s' % hostname)
-        self.app.hooks.call('status', 'Checking host %s' % hostname)
-        self.store.open_host(hostname)
+    def check_client(self, client_name):
+        '''Check a client.'''
+        logging.debug('Checking client %s' % client_name)
+        self.app.hooks.call('status', 'Checking client %s' % client_name)
+        self.store.open_client(client_name)
         for genid in self.store.list_generations():
             self.check_generation(genid)
 

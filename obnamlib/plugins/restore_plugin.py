@@ -67,7 +67,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
 
     def restore(self, args):
         self.app.config.require('store')
-        self.app.config.require('hostname')
+        self.app.config.require('client-name')
         self.app.config.require('generation')
         self.app.config.require('to')
 
@@ -85,7 +85,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         self.store = obnamlib.Store(storefs, self.app.config['node-size'], 
                                     self.app.config['upload-queue-size'],
                                     self.app.config['lru-size'])
-        self.store.open_host(self.app.config['hostname'])
+        self.store.open_client(self.app.config['client-name'])
         self.fs = self.app.fsf.new(self.app.config['to'])
         self.fs.connect()
 

@@ -48,7 +48,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         logging.debug('checkpoints every %s' % self.app.config['checkpoint'])
 
         self.app.config.require('store')
-        self.app.config.require('hostname')
+        self.app.config.require('client-name')
 
         roots = self.app.config['root'] + args
         logging.debug('backup roots: %s' % roots)
@@ -61,15 +61,15 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                                     self.app.config['upload-queue-size'],
                                     self.app.config['lru-size'])
 
-        hostname = self.app.config['hostname']
-        logging.debug('hostname: %s' % hostname)
-        if hostname not in self.store.list_hosts():
-            logging.debug('adding host %s' % hostname)
+        client_name = self.app.config['client-name']
+        logging.debug('client name: %s' % client_name)
+        if client_name not in self.store.list_clients():
+            logging.debug('adding client %s' % client_name)
             self.store.lock_root()
-            self.store.add_host(hostname)
+            self.store.add_client(client_name)
             self.store.commit_root()
 
-        self.store.lock_host(hostname)
+        self.store.lock_client(client_name)
         self.store.start_generation()
         self.fs = None
         
@@ -102,8 +102,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 if storefs.bytes_written - last_checkpoint >= interval:
                     logging.debug('Making checkpoint')
                     self.backup_parents('.')
-                    self.store.commit_host(checkpoint=True)
-                    self.store.lock_host(hostname)
+                    self.store.commit_client(checkpoint=True)
+                    self.store.lock_client(client_name)
                     self.store.start_generation()
                     last_checkpoint = storefs.bytes_written
 
@@ -111,7 +111,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         if self.fs:
             self.fs.close()
-        self.store.commit_host()
+        self.store.commit_client()
         storefs.close()
 
         logging.info('Backup finished.')

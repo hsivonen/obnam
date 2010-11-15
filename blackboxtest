@@ -50,7 +50,7 @@ class ObnamTestCase(unittest.TestCase):
     '''
 
     def setUp(self):
-        self.hostid = 'hostid'
+        self.client_name = 'client_name'
         self.tempdir = tempfile.mkdtemp()
         self.data = self.mkdir('data')
         self.store = self.mkdir('store')
@@ -101,7 +101,7 @@ class ObnamTestCase(unittest.TestCase):
         return self.runcmd(['./obnam', 
                             '--quiet',
                             '--log', 'blackboxtest-obnam.log',
-                            '--hostname', self.hostid] +
+                            '--client-name', self.client_name] +
                            args, stderr_ignore=stderr_ignore)
 
     def backup(self, roots=None):
@@ -214,7 +214,7 @@ class ObnamTestCase(unittest.TestCase):
         s = obnamlib.Store(fs, obnamlib.DEFAULT_NODE_SIZE,
                            obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
                            obnamlib.DEFAULT_LRU_SIZE)
-        s.open_host(self.hostid)
+        s.open_client(self.client_name)
         return s
 
     def assert_equal_stat_fields(self, filename, stat1, stat2, fieldname):
