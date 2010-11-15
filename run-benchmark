@@ -111,3 +111,6 @@ $(ls "$OBNAM_REVNO-$BTREE_REVNO"/* |
 eof
 )
 done
+
+./report-benchmark "$WIKI"/obnam/benchmarks/*/*.seivot \
+	> "$WIKI/obnam/benchmarkreport.mdwn"

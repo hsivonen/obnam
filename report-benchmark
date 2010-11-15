@@ -87,53 +87,28 @@ class Report(object):
 
     def preamble(self, f):
         f.write('''
-<html>
-<head>
-    <title>Obnam benchmark archive</title>
-    <style>
-        h1 {
-            font-size: 200%;
-        }
-        h2 {
-            font-size: 100%;
-        }
-        table {
-            border: 0;
-            text-align: left;
-        }
-        th {
-            padding-right: 1em;
-        }
-        td {
-            text-align: left;
-            padding-top: 0.5em;
-            padding-right: 1em;
-            font-family: monospace;
-        }
-    </style>
-</head>
-<body>
-<h1>Obnam+btree benchmark archive</h1>
+[[!meta title="Obnam benchmark archive"]]
 
-<p>This page lists results of benchmark runs of 
-<a href="http://braawi.org/obnam/">Obnam</a>,
-done by 
-<a href="http://liw.fi/">Lars Wirzenius</a>.
-See <a href="">the obnam benchmark page</a> 
-for more information.</p>
+Obnam+btree benchmark archive
+====
 
-<p>See <a href="http://files.liw.fi/obnam-benchmarks/">file list</a>
-for all files. This page just has a summary.</p>
+This page lists results of benchmark runs of [[Obnam]],
+done by <a href="http://liw.fi/">Lars Wirzenius</a>.
+See [[the obnam benchmark page|benchmarkspec]]
+for information on how the benchmark is set up,
+and [[the result listing|benchmarks]] for individual
+result. This page has summarizes results of each benchmark run,
+so they can be compared.
 
 ''')
         
     def footer(self, f):
-        f.write('</body> </html>\n')
+        pass
         
     def report_group(self, f, group):
         size = group[0].getint('meta', 'start-size')
         inc = group[0].getint('meta', 'inc-size')
-        f.write('<h2>Size %s, increment %s</h2>\n' % (humansize(size), 
+        f.write('Size %s, increment %s\n----\n' % (humansize(size), 
                                                       humansize(inc)))
         f.write('''
 <table>
