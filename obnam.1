@@ -23,9 +23,9 @@ backup store, or
 for short.
 A store may be, for example, a directory on an sftp server,
 or a directory on a USB hard disk.
-A single store may contain backups from several hosts.
+A single store may contain backups from several clients.
 Their data will intermingle as if they were using separate stores,
-but if one host backs up a file, the others may re-use the data.
+but if one client backs up a file, the others may re-use the data.
 .PP
 .B obnam 
 command line syntax consists of a 
@@ -34,7 +34,7 @@ possibly followed by arguments.
 The commands are:
 .BR backup ,
 .BR restore ,
-.BR hosts ,
+.BR clients ,
 .BR generations ,
 .BR ls ,
 .BR verify ,
@@ -51,11 +51,11 @@ after that an incremental one.
 is the opposite of a backup.
 It copies backed up data from the backup store to a target directory.
 .IP \(bu
-.B hosts
-lists the hosts that are backed up to the store.
+.B clients
+lists the clients that are backed up to the store.
 .IP \(bu
 .B generations
-lists every backup generation for a given host.
+lists every backup generation for a given client.
 .IP \(bu
 .B ls
 lists the contents of a given generation, similar to 
@@ -84,7 +84,7 @@ be removed).
 .IP \(bu
 .B fsck
 checks the internal consistency of the backup store.
-It verifies that all hosts, generations, directories, files, and
+It verifies that all clients, generations, directories, files, and
 all file contents still exists in the backup store.
 It may take quite a long time to run.
 .SS "Verifying backups"
@@ -245,8 +245,8 @@ which may be either a pathname or an
 URL.
 See above for a description of URL syntax.
 .TP
-.BR --hostname =\fIHOSTNAME
-Set name of host to use.
+.BR --client-name =\fICLIENT_NAME
+Set name of client to use.
 Default is the hostname of the machine where obnam runs.
 This is used to determine which part of the backup store to put backups in.
 .TP
