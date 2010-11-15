@@ -231,7 +231,7 @@ class ClientList(StoreTree):
     def hashfunc(self, string):
         return hashlib.new('md5', string).digest()
 
-    def hexhashfunc(self, string):
+    def hexhashfunc(self, string): # pragma: no cover
         return self.hashfunc(string).encode('hex')
 
     def hashkey(self, h, value_type, index):
@@ -244,7 +244,7 @@ class ClientList(StoreTree):
     def unkey(self, key):
         return struct.unpack(self.fmt, key)
 
-    def client_id(self, client_name, index):
+    def client_id(self, client_name, index): # pragma: no cover
         return '%s%08x' % (self.hexhashfunc(client_name), index)
 
     def list_clients(self):
@@ -265,7 +265,7 @@ class ClientList(StoreTree):
                 return index
         return None
 
-    def get_client_id(self, client_name):
+    def get_client_id(self, client_name): # pragma: no cover
         if not self.init_forest() or not self.forest.trees:
             return None
         
@@ -290,7 +290,7 @@ class ClientList(StoreTree):
                     t.lookup(k)
                 except KeyError:
                     break
-                else:
+                else: # pragma: no cover
                     index = random.randint(1, self.max_index)
             t.insert(self.key(client_name, self.type_name, index), 
                      client_name)
