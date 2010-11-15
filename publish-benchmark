@@ -1,0 +1,16 @@
+#!/bin/sh
+
+set -e
+
+die()
+{
+    echo "$@" 1>&2
+    exit 1
+}
+
+[ "$#" = 1 ] || die "Usage: $0 wikidir"
+
+wiki="$1"
+
+cp benchmark-result/* "$wiki/obnam/benchmarks/."
+./report-benchmark "$wiki/obnam/benchmarks"/*.seivot
