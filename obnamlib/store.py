@@ -192,7 +192,7 @@ class StoreTree(object):
             self.forest.commit()
 
 
-class clientList(StoreTree):
+class ClientList(StoreTree):
 
     '''Store list of clients.'''
 
@@ -672,7 +672,7 @@ class Store(object):
         self.upload_queue_size = upload_queue_size
         self.lru_size = lru_size
         self.got_root_lock = False
-        self.clientlist = clientList(fs, node_size, upload_queue_size, lru_size)
+        self.clientlist = ClientList(fs, node_size, upload_queue_size, lru_size)
         self.got_client_lock = False
         self.client_lockfile = None
         self.current_client = None
