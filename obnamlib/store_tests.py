@@ -168,8 +168,8 @@ class StoreRootNodeTests(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.tempdir)
 
-    def test_lists_no_hosts(self):
-        self.assertEqual(self.store.list_hosts(), [])
+    def test_lists_no_clients(self):
+        self.assertEqual(self.store.list_clients(), [])
 
     def test_has_not_got_root_node_lock(self):
         self.assertFalse(self.store.got_root_lock)
@@ -206,88 +206,88 @@ class StoreRootNodeTests(unittest.TestCase):
         self.other.lock_root()
         self.assertRaises(obnamlib.LockFail, self.store.unlock_root)
         
-    def test_adding_host_without_root_lock_fails(self):
-        self.assertRaises(obnamlib.LockFail, self.store.add_host, 'foo')
+    def test_adding_client_without_root_lock_fails(self):
+        self.assertRaises(obnamlib.LockFail, self.store.add_client, 'foo')
         
-    def test_adds_host(self):
+    def test_adds_client(self):
         self.store.lock_root()
-        self.store.add_host('foo')
-        self.assertEqual(self.store.list_hosts(), ['foo'])
+        self.store.add_client('foo')
+        self.assertEqual(self.store.list_clients(), ['foo'])
         
-    def test_adds_two_hosts_across_commits(self):
+    def test_adds_two_clients_across_commits(self):
         self.store.lock_root()
-        self.store.add_host('foo')
+        self.store.add_client('foo')
         self.store.commit_root()
         self.store.lock_root()
-        self.store.add_host('bar')
+        self.store.add_client('bar')
         self.store.commit_root()
-        self.assertEqual(sorted(self.store.list_hosts()), ['bar', 'foo'])
+        self.assertEqual(sorted(self.store.list_clients()), ['bar', 'foo'])
         
-    def test_adds_host_that_persists_after_commit(self):
+    def test_adds_client_that_persists_after_commit(self):
         self.store.lock_root()
-        self.store.add_host('foo')
+        self.store.add_client('foo')
         self.store.commit_root()
         s2 = obnamlib.Store(self.fs, obnamlib.DEFAULT_NODE_SIZE,
                             obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
                             obnamlib.DEFAULT_LRU_SIZE)
-        self.assertEqual(s2.list_hosts(), ['foo'])
+        self.assertEqual(s2.list_clients(), ['foo'])
         
-    def test_adding_existing_host_fails(self):
+    def test_adding_existing_client_fails(self):
         self.store.lock_root()
-        self.store.add_host('foo')
-        self.assertRaises(obnamlib.Error, self.store.add_host, 'foo')
+        self.store.add_client('foo')
+        self.assertRaises(obnamlib.Error, self.store.add_client, 'foo')
         
-    def test_removing_host_without_root_lock_fails(self):
-        self.assertRaises(obnamlib.LockFail, self.store.remove_host, 'foo')
+    def test_removing_client_without_root_lock_fails(self):
+        self.assertRaises(obnamlib.LockFail, self.store.remove_client, 'foo')
         
-    def test_removing_nonexistent_host_fails(self):
+    def test_removing_nonexistent_client_fails(self):
         self.store.lock_root()
-        self.assertRaises(obnamlib.Error, self.store.remove_host, 'foo')
+        self.assertRaises(obnamlib.Error, self.store.remove_client, 'foo')
         
-    def test_removing_host_works(self):
+    def test_removing_client_works(self):
         self.store.lock_root()
-        self.store.add_host('foo')
-        self.store.remove_host('foo')
-        self.assertEqual(self.store.list_hosts(), [])
+        self.store.add_client('foo')
+        self.store.remove_client('foo')
+        self.assertEqual(self.store.list_clients(), [])
         
-    def test_removing_host_persists_past_commit(self):
+    def test_removing_client_persists_past_commit(self):
         self.store.lock_root()
-        self.store.add_host('foo')
-        self.store.remove_host('foo')
+        self.store.add_client('foo')
+        self.store.remove_client('foo')
         self.store.commit_root()
-        self.assertEqual(self.store.list_hosts(), [])
+        self.assertEqual(self.store.list_clients(), [])
 
-    def test_adding_host_without_commit_does_not_happen(self):
+    def test_adding_client_without_commit_does_not_happen(self):
         self.store.lock_root()
-        self.store.add_host('foo')
+        self.store.add_client('foo')
         self.store.unlock_root()
-        self.assertEqual(self.store.list_hosts(), [])
+        self.assertEqual(self.store.list_clients(), [])
 
-    def test_removing_host_without_commit_does_not_happen(self):
+    def test_removing_client_without_commit_does_not_happen(self):
         self.store.lock_root()
-        self.store.add_host('foo')
+        self.store.add_client('foo')
         self.store.commit_root()
         self.store.lock_root()
-        self.store.remove_host('foo')
+        self.store.remove_client('foo')
         self.store.unlock_root()
-        self.assertEqual(self.store.list_hosts(), ['foo'])
+        self.assertEqual(self.store.list_clients(), ['foo'])
 
-    def test_removing_host_that_has_data_removes_the_data_as_well(self):
+    def test_removing_client_that_has_data_removes_the_data_as_well(self):
         self.store.lock_root()
-        self.store.add_host('foo')
+        self.store.add_client('foo')
         self.store.commit_root()
-        self.store.lock_host('foo')
+        self.store.lock_client('foo')
         self.store.start_generation()
         self.store.create('/', obnamlib.Metadata())
-        self.store.commit_host()
+        self.store.commit_client()
         self.store.lock_root()
-        self.store.remove_host('foo')
+        self.store.remove_client('foo')
         self.store.commit_root()
-        self.assertEqual(self.store.list_hosts(), [])
+        self.assertEqual(self.store.list_clients(), [])
         self.assertFalse(self.fs.exists('foo'))
 
 
-class StoreHostTests(unittest.TestCase):
+class StoreClientTests(unittest.TestCase):
 
 
     def setUp(self):
@@ -298,7 +298,7 @@ class StoreHostTests(unittest.TestCase):
                                     obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
                                     obnamlib.DEFAULT_LRU_SIZE)
         self.store.lock_root()
-        self.store.add_host('hostname')
+        self.store.add_client('client_name')
         self.store.commit_root()
         
         self.otherfs = obnamlib.LocalFS(self.tempdir)
@@ -312,75 +312,78 @@ class StoreHostTests(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.tempdir)
 
-    def test_has_not_got_host_lock(self):
-        self.assertFalse(self.store.got_host_lock)
+    def test_has_not_got_client_lock(self):
+        self.assertFalse(self.store.got_client_lock)
 
-    def test_locks_host(self):
-        self.store.lock_host('hostname')
-        self.assert_(self.store.got_host_lock)
+    def test_locks_client(self):
+        self.store.lock_client('client_name')
+        self.assert_(self.store.got_client_lock)
 
-    def test_locking_host_twice_fails(self):
-        self.store.lock_host('hostname')
-        self.assertRaises(obnamlib.LockFail, self.store.lock_host, 
-                          'hostname')
+    def test_locking_client_twice_fails(self):
+        self.store.lock_client('client_name')
+        self.assertRaises(obnamlib.LockFail, self.store.lock_client, 
+                          'client_name')
 
-    def test_unlock_host_releases_lock(self):
-        self.store.lock_host('hostname')
-        self.store.unlock_host()
-        self.assertFalse(self.store.got_host_lock)
+    def test_locking_nonexistent_client_fails(self):
+        self.assertRaises(obnamlib.LockFail, self.store.lock_client, 'foo')
 
-    def test_commit_host_releases_lock(self):
-        self.store.lock_host('hostname')
-        self.store.commit_host()
-        self.assertFalse(self.store.got_host_lock)
+    def test_unlock_client_releases_lock(self):
+        self.store.lock_client('client_name')
+        self.store.unlock_client()
+        self.assertFalse(self.store.got_client_lock)
+
+    def test_commit_client_releases_lock(self):
+        self.store.lock_client('client_name')
+        self.store.commit_client()
+        self.assertFalse(self.store.got_client_lock)
 
     def test_commit_does_not_mark_as_checkpoint_by_default(self):
-        self.store.lock_host('hostname')
+        self.store.lock_client('client_name')
         self.store.start_generation()
         genid = self.store.new_generation
-        self.store.commit_host()
-        self.store.open_host('hostname')
+        self.store.commit_client()
+        self.store.open_client('client_name')
         self.assertFalse(self.store.get_is_checkpoint(genid))
 
     def test_commit_marks_as_checkpoint_when_requested(self):
-        self.store.lock_host('hostname')
+        self.store.lock_client('client_name')
         self.store.start_generation()
         genid = self.store.new_generation
-        self.store.commit_host(checkpoint=True)
-        self.store.open_host('hostname')
+        self.store.commit_client(checkpoint=True)
+        self.store.open_client('client_name')
         self.assert_(self.store.get_is_checkpoint(genid))
 
-    def test_commit_host_without_lock_fails(self):
-        self.assertRaises(obnamlib.LockFail, self.store.commit_host)
+    def test_commit_client_without_lock_fails(self):
+        self.assertRaises(obnamlib.LockFail, self.store.commit_client)
         
-    def test_unlock_host_without_lock_fails(self):
-        self.assertRaises(obnamlib.LockFail, self.store.unlock_host)
+    def test_unlock_client_without_lock_fails(self):
+        self.assertRaises(obnamlib.LockFail, self.store.unlock_client)
 
-    def test_commit_host_when_locked_by_other_fails(self):
-        self.other.lock_host('hostname')
-        self.assertRaises(obnamlib.LockFail, self.store.commit_host)
+    def test_commit_client_when_locked_by_other_fails(self):
+        self.other.lock_client('client_name')
+        self.assertRaises(obnamlib.LockFail, self.store.commit_client)
 
-    def test_unlock_host_when_locked_by_other_fails(self):
-        self.other.lock_host('hostname')
-        self.assertRaises(obnamlib.LockFail, self.store.unlock_host)
+    def test_unlock_client_when_locked_by_other_fails(self):
+        self.other.lock_client('client_name')
+        self.assertRaises(obnamlib.LockFail, self.store.unlock_client)
 
-    def test_opens_host_fails_if_host_does_not_exist(self):
-        self.assertRaises(obnamlib.Error, self.store.open_host, 'bad')
+    def test_opens_client_fails_if_client_does_not_exist(self):
+        self.assertRaises(obnamlib.Error, self.store.open_client, 'bad')
 
-    def test_opens_host_even_when_locked_by_other(self):
-        self.other.lock_host('hostname')
-        self.store.open_host('hostname')
+    def test_opens_client_even_when_locked_by_other(self):
+        self.other.lock_client('client_name')
+        self.store.open_client('client_name')
         self.assert_(True)
         
     def test_lists_no_generations_when_readonly(self):
-        self.store.open_host('hostname')
+        self.store.open_client('client_name')
         self.assertEqual(self.store.list_generations(), [])
         
     def test_lists_no_generations_when_locked(self):
-        self.store.lock_host('hostname')
+        self.store.lock_client('client_name')
         self.assertEqual(self.store.list_generations(), [])
         
-    def test_listing_generations_fails_if_host_is_not_open(self):
+    def test_listing_generations_fails_if_client_is_not_open(self):
         self.assertRaises(obnamlib.Error, self.store.list_generations)
 
     def test_not_making_new_generation(self):
@@ -390,81 +393,81 @@ class StoreHostTests(unittest.TestCase):
         self.assertRaises(obnamlib.LockFail, self.store.start_generation)
 
     def test_starting_new_generation_works(self):
-        self.store.lock_host('hostname')
+        self.store.lock_client('client_name')
         gen = self.store.start_generation()
         self.assert_(self.store.new_generation)
         self.assertEqual(self.store.new_generation, gen)
         self.assertEqual(self.store.list_generations(),  [gen])
 
     def test_starting_second_concurrent_new_generation_fails(self):
-        self.store.lock_host('hostname')
+        self.store.lock_client('client_name')
         self.store.start_generation()
         self.assertRaises(obnamlib.Error, self.store.start_generation)
 
     def test_second_generation_has_different_id_from_first(self):
-        self.store.lock_host('hostname')
+        self.store.lock_client('client_name')
         gen = self.store.start_generation()
-        self.store.commit_host()
-        self.store.lock_host('hostname')
+        self.store.commit_client()
+        self.store.lock_client('client_name')
         self.assertNotEqual(gen, self.store.start_generation())
 
     def test_new_generation_has_start_time_only(self):
-        self.store.lock_host('hostname')
+        self.store.lock_client('client_name')
         gen = self.store.start_generation()
         start, end = self.store.get_generation_times(gen)
         self.assertNotEqual(start, None)
         self.assertEqual(end, None)
 
     def test_commited_generation_has_start_and_end_times(self):
-        self.store.lock_host('hostname')
+        self.store.lock_client('client_name')
         gen = self.store.start_generation()
-        self.store.commit_host()
-        self.store.open_host('hostname')
+        self.store.commit_client()
+        self.store.open_client('client_name')
         start, end = self.store.get_generation_times(gen)
         self.assertNotEqual(start, None)
         self.assertNotEqual(end, None)
         self.assert_(start <= end)
 
     def test_adding_generation_without_committing_does_not_add_it(self):
-        self.store.lock_host('hostname')
+        self.store.lock_client('client_name')
         self.store.start_generation()
-        self.store.unlock_host()
-        self.store.open_host('hostname')
+        self.store.unlock_client()
+        self.store.open_client('client_name')
         self.assertEqual(self.store.list_generations(), [])
 
     def test_removing_generation_works(self):
-        self.store.lock_host('hostname')
+        self.store.lock_client('client_name')
         gen = self.store.start_generation()
-        self.store.commit_host()
+        self.store.commit_client()
 
-        self.store.open_host('hostname')
+        self.store.open_client('client_name')
         self.assertEqual(len(self.store.list_generations()), 1)
 
-        self.store.lock_host('hostname')
+        self.store.lock_client('client_name')
         self.store.remove_generation(gen)
-        self.store.commit_host()
+        self.store.commit_client()
 
-        self.store.open_host('hostname')
+        self.store.open_client('client_name')
         self.assertEqual(self.store.list_generations(), [])
 
     def test_removing_started_generation_fails(self):
-        self.store.lock_host('hostname')
+        self.store.lock_client('client_name')
         gen = self.store.start_generation()
         self.assertRaises(obnamlib.Error,
                           self.store.remove_generation, gen)
 
     def test_removing_without_committing_does_not_remove(self):
-        self.store.lock_host('hostname')
+        self.store.lock_client('client_name')
         gen = self.store.start_generation()
-        self.store.commit_host()
-        self.store.lock_host('hostname')
+        self.store.commit_client()
+        self.store.lock_client('client_name')
         self.store.remove_generation(gen)
-        self.store.unlock_host()
-        self.store.open_host('hostname')
+        self.store.unlock_client()
+        self.store.open_client('client_name')
         self.assertEqual(self.store.list_generations(), [gen])
 
     def test_new_generation_has_root_dir_only(self):
-        self.store.lock_host('hostname')
+        self.store.lock_client('client_name')
         gen = self.store.start_generation()
         self.assertEqual(self.store.listdir(gen, '/'), [])
 
@@ -472,14 +475,14 @@ class StoreHostTests(unittest.TestCase):
         self.assertRaises(obnamlib.Error, self.store.create, None, '', None)
 
     def test_create_adds_file(self):
-        self.store.lock_host('hostname')
+        self.store.lock_client('client_name')
         gen = self.store.start_generation()
         self.store.create('/', self.dir_meta)
         self.store.create('/foo', obnamlib.Metadata())
         self.assertEqual(self.store.listdir(gen, '/'), ['foo'])
 
     def test_create_adds_two_files(self):
-        self.store.lock_host('hostname')
+        self.store.lock_client('client_name')
         gen = self.store.start_generation()
         self.store.create('/', self.dir_meta)
         self.store.create('/foo', obnamlib.Metadata())
@@ -488,7 +491,7 @@ class StoreHostTests(unittest.TestCase):
 
     def test_create_adds_lots_of_files(self):
         n = 100
-        self.store.lock_host('hostname')
+        self.store.lock_client('client_name')
         gen = self.store.start_generation()
         pathnames = ['/%d' % i for i in range(n)]
         for pathname in pathnames:
@@ -497,34 +500,34 @@ class StoreHostTests(unittest.TestCase):
                          sorted(os.path.basename(x) for x in pathnames))
 
     def test_create_adds_dir(self):
-        self.store.lock_host('hostname')
+        self.store.lock_client('client_name')
         gen = self.store.start_generation()
         self.store.create('/foo', self.dir_meta)
         self.assertEqual(self.store.listdir(gen, '/foo'), [])
 
     def test_create_adds_dir_after_file_in_it(self):
-        self.store.lock_host('hostname')
+        self.store.lock_client('client_name')
         gen = self.store.start_generation()
         self.store.create('/foo/bar', obnamlib.Metadata())
         self.store.create('/foo', self.dir_meta)
         self.assertEqual(self.store.listdir(gen, '/foo'), ['bar'])
 
     def test_gets_metadata_for_dir(self):
-        self.store.lock_host('hostname')
+        self.store.lock_client('client_name')
         gen = self.store.start_generation()
         self.store.create('/foo', self.dir_meta)
         self.assertEqual(self.store.get_metadata(gen, '/foo').st_mode, 
                          self.dir_meta.st_mode)
 
     def test_remove_removes_file(self):
-        self.store.lock_host('hostname')
+        self.store.lock_client('client_name')
         gen = self.store.start_generation()
         self.store.create('/foo', obnamlib.Metadata())
         self.store.remove('/foo')
         self.assertEqual(self.store.listdir(gen, '/'), [])
 
     def test_remove_removes_directory_tree(self):
-        self.store.lock_host('hostname')
+        self.store.lock_client('client_name')
         gen = self.store.start_generation()
         self.store.create('/foo/bar', obnamlib.Metadata())
         self.store.remove('/foo')
@@ -533,14 +536,14 @@ class StoreHostTests(unittest.TestCase):
     def test_get_metadata_works(self):
         metadata = obnamlib.Metadata()
         metadata.st_size = 123
-        self.store.lock_host('hostname')
+        self.store.lock_client('client_name')
         gen = self.store.start_generation()
         self.store.create('/foo', metadata)
         received = self.store.get_metadata(gen, '/foo')
         self.assertEqual(metadata.st_size, received.st_size)
 
     def test_get_metadata_raises_exception_if_file_does_not_exist(self):
-        self.store.lock_host('hostname')
+        self.store.lock_client('client_name')
         gen = self.store.start_generation()
         self.assertRaises(obnamlib.Error, self.store.get_metadata,
                           gen, '/foo')
@@ -556,9 +559,9 @@ class StoreChunkTests(unittest.TestCase):
                                     obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
                                     obnamlib.DEFAULT_LRU_SIZE)
         self.store.lock_root()
-        self.store.add_host('hostname')
+        self.store.add_client('client_name')
         self.store.commit_root()
-        self.store.lock_host('hostname')
+        self.store.lock_client('client_name')
         self.store.start_generation()
 
     def tearDown(self):
@@ -617,9 +620,9 @@ class StoreChunkGroupTests(unittest.TestCase):
                                     obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
                                     obnamlib.DEFAULT_LRU_SIZE)
         self.store.lock_root()
-        self.store.add_host('hostname')
+        self.store.add_client('client_name')
         self.store.commit_root()
-        self.store.lock_host('hostname')
+        self.store.lock_client('client_name')
         self.store.start_generation()
 
     def tearDown(self):
@@ -667,9 +670,9 @@ class StoreGetSetChunksAndGroupsTests(unittest.TestCase):
                                     obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
                                     obnamlib.DEFAULT_LRU_SIZE)
         self.store.lock_root()
-        self.store.add_host('hostname')
+        self.store.add_client('client_name')
         self.store.commit_root()
-        self.store.lock_host('hostname')
+        self.store.lock_client('client_name')
         self.gen = self.store.start_generation()
         self.store.create('/foo', obnamlib.Metadata())
 
@@ -704,15 +707,18 @@ class StoreGenspecTests(unittest.TestCase):
         self.store = obnamlib.Store(fs, obnamlib.DEFAULT_NODE_SIZE,
                                     obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
                                     obnamlib.DEFAULT_LRU_SIZE)
-        self.store.lock_host('hostname')
+        self.store.lock_root()
+        self.store.add_client('client_name')
+        self.store.commit_root()
+        self.store.lock_client('client_name')
 
     def tearDown(self):
         shutil.rmtree(self.tempdir)
 
     def backup(self):
         gen = self.store.start_generation()
-        self.store.commit_host()
-        self.store.lock_host('hostname')
+        self.store.commit_client()
+        self.store.lock_client('client_name')
         return gen
 
     def test_latest_raises_error_if_there_are_no_generations(self):

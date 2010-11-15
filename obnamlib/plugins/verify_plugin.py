@@ -36,7 +36,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
 
     def verify(self, args):
         self.app.config.require('store')
-        self.app.config.require('hostname')
+        self.app.config.require('client-name')
         self.app.config.require('generation')
         self.app.config.require('root')
 
@@ -52,7 +52,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         self.store = obnamlib.Store(fs, self.app.config['node-size'], 
                                     self.app.config['upload-queue-size'],
                                     self.app.config['lru-size'])
-        self.store.open_host(self.app.config['hostname'])
+        self.store.open_client(self.app.config['client-name'])
         self.fs = self.app.fsf.new(self.app.config['root'][0])
         self.fs.connect()
         self.fs.reinit('/')
