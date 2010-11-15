@@ -1,0 +1,178 @@
+#!/usr/bin/python
+
+
+import ConfigParser
+import glob
+import os
+import re
+import sys
+import urllib
+
+
+def humantime(secs):
+    units = (
+        ('h', 60*60),
+        ('min', 60),
+        ('s', 1),
+    )
+    
+    result = ''
+    for unit, factor in units:
+        if secs >= factor:
+            result += '%d%s' % (int(secs / factor), unit)
+            secs %= factor
+    return result
+
+
+def humansize(bytes):
+    units = (
+        ('MiB', 1024**2),
+        ('KiB', 1024**1),
+        ('B',   1024**0),
+    )
+    
+    for unit, factor in units:
+        if bytes >= factor:
+            return '%.1f %s' % (float(bytes / factor), unit)
+    return '0 B'
+
+
+def humanspeed(bytes_per_second):
+    bits_per_second = 8 * bytes_per_second
+    factor = 1000**2
+    unit = 'Mbit/s'
+    return '%.1f %s' % (float(bits_per_second / factor), unit)
+
+
+class Report(object):
+
+    def __init__(self):
+        self.seivots = []
+        
+    def load_seivot(self, filename):
+        cp = ConfigParser.RawConfigParser()
+        cp.read(filename)
+        cp.filename = filename
+        self.seivots.append(cp)
+        
+    def parse_revision(self, seivot):
+        revstr = seivot.get('meta', 'revision')
+        if ' and ' in revstr:
+            obnam, btree = revstr.split(' and ')
+            return int(obnam), int(btree)
+        else:
+            return int(revstr), 0
+        
+    def sort(self):
+        def getkey(seivot):
+            return seivot.get('meta', 'revision')
+        pairs = [(getkey(seivot), seivot) for seivot in self.seivots]
+        pairs.sort()
+        self.seivots = [seivot for key, seivot in pairs]
+        
+    def groups(self, seivots):
+        def getkey(seivot):
+            return (seivot.get('meta', 'start-size'), 
+                    seivot.get('meta', 'inc-size'))
+        keys = sorted(list(set(getkey(s) for s in seivots)))
+        for key in keys:
+            yield [s for s in seivots if getkey(s) == key]
+            
+    def report(self, f):
+        self.sort()
+        self.preamble(f)
+        for group in self.groups(self.seivots):
+            self.report_group(f, group)
+        self.footer(f) 
+
+    def preamble(self, f):
+        f.write('''
+<html>
+<head>
+    <title>Obnam benchmark archive</title>
+    <style>
+        h1 {
+            font-size: 200%;
+        }
+        h2 {
+            font-size: 100%;
+        }
+        table {
+            border: 0;
+            text-align: left;
+        }
+        th {
+            padding-right: 1em;
+        }
+        td {
+            text-align: left;
+            padding-top: 0.5em;
+            padding-right: 1em;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+<h1>Obnam+btree benchmark archive</h1>
+
+<p>This page lists results of benchmark runs of 
+<a href="http://braawi.org/obnam/">Obnam</a>,
+done by 
+<a href="http://liw.fi/">Lars Wirzenius</a>.
+See <a href="">the obnam benchmark page</a> 
+for more information.</p>
+
+<p>See <a href="http://files.liw.fi/obnam-benchmarks/">file list</a>
+for all files. This page just has a summary.</p>
+
+''')
+        
+    def footer(self, f):
+        f.write('</body> </html>\n')
+        
+    def report_group(self, f, group):
+        size = group[0].getint('meta', 'start-size')
+        inc = group[0].getint('meta', 'inc-size')
+        f.write('<h2>Size %s, increment %s</h2>\n' % (humansize(size), 
+                                                      humansize(inc)))
+        f.write('''
+<table>
+<tr>
+    <th>obnam</th>
+    <th>btree</th>
+    <th>gen0</th>
+    <th>slowest inc</th>
+</tr>
+''')
+
+        for seivot in group:
+            obnam, btree = self.parse_revision(seivot)
+            
+            gen0 = self.speed(seivot, '0')
+            slowest_inc = min(self.speed(seivot, gen)
+                              for gen in seivot.sections()
+                              if re.match(r'\d+', gen))
+
+            f.write('<tr>\n')
+            f.write('<td>%s</td>\n' % obnam)
+            f.write('<td>%s</td>\n' % btree)
+            f.write('<td>%s</td>\n' % humanspeed(gen0))
+            f.write('<td>%s</td>\n' % humanspeed(slowest_inc))
+            f.write('</tr>\n')
+          
+        f.write('</table>\n')
+
+    def speed(self, seivot, gen):
+        wall_clock = seivot.getfloat(gen, 'wallclock')
+        new_data = seivot.getfloat(gen, 'new-data')
+        return new_data / wall_clock
+
+def main():
+    r = Report()
+    for filename in sys.argv[1:]:
+        r.load_seivot(filename)
+    r.report(sys.stdout)
+
+
+if __name__ == '__main__':
+    main()
