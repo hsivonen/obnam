@@ -66,24 +66,32 @@ class GenerationStoreTests(unittest.TestCase):
             key = self.gen.genkey(x)
             return self.gen._lookup_int(self.gen.curgen, key)
 
-        genid = self.gen.get_generation_id(self.gen.curgen)
-        self.assertEqual(lookup(self.gen.GEN_META_ID), genid)
-        self.assertNotEqual(genid1, genid)
+        genid2 = self.gen.get_generation_id(self.gen.curgen)
+        self.assertEqual(lookup(self.gen.GEN_META_ID), genid2)
+        self.assertNotEqual(genid1, genid2)
         self.assertEqual(lookup(self.gen.GEN_META_STARTED), 2)
-        self.assertFalse(self.gen.get_is_checkpoint(genid))
+        self.assertFalse(self.gen.get_is_checkpoint(genid2))
+        self.assertEqual(self.gen.list_generations(), [genid1, genid2])
 
     def test_sets_is_checkpoint(self):
         self.gen.require_forest()
-        self.gen.start_generation(current_time=lambda: 12765)
+        self.gen.start_generation()
         genid = self.gen.get_generation_id(self.gen.curgen)
         self.gen.set_current_generation_is_checkpoint(True)
         self.assert_(self.gen.get_is_checkpoint(genid))
 
     def test_unsets_is_checkpoint(self):
         self.gen.require_forest()
-        self.gen.start_generation(current_time=lambda: 12765)
+        self.gen.start_generation()
         genid = self.gen.get_generation_id(self.gen.curgen)
         self.gen.set_current_generation_is_checkpoint(True)
         self.gen.set_current_generation_is_checkpoint(False)
         self.assertFalse(self.gen.get_is_checkpoint(genid))
+
+    def test_removes_generation(self):
+        self.gen.require_forest()
+        self.gen.start_generation()
+        self.gen.commit()
+        self.gen.remove_generation(self.gen.list_generations()[0])
+        self.assertEqual(self.gen.list_generations(), [])
 
