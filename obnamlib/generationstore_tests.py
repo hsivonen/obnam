@@ -102,3 +102,10 @@ class GenerationStoreTests(unittest.TestCase):
         self.assertEqual(self.gen.list_generations(), [])
         self.assertEqual(self.gen.curgen, None)
 
+    def test_committed_generation_has_times(self):
+        self.gen.require_forest()
+        self.gen.start_generation(current_time=lambda: 1)
+        genid = self.gen.get_generation_id(self.gen.curgen)
+        self.gen.commit(current_time=lambda: 2)
+        self.assertEqual(self.gen.get_generation_times(genid), (1, 2))
+

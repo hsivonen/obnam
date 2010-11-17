@@ -131,10 +131,10 @@ class GenerationStore(obnamlib.StoreTree):
     def _insert_int(self, tree, key, value):
         return tree.insert(key, struct.pack('!Q', value))
 
-    def commit(self):
+    def commit(self, current_time=time.time):
         if self.forest:
             if self.curgen:
-                now = int(time.time())
+                now = int(current_time())
                 self._insert_int(self.curgen, 
                                  self.genkey(self.GEN_META_ENDED), 
                                  now)
