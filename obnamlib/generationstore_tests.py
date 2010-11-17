@@ -15,6 +15,7 @@
 
 
 import shutil
+import stat
 import tempfile
 import unittest
 
@@ -114,4 +115,35 @@ class GenerationStoreTests(unittest.TestCase):
         genid = self.gen.get_generation_id(self.gen.curgen)
         self.gen.commit(current_time=lambda: 2)
         self.assertEqual(self.gen.get_generation_times(genid), (1, 2))
+
+
+class GenerationTreeFileOpsTests(unittest.TestCase):
+
+    def setUp(self):
+        self.tempdir = tempfile.mkdtemp()
+        fs = obnamlib.LocalFS(self.tempdir)
+        self.gen = obnamlib.GenerationStore(fs, 'clientid',
+                                            obnamlib.DEFAULT_NODE_SIZE,
+                                            obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
+                                            obnamlib.DEFAULT_LRU_SIZE)
+        self.gen.require_forest()
+        self.gen.start_generation()
+        self.genid = self.gen.get_generation_id(self.gen.curgen)
+        self.file_metadata = obnamlib.Metadata(st_mode=stat.S_IFREG | 0666)
+        self.file_encoded = obnamlib.store.encode_metadata(self.file_metadata)
+        
+    def tearDown(self):
+        shutil.rmtree(self.tempdir)
+
+    def test_has_empty_root_initially(self):
+        self.assertEqual(self.gen.listdir(self.genid, '/'), [])
+
+    def test_creates_file_at_root(self):
+        self.gen.create('/foo', self.file_encoded)
+        self.assertEqual(self.gen.listdir(self.genid, '/'), ['foo'])
+
+    def test_removes_file_at_root(self):
+        self.gen.create('/foo', self.file_encoded)
+        self.gen.remove('/foo')
+        self.assertEqual(self.gen.listdir(self.genid, '/'), [])
 

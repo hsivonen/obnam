@@ -216,14 +216,14 @@ class GenerationStore(obnamlib.StoreTree):
             key = self.key(parent, self.DIR_CONTENTS, subkey)
             self.curgen.remove_range(key, key)
 
-    def create(self, filename, metadata):
+    def create(self, filename, encoded_metadata):
         key = self.key(filename, self.FILE, self.FILE_METADATA)
         try:
             old_metadata = self.curgen.lookup(key)
         except KeyError:
             old_metadata = None
-        if metadata != old_metadata:
-            self.set_metadata(filename, metadata)
+        if encoded_metadata != old_metadata:
+            self.set_metadata(filename, encoded_metadata)
 
         # Add to parent's contents, unless already there.
         parent = os.path.dirname(filename)
