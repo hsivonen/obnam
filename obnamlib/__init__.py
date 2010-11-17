@@ -46,6 +46,7 @@ from nodestorevfs import NodeStoreVfs
 from store_tree import StoreTree
 from clientlist import ClientList
 from checksumtree import ChecksumTree
+from chunkgrouptree import ChunkGroupTree
 from store import Store, LockFail
 from forget_policy import ForgetPolicy
 from app import App
