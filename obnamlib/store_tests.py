@@ -60,47 +60,6 @@ class MetadataCodingTests(unittest.TestCase):
                                  'attribute %s must be None' % name)
 
 
-class ChecksumTreeTests(unittest.TestCase):
-
-    def setUp(self):
-        self.tempdir = tempfile.mkdtemp()
-        fs = obnamlib.LocalFS(self.tempdir)
-        self.checksum = hashlib.md5('foo').digest()
-        self.tree = obnamlib.store.ChecksumTree(fs, 'x', len(self.checksum), 
-                                                obnamlib.DEFAULT_NODE_SIZE,
-                                        obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
-                                        obnamlib.DEFAULT_LRU_SIZE)
-
-    def tearDown(self):
-        self.tree.commit()
-        shutil.rmtree(self.tempdir)
-
-    def test_is_empty_initially(self):
-        self.assertEqual(self.tree.find(self.checksum), [])
-
-    def test_finds_checksums(self):
-        self.tree.add(self.checksum, 1)
-        self.tree.add(self.checksum, 2)
-        self.assertEqual(sorted(self.tree.find(self.checksum)), [1, 2])
-
-    def test_finds_only_the_right_checksums(self):
-        self.tree.add(self.checksum, 1)
-        self.tree.add(self.checksum, 2)
-        self.tree.add(hashlib.md5('bar').digest(), 3)
-        self.assertEqual(sorted(self.tree.find(self.checksum)), [1, 2])
-
-    def test_removes_checksum(self):
-        self.tree.add(self.checksum, 1)
-        self.tree.add(self.checksum, 2)
-        self.tree.remove(self.checksum, 2)
-        self.assertEqual(self.tree.find(self.checksum), [1])
-
-    def test_adds_same_id_only_once(self):
-        self.tree.add(self.checksum, 1)
-        self.tree.add(self.checksum, 1)
-        self.assertEqual(self.tree.find(self.checksum), [1])
-
-
 class ChunkGroupTreeTests(unittest.TestCase):
 
     def setUp(self):

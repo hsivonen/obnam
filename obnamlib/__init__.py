@@ -45,6 +45,7 @@ from metadata import (read_metadata, set_metadata, Metadata, metadata_fields,
 from nodestorevfs import NodeStoreVfs
 from store_tree import StoreTree
 from clientlist import ClientList
+from checksumtree import ChecksumTree
 from store import Store, LockFail
 from forget_policy import ForgetPolicy
 from app import App

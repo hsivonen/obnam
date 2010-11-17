@@ -391,55 +391,6 @@ class GenerationStore(obnamlib.StoreTree):
                                struct.pack('!Q', cgid))
 
 
-class ChecksumTree(obnamlib.StoreTree):
-
-    '''Store map of checksum to integer id.
-
-    The checksum might be, for example, an MD5 one (as returned by
-    hashlib.md5().digest()). The id would be a chunk or chunk group
-    id.
-
-    '''
-
-    def __init__(self, fs, name, checksum_length, node_size, 
-                 upload_queue_size, lru_size):
-        self.sumlen = checksum_length
-        key_bytes = len(self.key('', 0))
-        obnamlib.StoreTree.__init__(self, fs, name, key_bytes, node_size, 
-                                    upload_queue_size, lru_size)
-        self.max_id = 2**64 - 1
-
-    def key(self, checksum, number):
-        return struct.pack('!%dsQ' % self.sumlen, checksum, number)
-
-    def unkey(self, key):
-        return struct.unpack('!%dsQ' % self.sumlen, key)
-
-    def add(self, checksum, identifier):
-        self.require_forest()
-        key = self.key(checksum, identifier)
-        if self.forest.trees:
-            t = self.forest.trees[-1]
-        else:
-            t = self.forest.new_tree()
-        t.insert(key, '')
-
-    def find(self, checksum):
-        if self.init_forest() and self.forest.trees:
-            t = self.forest.trees[-1]
-            pairs = t.lookup_range(self.key(checksum, 0),
-                                   self.key(checksum, self.max_id))
-            return [self.unkey(key)[1] for key, value in pairs]
-        else:
-            return []
-
-    def remove(self, checksum, identifier):
-        self.require_forest()
-        if self.forest.trees:
-            t = self.forest.new_tree(self.forest.trees[-1])
-            t.remove(self.key(checksum, identifier))
-
-
 class ChunkGroupTree(obnamlib.StoreTree):
 
     '''Store chunk groups.
@@ -564,10 +515,14 @@ class Store(object):
         self.removed_clients = []
         self.removed_generations = []
         self.genstore = None
-        self.chunksums = ChecksumTree(fs, 'chunksums', len(self.checksum('')),
-                                      node_size, upload_queue_size, lru_size)
-        self.groupsums = ChecksumTree(fs, 'groupsums', len(self.checksum('')),
-                                      node_size, upload_queue_size, lru_size)
+        self.chunksums = obnamlib.ChecksumTree(fs, 'chunksums', 
+                                               len(self.checksum('')),
+                                               node_size, upload_queue_size, 
+                                               lru_size)
+        self.groupsums = obnamlib.ChecksumTree(fs, 'groupsums', 
+                                               len(self.checksum('')),
+                                               node_size, upload_queue_size, 
+                                               lru_size)
         self.chunkgroups = ChunkGroupTree(fs, node_size, upload_queue_size,
                                           lru_size)
         self.prev_chunkid = None
