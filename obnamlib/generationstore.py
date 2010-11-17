@@ -159,7 +159,7 @@ class GenerationStore(obnamlib.StoreTree):
         else:
             return []
 
-    def start_generation(self):
+    def start_generation(self, current_time=time.time):
         assert self.curgen is None
         if self.forest.trees:
             old = self.forest.trees[-1]
@@ -167,7 +167,7 @@ class GenerationStore(obnamlib.StoreTree):
             old = None
         self.curgen = self.forest.new_tree(old=old)
         gen_id = self.forest.new_id()
-        now = int(time.time())
+        now = int(current_time())
         self._insert_int(self.curgen, self.genkey(self.GEN_META_ID), gen_id)
         self._insert_int(self.curgen, self.genkey(self.GEN_META_STARTED), now)
 

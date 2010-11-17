@@ -40,8 +40,14 @@ class GenerationStoreTests(unittest.TestCase):
     def test_lists_no_generations_initially(self):
         self.assertEqual(self.gen.list_generations(), [])
 
-    def test_start_generation_sets_curgen(self):
+    def test_starts_generation(self):
         self.gen.require_forest()
-        self.gen.start_generation()
+        self.gen.start_generation(current_time=lambda: 12765)
         self.assertNotEqual(self.gen.curgen, None)
-
+        
+        def lookup(x):
+            key = self.gen.genkey(x)
+            return self.gen._lookup_int(self.gen.curgen, key)
+        self.assertEqual(lookup(self.gen.GEN_META_ID), 
+                         self.gen.get_generation_id(self.gen.curgen))
+        self.assertEqual(lookup(self.gen.GEN_META_STARTED), 12765)
