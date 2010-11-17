@@ -124,38 +124,6 @@ def decode_metadata(encoded):
     return obnamlib.Metadata(**args)
 
 
-class NodeStoreVfs(btree.NodeStoreDisk):
-
-    def __init__(self, fs, dirname, node_size, codec, upload_queue_size,
-                 lru_size):
-        btree.NodeStoreDisk.__init__(self, dirname, node_size, codec,
-                                     upload_max=upload_queue_size,
-                                     lru_size=lru_size)
-        self.fs = fs
-        
-    def mkdir(self, dirname):
-        if not self.fs.exists(dirname):
-            self.fs.makedirs(dirname)
-
-    def read_file(self, filename):
-        return self.fs.cat(filename)
-
-    def write_file(self, filename, contents):
-        self.fs.overwrite_file(filename, contents, make_backup=False)
-
-    def file_exists(self, filename):
-        return self.fs.exists(filename)
-
-    def rename_file(self, old, new):
-        self.fs.rename(old, new)
-
-    def remove_file(self, filename): # pragma: no cover
-        self.fs.remove(filename)
-
-    def listdir(self, dirname): # pragma: no cover
-        return self.fs.listdir(dirname)
-
-
 class StoreTree(object):
 
     '''A B-tree within a Store.'''
@@ -175,7 +143,8 @@ class StoreTree(object):
             if not self.fs.exists(self.dirname):
                 return False
             codec = btree.NodeCodec(self.key_bytes)
-            ns = NodeStoreVfs(self.fs, self.dirname, self.node_size, codec,
+            ns = obnamlib.NodeStoreVfs(self.fs, 
+                              self.dirname, self.node_size, codec,
                               self.upload_queue_size, self.lru_size)
             self.forest = btree.Forest(ns)
         return True

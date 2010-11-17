@@ -42,6 +42,7 @@ from vfs import VirtualFileSystem, VfsFactory, VfsTests
 from vfs_local import LocalFS
 from metadata import (read_metadata, set_metadata, Metadata, metadata_fields,
                       metadata_verify_fields)
+from nodestorevfs import NodeStoreVfs
 from store import Store, LockFail
 from forget_policy import ForgetPolicy
 from app import App
