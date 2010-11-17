@@ -42,9 +42,9 @@ class NodeStoreVfs(btree.NodeStoreDisk):
     def rename_file(self, old, new):
         self.fs.rename(old, new)
 
-    def remove_file(self, filename): # pragma: no cover
+    def remove_file(self, filename):
         self.fs.remove(filename)
 
-    def listdir(self, dirname): # pragma: no cover
+    def listdir(self, dirname):
         return self.fs.listdir(dirname)
 
