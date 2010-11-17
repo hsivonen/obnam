@@ -40,3 +40,8 @@ class GenerationStoreTests(unittest.TestCase):
     def test_lists_no_generations_initially(self):
         self.assertEqual(self.gen.list_generations(), [])
 
+    def test_start_generation_sets_curgen(self):
+        self.gen.require_forest()
+        self.gen.start_generation()
+        self.assertNotEqual(self.gen.curgen, None)
+
