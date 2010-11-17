@@ -179,7 +179,10 @@ class GenerationStore(obnamlib.StoreTree):
     def get_is_checkpoint(self, genid):
         tree = self.find_generation(genid)
         key = self.genkey(self.GEN_META_IS_CHECKPOINT)
-        return self._lookup_int(tree, key)
+        try:
+            return self._lookup_int(tree, key)
+        except KeyError:
+            return 0
 
     def remove_generation(self, genid):
         tree = self.find_generation(genid)

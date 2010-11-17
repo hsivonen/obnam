@@ -48,6 +48,9 @@ class GenerationStoreTests(unittest.TestCase):
         def lookup(x):
             key = self.gen.genkey(x)
             return self.gen._lookup_int(self.gen.curgen, key)
-        self.assertEqual(lookup(self.gen.GEN_META_ID), 
-                         self.gen.get_generation_id(self.gen.curgen))
+
+        genid = self.gen.get_generation_id(self.gen.curgen)
+        self.assertEqual(lookup(self.gen.GEN_META_ID), genid)
         self.assertEqual(lookup(self.gen.GEN_META_STARTED), 12765)
+        self.assertFalse(self.gen.get_is_checkpoint(genid))
+
