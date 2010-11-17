@@ -95,3 +95,10 @@ class GenerationStoreTests(unittest.TestCase):
         self.gen.remove_generation(self.gen.list_generations()[0])
         self.assertEqual(self.gen.list_generations(), [])
 
+    def test_removes_started_generation(self):
+        self.gen.require_forest()
+        self.gen.start_generation()
+        self.gen.remove_generation(self.gen.list_generations()[0])
+        self.assertEqual(self.gen.list_generations(), [])
+        self.assertEqual(self.gen.curgen, None)
+
