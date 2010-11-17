@@ -54,6 +54,24 @@ class GenerationStoreTests(unittest.TestCase):
         self.assertEqual(lookup(self.gen.GEN_META_STARTED), 12765)
         self.assertFalse(self.gen.get_is_checkpoint(genid))
 
+    def test_starts_second_generation(self):
+        self.gen.require_forest()
+        self.gen.start_generation(current_time=lambda: 1)
+        genid1 = self.gen.get_generation_id(self.gen.curgen)
+        self.gen.commit()
+        self.gen.start_generation(current_time=lambda: 2)
+        self.assertNotEqual(self.gen.curgen, None)
+        
+        def lookup(x):
+            key = self.gen.genkey(x)
+            return self.gen._lookup_int(self.gen.curgen, key)
+
+        genid = self.gen.get_generation_id(self.gen.curgen)
+        self.assertEqual(lookup(self.gen.GEN_META_ID), genid)
+        self.assertNotEqual(genid1, genid)
+        self.assertEqual(lookup(self.gen.GEN_META_STARTED), 2)
+        self.assertFalse(self.gen.get_is_checkpoint(genid))
+
     def test_sets_is_checkpoint(self):
         self.gen.require_forest()
         self.gen.start_generation(current_time=lambda: 12765)
