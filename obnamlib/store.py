@@ -124,44 +124,7 @@ def decode_metadata(encoded):
     return obnamlib.Metadata(**args)
 
 
-class StoreTree(object):
-
-    '''A B-tree within a Store.'''
-
-    def __init__(self, fs, dirname, key_bytes, node_size, upload_queue_size,
-                 lru_size):
-        self.fs = fs
-        self.dirname = dirname
-        self.key_bytes = key_bytes
-        self.node_size = node_size
-        self.upload_queue_size = upload_queue_size
-        self.lru_size = lru_size
-        self.forest = None
-
-    def init_forest(self):
-        if self.forest is None:
-            if not self.fs.exists(self.dirname):
-                return False
-            codec = btree.NodeCodec(self.key_bytes)
-            ns = obnamlib.NodeStoreVfs(self.fs, 
-                              self.dirname, self.node_size, codec,
-                              self.upload_queue_size, self.lru_size)
-            self.forest = btree.Forest(ns)
-        return True
-
-    def require_forest(self):
-        if not self.fs.exists(self.dirname):
-            self.fs.mkdir(self.dirname)
-        self.init_forest()
-        assert self.forest is not None
-
-    def commit(self):
-        if self.forest:
-            self.require_forest()
-            self.forest.commit()
-
-
-class ClientList(StoreTree):
+class ClientList(obnamlib.StoreTree):
 
     '''Store list of clients.
     
@@ -194,8 +157,8 @@ class ClientList(StoreTree):
         self.key_bytes = len(self.key('', 0, 0))
         self.minkey = self.hashkey('\x00' * self.hash_len, 0, 0)
         self.maxkey = self.hashkey('\xff' * self.hash_len, 255, self.max_index)
-        StoreTree.__init__(self, fs, 'clientlist', self.key_bytes, node_size,
-                           upload_queue_size, lru_size)
+        obnamlib.StoreTree.__init__(self, fs, 'clientlist', self.key_bytes, 
+                                    node_size, upload_queue_size, lru_size)
 
     def hashfunc(self, string):
         return hashlib.new('md5', string).digest()
@@ -273,7 +236,7 @@ class ClientList(StoreTree):
                 t.remove(self.key(client_name, self.type_name, index))
 
 
-class GenerationStore(StoreTree):
+class GenerationStore(obnamlib.StoreTree):
 
     '''Store generations.
 
@@ -327,8 +290,8 @@ class GenerationStore(StoreTree):
     
     def __init__(self, fs, client_id, node_size, upload_queue_size, lru_size):
         key_bytes = len(self.key('', 0, 0))
-        StoreTree.__init__(self, fs, client_id, key_bytes, node_size,
-                           upload_queue_size, lru_size)
+        obnamlib.StoreTree.__init__(self, fs, client_id, key_bytes, node_size,
+                                    upload_queue_size, lru_size)
         self.curgen = None
         self.known_generations = dict()
 
@@ -540,7 +503,7 @@ class GenerationStore(StoreTree):
                                struct.pack('!Q', cgid))
 
 
-class ChecksumTree(StoreTree):
+class ChecksumTree(obnamlib.StoreTree):
 
     '''Store map of checksum to integer id.
 
@@ -554,8 +517,8 @@ class ChecksumTree(StoreTree):
                  upload_queue_size, lru_size):
         self.sumlen = checksum_length
         key_bytes = len(self.key('', 0))
-        StoreTree.__init__(self, fs, name, key_bytes, node_size, 
-                           upload_queue_size, lru_size)
+        obnamlib.StoreTree.__init__(self, fs, name, key_bytes, node_size, 
+                                    upload_queue_size, lru_size)
         self.max_id = 2**64 - 1
 
     def key(self, checksum, number):
@@ -589,7 +552,7 @@ class ChecksumTree(StoreTree):
             t.remove(self.key(checksum, identifier))
 
 
-class ChunkGroupTree(StoreTree):
+class ChunkGroupTree(obnamlib.StoreTree):
 
     '''Store chunk groups.
 
@@ -602,9 +565,9 @@ class ChunkGroupTree(StoreTree):
     # the chunks are stored as the value, as a blob, using struct.
 
     def __init__(self, fs, node_size, upload_queue_size, lru_size):
-        StoreTree.__init__(self, fs, 'chunkgroups', 
-                           len(self.key(0)), node_size, upload_queue_size,
-                           lru_size)
+        obnamlib.StoreTree.__init__(self, fs, 'chunkgroups', 
+                                    len(self.key(0)), node_size, 
+                                    upload_queue_size, lru_size)
         self.max_id = 2**64 - 1
 
     def key(self, cgid):

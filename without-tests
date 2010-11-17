@@ -21,3 +21,4 @@
 
 ./obnamlib/plugins/__init__.py
 ./obnamlib/nodestorevfs.py
+./obnamlib/store_tree.py
