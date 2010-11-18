@@ -138,6 +138,14 @@ class GenerationTreeFileOpsTests(unittest.TestCase):
     def test_has_empty_root_initially(self):
         self.assertEqual(self.gen.listdir(self.genid, '/'), [])
 
+    def test_has_no_metadata_initially(self):
+        self.assertRaises(KeyError, self.gen.get_metadata, self.genid, '/foo')
+
+    def test_sets_metadata(self):
+        self.gen.set_metadata('/foo', self.file_encoded)
+        self.assertEqual(self.gen.get_metadata(self.genid, '/foo'), 
+                         self.file_encoded)
+
     def test_creates_file_at_root(self):
         self.gen.create('/foo', self.file_encoded)
         self.assertEqual(self.gen.listdir(self.genid, '/'), ['foo'])
