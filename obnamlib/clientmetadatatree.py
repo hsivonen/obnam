@@ -223,8 +223,10 @@ class ClientMetadataTree(obnamlib.StoreTree):
             self.curgen.remove_range(key, key)
 
     def create(self, filename, encoded_metadata):
+        namehash = self.hash_name(filename)
         file_id = self.get_file_id(self.curgen, filename)
-        key = self.fskey(filename, self.FILE_NAME, file_id)
+        key = self.hashkey(self.PREFIX_FS_META, namehash, 
+                           self.FILE_NAME, file_id)
         try:
             old_metadata = self.curgen.lookup(key)
         except KeyError:
@@ -254,8 +256,10 @@ class ClientMetadataTree(obnamlib.StoreTree):
         return tree.lookup(key)
 
     def set_metadata(self, filename, encoded_metadata):
+        namehash = self.hash_name(filename)
         file_id = self.get_file_id(self.curgen, filename)
-        key1 = self.fskey(filename, self.FILE_NAME, file_id)
+        key1 = self.hashkey(self.PREFIX_FS_META, namehash, 
+                            self.FILE_NAME, file_id)
         self.curgen.insert(key1, filename)
         
         key2 = self.hashkey(self.PREFIX_FS_META, file_id, self.FILE_METADATA, 
