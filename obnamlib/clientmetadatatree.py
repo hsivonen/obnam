@@ -318,6 +318,7 @@ class ClientMetadataTree(obnamlib.StoreTree):
                               self.FILE_CHUNK_GROUPS, self.SUBKEY_MAX)
         self.curgen.remove_range(minkey, maxkey)
         for i, cgid in enumerate(cgids):
-            key = self.fskey(filename, self.FILE_CHUNK_GROUPS, i)
+            key = self.hashkey(self.PREFIX_FS_META, file_id, 
+                               self.FILE_CHUNK_GROUPS, i)
             self.curgen.insert(key, struct.pack('!Q', cgid))
 
