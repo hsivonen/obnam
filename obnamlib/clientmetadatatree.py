@@ -31,6 +31,11 @@ class ClientMetadataTree(obnamlib.StoreTree):
     data they use.
     
     '''
+    
+    # Key prefixes.
+    
+    PREFIX_FS_META = 0
+    PREFIX_CHUNK_REF = 1
 
     TYPE_MAX = 255
     SUBKEY_MAX = struct.pack('!Q', 2**64-1)
@@ -54,7 +59,7 @@ class ClientMetadataTree(obnamlib.StoreTree):
     FILE_METADATA = 1
     
     def __init__(self, fs, client_id, node_size, upload_queue_size, lru_size):
-        key_bytes = len(self.key('', 0, 0))
+        key_bytes = len(self.key(self.PREFIX_FS_META, '', 0, 0))
         obnamlib.StoreTree.__init__(self, fs, client_id, key_bytes, node_size,
                                     upload_queue_size, lru_size)
         self.curgen = None
@@ -64,7 +69,7 @@ class ClientMetadataTree(obnamlib.StoreTree):
         '''Return hash of filename suitable for use as main key.'''
         return hashlib.md5(filename).digest()[:8]
 
-    def hashkey(self, mainhash, subtype, subkey):
+    def hashkey(self, prefix, mainhash, subtype, subkey):
         '''Like key, but main key's hash is given.'''
         
         if type(subkey) == int:
@@ -76,11 +81,12 @@ class ClientMetadataTree(obnamlib.StoreTree):
 
         return struct.pack(fmt, mainhash, subtype, subkey)
 
-    def key(self, mainkey, subtype, subkey):
+    def key(self, prefix, mainkey, subtype, subkey):
         '''Compute a full key.
 
         The full key consists of three parts:
 
+        * prefix (0 for filesystem metadata, 1 for chunk refs)
         * a hash of mainkey (64 bits)
         * the subkey type (8 bits)
         * type subkey (64 bits)
@@ -98,11 +104,12 @@ class ClientMetadataTree(obnamlib.StoreTree):
 
         '''
 
-        return self.hashkey(self.hash_name(mainkey), subtype, subkey)
+        return self.hashkey(prefix, self.hash_name(mainkey), subtype, subkey)
 
     def genkey(self, subkey):
         '''Generate key for generation metadata.'''
-        return self.key('generation', self.GEN_META, subkey)
+        return self.key(self.PREFIX_FS_META, 'generation', 
+                        self.GEN_META, subkey)
 
     def _lookup_int(self, tree, key):
         return struct.unpack('!Q', tree.lookup(key))[0]
@@ -185,19 +192,22 @@ class ClientMetadataTree(obnamlib.StoreTree):
                 self._lookup_time(tree, self.GEN_META_ENDED))
 
     def _remove_filename_data(self, filename):
-        minkey = self.key(filename, 0, 0)
-        maxkey = self.key(filename, self.TYPE_MAX, self.SUBKEY_MAX)
+        minkey = self.key(self.PREFIX_FS_META, filename, 0, 0)
+        maxkey = self.key(self.PREFIX_FS_META, filename, self.TYPE_MAX, 
+                          self.SUBKEY_MAX)
         self.curgen.remove_range(minkey, maxkey)
 
         # Also remove from parent's contents.
         parent = os.path.dirname(filename)
         if parent != filename: # root dir is its own parent
             subkey = self.hash_name(filename)
-            key = self.key(parent, self.DIR_CONTENTS, subkey)
+            key = self.key(self.PREFIX_FS_META, parent, self.DIR_CONTENTS, 
+                           subkey)
             self.curgen.remove_range(key, key)
 
     def create(self, filename, encoded_metadata):
-        key = self.key(filename, self.FILE, self.FILE_METADATA)
+        key = self.key(self.PREFIX_FS_META, filename, self.FILE, 
+                       self.FILE_METADATA)
         try:
             old_metadata = self.curgen.lookup(key)
         except KeyError:
@@ -210,7 +220,8 @@ class ClientMetadataTree(obnamlib.StoreTree):
         if parent != filename: # root dir is its own parent
             basename = os.path.basename(filename)
             subkey = self.hash_name(filename)
-            key = self.key(parent, self.DIR_CONTENTS, subkey)
+            key = self.key(self.PREFIX_FS_META, parent, self.DIR_CONTENTS, 
+                           subkey)
             # We could just insert, but that would cause unnecessary
             # churn in the tree if nothing changes.
             try:
@@ -220,21 +231,27 @@ class ClientMetadataTree(obnamlib.StoreTree):
 
     def get_metadata(self, genid, filename):
         tree = self.find_generation(genid)
-        return tree.lookup(self.key(filename, self.FILE, self.FILE_METADATA))
+        key = self.key(self.PREFIX_FS_META, filename, self.FILE, 
+                       self.FILE_METADATA)
+        return tree.lookup(key)
 
     def set_metadata(self, filename, encoded_metadata):
-        self.curgen.insert(self.key(filename, self.FILE, self.FILE_NAME),
-                           filename)
-        self.curgen.insert(self.key(filename, self.FILE, self.FILE_METADATA),
-                           encoded_metadata)
+        key1 = self.key(self.PREFIX_FS_META, filename, self.FILE, 
+                        self.FILE_NAME)
+        self.curgen.insert(key1, filename)
+        
+        key2 = self.key(self.PREFIX_FS_META, filename, self.FILE, 
+                        self.FILE_METADATA)
+        self.curgen.insert(key2, encoded_metadata)
 
     def remove(self, filename):
         self._remove_filename_data(filename)
 
     def listdir(self, genid, dirname):
         tree = self.find_generation(genid)
-        minkey = self.key(dirname, self.DIR_CONTENTS, 0)
-        maxkey = self.key(dirname, self.DIR_CONTENTS, self.SUBKEY_MAX)
+        minkey = self.key(self.PREFIX_FS_META, dirname, self.DIR_CONTENTS, 0)
+        maxkey = self.key(self.PREFIX_FS_META, dirname, self.DIR_CONTENTS, 
+                          self.SUBKEY_MAX)
         basenames = []
         for key, value in tree.lookup_range(minkey, maxkey):
             basenames.append(value)
@@ -242,32 +259,39 @@ class ClientMetadataTree(obnamlib.StoreTree):
 
     def get_file_chunks(self, genid, filename):
         tree = self.find_generation(genid)
-        minkey = self.key(filename, self.FILE_CHUNKS, 0)
-        maxkey = self.key(filename, self.FILE_CHUNKS, self.SUBKEY_MAX)
+        minkey = self.key(self.PREFIX_FS_META, filename, self.FILE_CHUNKS, 0)
+        maxkey = self.key(self.PREFIX_FS_META, filename, self.FILE_CHUNKS, 
+                          self.SUBKEY_MAX)
         pairs = tree.lookup_range(minkey, maxkey)
         return [struct.unpack('!Q', value)[0]
                 for key, value in pairs]
     
     def set_file_chunks(self, filename, chunkids):
-        minkey = self.key(filename, self.FILE_CHUNKS, 0)
-        maxkey = self.key(filename, self.FILE_CHUNKS, self.SUBKEY_MAX)
+        minkey = self.key(self.PREFIX_FS_META, filename, self.FILE_CHUNKS, 0)
+        maxkey = self.key(self.PREFIX_FS_META, filename, self.FILE_CHUNKS, 
+                          self.SUBKEY_MAX)
         self.curgen.remove_range(minkey, maxkey)
         for i, chunkid in enumerate(chunkids):
-            self.curgen.insert(self.key(filename, self.FILE_CHUNKS, i),
-                               struct.pack('!Q', chunkid))
+            key = self.key(self.PREFIX_FS_META, filename, self.FILE_CHUNKS, i)
+            self.curgen.insert(key, struct.pack('!Q', chunkid))
         
     def get_file_chunk_groups(self, genid, filename):
         tree = self.find_generation(genid)
-        minkey = self.key(filename, self.FILE_CHUNK_GROUPS, 0)
-        maxkey = self.key(filename, self.FILE_CHUNK_GROUPS, self.SUBKEY_MAX)
+        minkey = self.key(self.PREFIX_FS_META, filename, 
+                          self.FILE_CHUNK_GROUPS, 0)
+        maxkey = self.key(self.PREFIX_FS_META, filename, 
+                          self.FILE_CHUNK_GROUPS, self.SUBKEY_MAX)
         return [struct.unpack('!Q', value)[0]
                 for key, value in tree.lookup_range(minkey, maxkey)]
 
     def set_file_chunk_groups(self, filename, cgids):
-        minkey = self.key(filename, self.FILE_CHUNK_GROUPS, 0)
-        maxkey = self.key(filename, self.FILE_CHUNK_GROUPS, self.SUBKEY_MAX)
+        minkey = self.key(self.PREFIX_FS_META, filename, 
+                          self.FILE_CHUNK_GROUPS, 0)
+        maxkey = self.key(self.PREFIX_FS_META, filename, 
+                          self.FILE_CHUNK_GROUPS, self.SUBKEY_MAX)
         self.curgen.remove_range(minkey, maxkey)
         for i, cgid in enumerate(cgids):
-            self.curgen.insert(self.key(filename, self.FILE_CHUNK_GROUPS, i),
-                               struct.pack('!Q', cgid))
+            key = self.key(self.PREFIX_FS_META, filename, 
+                           self.FILE_CHUNK_GROUPS, i)
+            self.curgen.insert(key, struct.pack('!Q', cgid))
 
