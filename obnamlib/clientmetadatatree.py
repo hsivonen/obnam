@@ -113,9 +113,9 @@ class ClientMetadataTree(obnamlib.StoreTree):
 
         return self.hashkey(prefix, self.hash_name(mainkey), subtype, subkey)
 
-    def fskey(self, pathname, subtype, subkey):
+    def fskey(self, mainhash, subtype, subkey):
         ''''Generate key for filesystem metadata.'''
-        return self.key(self.PREFIX_FS_META, pathname, subtype, subkey)
+        return self.hashkey(self.PREFIX_FS_META, mainhash, subtype, subkey)
 
     def genkey(self, subkey):
         '''Generate key for generation metadata.'''
@@ -208,25 +208,22 @@ class ClientMetadataTree(obnamlib.StoreTree):
 
     def _remove_filename_data(self, filename):
         file_id = self.get_file_id(self.curgen, filename)
-        minkey = self.hashkey(self.PREFIX_FS_META, file_id, 0, 0)
-        maxkey = self.hashkey(self.PREFIX_FS_META, file_id, 
-                              self.TYPE_MAX, self.SUBKEY_MAX)
+        minkey = self.fskey(file_id, 0, 0)
+        maxkey = self.fskey(file_id, self.TYPE_MAX, self.SUBKEY_MAX)
         self.curgen.remove_range(minkey, maxkey)
 
         # Also remove from parent's contents.
         parent = os.path.dirname(filename)
         if parent != filename: # root dir is its own parent
             parent_id = self.get_file_id(self.curgen, parent)
-            key = self.hashkey(self.PREFIX_FS_META, parent_id, 
-                               self.DIR_CONTENTS, file_id)
+            key = self.fskey(parent_id, self.DIR_CONTENTS, file_id)
             # The range removal will work even if the key does not exist.
             self.curgen.remove_range(key, key)
 
     def create(self, filename, encoded_metadata):
         namehash = self.hash_name(filename)
         file_id = self.get_file_id(self.curgen, filename)
-        key = self.hashkey(self.PREFIX_FS_META, namehash, 
-                           self.FILE_NAME, file_id)
+        key = self.fskey(namehash, self.FILE_NAME, file_id)
         try:
             old_metadata = self.curgen.lookup(key)
         except KeyError:
@@ -239,8 +236,7 @@ class ClientMetadataTree(obnamlib.StoreTree):
         if parent != filename: # root dir is its own parent
             basename = os.path.basename(filename)
             parent_id = self.get_file_id(self.curgen, parent)
-            key = self.hashkey(self.PREFIX_FS_META, parent_id, 
-                               self.DIR_CONTENTS, file_id)
+            key = self.fskey(parent_id, self.DIR_CONTENTS, file_id)
             # We could just insert, but that would cause unnecessary
             # churn in the tree if nothing changes.
             try:
@@ -251,19 +247,18 @@ class ClientMetadataTree(obnamlib.StoreTree):
     def get_metadata(self, genid, filename):
         tree = self.find_generation(genid)
         file_id = self.get_file_id(tree, filename)
-        key = self.hashkey(self.PREFIX_FS_META, file_id, self.FILE_METADATA, 
-                           self.FILE_METADATA_ENCODED)
+        key = self.fskey(file_id, self.FILE_METADATA, 
+                         self.FILE_METADATA_ENCODED)
         return tree.lookup(key)
 
     def set_metadata(self, filename, encoded_metadata):
         namehash = self.hash_name(filename)
         file_id = self.get_file_id(self.curgen, filename)
-        key1 = self.hashkey(self.PREFIX_FS_META, namehash, 
-                            self.FILE_NAME, file_id)
+        key1 = self.fskey(namehash, self.FILE_NAME, file_id)
         self.curgen.insert(key1, filename)
         
-        key2 = self.hashkey(self.PREFIX_FS_META, file_id, self.FILE_METADATA, 
-                            self.FILE_METADATA_ENCODED)
+        key2 = self.fskey(file_id, self.FILE_METADATA, 
+                          self.FILE_METADATA_ENCODED)
         self.curgen.insert(key2, encoded_metadata)
 
     def remove(self, filename):
@@ -272,10 +267,8 @@ class ClientMetadataTree(obnamlib.StoreTree):
     def listdir(self, genid, dirname):
         tree = self.find_generation(genid)
         dir_id = self.get_file_id(tree, dirname)
-        minkey = self.hashkey(self.PREFIX_FS_META, dir_id, 
-                              self.DIR_CONTENTS, 0)
-        maxkey = self.hashkey(self.PREFIX_FS_META, dir_id, 
-                              self.DIR_CONTENTS, self.SUBKEY_MAX)
+        minkey = self.fskey(dir_id, self.DIR_CONTENTS, 0)
+        maxkey = self.fskey(dir_id, self.DIR_CONTENTS, self.SUBKEY_MAX)
         basenames = []
         for key, value in tree.lookup_range(minkey, maxkey):
             basenames.append(value)
@@ -284,45 +277,35 @@ class ClientMetadataTree(obnamlib.StoreTree):
     def get_file_chunks(self, genid, filename):
         tree = self.find_generation(genid)
         file_id = self.get_file_id(tree, filename)
-        minkey = self.hashkey(self.PREFIX_FS_META, file_id, 
-                              self.FILE_CHUNKS, 0)
-        maxkey = self.hashkey(self.PREFIX_FS_META, file_id, 
-                              self.FILE_CHUNKS, self.SUBKEY_MAX)
+        minkey = self.fskey(file_id, self.FILE_CHUNKS, 0)
+        maxkey = self.fskey(file_id, self.FILE_CHUNKS, self.SUBKEY_MAX)
         pairs = tree.lookup_range(minkey, maxkey)
         return [struct.unpack('!Q', value)[0]
                 for key, value in pairs]
     
     def set_file_chunks(self, filename, chunkids):
         file_id = self.get_file_id(self.curgen, filename)
-        minkey = self.hashkey(self.PREFIX_FS_META, file_id, 
-                              self.FILE_CHUNKS, 0)
-        maxkey = self.hashkey(self.PREFIX_FS_META, file_id, 
-                              self.FILE_CHUNKS, self.SUBKEY_MAX)
+        minkey = self.fskey(file_id, self.FILE_CHUNKS, 0)
+        maxkey = self.fskey(file_id, self.FILE_CHUNKS, self.SUBKEY_MAX)
         self.curgen.remove_range(minkey, maxkey)
         for i, chunkid in enumerate(chunkids):
-            key = self.hashkey(self.PREFIX_FS_META, file_id, 
-                               self.FILE_CHUNKS, i)
+            key = self.fskey(file_id, self.FILE_CHUNKS, i)
             self.curgen.insert(key, struct.pack('!Q', chunkid))
         
     def get_file_chunk_groups(self, genid, filename):
         tree = self.find_generation(genid)
         file_id = self.get_file_id(tree, filename)
-        minkey = self.hashkey(self.PREFIX_FS_META, file_id, 
-                              self.FILE_CHUNK_GROUPS, 0)
-        maxkey = self.hashkey(self.PREFIX_FS_META, file_id, 
-                              self.FILE_CHUNK_GROUPS, self.SUBKEY_MAX)
+        minkey = self.fskey(file_id, self.FILE_CHUNK_GROUPS, 0)
+        maxkey = self.fskey(file_id, self.FILE_CHUNK_GROUPS, self.SUBKEY_MAX)
         return [struct.unpack('!Q', value)[0]
                 for key, value in tree.lookup_range(minkey, maxkey)]
 
     def set_file_chunk_groups(self, filename, cgids):
         file_id = self.get_file_id(self.curgen, filename)
-        minkey = self.hashkey(self.PREFIX_FS_META, file_id, 
-                              self.FILE_CHUNK_GROUPS, 0)
-        maxkey = self.hashkey(self.PREFIX_FS_META, file_id, 
-                              self.FILE_CHUNK_GROUPS, self.SUBKEY_MAX)
+        minkey = self.fskey(file_id, self.FILE_CHUNK_GROUPS, 0)
+        maxkey = self.fskey(file_id, self.FILE_CHUNK_GROUPS, self.SUBKEY_MAX)
         self.curgen.remove_range(minkey, maxkey)
         for i, cgid in enumerate(cgids):
-            key = self.hashkey(self.PREFIX_FS_META, file_id, 
-                               self.FILE_CHUNK_GROUPS, i)
+            key = self.fskey(file_id, self.FILE_CHUNK_GROUPS, i)
             self.curgen.insert(key, struct.pack('!Q', cgid))
 
