@@ -22,35 +22,14 @@ import time
 import obnamlib
 
 
-class GenerationStore(obnamlib.StoreTree):
+class ClientMetadataTree(obnamlib.StoreTree):
 
-    '''Store generations.
-
-    We store things in the B-tree forest as follows:
-
-    * each generation is a tree; each tree is a generation
-    * tree key is constructed from three parts: a main key, a subkey type,
-      and the subkey itself
-      * the main key is a hash of a string, and is 64 bits
-      * the subkey type is 8 bits
-      * the subkey is a string and is 64 bits
-    * the string for the main key is either a fully qualified pathname, 
-      for filesystem objects, or the string "generation" for generation
-      metadata
-    * a filesystem object's metadata (inode data, etc) is stored as a blob,
-      in a specific subkey
-    * a regular file's contents are stored using chunks, which are stored
-      outside of the tree
-      * each chunk has an id
-      * the chunk ids are stored in the tree, using a dedicated subkey type,
-        with the subkey being the ordinal for each subkey: 0, 1, 2, ...
-    * a directory's contents are stored by storing the main key (the hash,
-      not the input to the hash function) for each filesystem object in the
-      directory
-      * similar to chunks in files
-      * dedicated subkey type
-      * subkey is hash of directory entry's full pathname
-
+    '''Store per-client metadata about files.
+    
+    Actual file contents is stored elsewhere, this stores just the 
+    metadata about files: names, inode info, and what chunks of
+    data they use.
+    
     '''
 
     TYPE_MAX = 255

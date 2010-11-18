@@ -292,10 +292,10 @@ class Store(object):
         self.current_client = client_name
         self.added_generations = []
         self.removed_generations = []
-        self.genstore = obnamlib.GenerationStore(self.fs, client_id, 
-                                                 self.node_size,
-                                                 self.upload_queue_size, 
-                                                 self.lru_size)
+        self.genstore = obnamlib.ClientMetadataTree(self.fs, client_id, 
+                                                    self.node_size,
+                                                    self.upload_queue_size, 
+                                                    self.lru_size)
         self.genstore.require_forest()
 
     @require_client_lock
@@ -332,10 +332,10 @@ class Store(object):
         if client_id is None:
             raise obnamlib.Error('%s is not an existing client' % client_name)
         self.current_client = client_name
-        self.genstore = obnamlib.GenerationStore(self.fs, client_id, 
-                                                 self.node_size, 
-                                                 self.upload_queue_size, 
-                                                 self.lru_size)
+        self.genstore = obnamlib.ClientMetadataTree(self.fs, client_id, 
+                                                    self.node_size, 
+                                                    self.upload_queue_size, 
+                                                    self.lru_size)
         self.genstore.init_forest()
         
     @require_open_client
