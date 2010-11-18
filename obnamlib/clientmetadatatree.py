@@ -65,7 +65,7 @@ class ClientMetadataTree(obnamlib.StoreTree):
     SUBKEY_MAX = struct.pack('!Q', 2**64-1)
 
     def __init__(self, fs, client_id, node_size, upload_queue_size, lru_size):
-        key_bytes = len(self.key(0, '', 0, 0))
+        key_bytes = len(self.hashkey(0, self.hash_name(''), 0, 0))
         obnamlib.StoreTree.__init__(self, fs, client_id, key_bytes, node_size,
                                     upload_queue_size, lru_size)
         self.genhash = self.hash_name('generation')
@@ -77,18 +77,6 @@ class ClientMetadataTree(obnamlib.StoreTree):
         return hashlib.md5(filename).digest()[:8]
 
     def hashkey(self, prefix, mainhash, subtype, subkey):
-        '''Like key, but main key's hash is given.'''
-        
-        if type(subkey) == int:
-            fmt = '!B8sBQ'
-        else:
-            assert type(subkey) == str
-            subkey = (subkey + '\0' * 8)[:8]
-            fmt = '!B8sB8s'
-
-        return struct.pack(fmt, prefix, mainhash, subtype, subkey)
-
-    def key(self, prefix, mainkey, subtype, subkey):
         '''Compute a full key.
 
         The full key consists of three parts:
@@ -100,7 +88,7 @@ class ClientMetadataTree(obnamlib.StoreTree):
 
         These are catenated.
 
-        mainkey must be a string.
+        mainhash must be a string of 8 bytes.
 
         subtype must be an integer in the range 0.255, inclusive.
 
@@ -110,8 +98,15 @@ class ClientMetadataTree(obnamlib.StoreTree):
         be converted as a string, and the value must fit into 64 bits.
 
         '''
+        
+        if type(subkey) == int:
+            fmt = '!B8sBQ'
+        else:
+            assert type(subkey) == str
+            subkey = (subkey + '\0' * 8)[:8]
+            fmt = '!B8sB8s'
 
-        return self.hashkey(prefix, self.hash_name(mainkey), subtype, subkey)
+        return struct.pack(fmt, prefix, mainhash, subtype, subkey)
 
     def fskey(self, mainhash, subtype, subkey):
         ''''Generate key for filesystem metadata.'''
