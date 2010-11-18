@@ -20,3 +20,5 @@
 ./obnamlib/plugins/sftp_plugin.py
 
 ./obnamlib/plugins/__init__.py
+./obnamlib/nodestorevfs.py
+./obnamlib/store_tree.py
