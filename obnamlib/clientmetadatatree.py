@@ -36,6 +36,7 @@ class ClientMetadataTree(obnamlib.StoreTree):
     
     PREFIX_FS_META = 0
     PREFIX_CHUNK_REF = 1
+    PREFIX_GEN_META = 2
 
     TYPE_MAX = 255
     SUBKEY_MAX = struct.pack('!Q', 2**64-1)
@@ -62,6 +63,7 @@ class ClientMetadataTree(obnamlib.StoreTree):
         key_bytes = len(self.key(self.PREFIX_FS_META, '', 0, 0))
         obnamlib.StoreTree.__init__(self, fs, client_id, key_bytes, node_size,
                                     upload_queue_size, lru_size)
+        self.genhash = self.hash_name('generation')
         self.curgen = None
         self.known_generations = dict()
 
@@ -108,8 +110,8 @@ class ClientMetadataTree(obnamlib.StoreTree):
 
     def genkey(self, subkey):
         '''Generate key for generation metadata.'''
-        return self.key(self.PREFIX_FS_META, 'generation', 
-                        self.GEN_META, subkey)
+        return self.hashkey(self.PREFIX_GEN_META, self.genhash, 
+                            self.GEN_META, subkey)
 
     def _lookup_int(self, tree, key):
         return struct.unpack('!Q', tree.lookup(key))[0]
