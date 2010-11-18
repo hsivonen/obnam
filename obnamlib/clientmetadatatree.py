@@ -73,13 +73,13 @@ class ClientMetadataTree(obnamlib.StoreTree):
         '''Like key, but main key's hash is given.'''
         
         if type(subkey) == int:
-            fmt = '!8sBQ'
+            fmt = '!B8sBQ'
         else:
             assert type(subkey) == str
             subkey = (subkey + '\0' * 8)[:8]
-            fmt = '!8sB8s'
+            fmt = '!B8sB8s'
 
-        return struct.pack(fmt, mainhash, subtype, subkey)
+        return struct.pack(fmt, prefix, mainhash, subtype, subkey)
 
     def key(self, prefix, mainkey, subtype, subkey):
         '''Compute a full key.
