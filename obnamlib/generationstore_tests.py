@@ -155,3 +155,12 @@ class GenerationTreeFileOpsTests(unittest.TestCase):
         self.assertEqual(self.gen.get_file_chunks(self.genid, '/foo'), 
                          [1, 2, 3])
 
+    def test_has_no_file_chunk_groups_initially(self):
+        self.assertEqual(self.gen.get_file_chunk_groups(self.genid, '/foo'), 
+                         [])
+
+    def test_sets_file_chunk_groups(self):
+        self.gen.set_file_chunk_groups('/foo', [1, 2, 3])
+        self.assertEqual(self.gen.get_file_chunk_groups(self.genid, '/foo'), 
+                         [1, 2, 3])
+
