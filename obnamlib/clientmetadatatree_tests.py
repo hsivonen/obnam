@@ -51,8 +51,8 @@ class ClientMetadataTreeTests(unittest.TestCase):
             return self.client._lookup_int(self.client.curgen, key)
 
         genid = self.client.get_generation_id(self.client.curgen)
-        self.assertEqual(lookup(self.client.GEN_META_ID), genid)
-        self.assertEqual(lookup(self.client.GEN_META_STARTED), 12765)
+        self.assertEqual(lookup(self.client.GEN_ID), genid)
+        self.assertEqual(lookup(self.client.GEN_STARTED), 12765)
         self.assertFalse(self.client.get_is_checkpoint(genid))
 
     def test_starts_second_generation(self):
@@ -68,9 +68,9 @@ class ClientMetadataTreeTests(unittest.TestCase):
             return self.client._lookup_int(self.client.curgen, key)
 
         genid2 = self.client.get_generation_id(self.client.curgen)
-        self.assertEqual(lookup(self.client.GEN_META_ID), genid2)
+        self.assertEqual(lookup(self.client.GEN_ID), genid2)
         self.assertNotEqual(genid1, genid2)
-        self.assertEqual(lookup(self.client.GEN_META_STARTED), 2)
+        self.assertEqual(lookup(self.client.GEN_STARTED), 2)
         self.assertFalse(self.client.get_is_checkpoint(genid2))
         self.assertEqual(self.client.list_generations(), [genid1, genid2])
 
