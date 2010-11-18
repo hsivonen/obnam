@@ -30,13 +30,33 @@ class ClientMetadataTree(obnamlib.StoreTree):
     metadata about files: names, inode info, and what chunks of
     data they use.
     
+    See http://braawi.org/obnam/ondisk/ for a description of how
+    this works.
+    
     '''
     
-    # Key prefixes.
+    # Filesystem metadata.
+    PREFIX_FS_META = 0      # prefix
+    FILE_NAME = 0           # subkey type for storing pathnames
+    FILE_CHUNKS = 1         # subkey type for list of chunks
+    FILE_CHUNK_GROUPS = 2   # subkey type for list of chunk groups
+    FILE_METADATA = 3       # subkey type for inode fields, etc
+    DIR_CONTENTS = 4        # subkey type for list of directory contents
     
-    PREFIX_FS_META = 0
+    FILE_METADATA_ENCODED = 0 # subkey value for encoded obnamlib.Metadata().
+    
+    # References to chunks in this generation.
+    # Main key is the chunk id, subkey type is always 0, subkey is file id
+    # for file that uses the chunk.
     PREFIX_CHUNK_REF = 1
-    PREFIX_GEN_META = 2
+    
+    # Metadata about the generation. The main key is always the hash of
+    # 'generation', subkey type field is always 0.
+    PREFIX_GEN_META = 2     # prefix
+    GEN_ID = 0              # subkey type for generation id
+    GEN_STARTED = 1         # subkey type for when generation was started
+    GEN_ENDED = 2           # subkey type for when generation was ended
+    GEN_IS_CHECKPOINT = 3   # subkey type for whether generation is checkpoint
     
     # Maximum values for the subkey type field, and the subkey field.
     # Both have a minimum value of 0.
@@ -44,26 +64,8 @@ class ClientMetadataTree(obnamlib.StoreTree):
     TYPE_MAX = 255
     SUBKEY_MAX = struct.pack('!Q', 2**64-1)
 
-    # Subkey types.
-
-    GEN_META = 0
-    FILE = 1
-    FILE_CHUNKS = 2
-    FILE_CHUNK_GROUPS = 3
-    DIR_CONTENTS = 4
-
-    # Subkey values when they are fixed.
-
-    GEN_META_ID = 0
-    GEN_META_STARTED = 1
-    GEN_META_ENDED = 2
-    GEN_META_IS_CHECKPOINT = 3
-
-    FILE_NAME = 0
-    FILE_METADATA = 1
-    
     def __init__(self, fs, client_id, node_size, upload_queue_size, lru_size):
-        key_bytes = len(self.key(self.PREFIX_FS_META, '', 0, 0))
+        key_bytes = len(self.key(0, '', 0, 0))
         obnamlib.StoreTree.__init__(self, fs, client_id, key_bytes, node_size,
                                     upload_queue_size, lru_size)
         self.genhash = self.hash_name('generation')
@@ -117,8 +119,7 @@ class ClientMetadataTree(obnamlib.StoreTree):
 
     def genkey(self, subkey):
         '''Generate key for generation metadata.'''
-        return self.hashkey(self.PREFIX_GEN_META, self.genhash, 
-                            self.GEN_META, subkey)
+        return self.hashkey(self.PREFIX_GEN_META, self.genhash, 0, subkey)
 
     def _lookup_int(self, tree, key):
         return struct.unpack('!Q', tree.lookup(key))[0]
@@ -130,9 +131,7 @@ class ClientMetadataTree(obnamlib.StoreTree):
         if self.forest:
             if self.curgen:
                 now = int(current_time())
-                self._insert_int(self.curgen, 
-                                 self.genkey(self.GEN_META_ENDED), 
-                                 now)
+                self._insert_int(self.curgen, self.genkey(self.GEN_ENDED), now)
                 self.curgen = None
             self.forest.commit()
 
@@ -141,7 +140,7 @@ class ClientMetadataTree(obnamlib.StoreTree):
             return self.known_generations[genid]
 
         if self.forest:
-            key = self.genkey(self.GEN_META_ID)
+            key = self.genkey(self.GEN_ID)
             for t in self.forest.trees:
                 if self._lookup_int(t, key) == genid:
                     self.known_generations[genid] = t
@@ -150,7 +149,7 @@ class ClientMetadataTree(obnamlib.StoreTree):
 
     def list_generations(self):
         if self.forest:
-            key = self.genkey(self.GEN_META_ID)
+            key = self.genkey(self.GEN_ID)
             return [self._lookup_int(t, key) for t in self.forest.trees]
         else:
             return []
@@ -164,17 +163,17 @@ class ClientMetadataTree(obnamlib.StoreTree):
         self.curgen = self.forest.new_tree(old=old)
         gen_id = self.forest.new_id()
         now = int(current_time())
-        self._insert_int(self.curgen, self.genkey(self.GEN_META_ID), gen_id)
-        self._insert_int(self.curgen, self.genkey(self.GEN_META_STARTED), now)
+        self._insert_int(self.curgen, self.genkey(self.GEN_ID), gen_id)
+        self._insert_int(self.curgen, self.genkey(self.GEN_STARTED), now)
 
     def set_current_generation_is_checkpoint(self, is_checkpoint):
         value = 1 if is_checkpoint else 0
-        key = self.genkey(self.GEN_META_IS_CHECKPOINT)
+        key = self.genkey(self.GEN_IS_CHECKPOINT)
         self._insert_int(self.curgen, key, value)
 
     def get_is_checkpoint(self, genid):
         tree = self.find_generation(genid)
-        key = self.genkey(self.GEN_META_IS_CHECKPOINT)
+        key = self.genkey(self.GEN_IS_CHECKPOINT)
         try:
             return self._lookup_int(tree, key)
         except KeyError:
@@ -187,7 +186,7 @@ class ClientMetadataTree(obnamlib.StoreTree):
         self.forest.remove_tree(tree)
 
     def get_generation_id(self, tree):
-        return self._lookup_int(tree, self.genkey(self.GEN_META_ID))
+        return self._lookup_int(tree, self.genkey(self.GEN_ID))
 
     def _lookup_time(self, tree, what):
         try:
@@ -197,8 +196,8 @@ class ClientMetadataTree(obnamlib.StoreTree):
 
     def get_generation_times(self, genid):
         tree = self.find_generation(genid)
-        return (self._lookup_time(tree, self.GEN_META_STARTED),
-                self._lookup_time(tree, self.GEN_META_ENDED))
+        return (self._lookup_time(tree, self.GEN_STARTED),
+                self._lookup_time(tree, self.GEN_ENDED))
 
     def _remove_filename_data(self, filename):
         minkey = self.fskey(filename, 0, 0)
@@ -213,7 +212,8 @@ class ClientMetadataTree(obnamlib.StoreTree):
             self.curgen.remove_range(key, key)
 
     def create(self, filename, encoded_metadata):
-        key = self.fskey(filename, self.FILE, self.FILE_METADATA)
+        file_id = self.hash_name(filename)
+        key = self.fskey(filename, self.FILE_NAME, file_id)
         try:
             old_metadata = self.curgen.lookup(key)
         except KeyError:
@@ -236,14 +236,17 @@ class ClientMetadataTree(obnamlib.StoreTree):
 
     def get_metadata(self, genid, filename):
         tree = self.find_generation(genid)
-        key = self.fskey(filename, self.FILE, self.FILE_METADATA)
+        key = self.fskey(filename, self.FILE_METADATA, 
+                         self.FILE_METADATA_ENCODED)
         return tree.lookup(key)
 
     def set_metadata(self, filename, encoded_metadata):
-        key1 = self.fskey(filename, self.FILE, self.FILE_NAME)
+        file_id = self.hash_name(filename)
+        key1 = self.fskey(filename, self.FILE_NAME, file_id)
         self.curgen.insert(key1, filename)
         
-        key2 = self.fskey(filename, self.FILE, self.FILE_METADATA)
+        key2 = self.fskey(filename, self.FILE_METADATA, 
+                          self.FILE_METADATA_ENCODED)
         self.curgen.insert(key2, encoded_metadata)
 
     def remove(self, filename):
