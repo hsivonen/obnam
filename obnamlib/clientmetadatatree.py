@@ -37,6 +37,9 @@ class ClientMetadataTree(obnamlib.StoreTree):
     PREFIX_FS_META = 0
     PREFIX_CHUNK_REF = 1
     PREFIX_GEN_META = 2
+    
+    # Maximum values for the subkey type field, and the subkey field.
+    # Both have a minimum value of 0.
 
     TYPE_MAX = 255
     SUBKEY_MAX = struct.pack('!Q', 2**64-1)
