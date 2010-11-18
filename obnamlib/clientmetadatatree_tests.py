@@ -142,7 +142,7 @@ class ClientMetadataTreeTests(unittest.TestCase):
         self.assertRaises(KeyError, self.client.find_generation, 0)
 
 
-class GenerationTreeFileOpsTests(unittest.TestCase):
+class ClientMetadataTreeFileOpsTests(unittest.TestCase):
 
     def setUp(self):
         self.tempdir = tempfile.mkdtemp()
