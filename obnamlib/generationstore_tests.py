@@ -147,3 +147,11 @@ class GenerationTreeFileOpsTests(unittest.TestCase):
         self.gen.remove('/foo')
         self.assertEqual(self.gen.listdir(self.genid, '/'), [])
 
+    def test_has_no_file_chunks_initially(self):
+        self.assertEqual(self.gen.get_file_chunks(self.genid, '/foo'), [])
+
+    def test_sets_file_chunks(self):
+        self.gen.set_file_chunks('/foo', [1, 2, 3])
+        self.assertEqual(self.gen.get_file_chunks(self.genid, '/foo'), 
+                         [1, 2, 3])
+
