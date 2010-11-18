@@ -145,11 +145,12 @@ class GenerationStore(obnamlib.StoreTree):
         if genid in self.known_generations:
             return self.known_generations[genid]
 
-        key = self.genkey(self.GEN_META_ID)
-        for t in self.forest.trees:
-            if self._lookup_int(t, key) == genid:
-                self.known_generations[genid] = t
-                return t
+        if self.forest:
+            key = self.genkey(self.GEN_META_ID)
+            for t in self.forest.trees:
+                if self._lookup_int(t, key) == genid:
+                    self.known_generations[genid] = t
+                    return t
         raise KeyError('Unknown generation %s' % genid)
 
     def list_generations(self):

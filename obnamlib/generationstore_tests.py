@@ -116,6 +116,31 @@ class GenerationStoreTests(unittest.TestCase):
         self.gen.commit(current_time=lambda: 2)
         self.assertEqual(self.gen.get_generation_times(genid), (1, 2))
 
+    def test_finds_generation_the_first_time(self):
+        self.gen.require_forest()
+        self.gen.start_generation()
+        tree = self.gen.curgen
+        genid = self.gen.get_generation_id(tree)
+        self.gen.commit()
+        self.assertEqual(self.gen.find_generation(genid), tree)
+
+    def test_finds_generation_the_second_time(self):
+        self.gen.require_forest()
+        self.gen.start_generation()
+        tree = self.gen.curgen
+        genid = self.gen.get_generation_id(tree)
+        self.gen.commit()
+        self.gen.find_generation(genid)
+        self.assertEqual(self.gen.find_generation(genid), tree)
+
+    def test_find_generation_raises_keyerror_for_empty_forest(self):
+        self.gen.init_forest()
+        self.assertRaises(KeyError, self.gen.find_generation, 0)
+
+    def test_find_generation_raises_keyerror_for_unknown_generation(self):
+        self.gen.require_forest()
+        self.assertRaises(KeyError, self.gen.find_generation, 0)
+
 
 class GenerationTreeFileOpsTests(unittest.TestCase):
 
