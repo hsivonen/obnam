@@ -169,7 +169,7 @@ class Store(object):
         self.added_clients = []
         self.removed_clients = []
         self.removed_generations = []
-        self.genstore = None
+        self.client = None
         self.chunksums = obnamlib.ChecksumTree(fs, 'chunksums', 
                                                len(self.checksum('')),
                                                node_size, upload_queue_size, 
@@ -300,11 +300,11 @@ class Store(object):
         self.current_client_id = client_id
         self.added_generations = []
         self.removed_generations = []
-        self.genstore = obnamlib.ClientMetadataTree(self.fs, client_dir, 
-                                                    self.node_size,
-                                                    self.upload_queue_size, 
-                                                    self.lru_size)
-        self.genstore.require_forest()
+        self.client = obnamlib.ClientMetadataTree(self.fs, client_dir, 
+                                                  self.node_size,
+                                                  self.upload_queue_size, 
+                                                  self.lru_size)
+        self.client.require_forest()
 
     @require_client_lock
     def unlock_client(self):
@@ -312,7 +312,7 @@ class Store(object):
         self.new_generation = None
         for genid in self.added_generations:
             self._really_remove_generation(genid)
-        self.genstore = None # FIXME: This should remove uncommitted data.
+        self.client = None # FIXME: This should remove uncommitted data.
         self.added_generations = []
         self.removed_generations = []
         self.fs.remove(self.client_lockfile)
@@ -325,11 +325,11 @@ class Store(object):
     def commit_client(self, checkpoint=False):
         '''Commit changes to and unlock currently locked client.'''
         if self.new_generation:
-            self.genstore.set_current_generation_is_checkpoint(checkpoint)
+            self.client.set_current_generation_is_checkpoint(checkpoint)
         self.added_generations = []
         for genid in self.removed_generations:
             self._really_remove_generation(genid)
-        self.genstore.commit()
+        self.client.commit()
         self.chunksums.commit()
         self.groupsums.commit()
         self.chunkgroups.commit()
@@ -343,21 +343,21 @@ class Store(object):
         self.current_client = client_name
         self.current_client_id = client_id
         client_dir = self.client_dir(client_id)
-        self.genstore = obnamlib.ClientMetadataTree(self.fs, client_dir, 
-                                                    self.node_size, 
-                                                    self.upload_queue_size, 
-                                                    self.lru_size)
-        self.genstore.init_forest()
+        self.client = obnamlib.ClientMetadataTree(self.fs, client_dir, 
+                                                  self.node_size, 
+                                                  self.upload_queue_size, 
+                                                  self.lru_size)
+        self.client.init_forest()
         
     @require_open_client
     def list_generations(self):
         '''List existing generations for currently open client.'''
-        return self.genstore.list_generations()
+        return self.client.list_generations()
         
     @require_open_client
     def get_is_checkpoint(self, genid):
         '''Is a generation a checkpoint one?'''
-        return self.genstore.get_is_checkpoint(genid)
+        return self.client.get_is_checkpoint(genid)
         
     @require_client_lock
     def start_generation(self):
@@ -369,10 +369,10 @@ class Store(object):
         '''
         if self.new_generation is not None:
             raise obnamlib.Error('Cannot start two new generations')
-        self.genstore.require_forest()
-        self.genstore.start_generation()
+        self.client.require_forest()
+        self.client.start_generation()
         self.new_generation = \
-            self.genstore.get_generation_id(self.genstore.curgen)
+            self.client.get_generation_id(self.client.curgen)
         self.added_generations.append(self.new_generation)
         return self.new_generation
 
@@ -386,7 +386,7 @@ class Store(object):
         
         '''
 
-        self.genstore.remove_generation(gen)
+        self.client.remove_generation(gen)
 
     @require_client_lock
     def remove_generation(self, gen):
@@ -403,19 +403,19 @@ class Store(object):
         
         '''
 
-        return self.genstore.get_generation_times(gen)
+        return self.client.get_generation_times(gen)
 
     @require_open_client
     def listdir(self, gen, dirname):
         '''Return list of basenames in a directory within generation.'''
-        return self.genstore.listdir(gen, dirname)
+        return self.client.listdir(gen, dirname)
         
     @require_open_client
     def get_metadata(self, gen, filename):
         '''Return metadata for a file in a generation.'''
 
         try:
-            encoded = self.genstore.get_metadata(gen, filename)
+            encoded = self.client.get_metadata(gen, filename)
         except KeyError:
             raise obnamlib.Error('%s does not exist' % filename)
         return decode_metadata(encoded)
@@ -424,12 +424,12 @@ class Store(object):
     def create(self, filename, metadata):
         '''Create a new (empty) file in the new generation.'''
         encoded = encode_metadata(metadata)
-        self.genstore.create(filename, encoded)
+        self.client.create(filename, encoded)
 
     @require_started_generation
     def remove(self, filename):
         '''Remove file or directory or directory tree from generation.'''
-        self.genstore.remove(filename)
+        self.client.remove(filename)
 
     def _chunk_filename(self, chunkid):
         basename = '%x' % chunkid
@@ -540,7 +540,7 @@ class Store(object):
     @require_open_client
     def get_file_chunks(self, gen, filename):
         '''Return list of ids of chunks belonging to a file.'''
-        return self.genstore.get_file_chunks(gen, filename)
+        return self.client.get_file_chunks(gen, filename)
 
     @require_started_generation
     def set_file_chunks(self, filename, chunkids):
@@ -550,12 +550,12 @@ class Store(object):
         
         '''
         
-        self.genstore.set_file_chunks(filename, chunkids)
+        self.client.set_file_chunks(filename, chunkids)
 
     @require_open_client
     def get_file_chunk_groups(self, gen, filename):
         '''Return list of ids of chunk groups belonging to a file.'''
-        return self.genstore.get_file_chunk_groups(gen, filename)
+        return self.client.get_file_chunk_groups(gen, filename)
 
     @require_started_generation
     def set_file_chunk_groups(self, filename, cgids):
@@ -565,7 +565,7 @@ class Store(object):
         
         '''
 
-        self.genstore.set_file_chunk_groups(filename, cgids)
+        self.client.set_file_chunk_groups(filename, cgids)
 
     @require_open_client
     def genspec(self, spec):
