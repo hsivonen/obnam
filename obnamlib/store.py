@@ -164,6 +164,7 @@ class Store(object):
         self.got_client_lock = False
         self.client_lockfile = None
         self.current_client = None
+        self.current_client_id = None
         self.new_generation = None
         self.added_clients = []
         self.removed_clients = []
@@ -296,6 +297,7 @@ class Store(object):
         self.got_client_lock = True
         self.client_lockfile = lockname
         self.current_client = client_name
+        self.current_client_id = client_id
         self.added_generations = []
         self.removed_generations = []
         self.genstore = obnamlib.ClientMetadataTree(self.fs, client_dir, 
@@ -317,6 +319,7 @@ class Store(object):
         self.client_lockfile = None
         self.got_client_lock = False
         self.current_client = None
+        self.current_client_id = None
 
     @require_client_lock
     def commit_client(self, checkpoint=False):
@@ -338,6 +341,7 @@ class Store(object):
         if client_id is None:
             raise obnamlib.Error('%s is not an existing client' % client_name)
         self.current_client = client_name
+        self.current_client_id = client_id
         client_dir = self.client_dir(client_id)
         self.genstore = obnamlib.ClientMetadataTree(self.fs, client_dir, 
                                                     self.node_size, 
@@ -468,7 +472,8 @@ class Store(object):
         if not self.fs.exists(dirname):
             self.fs.makedirs(dirname)
         self.fs.write_file(filename, data)
-        self.chunksums.add(self.checksum(data), chunkid)
+        self.chunksums.add(self.checksum(data), chunkid, 
+                           self.current_client_id)
         return chunkid
         
     @require_open_client
@@ -514,7 +519,7 @@ class Store(object):
             if not self.chunkgroups.group_exists(cgid):
                 break
         self.chunkgroups.add(cgid, chunkids)
-        self.groupsums.add(checksum, cgid)
+        self.groupsums.add(checksum, cgid, self.current_client_id)
         return cgid
 
     @require_open_client
