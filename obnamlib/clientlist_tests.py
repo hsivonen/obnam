@@ -36,13 +36,12 @@ class ClientListTests(unittest.TestCase):
 
     def test_key_bytes_is_correct_length(self):
         self.assertEqual(self.list.key_bytes, 
-                         len(self.list.key('foo', self.list.type_name, 12765)))
+                         len(self.list.key('foo', 12765)))
 
     def test_unkey_unpacks_key_correctly(self):
-        key = self.list.key('client name', self.list.type_id, 12765)
-        client_hash, value_type, index = self.list.unkey(key)
-        self.assertEqual(value_type, self.list.type_id)
-        self.assertEqual(index, 12765)
+        key = self.list.key('client name', 12765)
+        client_hash, client_id = self.list.unkey(key)
+        self.assertEqual(client_id, 12765)
 
     def test_reports_none_as_id_for_nonexistent_client(self):
         self.assertEqual(self.list.get_client_id('foo'), None)
@@ -50,9 +49,9 @@ class ClientListTests(unittest.TestCase):
     def test_lists_no_clients_when_tree_does_not_exist(self):
         self.assertEqual(self.list.list_clients(), [])
 
-    def test_added_client_has_non_None_id(self):
+    def test_added_client_has_integer_id(self):
         self.list.add_client('foo')
-        self.assertNotEqual(self.list.get_client_id('foo'), None)
+        self.assert_(type(self.list.get_client_id('foo')) in [int, long])
 
     def test_added_client_is_listed(self):
         self.list.add_client('foo')

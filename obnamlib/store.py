@@ -201,6 +201,10 @@ class Store(object):
         '''Return a new checksum algorithm.'''
         return hashlib.md5()
 
+    def client_dir(self, client_id):
+        '''Return name of sub-directory for a given client.'''
+        return str(client_id)
+
     def list_clients(self):
         '''Return list of names of clients using this store.'''
 
@@ -243,8 +247,9 @@ class Store(object):
         self.added_clients = []
         for client_name in self.removed_clients:
             client_id = self.clientlist.get_client_id(client_name)
-            if client_id is not None and self.fs.exists(client_id):
-                self.fs.rmtree(client_id)
+            client_dir = self.client_dir(client_id)
+            if client_id is not None and self.fs.exists(client_dir):
+                self.fs.rmtree(client_dir)
             self.clientlist.remove_client(client_name)
         self.clientlist.commit()
         self.unlock_root()
@@ -281,8 +286,9 @@ class Store(object):
         client_id = self.clientlist.get_client_id(client_name)
         if client_id is None:
             raise LockFail('client %s does not exit' % client_name)
-        
-        lockname = os.path.join(client_id, 'lock')
+
+        client_dir = self.client_dir(client_id)        
+        lockname = os.path.join(client_dir, 'lock')
         try:
             self.fs.write_file(lockname, '')
         except OSError, e:
@@ -294,7 +300,7 @@ class Store(object):
         self.current_client_id = client_id
         self.added_generations = []
         self.removed_generations = []
-        self.genstore = obnamlib.ClientMetadataTree(self.fs, client_id, 
+        self.genstore = obnamlib.ClientMetadataTree(self.fs, client_dir, 
                                                     self.node_size,
                                                     self.upload_queue_size, 
                                                     self.lru_size)
@@ -336,7 +342,8 @@ class Store(object):
             raise obnamlib.Error('%s is not an existing client' % client_name)
         self.current_client = client_name
         self.current_client_id = client_id
-        self.genstore = obnamlib.ClientMetadataTree(self.fs, client_id, 
+        client_dir = self.client_dir(client_id)
+        self.genstore = obnamlib.ClientMetadataTree(self.fs, client_dir, 
                                                     self.node_size, 
                                                     self.upload_queue_size, 
                                                     self.lru_size)
