@@ -41,24 +41,24 @@ class ChecksumTreeTests(unittest.TestCase):
         self.assertEqual(self.tree.find(self.checksum), [])
 
     def test_finds_checksums(self):
-        self.tree.add(self.checksum, 1)
-        self.tree.add(self.checksum, 2)
+        self.tree.add(self.checksum, 1, 3)
+        self.tree.add(self.checksum, 2, 4)
         self.assertEqual(sorted(self.tree.find(self.checksum)), [1, 2])
 
     def test_finds_only_the_right_checksums(self):
-        self.tree.add(self.checksum, 1)
-        self.tree.add(self.checksum, 2)
-        self.tree.add(hashlib.md5('bar').digest(), 3)
-        self.assertEqual(sorted(self.tree.find(self.checksum)), [1, 2])
+        self.tree.add(self.checksum, 1, 2)
+        self.tree.add(self.checksum, 3, 4)
+        self.tree.add(hashlib.md5('bar').digest(), 5, 6)
+        self.assertEqual(sorted(self.tree.find(self.checksum)), [1, 3])
 
     def test_removes_checksum(self):
-        self.tree.add(self.checksum, 1)
-        self.tree.add(self.checksum, 2)
-        self.tree.remove(self.checksum, 2)
+        self.tree.add(self.checksum, 1, 3)
+        self.tree.add(self.checksum, 2, 4)
+        self.tree.remove(self.checksum, 2, 4)
         self.assertEqual(self.tree.find(self.checksum), [1])
 
     def test_adds_same_id_only_once(self):
-        self.tree.add(self.checksum, 1)
-        self.tree.add(self.checksum, 1)
+        self.tree.add(self.checksum, 1, 2)
+        self.tree.add(self.checksum, 1, 2)
         self.assertEqual(self.tree.find(self.checksum), [1])
 
