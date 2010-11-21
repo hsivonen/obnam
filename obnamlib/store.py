@@ -519,7 +519,7 @@ class Store(object):
             if not self.chunkgroups.group_exists(cgid):
                 break
         self.chunkgroups.add(cgid, chunkids)
-        self.groupsums.add(checksum, cgid)
+        self.groupsums.add(checksum, cgid, self.current_client_id)
         return cgid
 
     @require_open_client
