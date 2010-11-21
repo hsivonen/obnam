@@ -52,7 +52,7 @@ class ChecksumTree(obnamlib.StoreTree):
             t = self.forest.new_tree()
         t.insert(key, '')
 
-    def find_chunks(self, checksum):
+    def find(self, checksum):
         if self.init_forest() and self.forest.trees:
             t = self.forest.trees[-1]
             minkey = self.key(checksum, 0, 0)
