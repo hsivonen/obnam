@@ -20,7 +20,9 @@ import logging
 import os
 import pwd
 import random
+import socket
 import stat
+import subprocess
 import urlparse
 
 # As of 2010-07-10, Debian's paramiko package triggers
@@ -56,6 +58,41 @@ def ioerror_to_oserror(method):
     return helper
 
 
+class SSHChannelAdapter(object):
+
+    '''Take an ssh subprocess and pretend it is a paramiko Channel.'''
+    
+    # This is inspired by the ssh.py module in bzrlib.
+
+    def __init__(self, proc):
+        self.proc = proc
+
+    def send(self, data):
+        return os.write(self.proc.stdin.fileno(), data)
+
+    def recv(self, count):
+        try:
+            return os.read(self.proc.stdout.fileno(), count)
+        except socket.error, e:
+            if e.args[0] in (errno.EPIPE, errno.ECONNRESET, errno.ECONNABORTED,
+                             errno.EBADF):
+                # Connection has closed.  Paramiko expects an empty string in
+                # this case, not an exception.
+                return ''
+            raise
+
+    def get_name(self):
+        return 'obnam SSHChannelAdapter'
+
+    def close(self):
+        for func in [self.proc.stdin.close, self.proc.stdout.close, 
+                     self.proc.wait]:
+            try:
+                func()
+            except OSError:
+                pass
+
+
 class SftpFS(obnamlib.VirtualFileSystem):
 
     '''A VFS implementation for SFTP.
@@ -70,12 +107,36 @@ class SftpFS(obnamlib.VirtualFileSystem):
         self.reinit(baseurl)
         
     def connect(self):
+        if not self._connect_openssh():
+            self._connect_paramiko()
+        self.chdir(self.path)
+
+    def _connect_paramiko(self):
         self.transport = paramiko.Transport((self.host, self.port))
         self.transport.connect()
         self._check_host_key(self.host)
         self._authenticate(self.user)
         self.sftp = paramiko.SFTPClient.from_transport(self.transport)
-        self.chdir(self.path)
+
+    def _connect_openssh(self):
+        args = ['ssh',
+                '-oForwardX11=no', '-oForwardAgent=no',
+                '-oClearAllForwardings=yes', '-oProtocol=2',
+                '-p', str(self.port),
+                '-l', self.user,
+                '-s', self.host, 'sftp']
+
+        try:
+            proc = subprocess.Popen(args,
+                                    stdin=subprocess.PIPE,
+                                    stdout=subprocess.PIPE,
+                                    close_fds=True)
+        except OSError:
+            return False
+
+        self.transport = None
+        self.sftp = paramiko.SFTPClient(SSHChannelAdapter(proc))
+        return True
 
     def _check_host_key(self, hostname):
         key = self.transport.get_remote_server_key()
@@ -104,7 +165,9 @@ class SftpFS(obnamlib.VirtualFileSystem):
 
     def close(self):
         self.sftp.close()
-        self.transport.close()
+        if self.transport:
+            self.transport.close()
+            self.transport = None
         self.sftp = None
         logging.info('VFS %s closing down; bytes_read=%d bytes_written=%d' %
                      (self.baseurl, self.bytes_read, self.bytes_written))
