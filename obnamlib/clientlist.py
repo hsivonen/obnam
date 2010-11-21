@@ -28,81 +28,62 @@ class ClientList(obnamlib.StoreTree):
     The list maps a client name to an arbitrary (string) identifier,
     which is unique within the store.
     
-    The list is implemented as a B-tree, with a three-part key:
-    MD5 of client name, 1-byte value type field, and 64-bit index,
-    for hash collisions.
+    The list is implemented as a B-tree, with a two-part key:
+    128-bit MD5 of client name, and 64-bit unique identifier.
+    The value is the client name.
     
-    Value type 0 is the full client name; this is used for detecting
-    (very unlikely) hash collisions. Value type 1 is the actual 64-bit
-    identifier.
-    
-    The index is 0 for the first client whose name results in a
-    given MD5 checksum, and a random integer after that.
-    
-    The client's identifier is a string catenation of the MD5 of the name
-    (in hex) and the index (in hex).
+    The client's identifier is a random, unique 64-bit integer.
     
     '''
 
-    type_name = 0
-    type_id = 1
-    max_index = 2**64 - 1
+    max_id = 2**64 - 1
 
     def __init__(self, fs, node_size, upload_queue_size, lru_size):
         self.hash_len = len(self.hashfunc(''))
-        self.fmt = '!%dsBQ' % self.hash_len
-        self.key_bytes = len(self.key('', 0, 0))
-        self.minkey = self.hashkey('\x00' * self.hash_len, 0, 0)
-        self.maxkey = self.hashkey('\xff' * self.hash_len, 255, self.max_index)
+        self.fmt = '!%dsQ' % self.hash_len
+        self.key_bytes = len(self.key('', 0))
+        self.minkey = self.hashkey('\x00' * self.hash_len, 0)
+        self.maxkey = self.hashkey('\xff' * self.hash_len, self.max_id)
         obnamlib.StoreTree.__init__(self, fs, 'clientlist', self.key_bytes, 
                                     node_size, upload_queue_size, lru_size)
 
     def hashfunc(self, string):
         return hashlib.new('md5', string).digest()
 
-    def hexhashfunc(self, string):
-        return self.hashfunc(string).encode('hex')
+    def hashkey(self, namehash, client_id):
+        return struct.pack(self.fmt, namehash, client_id)
 
-    def hashkey(self, h, value_type, index):
-        return struct.pack(self.fmt, h, value_type, index)
-
-    def key(self, client_name, value_type, index):
+    def key(self, client_name, client_id):
         h = self.hashfunc(client_name)
-        return self.hashkey(h, value_type, index)
+        return self.hashkey(h, client_id)
 
     def unkey(self, key):
         return struct.unpack(self.fmt, key)
 
-    def client_id(self, client_name, index):
-        return '%s%08x' % (self.hexhashfunc(client_name), index)
+    def random_id(self):
+        return random.randint(0, self.max_id)
 
     def list_clients(self):
         if self.init_forest() and self.forest.trees:
             t = self.forest.trees[-1]
-            return [v 
-                    for k, v in t.lookup_range(self.minkey, self.maxkey)
-                    if self.unkey(k)[1] == self.type_name]
+            return [v for k, v in t.lookup_range(self.minkey, self.maxkey)]
         else:
             return []
 
-    def find_client_index(self, t, client_name):
-        minkey = self.key(client_name, 0, 0)
-        maxkey = self.key(client_name, 255, self.max_index)
+    def find_client_id(self, t, client_name):
+        minkey = self.key(client_name, 0)
+        maxkey = self.key(client_name, self.max_id)
         for k, v in t.lookup_range(minkey, maxkey):
-            checksum, value_type, index = self.unkey(k)
-            if value_type == self.type_name and v == client_name:
-                return index
+            checksum, client_id = self.unkey(k)
+            if v == client_name:
+                return client_id
         return None
 
     def get_client_id(self, client_name):
         if not self.init_forest() or not self.forest.trees:
             return None
-        
         t = self.forest.trees[-1]
-        index = self.find_client_index(t, client_name)
-        if index is None:
-            return None
-        return self.client_id(client_name, index)
+        return self.find_client_id(t, client_name)
 
     def add_client(self, client_name):
         self.require_forest()
@@ -111,24 +92,21 @@ class ClientList(obnamlib.StoreTree):
         else:
             t = self.forest.new_tree(old=self.forest.trees[-1])
 
-        if self.find_client_index(t, client_name) is None:
-            index = 0
+        if self.find_client_id(t, client_name) is None:
             while True:
-                k = self.key(client_name, self.type_name, index)
+                candidate_id = self.random_id()
+                key = self.key(client_name, candidate_id)
                 try:
-                    t.lookup(k)
+                    t.lookup(key)
                 except KeyError:
                     break
-                else:
-                    index = random.randint(1, self.max_index)
-            t.insert(self.key(client_name, self.type_name, index), 
-                     client_name)
+            t.insert(self.key(client_name, candidate_id), client_name)
         
     def remove_client(self, client_name):
         self.require_forest()
         if self.forest.trees:
             t = self.forest.new_tree(old=self.forest.trees[-1])
-            index = self.find_client_index(t, client_name)
-            if index is not None:
-                t.remove(self.key(client_name, self.type_name, index))
+            client_id = self.find_client_id(t, client_name)
+            if client_id is not None:
+                t.remove(self.key(client_name, client_id))
 
