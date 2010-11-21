@@ -64,10 +64,10 @@ class ClientMetadataTree(obnamlib.StoreTree):
     TYPE_MAX = 255
     SUBKEY_MAX = struct.pack('!Q', 2**64-1)
 
-    def __init__(self, fs, client_id, node_size, upload_queue_size, lru_size):
+    def __init__(self, fs, client_dir, node_size, upload_queue_size, lru_size):
         key_bytes = len(self.hashkey(0, self.hash_name(''), 0, 0))
-        obnamlib.StoreTree.__init__(self, fs, client_id, key_bytes, node_size,
-                                    upload_queue_size, lru_size)
+        obnamlib.StoreTree.__init__(self, fs, client_dir, key_bytes, 
+                                    node_size, upload_queue_size, lru_size)
         self.genhash = self.hash_name('generation')
         self.curgen = None
         self.known_generations = dict()
