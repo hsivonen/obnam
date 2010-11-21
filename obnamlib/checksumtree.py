@@ -31,39 +31,41 @@ class ChecksumTree(obnamlib.StoreTree):
 
     def __init__(self, fs, name, checksum_length, node_size, 
                  upload_queue_size, lru_size):
-        self.sumlen = checksum_length
-        key_bytes = len(self.key('', 0))
+        self.fmt = '!%dsQQ' % checksum_length
+        key_bytes = len(self.key('', 0, 0))
         obnamlib.StoreTree.__init__(self, fs, name, key_bytes, node_size, 
                                     upload_queue_size, lru_size)
         self.max_id = 2**64 - 1
 
-    def key(self, checksum, number):
-        return struct.pack('!%dsQ' % self.sumlen, checksum, number)
+    def key(self, checksum, chunk_id, client_id):
+        return struct.pack(self.fmt, checksum, chunk_id, client_id)
 
     def unkey(self, key):
-        return struct.unpack('!%dsQ' % self.sumlen, key)
+        return struct.unpack(self.fmt, key)
 
-    def add(self, checksum, identifier):
+    def add(self, checksum, chunk_id, client_id):
         self.require_forest()
-        key = self.key(checksum, identifier)
+        key = self.key(checksum, chunk_id, client_id)
         if self.forest.trees:
             t = self.forest.trees[-1]
         else:
             t = self.forest.new_tree()
         t.insert(key, '')
 
-    def find(self, checksum):
+    def find_chunks(self, checksum):
         if self.init_forest() and self.forest.trees:
             t = self.forest.trees[-1]
-            pairs = t.lookup_range(self.key(checksum, 0),
-                                   self.key(checksum, self.max_id))
+            minkey = self.key(checksum, 0, 0)
+            maxkey = self.key(checksum, self.max_id, self.max_id)
+            pairs = t.lookup_range(minkey, maxkey)
             return [self.unkey(key)[1] for key, value in pairs]
         else:
             return []
 
-    def remove(self, checksum, identifier):
+    def remove(self, checksum, chunk_id, client_id):
         self.require_forest()
         if self.forest.trees:
             t = self.forest.new_tree(self.forest.trees[-1])
-            t.remove(self.key(checksum, identifier))
+            key = self.key(checksum, chunk_id, client_id)
+            t.remove_range(key, key)
 
