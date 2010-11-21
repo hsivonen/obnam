@@ -50,9 +50,9 @@ class ClientListTests(unittest.TestCase):
     def test_lists_no_clients_when_tree_does_not_exist(self):
         self.assertEqual(self.list.list_clients(), [])
 
-    def test_added_client_has_non_None_id(self):
+    def test_added_client_has_integer_id(self):
         self.list.add_client('foo')
-        self.assertNotEqual(self.list.get_client_id('foo'), None)
+        self.assertEqual(type(self.list.get_client_id('foo')), int)
 
     def test_added_client_is_listed(self):
         self.list.add_client('foo')

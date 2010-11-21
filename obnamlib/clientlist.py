@@ -39,8 +39,7 @@ class ClientList(obnamlib.StoreTree):
     The index is 0 for the first client whose name results in a
     given MD5 checksum, and a random integer after that.
     
-    The client's identifier is a string catenation of the MD5 of the name
-    (in hex) and the index (in hex).
+    The client's identifier is a random, unique 64-bit integer.
     
     '''
 
