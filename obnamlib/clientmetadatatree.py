@@ -50,6 +50,11 @@ class ClientMetadataTree(obnamlib.StoreTree):
     # for file that uses the chunk.
     PREFIX_CHUNK_REF = 1
     
+    # References to chunk groups in this generation.
+    # Main key is the chunk group id, subkey type is always 0, 
+    # subkey is file id for file that uses the chunk group.
+    PREFIX_CHUNK_GROUP_REF = 3
+    
     # Metadata about the generation. The main key is always the hash of
     # 'generation', subkey type field is always 0.
     PREFIX_GEN_META = 2     # prefix
@@ -63,6 +68,9 @@ class ClientMetadataTree(obnamlib.StoreTree):
 
     TYPE_MAX = 255
     SUBKEY_MAX = struct.pack('!Q', 2**64-1)
+    
+    # Maximum value for file ids, client ids, chunk ids, chunk group ids.
+    max_id = 2**64-1
 
     def __init__(self, fs, client_dir, node_size, upload_queue_size, lru_size):
         key_bytes = len(self.hashkey(0, self.hash_name(''), 0, 0))
@@ -99,12 +107,12 @@ class ClientMetadataTree(obnamlib.StoreTree):
 
         '''
         
-        if type(subkey) == int:
-            fmt = '!B8sBQ'
-        else:
-            assert type(subkey) == str
+        if type(subkey) == str:
             subkey = (subkey + '\0' * 8)[:8]
             fmt = '!B8sB8s'
+        else:
+            assert type(subkey) in [int, long]
+            fmt = '!B8sBQ'
 
         return struct.pack(fmt, prefix, mainhash, subtype, subkey)
 
@@ -115,6 +123,20 @@ class ClientMetadataTree(obnamlib.StoreTree):
     def genkey(self, subkey):
         '''Generate key for generation metadata.'''
         return self.hashkey(self.PREFIX_GEN_META, self.genhash, 0, subkey)
+
+    def int2bin(self, integer):
+        '''Convert an integer to a binary string representation.'''
+        return struct.pack('!Q', integer)
+
+    def chunk_key(self, chunk_id, file_id):
+        '''Generate a key for a chunk reference.'''
+        return self.hashkey(self.PREFIX_CHUNK_REF, self.int2bin(chunk_id),
+                            0, file_id)
+
+    def cgkey(self, cgid, file_id):
+        '''Generate a key for a chunk group reference.'''
+        return self.hashkey(self.PREFIX_CHUNK_GROUP_REF, 
+                            self.int2bin(cgid), 0, file_id)
 
     def get_file_id(self, gen, pathname):
         '''Return id for file in a given generation.'''
@@ -201,20 +223,6 @@ class ClientMetadataTree(obnamlib.StoreTree):
         return (self._lookup_time(tree, self.GEN_STARTED),
                 self._lookup_time(tree, self.GEN_ENDED))
 
-    def _remove_filename_data(self, filename):
-        file_id = self.get_file_id(self.curgen, filename)
-        minkey = self.fskey(file_id, 0, 0)
-        maxkey = self.fskey(file_id, self.TYPE_MAX, self.SUBKEY_MAX)
-        self.curgen.remove_range(minkey, maxkey)
-
-        # Also remove from parent's contents.
-        parent = os.path.dirname(filename)
-        if parent != filename: # root dir is its own parent
-            parent_id = self.get_file_id(self.curgen, parent)
-            key = self.fskey(parent_id, self.DIR_CONTENTS, file_id)
-            # The range removal will work even if the key does not exist.
-            self.curgen.remove_range(key, key)
-
     def create(self, filename, encoded_metadata):
         namehash = self.hash_name(filename)
         file_id = self.get_file_id(self.curgen, filename)
@@ -257,8 +265,31 @@ class ClientMetadataTree(obnamlib.StoreTree):
         self.curgen.insert(key2, encoded_metadata)
 
     def remove(self, filename):
-        self._remove_filename_data(filename)
+        file_id = self.get_file_id(self.curgen, filename)
+        genid = self.get_generation_id(self.curgen)
 
+        # Remove chunk refs.
+        for chunkid in self.get_file_chunks(genid, filename):
+            key = self.chunk_key(chunkid, file_id)
+            self.curgen.remove_range(key, key)
+
+        # Remove chunk group refs.
+        for cgid in self.get_file_chunk_groups(genid, filename):
+            key = self.cgkey(cgid, file_id)
+            self.curgen.remove_range(key, key)
+
+        minkey = self.fskey(file_id, 0, 0)
+        maxkey = self.fskey(file_id, self.TYPE_MAX, self.SUBKEY_MAX)
+        self.curgen.remove_range(minkey, maxkey)
+
+        # Also remove from parent's contents.
+        parent = os.path.dirname(filename)
+        if parent != filename: # root dir is its own parent
+            parent_id = self.get_file_id(self.curgen, parent)
+            key = self.fskey(parent_id, self.DIR_CONTENTS, file_id)
+            # The range removal will work even if the key does not exist.
+            self.curgen.remove_range(key, key)
+            
     def listdir(self, genid, dirname):
         tree = self.find_generation(genid)
         dir_id = self.get_file_id(tree, dirname)
@@ -282,10 +313,19 @@ class ClientMetadataTree(obnamlib.StoreTree):
         file_id = self.get_file_id(self.curgen, filename)
         minkey = self.fskey(file_id, self.FILE_CHUNKS, 0)
         maxkey = self.fskey(file_id, self.FILE_CHUNKS, self.SUBKEY_MAX)
+        old_chunks = set(struct.unpack('!Q', v)[0]
+                         for k,v in self.curgen.lookup_range(minkey, maxkey))
         self.curgen.remove_range(minkey, maxkey)
         for i, chunkid in enumerate(chunkids):
             key = self.fskey(file_id, self.FILE_CHUNKS, i)
             self.curgen.insert(key, struct.pack('!Q', chunkid))
+            if chunkid not in old_chunks:
+                self.curgen.insert(self.chunk_key(chunkid, file_id), '')
+            else:
+                old_chunks.remove(chunkid)
+        for chunkid in old_chunks:
+            key = self.chunk_key(chunkid, file_id)
+            self.curgen.remove_range(key, key)
         
     def get_file_chunk_groups(self, genid, filename):
         tree = self.find_generation(genid)
@@ -299,8 +339,17 @@ class ClientMetadataTree(obnamlib.StoreTree):
         file_id = self.get_file_id(self.curgen, filename)
         minkey = self.fskey(file_id, self.FILE_CHUNK_GROUPS, 0)
         maxkey = self.fskey(file_id, self.FILE_CHUNK_GROUPS, self.SUBKEY_MAX)
+        old_groups = set(struct.unpack('!Q', v)[0]
+                         for k,v in self.curgen.lookup_range(minkey, maxkey))
         self.curgen.remove_range(minkey, maxkey)
         for i, cgid in enumerate(cgids):
             key = self.fskey(file_id, self.FILE_CHUNK_GROUPS, i)
             self.curgen.insert(key, struct.pack('!Q', cgid))
+            if cgid not in old_groups:
+                self.curgen.insert(self.cgkey(cgid, file_id), '')
+            else:
+                old_groups.remove(cgid)
+        for cgid in old_groups:
+            key = self.cgkey(cgid, file_id)
+            self.curgen.remove_range(key, key)
 
