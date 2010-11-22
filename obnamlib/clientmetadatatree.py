@@ -266,11 +266,16 @@ class ClientMetadataTree(obnamlib.StoreTree):
 
     def remove(self, filename):
         file_id = self.get_file_id(self.curgen, filename)
+        genid = self.get_generation_id(self.curgen)
 
         # Remove chunk refs.
-        genid = self.get_generation_id(self.curgen)
         for chunkid in self.get_file_chunks(genid, filename):
             key = self.chunk_key(chunkid, file_id)
+            self.curgen.remove_range(key, key)
+
+        # Remove chunk group refs.
+        for cgid in self.get_file_chunk_groups(genid, filename):
+            key = self.cgkey(cgid, file_id)
             self.curgen.remove_range(key, key)
 
         minkey = self.fskey(file_id, 0, 0)
