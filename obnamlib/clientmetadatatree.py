@@ -99,12 +99,12 @@ class ClientMetadataTree(obnamlib.StoreTree):
 
         '''
         
-        if type(subkey) == int:
-            fmt = '!B8sBQ'
-        else:
-            assert type(subkey) == str
+        if type(subkey) == str:
             subkey = (subkey + '\0' * 8)[:8]
             fmt = '!B8sB8s'
+        else:
+            assert type(subkey) in [int, long]
+            fmt = '!B8sBQ'
 
         return struct.pack(fmt, prefix, mainhash, subtype, subkey)
 
