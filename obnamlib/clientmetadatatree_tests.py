@@ -211,3 +211,12 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
                          set([(self.client.chunk_key(1, file_id), ''),
                               (self.client.chunk_key(2, file_id), '')]))
 
+    def test_set_file_chunks_removes_now_unused_chunk_refs(self):
+        self.client.set_file_chunks('/foo', [1, 2])
+        self.client.set_file_chunks('/foo', [1])
+        file_id = self.client.get_file_id(self.client.curgen, '/foo')
+        minkey = self.client.chunk_key(0, 0)
+        maxkey = self.client.chunk_key(self.client.max_id, self.client.max_id)
+        self.assertEqual(self.client.curgen.lookup_range(minkey, maxkey), 
+                         [(self.client.chunk_key(1, file_id), '')])
+
