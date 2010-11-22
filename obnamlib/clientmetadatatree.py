@@ -298,6 +298,7 @@ class ClientMetadataTree(obnamlib.StoreTree):
         for i, chunkid in enumerate(chunkids):
             key = self.fskey(file_id, self.FILE_CHUNKS, i)
             self.curgen.insert(key, struct.pack('!Q', chunkid))
+            self.curgen.insert(self.chunk_key(chunkid, file_id), '')
         
     def get_file_chunk_groups(self, genid, filename):
         tree = self.find_generation(genid)
