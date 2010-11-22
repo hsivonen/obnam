@@ -223,20 +223,6 @@ class ClientMetadataTree(obnamlib.StoreTree):
         return (self._lookup_time(tree, self.GEN_STARTED),
                 self._lookup_time(tree, self.GEN_ENDED))
 
-    def _remove_filename_data(self, filename):
-        file_id = self.get_file_id(self.curgen, filename)
-        minkey = self.fskey(file_id, 0, 0)
-        maxkey = self.fskey(file_id, self.TYPE_MAX, self.SUBKEY_MAX)
-        self.curgen.remove_range(minkey, maxkey)
-
-        # Also remove from parent's contents.
-        parent = os.path.dirname(filename)
-        if parent != filename: # root dir is its own parent
-            parent_id = self.get_file_id(self.curgen, parent)
-            key = self.fskey(parent_id, self.DIR_CONTENTS, file_id)
-            # The range removal will work even if the key does not exist.
-            self.curgen.remove_range(key, key)
-
     def create(self, filename, encoded_metadata):
         namehash = self.hash_name(filename)
         file_id = self.get_file_id(self.curgen, filename)
@@ -279,7 +265,18 @@ class ClientMetadataTree(obnamlib.StoreTree):
         self.curgen.insert(key2, encoded_metadata)
 
     def remove(self, filename):
-        self._remove_filename_data(filename)
+        file_id = self.get_file_id(self.curgen, filename)
+        minkey = self.fskey(file_id, 0, 0)
+        maxkey = self.fskey(file_id, self.TYPE_MAX, self.SUBKEY_MAX)
+        self.curgen.remove_range(minkey, maxkey)
+
+        # Also remove from parent's contents.
+        parent = os.path.dirname(filename)
+        if parent != filename: # root dir is its own parent
+            parent_id = self.get_file_id(self.curgen, parent)
+            key = self.fskey(parent_id, self.DIR_CONTENTS, file_id)
+            # The range removal will work even if the key does not exist.
+            self.curgen.remove_range(key, key)
 
     def listdir(self, genid, dirname):
         tree = self.find_generation(genid)
