@@ -126,7 +126,7 @@ class ClientMetadataTree(obnamlib.StoreTree):
     def chunk_key(self, chunk_id, file_id):
         '''Generate a key for a chunk reference.'''
         return self.hashkey(self.PREFIX_CHUNK_REF, self.int2bin(chunk_id),
-                            0, self.int2bin(file_id))
+                            0, file_id)
 
     def get_file_id(self, gen, pathname):
         '''Return id for file in a given generation.'''
