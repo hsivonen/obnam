@@ -198,9 +198,7 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
                          [1, 2, 3])
 
     def test_generation_has_no_chunk_refs_initially(self):
-        minkey = self.client.hashkey(self.client.PREFIX_CHUNK_REF,
-                                     '\0' * 8, 0, 0)
-        maxkey = self.client.hashkey(self.client.PREFIX_CHUNK_REF,
-                                     '\xff' * 8, 0, 2**64-1)
+        minkey = self.client.chunk_key(0, 0)
+        maxkey = self.client.chunk_key(self.client.max_id, self.client.max_id)
         self.assertEqual(self.client.curgen.lookup_range(minkey, maxkey), [])
 

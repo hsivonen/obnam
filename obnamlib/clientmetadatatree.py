@@ -63,6 +63,9 @@ class ClientMetadataTree(obnamlib.StoreTree):
 
     TYPE_MAX = 255
     SUBKEY_MAX = struct.pack('!Q', 2**64-1)
+    
+    # Maximum value for file ids, client ids, chunk ids, chunk group ids.
+    max_id = 2**64-1
 
     def __init__(self, fs, client_dir, node_size, upload_queue_size, lru_size):
         key_bytes = len(self.hashkey(0, self.hash_name(''), 0, 0))
@@ -115,6 +118,15 @@ class ClientMetadataTree(obnamlib.StoreTree):
     def genkey(self, subkey):
         '''Generate key for generation metadata.'''
         return self.hashkey(self.PREFIX_GEN_META, self.genhash, 0, subkey)
+
+    def int2bin(self, integer):
+        '''Convert an integer to a binary string representation.'''
+        return struct.pack('!Q', integer)
+
+    def chunk_key(self, chunk_id, file_id):
+        '''Generate a key for a chunk reference.'''
+        return self.hashkey(self.PREFIX_CHUNK_REF, self.int2bin(chunk_id),
+                            0, self.int2bin(file_id))
 
     def get_file_id(self, gen, pathname):
         '''Return id for file in a given generation.'''
