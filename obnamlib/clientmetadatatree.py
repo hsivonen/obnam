@@ -50,6 +50,11 @@ class ClientMetadataTree(obnamlib.StoreTree):
     # for file that uses the chunk.
     PREFIX_CHUNK_REF = 1
     
+    # References to chunk groups in this generation.
+    # Main key is the chunk group id, subkey type is always 0, 
+    # subkey is file id for file that uses the chunk group.
+    PREFIX_CHUNK_GROUP_REF = 3
+    
     # Metadata about the generation. The main key is always the hash of
     # 'generation', subkey type field is always 0.
     PREFIX_GEN_META = 2     # prefix
@@ -127,6 +132,11 @@ class ClientMetadataTree(obnamlib.StoreTree):
         '''Generate a key for a chunk reference.'''
         return self.hashkey(self.PREFIX_CHUNK_REF, self.int2bin(chunk_id),
                             0, file_id)
+
+    def cgkey(self, cgid, file_id):
+        '''Generate a key for a chunk group reference.'''
+        return self.hashkey(self.PREFIX_CHUNK_GROUP_REF, 
+                            self.int2bin(cgid), 0, file_id)
 
     def get_file_id(self, gen, pathname):
         '''Return id for file in a given generation.'''
@@ -320,8 +330,17 @@ class ClientMetadataTree(obnamlib.StoreTree):
         file_id = self.get_file_id(self.curgen, filename)
         minkey = self.fskey(file_id, self.FILE_CHUNK_GROUPS, 0)
         maxkey = self.fskey(file_id, self.FILE_CHUNK_GROUPS, self.SUBKEY_MAX)
+        old_groups = set(struct.unpack('!Q', v)[0]
+                         for k,v in self.curgen.lookup_range(minkey, maxkey))
         self.curgen.remove_range(minkey, maxkey)
         for i, cgid in enumerate(cgids):
             key = self.fskey(file_id, self.FILE_CHUNK_GROUPS, i)
             self.curgen.insert(key, struct.pack('!Q', cgid))
+            if cgid not in old_groups:
+                self.curgen.insert(self.cgkey(cgid, file_id), '')
+            else:
+                old_groups.remove(cgid)
+        for cgid in old_groups:
+            key = self.cgkey(cgid, file_id)
+            self.curgen.remove_range(key, key)
 
