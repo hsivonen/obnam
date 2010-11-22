@@ -294,11 +294,19 @@ class ClientMetadataTree(obnamlib.StoreTree):
         file_id = self.get_file_id(self.curgen, filename)
         minkey = self.fskey(file_id, self.FILE_CHUNKS, 0)
         maxkey = self.fskey(file_id, self.FILE_CHUNKS, self.SUBKEY_MAX)
+        old_chunks = set(struct.unpack('!Q', v)[0]
+                         for k,v in self.curgen.lookup_range(minkey, maxkey))
         self.curgen.remove_range(minkey, maxkey)
         for i, chunkid in enumerate(chunkids):
             key = self.fskey(file_id, self.FILE_CHUNKS, i)
             self.curgen.insert(key, struct.pack('!Q', chunkid))
-            self.curgen.insert(self.chunk_key(chunkid, file_id), '')
+            if chunkid not in old_chunks:
+                self.curgen.insert(self.chunk_key(chunkid, file_id), '')
+            else:
+                old_chunks.remove(chunkid)
+        for chunkid in old_chunks:
+            key = self.chunk_key(chunkid, file_id)
+            self.curgen.remove_range(key, key)
         
     def get_file_chunk_groups(self, genid, filename):
         tree = self.find_generation(genid)
