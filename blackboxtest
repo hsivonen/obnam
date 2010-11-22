@@ -388,17 +388,6 @@ class BackupTests(ObnamTestCase):
         s = self.open_store()
         self.assertEqual(len(s.list_chunks()), 1)
 
-    def test_uses_chunk_groups(self):
-        ngroups = 2
-        nbytes = (obnamlib.DEFAULT_CHUNK_SIZE * 
-                  obnamlib.DEFAULT_CHUNK_GROUP_SIZE * 
-                  ngroups)
-        self.create_file(self.data, 'file', 'x' * nbytes)
-        self.backup()
-
-        s = self.open_store()
-        self.assertEqual(len(s.list_chunk_groups()), ngroups)
-
 
 class VerifyTests(ObnamTestCase):
 

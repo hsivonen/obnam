@@ -28,7 +28,6 @@ class Error(Exception):
 
 DEFAULT_NODE_SIZE = 64 * 1024
 DEFAULT_CHUNK_SIZE = 64 * 1024
-DEFAULT_CHUNK_GROUP_SIZE = 16
 DEFAULT_UPLOAD_QUEUE_SIZE = 1024
 DEFAULT_LRU_SIZE = 10 * 1000
 
@@ -46,7 +45,6 @@ from nodestorevfs import NodeStoreVfs
 from store_tree import StoreTree
 from clientlist import ClientList
 from checksumtree import ChecksumTree
-from chunkgrouptree import ChunkGroupTree
 from clientmetadatatree import ClientMetadataTree
 from store import Store, LockFail
 from forget_policy import ForgetPolicy

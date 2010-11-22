@@ -188,15 +188,6 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
         self.assertEqual(self.client.get_file_chunks(self.clientid, '/foo'), 
                          [1, 2, 3])
                          
-    def test_has_no_file_chunk_groups_initially(self):
-        self.assertEqual(self.client.get_file_chunk_groups(self.clientid, '/foo'), 
-                         [])
-
-    def test_sets_file_chunk_groups(self):
-        self.client.set_file_chunk_groups('/foo', [1, 2, 3])
-        self.assertEqual(self.client.get_file_chunk_groups(self.clientid, '/foo'), 
-                         [1, 2, 3])
-
     def test_generation_has_no_chunk_refs_initially(self):
         minkey = self.client.chunk_key(0, 0)
         maxkey = self.client.chunk_key(self.client.max_id, self.client.max_id)
@@ -220,40 +211,10 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
         self.assertEqual(self.client.curgen.lookup_range(minkey, maxkey), 
                          [(self.client.chunk_key(1, file_id), '')])
 
-    def test_generation_has_no_chunk_group_refs_initially(self):
-        minkey = self.client.cgkey(0, 0)
-        maxkey = self.client.cgkey(self.client.max_id, self.client.max_id)
-        self.assertEqual(self.client.curgen.lookup_range(minkey, maxkey), [])
-
-    def test_set_file_chunks_adds_chunk_group_refs(self):
-        self.client.set_file_chunk_groups('/foo', [1, 2])
-        file_id = self.client.get_file_id(self.client.curgen, '/foo')
-        minkey = self.client.cgkey(0, 0)
-        maxkey = self.client.cgkey(self.client.max_id, self.client.max_id)
-        self.assertEqual(set(self.client.curgen.lookup_range(minkey, maxkey)), 
-                         set([(self.client.cgkey(1, file_id), ''),
-                              (self.client.cgkey(2, file_id), '')]))
-
-    def test_set_file_chunks_removes_now_unused_chunk_group_refs(self):
-        self.client.set_file_chunk_groups('/foo', [1, 2])
-        self.client.set_file_chunk_groups('/foo', [1])
-        file_id = self.client.get_file_id(self.client.curgen, '/foo')
-        minkey = self.client.cgkey(0, 0)
-        maxkey = self.client.cgkey(self.client.max_id, self.client.max_id)
-        self.assertEqual(self.client.curgen.lookup_range(minkey, maxkey), 
-                         [(self.client.cgkey(1, file_id), '')])
-
     def test_remove_removes_chunk_refs(self):
         self.client.set_file_chunks('/foo', [1, 2])
         self.client.remove('/foo')
         minkey = self.client.chunk_key(0, 0)
         maxkey = self.client.chunk_key(self.client.max_id, self.client.max_id)
-        self.assertEqual(self.client.curgen.lookup_range(minkey, maxkey), [])
-
-    def test_remove_removes_chunk_group_refs(self):
-        self.client.set_file_chunk_groups('/foo', [1, 2])
-        self.client.remove('/foo')
-        minkey = self.client.cgkey(0, 0)
-        maxkey = self.client.cgkey(self.client.max_id, self.client.max_id)
         self.assertEqual(self.client.curgen.lookup_range(minkey, maxkey), [])
 

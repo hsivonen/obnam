@@ -52,12 +52,6 @@ class App(object):
                                  '(default: %default)')
         self.config['chunk-size'] = '%s' % obnamlib.DEFAULT_CHUNK_SIZE
 
-        self.config.new_bytesize(['chunk-group-size'],
-                                 'number of chunks per chunk group '
-                                 '(default: %default)')
-        self.config['chunk-group-size'] = \
-            '%s' % obnamlib.DEFAULT_CHUNK_GROUP_SIZE
-
         self.config.new_bytesize(['upload-queue-size'],
                                  'length of upload queue for B-tree nodes '
                                  '(default: %default)')

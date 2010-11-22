@@ -24,8 +24,7 @@ class ChecksumTree(obnamlib.StoreTree):
     '''Store map of checksum to integer id.
 
     The checksum might be, for example, an MD5 one (as returned by
-    hashlib.md5().digest()). The id would be a chunk or chunk group
-    id.
+    hashlib.md5().digest()). The id would be a chunk id.
 
     '''
 

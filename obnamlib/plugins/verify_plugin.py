@@ -114,15 +114,8 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         f = self.fs.open(filename, 'r')
 
         chunkids = self.store.get_file_chunks(gen, filename)
-        if chunkids:
-            if not self.verify_chunks(f, chunkids):
-                raise Fail(filename, 'data changed')
-        else:
-            cgids = self.store.get_file_chunk_groups(gen, filename)
-            for cgid in cgids:
-                chunkids = self.store.get_chunk_group(cgid)
-                if not self.verify_chunks(f, chunkids):
-                    raise Fail(filename, 'data changed')
+        if not self.verify_chunks(f, chunkids):
+            raise Fail(filename, 'data changed')
 
         f.close()
 

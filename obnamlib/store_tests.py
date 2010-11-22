@@ -520,57 +520,7 @@ class StoreChunkTests(unittest.TestCase):
         self.assertEqual(sorted(self.store.list_chunks()), sorted(chunkids))
 
 
-class StoreChunkGroupTests(unittest.TestCase):
-
-    def setUp(self):
-        self.tempdir = tempfile.mkdtemp()
-
-        self.fs = obnamlib.LocalFS(self.tempdir)
-        self.store = obnamlib.Store(self.fs, obnamlib.DEFAULT_NODE_SIZE,
-                                    obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
-                                    obnamlib.DEFAULT_LRU_SIZE)
-        self.store.lock_root()
-        self.store.add_client('client_name')
-        self.store.commit_root()
-        self.store.lock_client('client_name')
-        self.store.start_generation()
-
-    def tearDown(self):
-        shutil.rmtree(self.tempdir)
-
-    def test_put_chunk_group_returns_id(self):
-        self.assertNotEqual(self.store.put_chunk_group([1], 'checksum'), 
-                            None)
-        
-    def test_get_chunk_group_retrieves_what_put_chunk_puts(self):
-        cgid = self.store.put_chunk_group([1, 2], 'checksum')
-        self.assertEqual(self.store.get_chunk_group(cgid), [1, 2])
-        
-    def test_find_chunk_groups_finds_what_put_chunk_group_puts(self):
-        cgid = self.store.put_chunk_group([1, 2], 'checksum')
-        self.assertEqual(self.store.find_chunk_groups('checksum'), [cgid])
-        
-    def test_find_chunk_groups_finds_nothing_if_nothing_is_put(self):
-        self.assertEqual(self.store.find_chunk_groups('checksum'), [])
-        
-    def test_handles_checksum_collision(self):
-        cgid1 = self.store.put_chunk_group([1, 2], 'checksum')
-        cgid2 = self.store.put_chunk_group([3, 4], 'checksum')
-        self.assertEqual(set(self.store.find_chunk_groups('checksum')),
-                         set([cgid1, cgid2]))
-
-    def test_returns_no_chunk_groups_initially(self):
-        self.assertEqual(self.store.list_chunk_groups(), [])
-        
-    def test_returns_chunk_groups_after_they_exist(self):
-        cgids = []
-        for i in range(2):
-            cgids.append(self.store.put_chunk_group([1], 'checksum'))
-        self.assertEqual(sorted(self.store.list_chunk_groups()), 
-                         sorted(cgids))
-
-
-class StoreGetSetChunksAndGroupsTests(unittest.TestCase):
+class StoreGetSetChunksTests(unittest.TestCase):
 
     def setUp(self):
         self.tempdir = tempfile.mkdtemp()
@@ -592,19 +542,10 @@ class StoreGetSetChunksAndGroupsTests(unittest.TestCase):
     def test_file_has_no_chunks(self):
         self.assertEqual(self.store.get_file_chunks(self.gen, '/foo'), [])
         
-    def test_file_has_no_chunk_groups(self):
-        self.assertEqual(self.store.get_file_chunk_groups(self.gen, '/foo'),
-                         [])
-
     def test_sets_chunks_for_file(self):
         self.store.set_file_chunks('/foo', [1, 2])
         chunkids = self.store.get_file_chunks(self.gen, '/foo')
         self.assertEqual(sorted(chunkids), [1, 2])
-
-    def test_sets_chunk_groups_for_file(self):
-        self.store.set_file_chunk_groups('/foo', [1, 2])
-        cgids = self.store.get_file_chunk_groups(self.gen, '/foo')
-        self.assertEqual(sorted(cgids), [1, 2])
 
 
 class StoreGenspecTests(unittest.TestCase):

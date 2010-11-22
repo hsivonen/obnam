@@ -1,4 +1,4 @@
-# Copyright (C) 2009  Lars Wirzenius
+# Copyright (C) 2009, 2010  Lars Wirzenius
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -150,13 +150,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         f = self.fs.open(to_filename, 'w')
 
         chunkids = self.store.get_file_chunks(gen, filename)
-        if chunkids:
-            self.restore_chunks(f, chunkids)
-        else:
-            cgids = self.store.get_file_chunk_groups(gen, filename)
-            for cgid in cgids:
-                chunkids = self.store.get_chunk_group(cgid)
-                self.restore_chunks(f, chunkids)
+        self.restore_chunks(f, chunkids)
 
         f.close()
         obnamlib.set_metadata(self.fs, to_filename, metadata)

@@ -195,34 +195,17 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         '''Back up contents of a regular file.'''
         logging.debug('backup_file_contents: %s' % filename)
         chunkids = []
-        cgids = []
-        groupsum = self.store.new_checksummer()
         f = self.fs.open(filename, 'r')
         chunk_size = int(self.app.config['chunk-size'])
-        chunk_group_size = int(self.app.config['chunk-group-size'])
         while True:
             data = f.read(chunk_size)
             if not data:
                 break
             chunkids.append(self.backup_file_chunk(data))
-            groupsum.update(data)
-            if len(chunkids) == chunk_group_size:
-                checksum = groupsum.hexdigest()
-                cgid = self.store.put_chunk_group(chunkids, checksum)
-                cgids.append(cgid)
-                chunkids = []
-                groupsum = self.store.new_checksummer()
             self.app.hooks.call('progress-data-uploaded', len(data))
         f.close()
         
-        if cgids:
-            if chunkids:
-                checksum = groupsum.hexdigest()
-                cgid = self.store.put_chunk_group(chunkids, checksum)
-                cgids.append(cgid)
-            self.store.set_file_chunk_groups(filename, cgids)
-        else:
-            self.store.set_file_chunks(filename, chunkids)
+        self.store.set_file_chunks(filename, chunkids)
 
     def backup_file_chunk(self, data):
         '''Back up a chunk of data by putting it into the store.'''

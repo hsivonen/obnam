@@ -174,12 +174,6 @@ class Store(object):
                                                len(self.checksum('')),
                                                node_size, upload_queue_size, 
                                                lru_size)
-        self.groupsums = obnamlib.ChecksumTree(fs, 'groupsums', 
-                                               len(self.checksum('')),
-                                               node_size, upload_queue_size, 
-                                               lru_size)
-        self.chunkgroups = obnamlib.ChunkGroupTree(fs, node_size, 
-                                                   upload_queue_size, lru_size)
         self.prev_chunkid = None
 
     def checksum(self, data):
@@ -331,8 +325,6 @@ class Store(object):
             self._really_remove_generation(genid)
         self.client.commit()
         self.chunksums.commit()
-        self.groupsums.commit()
-        self.chunkgroups.commit()
         self.unlock_client()
         
     def open_client(self, client_name):
@@ -506,37 +498,6 @@ class Store(object):
                     result.append(int(basename, 16))
         return result
 
-    @require_started_generation
-    def put_chunk_group(self, chunkids, checksum):
-        '''Put a new chunk group in the store.
-        
-        Return identifier of new group.
-        
-        '''
-
-        while True:
-            cgid = random.randint(0, 2**64 - 1)
-            if not self.chunkgroups.group_exists(cgid):
-                break
-        self.chunkgroups.add(cgid, chunkids)
-        self.groupsums.add(checksum, cgid, self.current_client_id)
-        return cgid
-
-    @require_open_client
-    def get_chunk_group(self, cgid):
-        '''Return list of chunk ids in the given chunk group.'''
-        return self.chunkgroups.list_chunk_group_chunks(cgid)
-
-    @require_open_client
-    def find_chunk_groups(self, checksum):
-        '''Return list of ids of chunk groups with given checksum.'''
-        return self.groupsums.find(checksum)
-
-    @require_open_client
-    def list_chunk_groups(self):
-        '''Return list of ids of all chunk groups in store.'''
-        return self.chunkgroups.list_chunk_groups()
-
     @require_open_client
     def get_file_chunks(self, gen, filename):
         '''Return list of ids of chunks belonging to a file.'''
@@ -551,21 +512,6 @@ class Store(object):
         '''
         
         self.client.set_file_chunks(filename, chunkids)
-
-    @require_open_client
-    def get_file_chunk_groups(self, gen, filename):
-        '''Return list of ids of chunk groups belonging to a file.'''
-        return self.client.get_file_chunk_groups(gen, filename)
-
-    @require_started_generation
-    def set_file_chunk_groups(self, filename, cgids):
-        '''Set ids of chunk groups belonging to a file.
-        
-        File must be in the started generation.
-        
-        '''
-
-        self.client.set_file_chunk_groups(filename, cgids)
 
     @require_open_client
     def genspec(self, spec):
