@@ -243,3 +243,10 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
         self.assertEqual(self.client.curgen.lookup_range(minkey, maxkey), 
                          [(self.client.cgkey(1, file_id), '')])
 
+    def test_remove_removes_chunk_refs(self):
+        self.client.set_file_chunk_groups('/foo', [1, 2])
+        self.client.remove('/foo')
+        minkey = self.client.cgkey(0, 0)
+        maxkey = self.client.cgkey(self.client.max_id, self.client.max_id)
+        self.assertEqual(self.client.curgen.lookup_range(minkey, maxkey), [])
+

@@ -277,7 +277,7 @@ class ClientMetadataTree(obnamlib.StoreTree):
             key = self.fskey(parent_id, self.DIR_CONTENTS, file_id)
             # The range removal will work even if the key does not exist.
             self.curgen.remove_range(key, key)
-
+            
     def listdir(self, genid, dirname):
         tree = self.find_generation(genid)
         dir_id = self.get_file_id(tree, dirname)
