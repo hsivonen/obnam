@@ -36,14 +36,12 @@ class ClientList(obnamlib.StoreTree):
     
     '''
 
-    max_id = 2**64 - 1
-
     def __init__(self, fs, node_size, upload_queue_size, lru_size):
         self.hash_len = len(self.hashfunc(''))
         self.fmt = '!%dsQ' % self.hash_len
         self.key_bytes = len(self.key('', 0))
         self.minkey = self.hashkey('\x00' * self.hash_len, 0)
-        self.maxkey = self.hashkey('\xff' * self.hash_len, self.max_id)
+        self.maxkey = self.hashkey('\xff' * self.hash_len, obnamlib.MAX_ID)
         obnamlib.StoreTree.__init__(self, fs, 'clientlist', self.key_bytes, 
                                     node_size, upload_queue_size, lru_size)
 
@@ -61,7 +59,7 @@ class ClientList(obnamlib.StoreTree):
         return struct.unpack(self.fmt, key)
 
     def random_id(self):
-        return random.randint(0, self.max_id)
+        return random.randint(0, obnamlib.MAX_ID)
 
     def list_clients(self):
         if self.init_forest() and self.forest.trees:
@@ -72,7 +70,7 @@ class ClientList(obnamlib.StoreTree):
 
     def find_client_id(self, t, client_name):
         minkey = self.key(client_name, 0)
-        maxkey = self.key(client_name, self.max_id)
+        maxkey = self.key(client_name, obnamlib.MAX_ID)
         for k, v in t.lookup_range(minkey, maxkey):
             checksum, client_id = self.unkey(k)
             if v == client_name:

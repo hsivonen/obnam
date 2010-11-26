@@ -31,6 +31,11 @@ DEFAULT_CHUNK_SIZE = 64 * 1024
 DEFAULT_UPLOAD_QUEUE_SIZE = 1024
 DEFAULT_LRU_SIZE = 10 * 1000
 
+# Maximum identifier for clients, chunks, files, etc. This is the largest
+# unsigned 64-bit value. In various places we assume 64-bit field sizes
+# for on-disk data structures.
+MAX_ID = 2**64 - 1
+
 from sizeparse import SizeSyntaxError, UnitNameError, ByteSizeParser
 
 from hooks import Hook, HookManager

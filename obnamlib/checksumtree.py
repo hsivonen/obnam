@@ -34,7 +34,6 @@ class ChecksumTree(obnamlib.StoreTree):
         key_bytes = len(self.key('', 0, 0))
         obnamlib.StoreTree.__init__(self, fs, name, key_bytes, node_size, 
                                     upload_queue_size, lru_size)
-        self.max_id = 2**64 - 1
 
     def key(self, checksum, chunk_id, client_id):
         return struct.pack(self.fmt, checksum, chunk_id, client_id)
@@ -55,7 +54,7 @@ class ChecksumTree(obnamlib.StoreTree):
         if self.init_forest() and self.forest.trees:
             t = self.forest.trees[-1]
             minkey = self.key(checksum, 0, 0)
-            maxkey = self.key(checksum, self.max_id, self.max_id)
+            maxkey = self.key(checksum, obnamlib.MAX_ID, obnamlib.MAX_ID)
             pairs = t.lookup_range(minkey, maxkey)
             return [self.unkey(key)[1] for key, value in pairs]
         else:

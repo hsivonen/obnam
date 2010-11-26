@@ -447,14 +447,13 @@ class Store(object):
         
         '''
         
-        max_chunkid = 2**64 - 1
         def random_chunkid():
-            return random.randint(0, max_chunkid)
+            return random.randint(0, obnamlib.MAX_ID)
         
         if self.prev_chunkid is None:
             self.prev_chunkid = random_chunkid()
         while True:
-            chunkid = (self.prev_chunkid + 1) % max_chunkid
+            chunkid = (self.prev_chunkid + 1) % obnamlib.MAX_ID
             filename = self._chunk_filename(chunkid)
             if not self.fs.exists(filename):
                 break

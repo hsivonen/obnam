@@ -61,11 +61,8 @@ class ClientMetadataTree(obnamlib.StoreTree):
     # Both have a minimum value of 0.
 
     TYPE_MAX = 255
-    SUBKEY_MAX = struct.pack('!Q', 2**64-1)
+    SUBKEY_MAX = struct.pack('!Q', obnamlib.MAX_ID)
     
-    # Maximum value for file ids, client ids, chunk ids.
-    max_id = 2**64-1
-
     def __init__(self, fs, client_dir, node_size, upload_queue_size, lru_size):
         key_bytes = len(self.hashkey(0, self.hash_name(''), 0, 0))
         obnamlib.StoreTree.__init__(self, fs, client_dir, key_bytes, 
