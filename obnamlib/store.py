@@ -170,6 +170,8 @@ class Store(object):
         self.removed_clients = []
         self.removed_generations = []
         self.client = None
+        self.chunklist = obnamlib.ChunkList(fs, node_size, upload_queue_size, 
+                                            lru_size)
         self.chunksums = obnamlib.ChecksumTree(fs, 'chunksums', 
                                                len(self.checksum('')),
                                                node_size, upload_queue_size, 
@@ -463,8 +465,9 @@ class Store(object):
         if not self.fs.exists(dirname):
             self.fs.makedirs(dirname)
         self.fs.write_file(filename, data)
-        self.chunksums.add(self.checksum(data), chunkid, 
-                           self.current_client_id)
+        checksum = self.checksum(data)
+        self.chunklist.add(chunkid, checksum)
+        self.chunksums.add(checksum, chunkid, self.current_client_id)
         return chunkid
         
     @require_open_client
