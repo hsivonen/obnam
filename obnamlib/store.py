@@ -500,6 +500,15 @@ class Store(object):
                     result.append(int(basename, 16))
         return result
 
+    def remove_chunk(self, chunk_id):
+        '''Remove a chunk from the store.
+        
+        Note that no locking is used.
+        
+        '''
+        
+        pass
+
     @require_open_client
     def get_file_chunks(self, gen, filename):
         '''Return list of ids of chunks belonging to a file.'''
