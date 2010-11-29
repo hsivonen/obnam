@@ -316,3 +316,7 @@ class ClientMetadataTree(obnamlib.StoreTree):
         t = self.find_generation(gen_id)
         return len(t.lookup_range(minkey, maxkey)) > 0
 
+    def list_chunks_in_generation(self, gen_id):
+        '''Return list of chunk ids used in a given generation.'''
+        return []
+
