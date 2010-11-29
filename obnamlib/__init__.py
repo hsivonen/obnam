@@ -48,6 +48,7 @@ from metadata import (read_metadata, set_metadata, Metadata, metadata_fields,
                       metadata_verify_fields)
 from nodestorevfs import NodeStoreVfs
 from store_tree import StoreTree
+from chunklist import ChunkList
 from clientlist import ClientList
 from checksumtree import ChecksumTree
 from clientmetadatatree import ClientMetadataTree
