@@ -465,8 +465,9 @@ class Store(object):
         if not self.fs.exists(dirname):
             self.fs.makedirs(dirname)
         self.fs.write_file(filename, data)
-        self.chunksums.add(self.checksum(data), chunkid, 
-                           self.current_client_id)
+        checksum = self.checksum(data)
+        self.chunklist.add(chunkid, checksum)
+        self.chunksums.add(checksum, chunkid, self.current_client_id)
         return chunkid
         
     @require_open_client
