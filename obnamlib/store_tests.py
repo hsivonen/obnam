@@ -498,6 +498,9 @@ class StoreChunkTests(unittest.TestCase):
         chunkid = self.store.put_chunk('chunk', 'checksum')
         self.store.remove_chunk(chunkid)
         self.assertFalse(self.store.chunk_exists(chunkid))
+
+    def test_silently_ignores_failure_when_removing_nonexistent_chunk(self):
+        self.assertEqual(self.store.remove_chunk(0), None)
         
     def test_find_chunks_finds_what_put_chunk_puts(self):
         checksum = self.store.checksum('data')

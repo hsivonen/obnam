@@ -507,7 +507,11 @@ class Store(object):
         
         '''
         
-        pass
+        filename = self._chunk_filename(chunk_id)
+        try:
+            self.fs.remove(filename)
+        except OSError:
+            pass
 
     @require_open_client
     def get_file_chunks(self, gen, filename):
