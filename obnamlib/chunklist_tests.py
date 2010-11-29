@@ -40,6 +40,11 @@ class ChunkListTests(unittest.TestCase):
     def test_adds_chunk(self):
         self.list.add(0, 'checksum')
         self.assertEqual(self.list.get_checksum(0), 'checksum')
+        
+    def test_adds_second_chunk(self):
+        self.list.add(0, 'checksum')
+        self.list.add(1, 'checksum1')
+        self.assertEqual(self.list.get_checksum(1), 'checksum1')
 
     def test_removes_chunk(self):
         self.list.add(0, 'checksum')
