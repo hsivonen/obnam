@@ -217,4 +217,13 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
         minkey = self.client.chunk_key(0, 0)
         maxkey = self.client.chunk_key(obnamlib.MAX_ID, obnamlib.MAX_ID)
         self.assertEqual(self.client.curgen.lookup_range(minkey, maxkey), [])
+        
+    def test_report_chunk_not_in_use_initially(self):
+        gen_id = self.client.get_generation_id(self.client.curgen)
+        self.assertFalse(self.client.chunk_in_use(gen_id, 0))
+        
+    def test_report_chunk_in_use_after_it_is(self):
+        gen_id = self.client.get_generation_id(self.client.curgen)
+        self.client.set_file_chunks('/foo', [0])
+        self.assertTrue(self.client.chunk_in_use(gen_id, 0))
 

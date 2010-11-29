@@ -307,4 +307,8 @@ class ClientMetadataTree(obnamlib.StoreTree):
         for chunkid in old_chunks:
             key = self.chunk_key(chunkid, file_id)
             self.curgen.remove_range(key, key)
-        
+
+    def chunk_in_use(self, gen_id, chunk_id):
+        '''Is a chunk used by a generation?'''
+        return False
+
