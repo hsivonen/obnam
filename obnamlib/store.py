@@ -170,6 +170,8 @@ class Store(object):
         self.removed_clients = []
         self.removed_generations = []
         self.client = None
+        self.chunklist = obnamlib.ChunkList(fs, node_size, upload_queue_size, 
+                                            lru_size)
         self.chunksums = obnamlib.ChecksumTree(fs, 'chunksums', 
                                                len(self.checksum('')),
                                                node_size, upload_queue_size, 
