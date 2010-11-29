@@ -310,5 +310,9 @@ class ClientMetadataTree(obnamlib.StoreTree):
 
     def chunk_in_use(self, gen_id, chunk_id):
         '''Is a chunk used by a generation?'''
-        return False
+        
+        minkey = self.chunk_key(chunk_id, 0)
+        maxkey = self.chunk_key(chunk_id, obnamlib.MAX_ID)
+        t = self.find_generation(gen_id)
+        return len(t.lookup_range(minkey, maxkey)) > 0
 
