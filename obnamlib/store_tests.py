@@ -360,6 +360,28 @@ class StoreClientTests(unittest.TestCase):
         self.store.open_client('client_name')
         self.assertEqual(self.store.list_generations(), [])
 
+    def test_removing_only_second_generation_works(self):
+        self.store.lock_client('client_name')
+        gen1 = self.store.start_generation()
+        self.store.commit_client()
+
+        self.store.lock_client('client_name')
+        gen2 = self.store.start_generation()
+        chunk_id = self.store.put_chunk('data', self.store.checksum('data'))
+        self.store.set_file_chunks('/foo', [chunk_id])
+        self.store.commit_client()
+
+        self.store.open_client('client_name')
+        self.assertEqual(len(self.store.list_generations()), 2)
+
+        self.store.lock_client('client_name')
+        self.store.remove_generation(gen2)
+        self.store.commit_client()
+
+        self.store.open_client('client_name')
+        self.assertEqual(self.store.list_generations(), [gen1])
+        self.assertFalse(self.store.chunk_exists(chunk_id))
+
     def test_removing_started_generation_fails(self):
         self.store.lock_client('client_name')
         gen = self.store.start_generation()

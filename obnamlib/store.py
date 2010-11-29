@@ -382,9 +382,11 @@ class Store(object):
 
         chunk_ids = self.client.list_chunks_in_generation(gen_id)
         for other_id in self.list_generations():
-            chunk_ids = [chunk_id
-                         for chunk_id in chunk_ids
-                         if not self.client.chunk_in_use(other_id, chunk_id)]
+            if other_id != gen_id:
+                chunk_ids = [chunk_id
+                             for chunk_id in chunk_ids
+                             if not self.client.chunk_in_use(other_id, 
+                                                             chunk_id)]
         for chunk_id in chunk_ids:
             self.remove_chunk(chunk_id)
         self.client.remove_generation(gen_id)
