@@ -371,7 +371,7 @@ class Store(object):
         return self.new_generation
 
     @require_client_lock
-    def _really_remove_generation(self, gen):
+    def _really_remove_generation(self, gen_id):
         '''Really remove a committed generation.
         
         This is not part of the public API.
@@ -380,7 +380,14 @@ class Store(object):
         
         '''
 
-        self.client.remove_generation(gen)
+        chunk_ids = self.client.list_chunks_in_generation(gen_id)
+        for other_id in self.list_generations():
+            chunk_ids = [chunk_id
+                         for chunk_id in chunk_ids
+                         if not self.client.chunk_in_use(other_id, chunk_id)]
+        for chunk_id in chunk_ids:
+            self.remove_chunk(chunk_id)
+        self.client.remove_generation(gen_id)
 
     @require_client_lock
     def remove_generation(self, gen):
