@@ -78,39 +78,48 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         last_checkpoint = 0
         interval = self.app.config['checkpoint']
 
-        for root in roots:
-            if not self.fs:
-                self.fs = self.app.fsf.new(root)
-                self.fs.connect()
-            else:
+        if roots:
+            self.fs = self.app.fsf.new(roots[0])
+            self.fs.connect()
+
+            absroots = []
+            for root in roots:
                 self.fs.reinit(root)
-            absroot = self.fs.abspath('.')
-            for pathname, metadata in self.find_files(absroot):
-                logging.debug('backing up %s' % pathname)
-                try:
-                    self.backup_metadata(pathname, metadata)
-                    if stat.S_ISDIR(metadata.st_mode):
-                        self.backup_dir_contents(pathname)
-                    elif stat.S_ISREG(metadata.st_mode):
-                        self.backup_file_contents(pathname)
-                except OSError, e:
-                    logging.error('Could not back up %s: %s' % 
-                                  (pathname, e.strerror))
-                    self.app.hooks.call('error-message', 
-                                        'Could not back up %s: %s' %
-                                        (pathname, e.strerror))
-                if storefs.bytes_written - last_checkpoint >= interval:
-                    logging.debug('Making checkpoint')
-                    self.backup_parents('.')
-                    self.store.commit_client(checkpoint=True)
-                    self.store.lock_client(client_name)
-                    self.store.start_generation()
-                    last_checkpoint = storefs.bytes_written
+                absroots.append(self.fs.abspath('.'))
+                
+            logging.debug('absolute roots: %s' % absroots)
+            self.remove_old_roots(absroots)
 
-            self.backup_parents('.')
+            for root in roots:
+                self.fs.reinit(root)
+                absroot = self.fs.abspath('.')
+                for pathname, metadata in self.find_files(absroot):
+                    logging.debug('backing up %s' % pathname)
+                    try:
+                        self.backup_metadata(pathname, metadata)
+                        if stat.S_ISDIR(metadata.st_mode):
+                            self.backup_dir_contents(pathname)
+                        elif stat.S_ISREG(metadata.st_mode):
+                            self.backup_file_contents(pathname)
+                    except OSError, e:
+                        logging.error('Could not back up %s: %s' % 
+                                      (pathname, e.strerror))
+                        self.app.hooks.call('error-message', 
+                                            'Could not back up %s: %s' %
+                                            (pathname, e.strerror))
+                    if storefs.bytes_written - last_checkpoint >= interval:
+                        logging.debug('Making checkpoint')
+                        self.backup_parents('.')
+                        self.store.commit_client(checkpoint=True)
+                        self.store.lock_client(client_name)
+                        self.store.start_generation()
+                        last_checkpoint = storefs.bytes_written
 
-        if self.fs:
-            self.fs.close()
+                self.backup_parents('.')
+
+            if self.fs:
+                self.fs.close()
+
         self.store.commit_client()
         storefs.close()
 
@@ -235,3 +244,43 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         # Files that are created after the previous generation will be
         # added to the directory when they are backed up, so we don't
         # need to worry about them here.
+
+    def remove_old_roots(self, new_roots):
+        '''Remove from started generation anything that is not a backup root.
+        
+        We recurse from filesystem root directory until getting to one of 
+        the new backup roots, or a directory or file that is not a parent 
+        of one of the new backup roots. We remove anything that is not a
+        new backup root, or their parent.
+        
+        '''
+        
+        def is_parent(pathname):
+            x = pathname + os.sep
+            logging.debug('is_parent: x is %s' % x)
+            for new_root in new_roots:
+                if new_root.startswith(x):
+                    logging.debug('is_parent: starts with x: %s' % new_root)
+                    return True
+            logging.debug('is_parent: is not %s' % pathname)
+            return False
+
+        def helper(dirname):
+            logging.debug('helper: %s' % dirname)
+            gen_id = self.store.new_generation
+            basenames = self.store.listdir(gen_id, dirname)
+            for basename in basenames:
+                pathname = os.path.join(dirname, basename)
+                if is_parent(pathname):
+                    logging.debug('helper: is parent: %s' % pathname)
+                    metadata = self.store.get_metadata(gen_id, pathname)
+                    if metadata.isdir():
+                        helper(pathname)
+                elif pathname not in new_roots:
+                    logging.debug('helper: removing %s' % pathname)
+                    self.store.remove(pathname)
+                else:
+                    logging.debug('helper: keeping %s' % pathname)
+
+        helper('/')
+
