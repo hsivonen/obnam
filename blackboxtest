@@ -398,6 +398,7 @@ class BackupTests(ObnamTestCase):
         parent = os.path.join(self.restored, './' + self.data)
         self.assertEqual(os.listdir(parent), ['bar'])
 
+
 class VerifyTests(ObnamTestCase):
 
     def test_accepts_unchanged_backup(self):
