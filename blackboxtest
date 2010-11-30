@@ -22,6 +22,7 @@
 
 import logging
 import os
+import random
 import re
 import shutil
 import stat
@@ -50,7 +51,7 @@ class ObnamTestCase(unittest.TestCase):
     '''
 
     def setUp(self):
-        self.hostid = 'hostid'
+        self.client_name = 'client_name'
         self.tempdir = tempfile.mkdtemp()
         self.data = self.mkdir('data')
         self.store = self.mkdir('store')
@@ -101,7 +102,7 @@ class ObnamTestCase(unittest.TestCase):
         return self.runcmd(['./obnam', 
                             '--quiet',
                             '--log', 'blackboxtest-obnam.log',
-                            '--hostname', self.hostid] +
+                            '--client-name', self.client_name] +
                            args, stderr_ignore=stderr_ignore)
 
     def backup(self, roots=None):
@@ -214,7 +215,7 @@ class ObnamTestCase(unittest.TestCase):
         s = obnamlib.Store(fs, obnamlib.DEFAULT_NODE_SIZE,
                            obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
                            obnamlib.DEFAULT_LRU_SIZE)
-        s.open_host(self.hostid)
+        s.open_client(self.client_name)
         return s
 
     def assert_equal_stat_fields(self, filename, stat1, stat2, fieldname):
@@ -388,17 +389,6 @@ class BackupTests(ObnamTestCase):
         s = self.open_store()
         self.assertEqual(len(s.list_chunks()), 1)
 
-    def test_uses_chunk_groups(self):
-        ngroups = 2
-        nbytes = (obnamlib.DEFAULT_CHUNK_SIZE * 
-                  obnamlib.DEFAULT_CHUNK_GROUP_SIZE * 
-                  ngroups)
-        self.create_file(self.data, 'file', 'x' * nbytes)
-        self.backup()
-
-        s = self.open_store()
-        self.assertEqual(len(s.list_chunk_groups()), ngroups)
-
 
 class VerifyTests(ObnamTestCase):
 
@@ -446,6 +436,25 @@ class ForgetTests(ObnamTestCase):
         genids = self.generations()
         self.forget(keep='1d', pretend=True)
         self.assertEqual(genids, self.generations())
+    
+    def disk_usage(self, root):
+        usage = 0
+        fs = obnamlib.LocalFS(root)
+        for dirname, subdirs, filenames in fs.depth_first('.'):
+            for filename in filenames:
+                st = fs.lstat(os.path.join(dirname, filename))
+                usage += st.st_blocks * 512
+        return usage
+        
+    def random_string(self, size):
+        return ''.join(chr(random.randint(0, 255)) for i in xrange(size))
+    
+    def test_removes_unwanted_data(self):
+        self.create_file(self.data, 'big', self.random_string(1024**2))
+        self.backup()
+        self.forget(genids=self.generations())
+        self.assertEqual(self.disk_usage(os.path.join(self.store, 'chunks')),
+                         0)
 
 
 if __name__ == '__main__':

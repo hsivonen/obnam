@@ -1,3 +1,17 @@
+# Copyright 2010  Lars Wirzenius
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 .TH OBNAM 1
 .SH NAME
 obnam \- make, restore, and manipulate backups
@@ -23,9 +37,9 @@ backup store, or
 for short.
 A store may be, for example, a directory on an sftp server,
 or a directory on a USB hard disk.
-A single store may contain backups from several hosts.
+A single store may contain backups from several clients.
 Their data will intermingle as if they were using separate stores,
-but if one host backs up a file, the others may re-use the data.
+but if one client backs up a file, the others may re-use the data.
 .PP
 .B obnam 
 command line syntax consists of a 
@@ -34,7 +48,7 @@ possibly followed by arguments.
 The commands are:
 .BR backup ,
 .BR restore ,
-.BR hosts ,
+.BR clients ,
 .BR generations ,
 .BR ls ,
 .BR verify ,
@@ -51,15 +65,15 @@ after that an incremental one.
 is the opposite of a backup.
 It copies backed up data from the backup store to a target directory.
 .IP \(bu
-.B hosts
-lists the hosts that are backed up to the store.
+.B clients
+lists the clients that are backed up to the store.
 .IP \(bu
 .B generations
-lists every backup generation for a given host.
+lists every backup generation for a given client.
 .IP \(bu
 .B ls
 lists the contents of a given generation, similar to 
-.BR ls -lAR .
+.BR ls \-lAR .
 .IP \(bu
 .B verify
 compares data in the backup with actual user data,
@@ -78,13 +92,13 @@ the data can't be restored anymore.
 You can either specify the generations to remove by listing them
 on the command line,
 or use the
-.B --keep
+.B \-\-keep
 option to specify a policy for what to keep (everything else will
 be removed).
 .IP \(bu
 .B fsck
 checks the internal consistency of the backup store.
-It verifies that all hosts, generations, directories, files, and
+It verifies that all clients, generations, directories, files, and
 all file contents still exists in the backup store.
 It may take quite a long time to run.
 .SS "Verifying backups"
@@ -112,7 +126,7 @@ Note that you will need to specify the whole path to the files
 or directories to be verified, not relative to the backup root.
 You still need to specify at least one of the backup roots via
 the
-.B --root
+.B \-\-root
 option so that obnam will find the filesystem, in case it is
 a remote one.
 .SS "URL syntax"
@@ -145,7 +159,7 @@ See the EXAMPLES section for examples of URLs.
 When not using the latest generation,
 you will need to specify which one you need.
 This will be done with the
-.B --generation
+.B \-\-generation
 option,
 which takes a generation specification as its argument.
 The specification is either the word
@@ -162,7 +176,7 @@ The
 command can follow a policy to automatically keep some and remove
 other backup generations.
 The policy is set with the
-.BR --keep =\fIPOLICY
+.BR \-\-keep =\fIPOLICY
 option.
 .PP
 .I POLICY
@@ -230,14 +244,14 @@ weekly backups for a month,
 and monthly backups for a year.
 .SH OPTIONS
 .TP
-.BR -h ", " --help
+.BR \-h ", " \-\-help
 Show a summary of options.
 .TP
-.BR --log =\fIFILE
+.BR \-\-log =\fIFILE
 Log debug and other messages to
 .IR FILE .
 .TP
-.BR --store =\fIURL
+.BR \-\-store =\fIURL
 Store backups in
 .IR URL ,
 which may be either a pathname or an 
@@ -245,39 +259,39 @@ which may be either a pathname or an
 URL.
 See above for a description of URL syntax.
 .TP
-.BR --hostname =\fIHOSTNAME
-Set name of host to use.
+.BR \-\-client\-name =\fICLIENT_NAME
+Set name of client to use.
 Default is the hostname of the machine where obnam runs.
 This is used to determine which part of the backup store to put backups in.
 .TP
-.BR --to =\fIDIR
+.BR \-\-to =\fIDIR
 Restore files to
 .IR DIR .
 This is only used with the
 .B restore
 command.
 .TP
-.BR --generation =\fIGENSPEC
+.BR \-\-generation =\fIGENSPEC
 Use generation specified by
 .IR GENSPEC .
 See above for ways to specify a generation.
 Default is
 .IR latest .
 .TP
-.BR --quiet
+.BR \-\-quiet
 Do not report progress when running.
 This is helpful when running obnam non-interactively,
 for example from 
 .BR cron (8).
 .TP
-.BR --root =\fDIR
+.BR \-\-root =\fDIR
 Back up 
 .IR DIR .
 This is only relevant with the
 .B backup
 command.
 .TP
-.BR --keep =\fIPOLICY
+.BR \-\-keep =\fIPOLICY
 Specify which generations the
 .B forget
 command will keep.
@@ -285,7 +299,7 @@ Everything else will be removed.
 See above for a description of
 .IR POLICY .
 .TP
-.BR --pretend ", " --no-act ", " --dry-run
+.BR \-\-pretend ", " \-\-no\-act ", " \-\-dry\-run
 Pretend to do things, but don't actually do them, if they change anything.
 Report what would have been done.
 Currently only applies to the
@@ -309,27 +323,27 @@ There will some day be a configuration file, which will be documented here.
 To back up your home directory to a server:
 .IP
 .nf
-obnam backup --store sftp://your.server/~/backups $HOME
+obnam backup \-\-store sftp://your.server/~/backups $HOME
 .PP
 To restore your latest backup from the server:
 .IP
 .nf
-obnam restore --store sftp://your.server/~/backups \\
---to /var/tmp/my.home.dir
+obnam restore \-\-store sftp://your.server/~/backups \\
+\-\-to /var/tmp/my.home.dir
 .PP
 To check that the backup worked:
 .IP
 .nf
-obnam verify --store sftp://your.server/~/backups /path/to/file
+obnam verify \-\-store sftp://your.server/~/backups /path/to/file
 .PP
 To remove old backups, keeping the newest backup for each day for
 ten years:
 .IP
 .nf
-obnam forget --store sftp://your.server/~/backups --keep 3650d
+obnam forget \-\-store sftp://your.server/~/backups \-\-keep 3650d
 .PP
 To verify that the backup store is OK:
 .IP
 .nf
-obnam fsck --store sftp://your.server/~/backups
+obnam fsck \-\-store sftp://your.server/~/backups
 

@@ -26,30 +26,30 @@ class ShowPlugin(obnamlib.ObnamPlugin):
 
     '''Show information about data in the backup store.
     
-    This implements commands for listing contents of root and host
+    This implements commands for listing contents of root and client
     objects, or the contents of a backup generation.
     
     '''
 
     def enable(self):
-        self.app.register_command('hosts', self.hosts)
+        self.app.register_command('clients', self.clients)
         self.app.register_command('generations', self.generations)
         self.app.register_command('ls', self.ls)
 
     def open_store(self):
         self.app.config.require('store')
-        self.app.config.require('hostname')
+        self.app.config.require('client-name')
         fs = self.app.fsf.new(self.app.config['store'])
         fs.connect()
         self.store = obnamlib.Store(fs, self.app.config['node-size'], 
                                     self.app.config['upload-queue-size'],
                                     self.app.config['lru-size'])
-        self.store.open_host(self.app.config['hostname'])
+        self.store.open_client(self.app.config['client-name'])
 
-    def hosts(self, args):
+    def clients(self, args):
         self.open_store()
-        for hostname in self.store.list_hosts():
-            print hostname
+        for client_name in self.store.list_clients():
+            print client_name
     
     def generations(self, args):
         self.open_store()

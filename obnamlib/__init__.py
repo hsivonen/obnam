@@ -28,9 +28,13 @@ class Error(Exception):
 
 DEFAULT_NODE_SIZE = 64 * 1024
 DEFAULT_CHUNK_SIZE = 64 * 1024
-DEFAULT_CHUNK_GROUP_SIZE = 16
 DEFAULT_UPLOAD_QUEUE_SIZE = 1024
 DEFAULT_LRU_SIZE = 10 * 1000
+
+# Maximum identifier for clients, chunks, files, etc. This is the largest
+# unsigned 64-bit value. In various places we assume 64-bit field sizes
+# for on-disk data structures.
+MAX_ID = 2**64 - 1
 
 from sizeparse import SizeSyntaxError, UnitNameError, ByteSizeParser
 
@@ -42,6 +46,12 @@ from vfs import VirtualFileSystem, VfsFactory, VfsTests
 from vfs_local import LocalFS
 from metadata import (read_metadata, set_metadata, Metadata, metadata_fields,
                       metadata_verify_fields)
+from nodestorevfs import NodeStoreVfs
+from store_tree import StoreTree
+from chunklist import ChunkList
+from clientlist import ClientList
+from checksumtree import ChecksumTree
+from clientmetadatatree import ClientMetadataTree
 from store import Store, LockFail
 from forget_policy import ForgetPolicy
 from app import App

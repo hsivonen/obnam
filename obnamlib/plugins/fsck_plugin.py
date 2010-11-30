@@ -41,14 +41,14 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         '''Check the root node.'''
         logging.debug('Checking root node')
         self.app.hooks.call('status', 'Checking root node')
-        for host in self.store.list_hosts():
-            self.check_host(host)
+        for client in self.store.list_clients():
+            self.check_client(client)
     
-    def check_host(self, hostname):
-        '''Check a host.'''
-        logging.debug('Checking host %s' % hostname)
-        self.app.hooks.call('status', 'Checking host %s' % hostname)
-        self.store.open_host(hostname)
+    def check_client(self, client_name):
+        '''Check a client.'''
+        logging.debug('Checking client %s' % client_name)
+        self.app.hooks.call('status', 'Checking client %s' % client_name)
+        self.store.open_client(client_name)
         for genid in self.store.list_generations():
             self.check_generation(genid)
 
@@ -77,16 +77,8 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         self.app.hooks.call('status', 'Checking file %s' % filename)
         metadata = self.store.get_metadata(genid, filename)
         if metadata.isfile():
-            for cgid in self.store.get_file_chunk_groups(genid, filename):
-                self.check_chunk_group(cgid)
-            for chunkid in self.store.get_file_chunk_groups(genid, filename):
+            for chunkid in self.store.get_file_chunks(genid, filename):
                 self.check_chunk(chunkid)
-
-    def check_chunk_group(self, cgid):
-        '''Check a chunk group.'''
-        logging.debug('Checking chunk group %s' % cgid)
-        for chunkid in self.store.get_chunk_group(cgid):
-            self.check_chunk(chunkid)
 
     def check_chunk(self, chunkid):
         '''Check a chunk.'''

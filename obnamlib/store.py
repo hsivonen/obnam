@@ -41,27 +41,27 @@ def require_root_lock(method):
     return helper
 
 
-def require_host_lock(method):
-    '''Decorator for ensuring the currently open host is locked by us.'''
+def require_client_lock(method):
+    '''Decorator for ensuring the currently open client is locked by us.'''
     
     def helper(self, *args, **kwargs):
-        if not self.got_host_lock:
-            raise LockFail('have not got lock on host')
+        if not self.got_client_lock:
+            raise LockFail('have not got lock on client')
         return method(self, *args, **kwargs)
     
     return helper
 
 
-def require_open_host(method):
-    '''Decorator for ensuring store has an open host.
+def require_open_client(method):
+    '''Decorator for ensuring store has an open client.
     
-    Host may be read/write (locked) or read-only.
+    client may be read/write (locked) or read-only.
     
     '''
     
     def helper(self, *args, **kwargs):
-        if self.current_host is None:
-            raise obnamlib.Error('host is not open')
+        if self.current_client is None:
+            raise obnamlib.Error('client is not open')
         return method(self, *args, **kwargs)
     
     return helper
@@ -124,519 +124,6 @@ def decode_metadata(encoded):
     return obnamlib.Metadata(**args)
 
 
-class NodeStoreVfs(btree.NodeStoreDisk):
-
-    def __init__(self, fs, dirname, node_size, codec, upload_queue_size,
-                 lru_size):
-        btree.NodeStoreDisk.__init__(self, dirname, node_size, codec,
-                                     upload_max=upload_queue_size,
-                                     lru_size=lru_size)
-        self.fs = fs
-        
-    def mkdir(self, dirname):
-        if not self.fs.exists(dirname):
-            self.fs.makedirs(dirname)
-
-    def read_file(self, filename):
-        return self.fs.cat(filename)
-
-    def write_file(self, filename, contents):
-        self.fs.overwrite_file(filename, contents, make_backup=False)
-
-    def file_exists(self, filename):
-        return self.fs.exists(filename)
-
-    def rename_file(self, old, new):
-        self.fs.rename(old, new)
-
-    def remove_file(self, filename): # pragma: no cover
-        self.fs.remove(filename)
-
-    def listdir(self, dirname): # pragma: no cover
-        return self.fs.listdir(dirname)
-
-
-class StoreTree(object):
-
-    '''A B-tree within a Store.'''
-
-    def __init__(self, fs, dirname, key_bytes, node_size, upload_queue_size,
-                 lru_size):
-        self.fs = fs
-        self.dirname = dirname
-        self.key_bytes = key_bytes
-        self.node_size = node_size
-        self.upload_queue_size = upload_queue_size
-        self.lru_size = lru_size
-        self.forest = None
-
-    def init_forest(self):
-        if self.forest is None:
-            if not self.fs.exists(self.dirname):
-                return False
-            codec = btree.NodeCodec(self.key_bytes)
-            ns = NodeStoreVfs(self.fs, self.dirname, self.node_size, codec,
-                              self.upload_queue_size, self.lru_size)
-            self.forest = btree.Forest(ns)
-        return True
-
-    def require_forest(self):
-        if not self.fs.exists(self.dirname):
-            self.fs.mkdir(self.dirname)
-        self.init_forest()
-        assert self.forest is not None
-
-    def commit(self):
-        if self.forest:
-            self.require_forest()
-            self.forest.commit()
-
-
-class HostList(StoreTree):
-
-    '''Store list of hosts.'''
-
-    key_bytes = 8 # 64-bit counter as key
-
-    def __init__(self, fs, node_size, upload_queue_size, lru_size):
-        StoreTree.__init__(self, fs, 'hostlist', self.key_bytes, node_size,
-                           upload_queue_size, lru_size)
-        self.minkey = self.key(0)
-        self.maxkey = self.key(2**64-1)
-
-    def key(self, intkey):
-        return struct.pack('!Q', intkey)
-
-    def pairs(self): # pragma: no cover
-        if self.forest.trees:
-            t = self.forest.trees[-1]
-            return t.lookup_range(self.minkey, self.maxkey)
-        else:
-            return []
-
-    def list_hosts(self):
-        if not self.init_forest():
-            return []
-        return [value for key, value in self.pairs()]
-
-    def add_host(self, hostname):
-        self.require_forest()
-        if not self.forest.trees:
-            t = self.forest.new_tree()
-            hostnum = 0
-        else:
-            t = self.forest.new_tree(old=self.forest.trees[-1])
-            pairs = t.lookup_range(self.minkey, self.maxkey)
-            biggest = max(key for key, value in pairs)
-            hostnum = 1 + struct.unpack('!Q', biggest)[0]
-        t.insert(self.key(hostnum), hostname)
-
-    def remove_host(self, hostname):
-        self.require_forest()
-        if self.forest.trees:
-            t = self.forest.new_tree(old=self.forest.trees[-1])
-            for key, value in t.lookup_range(self.minkey, self.maxkey):
-                if value == hostname:
-                    t.remove(key)
-                    break
-
-
-class GenerationStore(StoreTree):
-
-    '''Store generations.
-
-    We store things in the B-tree forest as follows:
-
-    * each generation is a tree; each tree is a generation
-    * tree key is constructed from three parts: a main key, a subkey type,
-      and the subkey itself
-      * the main key is a hash of a string, and is 64 bits
-      * the subkey type is 8 bits
-      * the subkey is a string and is 64 bits
-    * the string for the main key is either a fully qualified pathname, 
-      for filesystem objects, or the string "generation" for generation
-      metadata
-    * a filesystem object's metadata (inode data, etc) is stored as a blob,
-      in a specific subkey
-    * a regular file's contents are stored using chunks, which are stored
-      outside of the tree
-      * each chunk has an id
-      * the chunk ids are stored in the tree, using a dedicated subkey type,
-        with the subkey being the ordinal for each subkey: 0, 1, 2, ...
-    * a directory's contents are stored by storing the main key (the hash,
-      not the input to the hash function) for each filesystem object in the
-      directory
-      * similar to chunks in files
-      * dedicated subkey type
-      * subkey is hash of directory entry's full pathname
-
-    '''
-
-    TYPE_MAX = 255
-    SUBKEY_MAX = struct.pack('!Q', 2**64-1)
-
-    # Subkey types.
-
-    GEN_META = 0
-    FILE = 1
-    FILE_CHUNKS = 2
-    FILE_CHUNK_GROUPS = 3
-    DIR_CONTENTS = 4
-
-    # Subkey values when they are fixed.
-
-    GEN_META_ID = 0
-    GEN_META_STARTED = 1
-    GEN_META_ENDED = 2
-    GEN_META_IS_CHECKPOINT = 3
-
-    FILE_NAME = 0
-    FILE_METADATA = 1
-    
-    def __init__(self, fs, hostname, node_size, upload_queue_size, lru_size):
-        key_bytes = len(self.key('', 0, 0))
-        # FIXME: We should handle evil hostnames.
-        StoreTree.__init__(self, fs, hostname, key_bytes, node_size,
-                           upload_queue_size, lru_size)
-        self.curgen = None
-        self.known_generations = dict()
-
-    def hash_name(self, filename):
-        '''Return hash of filename suitable for use as main key.'''
-        return hashlib.md5(filename).digest()[:8]
-
-    def hashkey(self, mainhash, subtype, subkey):
-        '''Like key, but main key's hash is given.'''
-        
-        if type(subkey) == int:
-            fmt = '!8sBQ'
-        else:
-            assert type(subkey) == str
-            subkey = (subkey + '\0' * 8)[:8]
-            fmt = '!8sB8s'
-
-        return struct.pack(fmt, mainhash, subtype, subkey)
-
-    def key(self, mainkey, subtype, subkey):
-        '''Compute a full key.
-
-        The full key consists of three parts:
-
-        * a hash of mainkey (64 bits)
-        * the subkey type (8 bits)
-        * type subkey (64 bits)
-
-        These are catenated.
-
-        mainkey must be a string.
-
-        subtype must be an integer in the range 0.255, inclusive.
-
-        subkey must be either a string or an integer. If it is a string,
-        it will be padded with NUL bytes at the end, if it is less than
-        8 bytes, and truncated, if longer. If it is an integer, it will
-        be converted as a string, and the value must fit into 64 bits.
-
-        '''
-
-        return self.hashkey(self.hash_name(mainkey), subtype, subkey)
-
-    def genkey(self, subkey):
-        '''Generate key for generation metadata.'''
-        return self.key('generation', self.GEN_META, subkey)
-
-    def _lookup_int(self, tree, key):
-        return struct.unpack('!Q', tree.lookup(key))[0]
-
-    def _insert_int(self, tree, key, value):
-        return tree.insert(key, struct.pack('!Q', value))
-
-    def commit(self):
-        if self.forest:
-            if self.curgen:
-                now = int(time.time())
-                self._insert_int(self.curgen, 
-                                 self.genkey(self.GEN_META_ENDED), 
-                                 now)
-                self.curgen = None
-            self.forest.commit()
-
-    def find_generation(self, genid):
-        if genid in self.known_generations: # pragma: no cover
-            return self.known_generations[genid]
-
-        key = self.genkey(self.GEN_META_ID)
-        for t in self.forest.trees:
-            if self._lookup_int(t, key) == genid:
-                self.known_generations[genid] = t
-                return t
-        raise KeyError('Unknown generation %s' % genid) # pragma: no cover
-
-    def list_generations(self):
-        if self.forest:
-            key = self.genkey(self.GEN_META_ID)
-            return [self._lookup_int(t, key) for t in self.forest.trees]
-        else:
-            return []
-
-    def start_generation(self):
-        assert self.curgen is None
-        if self.forest.trees:
-            old = self.forest.trees[-1]
-        else:
-            old = None
-        self.curgen = self.forest.new_tree(old=old)
-        gen_id = self.forest.new_id()
-        now = int(time.time())
-        self._insert_int(self.curgen, self.genkey(self.GEN_META_ID), gen_id)
-        self._insert_int(self.curgen, self.genkey(self.GEN_META_STARTED), now)
-
-    def set_current_generation_is_checkpoint(self, is_checkpoint):
-        value = 1 if is_checkpoint else 0
-        key = self.genkey(self.GEN_META_IS_CHECKPOINT)
-        self._insert_int(self.curgen, key, value)
-
-    def get_is_checkpoint(self, genid):
-        tree = self.find_generation(genid)
-        key = self.genkey(self.GEN_META_IS_CHECKPOINT)
-        return self._lookup_int(tree, key)
-
-    def remove_generation(self, genid):
-        tree = self.find_generation(genid)
-        if tree == self.curgen:
-            self.curgen = None
-        self.forest.remove_tree(tree)
-
-    def get_generation_id(self, tree):
-        return self._lookup_int(tree, self.genkey(self.GEN_META_ID))
-
-    def _lookup_time(self, tree, what):
-        try:
-            return self._lookup_int(tree, self.genkey(what))
-        except KeyError:
-            return None
-
-    def get_generation_times(self, genid):
-        tree = self.find_generation(genid)
-        return (self._lookup_time(tree, self.GEN_META_STARTED),
-                self._lookup_time(tree, self.GEN_META_ENDED))
-
-    def _remove_filename_data(self, filename):
-        minkey = self.key(filename, 0, 0)
-        maxkey = self.key(filename, self.TYPE_MAX, self.SUBKEY_MAX)
-        self.curgen.remove_range(minkey, maxkey)
-
-        # Also remove from parent's contents.
-        parent = os.path.dirname(filename)
-        if parent != filename: # root dir is its own parent
-            subkey = self.hash_name(filename)
-            key = self.key(parent, self.DIR_CONTENTS, subkey)
-            self.curgen.remove_range(key, key)
-
-    def create(self, filename, metadata):
-        key = self.key(filename, self.FILE, self.FILE_METADATA)
-        try:
-            old_metadata = self.curgen.lookup(key)
-        except KeyError:
-            old_metadata = None
-        if metadata != old_metadata:
-            self.set_metadata(filename, metadata)
-
-        # Add to parent's contents, unless already there.
-        parent = os.path.dirname(filename)
-        if parent != filename: # root dir is its own parent
-            basename = os.path.basename(filename)
-            subkey = self.hash_name(filename)
-            key = self.key(parent, self.DIR_CONTENTS, subkey)
-            # We could just insert, but that would cause unnecessary
-            # churn in the tree if nothing changes.
-            try:
-                self.curgen.lookup(key)
-            except KeyError:
-                self.curgen.insert(key, basename)
-
-    def get_metadata(self, genid, filename):
-        tree = self.find_generation(genid)
-        return tree.lookup(self.key(filename, self.FILE, self.FILE_METADATA))
-
-    def set_metadata(self, filename, encoded_metadata):
-        self.curgen.insert(self.key(filename, self.FILE, self.FILE_NAME),
-                           filename)
-        self.curgen.insert(self.key(filename, self.FILE, self.FILE_METADATA),
-                           encoded_metadata)
-
-    def remove(self, filename):
-        self._remove_filename_data(filename)
-
-    def listdir(self, genid, dirname):
-        tree = self.find_generation(genid)
-        minkey = self.key(dirname, self.DIR_CONTENTS, 0)
-        maxkey = self.key(dirname, self.DIR_CONTENTS, self.SUBKEY_MAX)
-        basenames = []
-        for key, value in tree.lookup_range(minkey, maxkey):
-            basenames.append(value)
-        return basenames
-
-    def get_file_chunks(self, genid, filename):
-        tree = self.find_generation(genid)
-        minkey = self.key(filename, self.FILE_CHUNKS, 0)
-        maxkey = self.key(filename, self.FILE_CHUNKS, self.SUBKEY_MAX)
-        pairs = tree.lookup_range(minkey, maxkey)
-        return [struct.unpack('!Q', value)[0]
-                for key, value in pairs]
-    
-    def set_file_chunks(self, filename, chunkids):
-        minkey = self.key(filename, self.FILE_CHUNKS, 0)
-        maxkey = self.key(filename, self.FILE_CHUNKS, self.SUBKEY_MAX)
-        self.curgen.remove_range(minkey, maxkey)
-        for i, chunkid in enumerate(chunkids):
-            self.curgen.insert(self.key(filename, self.FILE_CHUNKS, i),
-                               struct.pack('!Q', chunkid))
-        
-    def get_file_chunk_groups(self, genid, filename):
-        tree = self.find_generation(genid)
-        minkey = self.key(filename, self.FILE_CHUNK_GROUPS, 0)
-        maxkey = self.key(filename, self.FILE_CHUNK_GROUPS, self.SUBKEY_MAX)
-        return [struct.unpack('!Q', value)[0]
-                for key, value in tree.lookup_range(minkey, maxkey)]
-
-    def set_file_chunk_groups(self, filename, cgids):
-        minkey = self.key(filename, self.FILE_CHUNK_GROUPS, 0)
-        maxkey = self.key(filename, self.FILE_CHUNK_GROUPS, self.SUBKEY_MAX)
-        self.curgen.remove_range(minkey, maxkey)
-        for i, cgid in enumerate(cgids):
-            self.curgen.insert(self.key(filename, self.FILE_CHUNK_GROUPS, i),
-                               struct.pack('!Q', cgid))
-
-
-class ChecksumTree(StoreTree):
-
-    '''Store map of checksum to integer id.
-
-    The checksum might be, for example, an MD5 one (as returned by
-    hashlib.md5().digest()). The id would be a chunk or chunk group
-    id.
-
-    '''
-
-    def __init__(self, fs, name, checksum_length, node_size, 
-                 upload_queue_size, lru_size):
-        self.sumlen = checksum_length
-        key_bytes = len(self.key('', 0))
-        StoreTree.__init__(self, fs, name, key_bytes, node_size, 
-                           upload_queue_size, lru_size)
-        self.max_id = 2**64 - 1
-
-    def key(self, checksum, number):
-        return struct.pack('!%dsQ' % self.sumlen, checksum, number)
-
-    def unkey(self, key):
-        return struct.unpack('!%dsQ' % self.sumlen, key)
-
-    def add(self, checksum, identifier):
-        self.require_forest()
-        key = self.key(checksum, identifier)
-        if self.forest.trees:
-            t = self.forest.trees[-1]
-        else:
-            t = self.forest.new_tree()
-        t.insert(key, '')
-
-    def find(self, checksum):
-        if self.init_forest() and self.forest.trees:
-            t = self.forest.trees[-1]
-            pairs = t.lookup_range(self.key(checksum, 0),
-                                   self.key(checksum, self.max_id))
-            return [self.unkey(key)[1] for key, value in pairs]
-        else:
-            return []
-
-    def remove(self, checksum, identifier):
-        self.require_forest()
-        if self.forest.trees:
-            t = self.forest.new_tree(self.forest.trees[-1])
-            t.remove(self.key(checksum, identifier))
-
-
-class ChunkGroupTree(StoreTree):
-
-    '''Store chunk groups.
-
-    A chunk group maps an identifier (integer) to a list of chunk ids
-    (integers).
-
-    '''
-    
-    # We store things using the chunk group id as tkey key. The ids of
-    # the chunks are stored as the value, as a blob, using struct.
-
-    def __init__(self, fs, node_size, upload_queue_size, lru_size):
-        StoreTree.__init__(self, fs, 'chunkgroups', 
-                           len(self.key(0)), node_size, upload_queue_size,
-                           lru_size)
-        self.max_id = 2**64 - 1
-
-    def key(self, cgid):
-        return struct.pack('!Q', cgid)
-
-    def unkey(self, key):
-        return struct.unpack('!Q', key)[0]
-
-    def blob(self, chunkids):
-        return struct.pack('!' + 'Q' * len(chunkids), *chunkids)
-        
-    def unblob(self, blob):
-        n = len(blob) / struct.calcsize('Q')
-        return struct.unpack('!' + 'Q' * n, blob)
-
-    def group_exists(self, cgid):
-        '''Does a chunk group exist?'''
-        if self.init_forest() and self.forest.trees:
-            t = self.forest.trees[-1]
-            try:
-                t.lookup(self.key(cgid))
-            except KeyError:
-                pass
-            else:
-                return True
-        return False
-
-    def list_chunk_groups(self):
-        '''List all chunk group ids.'''
-        if self.init_forest() and self.forest.trees:
-            t = self.forest.trees[-1]
-            pairs = t.lookup_range(self.key(0), self.key(self.max_id))
-            return list(self.unkey(key) for key, value in pairs)
-        else:
-            return []
-
-    def list_chunk_group_chunks(self, cgid):
-        '''List all chunks in a chunk group.'''
-        if self.init_forest() and self.forest.trees:
-            t = self.forest.trees[-1]
-            blob = t.lookup(self.key(cgid))
-            return list(self.unblob(blob))
-        else:
-            return []
-
-    def add(self, cgid, chunkids):
-        '''Add a chunk group.'''
-        self.require_forest()
-        if self.forest.trees:
-            t = self.forest.trees[-1]
-        else:
-            t = self.forest.new_tree()
-        blob = self.blob(chunkids)
-        t.insert(self.key(cgid), blob)
-
-    def remove(self, cgid):
-        '''Remove a chunk group.'''
-        self.require_forest()
-        if self.forest.trees:
-            t = self.forest.trees[-1]
-            t.remove(self.key(cgid))
-
-
 class Store(object):
 
     '''Store backup data.
@@ -645,20 +132,20 @@ class Store(object):
     (obnamlib.VirtualFileSystem instance), in some form that
     the API of this class does not care about.
     
-    The store may contain data for several hosts that share 
-    encryption keys. Each host is identified by a name.
+    The store may contain data for several clients that share 
+    encryption keys. Each client is identified by a name.
     
     The store has a "root" object, which is conceptually a list of
-    host names.
+    client names.
     
-    Each host in turn is conceptually a list of generations,
+    Each client in turn is conceptually a list of generations,
     which correspond to snapshots of the user data that existed
     when the generation was created.
     
     Read-only access to the store does not require locking.
-    Write access may affect only the root object, or only a host's
+    Write access may affect only the root object, or only a client's
     own data, and thus locking may affect only the root, or only
-    the host.
+    the client.
     
     When a new generation is started, it is a copy-on-write clone
     of the previous generation, and the caller needs to modify
@@ -672,21 +159,23 @@ class Store(object):
         self.upload_queue_size = upload_queue_size
         self.lru_size = lru_size
         self.got_root_lock = False
-        self.hostlist = HostList(fs, node_size, upload_queue_size, lru_size)
-        self.got_host_lock = False
-        self.host_lockfile = None
-        self.current_host = None
+        self.clientlist = obnamlib.ClientList(fs, node_size, upload_queue_size, 
+                                              lru_size)
+        self.got_client_lock = False
+        self.client_lockfile = None
+        self.current_client = None
+        self.current_client_id = None
         self.new_generation = None
-        self.added_hosts = []
-        self.removed_hosts = []
+        self.added_clients = []
+        self.removed_clients = []
         self.removed_generations = []
-        self.genstore = None
-        self.chunksums = ChecksumTree(fs, 'chunksums', len(self.checksum('')),
-                                      node_size, upload_queue_size, lru_size)
-        self.groupsums = ChecksumTree(fs, 'groupsums', len(self.checksum('')),
-                                      node_size, upload_queue_size, lru_size)
-        self.chunkgroups = ChunkGroupTree(fs, node_size, upload_queue_size,
-                                          lru_size)
+        self.client = None
+        self.chunklist = obnamlib.ChunkList(fs, node_size, upload_queue_size, 
+                                            lru_size)
+        self.chunksums = obnamlib.ChecksumTree(fs, 'chunksums', 
+                                               len(self.checksum('')),
+                                               node_size, upload_queue_size, 
+                                               lru_size)
         self.prev_chunkid = None
 
     def checksum(self, data):
@@ -708,14 +197,18 @@ class Store(object):
         '''Return a new checksum algorithm.'''
         return hashlib.md5()
 
-    def list_hosts(self):
-        '''Return list of names of hosts using this store.'''
+    def client_dir(self, client_id):
+        '''Return name of sub-directory for a given client.'''
+        return str(client_id)
 
-        listed = set(self.hostlist.list_hosts())
-        added = set(self.added_hosts)
-        removed = set(self.removed_hosts)
-        hosts = listed.union(added).difference(removed)
-        return list(hosts)
+    def list_clients(self):
+        '''Return list of names of clients using this store.'''
+
+        listed = set(self.clientlist.list_clients())
+        added = set(self.added_clients)
+        removed = set(self.removed_clients)
+        clients = listed.union(added).difference(removed)
+        return list(clients)
 
     def lock_root(self):
         '''Lock root node.
@@ -731,121 +224,137 @@ class Store(object):
             if e.errno == errno.EEXIST:
                 raise LockFail('Lock file root.lock already exists')
         self.got_root_lock = True
-        self.added_hosts = []
-        self.removed_hosts = []
+        self.added_clients = []
+        self.removed_clients = []
 
     @require_root_lock
     def unlock_root(self):
         '''Unlock root node without committing changes made.'''
-        self.added_hosts = []
-        self.removed_hosts = []
+        self.added_clients = []
+        self.removed_clients = []
         self.fs.remove('root.lock')
         self.got_root_lock = False
         
     @require_root_lock
     def commit_root(self):
         '''Commit changes to root node, and unlock it.'''
-        for hostname in self.added_hosts:
-            self.hostlist.add_host(hostname)
-        self.added_hosts = []
-        for hostname in self.removed_hosts:
-            if self.fs.exists(hostname):
-                self.fs.rmtree(hostname)
-            self.hostlist.remove_host(hostname)
-        self.hostlist.commit()
+        for client_name in self.added_clients:
+            self.clientlist.add_client(client_name)
+        self.added_clients = []
+        for client_name in self.removed_clients:
+            client_id = self.clientlist.get_client_id(client_name)
+            client_dir = self.client_dir(client_id)
+            if client_id is not None and self.fs.exists(client_dir):
+                self.fs.rmtree(client_dir)
+            self.clientlist.remove_client(client_name)
+        self.clientlist.commit()
         self.unlock_root()
         
     @require_root_lock
-    def add_host(self, hostname):
-        '''Add a new host to the store.'''
-        if hostname in self.list_hosts():
-            raise obnamlib.Error('host %s already exists in store' % hostname)
-        self.added_hosts.append(hostname)
+    def add_client(self, client_name):
+        '''Add a new client to the store.'''
+        if client_name in self.list_clients():
+            raise obnamlib.Error('client %s already exists in store' % 
+                                 client_name)
+        self.added_clients.append(client_name)
         
     @require_root_lock
-    def remove_host(self, hostname):
-        '''Remove a host from the store.
+    def remove_client(self, client_name):
+        '''Remove a client from the store.
         
-        This removes all data related to the host, including all
-        actual file data unless other hosts also use it.
+        This removes all data related to the client, including all
+        actual file data unless other clients also use it.
         
         '''
         
-        if hostname not in self.list_hosts():
-            raise obnamlib.Error('host %s does not exist' % hostname)
-        self.removed_hosts.append(hostname)
+        if client_name not in self.list_clients():
+            raise obnamlib.Error('client %s does not exist' % client_name)
+        self.removed_clients.append(client_name)
         
-    def lock_host(self, hostname):
-        '''Lock a host for exclusive write access.
+    def lock_client(self, client_name):
+        '''Lock a client for exclusive write access.
         
         Raise obnamlib.LockFail if locking fails. Lock will be released
-        by commit_host() or unlock_host().
+        by commit_client() or unlock_client().
 
         '''
-        
-        lockname = os.path.join(hostname, 'lock')
+
+        client_id = self.clientlist.get_client_id(client_name)
+        if client_id is None:
+            raise LockFail('client %s does not exit' % client_name)
+
+        client_dir = self.client_dir(client_id)        
+        lockname = os.path.join(client_dir, 'lock')
         try:
             self.fs.write_file(lockname, '')
         except OSError, e:
             if e.errno == errno.EEXIST:
-                raise LockFail('Host %s is already locked' % hostname)
-        self.got_host_lock = True
-        self.host_lockfile = lockname
-        self.current_host = hostname
+                raise LockFail('client %s is already locked' % client_name)
+        self.got_client_lock = True
+        self.client_lockfile = lockname
+        self.current_client = client_name
+        self.current_client_id = client_id
         self.added_generations = []
         self.removed_generations = []
-        self.genstore = GenerationStore(self.fs, hostname, self.node_size, 
-                                        self.upload_queue_size, self.lru_size)
-        self.genstore.require_forest()
+        self.client = obnamlib.ClientMetadataTree(self.fs, client_dir, 
+                                                  self.node_size,
+                                                  self.upload_queue_size, 
+                                                  self.lru_size)
+        self.client.require_forest()
 
-    @require_host_lock
-    def unlock_host(self):
-        '''Unlock currently locked host, without committing changes.'''
+    @require_client_lock
+    def unlock_client(self):
+        '''Unlock currently locked client, without committing changes.'''
         self.new_generation = None
         for genid in self.added_generations:
             self._really_remove_generation(genid)
-        self.genstore = None # FIXME: This should remove uncommitted data.
+        self.client = None # FIXME: This should remove uncommitted data.
         self.added_generations = []
         self.removed_generations = []
-        self.fs.remove(self.host_lockfile)
-        self.host_lockfile = None
-        self.got_host_lock = False
-        self.current_host = None
+        self.fs.remove(self.client_lockfile)
+        self.client_lockfile = None
+        self.got_client_lock = False
+        self.current_client = None
+        self.current_client_id = None
 
-    @require_host_lock
-    def commit_host(self, checkpoint=False):
-        '''Commit changes to and unlock currently locked host.'''
+    @require_client_lock
+    def commit_client(self, checkpoint=False):
+        '''Commit changes to and unlock currently locked client.'''
         if self.new_generation:
-            self.genstore.set_current_generation_is_checkpoint(checkpoint)
+            self.client.set_current_generation_is_checkpoint(checkpoint)
         self.added_generations = []
         for genid in self.removed_generations:
             self._really_remove_generation(genid)
-        self.genstore.commit()
+        self.client.commit()
+        self.chunklist.commit()
         self.chunksums.commit()
-        self.groupsums.commit()
-        self.chunkgroups.commit()
-        self.unlock_host()
+        self.unlock_client()
         
-    def open_host(self, hostname):
-        '''Open a host for read-only operation.'''
-        if hostname not in self.list_hosts():
-            raise obnamlib.Error('%s is not an existing host' % hostname)
-        self.current_host = hostname
-        self.genstore = GenerationStore(self.fs, hostname, self.node_size,
-                                        self.upload_queue_size, self.lru_size)
-        self.genstore.init_forest()
+    def open_client(self, client_name):
+        '''Open a client for read-only operation.'''
+        client_id = self.clientlist.get_client_id(client_name)
+        if client_id is None:
+            raise obnamlib.Error('%s is not an existing client' % client_name)
+        self.current_client = client_name
+        self.current_client_id = client_id
+        client_dir = self.client_dir(client_id)
+        self.client = obnamlib.ClientMetadataTree(self.fs, client_dir, 
+                                                  self.node_size, 
+                                                  self.upload_queue_size, 
+                                                  self.lru_size)
+        self.client.init_forest()
         
-    @require_open_host
+    @require_open_client
     def list_generations(self):
-        '''List existing generations for currently open host.'''
-        return self.genstore.list_generations()
+        '''List existing generations for currently open client.'''
+        return self.client.list_generations()
         
-    @require_open_host
+    @require_open_client
     def get_is_checkpoint(self, genid):
         '''Is a generation a checkpoint one?'''
-        return self.genstore.get_is_checkpoint(genid)
+        return self.client.get_is_checkpoint(genid)
         
-    @require_host_lock
+    @require_client_lock
     def start_generation(self):
         '''Start a new generation.
         
@@ -855,15 +364,15 @@ class Store(object):
         '''
         if self.new_generation is not None:
             raise obnamlib.Error('Cannot start two new generations')
-        self.genstore.require_forest()
-        self.genstore.start_generation()
+        self.client.require_forest()
+        self.client.start_generation()
         self.new_generation = \
-            self.genstore.get_generation_id(self.genstore.curgen)
+            self.client.get_generation_id(self.client.curgen)
         self.added_generations.append(self.new_generation)
         return self.new_generation
 
-    @require_host_lock
-    def _really_remove_generation(self, gen):
+    @require_client_lock
+    def _really_remove_generation(self, gen_id):
         '''Really remove a committed generation.
         
         This is not part of the public API.
@@ -872,16 +381,28 @@ class Store(object):
         
         '''
 
-        self.genstore.remove_generation(gen)
+        chunk_ids = self.client.list_chunks_in_generation(gen_id)
+        for other_id in self.list_generations():
+            if other_id != gen_id:
+                chunk_ids = [chunk_id
+                             for chunk_id in chunk_ids
+                             if not self.client.chunk_in_use(other_id, 
+                                                             chunk_id)]
+        for chunk_id in chunk_ids:
+            checksum = self.chunklist.get_checksum(chunk_id)
+            self.chunksums.remove(checksum, chunk_id, self.current_client_id)
+            if not self.chunksums.chunk_is_used(checksum, chunk_id):
+                self.remove_chunk(chunk_id)
+        self.client.remove_generation(gen_id)
 
-    @require_host_lock
+    @require_client_lock
     def remove_generation(self, gen):
         '''Remove a committed generation.'''
         if gen == self.new_generation:
             raise obnamlib.Error('cannot remove started generation')
         self.removed_generations.append(gen)
 
-    @require_open_host
+    @require_open_client
     def get_generation_times(self, gen):
         '''Return start and end times of a generation.
         
@@ -889,19 +410,19 @@ class Store(object):
         
         '''
 
-        return self.genstore.get_generation_times(gen)
+        return self.client.get_generation_times(gen)
 
-    @require_open_host
+    @require_open_client
     def listdir(self, gen, dirname):
         '''Return list of basenames in a directory within generation.'''
-        return self.genstore.listdir(gen, dirname)
+        return self.client.listdir(gen, dirname)
         
-    @require_open_host
+    @require_open_client
     def get_metadata(self, gen, filename):
         '''Return metadata for a file in a generation.'''
 
         try:
-            encoded = self.genstore.get_metadata(gen, filename)
+            encoded = self.client.get_metadata(gen, filename)
         except KeyError:
             raise obnamlib.Error('%s does not exist' % filename)
         return decode_metadata(encoded)
@@ -910,12 +431,12 @@ class Store(object):
     def create(self, filename, metadata):
         '''Create a new (empty) file in the new generation.'''
         encoded = encode_metadata(metadata)
-        self.genstore.create(filename, encoded)
+        self.client.create(filename, encoded)
 
     @require_started_generation
     def remove(self, filename):
         '''Remove file or directory or directory tree from generation.'''
-        self.genstore.remove(filename)
+        self.client.remove(filename)
 
     def _chunk_filename(self, chunkid):
         basename = '%x' % chunkid
@@ -941,14 +462,13 @@ class Store(object):
         
         '''
         
-        max_chunkid = 2**64 - 1
         def random_chunkid():
-            return random.randint(0, max_chunkid)
+            return random.randint(0, obnamlib.MAX_ID)
         
         if self.prev_chunkid is None:
             self.prev_chunkid = random_chunkid()
         while True:
-            chunkid = (self.prev_chunkid + 1) % max_chunkid
+            chunkid = (self.prev_chunkid + 1) % obnamlib.MAX_ID
             filename = self._chunk_filename(chunkid)
             if not self.fs.exists(filename):
                 break
@@ -958,20 +478,22 @@ class Store(object):
         if not self.fs.exists(dirname):
             self.fs.makedirs(dirname)
         self.fs.write_file(filename, data)
-        self.chunksums.add(self.checksum(data), chunkid)
+        checksum = self.checksum(data)
+        self.chunklist.add(chunkid, checksum)
+        self.chunksums.add(checksum, chunkid, self.current_client_id)
         return chunkid
         
-    @require_open_host
+    @require_open_client
     def get_chunk(self, chunkid):
         '''Return data of chunk with given id.'''
         return self.fs.cat(self._chunk_filename(chunkid))
         
-    @require_open_host
+    @require_open_client
     def chunk_exists(self, chunkid):
         '''Does a chunk exist in the store?'''
         return self.fs.exists(self._chunk_filename(chunkid))
         
-    @require_open_host
+    @require_open_client
     def find_chunks(self, checksum):
         '''Return identifiers of chunks with given checksum.
         
@@ -981,7 +503,7 @@ class Store(object):
 
         return self.chunksums.find(checksum)
 
-    @require_open_host
+    @require_open_client
     def list_chunks(self):
         '''Return list of ids of all chunks in store.'''
         result = []
@@ -991,41 +513,28 @@ class Store(object):
                     result.append(int(basename, 16))
         return result
 
-    @require_started_generation
-    def put_chunk_group(self, chunkids, checksum):
-        '''Put a new chunk group in the store.
-        
-        Return identifier of new group.
-        
-        '''
+    @require_open_client
+    def remove_chunk(self, chunk_id):
+        '''Remove a chunk from the store.'''
 
-        while True:
-            cgid = random.randint(0, 2**64 - 1)
-            if not self.chunkgroups.group_exists(cgid):
-                break
-        self.chunkgroups.add(cgid, chunkids)
-        self.groupsums.add(checksum, cgid)
-        return cgid
+        try:
+            checksum = self.chunklist.get_checksum(chunk_id)
+        except KeyError:
+            pass
+        else:
+            self.chunksums.remove(checksum, chunk_id, 
+                                  self.current_client_id)
+        self.chunklist.remove(chunk_id)
+        filename = self._chunk_filename(chunk_id)
+        try:
+            self.fs.remove(filename)
+        except OSError:
+            pass
 
-    @require_open_host
-    def get_chunk_group(self, cgid):
-        '''Return list of chunk ids in the given chunk group.'''
-        return self.chunkgroups.list_chunk_group_chunks(cgid)
-
-    @require_open_host
-    def find_chunk_groups(self, checksum):
-        '''Return list of ids of chunk groups with given checksum.'''
-        return self.groupsums.find(checksum)
-
-    @require_open_host
-    def list_chunk_groups(self):
-        '''Return list of ids of all chunk groups in store.'''
-        return self.chunkgroups.list_chunk_groups()
-
-    @require_open_host
+    @require_open_client
     def get_file_chunks(self, gen, filename):
         '''Return list of ids of chunks belonging to a file.'''
-        return self.genstore.get_file_chunks(gen, filename)
+        return self.client.get_file_chunks(gen, filename)
 
     @require_started_generation
     def set_file_chunks(self, filename, chunkids):
@@ -1035,24 +544,9 @@ class Store(object):
         
         '''
         
-        self.genstore.set_file_chunks(filename, chunkids)
+        self.client.set_file_chunks(filename, chunkids)
 
-    @require_open_host
-    def get_file_chunk_groups(self, gen, filename):
-        '''Return list of ids of chunk groups belonging to a file.'''
-        return self.genstore.get_file_chunk_groups(gen, filename)
-
-    @require_started_generation
-    def set_file_chunk_groups(self, filename, cgids):
-        '''Set ids of chunk groups belonging to a file.
-        
-        File must be in the started generation.
-        
-        '''
-
-        self.genstore.set_file_chunk_groups(filename, cgids)
-
-    @require_open_host
+    @require_open_client
     def genspec(self, spec):
         '''Interpret a generation specification.'''
 

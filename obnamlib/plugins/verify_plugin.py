@@ -36,7 +36,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
 
     def verify(self, args):
         self.app.config.require('store')
-        self.app.config.require('hostname')
+        self.app.config.require('client-name')
         self.app.config.require('generation')
         self.app.config.require('root')
 
@@ -52,7 +52,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         self.store = obnamlib.Store(fs, self.app.config['node-size'], 
                                     self.app.config['upload-queue-size'],
                                     self.app.config['lru-size'])
-        self.store.open_host(self.app.config['hostname'])
+        self.store.open_client(self.app.config['client-name'])
         self.fs = self.app.fsf.new(self.app.config['root'][0])
         self.fs.connect()
         self.fs.reinit('/')
@@ -114,15 +114,8 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         f = self.fs.open(filename, 'r')
 
         chunkids = self.store.get_file_chunks(gen, filename)
-        if chunkids:
-            if not self.verify_chunks(f, chunkids):
-                raise Fail(filename, 'data changed')
-        else:
-            cgids = self.store.get_file_chunk_groups(gen, filename)
-            for cgid in cgids:
-                chunkids = self.store.get_chunk_group(cgid)
-                if not self.verify_chunks(f, chunkids):
-                    raise Fail(filename, 'data changed')
+        if not self.verify_chunks(f, chunkids):
+            raise Fail(filename, 'data changed')
 
         f.close()
 

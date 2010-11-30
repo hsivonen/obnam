@@ -31,14 +31,14 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
 
     def forget(self, args):
         self.app.config.require('store')
-        self.app.config.require('hostname')
+        self.app.config.require('client-name')
 
         fs = self.app.fsf.new(self.app.config['store'])
         fs.connect()
         self.store = obnamlib.Store(fs, self.app.config['node-size'], 
                                     self.app.config['upload-queue-size'],
                                     self.app.config['lru-size'])
-        self.store.lock_host(self.app.config['hostname'])
+        self.store.lock_client(self.app.config['client-name'])
 
         if args:
             for genid in args:
@@ -59,7 +59,7 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
                 if genid not in keepids:
                     self.remove(genid)
 
-        self.store.commit_host()
+        self.store.commit_client()
 
     def remove(self, genid):
         if self.app.config['pretend']:

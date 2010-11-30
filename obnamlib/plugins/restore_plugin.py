@@ -1,4 +1,4 @@
-# Copyright (C) 2009  Lars Wirzenius
+# Copyright (C) 2009, 2010  Lars Wirzenius
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -67,7 +67,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
 
     def restore(self, args):
         self.app.config.require('store')
-        self.app.config.require('hostname')
+        self.app.config.require('client-name')
         self.app.config.require('generation')
         self.app.config.require('to')
 
@@ -85,7 +85,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         self.store = obnamlib.Store(storefs, self.app.config['node-size'], 
                                     self.app.config['upload-queue-size'],
                                     self.app.config['lru-size'])
-        self.store.open_host(self.app.config['hostname'])
+        self.store.open_client(self.app.config['client-name'])
         self.fs = self.app.fsf.new(self.app.config['to'])
         self.fs.connect()
 
@@ -150,13 +150,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         f = self.fs.open(to_filename, 'w')
 
         chunkids = self.store.get_file_chunks(gen, filename)
-        if chunkids:
-            self.restore_chunks(f, chunkids)
-        else:
-            cgids = self.store.get_file_chunk_groups(gen, filename)
-            for cgid in cgids:
-                chunkids = self.store.get_chunk_group(cgid)
-                self.restore_chunks(f, chunkids)
+        self.restore_chunks(f, chunkids)
 
         f.close()
         obnamlib.set_metadata(self.fs, to_filename, metadata)

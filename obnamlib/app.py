@@ -36,8 +36,8 @@ class App(object):
                                'error, critical (%default)')
         self.config['log-level'] = 'info'
         self.config.new_string(['store'], 'name of backup store')
-        self.config.new_string(['hostname'], 'name of host (%default)')
-        self.config['hostname'] = self.deduce_hostname()
+        self.config.new_string(['client-name'], 'name of client (%default)')
+        self.config['client-name'] = self.deduce_client_name()
         self.config.new_boolean(['pretend', 'dry-run', 'no-act'],
                                 'do not write or remove anything, just '
                                 'pretend to do that')
@@ -51,12 +51,6 @@ class App(object):
                                  'size of chunks of file data backed up '
                                  '(default: %default)')
         self.config['chunk-size'] = '%s' % obnamlib.DEFAULT_CHUNK_SIZE
-
-        self.config.new_bytesize(['chunk-group-size'],
-                                 'number of chunks per chunk group '
-                                 '(default: %default)')
-        self.config['chunk-group-size'] = \
-            '%s' % obnamlib.DEFAULT_CHUNK_GROUP_SIZE
 
         self.config.new_bytesize(['upload-queue-size'],
                                  'length of upload queue for B-tree nodes '
@@ -82,7 +76,7 @@ class App(object):
         
         self.fsf = obnamlib.VfsFactory()
         
-    def deduce_hostname(self):
+    def deduce_client_name(self):
         return socket.gethostname()
         
     def plugins_dir(self):

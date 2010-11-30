@@ -1,0 +1,108 @@
+#!/usr/bin/python
+#
+# Report duplicate chunks of data in a filesystem.
+
+
+import hashlib
+import os
+import subprocess
+import sys
+import tempfile
+
+
+def compute(f, chunk_size, offset):
+    chunk = f.read(chunk_size)
+    while len(chunk) == chunk_size:
+        yield hashlib.md5(chunk).hexdigest()
+        chunk = chunk[offset:] + f.read(offset)
+
+
+def compute_checksums(f, chunk_size, offset, dirname):
+    for dirname, subdirs, filenames in os.walk(dirname):
+        for filename in filenames:
+            pathname = os.path.join(dirname, filename)
+            if os.path.isfile(pathname) and not os.path.islink(pathname):
+                ff = file(pathname)
+                for checksum in compute(ff, chunk_size, offset):
+                    f.write('%s\n' % checksum)
+                ff.close()
+    
+    
+def sort_checksums(f, checksums_name):
+    subprocess.check_call(['sort',
+                           '-T', '.',
+                           '--batch-size', '1000',
+                           '-S', '1G',
+                          ],
+                          stdin=file(checksums_name),
+                          stdout=f)
+    
+
+def count_duplicates(f, sorted_name):
+    subprocess.check_call(['uniq', '-c'], stdin=file(sorted_name), stdout=f)
+    
+    
+def make_report(f, counts_name, chunk_size, offset):
+    num_diff_checksums = 0
+    saved = 0
+    total = 0
+
+    limits = [1]
+    counts = { 1: 0 }
+
+    for line in file(counts_name):
+        count, checksum = line.split()
+        count = int(count)
+        num_diff_checksums += 1
+        saved += (count-1) * chunk_size
+        total += count * chunk_size
+        while limits[-1] < count:
+            n = limits[-1] * 10
+            limits.append(n)
+            counts[n] = 0
+        for limit in limits:
+            if count <= limit:
+                counts[limit] += count
+                break
+    
+    f.write('chunk size: %d\n' % chunk_size)
+    f.write('offset: %d\n' % offset)
+    f.write('#different checksums: %d\n' % num_diff_checksums)
+    f.write('%8s  %8s\n' % ('repeats', 'how many'))
+    for limit in limits:
+        f.write('%8d  %8d\n' % (limit, counts[limit]))
+    f.write('bytes saved by de-duplication: %d\n' % saved)
+    f.write('%% saved: %f\n' % (100.0*saved/total))
+
+
+def main():
+    chunk_size = int(sys.argv[1])
+    offset = int(sys.argv[2])
+    dirname = sys.argv[3]
+    
+    prefix = 'data-%04d-%04d' % (chunk_size, offset)
+    checksums_name = prefix + '.checksums'
+    sorted_name = prefix + '.sorted'
+    counts_name = prefix + '.counts'
+    report_name = prefix + '.report'
+    
+    steps = (
+        (checksums_name, compute_checksums, (chunk_size, offset, dirname)),
+        (sorted_name, sort_checksums, (checksums_name,)),
+        (counts_name, count_duplicates, (sorted_name,)),
+        (report_name, make_report, (counts_name, chunk_size, offset)),
+    )
+    
+    for filename, func, args in steps:
+        if not os.path.exists(filename):
+            print 'Step:', func.__name__
+            fd, output_name = tempfile.mkstemp(dir='.')
+            os.close(fd)
+            f = file(output_name, 'w')
+            func(*((f,) + args))
+            f.close()
+            os.rename(output_name, filename)
+
+
+if __name__ == '__main__':
+    main()
