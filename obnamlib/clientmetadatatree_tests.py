@@ -238,3 +238,9 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
         self.assertEqual(set(self.client.list_chunks_in_generation(gen_id)), 
                          set([0, 1]))
 
+    def test_lists_chunks_in_generation_only_once(self):
+        gen_id = self.client.get_generation_id(self.client.curgen)
+        self.client.set_file_chunks('/foo', [0])
+        self.client.set_file_chunks('/bar', [0])
+        self.assertEqual(self.client.list_chunks_in_generation(gen_id), [0])
+

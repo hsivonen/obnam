@@ -327,6 +327,6 @@ class ClientMetadataTree(obnamlib.StoreTree):
         minkey = self.chunk_key(0, 0)
         maxkey = self.chunk_key(obnamlib.MAX_ID, obnamlib.MAX_ID)
         t = self.find_generation(gen_id)
-        return [self.chunk_unkey(key)[0]
-                for key, value in t.lookup_range(minkey, maxkey)]
+        return list(set(self.chunk_unkey(key)[0]
+                        for key, value in t.lookup_range(minkey, maxkey)))
 
