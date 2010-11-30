@@ -326,6 +326,7 @@ class Store(object):
         for genid in self.removed_generations:
             self._really_remove_generation(genid)
         self.client.commit()
+        self.chunklist.commit()
         self.chunksums.commit()
         self.unlock_client()
         
@@ -371,7 +372,7 @@ class Store(object):
         return self.new_generation
 
     @require_client_lock
-    def _really_remove_generation(self, gen):
+    def _really_remove_generation(self, gen_id):
         '''Really remove a committed generation.
         
         This is not part of the public API.
@@ -380,7 +381,19 @@ class Store(object):
         
         '''
 
-        self.client.remove_generation(gen)
+        chunk_ids = self.client.list_chunks_in_generation(gen_id)
+        for other_id in self.list_generations():
+            if other_id != gen_id:
+                chunk_ids = [chunk_id
+                             for chunk_id in chunk_ids
+                             if not self.client.chunk_in_use(other_id, 
+                                                             chunk_id)]
+        for chunk_id in chunk_ids:
+            checksum = self.chunklist.get_checksum(chunk_id)
+            self.chunksums.remove(checksum, chunk_id, self.current_client_id)
+            if not self.chunksums.chunk_is_used(checksum, chunk_id):
+                self.remove_chunk(chunk_id)
+        self.client.remove_generation(gen_id)
 
     @require_client_lock
     def remove_generation(self, gen):
@@ -499,6 +512,24 @@ class Store(object):
                 for basename in basenames:
                     result.append(int(basename, 16))
         return result
+
+    @require_open_client
+    def remove_chunk(self, chunk_id):
+        '''Remove a chunk from the store.'''
+
+        try:
+            checksum = self.chunklist.get_checksum(chunk_id)
+        except KeyError:
+            pass
+        else:
+            self.chunksums.remove(checksum, chunk_id, 
+                                  self.current_client_id)
+        self.chunklist.remove(chunk_id)
+        filename = self._chunk_filename(chunk_id)
+        try:
+            self.fs.remove(filename)
+        except OSError:
+            pass
 
     @require_open_client
     def get_file_chunks(self, gen, filename):

@@ -124,6 +124,11 @@ class ClientMetadataTree(obnamlib.StoreTree):
         return self.hashkey(self.PREFIX_CHUNK_REF, self.int2bin(chunk_id),
                             0, file_id)
 
+    def chunk_unkey(self, key):
+        '''Return the chunk and file ids in a chunk key.'''
+        parts = struct.unpack('!BQBQ', key)
+        return parts[1], parts[3]
+
     def get_file_id(self, gen, pathname):
         '''Return id for file in a given generation.'''
         
@@ -307,4 +312,21 @@ class ClientMetadataTree(obnamlib.StoreTree):
         for chunkid in old_chunks:
             key = self.chunk_key(chunkid, file_id)
             self.curgen.remove_range(key, key)
+
+    def chunk_in_use(self, gen_id, chunk_id):
+        '''Is a chunk used by a generation?'''
         
+        minkey = self.chunk_key(chunk_id, 0)
+        maxkey = self.chunk_key(chunk_id, obnamlib.MAX_ID)
+        t = self.find_generation(gen_id)
+        return len(t.lookup_range(minkey, maxkey)) > 0
+
+    def list_chunks_in_generation(self, gen_id):
+        '''Return list of chunk ids used in a given generation.'''
+        
+        minkey = self.chunk_key(0, 0)
+        maxkey = self.chunk_key(obnamlib.MAX_ID, obnamlib.MAX_ID)
+        t = self.find_generation(gen_id)
+        return list(set(self.chunk_unkey(key)[0]
+                        for key, value in t.lookup_range(minkey, maxkey)))
+

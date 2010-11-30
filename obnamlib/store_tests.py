@@ -360,6 +360,28 @@ class StoreClientTests(unittest.TestCase):
         self.store.open_client('client_name')
         self.assertEqual(self.store.list_generations(), [])
 
+    def test_removing_only_second_generation_works(self):
+        self.store.lock_client('client_name')
+        gen1 = self.store.start_generation()
+        self.store.commit_client()
+
+        self.store.lock_client('client_name')
+        gen2 = self.store.start_generation()
+        chunk_id = self.store.put_chunk('data', self.store.checksum('data'))
+        self.store.set_file_chunks('/foo', [chunk_id])
+        self.store.commit_client()
+
+        self.store.open_client('client_name')
+        self.assertEqual(len(self.store.list_generations()), 2)
+
+        self.store.lock_client('client_name')
+        self.store.remove_generation(gen2)
+        self.store.commit_client()
+
+        self.store.open_client('client_name')
+        self.assertEqual(self.store.list_generations(), [gen1])
+        self.assertFalse(self.store.chunk_exists(chunk_id))
+
     def test_removing_started_generation_fails(self):
         self.store.lock_client('client_name')
         gen = self.store.start_generation()
@@ -493,6 +515,14 @@ class StoreChunkTests(unittest.TestCase):
     def test_chunk_exists_after_it_is_put(self):
         chunkid = self.store.put_chunk('chunk', 'checksum')
         self.assert_(self.store.chunk_exists(chunkid))
+
+    def test_removes_chunk(self):
+        chunkid = self.store.put_chunk('chunk', 'checksum')
+        self.store.remove_chunk(chunkid)
+        self.assertFalse(self.store.chunk_exists(chunkid))
+
+    def test_silently_ignores_failure_when_removing_nonexistent_chunk(self):
+        self.assertEqual(self.store.remove_chunk(0), None)
         
     def test_find_chunks_finds_what_put_chunk_puts(self):
         checksum = self.store.checksum('data')
