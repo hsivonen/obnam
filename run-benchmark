@@ -64,6 +64,11 @@ then
     die "Usage: $0 [obnam-branch [btree-branch [sizes [wiki-root [path/to/seivot]]]]]"
 fi
 
+if [ "x$TMPDIR" = x ]
+then
+    die "TMPDIR is not set. You'll probably run out of space on /tmp..."
+fi
+
 GENERATIONS=5
 OBNAM_REVNO=$(cd "$OBNAM_BRANCH" && bzr revno)
 BTREE_REVNO=$(cd "$BTREE_BRANCH" && bzr revno)
