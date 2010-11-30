@@ -389,6 +389,14 @@ class BackupTests(ObnamTestCase):
         s = self.open_store()
         self.assertEqual(len(s.list_chunks()), 1)
 
+    def test_does_not_include_roots_from_old_gens_unless_specified_again(self):
+        foo = self.create_dir(self.data, 'foo')
+        self.backup(roots=[foo])
+        bar = self.create_dir(self.data, 'bar')
+        self.backup(roots=[bar])
+        self.restore()
+        parent = os.path.join(self.restored, './' + self.data)
+        self.assertEqual(os.listdir(parent), ['bar'])
 
 class VerifyTests(ObnamTestCase):
 
