@@ -67,3 +67,13 @@ class ChecksumTree(obnamlib.StoreTree):
             key = self.key(checksum, chunk_id, client_id)
             t.remove_range(key, key)
 
+    def chunk_is_used(self, checksum, chunk_id):
+        '''Is a given chunk used by anyone?'''
+        if self.init_forest() and self.forest.trees:
+            t = self.forest.trees[-1]
+            minkey = self.key(checksum, chunk_id, 0)
+            maxkey = self.key(checksum, chunk_id, obnamlib.MAX_ID)
+            return len(t.lookup_range(minkey, maxkey)) > 0
+        else:
+            return False
+

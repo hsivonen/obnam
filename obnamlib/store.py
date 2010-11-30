@@ -326,6 +326,7 @@ class Store(object):
         for genid in self.removed_generations:
             self._really_remove_generation(genid)
         self.client.commit()
+        self.chunklist.commit()
         self.chunksums.commit()
         self.unlock_client()
         
@@ -388,7 +389,10 @@ class Store(object):
                              if not self.client.chunk_in_use(other_id, 
                                                              chunk_id)]
         for chunk_id in chunk_ids:
-            self.remove_chunk(chunk_id)
+            checksum = self.chunklist.get_checksum(chunk_id)
+            self.chunksums.remove(checksum, chunk_id, self.current_client_id)
+            if not self.chunksums.chunk_is_used(checksum, chunk_id):
+                self.remove_chunk(chunk_id)
         self.client.remove_generation(gen_id)
 
     @require_client_lock
