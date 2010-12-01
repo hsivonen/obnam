@@ -464,6 +464,19 @@ class ForgetTests(ObnamTestCase):
         self.forget(genids=self.generations())
         self.assertEqual(self.disk_usage(os.path.join(self.store, 'chunks')),
                          0)
+    
+    def test_removes_unwanted_data_with_empty_generation_remaining(self):
+        self.create_file(self.data, 'big', self.random_string(1024**2))
+        self.backup()
+        shutil.rmtree(self.data)
+        os.mkdir(self.data)
+        self.backup()
+        genids = self.generations()[:-1]
+        forgettable = genids[:-1]
+        print "forgetting:", forgettable, genids
+        self.forget(genids=genids)
+        self.assertEqual(self.disk_usage(os.path.join(self.store, 'chunks')),
+                         0)
 
 
 if __name__ == '__main__':
