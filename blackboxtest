@@ -102,6 +102,7 @@ class ObnamTestCase(unittest.TestCase):
         return self.runcmd(['./obnam', 
                             '--quiet',
                             '--log', 'blackboxtest-obnam.log',
+                            '--log-level', 'debug',
                             '--client-name', self.client_name] +
                            args, stderr_ignore=stderr_ignore)
 
@@ -454,7 +455,7 @@ class ForgetTests(ObnamTestCase):
                 st = fs.lstat(os.path.join(dirname, filename))
                 usage += st.st_blocks * 512
         return usage
-        
+    
     def random_string(self, size):
         return ''.join(chr(random.randint(0, 255)) for i in xrange(size))
     
@@ -471,12 +472,11 @@ class ForgetTests(ObnamTestCase):
         shutil.rmtree(self.data)
         os.mkdir(self.data)
         self.backup()
-        genids = self.generations()[:-1]
+        genids = self.generations()
         forgettable = genids[:-1]
-        print "forgetting:", forgettable, genids
-        self.forget(genids=genids)
-        self.assertEqual(self.disk_usage(os.path.join(self.store, 'chunks')),
-                         0)
+        self.forget(genids=forgettable)
+        chunks = os.path.join(self.store, 'chunks')
+        self.assertEqual(self.disk_usage(chunks), 0)
 
 
 if __name__ == '__main__':
