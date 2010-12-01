@@ -248,7 +248,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             pathname = os.path.join(root, old)
             if old not in new_basenames:
                 self.store.remove(pathname)
-            else:
         # Files that are created after the previous generation will be
         # added to the directory when they are backed up, so we don't
         # need to worry about them here.
@@ -281,7 +280,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                         helper(pathname)
                 elif pathname not in new_roots:
                     self.store.remove(pathname)
-                else:
 
         helper('/')
 
