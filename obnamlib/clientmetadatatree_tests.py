@@ -181,6 +181,8 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
         self.client.create('/foo', self.file_encoded)
         self.client.remove('/foo')
         self.assertEqual(self.client.listdir(self.clientid, '/'), [])
+        self.assertRaises(KeyError, self.client.get_metadata, 
+                          self.clientid, '/foo')
 
     def test_creates_directory_at_root(self):
         self.client.create('/foo', self.dir_encoded)
@@ -192,6 +194,8 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
         self.client.create('/foo', self.dir_encoded)
         self.client.remove('/foo')
         self.assertEqual(self.client.listdir(self.clientid, '/'), [])
+        self.assertRaises(KeyError, self.client.get_metadata, 
+                          self.clientid, '/foo')
 
     def test_creates_directory_and_files_and_subdirs(self):
         self.client.create('/foo', self.dir_encoded)
