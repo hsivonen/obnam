@@ -108,6 +108,7 @@ class App(object):
         self.setup_logging()
         logging.info('Obnam %s starts' % obnamlib.version)
         if self.config.args:
+            logging.info('Executing command: %s' % self.config.args[0])
             self.interp.execute(self.config.args[0], self.config.args[1:])
         else:
             raise obnamlib.AppException('Usage error: '
