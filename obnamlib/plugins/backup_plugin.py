@@ -90,9 +90,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             logging.debug('absolute roots: %s' % absroots)
             self.remove_old_roots(absroots)
 
-            for root in roots:
-                self.fs.reinit(root)
-                absroot = self.fs.abspath('.')
+            for absroot in absroots:
+                logging.debug('Backing up root %s' % absroot)
+                self.fs.reinit(absroot)
                 for pathname, metadata in self.find_files(absroot):
                     logging.debug('backing up %s' % pathname)
                     try:
@@ -146,7 +146,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     yield pathname, metadata
                     needed = True
             metadata = obnamlib.read_metadata(self.fs, dirname)
-            if needed or self.needs_backup(dirname, metadata):
+            if not needed:
+                needed = self.needs_backup(dirname, metadata)
+            if needed:
                 yield dirname, metadata
 
     def prune(self, dirname, subdirs, filenames):
@@ -169,6 +171,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
     def needs_backup(self, pathname, current):
         '''Does a given file need to be backed up?'''
         
+        # Directories always require backing up so that backup_dir_contents
+        # can remove stuff that no longer exists from them.
+        if current.isdir():
+            return True
         try:
             old = self.store.get_metadata(self.store.new_generation, pathname)
         except obnamlib.Error:
@@ -239,8 +245,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             old_basenames = []
 
         for old in old_basenames:
+            pathname = os.path.join(root, old)
             if old not in new_basenames:
-                self.store.remove(os.path.join(root, old))
+                self.store.remove(pathname)
+            else:
         # Files that are created after the previous generation will be
         # added to the directory when they are backed up, so we don't
         # need to worry about them here.
@@ -257,30 +265,23 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         
         def is_parent(pathname):
             x = pathname + os.sep
-            logging.debug('is_parent: x is %s' % x)
             for new_root in new_roots:
                 if new_root.startswith(x):
-                    logging.debug('is_parent: starts with x: %s' % new_root)
                     return True
-            logging.debug('is_parent: is not %s' % pathname)
             return False
 
         def helper(dirname):
-            logging.debug('helper: %s' % dirname)
             gen_id = self.store.new_generation
             basenames = self.store.listdir(gen_id, dirname)
             for basename in basenames:
                 pathname = os.path.join(dirname, basename)
                 if is_parent(pathname):
-                    logging.debug('helper: is parent: %s' % pathname)
                     metadata = self.store.get_metadata(gen_id, pathname)
                     if metadata.isdir():
                         helper(pathname)
                 elif pathname not in new_roots:
-                    logging.debug('helper: removing %s' % pathname)
                     self.store.remove(pathname)
                 else:
-                    logging.debug('helper: keeping %s' % pathname)
 
         helper('/')
 
