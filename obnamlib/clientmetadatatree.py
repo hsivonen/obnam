@@ -215,11 +215,10 @@ class ClientMetadataTree(obnamlib.StoreTree):
                 self._lookup_time(tree, self.GEN_ENDED))
 
     def create(self, filename, encoded_metadata):
-        namehash = self.hash_name(filename)
         file_id = self.get_file_id(self.curgen, filename)
-        key = self.fskey(namehash, self.FILE_NAME, file_id)
+        gen_id = self.get_generation_id(self.curgen)
         try:
-            old_metadata = self.curgen.lookup(key)
+            old_metadata = self.get_metadata(gen_id, filename)
         except KeyError:
             old_metadata = None
         if encoded_metadata != old_metadata:
