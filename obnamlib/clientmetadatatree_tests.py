@@ -176,6 +176,8 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
     def test_creates_file_at_root(self):
         self.client.create('/foo', self.file_encoded)
         self.assertEqual(self.client.listdir(self.clientid, '/'), ['foo'])
+        self.assertEqual(self.client.get_metadata(self.clientid, '/foo'),
+                         self.file_encoded)
 
     def test_removes_file_at_root(self):
         self.client.create('/foo', self.file_encoded)
