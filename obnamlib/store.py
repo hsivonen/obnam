@@ -17,6 +17,7 @@
 import btree
 import errno
 import hashlib
+import logging
 import os
 import random
 import struct
@@ -381,17 +382,26 @@ class Store(object):
         
         '''
 
+        logging.debug('_really_remove_generation: %d' % gen_id)
         chunk_ids = self.client.list_chunks_in_generation(gen_id)
-        for other_id in self.list_generations():
-            if other_id != gen_id:
-                chunk_ids = [chunk_id
-                             for chunk_id in chunk_ids
-                             if not self.client.chunk_in_use(other_id, 
-                                                             chunk_id)]
+        logging.debug('_r_r_g: chunk ids in gen: %s' % chunk_ids)
         for chunk_id in chunk_ids:
+            logging.debug('_r_r_g: removing chunk %d from client' % chunk_id)
             checksum = self.chunklist.get_checksum(chunk_id)
             self.chunksums.remove(checksum, chunk_id, self.current_client_id)
+        for other_id in self.list_generations():
+            if other_id != gen_id:
+                logging.debug('_r_r_g: other_id is %d' % other_id)
+                other_chunks = self.client.list_chunks_in_generation(other_id)
+                logging.debug('_r_r_g: other_chunks: %s' % other_chunks)
+                chunk_ids = [chunk_id
+                             for chunk_id in chunk_ids
+                             if chunk_id not in other_chunks]
+        logging.debug('_r_r_g: chunk ids only in gen: %s' % chunk_ids)
+        for chunk_id in chunk_ids:
+            checksum = self.chunklist.get_checksum(chunk_id)
             if not self.chunksums.chunk_is_used(checksum, chunk_id):
+                logging.debug('_r_r_g: removing chunk %d' % chunk_id)
                 self.remove_chunk(chunk_id)
         self.client.remove_generation(gen_id)
 

@@ -156,6 +156,8 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
         self.clientid = self.client.get_generation_id(self.client.curgen)
         self.file_metadata = obnamlib.Metadata(st_mode=stat.S_IFREG | 0666)
         self.file_encoded = obnamlib.store.encode_metadata(self.file_metadata)
+        self.dir_metadata = obnamlib.Metadata(st_mode=stat.S_IFDIR | 0777)
+        self.dir_encoded = obnamlib.store.encode_metadata(self.dir_metadata)
         
     def tearDown(self):
         shutil.rmtree(self.tempdir)
@@ -174,11 +176,64 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
     def test_creates_file_at_root(self):
         self.client.create('/foo', self.file_encoded)
         self.assertEqual(self.client.listdir(self.clientid, '/'), ['foo'])
+        self.assertEqual(self.client.get_metadata(self.clientid, '/foo'),
+                         self.file_encoded)
 
     def test_removes_file_at_root(self):
         self.client.create('/foo', self.file_encoded)
         self.client.remove('/foo')
         self.assertEqual(self.client.listdir(self.clientid, '/'), [])
+        self.assertRaises(KeyError, self.client.get_metadata, 
+                          self.clientid, '/foo')
+
+    def test_creates_directory_at_root(self):
+        self.client.create('/foo', self.dir_encoded)
+        self.assertEqual(self.client.listdir(self.clientid, '/'), ['foo'])
+        self.assertEqual(self.client.get_metadata(self.clientid, '/foo'), 
+                         self.dir_encoded)
+
+    def test_removes_directory_at_root(self):
+        self.client.create('/foo', self.dir_encoded)
+        self.client.remove('/foo')
+        self.assertEqual(self.client.listdir(self.clientid, '/'), [])
+        self.assertRaises(KeyError, self.client.get_metadata, 
+                          self.clientid, '/foo')
+
+    def test_creates_directory_and_files_and_subdirs(self):
+        self.client.create('/foo', self.dir_encoded)
+        self.client.create('/foo/foobar', self.file_encoded)
+        self.client.create('/foo/bar', self.dir_encoded)
+        self.client.create('/foo/bar/baz', self.file_encoded)
+        self.assertEqual(self.client.listdir(self.clientid, '/'), ['foo'])
+        self.assertEqual(sorted(self.client.listdir(self.clientid, '/foo')), 
+                         ['bar', 'foobar'])
+        self.assertEqual(self.client.listdir(self.clientid, '/foo/bar'), 
+                         ['baz'])
+        self.assertEqual(self.client.get_metadata(self.clientid, '/foo'), 
+                         self.dir_encoded)
+        self.assertEqual(self.client.get_metadata(self.clientid, '/foo/bar'), 
+                         self.dir_encoded)
+        self.assertEqual(self.client.get_metadata(self.clientid, '/foo/foobar'), 
+                         self.file_encoded)
+        self.assertEqual(self.client.get_metadata(self.clientid, 
+                                                  '/foo/bar/baz'), 
+                         self.file_encoded)
+
+    def test_removes_directory_and_files_and_subdirs(self):
+        self.client.create('/foo', self.dir_encoded)
+        self.client.create('/foo/foobar', self.file_encoded)
+        self.client.create('/foo/bar', self.dir_encoded)
+        self.client.create('/foo/bar/baz', self.file_encoded)
+        self.client.remove('/foo')
+        self.assertEqual(self.client.listdir(self.clientid, '/'), [])
+        self.assertRaises(KeyError, self.client.get_metadata, 
+                          self.clientid, '/foo')
+        self.assertRaises(KeyError, self.client.get_metadata, 
+                          self.clientid, '/foo/foobar')
+        self.assertRaises(KeyError, self.client.get_metadata, 
+                          self.clientid, '/foo/bar')
+        self.assertRaises(KeyError, self.client.get_metadata, 
+                          self.clientid, '/foo/bar/baz')
 
     def test_has_no_file_chunks_initially(self):
         self.assertEqual(self.client.get_file_chunks(self.clientid, '/foo'), [])

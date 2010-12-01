@@ -215,11 +215,10 @@ class ClientMetadataTree(obnamlib.StoreTree):
                 self._lookup_time(tree, self.GEN_ENDED))
 
     def create(self, filename, encoded_metadata):
-        namehash = self.hash_name(filename)
         file_id = self.get_file_id(self.curgen, filename)
-        key = self.fskey(namehash, self.FILE_NAME, file_id)
+        gen_id = self.get_generation_id(self.curgen)
         try:
-            old_metadata = self.curgen.lookup(key)
+            old_metadata = self.get_metadata(gen_id, filename)
         except KeyError:
             old_metadata = None
         if encoded_metadata != old_metadata:
@@ -246,9 +245,8 @@ class ClientMetadataTree(obnamlib.StoreTree):
         return tree.lookup(key)
 
     def set_metadata(self, filename, encoded_metadata):
-        namehash = self.hash_name(filename)
         file_id = self.get_file_id(self.curgen, filename)
-        key1 = self.fskey(namehash, self.FILE_NAME, file_id)
+        key1 = self.fskey(file_id, self.FILE_NAME, file_id)
         self.curgen.insert(key1, filename)
         
         key2 = self.fskey(file_id, self.FILE_METADATA, 
@@ -259,11 +257,18 @@ class ClientMetadataTree(obnamlib.StoreTree):
         file_id = self.get_file_id(self.curgen, filename)
         genid = self.get_generation_id(self.curgen)
 
+        # Remove any children.
+        minkey = self.fskey(file_id, self.DIR_CONTENTS, 0)
+        maxkey = self.fskey(file_id, self.DIR_CONTENTS, obnamlib.MAX_ID)
+        for key, basename in self.curgen.lookup_range(minkey, maxkey):
+            self.remove(os.path.join(filename, basename))
+
         # Remove chunk refs.
         for chunkid in self.get_file_chunks(genid, filename):
             key = self.chunk_key(chunkid, file_id)
             self.curgen.remove_range(key, key)
-
+            
+        # Remove this file's metadata.
         minkey = self.fskey(file_id, 0, 0)
         maxkey = self.fskey(file_id, self.TYPE_MAX, self.SUBKEY_MAX)
         self.curgen.remove_range(minkey, maxkey)
