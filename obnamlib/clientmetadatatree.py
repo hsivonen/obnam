@@ -245,9 +245,8 @@ class ClientMetadataTree(obnamlib.StoreTree):
         return tree.lookup(key)
 
     def set_metadata(self, filename, encoded_metadata):
-        namehash = self.hash_name(filename)
         file_id = self.get_file_id(self.curgen, filename)
-        key1 = self.fskey(namehash, self.FILE_NAME, file_id)
+        key1 = self.fskey(file_id, self.FILE_NAME, file_id)
         self.curgen.insert(key1, filename)
         
         key2 = self.fskey(file_id, self.FILE_METADATA, 
