@@ -527,15 +527,16 @@ class Store(object):
 
     @require_open_client
     def remove_chunk(self, chunk_id):
-        '''Remove a chunk from the store.'''
+        '''Remove a chunk from the store.
+        
+        Note that this does _not_ remove the chunk from the chunk
+        checksum forest. The caller is not supposed to call us until
+        the chunk is not there anymore.
+        
+        However, it does remove the chunk from the chunk list forest.
+        
+        '''
 
-        try:
-            checksum = self.chunklist.get_checksum(chunk_id)
-        except KeyError:
-            pass
-        else:
-            self.chunksums.remove(checksum, chunk_id, 
-                                  self.current_client_id)
         self.chunklist.remove(chunk_id)
         filename = self._chunk_filename(chunk_id)
         try:
