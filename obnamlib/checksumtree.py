@@ -63,7 +63,7 @@ class ChecksumTree(obnamlib.StoreTree):
     def remove(self, checksum, chunk_id, client_id):
         self.require_forest()
         if self.forest.trees:
-            t = self.forest.new_tree(self.forest.trees[-1])
+            t = self.forest.trees[-1]
             key = self.key(checksum, chunk_id, client_id)
             t.remove_range(key, key)
 
