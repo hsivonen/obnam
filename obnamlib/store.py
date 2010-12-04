@@ -393,21 +393,17 @@ class Store(object):
                                  if chunk_id not in other_chunks]
             return chunk_ids
 
-        def remove_from_chunksums_for_this_client(chunk_ids):
-            for chunk_id in chunk_ids:
-                checksum = self.chunklist.get_checksum(chunk_id)
-                self.chunksums.remove(checksum, chunk_id, self.current_client_id)
-
         def remove_unused_chunks(chunk_ids):
             for chunk_id in chunk_ids:
                 checksum = self.chunklist.get_checksum(chunk_id)
+                self.chunksums.remove(checksum, chunk_id, 
+                                      self.current_client_id)
                 if not self.chunksums.chunk_is_used(checksum, chunk_id):
                     self.remove_chunk(chunk_id)
 
         logging.debug('_really_remove_generation: %d' % gen_id)
         chunk_ids = self.client.list_chunks_in_generation(gen_id)
         chunk_ids = filter_away_chunks_used_by_other_gens(chunk_ids, gen_id)
-        remove_from_chunksums_for_this_client(chunk_ids)
         remove_unused_chunks(chunk_ids)
         self.client.remove_generation(gen_id)
 
