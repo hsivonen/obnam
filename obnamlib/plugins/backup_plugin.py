@@ -167,6 +167,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             
         prune_list(subdirs)
         prune_list(filenames)
+        subdirs.sort()
+        filenames.sort()
 
     def needs_backup(self, pathname, current):
         '''Does a given file need to be backed up?'''
