@@ -382,27 +382,33 @@ class Store(object):
         
         '''
 
+
+        def filter_away_chunks_used_by_other_gens(chunk_ids, gen_id):
+            for other_id in self.list_generations():
+                if other_id != gen_id:
+                    other_chunks = self.client.list_chunks_in_generation(
+                                        other_id)
+                    chunk_ids = [chunk_id
+                                 for chunk_id in chunk_ids
+                                 if chunk_id not in other_chunks]
+            return chunk_ids
+
+        def remove_from_chunksums_for_this_client(chunk_ids):
+            for chunk_id in chunk_ids:
+                checksum = self.chunklist.get_checksum(chunk_id)
+                self.chunksums.remove(checksum, chunk_id, self.current_client_id)
+
+        def remove_unused_chunks(chunk_ids):
+            for chunk_id in chunk_ids:
+                checksum = self.chunklist.get_checksum(chunk_id)
+                if not self.chunksums.chunk_is_used(checksum, chunk_id):
+                    self.remove_chunk(chunk_id)
+
         logging.debug('_really_remove_generation: %d' % gen_id)
         chunk_ids = self.client.list_chunks_in_generation(gen_id)
-        logging.debug('_r_r_g: chunk ids in gen: %s' % chunk_ids)
-        for chunk_id in chunk_ids:
-            logging.debug('_r_r_g: removing chunk %d from client' % chunk_id)
-            checksum = self.chunklist.get_checksum(chunk_id)
-            self.chunksums.remove(checksum, chunk_id, self.current_client_id)
-        for other_id in self.list_generations():
-            if other_id != gen_id:
-                logging.debug('_r_r_g: other_id is %d' % other_id)
-                other_chunks = self.client.list_chunks_in_generation(other_id)
-                logging.debug('_r_r_g: other_chunks: %s' % other_chunks)
-                chunk_ids = [chunk_id
-                             for chunk_id in chunk_ids
-                             if chunk_id not in other_chunks]
-        logging.debug('_r_r_g: chunk ids only in gen: %s' % chunk_ids)
-        for chunk_id in chunk_ids:
-            checksum = self.chunklist.get_checksum(chunk_id)
-            if not self.chunksums.chunk_is_used(checksum, chunk_id):
-                logging.debug('_r_r_g: removing chunk %d' % chunk_id)
-                self.remove_chunk(chunk_id)
+        chunk_ids = filter_away_chunks_used_by_other_gens(chunk_ids, gen_id)
+        remove_from_chunksums_for_this_client(chunk_ids)
+        remove_unused_chunks(chunk_ids)
         self.client.remove_generation(gen_id)
 
     @require_client_lock
