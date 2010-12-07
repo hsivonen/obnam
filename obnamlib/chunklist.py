@@ -41,22 +41,16 @@ class ChunkList(obnamlib.StoreTree):
         return struct.pack('!Q', chunk_id)
 
     def add(self, chunk_id, checksum):
-        self.require_forest()
-        if not self.forest.trees:
-            t = self.forest.new_tree()
-        else:
-            t = self.forest.trees[-1]
-        t.insert(self.key(chunk_id), checksum)
+        self.start_changes()
+        self.tree.insert(self.key(chunk_id), checksum)
         
     def get_checksum(self, chunk_id):
-        if self.init_forest() and self.forest.trees:
-            return self.forest.trees[-1].lookup(self.key(chunk_id))
+        if self.init_forest() and self.tree:
+            return self.tree.lookup(self.key(chunk_id))
         raise KeyError(chunk_id)
         
     def remove(self, chunk_id):
-        self.require_forest()
-        if self.forest.trees:
-            t = self.forest.trees[-1]
-            key = self.key(chunk_id)
-            t.remove_range(key, key)
+        self.start_changes()
+        key = self.key(chunk_id)
+        self.tree.remove_range(key, key)
 
