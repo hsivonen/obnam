@@ -111,8 +111,7 @@ Benchmark result: Obnam r$OBNAM_REVNO with btree r$BTREE_REVNO
 -------------------------------------------------------
 
 $(ls "$OBNAM_REVNO-$BTREE_REVNO"/* |
-  awk '{ sub(/^.*\//, "", $1); 
-         printf "* <a href=\"%s\">%s</a>\n", $1, $1 }')
+  awk '{ printf "* <a href=\"/obnam/benchmarks/%s\">%s</a>\n", $1, $1 }')
 eof
 )
 done
