@@ -34,6 +34,7 @@ class ChecksumTree(obnamlib.StoreTree):
         key_bytes = len(self.key('', 0, 0))
         obnamlib.StoreTree.__init__(self, fs, name, key_bytes, node_size, 
                                     upload_queue_size, lru_size)
+        self.keep_just_one_tree = True
 
     def key(self, checksum, chunk_id, client_id):
         return struct.pack(self.fmt, checksum, chunk_id, client_id)

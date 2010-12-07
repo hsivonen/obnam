@@ -44,6 +44,7 @@ class ClientList(obnamlib.StoreTree):
         self.maxkey = self.hashkey('\xff' * self.hash_len, obnamlib.MAX_ID)
         obnamlib.StoreTree.__init__(self, fs, 'clientlist', self.key_bytes, 
                                     node_size, upload_queue_size, lru_size)
+        self.keep_just_one_tree = True
 
     def hashfunc(self, string):
         return hashlib.new('md5', string).digest()

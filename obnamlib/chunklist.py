@@ -36,6 +36,7 @@ class ChunkList(obnamlib.StoreTree):
         self.key_bytes = len(self.key(0))
         obnamlib.StoreTree.__init__(self, fs, 'chunklist', self.key_bytes, 
                                     node_size, upload_queue_size, lru_size)
+        self.keep_just_one_tree = True
 
     def key(self, chunk_id):
         return struct.pack('!Q', chunk_id)
