@@ -44,6 +44,10 @@ class StoreTree(object):
                               self.dirname, self.node_size, codec,
                               self.upload_queue_size, self.lru_size)
             self.forest = btree.Forest(ns)
+            if self.forest.trees:
+                self.tree = self.forest.trees[-1]
+            else:
+                self.tree = None
         return True
 
     def require_forest(self):

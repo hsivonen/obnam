@@ -62,9 +62,10 @@ class ClientList(obnamlib.StoreTree):
         return random.randint(0, obnamlib.MAX_ID)
 
     def list_clients(self):
-        if self.init_forest() and self.forest.trees:
-            t = self.forest.trees[-1]
-            return [v for k, v in t.lookup_range(self.minkey, self.maxkey)]
+        if self.init_forest() and self.tree:
+            return [v 
+                    for k, v in 
+                        self.tree.lookup_range(self.minkey, self.maxkey)]
         else:
             return []
 
@@ -80,31 +81,23 @@ class ClientList(obnamlib.StoreTree):
     def get_client_id(self, client_name):
         if not self.init_forest() or not self.forest.trees:
             return None
-        t = self.forest.trees[-1]
-        return self.find_client_id(t, client_name)
+        return self.find_client_id(self.tree, client_name)
 
     def add_client(self, client_name):
-        self.require_forest()
-        if not self.forest.trees:
-            t = self.forest.new_tree()
-        else:
-            t = self.forest.new_tree(old=self.forest.trees[-1])
-
-        if self.find_client_id(t, client_name) is None:
+        self.start_changes()
+        if self.find_client_id(self.tree, client_name) is None:
             while True:
                 candidate_id = self.random_id()
                 key = self.key(client_name, candidate_id)
                 try:
-                    t.lookup(key)
+                    self.tree.lookup(key)
                 except KeyError:
                     break
-            t.insert(self.key(client_name, candidate_id), client_name)
+            self.tree.insert(self.key(client_name, candidate_id), client_name)
         
     def remove_client(self, client_name):
-        self.require_forest()
-        if self.forest.trees:
-            t = self.forest.new_tree(old=self.forest.trees[-1])
-            client_id = self.find_client_id(t, client_name)
-            if client_id is not None:
-                t.remove(self.key(client_name, client_id))
+        self.start_changes()
+        client_id = self.find_client_id(self.tree, client_name)
+        if client_id is not None:
+            self.tree.remove(self.key(client_name, client_id))
 
