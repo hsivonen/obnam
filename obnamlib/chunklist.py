@@ -46,8 +46,9 @@ class ChunkList(obnamlib.StoreTree):
         self.tree.insert(self.key(chunk_id), checksum)
         
     def get_checksum(self, chunk_id):
-        if self.init_forest() and self.tree:
-            return self.tree.lookup(self.key(chunk_id))
+        if self.init_forest():
+            t = self.forest.trees[-1]
+            return t.lookup(self.key(chunk_id))
         raise KeyError(chunk_id)
         
     def remove(self, chunk_id):

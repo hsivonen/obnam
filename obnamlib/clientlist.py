@@ -63,10 +63,9 @@ class ClientList(obnamlib.StoreTree):
         return random.randint(0, obnamlib.MAX_ID)
 
     def list_clients(self):
-        if self.init_forest() and self.tree:
-            return [v 
-                    for k, v in 
-                        self.tree.lookup_range(self.minkey, self.maxkey)]
+        if self.init_forest() and self.forest.trees:
+            t = self.forest.trees[-1]
+            return [v for k, v in t.lookup_range(self.minkey, self.maxkey)]
         else:
             return []
 
@@ -82,7 +81,8 @@ class ClientList(obnamlib.StoreTree):
     def get_client_id(self, client_name):
         if not self.init_forest() or not self.forest.trees:
             return None
-        return self.find_client_id(self.tree, client_name)
+        t = self.forest.trees[-1]
+        return self.find_client_id(t, client_name)
 
     def add_client(self, client_name):
         self.start_changes()

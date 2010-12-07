@@ -48,10 +48,11 @@ class ChecksumTree(obnamlib.StoreTree):
         self.tree.insert(key, '')
 
     def find(self, checksum):
-        if self.init_forest() and self.tree:
+        if self.init_forest():
             minkey = self.key(checksum, 0, 0)
             maxkey = self.key(checksum, obnamlib.MAX_ID, obnamlib.MAX_ID)
-            pairs = self.tree.lookup_range(minkey, maxkey)
+            t = self.forest.trees[-1]
+            pairs = t.lookup_range(minkey, maxkey)
             return [self.unkey(key)[1] for key, value in pairs]
         else:
             return []
@@ -63,10 +64,11 @@ class ChecksumTree(obnamlib.StoreTree):
 
     def chunk_is_used(self, checksum, chunk_id):
         '''Is a given chunk used by anyone?'''
-        if self.init_forest() and self.tree:
+        if self.init_forest():
             minkey = self.key(checksum, chunk_id, 0)
             maxkey = self.key(checksum, chunk_id, obnamlib.MAX_ID)
-            return len(self.tree.lookup_range(minkey, maxkey)) > 0
+            t = self.forest.trees[-1]
+            return len(t.lookup_range(minkey, maxkey)) > 0
         else:
             return False
 
