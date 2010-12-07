@@ -32,6 +32,8 @@ class StoreTree(object):
         self.upload_queue_size = upload_queue_size
         self.lru_size = lru_size
         self.forest = None
+        self.tree = None
+        self.keep_just_one_tree = False
 
     def init_forest(self):
         if self.forest is None:
@@ -50,8 +52,19 @@ class StoreTree(object):
         self.init_forest()
         assert self.forest is not None
 
+    def start_changes(self):
+        self.require_forest()
+        if self.tree is None:
+            if self.forest.trees:
+                self.tree = self.forest.new_tree(self.forest.trees[-1])
+            else:
+                self.tree = self.forest.new_tree()
+
     def commit(self):
         if self.forest:
             self.require_forest()
+            if self.keep_just_one_tree:
+                while len(self.forest.trees) > 1:
+                    self.forest.remove_tree(self.forest.trees[0])
             self.forest.commit()
 
