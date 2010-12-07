@@ -34,6 +34,7 @@ class ChecksumTree(obnamlib.StoreTree):
         key_bytes = len(self.key('', 0, 0))
         obnamlib.StoreTree.__init__(self, fs, name, key_bytes, node_size, 
                                     upload_queue_size, lru_size)
+        self.keep_just_one_tree = True
 
     def key(self, checksum, chunk_id, client_id):
         return struct.pack(self.fmt, checksum, chunk_id, client_id)
@@ -42,37 +43,31 @@ class ChecksumTree(obnamlib.StoreTree):
         return struct.unpack(self.fmt, key)
 
     def add(self, checksum, chunk_id, client_id):
-        self.require_forest()
+        self.start_changes()
         key = self.key(checksum, chunk_id, client_id)
-        if self.forest.trees:
-            t = self.forest.trees[-1]
-        else:
-            t = self.forest.new_tree()
-        t.insert(key, '')
+        self.tree.insert(key, '')
 
     def find(self, checksum):
-        if self.init_forest() and self.forest.trees:
-            t = self.forest.trees[-1]
+        if self.init_forest():
             minkey = self.key(checksum, 0, 0)
             maxkey = self.key(checksum, obnamlib.MAX_ID, obnamlib.MAX_ID)
+            t = self.forest.trees[-1]
             pairs = t.lookup_range(minkey, maxkey)
             return [self.unkey(key)[1] for key, value in pairs]
         else:
             return []
 
     def remove(self, checksum, chunk_id, client_id):
-        self.require_forest()
-        if self.forest.trees:
-            t = self.forest.trees[-1]
-            key = self.key(checksum, chunk_id, client_id)
-            t.remove_range(key, key)
+        self.start_changes()
+        key = self.key(checksum, chunk_id, client_id)
+        self.tree.remove_range(key, key)
 
     def chunk_is_used(self, checksum, chunk_id):
         '''Is a given chunk used by anyone?'''
-        if self.init_forest() and self.forest.trees:
-            t = self.forest.trees[-1]
+        if self.init_forest():
             minkey = self.key(checksum, chunk_id, 0)
             maxkey = self.key(checksum, chunk_id, obnamlib.MAX_ID)
+            t = self.forest.trees[-1]
             return len(t.lookup_range(minkey, maxkey)) > 0
         else:
             return False

@@ -44,6 +44,7 @@ class ClientList(obnamlib.StoreTree):
         self.maxkey = self.hashkey('\xff' * self.hash_len, obnamlib.MAX_ID)
         obnamlib.StoreTree.__init__(self, fs, 'clientlist', self.key_bytes, 
                                     node_size, upload_queue_size, lru_size)
+        self.keep_just_one_tree = True
 
     def hashfunc(self, string):
         return hashlib.new('md5', string).digest()
@@ -84,27 +85,20 @@ class ClientList(obnamlib.StoreTree):
         return self.find_client_id(t, client_name)
 
     def add_client(self, client_name):
-        self.require_forest()
-        if not self.forest.trees:
-            t = self.forest.new_tree()
-        else:
-            t = self.forest.new_tree(old=self.forest.trees[-1])
-
-        if self.find_client_id(t, client_name) is None:
+        self.start_changes()
+        if self.find_client_id(self.tree, client_name) is None:
             while True:
                 candidate_id = self.random_id()
                 key = self.key(client_name, candidate_id)
                 try:
-                    t.lookup(key)
+                    self.tree.lookup(key)
                 except KeyError:
                     break
-            t.insert(self.key(client_name, candidate_id), client_name)
+            self.tree.insert(self.key(client_name, candidate_id), client_name)
         
     def remove_client(self, client_name):
-        self.require_forest()
-        if self.forest.trees:
-            t = self.forest.new_tree(old=self.forest.trees[-1])
-            client_id = self.find_client_id(t, client_name)
-            if client_id is not None:
-                t.remove(self.key(client_name, client_id))
+        self.start_changes()
+        client_id = self.find_client_id(self.tree, client_name)
+        if client_id is not None:
+            self.tree.remove(self.key(client_name, client_id))
 

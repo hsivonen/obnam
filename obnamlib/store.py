@@ -301,7 +301,7 @@ class Store(object):
                                                   self.node_size,
                                                   self.upload_queue_size, 
                                                   self.lru_size)
-        self.client.require_forest()
+        self.client.init_forest()
 
     @require_client_lock
     def unlock_client(self):
@@ -365,10 +365,9 @@ class Store(object):
         '''
         if self.new_generation is not None:
             raise obnamlib.Error('Cannot start two new generations')
-        self.client.require_forest()
         self.client.start_generation()
         self.new_generation = \
-            self.client.get_generation_id(self.client.curgen)
+            self.client.get_generation_id(self.client.tree)
         self.added_generations.append(self.new_generation)
         return self.new_generation
 

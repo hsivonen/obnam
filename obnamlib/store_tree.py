@@ -21,7 +21,18 @@ import obnamlib
 
 class StoreTree(object):
 
-    '''A B-tree within a Store.'''
+    '''A B-tree within a Store.
+    
+    For read-only operation, call init_forest before doing anything.
+    
+    For read-write operation, call start_changes before doing anything,
+    and commit afterwards. In between, self.tree is the new tree to be 
+    modified. Note that self.tree is NOT available after init_forest.
+    
+    After init_forest or start_changes, self.forest is the opened forest.
+    Unlike self.tree, it will not go away after commit.
+    
+    '''
 
     def __init__(self, fs, dirname, key_bytes, node_size, upload_queue_size,
                  lru_size):
@@ -32,9 +43,12 @@ class StoreTree(object):
         self.upload_queue_size = upload_queue_size
         self.lru_size = lru_size
         self.forest = None
+        self.tree = None
+        self.keep_just_one_tree = False
 
     def init_forest(self):
         if self.forest is None:
+            assert self.tree is None
             if not self.fs.exists(self.dirname):
                 return False
             codec = btree.NodeCodec(self.key_bytes)
@@ -44,14 +58,22 @@ class StoreTree(object):
             self.forest = btree.Forest(ns)
         return True
 
-    def require_forest(self):
+    def start_changes(self):
         if not self.fs.exists(self.dirname):
             self.fs.mkdir(self.dirname)
         self.init_forest()
         assert self.forest is not None
+        if self.tree is None:
+            if self.forest.trees:
+                self.tree = self.forest.new_tree(self.forest.trees[-1])
+            else:
+                self.tree = self.forest.new_tree()
 
     def commit(self):
         if self.forest:
-            self.require_forest()
+            if self.keep_just_one_tree:
+                while len(self.forest.trees) > 1:
+                    self.forest.remove_tree(self.forest.trees[0])
             self.forest.commit()
+            self.tree = None
 

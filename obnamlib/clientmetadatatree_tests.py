@@ -36,38 +36,37 @@ class ClientMetadataTreeTests(unittest.TestCase):
         shutil.rmtree(self.tempdir)
 
     def test_has_not_current_generation_initially(self):
-        self.assertEqual(self.client.curgen, None)
+        self.assertEqual(self.client.tree, None)
     
     def test_lists_no_generations_initially(self):
         self.assertEqual(self.client.list_generations(), [])
 
     def test_starts_generation(self):
-        self.client.require_forest()
         self.client.start_generation(current_time=lambda: 12765)
-        self.assertNotEqual(self.client.curgen, None)
+        self.assertNotEqual(self.client.tree, None)
         
         def lookup(x):
             key = self.client.genkey(x)
-            return self.client._lookup_int(self.client.curgen, key)
+            return self.client._lookup_int(self.client.tree, key)
 
-        genid = self.client.get_generation_id(self.client.curgen)
+        genid = self.client.get_generation_id(self.client.tree)
         self.assertEqual(lookup(self.client.GEN_ID), genid)
         self.assertEqual(lookup(self.client.GEN_STARTED), 12765)
         self.assertFalse(self.client.get_is_checkpoint(genid))
 
     def test_starts_second_generation(self):
-        self.client.require_forest()
         self.client.start_generation(current_time=lambda: 1)
-        genid1 = self.client.get_generation_id(self.client.curgen)
+        genid1 = self.client.get_generation_id(self.client.tree)
         self.client.commit()
+        self.assertEqual(self.client.tree, None)
         self.client.start_generation(current_time=lambda: 2)
-        self.assertNotEqual(self.client.curgen, None)
+        self.assertNotEqual(self.client.tree, None)
         
         def lookup(x):
             key = self.client.genkey(x)
-            return self.client._lookup_int(self.client.curgen, key)
+            return self.client._lookup_int(self.client.tree, key)
 
-        genid2 = self.client.get_generation_id(self.client.curgen)
+        genid2 = self.client.get_generation_id(self.client.tree)
         self.assertEqual(lookup(self.client.GEN_ID), genid2)
         self.assertNotEqual(genid1, genid2)
         self.assertEqual(lookup(self.client.GEN_STARTED), 2)
@@ -75,59 +74,52 @@ class ClientMetadataTreeTests(unittest.TestCase):
         self.assertEqual(self.client.list_generations(), [genid1, genid2])
 
     def test_sets_is_checkpoint(self):
-        self.client.require_forest()
         self.client.start_generation()
-        genid = self.client.get_generation_id(self.client.curgen)
+        genid = self.client.get_generation_id(self.client.tree)
         self.client.set_current_generation_is_checkpoint(True)
         self.assert_(self.client.get_is_checkpoint(genid))
 
     def test_unsets_is_checkpoint(self):
-        self.client.require_forest()
         self.client.start_generation()
-        genid = self.client.get_generation_id(self.client.curgen)
+        genid = self.client.get_generation_id(self.client.tree)
         self.client.set_current_generation_is_checkpoint(True)
         self.client.set_current_generation_is_checkpoint(False)
         self.assertFalse(self.client.get_is_checkpoint(genid))
 
     def test_removes_generation(self):
-        self.client.require_forest()
         self.client.start_generation()
         self.client.commit()
-        self.client.remove_generation(self.client.list_generations()[0])
+        genid = self.client.list_generations()[0]
+        self.client.remove_generation(genid)
         self.assertEqual(self.client.list_generations(), [])
 
     def test_removes_started_generation(self):
-        self.client.require_forest()
         self.client.start_generation()
         self.client.remove_generation(self.client.list_generations()[0])
         self.assertEqual(self.client.list_generations(), [])
-        self.assertEqual(self.client.curgen, None)
+        self.assertEqual(self.client.tree, None)
 
     def test_started_generation_has_start_time(self):
-        self.client.require_forest()
         self.client.start_generation(current_time=lambda: 1)
-        genid = self.client.get_generation_id(self.client.curgen)
+        genid = self.client.get_generation_id(self.client.tree)
         self.assertEqual(self.client.get_generation_times(genid), (1, None))
 
     def test_committed_generation_has_times(self):
-        self.client.require_forest()
         self.client.start_generation(current_time=lambda: 1)
-        genid = self.client.get_generation_id(self.client.curgen)
+        genid = self.client.get_generation_id(self.client.tree)
         self.client.commit(current_time=lambda: 2)
         self.assertEqual(self.client.get_generation_times(genid), (1, 2))
 
     def test_finds_generation_the_first_time(self):
-        self.client.require_forest()
         self.client.start_generation()
-        tree = self.client.curgen
+        tree = self.client.tree
         genid = self.client.get_generation_id(tree)
         self.client.commit()
         self.assertEqual(self.client.find_generation(genid), tree)
 
     def test_finds_generation_the_second_time(self):
-        self.client.require_forest()
         self.client.start_generation()
-        tree = self.client.curgen
+        tree = self.client.tree
         genid = self.client.get_generation_id(tree)
         self.client.commit()
         self.client.find_generation(genid)
@@ -138,7 +130,6 @@ class ClientMetadataTreeTests(unittest.TestCase):
         self.assertRaises(KeyError, self.client.find_generation, 0)
 
     def test_find_generation_raises_keyerror_for_unknown_generation(self):
-        self.client.require_forest()
         self.assertRaises(KeyError, self.client.find_generation, 0)
 
 
@@ -151,9 +142,8 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
                                             obnamlib.DEFAULT_NODE_SIZE,
                                             obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
                                             obnamlib.DEFAULT_LRU_SIZE)
-        self.client.require_forest()
         self.client.start_generation()
-        self.clientid = self.client.get_generation_id(self.client.curgen)
+        self.clientid = self.client.get_generation_id(self.client.tree)
         self.file_metadata = obnamlib.Metadata(st_mode=stat.S_IFREG | 0666)
         self.file_encoded = obnamlib.store.encode_metadata(self.file_metadata)
         self.dir_metadata = obnamlib.Metadata(st_mode=stat.S_IFDIR | 0777)
@@ -246,24 +236,24 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
     def test_generation_has_no_chunk_refs_initially(self):
         minkey = self.client.chunk_key(0, 0)
         maxkey = self.client.chunk_key(obnamlib.MAX_ID, obnamlib.MAX_ID)
-        self.assertEqual(self.client.curgen.lookup_range(minkey, maxkey), [])
+        self.assertEqual(self.client.tree.lookup_range(minkey, maxkey), [])
 
     def test_set_file_chunks_adds_chunk_refs(self):
         self.client.set_file_chunks('/foo', [1, 2])
-        file_id = self.client.get_file_id(self.client.curgen, '/foo')
+        file_id = self.client.get_file_id(self.client.tree, '/foo')
         minkey = self.client.chunk_key(0, 0)
         maxkey = self.client.chunk_key(obnamlib.MAX_ID, obnamlib.MAX_ID)
-        self.assertEqual(set(self.client.curgen.lookup_range(minkey, maxkey)), 
+        self.assertEqual(set(self.client.tree.lookup_range(minkey, maxkey)), 
                          set([(self.client.chunk_key(1, file_id), ''),
                               (self.client.chunk_key(2, file_id), '')]))
 
     def test_set_file_chunks_removes_now_unused_chunk_refs(self):
         self.client.set_file_chunks('/foo', [1, 2])
         self.client.set_file_chunks('/foo', [1])
-        file_id = self.client.get_file_id(self.client.curgen, '/foo')
+        file_id = self.client.get_file_id(self.client.tree, '/foo')
         minkey = self.client.chunk_key(0, 0)
         maxkey = self.client.chunk_key(obnamlib.MAX_ID, obnamlib.MAX_ID)
-        self.assertEqual(self.client.curgen.lookup_range(minkey, maxkey), 
+        self.assertEqual(self.client.tree.lookup_range(minkey, maxkey), 
                          [(self.client.chunk_key(1, file_id), '')])
 
     def test_remove_removes_chunk_refs(self):
@@ -271,30 +261,30 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
         self.client.remove('/foo')
         minkey = self.client.chunk_key(0, 0)
         maxkey = self.client.chunk_key(obnamlib.MAX_ID, obnamlib.MAX_ID)
-        self.assertEqual(self.client.curgen.lookup_range(minkey, maxkey), [])
+        self.assertEqual(self.client.tree.lookup_range(minkey, maxkey), [])
         
     def test_report_chunk_not_in_use_initially(self):
-        gen_id = self.client.get_generation_id(self.client.curgen)
+        gen_id = self.client.get_generation_id(self.client.tree)
         self.assertFalse(self.client.chunk_in_use(gen_id, 0))
         
     def test_report_chunk_in_use_after_it_is(self):
-        gen_id = self.client.get_generation_id(self.client.curgen)
+        gen_id = self.client.get_generation_id(self.client.tree)
         self.client.set_file_chunks('/foo', [0])
         self.assertTrue(self.client.chunk_in_use(gen_id, 0))
 
     def test_lists_no_chunks_in_generation_initially(self):
-        gen_id = self.client.get_generation_id(self.client.curgen)
+        gen_id = self.client.get_generation_id(self.client.tree)
         self.assertEqual(self.client.list_chunks_in_generation(gen_id), [])
 
     def test_lists_used_chunks_in_generation(self):
-        gen_id = self.client.get_generation_id(self.client.curgen)
+        gen_id = self.client.get_generation_id(self.client.tree)
         self.client.set_file_chunks('/foo', [0])
         self.client.set_file_chunks('/bar', [1])
         self.assertEqual(set(self.client.list_chunks_in_generation(gen_id)), 
                          set([0, 1]))
 
     def test_lists_chunks_in_generation_only_once(self):
-        gen_id = self.client.get_generation_id(self.client.curgen)
+        gen_id = self.client.get_generation_id(self.client.tree)
         self.client.set_file_chunks('/foo', [0])
         self.client.set_file_chunks('/bar', [0])
         self.assertEqual(self.client.list_chunks_in_generation(gen_id), [0])

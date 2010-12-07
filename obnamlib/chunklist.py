@@ -36,27 +36,23 @@ class ChunkList(obnamlib.StoreTree):
         self.key_bytes = len(self.key(0))
         obnamlib.StoreTree.__init__(self, fs, 'chunklist', self.key_bytes, 
                                     node_size, upload_queue_size, lru_size)
+        self.keep_just_one_tree = True
 
     def key(self, chunk_id):
         return struct.pack('!Q', chunk_id)
 
     def add(self, chunk_id, checksum):
-        self.require_forest()
-        if not self.forest.trees:
-            t = self.forest.new_tree()
-        else:
-            t = self.forest.trees[-1]
-        t.insert(self.key(chunk_id), checksum)
+        self.start_changes()
+        self.tree.insert(self.key(chunk_id), checksum)
         
     def get_checksum(self, chunk_id):
-        if self.init_forest() and self.forest.trees:
-            return self.forest.trees[-1].lookup(self.key(chunk_id))
+        if self.init_forest():
+            t = self.forest.trees[-1]
+            return t.lookup(self.key(chunk_id))
         raise KeyError(chunk_id)
         
     def remove(self, chunk_id):
-        self.require_forest()
-        if self.forest.trees:
-            t = self.forest.trees[-1]
-            key = self.key(chunk_id)
-            t.remove_range(key, key)
+        self.start_changes()
+        key = self.key(chunk_id)
+        self.tree.remove_range(key, key)
 

@@ -68,7 +68,6 @@ class ClientMetadataTree(obnamlib.StoreTree):
         obnamlib.StoreTree.__init__(self, fs, client_dir, key_bytes, 
                                     node_size, upload_queue_size, lru_size)
         self.genhash = self.hash_name('generation')
-        self.curgen = None
         self.known_generations = dict()
 
     def hash_name(self, filename):
@@ -143,12 +142,10 @@ class ClientMetadataTree(obnamlib.StoreTree):
         return tree.insert(key, struct.pack('!Q', value))
 
     def commit(self, current_time=time.time):
-        if self.forest:
-            if self.curgen:
-                now = int(current_time())
-                self._insert_int(self.curgen, self.genkey(self.GEN_ENDED), now)
-                self.curgen = None
-            self.forest.commit()
+        if self.tree:
+            now = int(current_time())
+            self._insert_int(self.tree, self.genkey(self.GEN_ENDED), now)
+        obnamlib.StoreTree.commit(self)
 
     def find_generation(self, genid):
         if genid in self.known_generations:
@@ -170,21 +167,16 @@ class ClientMetadataTree(obnamlib.StoreTree):
             return []
 
     def start_generation(self, current_time=time.time):
-        assert self.curgen is None
-        if self.forest.trees:
-            old = self.forest.trees[-1]
-        else:
-            old = None
-        self.curgen = self.forest.new_tree(old=old)
+        self.start_changes()
         gen_id = self.forest.new_id()
         now = int(current_time())
-        self._insert_int(self.curgen, self.genkey(self.GEN_ID), gen_id)
-        self._insert_int(self.curgen, self.genkey(self.GEN_STARTED), now)
+        self._insert_int(self.tree, self.genkey(self.GEN_ID), gen_id)
+        self._insert_int(self.tree, self.genkey(self.GEN_STARTED), now)
 
     def set_current_generation_is_checkpoint(self, is_checkpoint):
         value = 1 if is_checkpoint else 0
         key = self.genkey(self.GEN_IS_CHECKPOINT)
-        self._insert_int(self.curgen, key, value)
+        self._insert_int(self.tree, key, value)
 
     def get_is_checkpoint(self, genid):
         tree = self.find_generation(genid)
@@ -196,8 +188,8 @@ class ClientMetadataTree(obnamlib.StoreTree):
 
     def remove_generation(self, genid):
         tree = self.find_generation(genid)
-        if tree == self.curgen:
-            self.curgen = None
+        if tree == self.tree:
+            self.tree = None
         self.forest.remove_tree(tree)
 
     def get_generation_id(self, tree):
@@ -215,8 +207,8 @@ class ClientMetadataTree(obnamlib.StoreTree):
                 self._lookup_time(tree, self.GEN_ENDED))
 
     def create(self, filename, encoded_metadata):
-        file_id = self.get_file_id(self.curgen, filename)
-        gen_id = self.get_generation_id(self.curgen)
+        file_id = self.get_file_id(self.tree, filename)
+        gen_id = self.get_generation_id(self.tree)
         try:
             old_metadata = self.get_metadata(gen_id, filename)
         except KeyError:
@@ -228,14 +220,14 @@ class ClientMetadataTree(obnamlib.StoreTree):
         parent = os.path.dirname(filename)
         if parent != filename: # root dir is its own parent
             basename = os.path.basename(filename)
-            parent_id = self.get_file_id(self.curgen, parent)
+            parent_id = self.get_file_id(self.tree, parent)
             key = self.fskey(parent_id, self.DIR_CONTENTS, file_id)
             # We could just insert, but that would cause unnecessary
             # churn in the tree if nothing changes.
             try:
-                self.curgen.lookup(key)
+                self.tree.lookup(key)
             except KeyError:
-                self.curgen.insert(key, basename)
+                self.tree.insert(key, basename)
 
     def get_metadata(self, genid, filename):
         tree = self.find_generation(genid)
@@ -245,41 +237,41 @@ class ClientMetadataTree(obnamlib.StoreTree):
         return tree.lookup(key)
 
     def set_metadata(self, filename, encoded_metadata):
-        file_id = self.get_file_id(self.curgen, filename)
+        file_id = self.get_file_id(self.tree, filename)
         key1 = self.fskey(file_id, self.FILE_NAME, file_id)
-        self.curgen.insert(key1, filename)
+        self.tree.insert(key1, filename)
         
         key2 = self.fskey(file_id, self.FILE_METADATA, 
                           self.FILE_METADATA_ENCODED)
-        self.curgen.insert(key2, encoded_metadata)
+        self.tree.insert(key2, encoded_metadata)
 
     def remove(self, filename):
-        file_id = self.get_file_id(self.curgen, filename)
-        genid = self.get_generation_id(self.curgen)
+        file_id = self.get_file_id(self.tree, filename)
+        genid = self.get_generation_id(self.tree)
 
         # Remove any children.
         minkey = self.fskey(file_id, self.DIR_CONTENTS, 0)
         maxkey = self.fskey(file_id, self.DIR_CONTENTS, obnamlib.MAX_ID)
-        for key, basename in self.curgen.lookup_range(minkey, maxkey):
+        for key, basename in self.tree.lookup_range(minkey, maxkey):
             self.remove(os.path.join(filename, basename))
 
         # Remove chunk refs.
         for chunkid in self.get_file_chunks(genid, filename):
             key = self.chunk_key(chunkid, file_id)
-            self.curgen.remove_range(key, key)
+            self.tree.remove_range(key, key)
             
         # Remove this file's metadata.
         minkey = self.fskey(file_id, 0, 0)
         maxkey = self.fskey(file_id, self.TYPE_MAX, self.SUBKEY_MAX)
-        self.curgen.remove_range(minkey, maxkey)
+        self.tree.remove_range(minkey, maxkey)
 
         # Also remove from parent's contents.
         parent = os.path.dirname(filename)
         if parent != filename: # root dir is its own parent
-            parent_id = self.get_file_id(self.curgen, parent)
+            parent_id = self.get_file_id(self.tree, parent)
             key = self.fskey(parent_id, self.DIR_CONTENTS, file_id)
             # The range removal will work even if the key does not exist.
-            self.curgen.remove_range(key, key)
+            self.tree.remove_range(key, key)
             
     def listdir(self, genid, dirname):
         tree = self.find_generation(genid)
@@ -301,22 +293,22 @@ class ClientMetadataTree(obnamlib.StoreTree):
                 for key, value in pairs]
     
     def set_file_chunks(self, filename, chunkids):
-        file_id = self.get_file_id(self.curgen, filename)
+        file_id = self.get_file_id(self.tree, filename)
         minkey = self.fskey(file_id, self.FILE_CHUNKS, 0)
         maxkey = self.fskey(file_id, self.FILE_CHUNKS, self.SUBKEY_MAX)
         old_chunks = set(struct.unpack('!Q', v)[0]
-                         for k,v in self.curgen.lookup_range(minkey, maxkey))
-        self.curgen.remove_range(minkey, maxkey)
+                         for k,v in self.tree.lookup_range(minkey, maxkey))
+        self.tree.remove_range(minkey, maxkey)
         for i, chunkid in enumerate(chunkids):
             key = self.fskey(file_id, self.FILE_CHUNKS, i)
-            self.curgen.insert(key, struct.pack('!Q', chunkid))
+            self.tree.insert(key, struct.pack('!Q', chunkid))
             if chunkid not in old_chunks:
-                self.curgen.insert(self.chunk_key(chunkid, file_id), '')
+                self.tree.insert(self.chunk_key(chunkid, file_id), '')
             else:
                 old_chunks.remove(chunkid)
         for chunkid in old_chunks:
             key = self.chunk_key(chunkid, file_id)
-            self.curgen.remove_range(key, key)
+            self.tree.remove_range(key, key)
 
     def chunk_in_use(self, gen_id, chunk_id):
         '''Is a chunk used by a generation?'''
