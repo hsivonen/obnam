@@ -45,6 +45,3 @@ class NodeStoreVfs(btree.NodeStoreDisk):
     def remove_file(self, filename):
         self.fs.remove(filename)
 
-    def listdir(self, dirname):
-        return self.fs.listdir(dirname)
-
