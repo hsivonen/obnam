@@ -154,8 +154,9 @@ class ClientMetadataTree(obnamlib.StoreTree):
         if self.forest:
             key = self.genkey(self.GEN_ID)
             for t in self.forest.trees:
-                if self._lookup_int(t, key) == genid:
-                    self.known_generations[genid] = t
+                t_genid = self._lookup_int(t, key)
+                self.known_generations[t_genid] = t
+                if t_genid == genid:
                     return t
         raise KeyError('Unknown generation %s' % genid)
 
