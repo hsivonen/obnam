@@ -240,11 +240,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         logging.debug('backup_dir: %s' % root)
 
         new_basenames = self.fs.listdir(root)
-        try:
-            old_basenames = self.store.listdir(self.store.new_generation, 
-                                               root)
-        except obnamlib.Error:
-            old_basenames = []
+        old_basenames = self.store.listdir(self.store.new_generation, 
+                                           root)
 
         for old in old_basenames:
             pathname = os.path.join(root, old)
