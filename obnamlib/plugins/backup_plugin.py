@@ -76,7 +76,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.exclude_pats = [re.compile(x) for x in self.app.config['exclude']]
 
         last_checkpoint = 0
-        self.meliae_counter = 0
+        self.memory_dump_counter = 0
         interval = self.app.config['checkpoint']
 
         if roots:
@@ -133,6 +133,12 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             from guppy import hpy
             h = hpy()
             logging.debug('memory profile:\n%s' % h.heap())
+
+            from meliae import scanner
+            filename = 'obnam-%d.meliae' % self.memory_dump_counter
+            scanner.dump_all_objects(filename)
+            
+            self.memory_dump_counter += 1
 
     def find_files(self, root):
         '''Find all files and directories that need to be backed up.
