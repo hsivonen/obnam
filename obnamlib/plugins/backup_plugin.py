@@ -115,8 +115,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                         self.store.lock_client(client_name)
                         self.store.start_generation()
                         last_checkpoint = storefs.bytes_written
-                        if self.app.config['dump-meliae']:  
-                            self.dump_memory_profile()
+                        self.dump_memory_profile()
 
                 self.backup_parents('.')
 
@@ -130,7 +129,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.dump_memory_profile()
 
     def dump_memory_profile(self):
-        pass
+        if self.app.config['dump-memory-profile']:
+            from guppy import hpy
+            h = hpy()
+            logging.debug('memory profile:\n%s' % h.heap())
 
     def find_files(self, root):
         '''Find all files and directories that need to be backed up.
