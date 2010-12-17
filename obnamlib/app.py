@@ -63,11 +63,9 @@ class App(object):
                                  '(default: %default)')
         self.config['lru-size'] = '%s' % obnamlib.DEFAULT_LRU_SIZE
 
-        self.config.new_bytesize(['meliae-dump-after'],
-                                 'make a meliae memory profiling dump '
-                                 'after this many bytes have been backed up, '
-                                 '0 means no dump (default: %default)')
-        self.config['meliae-dump-after'] = str(0)
+        self.config.new_boolean(['dump-memory-profile'],
+                                'make memory profiling dumps '
+                                'after each checkpoint and at end?')
 
         self.pm = obnamlib.PluginManager()
         self.pm.locations = [self.plugins_dir()]

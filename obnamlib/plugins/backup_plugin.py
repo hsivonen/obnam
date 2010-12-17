@@ -76,6 +76,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.exclude_pats = [re.compile(x) for x in self.app.config['exclude']]
 
         last_checkpoint = 0
+        self.meliae_counter = 0
         interval = self.app.config['checkpoint']
 
         if roots:
@@ -114,6 +115,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                         self.store.lock_client(client_name)
                         self.store.start_generation()
                         last_checkpoint = storefs.bytes_written
+                        if self.app.config['dump-meliae']:  
+                            self.dump_memory_profile()
 
                 self.backup_parents('.')
 
@@ -124,6 +127,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         storefs.close()
 
         logging.info('Backup finished.')
+        self.dump_memory_profile()
+
+    def dump_memory_profile(self):
+        pass
 
     def find_files(self, root):
         '''Find all files and directories that need to be backed up.
