@@ -129,15 +129,15 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.dump_memory_profile()
 
     def dump_memory_profile(self):
-        if self.app.config['dump-memory-profile']:
+        kind = self.app.config['dump-memory-profile']
+        if kind == 'heapy':
             from guppy import hpy
             h = hpy()
             logging.debug('memory profile:\n%s' % h.heap())
-
+        elif kind == 'meliae':
             from meliae import scanner
             filename = 'obnam-%d.meliae' % self.memory_dump_counter
             scanner.dump_all_objects(filename)
-            
             self.memory_dump_counter += 1
 
     def find_files(self, root):
