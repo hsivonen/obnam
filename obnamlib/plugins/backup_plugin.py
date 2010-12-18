@@ -135,8 +135,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             h = hpy()
             logging.debug('memory profile:\n%s' % h.heap())
         elif kind == 'meliae':
-            from meliae import scanner
             filename = 'obnam-%d.meliae' % self.memory_dump_counter
+            logging.debug('memory profile: see %s' % filename)
+            from meliae import scanner
             scanner.dump_all_objects(filename)
             self.memory_dump_counter += 1
 
