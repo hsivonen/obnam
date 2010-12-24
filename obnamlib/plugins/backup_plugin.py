@@ -108,6 +108,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                         self.app.hooks.call('error-message', 
                                             'Could not back up %s: %s' %
                                             (pathname, e.strerror))
+                    logging.debug('storefs.bytes_written: %d' % 
+                                  storefs.bytes_written)
+                    logging.debug('last_checkpoint: %d' % last_checkpoint)
+                    logging.debug('interval: %d' % interval)
                     if storefs.bytes_written - last_checkpoint >= interval:
                         logging.debug('Making checkpoint')
                         self.backup_parents('.')
@@ -128,7 +132,24 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         logging.info('Backup finished.')
         self.dump_memory_profile()
 
+    def vmrss(self):
+        f = open('/proc/self/status')
+        rss = 0
+        for line in f:
+            if line.startswith('VmRSS'):
+                rss = line.split()[1]
+        f.close()
+        return rss
+
     def dump_memory_profile(self):
+        import gc
+        logging.debug('VmRSS: %s KiB' % self.vmrss())
+        logging.debug('# objects: %d' % len(gc.get_objects()))
+        logging.debug('# garbage: %d' % len(gc.garbage))
+        x = self.store.client.forest.node_store.cache
+        logging.debug('Store.client.forest.node_store.cache: '
+                      'max_size=%d len(_heap)=%d' %
+                      (x.max_size, len(x._heap)))
         kind = self.app.config['dump-memory-profile']
         if kind == 'heapy':
             from guppy import hpy
@@ -183,8 +204,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             
         prune_list(subdirs)
         prune_list(filenames)
-        subdirs.sort()
-        filenames.sort()
 
     def needs_backup(self, pathname, current):
         '''Does a given file need to be backed up?'''
