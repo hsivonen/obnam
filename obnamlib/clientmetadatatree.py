@@ -15,6 +15,7 @@
 
 
 import hashlib
+import logging
 import os
 import struct
 import time
@@ -39,6 +40,7 @@ class ClientMetadataTree(obnamlib.StoreTree):
     PREFIX_FS_META = 0      # prefix
     FILE_NAME = 0           # subkey type for storing pathnames
     FILE_CHUNKS = 1         # subkey type for list of chunks
+    FILE_NUM_CHUNKS = 2     # subkey type for length of list of chunks
     FILE_METADATA = 3       # subkey type for inode fields, etc
     DIR_CONTENTS = 4        # subkey type for list of directory contents
     
@@ -69,6 +71,8 @@ class ClientMetadataTree(obnamlib.StoreTree):
                                     node_size, upload_queue_size, lru_size)
         self.genhash = self.hash_name('generation')
         self.known_generations = dict()
+        self.chunkids_per_key = max(1,
+                                    int(node_size / 4 / struct.calcsize('Q')))
 
     def hash_name(self, filename):
         '''Return hash of filename suitable for use as main key.'''
@@ -135,8 +139,14 @@ class ClientMetadataTree(obnamlib.StoreTree):
         
         return self.hash_name(pathname)
 
-    def _lookup_int(self, tree, key):
-        return struct.unpack('!Q', tree.lookup(key))[0]
+    def _lookup_int(self, tree, key, default=None):
+        if default is None:
+            return struct.unpack('!Q', tree.lookup(key))[0]
+        else:
+            try:
+                return struct.unpack('!Q', tree.lookup(key))[0]
+            except KeyError:
+                return default
 
     def _insert_int(self, tree, key, value):
         return tree.insert(key, struct.pack('!Q', value))
@@ -290,26 +300,52 @@ class ClientMetadataTree(obnamlib.StoreTree):
         minkey = self.fskey(file_id, self.FILE_CHUNKS, 0)
         maxkey = self.fskey(file_id, self.FILE_CHUNKS, self.SUBKEY_MAX)
         pairs = tree.lookup_range(minkey, maxkey)
-        return [struct.unpack('!Q', value)[0]
-                for key, value in pairs]
-    
+        chunkids = []
+        for key, value in pairs:
+            chunkids.extend(self._decode_chunks(value))
+        return chunkids
+
+    def _encode_chunks(self, chunkids):
+        fmt = '!' + ('Q' * len(chunkids))
+        return struct.pack(fmt, *chunkids)
+
+    def _decode_chunks(self, encoded):
+        size = struct.calcsize('Q')
+        count = len(encoded) / size
+        fmt = '!' + ('Q' * count)
+        return struct.unpack(fmt, encoded)
+
+    def _insert_chunks(self, tree, file_id, i, chunkids):
+        key = self.fskey(file_id, self.FILE_CHUNKS, i)
+        encoded = self._encode_chunks(chunkids)
+        tree.insert(key, encoded)
+
     def set_file_chunks(self, filename, chunkids):
         file_id = self.get_file_id(self.tree, filename)
         minkey = self.fskey(file_id, self.FILE_CHUNKS, 0)
         maxkey = self.fskey(file_id, self.FILE_CHUNKS, self.SUBKEY_MAX)
-        old_chunks = set(struct.unpack('!Q', v)[0]
-                         for k,v in self.tree.lookup_range(minkey, maxkey))
+
+        for key, value in self.tree.lookup_range(minkey, maxkey):
+            for chunkid in self._decode_chunks(value):
+                k = self.chunk_key(chunkid, file_id)
+                self.tree.remove_range(k, k)
+
         self.tree.remove_range(minkey, maxkey)
-        for i, chunkid in enumerate(chunkids):
-            key = self.fskey(file_id, self.FILE_CHUNKS, i)
-            self.tree.insert(key, struct.pack('!Q', chunkid))
-            if chunkid not in old_chunks:
+
+        self.append_file_chunks(filename, chunkids)
+
+    def append_file_chunks(self, filename, chunkids):
+        file_id = self.get_file_id(self.tree, filename)
+        lenkey = self.fskey(file_id, self.FILE_NUM_CHUNKS, 0)
+        i = self._lookup_int(self.tree, lenkey, 0)
+        while chunkids:
+            some = chunkids[:self.chunkids_per_key]
+            self._insert_chunks(self.tree, file_id, i, some)
+            for chunkid in some:
                 self.tree.insert(self.chunk_key(chunkid, file_id), '')
-            else:
-                old_chunks.remove(chunkid)
-        for chunkid in old_chunks:
-            key = self.chunk_key(chunkid, file_id)
-            self.tree.remove_range(key, key)
+            i += 1
+            chunkids = chunkids[self.chunkids_per_key:]
+        self._insert_int(self.tree, lenkey, i)
 
     def chunk_in_use(self, gen_id, chunk_id):
         '''Is a chunk used by a generation?'''
