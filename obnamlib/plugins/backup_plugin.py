@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import gc
 import logging
 import os
 import re
@@ -142,16 +143,13 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         return rss
 
     def dump_memory_profile(self, msg):
-        import gc
+        kind = self.app.config['dump-memory-profile']
+        if kind == 'none':
+            return
         logging.debug('dumping memory profiling data: %s' % msg)
         logging.debug('VmRSS: %s KiB' % self.vmrss())
         logging.debug('# objects: %d' % len(gc.get_objects()))
         logging.debug('# garbage: %d' % len(gc.garbage))
-        x = self.store.client.forest.node_store.cache
-        logging.debug('Store.client.forest.node_store.cache: '
-                      'max_size=%d len(_heap)=%d' %
-                      (x.max_size, len(x._heap)))
-        kind = self.app.config['dump-memory-profile']
         if kind == 'heapy':
             from guppy import hpy
             h = hpy()
@@ -258,11 +256,14 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             chunkids.append(self.backup_file_chunk(data))
             if len(chunkids) >= obnamlib.DEFAULT_CHUNKIDS_PER_GROUP:
                 self.store.append_file_chunks(filename, chunkids)
+                self.dump_memory_profile('after appending some chunkids')
                 chunkids = []
             self.app.hooks.call('progress-data-uploaded', len(data))
         f.close()
         if chunkids:
             self.store.append_file_chunks(filename, chunkids)
+        self.dump_memory_profile('at end of file content backup for %s' %
+                                 filename)
         
     def backup_file_chunk(self, data):
         '''Back up a chunk of data by putting it into the store.'''
