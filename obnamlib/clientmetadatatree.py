@@ -311,6 +311,9 @@ class ClientMetadataTree(obnamlib.StoreTree):
             key = self.chunk_key(chunkid, file_id)
             self.tree.remove_range(key, key)
 
+    def append_file_chunks(self, filename, chunkids):
+        pass
+
     def chunk_in_use(self, gen_id, chunk_id):
         '''Is a chunk used by a generation?'''
         
