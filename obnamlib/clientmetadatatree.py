@@ -312,7 +312,14 @@ class ClientMetadataTree(obnamlib.StoreTree):
             self.tree.remove_range(key, key)
 
     def append_file_chunks(self, filename, chunkids):
-        pass
+        file_id = self.get_file_id(self.tree, filename)
+        minkey = self.fskey(file_id, self.FILE_CHUNKS, 0)
+        maxkey = self.fskey(file_id, self.FILE_CHUNKS, self.SUBKEY_MAX)
+        n = len(self.tree.lookup_range(minkey, maxkey))
+        for i, chunkid in enumerate(chunkids, n):
+            key = self.fskey(file_id, self.FILE_CHUNKS, i)
+            self.tree.insert(key, struct.pack('!Q', chunkid))
+            self.tree.insert(self.chunk_key(chunkid, file_id), '')
 
     def chunk_in_use(self, gen_id, chunk_id):
         '''Is a chunk used by a generation?'''
