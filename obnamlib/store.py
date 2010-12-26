@@ -558,6 +558,16 @@ class Store(object):
         
         self.client.set_file_chunks(filename, chunkids)
 
+    @require_started_generation
+    def append_file_chunks(self, filename, chunkids):
+        '''Append to list of ids of chunks belonging to a file.
+        
+        File must be in the started generation.
+        
+        '''
+        
+        self.client.append_file_chunks(filename, chunkids)
+
     @require_open_client
     def genspec(self, spec):
         '''Interpret a generation specification.'''

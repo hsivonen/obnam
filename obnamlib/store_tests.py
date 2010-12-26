@@ -577,6 +577,17 @@ class StoreGetSetChunksTests(unittest.TestCase):
         chunkids = self.store.get_file_chunks(self.gen, '/foo')
         self.assertEqual(sorted(chunkids), [1, 2])
 
+    def test_appends_chunks_to_empty_list(self):
+        self.store.append_file_chunks('/foo', [1, 2])
+        chunkids = self.store.get_file_chunks(self.gen, '/foo')
+        self.assertEqual(sorted(chunkids), [1, 2])
+
+    def test_appends_chunks_to_nonempty_list(self):
+        self.store.append_file_chunks('/foo', [1, 2])
+        self.store.append_file_chunks('/foo', [3, 4])
+        chunkids = self.store.get_file_chunks(self.gen, '/foo')
+        self.assertEqual(sorted(chunkids), [1, 2, 3, 4])
+
 
 class StoreGenspecTests(unittest.TestCase):
 
