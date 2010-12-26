@@ -119,7 +119,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                         self.store.lock_client(client_name)
                         self.store.start_generation()
                         last_checkpoint = storefs.bytes_written
-                        self.dump_memory_profile()
+                        self.dump_memory_profile('at end of checkpoint')
 
                 self.backup_parents('.')
 
@@ -130,7 +130,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         storefs.close()
 
         logging.info('Backup finished.')
-        self.dump_memory_profile()
+        self.dump_memory_profile('at end of backup run')
 
     def vmrss(self):
         f = open('/proc/self/status')
@@ -141,8 +141,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         f.close()
         return rss
 
-    def dump_memory_profile(self):
+    def dump_memory_profile(self, msg):
         import gc
+        logging.debug('dumping memory profiling data: %s' % msg)
         logging.debug('VmRSS: %s KiB' % self.vmrss())
         logging.debug('# objects: %d' % len(gc.get_objects()))
         logging.debug('# garbage: %d' % len(gc.garbage))
