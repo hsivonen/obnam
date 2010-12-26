@@ -63,6 +63,13 @@ class App(object):
                                  '(default: %default)')
         self.config['lru-size'] = '%s' % obnamlib.DEFAULT_LRU_SIZE
 
+        self.config.new_string(['dump-memory-profile'],
+                                'make memory profiling dumps '
+                                'after each checkpoint and at end? '
+                                'set to none, meliae, or heapy '
+                                '(default: %default)')
+        self.config['dump-memory-profile'] = 'none'
+
         self.pm = obnamlib.PluginManager()
         self.pm.locations = [self.plugins_dir()]
         self.pm.plugin_arguments = (self,)

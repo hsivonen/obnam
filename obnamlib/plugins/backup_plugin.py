@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import gc
 import logging
 import os
 import re
@@ -76,6 +77,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.exclude_pats = [re.compile(x) for x in self.app.config['exclude']]
 
         last_checkpoint = 0
+        self.memory_dump_counter = 0
         interval = self.app.config['checkpoint']
 
         if roots:
@@ -107,6 +109,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                         self.app.hooks.call('error-message', 
                                             'Could not back up %s: %s' %
                                             (pathname, e.strerror))
+                    logging.debug('storefs.bytes_written: %d' % 
+                                  storefs.bytes_written)
+                    logging.debug('last_checkpoint: %d' % last_checkpoint)
+                    logging.debug('interval: %d' % interval)
                     if storefs.bytes_written - last_checkpoint >= interval:
                         logging.debug('Making checkpoint')
                         self.backup_parents('.')
@@ -114,6 +120,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                         self.store.lock_client(client_name)
                         self.store.start_generation()
                         last_checkpoint = storefs.bytes_written
+                        self.dump_memory_profile('at end of checkpoint')
 
                 self.backup_parents('.')
 
@@ -124,6 +131,35 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         storefs.close()
 
         logging.info('Backup finished.')
+        self.dump_memory_profile('at end of backup run')
+
+    def vmrss(self):
+        f = open('/proc/self/status')
+        rss = 0
+        for line in f:
+            if line.startswith('VmRSS'):
+                rss = line.split()[1]
+        f.close()
+        return rss
+
+    def dump_memory_profile(self, msg):
+        kind = self.app.config['dump-memory-profile']
+        if kind == 'none':
+            return
+        logging.debug('dumping memory profiling data: %s' % msg)
+        logging.debug('VmRSS: %s KiB' % self.vmrss())
+        logging.debug('# objects: %d' % len(gc.get_objects()))
+        logging.debug('# garbage: %d' % len(gc.garbage))
+        if kind == 'heapy':
+            from guppy import hpy
+            h = hpy()
+            logging.debug('memory profile:\n%s' % h.heap())
+        elif kind == 'meliae':
+            filename = 'obnam-%d.meliae' % self.memory_dump_counter
+            logging.debug('memory profile: see %s' % filename)
+            from meliae import scanner
+            scanner.dump_all_objects(filename)
+            self.memory_dump_counter += 1
 
     def find_files(self, root):
         '''Find all files and directories that need to be backed up.
@@ -167,8 +203,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             
         prune_list(subdirs)
         prune_list(filenames)
-        subdirs.sort()
-        filenames.sort()
 
     def needs_backup(self, pathname, current):
         '''Does a given file need to be backed up?'''
@@ -222,11 +256,14 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             chunkids.append(self.backup_file_chunk(data))
             if len(chunkids) >= obnamlib.DEFAULT_CHUNKIDS_PER_GROUP:
                 self.store.append_file_chunks(filename, chunkids)
+                self.dump_memory_profile('after appending some chunkids')
                 chunkids = []
             self.app.hooks.call('progress-data-uploaded', len(data))
         f.close()
         if chunkids:
             self.store.append_file_chunks(filename, chunkids)
+        self.dump_memory_profile('at end of file content backup for %s' %
+                                 filename)
         
     def backup_file_chunk(self, data):
         '''Back up a chunk of data by putting it into the store.'''
