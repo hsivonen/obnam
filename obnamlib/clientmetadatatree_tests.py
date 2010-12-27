@@ -247,12 +247,14 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
     def test_generation_has_no_chunk_refs_initially(self):
         minkey = self.client.chunk_key(0, 0)
         maxkey = self.client.chunk_key(obnamlib.MAX_ID, obnamlib.MAX_ID)
-        self.assertEqual(self.client.tree.lookup_range(minkey, maxkey), [])
+        self.assertEqual(list(self.client.tree.lookup_range(minkey, maxkey)), 
+                         [])
                          
     def test_generation_has_no_chunk_refs_initially(self):
         minkey = self.client.chunk_key(0, 0)
         maxkey = self.client.chunk_key(obnamlib.MAX_ID, obnamlib.MAX_ID)
-        self.assertEqual(self.client.tree.lookup_range(minkey, maxkey), [])
+        self.assertEqual(list(self.client.tree.lookup_range(minkey, maxkey)), 
+                         [])
 
     def test_sets_file_chunks(self):
         self.client.set_file_chunks('/foo', [1, 2, 3])
@@ -262,7 +264,8 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
     def test_generation_has_no_chunk_refs_initially(self):
         minkey = self.client.chunk_key(0, 0)
         maxkey = self.client.chunk_key(obnamlib.MAX_ID, obnamlib.MAX_ID)
-        self.assertEqual(self.client.tree.lookup_range(minkey, maxkey), [])
+        self.assertEqual(list(self.client.tree.lookup_range(minkey, maxkey)), 
+                         [])
 
     def test_set_file_chunks_adds_chunk_refs(self):
         self.client.set_file_chunks('/foo', [1, 2])
@@ -279,7 +282,7 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
         file_id = self.client.get_file_id(self.client.tree, '/foo')
         minkey = self.client.chunk_key(0, 0)
         maxkey = self.client.chunk_key(obnamlib.MAX_ID, obnamlib.MAX_ID)
-        self.assertEqual(self.client.tree.lookup_range(minkey, maxkey), 
+        self.assertEqual(list(self.client.tree.lookup_range(minkey, maxkey)), 
                          [(self.client.chunk_key(1, file_id), '')])
 
     def test_remove_removes_chunk_refs(self):
@@ -287,7 +290,8 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
         self.client.remove('/foo')
         minkey = self.client.chunk_key(0, 0)
         maxkey = self.client.chunk_key(obnamlib.MAX_ID, obnamlib.MAX_ID)
-        self.assertEqual(self.client.tree.lookup_range(minkey, maxkey), [])
+        self.assertEqual(list(self.client.tree.lookup_range(minkey, maxkey)), 
+                         [])
         
     def test_report_chunk_not_in_use_initially(self):
         gen_id = self.client.get_generation_id(self.client.tree)
