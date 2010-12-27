@@ -242,14 +242,33 @@ to keep hourly backups for three days,
 daily backups for a week,
 weekly backups for a month,
 and monthly backups for a year.
+.\"---------------------------------------------------------------------
 .SH OPTIONS
+.\"
 .TP
 .BR \-h ", " \-\-help
 Show a summary of options.
+.\"
 .TP
 .BR \-\-log =\fIFILE
-Log debug and other messages to
+Write log messages to
 .IR FILE .
+.\"
+.TP
+.BR \-\-log\-level =\fILEVEL
+Log messages at 
+.I LEVEL
+and above.
+Level is one of 
+.IR debug ,
+.IR info ,
+.IR warning ,
+.IR error ,
+or
+.IR critical .
+Default is
+.IR info .
+.\"
 .TP
 .BR \-\-store =\fIURL
 Store backups in
@@ -258,11 +277,74 @@ which may be either a pathname or an
 .B sftp
 URL.
 See above for a description of URL syntax.
+.\"
 .TP
 .BR \-\-client\-name =\fICLIENT_NAME
 Set name of client to use.
-Default is the hostname of the machine where obnam runs.
+Default is the hostname of the machine where 
+.B obnam 
+runs.
 This is used to determine which part of the backup store to put backups in.
+.\"
+.TP
+.BR \-\-pretend ", " \-\-dry\-run ", " \-\-no\-act
+Do not actually remove anything, just pretend you do.
+This currently only works for the 
+.B forget
+operation.
+.\"
+.TP
+.BR \-\-node\-size =\fISIZE
+Maximum size of B-tree nodes on disk.
+Default is 65536 bytes.
+.\"
+.TP
+.BR \-\-chunk\-size =\fISIZE
+Maximum size of chunks of file data in backup store.
+Default is 65536 bytes.
+.\"
+.TP
+.BR \-\-upload\-queue\-size =\fISIZE
+Maximum length of upload queue for B-tree nodes.
+Default is 1024 nodes.
+.\"
+.TP
+.BR \-\-lru\-size\-size =\fISIZE
+Maximum size of Least-Recently-Used cache for B-tree nodes.
+Default is 10000 nodes.
+.\"
+.TP
+.BR \-\-dump\-memory\-profile =\fIHOW
+Make memory profiling dumps after each file, checkpoint, and generation.
+Value is one of 
+.IR none ,
+.IR meliae ,
+or
+.IR heapy .
+Default is 
+.IR none .
+.\"
+.TP
+.BR \-\-root =\fIURL
+What to back up.
+Can be specified multiple times.
+The
+.I URL
+can be specified the same way as for backup stores.
+This option is only relevant to the backup operation.
+You can also give the URLs as normal command line arguments.
+.\"
+.TP
+.BR \-\-exclude =\fIREGEXP
+Exclude any files and directories whose full pathname matches the
+regular expression given.
+Can be given multiple times.
+.\"
+.TP
+.BR \-\-checkpoint =\fISIZE
+Make a checkpoint generation after a given size.
+Default is 1 GiB.
+.\"
 .TP
 .BR \-\-to =\fIDIR
 Restore files to
@@ -270,6 +352,7 @@ Restore files to
 This is only used with the
 .B restore
 command.
+.\"
 .TP
 .BR \-\-generation =\fIGENSPEC
 Use generation specified by
@@ -277,19 +360,14 @@ Use generation specified by
 See above for ways to specify a generation.
 Default is
 .IR latest .
+.\"
 .TP
 .BR \-\-quiet
 Do not report progress when running.
 This is helpful when running obnam non-interactively,
 for example from 
 .BR cron (8).
-.TP
-.BR \-\-root =\fDIR
-Back up 
-.IR DIR .
-This is only relevant with the
-.B backup
-command.
+.\"
 .TP
 .BR \-\-keep =\fIPOLICY
 Specify which generations the
@@ -298,14 +376,7 @@ command will keep.
 Everything else will be removed.
 See above for a description of
 .IR POLICY .
-.TP
-.BR \-\-pretend ", " \-\-no\-act ", " \-\-dry\-run
-Pretend to do things, but don't actually do them, if they change anything.
-Report what would have been done.
-Currently only applies to the
-.B forget
-command,
-which will list the generations that would be removed.
+.\" ------------------------------------------------------------------
 .SH "EXIT STATUS"
 .B obnam
 will exit with zero if everything went well,
