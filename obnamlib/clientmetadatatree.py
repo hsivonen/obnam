@@ -353,7 +353,7 @@ class ClientMetadataTree(obnamlib.StoreTree):
         minkey = self.chunk_key(chunk_id, 0)
         maxkey = self.chunk_key(chunk_id, obnamlib.MAX_ID)
         t = self.find_generation(gen_id)
-        return len(t.lookup_range(minkey, maxkey)) > 0
+        return not t.range_is_empty(minkey, maxkey)
 
     def list_chunks_in_generation(self, gen_id):
         '''Return list of chunk ids used in a given generation.'''

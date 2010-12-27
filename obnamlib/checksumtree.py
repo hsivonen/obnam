@@ -68,7 +68,7 @@ class ChecksumTree(obnamlib.StoreTree):
             minkey = self.key(checksum, chunk_id, 0)
             maxkey = self.key(checksum, chunk_id, obnamlib.MAX_ID)
             t = self.forest.trees[-1]
-            return len(t.lookup_range(minkey, maxkey)) > 0
+            return not t.range_is_empty(minkey, maxkey)
         else:
             return False
 
