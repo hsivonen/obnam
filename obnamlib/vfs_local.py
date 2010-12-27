@@ -55,6 +55,8 @@ class LocalFS(obnamlib.VirtualFileSystem):
         # perception of current working directory. This also benefits
         # unit tests. To do this, we store the baseurl as the cwd.
         self.cwd = os.path.abspath(baseurl)
+        if not self.isdir('.'):
+            raise OSError(errno.ENOENT, self.cwd)
 
     def close(self):
         logging.info('VFS %s closing down; bytes_read=%d bytes_written=%d' %

@@ -280,6 +280,9 @@ class VfsTests(object): # pragma: no cover
         self.fs.reinit(self.fs.baseurl)
         self.assertEqual(self.fs.getcwd(), self.basepath)
 
+    def test_reinit_to_nonexistent_filename_raises_OSError(self):
+        self.assertRaises(OSError, self.fs.reinit, '/thisdoesnotexist')
+
     def test_getcwd_returns_dirname(self):
         self.assertEqual(self.fs.getcwd(), self.basepath)
 

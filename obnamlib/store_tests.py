@@ -595,6 +595,7 @@ class StoreGenspecTests(unittest.TestCase):
         self.tempdir = tempfile.mkdtemp()
 
         storedir = os.path.join(self.tempdir, 'store')
+        os.mkdir(storedir)
         fs = obnamlib.LocalFS(storedir)
         self.store = obnamlib.Store(fs, obnamlib.DEFAULT_NODE_SIZE,
                                     obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
