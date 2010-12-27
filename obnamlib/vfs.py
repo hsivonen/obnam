@@ -17,6 +17,7 @@
 
 import errno
 import os
+import stat
 import urlparse
 
 import obnamlib
@@ -196,7 +197,15 @@ class VirtualFileSystem(object):
         dirs = []
         nondirs = []
         for name in names:
-            if self.isdir(os.path.join(top, name)):
+            is_dir = False
+            try:
+                st = self.lstat(os.path.join(top, name))
+            except OSError, e:
+                if e.errno != errno.ENOENT:
+                    raise
+            else:
+                is_dir = stat.S_ISDIR(st.st_mode)
+            if is_dir:
                 dirs.append(name)
             else:
                 nondirs.append(name)
@@ -524,6 +533,7 @@ class VfsTests(object): # pragma: no cover
         for dirname in self.dirs:
             self.fs.mkdir(dirname)
         self.dirs.insert(0, self.basepath)
+        self.fs.symlink('foo', 'symfoo')
     
     def test_depth_first_finds_all_dirs(self):
         self.set_up_depth_first()
