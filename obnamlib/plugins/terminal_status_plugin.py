@@ -55,7 +55,7 @@ class TerminalStatusPlugin(obnamlib.ObnamPlugin):
             self.ts.add(ttystatus.Literal(' up ('))
             self.ts.add(ttystatus.ByteSpeed('uploaded-bytes'))
             self.ts.add(ttystatus.Literal(') '))
-            self.ts.add(ttystatus.Pathname('current-dir'))
+            self.ts.add(ttystatus.Pathname('current-file'))
 
     def found_file_cb(self, filename, metadata):
         self.ts['current-file'] = filename
@@ -66,6 +66,7 @@ class TerminalStatusPlugin(obnamlib.ObnamPlugin):
         if not dirname.endswith(os.sep):
             dirname += os.sep
         self.ts['current-dir'] = dirname
+        self.ts['current-file'] = filename
         
     def data_uploaded_cb(self, amount):
         self.ts['uploaded-bytes'] += amount
