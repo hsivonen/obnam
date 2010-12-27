@@ -93,10 +93,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.remove_old_roots(absroots)
 
             for absroot in absroots:
-                logging.debug('Backing up root %s' % absroot)
+                logging.info('Backing up root %s' % absroot)
                 self.fs.reinit(absroot)
                 for pathname, metadata in self.find_files(absroot):
-                    logging.debug('backing up %s' % pathname)
+                    logging.info('backing up %s' % pathname)
                     try:
                         self.backup_metadata(pathname, metadata)
                         if stat.S_ISDIR(metadata.st_mode):
