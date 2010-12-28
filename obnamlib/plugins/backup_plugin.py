@@ -191,12 +191,12 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         '''Remove unwanted things.'''
 
         def prune_list(items):
-            delete = []
+            delete = set()
             for pat in self.exclude_pats:
                 for item in items:
                     path = os.path.join(dirname, item)
                     if pat.search(path):
-                        delete.append(item)
+                        delete.add(item)
             for path in delete:
                 i = items.index(path)
                 del items[i]
