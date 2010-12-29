@@ -1,3 +1,9 @@
+obnam (0.14) squeeze; urgency=low
+
+  * New upstream release.
+
+ -- Lars Wirzenius <liw@liw.fi>  Wed, 29 Dec 2010 20:41:15 +0000
+
 obnam (0.13) squeeze; urgency=low
 
   * New upstream release.

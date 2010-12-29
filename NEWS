@@ -5,6 +5,95 @@ Obnam NEWS
 This file summarizes changes between releases of Obnam.
 
 
+Version 0.14, released 2010-12-29; an ALPHA release
+----------------------------------------------------
+
+This version is capable of backing up my laptop's home directory.
+It is, however, still an ALPHA release, and you should not rely on
+it as your sole form of backup. It is also slow. But if you're 
+curious, now would be a good time to try it out a bit.
+
+Bug fixes:
+
+* `COPYING` now contains GPL version 3, instead of 2. The code was
+  licensed under version 3 already. (Thank you Greg Grossmeier.)
+* The manual page now uses `-` and `\-` correctly.
+* `obnam forget` now actually removes data that is no longer used by
+  any generation.
+* When backing up a new generation, if any of the root directories for
+  the backup got dropped by the user, they are now also removed from
+  the backup generation. Old generations obviously still have them.
+* Only the per-client B-tree forest should have multiple trees. Now this
+  actually happens, whereas previously sometimes a very large number of 
+  new trees would be created in some forests. (What's good for rain 
+  forests is not good for saving disk space.)
+* When recursing through directory trees, obnam no longer follows 
+  symlinks to directories.
+* obnam no longer creates a missing backup store when backing up to
+  a local disk. It never did this when backing up via sftp. (This
+  saves me from figuring out which of `store`, `stor`, and `sorte`
+  is the real directory.)
+
+New features and stuff:
+
+* `blackboxtest` has been rewritten to use Python's `unittest`
+  framework, rather than a homegrown bad re-implementation of some of it.
+* `obnam ls` interprets arguments as "genspecs" rather than generation
+  identifiers. This means `obnam ls latest` works, and now `latest` is
+  also the default if you don't give any spec.
+* `run-benchmarks` now outputs results into a git checkout of
+  <http://braawi.org/>, an ikiwiki instance hosted by
+  <http://www.branchable.com/>. The script also puts the results into
+  a suitable sub-directory, adds a page for the RSS feed of benchmark
+  results, and updates the report page that summarizes all stored results.
+* There is now a 100 GiB benchmark.
+* Clients are now called clients, instead of hosts. This terminology should
+  be clearer.
+* The list of clients now stores a random integer identifier for each client
+  (unique within the store). The identifier is used as the name of the
+  per-client B-tree directory, rather than the hostname of the client.
+  This should prevent a teeny tiny bit of information leakage. It also
+  makes debugging things much harder.
+* Various refactorings and prettifications of the code has happened.
+  For example, several classes have been split off from the `store.py` 
+  module. This has also resulted in much better test coverage for those
+  classes.
+* The per-client trees (formerly GenerationStore, now ClientMetadataTree)
+  have a more complicated key now: 4 parts, not 3. This makes it easier
+  to keep separate data about files, and other data that needs to be
+  stored per-generation, such as what the generation id is.
+* `find-duplicate-chunks`, a tool for finding duplicate chunks of data
+  in a files in a directory tree, was added to the tree. I have used it
+  to find out if is worthwhile to do duplicate chunk removal at all.
+  (It is, at least for my data.) Also, it can be used to find good
+  values for chunk sizes for duplicate detection.
+* The whole way in which obnam does de-duplication got re-designed and
+  re-implemented. This is tricky stuff, when there is more than one client.
+* `SftpFS` now uses a hack copied from bzrlib, to use openssh if it is
+  available, and paramiko only if it is not. This speeds up sftp data
+  transfers quite a bit. (Where bzrlib supports more than just openssh,
+  we don't, since I have no way to test the other stuff. Patches welcome.)
+* The way lists of chunk ids are stored for files got changed. Now we store
+  several ids per list item, which is faster and also saves some space
+  in the B-tree nodes. Also, it is now possible to append to the list,
+  which means the caller does not need to first gather a list of all ids.
+  Such a list gets quite costly when the file is quite big (e.g., in the
+  terabyte size).
+* New `--dump-memory-profile` option was added to help do memory profiling 
+  with meliae or heapy have been added. (Obnam's memory consumption finally
+  got annoying enough that I did something about it.)
+
+Removed stuff:
+
+* The functional specification was badly outdated, and has been removed.
+  I decided to stop kidding myself that I would keep it up to date.
+* The store design document has been removed from the store tree.
+  The online version at <http://braawi.org/obnam/ondisk/> is the
+  canonical version, and is actually kept up to date.
+* The benchmark specification has likewise been replaced with
+  <http://braawi.org/obnam/benchmarkspec/>.
+
+
 Version 0.13, released 2010-07-13; an ALPHA release
 ----------------------------------------------------
 
