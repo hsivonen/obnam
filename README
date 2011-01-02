@@ -101,6 +101,8 @@ Mark statements that should not be included in coverage test with
 "# pragma: no cover", if you really, really can't write a test.
 without-tests lists modules that have no test modules.
 
+If you want to make a new release of Obnam, I recommend following
+my release checklist: <http://braawi.org/obnam/release/>.
 
 Feedback
 --------
