@@ -88,7 +88,7 @@ def main():
         stat_info = os.lstat(name)
         if stat.S_ISDIR(stat_info.st_mode):
             for dirname, subdirs, filenames in os.walk(name):
-                stats.add_dir(dirname, len(filenames))
+                stats.add_dir(dirname, len(filenames) + len(subdirs))
                 for filename in filenames:
                     pathname = os.path.join(dirname, filename)
                     stat_info = os.lstat(pathname)
