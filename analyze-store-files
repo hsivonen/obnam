@@ -93,7 +93,7 @@ def main():
                     pathname = os.path.join(dirname, filename)
                     stat_info = os.lstat(pathname)
                     if stat.S_ISREG(stat_info.st_mode):
-                        stats.add_file(name, stat_info.st_size)
+                        stats.add_file(pathname, stat_info.st_size)
         elif stat.S_ISREG(stat_info.st_mode):
             stats.add_file(name, stat_info.st_size)
     
