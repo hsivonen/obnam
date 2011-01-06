@@ -1,0 +1,121 @@
+#!/usr/bin/python
+# Copyright 2011  Lars Wirzenius
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+'''Analyze the files in an Obnam backup store.
+
+For performance reasons, it is best if Obnam does not write too many
+files per directory, or too large or too small files. This program
+analyzes all the files in an Obnam backup store, or, indeed, any
+local directory, and reports the following:
+
+* total number of files
+* sum of lengths of files
+* number of files per directory: fewest, most, average, median
+  (both number and name of directory)
+* size of files: smallest, largest, average, median
+  (both size and name of file)
+
+'''
+
+
+import os
+import stat
+import sys
+
+
+class Stats(object):
+
+    def __init__(self):
+        self.dirs = list()
+        self.files = list()
+        
+    def add_dir(self, dirname, count):
+        self.dirs.append((count, dirname))
+        
+    def add_file(self, filename, size):
+        self.files.append((size, filename))
+        
+    @property
+    def total_files(self):
+        return len(self.files)
+        
+    @property
+    def sum_of_sizes(self):
+        return sum(size for size, name in self.files)
+        
+    @property
+    def dirsizes(self):
+        self.dirs.sort()
+        num_dirs = len(self.dirs)
+        
+        fewest, fewest_name = self.dirs[0]
+        most, most_name = self.dirs[-1]
+        average = sum(count for count, name in self.dirs) / num_dirs
+        median = self.dirs[num_dirs/2][0]
+
+        return fewest, fewest_name, most, most_name, average, median
+        
+    @property
+    def filesizes(self):
+        self.files.sort()
+        num_files = len(self.files)
+        
+        smallest, smallest_name = self.files[0]
+        largest, largest_name = self.files[-1]
+        average = sum(size for size, name in self.files) / num_files
+        median = self.files[num_files/2][0]
+
+        return smallest, smallest_name, largest, largest_name, average, median
+
+
+def main():
+    stats = Stats()
+    for name in sys.argv[1:]:
+        stat_info = os.lstat(name)
+        if stat.S_ISDIR(stat_info.st_mode):
+            for dirname, subdirs, filenames in os.walk(name):
+                stats.add_dir(dirname, len(filenames))
+                for filename in filenames:
+                    pathname = os.path.join(dirname, filename)
+                    stat_info = os.lstat(pathname)
+                    if stat.S_ISREG(stat_info.st_mode):
+                        stats.add_file(name, stat_info.st_size)
+        elif stat.S_ISREG(stat_info.st_mode):
+            stats.add_file(name, stat_info.st_size)
+    
+    print "total_files:", stats.total_files
+    print "sum of sizes:", stats.sum_of_sizes
+
+    fewest, fewest_name, most, most_name, average, median = stats.dirsizes
+    print "files per dir:"
+    print "  fewest:", fewest, fewest_name
+    print "  most:", most, most_name
+    print "  average:", average
+    print "  median:", median
+
+    smallest, smallest_name, largest, largest_name, average, median = \
+        stats.filesizes
+    print "file sizes:"
+    print "  smallest:", smallest, smallest_name
+    print "  largest:", largest, largest_name
+    print "  average:", average
+    print "  median:", median
+
+
+if __name__ == '__main__':
+    main()
+
