@@ -46,16 +46,17 @@ class TerminalStatusPlugin(obnamlib.ObnamPlugin):
         self.ts = None
 
     def config_loaded_cb(self):
-        if not self.app.config['quiet']:
-            self.ts.add(ttystatus.ElapsedTime())
-            self.ts.add(ttystatus.Literal(' '))
-            self.ts.add(ttystatus.Counter('current-file'))
-            self.ts.add(ttystatus.Literal(' files; '))
-            self.ts.add(ttystatus.ByteSize('uploaded-bytes'))
-            self.ts.add(ttystatus.Literal(' up ('))
-            self.ts.add(ttystatus.ByteSpeed('uploaded-bytes'))
-            self.ts.add(ttystatus.Literal(') '))
-            self.ts.add(ttystatus.Pathname('current-file'))
+        self.ts.add(ttystatus.ElapsedTime())
+        self.ts.add(ttystatus.Literal(' '))
+        self.ts.add(ttystatus.Counter('current-file'))
+        self.ts.add(ttystatus.Literal(' files; '))
+        self.ts.add(ttystatus.ByteSize('uploaded-bytes'))
+        self.ts.add(ttystatus.Literal(' up ('))
+        self.ts.add(ttystatus.ByteSpeed('uploaded-bytes'))
+        self.ts.add(ttystatus.Literal(') '))
+        self.ts.add(ttystatus.Pathname('current-file'))
+        if self.app.config['quiet']:
+            self.ts.disable()
 
     def found_file_cb(self, filename, metadata):
         self.ts['current-file'] = filename
