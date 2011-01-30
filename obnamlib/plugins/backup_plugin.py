@@ -200,6 +200,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             for path in delete:
                 i = items.index(path)
                 del items[i]
+            items.sort()
             
         prune_list(subdirs)
         prune_list(filenames)
