@@ -230,11 +230,11 @@ class VfsFactory:
             raise obnamlib.Error('URL scheme %s already registered' % scheme)
         self.implementations[scheme] = implementation
 
-    def new(self, url):
+    def new(self, url, create=False):
         '''Create a new VFS appropriate for a given URL.'''
         scheme, netloc, path, params, query, fragment = urlparse.urlparse(url)
         if scheme in self.implementations:
-            return self.implementations[scheme](url)
+            return self.implementations[scheme](url, create=create)
         raise obnamlib.Error('Unknown VFS type %s' % url)
             
             

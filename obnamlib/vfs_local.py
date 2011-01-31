@@ -46,9 +46,9 @@ class LocalFS(obnamlib.VirtualFileSystem):
     
     chunk_size = 1024 * 1024
     
-    def __init__(self, baseurl):
+    def __init__(self, baseurl, create=False):
         obnamlib.VirtualFileSystem.__init__(self, baseurl)
-        self.reinit(baseurl)
+        self.reinit(baseurl, create=create)
 
     def reinit(self, baseurl, create=False):
         # Create the base directory, if necessary.
