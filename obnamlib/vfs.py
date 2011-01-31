@@ -57,7 +57,7 @@ class VirtualFileSystem(object):
     def close(self):
         '''Close connection to filesystem.'''
 
-    def reinit(self, new_baseurl):
+    def reinit(self, new_baseurl, create=False):
         '''Go back to the beginning.
         
         This behaves like instantiating a new instance, but possibly
