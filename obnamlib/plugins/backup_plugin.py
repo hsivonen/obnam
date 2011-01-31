@@ -56,7 +56,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         storepath = self.app.config['store']
         logging.debug('store: %s' % storepath)
-        storefs = self.app.fsf.new(storepath)
+        storefs = self.app.fsf.new(storepath, create=True)
         storefs.connect()
         self.store = obnamlib.Store(storefs, self.app.config['node-size'],
                                     self.app.config['upload-queue-size'],

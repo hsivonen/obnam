@@ -51,16 +51,15 @@ class LocalFS(obnamlib.VirtualFileSystem):
         self.reinit(baseurl, create=create)
 
     def reinit(self, baseurl, create=False):
-        # Create the base directory, if necessary.
-        if create and not self.exists(baseurl):
-            self.mkdir(baseurl)
-    
         # We fake chdir so that it doesn't mess with the caller's 
         # perception of current working directory. This also benefits
         # unit tests. To do this, we store the baseurl as the cwd.
         self.cwd = os.path.abspath(baseurl)
         if not self.isdir('.'):
-            raise OSError(errno.ENOENT, self.cwd)
+            if create:
+                os.mkdir(baseurl)
+            else:
+                raise OSError(errno.ENOENT, self.cwd)
 
     def close(self):
         logging.info('VFS %s closing down; bytes_read=%d bytes_written=%d' %
