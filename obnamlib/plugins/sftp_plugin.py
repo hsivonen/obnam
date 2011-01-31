@@ -101,14 +101,16 @@ class SftpFS(obnamlib.VirtualFileSystem):
     
     '''
 
-    def __init__(self, baseurl):
+    def __init__(self, baseurl, create=False):
         obnamlib.VirtualFileSystem.__init__(self, baseurl)
         self.sftp = None
-        self.reinit(baseurl)
+        self.reinit(baseurl, create=create)
         
     def connect(self):
         if not self._connect_openssh():
             self._connect_paramiko()
+        if self.create_path_if_missing and not self.exists(self.path):
+            self.mkdir(self.path)
         self.chdir(self.path)
 
     def _connect_paramiko(self):
@@ -172,7 +174,8 @@ class SftpFS(obnamlib.VirtualFileSystem):
         logging.info('VFS %s closing down; bytes_read=%d bytes_written=%d' %
                      (self.baseurl, self.bytes_read, self.bytes_written))
 
-    def reinit(self, baseurl):
+    @ioerror_to_oserror
+    def reinit(self, baseurl, create=False):
         scheme, netloc, path, query, fragment = urlparse.urlsplit(baseurl)
 
         if scheme != 'sftp':
@@ -197,8 +200,12 @@ class SftpFS(obnamlib.VirtualFileSystem):
         self.port = port
         self.user = user
         self.path = path
+        self.create_path_if_missing = create
         
         if self.sftp:
+            if create and not self.exists(path):
+                self.mkdir(path)
+                self.create_path_if_missing = False # only create first time
             self.sftp.chdir(path)
 
     def _get_username(self):
