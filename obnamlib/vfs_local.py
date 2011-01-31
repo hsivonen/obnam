@@ -46,17 +46,20 @@ class LocalFS(obnamlib.VirtualFileSystem):
     
     chunk_size = 1024 * 1024
     
-    def __init__(self, baseurl):
+    def __init__(self, baseurl, create=False):
         obnamlib.VirtualFileSystem.__init__(self, baseurl)
-        self.reinit(baseurl)
+        self.reinit(baseurl, create=create)
 
-    def reinit(self, baseurl):
+    def reinit(self, baseurl, create=False):
         # We fake chdir so that it doesn't mess with the caller's 
         # perception of current working directory. This also benefits
         # unit tests. To do this, we store the baseurl as the cwd.
         self.cwd = os.path.abspath(baseurl)
         if not self.isdir('.'):
-            raise OSError(errno.ENOENT, self.cwd)
+            if create:
+                os.mkdir(baseurl)
+            else:
+                raise OSError(errno.ENOENT, self.cwd)
 
     def close(self):
         logging.info('VFS %s closing down; bytes_read=%d bytes_written=%d' %

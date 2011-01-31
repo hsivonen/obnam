@@ -57,7 +57,7 @@ class VirtualFileSystem(object):
     def close(self):
         '''Close connection to filesystem.'''
 
-    def reinit(self, new_baseurl):
+    def reinit(self, new_baseurl, create=False):
         '''Go back to the beginning.
         
         This behaves like instantiating a new instance, but possibly
@@ -230,11 +230,11 @@ class VfsFactory:
             raise obnamlib.Error('URL scheme %s already registered' % scheme)
         self.implementations[scheme] = implementation
 
-    def new(self, url):
+    def new(self, url, create=False):
         '''Create a new VFS appropriate for a given URL.'''
         scheme, netloc, path, params, query, fragment = urlparse.urlparse(url)
         if scheme in self.implementations:
-            return self.implementations[scheme](url)
+            return self.implementations[scheme](url, create=create)
         raise obnamlib.Error('Unknown VFS type %s' % url)
             
             
@@ -281,7 +281,15 @@ class VfsTests(object): # pragma: no cover
         self.assertEqual(self.fs.getcwd(), self.basepath)
 
     def test_reinit_to_nonexistent_filename_raises_OSError(self):
-        self.assertRaises(OSError, self.fs.reinit, '/thisdoesnotexist')
+        notexist = os.path.join(self.fs.baseurl, 'thisdoesnotexist')
+        self.assertRaises(OSError, self.fs.reinit, notexist)
+
+    def test_reinit_creates_target_if_requested(self):
+        self.fs.chdir('/')
+        new_baseurl = os.path.join(self.fs.baseurl, 'newdir')
+        new_basepath = os.path.join(self.basepath, 'newdir')
+        self.fs.reinit(new_baseurl, create=True)
+        self.assertEqual(self.fs.getcwd(), new_basepath)
 
     def test_getcwd_returns_dirname(self):
         self.assertEqual(self.fs.getcwd(), self.basepath)
