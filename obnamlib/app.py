@@ -17,6 +17,7 @@
 import logging
 import os
 import socket
+import tracing
 
 import obnamlib
 
@@ -70,6 +71,10 @@ class App(object):
                                 '(default: %default)')
         self.config['dump-memory-profile'] = 'none'
 
+        self.config.new_list(['trace'],
+                                'add to filename patters for which trace '
+                                'debugging logging happens')
+
         self.pm = obnamlib.PluginManager()
         self.pm.locations = [self.plugins_dir()]
         self.pm.plugin_arguments = (self,)
@@ -105,6 +110,9 @@ class App(object):
         level = levels.get(level_name.lower(), logging.DEBUG)
         logger.setLevel(level)
         logger.addHandler(handler)
+        
+        for pattern in self.config['trace']:
+            tracing.trace_add_pattern(pattern)
         
     def run(self):
         self.pm.load_plugins()
