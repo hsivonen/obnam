@@ -70,6 +70,10 @@ class App(object):
                                 '(default: %default)')
         self.config['dump-memory-profile'] = 'none'
 
+        self.config.new_list(['trace'],
+                                'add to filename patters for which trace '
+                                'debugging logging happens')
+
         self.pm = obnamlib.PluginManager()
         self.pm.locations = [self.plugins_dir()]
         self.pm.plugin_arguments = (self,)
