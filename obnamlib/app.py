@@ -17,6 +17,7 @@
 import logging
 import os
 import socket
+import tracing
 
 import obnamlib
 
@@ -109,6 +110,9 @@ class App(object):
         level = levels.get(level_name.lower(), logging.DEBUG)
         logger.setLevel(level)
         logger.addHandler(handler)
+        
+        for pattern in self.config['trace']:
+            tracing.trace_add_pattern(pattern)
         
     def run(self):
         self.pm.load_plugins()
