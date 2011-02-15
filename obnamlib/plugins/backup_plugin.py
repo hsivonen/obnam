@@ -19,6 +19,7 @@ import logging
 import os
 import re
 import stat
+import tracing
 
 import obnamlib
 
@@ -46,16 +47,15 @@ class BackupPlugin(obnamlib.ObnamPlugin):
     def backup(self, args):
         logging.info('Backup starts')
 
-        logging.debug('checkpoints every %s' % self.app.config['checkpoint'])
+        logging.info('Checkpoints every %s bytes' % 
+                        self.app.config['checkpoint'])
 
         self.app.config.require('store')
         self.app.config.require('client-name')
 
         roots = self.app.config['root'] + args
-        logging.debug('backup roots: %s' % roots)
 
         storepath = self.app.config['store']
-        logging.debug('store: %s' % storepath)
         storefs = self.app.fsf.new(storepath, create=True)
         storefs.connect()
         self.store = obnamlib.Store(storefs, self.app.config['node-size'],
@@ -63,9 +63,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                                     self.app.config['lru-size'])
 
         client_name = self.app.config['client-name']
-        logging.debug('client name: %s' % client_name)
         if client_name not in self.store.list_clients():
-            logging.debug('adding client %s' % client_name)
+            tracing.trace('adding new client %s' % client_name)
             self.store.lock_root()
             self.store.add_client(client_name)
             self.store.commit_root()
@@ -89,14 +88,13 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 self.fs.reinit(root)
                 absroots.append(self.fs.abspath('.'))
                 
-            logging.debug('absolute roots: %s' % absroots)
             self.remove_old_roots(absroots)
 
             for absroot in absroots:
                 logging.info('Backing up root %s' % absroot)
                 self.fs.reinit(absroot)
                 for pathname, metadata in self.find_files(absroot):
-                    logging.info('backing up %s' % pathname)
+                    tracing.trace('Backing up %s', pathname)
                     try:
                         self.backup_metadata(pathname, metadata)
                         if stat.S_ISDIR(metadata.st_mode):
@@ -109,12 +107,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                         self.app.hooks.call('error-message', 
                                             'Could not back up %s: %s' %
                                             (pathname, e.strerror))
-                    logging.debug('storefs.bytes_written: %d' % 
-                                  storefs.bytes_written)
-                    logging.debug('last_checkpoint: %d' % last_checkpoint)
-                    logging.debug('interval: %d' % interval)
                     if storefs.bytes_written - last_checkpoint >= interval:
-                        logging.debug('Making checkpoint')
+                        logging.info('Making checkpoint')
                         self.backup_parents('.')
                         self.store.commit_client(checkpoint=True)
                         self.store.lock_client(client_name)
@@ -228,7 +222,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
     def backup_parents(self, root):
         '''Back up parents of root, non-recursively.'''
         root = self.fs.abspath(root)
-        logging.debug('backing up parents of %s' % root)
+        tracing.trace('backing up parents of %s', root)
         while True:
             parent = os.path.dirname(root)
             metadata = obnamlib.read_metadata(self.fs, root)
@@ -240,12 +234,12 @@ class BackupPlugin(obnamlib.ObnamPlugin):
     def backup_metadata(self, pathname, metadata):
         '''Back up metadata for a filesystem object'''
         
-        logging.debug('backup_metadata: %s' % pathname)
+        tracing.trace('backup_metadata: %s', pathname)
         self.store.create(pathname, metadata)
 
     def backup_file_contents(self, filename):
         '''Back up contents of a regular file.'''
-        logging.debug('backup_file_contents: %s' % filename)
+        tracing.trace('backup_file_contents: %s', filename)
         self.store.set_file_chunks(filename, [])
         f = self.fs.open(filename, 'r')
         chunk_size = int(self.app.config['chunk-size'])
@@ -279,7 +273,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
     def backup_dir_contents(self, root):
         '''Back up the list of files in a directory.'''
 
-        logging.debug('backup_dir: %s' % root)
+        tracing.trace('backup_dir: %s', root)
 
         new_basenames = self.fs.listdir(root)
         old_basenames = self.store.listdir(self.store.new_generation, 
