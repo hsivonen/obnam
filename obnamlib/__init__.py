@@ -47,7 +47,6 @@ from vfs import VirtualFileSystem, VfsFactory, VfsTests
 from vfs_local import LocalFS
 from metadata import (read_metadata, set_metadata, Metadata, metadata_fields,
                       metadata_verify_fields)
-from nodestorevfs import NodeStoreVfs
 from store_tree import StoreTree
 from chunklist import ChunkList
 from clientlist import ClientList
