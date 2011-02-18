@@ -52,9 +52,10 @@ class StoreTree(object):
             if not self.fs.exists(self.dirname):
                 return False
             codec = btree.NodeCodec(self.key_bytes)
-            ns = obnamlib.NodeStoreVfs(self.fs, 
-                              self.dirname, self.node_size, codec,
-                              self.upload_queue_size, self.lru_size)
+            ns = btree.NodeStoreDisk(self.dirname, self.node_size, codec,
+                                     upload_max=self.upload_queue_size,
+                                     lru_size=self.lru_size,
+                                     vfs=self.fs)
             self.forest = btree.Forest(ns)
         return True
 
