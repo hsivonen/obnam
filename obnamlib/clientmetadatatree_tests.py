@@ -145,9 +145,9 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
         self.client.start_generation()
         self.clientid = self.client.get_generation_id(self.client.tree)
         self.file_metadata = obnamlib.Metadata(st_mode=stat.S_IFREG | 0666)
-        self.file_encoded = obnamlib.store.encode_metadata(self.file_metadata)
+        self.file_encoded = obnamlib.repo.encode_metadata(self.file_metadata)
         self.dir_metadata = obnamlib.Metadata(st_mode=stat.S_IFDIR | 0777)
-        self.dir_encoded = obnamlib.store.encode_metadata(self.dir_metadata)
+        self.dir_encoded = obnamlib.repo.encode_metadata(self.dir_metadata)
         
     def tearDown(self):
         shutil.rmtree(self.tempdir)
