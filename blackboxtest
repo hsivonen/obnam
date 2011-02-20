@@ -54,7 +54,7 @@ class ObnamTestCase(unittest.TestCase):
         self.client_name = 'client_name'
         self.tempdir = tempfile.mkdtemp()
         self.data = self.mkdir('data')
-        self.store = self.mkdir('store')
+        self.repo = self.mkdir('repo')
         self.restored = self.mkdir('restored')
         self.setUpHook()
         
@@ -107,42 +107,42 @@ class ObnamTestCase(unittest.TestCase):
                            args, stderr_ignore=stderr_ignore)
 
     def backup(self, roots=None):
-        '''Back up the data directory to the store.'''
+        '''Back up the data directory to the repository.'''
 
         if roots is None:
             roots = [self.data]
-        logging.debug('backing up %s to %s' % (roots, self.store))
-        self.obnam(['--store', self.store, 'backup'] + roots)
-        self.obnam(['fsck', '--store', self.store])
+        logging.debug('backing up %s to %s' % (roots, self.repo))
+        self.obnam(['--repository', self.repo, 'backup'] + roots)
+        self.obnam(['fsck', '--repository', self.repo])
         
     def restore(self, pathnames=None):
-        '''Restore the newest generation from a store.
+        '''Restore the newest generation from a repository.
         
         Data is restored to self.restored.
         
         '''
         
-        logging.debug('restoring %s to %s' % (self.store, self.restored))
+        logging.debug('restoring %s to %s' % (self.repo, self.restored))
         self.obnam(['restore', '--to', self.restored, 
-                    '--generation=latest', '--store', self.store] +
+                    '--generation=latest', '--repository', self.repo] +
                    (pathnames or []))
 
     def verify(self, stderr_ignore=None):
-        '''Run 'obnam verify' on the store.'''
-        self.obnam(['verify', '--root', self.data, '--store', self.store],
+        '''Run 'obnam verify' on the repository.'''
+        self.obnam(['verify', '--root', self.data, '--repository', self.repo],
                    stderr_ignore=stderr_ignore)
 
     def generations(self):
         '''Return all generation ids.'''
         
-        logging.debug('Looking up generations in %s' % self.store)
-        stdout = self.obnam(['generations', '--store', self.store])
+        logging.debug('Looking up generations in %s' % self.repo)
+        stdout = self.obnam(['generations', '--repository', self.repo])
         return [line.split()[0] for line in stdout.splitlines()]
 
     def forget(self, genids=None, keep=None, pretend=False):
         '''Forget specific generations.'''
         
-        logging.debug('Forgetting in %s' % self.store)
+        logging.debug('Forgetting in %s' % self.repo)
         logging.debug('genids: %s' % genids)
         logging.debug('keep: %s' % keep)
         args = []
@@ -152,7 +152,7 @@ class ObnamTestCase(unittest.TestCase):
             args += ['--keep', keep]
         if pretend:
             args += ['--pretend']
-        self.obnam(['forget', '--store', self.store] + args)
+        self.obnam(['forget', '--repository', self.repo] + args)
 
     def create_file(self, dirname, relative, contents):
         '''Create a new file with the desired contents.'''
@@ -209,13 +209,13 @@ class ObnamTestCase(unittest.TestCase):
                 result.append(self.get_info(root, pathname))
         return [x for x in result if x]
 
-    def open_store(self):
-        '''Open the store.'''
+    def open_repository(self):
+        '''Open the repository.'''
 
-        fs = obnamlib.LocalFS(self.store)
-        s = obnamlib.Store(fs, obnamlib.DEFAULT_NODE_SIZE,
-                           obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
-                           obnamlib.DEFAULT_LRU_SIZE)
+        fs = obnamlib.LocalFS(self.repo)
+        s = obnamlib.Repository(fs, obnamlib.DEFAULT_NODE_SIZE,
+                                obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
+                                obnamlib.DEFAULT_LRU_SIZE)
         s.open_client(self.client_name)
         return s
 
@@ -387,7 +387,7 @@ class BackupTests(ObnamTestCase):
             self.create_file(self.data, 'target%d' % i, 'content1')
         self.backup()
 
-        s = self.open_store()
+        s = self.open_repository()
         self.assertEqual(len(s.list_chunks()), 1)
 
     def test_does_not_include_roots_from_old_gens_unless_specified_again(self):
@@ -463,7 +463,7 @@ class ForgetTests(ObnamTestCase):
         self.create_file(self.data, 'big', self.random_string(1024**2))
         self.backup()
         self.forget(genids=self.generations())
-        self.assertEqual(self.disk_usage(os.path.join(self.store, 'chunks')),
+        self.assertEqual(self.disk_usage(os.path.join(self.repo, 'chunks')),
                          0)
     
     def test_removes_unwanted_data_with_empty_generation_remaining(self):
@@ -475,7 +475,7 @@ class ForgetTests(ObnamTestCase):
         genids = self.generations()
         forgettable = genids[:-1]
         self.forget(genids=forgettable)
-        chunks = os.path.join(self.store, 'chunks')
+        chunks = os.path.join(self.repo, 'chunks')
         self.assertEqual(self.disk_usage(chunks), 0)
 
 
