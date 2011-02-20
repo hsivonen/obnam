@@ -38,14 +38,16 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         self.app.config.require('repository')
         self.app.config.require('client-name')
         self.app.config.require('generation')
-        self.app.config.require('root')
 
         logging.debug('verifying generation %s' % 
                         self.app.config['generation'])
-        logging.debug('verifying what: %s' % repr(args))
         if not args:
-            logging.debug('no args given, so verifying everything')
+            self.app.config.require('root')
+            args = self.app.config['root']
+        if not args:
+            logging.debug('no roots/args given, so verifying everything')
             args = ['/']
+        logging.debug('verifying what: %s' % repr(args))
     
         fs = self.app.fsf.new(self.app.config['repository'])
         fs.connect()
@@ -53,7 +55,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
                                         self.app.config['upload-queue-size'],
                                         self.app.config['lru-size'])
         self.repo.open_client(self.app.config['client-name'])
-        self.fs = self.app.fsf.new(self.app.config['root'][0])
+        self.fs = self.app.fsf.new(args[0])
         self.fs.connect()
         self.fs.reinit('/')
 
