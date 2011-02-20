@@ -24,7 +24,7 @@ import obnamlib
 
 class ShowPlugin(obnamlib.ObnamPlugin):
 
-    '''Show information about data in the backup store.
+    '''Show information about data in the backup repository.
     
     This implements commands for listing contents of root and client
     objects, or the contents of a backup generation.
@@ -36,26 +36,26 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         self.app.register_command('generations', self.generations)
         self.app.register_command('ls', self.ls)
 
-    def open_store(self):
-        self.app.config.require('store')
+    def open_repository(self):
+        self.app.config.require('repository')
         self.app.config.require('client-name')
-        fs = self.app.fsf.new(self.app.config['store'])
+        fs = self.app.fsf.new(self.app.config['repository'])
         fs.connect()
-        self.store = obnamlib.Store(fs, self.app.config['node-size'], 
-                                    self.app.config['upload-queue-size'],
-                                    self.app.config['lru-size'])
-        self.store.open_client(self.app.config['client-name'])
+        self.repo = obnamlib.Repository(fs, self.app.config['node-size'], 
+                                        self.app.config['upload-queue-size'],
+                                        self.app.config['lru-size'])
+        self.repo.open_client(self.app.config['client-name'])
 
     def clients(self, args):
-        self.open_store()
-        for client_name in self.store.list_clients():
+        self.open_repository()
+        for client_name in self.repo.list_clients():
             print client_name
     
     def generations(self, args):
-        self.open_store()
-        for gen in self.store.list_generations():
-            start, end = self.store.get_generation_times(gen)
-            is_checkpoint = self.store.get_is_checkpoint(gen)
+        self.open_repository()
+        for gen in self.repo.list_generations():
+            start, end = self.repo.get_generation_times(gen)
+            is_checkpoint = self.repo.get_is_checkpoint(gen)
             if is_checkpoint:
                 checkpoint = ' (checkpoint)'
             else:
@@ -67,9 +67,9 @@ class ShowPlugin(obnamlib.ObnamPlugin):
                               checkpoint))
 
     def ls(self, args):
-        self.open_store()
+        self.open_repository()
         for gen in args or ["latest"]:
-            gen = self.store.genspec(gen)
+            gen = self.repo.genspec(gen)
             started = self.format_time(0)
             ended = self.format_time(0)
             print 'Generation %s (%s - %s)' % (gen, started, ended)
@@ -79,14 +79,14 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp))
     
     def isdir(self, gen, filename):
-        metadata = self.store.get_metadata(gen, filename)
+        metadata = self.repo.get_metadata(gen, filename)
         return metadata.isdir()
     
     def show_objects(self, gen, dirname):
         print
         print '%s:' % dirname
         subdirs = []
-        for basename in self.store.listdir(gen, dirname):
+        for basename in self.repo.listdir(gen, dirname):
             full = os.path.join(dirname, basename)
             print self.format(gen, dirname, basename)
             if self.isdir(gen, full):
@@ -96,7 +96,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
 
     def format(self, gen, dirname, basename):
         full = os.path.join(dirname, basename)
-        metadata = self.store.get_metadata(gen, full)
+        metadata = self.repo.get_metadata(gen, full)
 
         perms = ['?'] + ['-'] * 9
         tab = [
