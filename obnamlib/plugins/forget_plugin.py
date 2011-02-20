@@ -41,8 +41,9 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
         self.repo.lock_client(self.app.config['client-name'])
 
         if args:
-            for genid in args:
-                self.remove(int(genid))
+            for genspec in args:
+                genid = self.repo.genspec(genspec)
+                self.remove(genid)
         elif self.app.config['keep']:
             genlist = []
             dt = datetime.datetime(1970, 1, 1, 0, 0, 0)
