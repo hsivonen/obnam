@@ -1,4 +1,4 @@
-.\" Copyright 2010  Lars Wirzenius
+.\" Copyright 2010, 2011  Lars Wirzenius
 .\" 
 .\" This program is free software: you can redistribute it and/or modify
 .\" it under the terms of the GNU General Public License as published by
@@ -32,13 +32,11 @@ and if a chunk of data is already backed up in another file,
 that data is re-used.
 .PP
 The place where backed up data is placed is called the
-backup store, or
-.I store
-for short.
-A store may be, for example, a directory on an sftp server,
+backup repository.
+A repository may be, for example, a directory on an sftp server,
 or a directory on a USB hard disk.
-A single store may contain backups from several clients.
-Their data will intermingle as if they were using separate stores,
+A single repository may contain backups from several clients.
+Their data will intermingle as if they were using separate repositories,
 but if one client backs up a file, the others may re-use the data.
 .PP
 .B obnam 
@@ -54,10 +52,10 @@ after that an incremental one.
 .IP \(bu
 .B restore
 is the opposite of a backup.
-It copies backed up data from the backup store to a target directory.
+It copies backed up data from the backup repository to a target directory.
 .IP \(bu
 .B clients
-lists the clients that are backed up to the store.
+lists the clients that are backed up to the repository.
 .IP \(bu
 .B generations
 lists every backup generation for a given client.
@@ -88,16 +86,16 @@ option to specify a policy for what to keep (everything else will
 be removed).
 .IP \(bu
 .B fsck
-checks the internal consistency of the backup store.
+checks the internal consistency of the backup repository.
 It verifies that all clients, generations, directories, files, and
-all file contents still exists in the backup store.
+all file contents still exists in the backup repository.
 It may take quite a long time to run.
 .SS "Making backups"
 When you run a backup,
 .B obnam
-uploads data into the backup store.
+uploads data into the backup repository.
 The data is divided into chunks,
-and if a chunk already exists in the backup store,
+and if a chunk already exists in the backup repository,
 it is not uploaded again.
 This allows 
 .B obnam
@@ -105,7 +103,7 @@ to deal with files that have been changed or renamed since the previous
 backup run.
 It also allows several backup clients to avoid uploading the same data.
 If, for example, everyone in the office has a copy of the same sales brochures,
-only one copy needs to be stored in the backup store.
+only one copy needs to be stored in the backup repository.
 .PP
 Every backup run is a 
 .IR generation .
@@ -125,15 +123,15 @@ the older generations will still keep it:
 nothing changes in the old generations just because there is a new one.
 If the root was dropped by mistake,
 it can be added back and the next backup run will re-use the existing
-data in the backup store,
+data in the backup repository,
 and will only back up the file metadata (filenames, permissions, etc).
 .SS "Verifying backups"
 What good is a backup system you cannot rely on?
 How can you rely on something you cannot test?
 The
 .B "obnam verify"
-command checks that data in the backup store matches actual user data.
-It retrieves one or more files from the store and compares them to
+command checks that data in the backup repository matches actual user data.
+It retrieves one or more files from the repository and compares them to
 the user data.
 This is essentialy the same as doing a restore,
 then comparing restored files with the original files using 
@@ -232,7 +230,7 @@ it will keep the backup taken at 23:00 on each day,
 and remove every other backup that day.
 It will also remove backups older than 30 days.
 .PP
-Note that obnam will only inspect timestamps in the backup store,
+Note that obnam will only inspect timestamps in the backup repository,
 and does not care what the actual current time is.
 This means that if you stop making new backups,
 the existing ones won't be removed automatically.
@@ -296,7 +294,7 @@ Default is
 .IR info .
 .\"
 .TP
-.BR \-\-store =\fIURL
+.BR \-\-repository =\fIURL
 Store backups in
 .IR URL ,
 which may be either a pathname or an 
@@ -310,7 +308,8 @@ Set name of client to use.
 Default is the hostname of the machine where 
 .B obnam 
 runs.
-This is used to determine which part of the backup store to put backups in.
+This is used to determine which part of the backup repository to put 
+backups in.
 .\"
 .TP
 .BR \-\-pretend ", " \-\-dry\-run ", " \-\-no\-act
@@ -326,7 +325,7 @@ Default is 65536 bytes.
 .\"
 .TP
 .BR \-\-chunk\-size =\fISIZE
-Maximum size of chunks of file data in backup store.
+Maximum size of chunks of file data in backup repository.
 Default is 65536 bytes.
 .\"
 .TP
@@ -356,7 +355,7 @@ What to back up.
 Can be specified multiple times.
 The
 .I URL
-can be specified the same way as for backup stores.
+can be specified the same way as for backup repositories.
 This option is only relevant to the backup operation.
 You can also give the URLs as normal command line arguments.
 .\"
@@ -420,27 +419,27 @@ There will some day be a configuration file, which will be documented here.
 To back up your home directory to a server:
 .IP
 .nf
-obnam backup \-\-store sftp://your.server/~/backups $HOME
+obnam backup \-\-repository sftp://your.server/~/backups $HOME
 .PP
 To restore your latest backup from the server:
 .IP
 .nf
-obnam restore \-\-store sftp://your.server/~/backups \\
+obnam restore \-\-repository sftp://your.server/~/backups \\
 \-\-to /var/tmp/my.home.dir
 .PP
 To check that the backup worked:
 .IP
 .nf
-obnam verify \-\-store sftp://your.server/~/backups /path/to/file
+obnam verify \-\-repository sftp://your.server/~/backups /path/to/file
 .PP
 To remove old backups, keeping the newest backup for each day for
 ten years:
 .IP
 .nf
-obnam forget \-\-store sftp://your.server/~/backups \-\-keep 3650d
+obnam forget \-\-repository sftp://your.server/~/backups \-\-keep 3650d
 .PP
-To verify that the backup store is OK:
+To verify that the backup repository is OK:
 .IP
 .nf
-obnam fsck \-\-store sftp://your.server/~/backups
+obnam fsck \-\-repository sftp://your.server/~/backups
 
