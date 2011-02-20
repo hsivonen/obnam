@@ -95,7 +95,8 @@ do
         --fullcmd="env OBNAM_PROFILE=obnam.prof \
                    PYTHONPATH=$BTREE_BRANCH $OBNAM_BRANCH/obnam \
                    --log-level warning \
-                   --log $basename-\$GEN.log --store \$STORE backup \$DATA && \
+                   --log $basename-\$GEN.log --repository \$STORE \
+                   backup \$DATA && \
                    cp obnam.prof $basename-\$GEN.prof && \
                    viewprof obnam.prof cumulative \
                     > $basename-\$GEN-cumulative.txt && \
