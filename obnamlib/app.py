@@ -1,4 +1,4 @@
-# Copyright (C) 2009  Lars Wirzenius
+# Copyright (C) 2009, 2011  Lars Wirzenius
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ class App(object):
                                'log level, one of debug, info, warning, '
                                'error, critical (%default)')
         self.config['log-level'] = 'info'
-        self.config.new_string(['store'], 'name of backup store')
+        self.config.new_string(['repository'], 'name of backup repository')
         self.config.new_string(['client-name'], 'name of client (%default)')
         self.config['client-name'] = self.deduce_client_name()
         self.config.new_boolean(['pretend', 'dry-run', 'no-act'],
