@@ -19,9 +19,9 @@ import btree
 import obnamlib
 
 
-class StoreTree(object):
+class RepositoryTree(object):
 
-    '''A B-tree within a Store.
+    '''A B-tree within an obnamlib.Repository.
     
     For read-only operation, call init_forest before doing anything.
     
