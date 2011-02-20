@@ -23,7 +23,7 @@ import time
 import obnamlib
 
 
-class ClientMetadataTree(obnamlib.StoreTree):
+class ClientMetadataTree(obnamlib.RepositoryTree):
 
     '''Store per-client metadata about files.
     
@@ -67,8 +67,9 @@ class ClientMetadataTree(obnamlib.StoreTree):
     
     def __init__(self, fs, client_dir, node_size, upload_queue_size, lru_size):
         key_bytes = len(self.hashkey(0, self.hash_name(''), 0, 0))
-        obnamlib.StoreTree.__init__(self, fs, client_dir, key_bytes, 
-                                    node_size, upload_queue_size, lru_size)
+        obnamlib.RepositoryTree.__init__(self, fs, client_dir, key_bytes, 
+                                         node_size, upload_queue_size, 
+                                         lru_size)
         self.genhash = self.hash_name('generation')
         self.known_generations = dict()
         self.chunkids_per_key = max(1,
@@ -155,7 +156,7 @@ class ClientMetadataTree(obnamlib.StoreTree):
         if self.tree:
             now = int(current_time())
             self._insert_int(self.tree, self.genkey(self.GEN_ENDED), now)
-        obnamlib.StoreTree.commit(self)
+        obnamlib.RepositoryTree.commit(self)
 
     def find_generation(self, genid):
         if genid in self.known_generations:
