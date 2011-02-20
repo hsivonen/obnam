@@ -29,7 +29,7 @@ class Error(Exception):
 DEFAULT_NODE_SIZE = 64 * 1024
 DEFAULT_CHUNK_SIZE = 64 * 1024
 DEFAULT_UPLOAD_QUEUE_SIZE = 1024
-DEFAULT_LRU_SIZE = 10 * 1000
+DEFAULT_LRU_SIZE = 500
 DEFAULT_CHUNKIDS_PER_GROUP = 1024
 
 # Maximum identifier for clients, chunks, files, etc. This is the largest
