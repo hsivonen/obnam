@@ -86,7 +86,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
                                         self.app.config['upload-queue-size'],
                                         self.app.config['lru-size'])
         self.repo.open_client(self.app.config['client-name'])
-        self.fs = self.app.fsf.new(self.app.config['to'])
+        self.fs = self.app.fsf.new(self.app.config['to'], create=True)
         self.fs.connect()
 
         self.hardlinks = Hardlinks()
