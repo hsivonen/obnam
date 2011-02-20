@@ -31,7 +31,7 @@ class VirtualFileSystem(object):
     To make it easier to support all kinds of files both locally and
     remotely, we use a custom virtual filesystem interface so that
     all filesystem access is done the same way. This way, we can
-    easily support user data and backup stores in any combination of
+    easily support user data and backup repositories in any combination of
     local and remote filesystems.
 
     This class defines the interface for such virtual filesystems.
