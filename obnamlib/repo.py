@@ -1,4 +1,4 @@
-# Copyright (C) 2009, 2010  Lars Wirzenius
+# Copyright (C) 2009-2011  Lars Wirzenius
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ class LockFail(Exception):
 
 
 def require_root_lock(method):
-    '''Decorator for ensuring the store's root node is locked.'''
+    '''Decorator for ensuring the repository's root node is locked.'''
     
     def helper(self, *args, **kwargs):
         if not self.got_root_lock:
@@ -54,7 +54,7 @@ def require_client_lock(method):
 
 
 def require_open_client(method):
-    '''Decorator for ensuring store has an open client.
+    '''Decorator for ensuring repository has an open client.
     
     client may be read/write (locked) or read-only.
     
@@ -125,25 +125,25 @@ def decode_metadata(encoded):
     return obnamlib.Metadata(**args)
 
 
-class Store(object):
+class Repository(object):
 
-    '''Store backup data.
+    '''Repository for backup data.
     
-    Backup data is stored on a virtual file system
+    Backup data is put on a virtual file system
     (obnamlib.VirtualFileSystem instance), in some form that
     the API of this class does not care about.
     
-    The store may contain data for several clients that share 
+    The repository may contain data for several clients that share 
     encryption keys. Each client is identified by a name.
     
-    The store has a "root" object, which is conceptually a list of
+    The repository has a "root" object, which is conceptually a list of
     client names.
     
     Each client in turn is conceptually a list of generations,
     which correspond to snapshots of the user data that existed
     when the generation was created.
     
-    Read-only access to the store does not require locking.
+    Read-only access to the repository does not require locking.
     Write access may affect only the root object, or only a client's
     own data, and thus locking may affect only the root, or only
     the client.
@@ -203,7 +203,7 @@ class Store(object):
         return str(client_id)
 
     def list_clients(self):
-        '''Return list of names of clients using this store.'''
+        '''Return list of names of clients using this repository.'''
 
         listed = set(self.clientlist.list_clients())
         added = set(self.added_clients)
@@ -253,15 +253,15 @@ class Store(object):
         
     @require_root_lock
     def add_client(self, client_name):
-        '''Add a new client to the store.'''
+        '''Add a new client to the repository.'''
         if client_name in self.list_clients():
-            raise obnamlib.Error('client %s already exists in store' % 
+            raise obnamlib.Error('client %s already exists in repository' % 
                                  client_name)
         self.added_clients.append(client_name)
         
     @require_root_lock
     def remove_client(self, client_name):
-        '''Remove a client from the store.
+        '''Remove a client from the repository.
         
         This removes all data related to the client, including all
         actual file data unless other clients also use it.
@@ -456,7 +456,7 @@ class Store(object):
 
     @require_started_generation
     def put_chunk(self, data, checksum):
-        '''Put chunk of data into store.
+        '''Put chunk of data into repository.
         
         checksum is the checksum of the data, and must be the same
         value as returned by self.checksum(data). However, since all
@@ -465,9 +465,9 @@ class Store(object):
         expensive, we micro-optimize a little bit by passing it as
         an argument.
         
-        If the same data is already in the store, it will be put there
+        If the same data is already in the repository, it will be put there
         a second time. It is the caller's responsibility to check
-        that the data is not already in the store.
+        that the data is not already in the repository.
         
         Return the unique identifier of the new chunk.
         
@@ -501,7 +501,7 @@ class Store(object):
         
     @require_open_client
     def chunk_exists(self, chunkid):
-        '''Does a chunk exist in the store?'''
+        '''Does a chunk exist in the repository?'''
         return self.fs.exists(self._chunk_filename(chunkid))
         
     @require_open_client
@@ -516,7 +516,7 @@ class Store(object):
 
     @require_open_client
     def list_chunks(self):
-        '''Return list of ids of all chunks in store.'''
+        '''Return list of ids of all chunks in repository.'''
         result = []
         if self.fs.exists('chunks'):
             for dirname, subdirs, basenames in self.fs.depth_first('chunks'):
@@ -526,7 +526,7 @@ class Store(object):
 
     @require_open_client
     def remove_chunk(self, chunk_id):
-        '''Remove a chunk from the store.
+        '''Remove a chunk from the repository.
         
         Note that this does _not_ remove the chunk from the chunk
         checksum forest. The caller is not supposed to call us until
