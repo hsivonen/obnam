@@ -26,14 +26,14 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         self.app.register_command('fsck', self.fsck)
         
     def fsck(self, args):
-        self.app.config.require('store')
-        logging.debug('fsck on %s' % self.app.config['store'])
+        self.app.config.require('repository')
+        logging.debug('fsck on %s' % self.app.config['repository'])
 
-        storefs = self.app.fsf.new(self.app.config['store'])
-        storefs.connect()
-        self.store = obnamlib.Store(storefs, self.app.config['node-size'], 
-                                    self.app.config['upload-queue-size'],
-                                    self.app.config['lru-size'])
+        repofs = self.app.fsf.new(self.app.config['repo'])
+        repofs.connect()
+        self.repo = obnamlib.Repository(repofs, self.app.config['node-size'], 
+                                        self.app.config['upload-queue-size'],
+                                        self.app.config['lru-size'])
         
         self.check_root()
 
@@ -41,15 +41,15 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         '''Check the root node.'''
         logging.debug('Checking root node')
         self.app.hooks.call('status', 'Checking root node')
-        for client in self.store.list_clients():
+        for client in self.repo.list_clients():
             self.check_client(client)
     
     def check_client(self, client_name):
         '''Check a client.'''
         logging.debug('Checking client %s' % client_name)
         self.app.hooks.call('status', 'Checking client %s' % client_name)
-        self.store.open_client(client_name)
-        for genid in self.store.list_generations():
+        self.repo.open_client(client_name)
+        for genid in self.repo.list_generations():
             self.check_generation(genid)
 
     def check_generation(self, genid):
@@ -62,10 +62,10 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         '''Check a directory.'''
         logging.debug('Checking directory %s' % dirname)
         self.app.hooks.call('status', 'Checking dir %s' % dirname)
-        self.store.get_metadata(genid, dirname)
-        for basename in self.store.listdir(genid, dirname):
+        self.repo.get_metadata(genid, dirname)
+        for basename in self.repo.listdir(genid, dirname):
             pathname = os.path.join(dirname, basename)
-            metadata = self.store.get_metadata(genid, pathname)
+            metadata = self.repo.get_metadata(genid, pathname)
             if metadata.isdir():
                 self.check_dir(genid, pathname)
             else:
@@ -75,13 +75,13 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         '''Check a non-directory.'''
         logging.debug('Checking file %s' % filename)
         self.app.hooks.call('status', 'Checking file %s' % filename)
-        metadata = self.store.get_metadata(genid, filename)
+        metadata = self.repo.get_metadata(genid, filename)
         if metadata.isfile():
-            for chunkid in self.store.get_file_chunks(genid, filename):
+            for chunkid in self.repo.get_file_chunks(genid, filename):
                 self.check_chunk(chunkid)
 
     def check_chunk(self, chunkid):
         '''Check a chunk.'''
         logging.debug('Checking chunk %s' % chunkid)
-        self.store.chunk_exists(chunkid)
+        self.repo.chunk_exists(chunkid)
 
