@@ -71,6 +71,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
 
         if self.failed:
             sys.exit(1)
+        print "Verify did not find problems."
 
     def log_fail(self, e):
         logging.error('verify failure for %s: %s' % (e.filename, e.reason))
