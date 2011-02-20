@@ -30,15 +30,15 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
                                    'when forgetting')
 
     def forget(self, args):
-        self.app.config.require('store')
+        self.app.config.require('repository')
         self.app.config.require('client-name')
 
-        fs = self.app.fsf.new(self.app.config['store'])
+        fs = self.app.fsf.new(self.app.config['repository'])
         fs.connect()
-        self.store = obnamlib.Store(fs, self.app.config['node-size'], 
-                                    self.app.config['upload-queue-size'],
-                                    self.app.config['lru-size'])
-        self.store.lock_client(self.app.config['client-name'])
+        self.repo = obnamlib.Repository(fs, self.app.config['node-size'], 
+                                        self.app.config['upload-queue-size'],
+                                        self.app.config['lru-size'])
+        self.repo.lock_client(self.app.config['client-name'])
 
         if args:
             for genid in args:
@@ -46,8 +46,8 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
         elif self.app.config['keep']:
             genlist = []
             dt = datetime.datetime(1970, 1, 1, 0, 0, 0)
-            for genid in self.store.list_generations():
-                start, end = self.store.get_generation_times(genid)
+            for genid in self.repo.list_generations():
+                start, end = self.repo.get_generation_times(genid)
                 genlist.append((genid, dt.fromtimestamp(end)))
 
             fp = obnamlib.ForgetPolicy()
@@ -59,11 +59,11 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
                 if genid not in keepids:
                     self.remove(genid)
 
-        self.store.commit_client()
+        self.repo.commit_client()
 
     def remove(self, genid):
         if self.app.config['pretend']:
             self.app.hooks.call('status', 'pretending to remove %s' % genid)
         else:
-            self.store.remove_generation(genid)
+            self.repo.remove_generation(genid)
 

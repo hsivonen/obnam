@@ -21,12 +21,12 @@ import random
 import obnamlib
 
 
-class ClientList(obnamlib.StoreTree):
+class ClientList(obnamlib.RepositoryTree):
 
-    '''Store list of clients.
+    '''Repository's list of clients.
     
     The list maps a client name to an arbitrary (string) identifier,
-    which is unique within the store.
+    which is unique within the repository.
     
     The list is implemented as a B-tree, with a two-part key:
     128-bit MD5 of client name, and 64-bit unique identifier.
@@ -42,8 +42,9 @@ class ClientList(obnamlib.StoreTree):
         self.key_bytes = len(self.key('', 0))
         self.minkey = self.hashkey('\x00' * self.hash_len, 0)
         self.maxkey = self.hashkey('\xff' * self.hash_len, obnamlib.MAX_ID)
-        obnamlib.StoreTree.__init__(self, fs, 'clientlist', self.key_bytes, 
-                                    node_size, upload_queue_size, lru_size)
+        obnamlib.RepositoryTree.__init__(self, fs, 'clientlist', 
+                                         self.key_bytes, node_size, 
+                                         upload_queue_size, lru_size)
         self.keep_just_one_tree = True
 
     def hashfunc(self, string):

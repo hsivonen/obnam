@@ -49,7 +49,7 @@ To get a quick help summary of options:
     
 To make a backup:
 
-    ./obnam backup --store /tmp/mybackup $HOME
+    ./obnam backup --repository /tmp/mybackup $HOME
 
 For more information, see the manual page:
 

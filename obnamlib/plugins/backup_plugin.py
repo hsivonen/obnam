@@ -50,27 +50,27 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         logging.info('Checkpoints every %s bytes' % 
                         self.app.config['checkpoint'])
 
-        self.app.config.require('store')
+        self.app.config.require('repository')
         self.app.config.require('client-name')
 
         roots = self.app.config['root'] + args
 
-        storepath = self.app.config['store']
-        storefs = self.app.fsf.new(storepath, create=True)
-        storefs.connect()
-        self.store = obnamlib.Store(storefs, self.app.config['node-size'],
-                                    self.app.config['upload-queue-size'],
-                                    self.app.config['lru-size'])
+        repopath = self.app.config['repository']
+        repofs = self.app.fsf.new(repopath, create=True)
+        repofs.connect()
+        self.repo = obnamlib.Repository(repofs, self.app.config['node-size'],
+                                        self.app.config['upload-queue-size'],
+                                        self.app.config['lru-size'])
 
         client_name = self.app.config['client-name']
-        if client_name not in self.store.list_clients():
+        if client_name not in self.repo.list_clients():
             tracing.trace('adding new client %s' % client_name)
-            self.store.lock_root()
-            self.store.add_client(client_name)
-            self.store.commit_root()
+            self.repo.lock_root()
+            self.repo.add_client(client_name)
+            self.repo.commit_root()
 
-        self.store.lock_client(client_name)
-        self.store.start_generation()
+        self.repo.lock_client(client_name)
+        self.repo.start_generation()
         self.fs = None
         
         self.exclude_pats = [re.compile(x) for x in self.app.config['exclude']]
@@ -107,13 +107,13 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                         self.app.hooks.call('error-message', 
                                             'Could not back up %s: %s' %
                                             (pathname, e.strerror))
-                    if storefs.bytes_written - last_checkpoint >= interval:
+                    if repofs.bytes_written - last_checkpoint >= interval:
                         logging.info('Making checkpoint')
                         self.backup_parents('.')
-                        self.store.commit_client(checkpoint=True)
-                        self.store.lock_client(client_name)
-                        self.store.start_generation()
-                        last_checkpoint = storefs.bytes_written
+                        self.repo.commit_client(checkpoint=True)
+                        self.repo.lock_client(client_name)
+                        self.repo.start_generation()
+                        last_checkpoint = repofs.bytes_written
                         self.dump_memory_profile('at end of checkpoint')
 
                 self.backup_parents('.')
@@ -121,8 +121,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             if self.fs:
                 self.fs.close()
 
-        self.store.commit_client()
-        storefs.close()
+        self.repo.commit_client()
+        repofs.close()
 
         logging.info('Backup finished.')
         self.dump_memory_profile('at end of backup run')
@@ -207,7 +207,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         if current.isdir():
             return True
         try:
-            old = self.store.get_metadata(self.store.new_generation, pathname)
+            old = self.repo.get_metadata(self.repo.new_generation, pathname)
         except obnamlib.Error:
             # File does not exist in the previous generation, so it
             # does need to be backed up.
@@ -226,7 +226,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         while True:
             parent = os.path.dirname(root)
             metadata = obnamlib.read_metadata(self.fs, root)
-            self.store.create(root, metadata)
+            self.repo.create(root, metadata)
             if root == parent:
                 break
             root = parent
@@ -235,12 +235,12 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         '''Back up metadata for a filesystem object'''
         
         tracing.trace('backup_metadata: %s', pathname)
-        self.store.create(pathname, metadata)
+        self.repo.create(pathname, metadata)
 
     def backup_file_contents(self, filename):
         '''Back up contents of a regular file.'''
         tracing.trace('backup_file_contents: %s', filename)
-        self.store.set_file_chunks(filename, [])
+        self.repo.set_file_chunks(filename, [])
         f = self.fs.open(filename, 'r')
         chunk_size = int(self.app.config['chunk-size'])
         chunkids = []
@@ -250,24 +250,24 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 break
             chunkids.append(self.backup_file_chunk(data))
             if len(chunkids) >= obnamlib.DEFAULT_CHUNKIDS_PER_GROUP:
-                self.store.append_file_chunks(filename, chunkids)
+                self.repo.append_file_chunks(filename, chunkids)
                 self.dump_memory_profile('after appending some chunkids')
                 chunkids = []
             self.app.hooks.call('progress-data-uploaded', len(data))
         f.close()
         if chunkids:
-            self.store.append_file_chunks(filename, chunkids)
+            self.repo.append_file_chunks(filename, chunkids)
         self.dump_memory_profile('at end of file content backup for %s' %
                                  filename)
         
     def backup_file_chunk(self, data):
-        '''Back up a chunk of data by putting it into the store.'''
-        checksum = self.store.checksum(data)
-        existing = self.store.find_chunks(checksum)
+        '''Back up a chunk of data by putting it into the repository.'''
+        checksum = self.repo.checksum(data)
+        existing = self.repo.find_chunks(checksum)
         if existing:
             chunkid = existing[0]
         else:
-            chunkid = self.store.put_chunk(data, checksum)
+            chunkid = self.repo.put_chunk(data, checksum)
         return chunkid
 
     def backup_dir_contents(self, root):
@@ -276,13 +276,12 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         tracing.trace('backup_dir: %s', root)
 
         new_basenames = self.fs.listdir(root)
-        old_basenames = self.store.listdir(self.store.new_generation, 
-                                           root)
+        old_basenames = self.repo.listdir(self.repo.new_generation, root)
 
         for old in old_basenames:
             pathname = os.path.join(root, old)
             if old not in new_basenames:
-                self.store.remove(pathname)
+                self.repo.remove(pathname)
         # Files that are created after the previous generation will be
         # added to the directory when they are backed up, so we don't
         # need to worry about them here.
@@ -305,16 +304,16 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             return False
 
         def helper(dirname):
-            gen_id = self.store.new_generation
-            basenames = self.store.listdir(gen_id, dirname)
+            gen_id = self.repo.new_generation
+            basenames = self.repo.listdir(gen_id, dirname)
             for basename in basenames:
                 pathname = os.path.join(dirname, basename)
                 if is_parent(pathname):
-                    metadata = self.store.get_metadata(gen_id, pathname)
+                    metadata = self.repo.get_metadata(gen_id, pathname)
                     if metadata.isdir():
                         helper(pathname)
                 elif pathname not in new_roots:
-                    self.store.remove(pathname)
+                    self.repo.remove(pathname)
 
         helper('/')
 

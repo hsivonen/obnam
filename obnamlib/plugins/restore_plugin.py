@@ -66,7 +66,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         self.app.config['generation'] = 'latest'
 
     def restore(self, args):
-        self.app.config.require('store')
+        self.app.config.require('repository')
         self.app.config.require('client-name')
         self.app.config.require('generation')
         self.app.config.require('to')
@@ -80,20 +80,20 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             logging.debug('no args given, so restoring everything')
             args = ['/']
     
-        storefs = self.app.fsf.new(self.app.config['store'])
-        storefs.connect()
-        self.store = obnamlib.Store(storefs, self.app.config['node-size'], 
-                                    self.app.config['upload-queue-size'],
-                                    self.app.config['lru-size'])
-        self.store.open_client(self.app.config['client-name'])
+        repofs = self.app.fsf.new(self.app.config['repository'])
+        repofs.connect()
+        self.repo = obnamlib.Repository(repofs, self.app.config['node-size'], 
+                                        self.app.config['upload-queue-size'],
+                                        self.app.config['lru-size'])
+        self.repo.open_client(self.app.config['client-name'])
         self.fs = self.app.fsf.new(self.app.config['to'])
         self.fs.connect()
 
         self.hardlinks = Hardlinks()
         
-        gen = self.store.genspec(self.app.config['generation'])
+        gen = self.repo.genspec(self.app.config['generation'])
         for arg in args:
-            metadata = self.store.get_metadata(gen, arg)
+            metadata = self.repo.get_metadata(gen, arg)
             if metadata.isdir():
                 self.restore_recursively(gen, '.', arg)
             else:
@@ -106,18 +106,18 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         logging.debug('restoring dir %s' % root)
         if not self.fs.exists('./' + root):
             self.fs.makedirs('./' + root)
-        for basename in self.store.listdir(gen, root):
+        for basename in self.repo.listdir(gen, root):
             full = os.path.join(root, basename)
-            metadata = self.store.get_metadata(gen, full)
+            metadata = self.repo.get_metadata(gen, full)
             if metadata.isdir():
                 self.restore_recursively(gen, to_dir, full)
             else:
                 self.restore_file(gen, to_dir, full)
-        metadata = self.store.get_metadata(gen, root)
+        metadata = self.repo.get_metadata(gen, root)
         obnamlib.set_metadata(self.fs, './' + root, metadata)
 
     def restore_file(self, gen, to_dir, filename):
-        metadata = self.store.get_metadata(gen, filename)
+        metadata = self.repo.get_metadata(gen, filename)
         if metadata.islink():
             self.restore_symlink(gen, to_dir, filename, metadata)
         elif metadata.st_nlink > 1:
@@ -149,7 +149,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         to_filename = os.path.join(to_dir, './' + filename)
         f = self.fs.open(to_filename, 'w')
 
-        chunkids = self.store.get_file_chunks(gen, filename)
+        chunkids = self.repo.get_file_chunks(gen, filename)
         self.restore_chunks(f, chunkids)
 
         f.close()
@@ -157,6 +157,6 @@ class RestorePlugin(obnamlib.ObnamPlugin):
 
     def restore_chunks(self, f, chunkids):
         for chunkid in chunkids:
-            data = self.store.get_chunk(chunkid)
+            data = self.repo.get_chunk(chunkid)
             f.write(data)
 

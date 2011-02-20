@@ -21,9 +21,9 @@ import random
 import obnamlib
 
 
-class ChunkList(obnamlib.StoreTree):
+class ChunkList(obnamlib.RepositoryTree):
 
-    '''Store list of chunks.
+    '''Repository's list of chunks.
     
     The list maps a chunk id to its checksum.
     
@@ -34,8 +34,9 @@ class ChunkList(obnamlib.StoreTree):
 
     def __init__(self, fs, node_size, upload_queue_size, lru_size):
         self.key_bytes = len(self.key(0))
-        obnamlib.StoreTree.__init__(self, fs, 'chunklist', self.key_bytes, 
-                                    node_size, upload_queue_size, lru_size)
+        obnamlib.RepositoryTree.__init__(self, fs, 'chunklist', self.key_bytes, 
+                                         node_size, upload_queue_size, 
+                                         lru_size)
         self.keep_just_one_tree = True
 
     def key(self, chunk_id):

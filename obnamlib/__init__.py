@@ -1,4 +1,4 @@
-# Copyright (C) 2009  Lars Wirzenius
+# Copyright (C) 2009-2011  Lars Wirzenius
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -47,11 +47,11 @@ from vfs import VirtualFileSystem, VfsFactory, VfsTests
 from vfs_local import LocalFS
 from metadata import (read_metadata, set_metadata, Metadata, metadata_fields,
                       metadata_verify_fields)
-from store_tree import StoreTree
+from repo_tree import RepositoryTree
 from chunklist import ChunkList
 from clientlist import ClientList
 from checksumtree import ChecksumTree
 from clientmetadatatree import ClientMetadataTree
-from store import Store, LockFail
+from repo import Repository, LockFail
 from forget_policy import ForgetPolicy
 from app import App

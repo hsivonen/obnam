@@ -19,9 +19,9 @@ import struct
 import obnamlib
 
 
-class ChecksumTree(obnamlib.StoreTree):
+class ChecksumTree(obnamlib.RepositoryTree):
 
-    '''Store map of checksum to integer id.
+    '''Repository map of checksum to integer id.
 
     The checksum might be, for example, an MD5 one (as returned by
     hashlib.md5().digest()). The id would be a chunk id.
@@ -32,8 +32,8 @@ class ChecksumTree(obnamlib.StoreTree):
                  upload_queue_size, lru_size):
         self.fmt = '!%dsQQ' % checksum_length
         key_bytes = len(self.key('', 0, 0))
-        obnamlib.StoreTree.__init__(self, fs, name, key_bytes, node_size, 
-                                    upload_queue_size, lru_size)
+        obnamlib.RepositoryTree.__init__(self, fs, name, key_bytes, node_size, 
+                                         upload_queue_size, lru_size)
         self.keep_just_one_tree = True
 
     def key(self, checksum, chunk_id, client_id):

@@ -35,7 +35,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         self.app.register_command('verify', self.verify)
 
     def verify(self, args):
-        self.app.config.require('store')
+        self.app.config.require('repository')
         self.app.config.require('client-name')
         self.app.config.require('generation')
         self.app.config.require('root')
@@ -47,20 +47,20 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
             logging.debug('no args given, so verifying everything')
             args = ['/']
     
-        fs = self.app.fsf.new(self.app.config['store'])
+        fs = self.app.fsf.new(self.app.config['repository'])
         fs.connect()
-        self.store = obnamlib.Store(fs, self.app.config['node-size'], 
-                                    self.app.config['upload-queue-size'],
-                                    self.app.config['lru-size'])
-        self.store.open_client(self.app.config['client-name'])
+        self.repo = obnamlib.Repository(fs, self.app.config['node-size'], 
+                                        self.app.config['upload-queue-size'],
+                                        self.app.config['lru-size'])
+        self.repo.open_client(self.app.config['client-name'])
         self.fs = self.app.fsf.new(self.app.config['root'][0])
         self.fs.connect()
         self.fs.reinit('/')
 
         self.failed = False
-        gen = self.store.genspec(self.app.config['generation'])
+        gen = self.repo.genspec(self.app.config['generation'])
         for arg in args:
-            metadata = self.store.get_metadata(gen, arg)
+            metadata = self.repo.get_metadata(gen, arg)
             try:
                 if metadata.isdir():
                     self.verify_recursively(gen, arg)
@@ -82,9 +82,9 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
     def verify_recursively(self, gen, root):
         logging.debug('verifying dir %s' % root)
         self.verify_metadata(gen, root)
-        for basename in self.store.listdir(gen, root):
+        for basename in self.repo.listdir(gen, root):
             full = os.path.join(root, basename)
-            metadata = self.store.get_metadata(gen, full)
+            metadata = self.repo.get_metadata(gen, full)
             try:
                 if metadata.isdir():
                     self.verify_recursively(gen, full)
@@ -94,7 +94,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
                 self.log_fail(e)
 
     def verify_metadata(self, gen, filename):
-        backed_up = self.store.get_metadata(gen, filename)
+        backed_up = self.repo.get_metadata(gen, filename)
         try:
             live_data = obnamlib.read_metadata(self.fs, filename)
         except OSError, e:
@@ -105,7 +105,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
 
     def verify_file(self, gen, filename):
         self.verify_metadata(gen, filename)
-        metadata = self.store.get_metadata(gen, filename)
+        metadata = self.repo.get_metadata(gen, filename)
         if stat.S_ISREG(metadata.st_mode):
             self.verify_regular_file(gen, filename, metadata)
     
@@ -113,7 +113,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         logging.debug('verifying regular %s' % filename)
         f = self.fs.open(filename, 'r')
 
-        chunkids = self.store.get_file_chunks(gen, filename)
+        chunkids = self.repo.get_file_chunks(gen, filename)
         if not self.verify_chunks(f, chunkids):
             raise Fail(filename, 'data changed')
 
@@ -121,7 +121,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
 
     def verify_chunks(self, f, chunkids):
         for chunkid in chunkids:
-            backed_up = self.store.get_chunk(chunkid)
+            backed_up = self.repo.get_chunk(chunkid)
             live_data = f.read(len(backed_up))
             if backed_up != live_data:
                 return False

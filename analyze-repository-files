@@ -15,11 +15,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-'''Analyze the files in an Obnam backup store.
+'''Analyze the files in an Obnam backup repository.
 
 For performance reasons, it is best if Obnam does not write too many
 files per directory, or too large or too small files. This program
-analyzes all the files in an Obnam backup store, or, indeed, any
+analyzes all the files in an Obnam backup repository, or, indeed, any
 local directory, and reports the following:
 
 * total number of files
