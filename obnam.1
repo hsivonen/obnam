@@ -45,16 +45,7 @@ but if one client backs up a file, the others may re-use the data.
 command line syntax consists of a 
 .I command
 possibly followed by arguments.
-The commands are:
-.BR backup ,
-.BR restore ,
-.BR clients ,
-.BR generations ,
-.BR ls ,
-.BR verify ,
-.BR forget ,
-and
-.BR fsck .
+The commands are list below.
 .IP \(bu
 .B backup
 makes a new backup.
@@ -101,6 +92,41 @@ checks the internal consistency of the backup store.
 It verifies that all clients, generations, directories, files, and
 all file contents still exists in the backup store.
 It may take quite a long time to run.
+.SS "Making backups"
+When you run a backup,
+.B obnam
+uploads data into the backup store.
+The data is divided into chunks,
+and if a chunk already exists in the backup store,
+it is not uploaded again.
+This allows 
+.B obnam
+to deal with files that have been changed or renamed since the previous
+backup run.
+It also allows several backup clients to avoid uploading the same data.
+If, for example, everyone in the office has a copy of the same sales brochures,
+only one copy needs to be stored in the backup store.
+.PP
+Every backup run is a 
+.IR generation .
+In addition,
+.B obnam
+will make 
+.I checkpoint
+generations every now and then.
+These are exactly like normal generations,
+but are not guaranteed to be a complete snapshot of the live data.
+If the backup run needs to be aborted in the middle,
+the next backup run can continue from the latest checkpoint,
+avoiding the need to start completely over.
+.PP
+If one backup run drops a backup root directory,
+the older generations will still keep it:
+nothing changes in the old generations just because there is a new one.
+If the root was dropped by mistake,
+it can be added back and the next backup run will re-use the existing
+data in the backup store,
+and will only back up the file metadata (filenames, permissions, etc).
 .SS "Verifying backups"
 What good is a backup system you cannot rely on?
 How can you rely on something you cannot test?
