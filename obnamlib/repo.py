@@ -280,10 +280,18 @@ class Repository(object):
         
         '''
         
-        return None
+        if self.fs.exists('format'):
+            data = self.fs.cat('format')
+            lines = data.splitlines()
+            major = int(lines[0])
+            minor = int(lines[1])
+            return major, minor
+        else:
+            return None
         
     def _write_format_version(self, major, minor):
         '''Write the desired format version to the repository.'''
+        self.fs.overwrite_file('format', '%s\n%s\n' % (major, minor))
         
     @require_root_lock
     def add_client(self, client_name):
