@@ -51,6 +51,7 @@ class VirtualFileSystem(object):
         self.baseurl = baseurl
         self.bytes_read = 0
         self.bytes_written = 0
+        logging.info('VFS: __init__: baseurl=%s' % self.baseurl)
 
     def __del__(self):
         logging.info('VFS: __del__: baseurl=%s read=%d written=%d' %
