@@ -164,6 +164,9 @@ class Repository(object):
 
     '''
     
+    format_major = 1
+    format_minor = 0
+
     def __init__(self, fs, node_size, upload_queue_size, lru_size):
         self.fs = fs
         self.node_size = node_size
