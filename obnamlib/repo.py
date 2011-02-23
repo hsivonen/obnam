@@ -31,6 +31,11 @@ class LockFail(Exception):
     pass
 
 
+class BadFormat(Exception):
+
+    pass
+
+
 def require_root_lock(method):
     '''Decorator for ensuring the repository's root node is locked.'''
     
@@ -151,8 +156,21 @@ class Repository(object):
     When a new generation is started, it is a copy-on-write clone
     of the previous generation, and the caller needs to modify
     the new generation to match the current state of user data.
+    
+    The file 'format' at the root of the repository contains the
+    version of the repository format it uses. The version is
+    specified using two numbers: major and minor. Compatibility
+    between on-disk format and format supported by this version
+    of obnam is determined as follows: major numbers must match
+    exactly, and the program must have a minor that is the same
+    or larger as the value on disk. The on-disk version is
+    updated when obnam locks the repository root. (Some day a
+    more sophisticated upgrade procedure may be necessary.)
 
     '''
+    
+    format_major = 1
+    format_minor = 0
 
     def __init__(self, fs, node_size, upload_queue_size, lru_size):
         self.fs = fs
@@ -198,6 +216,10 @@ class Repository(object):
         '''Return a new checksum algorithm.'''
         return hashlib.md5()
 
+    def acceptable_version(self, major, minor):
+        '''Are we compatible with on-disk major/minor format?'''
+        return self.format_major == major and self.format_minor >= minor
+
     def client_dir(self, client_id):
         '''Return name of sub-directory for a given client.'''
         return str(client_id)
@@ -205,6 +227,7 @@ class Repository(object):
     def list_clients(self):
         '''Return list of names of clients using this repository.'''
 
+        self.check_format_version()
         listed = set(self.clientlist.list_clients())
         added = set(self.added_clients)
         removed = set(self.removed_clients)
@@ -219,6 +242,7 @@ class Repository(object):
         
         '''
         
+        self.check_format_version()
         try:
             self.fs.write_file('root.lock', '')
         except OSError, e:
@@ -227,6 +251,7 @@ class Repository(object):
         self.got_root_lock = True
         self.added_clients = []
         self.removed_clients = []
+        self._write_format_version(self.format_major, self.format_minor)
 
     @require_root_lock
     def unlock_root(self):
@@ -250,6 +275,42 @@ class Repository(object):
             self.clientlist.remove_client(client_name)
         self.clientlist.commit()
         self.unlock_root()
+        
+    def get_format_version(self):
+        '''Return (major, minor) of the on-disk format version.
+        
+        If on-disk repository does not have a version yet, return None.
+        
+        '''
+        
+        if self.fs.exists('format'):
+            data = self.fs.cat('format')
+            lines = data.splitlines()
+            major = int(lines[0])
+            minor = int(lines[1])
+            return major, minor
+        else:
+            return None
+        
+    def _write_format_version(self, major, minor):
+        '''Write the desired format version to the repository.'''
+        self.fs.overwrite_file('format', '%s\n%s\n' % (major, minor))
+
+    def check_format_version(self):
+        '''Verify that on-disk format version is compatbile.
+        
+        If not, raise BadFormat.
+        
+        '''
+        
+        on_disk = self.get_format_version()
+        if on_disk is not None:
+            major, minor = on_disk
+            if not self.acceptable_version(major, minor):
+                raise BadFormat('On-disk format %s.%s is incompabile '
+                                'with program format %s.%s' %
+                                    (major, minor,
+                                     self.format_major, self.format_minor))
         
     @require_root_lock
     def add_client(self, client_name):
@@ -280,6 +341,7 @@ class Repository(object):
 
         '''
 
+        self.check_format_version()
         client_id = self.clientlist.get_client_id(client_name)
         if client_id is None:
             raise LockFail('client %s does not exit' % client_name)
@@ -333,6 +395,7 @@ class Repository(object):
         
     def open_client(self, client_name):
         '''Open a client for read-only operation.'''
+        self.check_format_version()
         client_id = self.clientlist.get_client_id(client_name)
         if client_id is None:
             raise obnamlib.Error('%s is not an existing client' % client_name)
