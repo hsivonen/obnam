@@ -151,9 +151,19 @@ class Repository(object):
     When a new generation is started, it is a copy-on-write clone
     of the previous generation, and the caller needs to modify
     the new generation to match the current state of user data.
+    
+    The file 'format' at the root of the repository contains the
+    version of the repository format it uses. The version is
+    specified using two numbers: major and minor. Compatibility
+    between on-disk format and format supported by this version
+    of obnam is determined as follows: major numbers must match
+    exactly, and the program must have a minor that is the same
+    or larger as the value on disk. The on-disk version is
+    updated when obnam locks the repository root. (Some day a
+    more sophisticated upgrade procedure may be necessary.)
 
     '''
-
+    
     def __init__(self, fs, node_size, upload_queue_size, lru_size):
         self.fs = fs
         self.node_size = node_size
