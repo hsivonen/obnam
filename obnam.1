@@ -358,11 +358,14 @@ Default is 10000 nodes.
 Make memory profiling dumps after each file, checkpoint, and generation.
 Value is one of 
 .IR none ,
+.IR simple ,
 .IR meliae ,
 or
 .IR heapy .
 Default is 
-.IR none .
+.IR simple ,
+which reports only the RSS value from the kernel,
+and the number of live and garbage Python objects.
 .\"
 .TP
 .BR \-\-root =\fIURL

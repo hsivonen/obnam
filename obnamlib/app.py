@@ -67,9 +67,9 @@ class App(object):
         self.config.new_string(['dump-memory-profile'],
                                 'make memory profiling dumps '
                                 'after each checkpoint and at end? '
-                                'set to none, meliae, or heapy '
+                                'set to none, simple, meliae, or heapy '
                                 '(default: %default)')
-        self.config['dump-memory-profile'] = 'none'
+        self.config['dump-memory-profile'] = 'simple'
 
         self.config.new_list(['trace'],
                                 'add to filename patters for which trace '
