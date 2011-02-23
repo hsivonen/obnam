@@ -58,7 +58,13 @@ It copies backed up data from the backup repository to a target directory.
 lists the clients that are backed up to the repository.
 .IP \(bu
 .B generations
-lists every backup generation for a given client.
+lists every backup generation for a given client, 
+plus some metadata about the generation.
+.IP \(bu
+.B genids
+lists the identifier for every backup generation for a given client.
+No other information is shown.
+This can be useful for scripting.
 .IP \(bu
 .B ls
 lists the contents of a given generation, similar to 

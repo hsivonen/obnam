@@ -34,6 +34,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
     def enable(self):
         self.app.register_command('clients', self.clients)
         self.app.register_command('generations', self.generations)
+        self.app.register_command('genids', self.genids)
         self.app.register_command('ls', self.ls)
 
     def open_repository(self):
@@ -65,6 +66,11 @@ class ShowPlugin(obnamlib.ObnamPlugin):
                               self.format_time(start), 
                               self.format_time(end),
                               checkpoint))
+    
+    def genids(self, args):
+        self.open_repository()
+        for gen in self.repo.list_generations():
+            sys.stdout.write('%s\n' % gen)
 
     def ls(self, args):
         self.open_repository()
