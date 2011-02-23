@@ -171,8 +171,6 @@ class SftpFS(obnamlib.VirtualFileSystem):
             self.transport.close()
             self.transport = None
         self.sftp = None
-        logging.info('VFS %s closing down; bytes_read=%d bytes_written=%d' %
-                     (self.baseurl, self.bytes_read, self.bytes_written))
 
     @ioerror_to_oserror
     def reinit(self, baseurl, create=False):

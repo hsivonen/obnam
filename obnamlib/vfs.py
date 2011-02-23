@@ -16,6 +16,7 @@
 
 
 import errno
+import logging
 import os
 import stat
 import urlparse
@@ -50,6 +51,10 @@ class VirtualFileSystem(object):
         self.baseurl = baseurl
         self.bytes_read = 0
         self.bytes_written = 0
+
+    def __del__(self):
+        logging.info('VFS: __del__: baseurl=%s read=%d written=%d' %
+                     (self.baseurl, self.bytes_read, self.bytes_written))
 
     def connect(self):
         '''Connect to filesystem.'''
