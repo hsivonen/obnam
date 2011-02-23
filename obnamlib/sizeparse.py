@@ -74,4 +74,5 @@ class ByteSizeParser(object):
         elif unit.lower() not in self.units:
             raise UnitNameError(unit)
         factor = self.units[unit.lower()]
-        return size * factor
+        return int(size * factor)
+

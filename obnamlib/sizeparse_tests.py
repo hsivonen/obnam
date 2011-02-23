@@ -30,6 +30,9 @@ class ByteSizeParserTests(unittest.TestCase):
     def test_parses_unadorned_size_as_bytes(self):
         self.assertEqual(self.p.parse('123'), 123)
         
+    def test_returns_an_int(self):
+        self.assert_(isinstance(self.p.parse('123'), int))
+        
     def test_parses_unadorned_size_using_default_unit(self):
         self.p.set_default_unit('KiB')
         self.assertEqual(self.p.parse('123'), 123 * 1024)
