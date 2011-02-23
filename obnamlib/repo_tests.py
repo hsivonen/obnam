@@ -78,6 +78,10 @@ class RepositoryRootNodeTests(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.tempdir)
 
+    def test_has_format_version(self):
+        self.assert_(hasattr(self.repo, 'format_major'))
+        self.assert_(hasattr(self.repo, 'format_minor'))
+
     def test_lists_no_clients(self):
         self.assertEqual(self.repo.list_clients(), [])
 
