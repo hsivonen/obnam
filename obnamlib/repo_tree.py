@@ -51,12 +51,12 @@ class RepositoryTree(object):
             assert self.tree is None
             if not self.fs.exists(self.dirname):
                 return False
-            codec = btree.NodeCodec(self.key_bytes)
-            ns = btree.NodeStoreDisk(self.dirname, self.node_size, codec,
-                                     upload_max=self.upload_queue_size,
-                                     lru_size=self.lru_size,
-                                     vfs=self.fs)
-            self.forest = btree.Forest(ns)
+            self.forest = btree.open_forest(key_size=self.key_bytes,
+                                            node_size=self.node_size,
+                                            dirname=self.dirname,
+                                            upload_max=self.upload_queue_size,
+                                            lru_size=self.lru_size,
+                                            vfs=self.fs)
         return True
 
     def start_changes(self):
