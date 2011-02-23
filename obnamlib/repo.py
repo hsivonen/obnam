@@ -227,6 +227,7 @@ class Repository(object):
     def list_clients(self):
         '''Return list of names of clients using this repository.'''
 
+        self.check_format_version()
         listed = set(self.clientlist.list_clients())
         added = set(self.added_clients)
         removed = set(self.removed_clients)
@@ -241,6 +242,7 @@ class Repository(object):
         
         '''
         
+        self.check_format_version()
         try:
             self.fs.write_file('root.lock', '')
         except OSError, e:
@@ -249,6 +251,7 @@ class Repository(object):
         self.got_root_lock = True
         self.added_clients = []
         self.removed_clients = []
+        self._write_format_version(self.format_major, self.format_minor)
 
     @require_root_lock
     def unlock_root(self):
@@ -292,6 +295,22 @@ class Repository(object):
     def _write_format_version(self, major, minor):
         '''Write the desired format version to the repository.'''
         self.fs.overwrite_file('format', '%s\n%s\n' % (major, minor))
+
+    def check_format_version(self):
+        '''Verify that on-disk format version is compatbile.
+        
+        If not, raise BadFormat.
+        
+        '''
+        
+        on_disk = self.get_format_version()
+        if on_disk is not None:
+            major, minor = on_disk
+            if not self.acceptable_version(major, minor):
+                raise BadFormat('On-disk format %s.%s is incompabile '
+                                'with program format %s.%s' %
+                                    (major, minor,
+                                     self.format_major, self.format_minor))
         
     @require_root_lock
     def add_client(self, client_name):
@@ -322,6 +341,7 @@ class Repository(object):
 
         '''
 
+        self.check_format_version()
         client_id = self.clientlist.get_client_id(client_name)
         if client_id is None:
             raise LockFail('client %s does not exit' % client_name)
@@ -375,6 +395,7 @@ class Repository(object):
         
     def open_client(self, client_name):
         '''Open a client for read-only operation.'''
+        self.check_format_version()
         client_id = self.clientlist.get_client_id(client_name)
         if client_id is None:
             raise obnamlib.Error('%s is not an existing client' % client_name)
