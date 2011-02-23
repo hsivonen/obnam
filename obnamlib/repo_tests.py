@@ -95,11 +95,11 @@ class RepositoryRootNodeTests(unittest.TestCase):
     def test_does_not_accept_older_major(self):
         old_major = self.repo.format_major
         self.repo.format_major = old_major + 1
-        self.assert_(self.repo.acceptable_version(old_major, 0))
+        self.assertFalse(self.repo.acceptable_version(old_major, 0))
 
     def test_does_not_accept_newer_minor(self):
-        self.assert_(self.repo.acceptable_version(self.repo.format_major,
-                                                  self.repo_format_minor + 1))
+        self.assertFalse(self.repo.acceptable_version(self.repo.format_major,
+                                                  self.repo.format_minor + 1))
 
     def test_lists_no_clients(self):
         self.assertEqual(self.repo.list_clients(), [])

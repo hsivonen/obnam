@@ -213,8 +213,7 @@ class Repository(object):
 
     def acceptable_version(self, major, minor):
         '''Are we compatible with on-disk major/minor format?'''
-        
-        return False
+        return self.format_major == major and self.format_minor >= minor
 
     def client_dir(self, client_id):
         '''Return name of sub-directory for a given client.'''
