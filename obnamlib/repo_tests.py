@@ -138,6 +138,30 @@ class RepositoryRootNodeTests(unittest.TestCase):
     def test_unlock_root_when_locked_by_other_fails(self):
         self.other.lock_root()
         self.assertRaises(obnamlib.LockFail, self.repo.unlock_root)
+
+    def test_on_disk_repository_has_no_version_initially(self):
+        self.assertEqual(self.repo.get_format_version(), None)
+
+    def test_lock_root_adds_version(self):
+        self.repo.lock_root()
+        self.assertEqual(self.repo.get_format_version(),
+                         (self.repo.format_major, self.repo.format_minor))
+
+    def test_lock_root_fails_if_format_is_incompatible(self):
+        self.repo._write_format_version(0, 0)
+        self.assertRaises(obnamlib.BadFormat, self.repo.lock_root)
+
+    def test_list_clients_fails_if_format_is_incompatible(self):
+        self.repo._write_format_version(0, 0)
+        self.assertRaises(obnamlib.BadFormat, self.repo.list_clients)
+
+    def test_lock_client_fails_if_format_is_incompatible(self):
+        self.repo._write_format_version(0, 0)
+        self.assertRaises(obnamlib.BadFormat, self.repo.lock_client, 'foo')
+
+    def test_open_client_fails_if_format_is_incompatible(self):
+        self.repo._write_format_version(0, 0)
+        self.assertRaises(obnamlib.BadFormat, self.repo.open_client, 'foo')
         
     def test_adding_client_without_root_lock_fails(self):
         self.assertRaises(obnamlib.LockFail, self.repo.add_client, 'foo')

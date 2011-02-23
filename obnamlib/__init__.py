@@ -52,6 +52,6 @@ from chunklist import ChunkList
 from clientlist import ClientList
 from checksumtree import ChecksumTree
 from clientmetadatatree import ClientMetadataTree
-from repo import Repository, LockFail
+from repo import Repository, LockFail, BadFormat
 from forget_policy import ForgetPolicy
 from app import App

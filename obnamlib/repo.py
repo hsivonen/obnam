@@ -31,6 +31,11 @@ class LockFail(Exception):
     pass
 
 
+class BadFormat(Exception):
+
+    pass
+
+
 def require_root_lock(method):
     '''Decorator for ensuring the repository's root node is locked.'''
     
@@ -267,6 +272,18 @@ class Repository(object):
             self.clientlist.remove_client(client_name)
         self.clientlist.commit()
         self.unlock_root()
+        
+    def get_format_version(self):
+        '''Return (major, minor) of the on-disk format version.
+        
+        If on-disk repository does not have a version yet, return None.
+        
+        '''
+        
+        return None
+        
+    def _write_format_version(self, major, minor):
+        '''Write the desired format version to the repository.'''
         
     @require_root_lock
     def add_client(self, client_name):
