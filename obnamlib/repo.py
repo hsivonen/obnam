@@ -211,6 +211,11 @@ class Repository(object):
         '''Return a new checksum algorithm.'''
         return hashlib.md5()
 
+    def acceptable_version(self, major, minor):
+        '''Are we compatible with on-disk major/minor format?'''
+        
+        return False
+
     def client_dir(self, client_id):
         '''Return name of sub-directory for a given client.'''
         return str(client_id)

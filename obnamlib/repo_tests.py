@@ -82,6 +82,25 @@ class RepositoryRootNodeTests(unittest.TestCase):
         self.assert_(hasattr(self.repo, 'format_major'))
         self.assert_(hasattr(self.repo, 'format_minor'))
 
+    def test_accepts_same_format_version(self):
+        self.assert_(self.repo.acceptable_version(self.repo.format_major,
+                                                  self.repo.format_minor))
+
+    def test_accepts_older_format_version(self):
+        old_minor = self.repo.format_minor
+        self.repo.format_minor = old_minor + 1
+        self.assert_(self.repo.acceptable_version(self.repo.format_major,
+                                                  old_minor))
+
+    def test_does_not_accept_older_major(self):
+        old_major = self.repo.format_major
+        self.repo.format_major = old_major + 1
+        self.assert_(self.repo.acceptable_version(old_major, 0))
+
+    def test_does_not_accept_newer_minor(self):
+        self.assert_(self.repo.acceptable_version(self.repo.format_major,
+                                                  self.repo_format_minor + 1))
+
     def test_lists_no_clients(self):
         self.assertEqual(self.repo.list_clients(), [])
 
