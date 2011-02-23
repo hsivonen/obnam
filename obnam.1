@@ -90,6 +90,13 @@ checks the internal consistency of the backup repository.
 It verifies that all clients, generations, directories, files, and
 all file contents still exists in the backup repository.
 It may take quite a long time to run.
+.IP \(bu
+.B force-lock
+removes a lock file for a client in the repository.
+You should only force a lock if you are sure no-one is accessing that
+client's data in the repository.
+A dangling lock might happen, for example, if obnam loses its network
+connection to the backup repository.
 .SS "Making backups"
 When you run a backup,
 .B obnam

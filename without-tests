@@ -18,6 +18,7 @@
 ./obnamlib/plugins/fsck_plugin.py
 ./obnamlib/plugins/vfs_local_plugin.py
 ./obnamlib/plugins/sftp_plugin.py
+./obnamlib/plugins/force_lock_plugin.py
 
 ./obnamlib/plugins/__init__.py
 ./obnamlib/repo_tree.py
