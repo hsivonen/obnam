@@ -33,7 +33,7 @@ On other systems, using the setup.py file might work: run
 You need to install my B-tree, and some other libraries and tools, which you 
 can get from:
 
-* <http://liw.fi/btree/>
+* <http://liw.fi/larch/>
 * <http://liw.fi/ttystatus/>
 * <http://liw.fi/lru/>
 * <http://liw.fi/coverage-test-runner/>
