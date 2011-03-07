@@ -14,7 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import btree
+import larch
 
 import obnamlib
 
@@ -51,7 +51,7 @@ class RepositoryTree(object):
             assert self.tree is None
             if not self.fs.exists(self.dirname):
                 return False
-            self.forest = btree.open_forest(key_size=self.key_bytes,
+            self.forest = larch.open_forest(key_size=self.key_bytes,
                                             node_size=self.node_size,
                                             dirname=self.dirname,
                                             upload_max=self.upload_queue_size,

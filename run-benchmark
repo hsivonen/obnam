@@ -25,7 +25,7 @@ die()
 
 SEIVOT=seivot
 OBNAM_BRANCH="."
-BTREE_BRANCH="$HOME/btree/trunk"
+LARCH_BRANCH="$HOME/larch/trunk"
 SIZES="100m/10m 1000m/100m 10000m/1000m 100000m/10000m"
 WIKI="$HOME/braawi.org"
 
@@ -37,7 +37,7 @@ fi
 
 if [ $# -ge 1 ]
 then
-    BTREE_BRANCH="$1"
+    LARCH_BRANCH="$1"
     shift
 fi
 
@@ -61,7 +61,7 @@ fi
 
 if [ $# != 0 ]
 then
-    die "Usage: $0 [obnam-branch [btree-branch [sizes [wiki-root [path/to/seivot]]]]]"
+    die "Usage: $0 [obnam-branch [larch-branch [sizes [wiki-root [path/to/seivot]]]]]"
 fi
 
 if [ "x$TMPDIR" = x ]
@@ -71,29 +71,29 @@ fi
 
 GENERATIONS=5
 OBNAM_REVNO=$(cd "$OBNAM_BRANCH" && bzr revno)
-BTREE_REVNO=$(cd "$BTREE_BRANCH" && bzr revno)
+LARCH_REVNO=$(cd "$LARCH_BRANCH" && bzr revno)
 
 for pair in $SIZES
 do
     size=$(echo "$pair" | sed 's:/.*::')
     inc=$(echo "$pair" | sed 's:.*/::')
     echo "Benchmark run for size $size inc $inc"
-    results="$WIKI/obnam/benchmarks/$OBNAM_REVNO-$BTREE_REVNO"
+    results="$WIKI/obnam/benchmarks/$OBNAM_REVNO-$LARCH_REVNO"
     mkdir -p "$results"
     basename="$results/obnam-$size"
     data="$basename.seivot"
-    desc="obnam (r$OBNAM_REVNO) and btree (r$BTREE_REVNO)"
+    desc="obnam (r$OBNAM_REVNO) and larch (r$LARCH_REVNO)"
     desc="$desc for live data size $size with $inc increments"
     $SEIVOT \
         --output="$data" \
         --description="$desc" \
-        --program="obnam+btree" \
-        --revision="$OBNAM_REVNO and $BTREE_REVNO" \
+        --program="obnam+larch" \
+        --revision="$OBNAM_REVNO and $LARCH_REVNO" \
         --start-size=$size \
         --inc-size=$inc \
         --generations=$GENERATIONS \
         --fullcmd="env OBNAM_PROFILE=obnam.prof \
-                   PYTHONPATH=$BTREE_BRANCH $OBNAM_BRANCH/obnam \
+                   PYTHONPATH=$LARCH_BRANCH $OBNAM_BRANCH/obnam \
                    --log-level warning \
                    --log $basename-\$GEN.log --repository \$STORE \
                    backup \$DATA && \
@@ -106,13 +106,13 @@ do
                     " \
         measure
 (cd "$results/.."
-    cat <<eof > "$OBNAM_REVNO-$BTREE_REVNO.mdwn"
-[[!meta title="Obnam r$OBNAM_REVNO with btree r$BTREE_REVNO"]]
+    cat <<eof > "$OBNAM_REVNO-$LARCH_REVNO.mdwn"
+[[!meta title="Obnam r$OBNAM_REVNO with larch r$LARCH_REVNO"]]
 
-Benchmark result: Obnam r$OBNAM_REVNO with btree r$BTREE_REVNO
+Benchmark result: Obnam r$OBNAM_REVNO with larch r$LARCH_REVNO
 -------------------------------------------------------
 
-$(ls "$OBNAM_REVNO-$BTREE_REVNO"/* |
+$(ls "$OBNAM_REVNO-$LARCH_REVNO"/* |
   awk '{ printf "* <a href=\"/obnam/benchmarks/%s\">%s</a>\n", $1, $1 }')
 eof
 )

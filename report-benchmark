@@ -58,8 +58,8 @@ class Report(object):
     def parse_revision(self, seivot):
         revstr = seivot.get('meta', 'revision')
         if ' and ' in revstr:
-            obnam, btree = revstr.split(' and ')
-            return int(obnam), int(btree)
+            obnam, larch = revstr.split(' and ')
+            return int(obnam), int(larch)
         else:
             return int(revstr), 0
         
@@ -89,7 +89,7 @@ class Report(object):
         f.write('''
 [[!meta title="Obnam benchmark archive"]]
 
-Obnam+btree benchmark archive
+Obnam+larch benchmark archive
 ====
 
 This page lists results of benchmark runs of [[Obnam]],
@@ -114,14 +114,14 @@ so they can be compared.
 <table>
 <tr>
     <th>obnam</th>
-    <th>btree</th>
+    <th>larch</th>
     <th>gen0</th>
     <th>slowest inc</th>
 </tr>
 ''')
 
         for seivot in group:
-            obnam, btree = self.parse_revision(seivot)
+            obnam, larch = self.parse_revision(seivot)
             
             gen0 = self.speed(seivot, '0')
             slowest_inc = min(self.speed(seivot, gen)
@@ -130,7 +130,7 @@ so they can be compared.
 
             f.write('<tr>\n')
             f.write('<td>%s</td>\n' % obnam)
-            f.write('<td>%s</td>\n' % btree)
+            f.write('<td>%s</td>\n' % larch)
             f.write('<td>%s</td>\n' % humanspeed(gen0))
             f.write('<td>%s</td>\n' % humanspeed(slowest_inc))
             f.write('</tr>\n')
