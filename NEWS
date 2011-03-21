@@ -5,6 +5,48 @@ Obnam NEWS
 This file summarizes changes between releases of Obnam.
 
 
+Version 0.15, released 2011-03-21; an ALPHA release
+----------------------------------------------------
+
+Bugs fixed:
+
+* Manual page GPL copyright blurb is now properly marked up as a comment.
+  (Thanks, Joey Hess.)
+* README now links to python-lru correctly. (Thanks, Erik Johansson.)
+
+Improvements and other changes:
+
+* Filenames and directories are backed up in sorted order. This should
+  make it easier to know how far obnam's gotten.
+* The location where backups are stored is now called the repository,
+  instead of the store. Suggested by Joey Hess.
+* The repository and the target directory for restored data are now
+  both created by Obnam, if they don't already exist. Suggested by
+  Joey Hess.
+* Better control of logging, using the new `--trace` option.
+* Manual page now explains making backups a little better.
+* Default value for `--lru-size` reduced to 500, for great improvement
+  in memory used, without, it seems, much decrease in speed.
+* `obnam verify` now reports success explicitly. Based on question 
+  from Joey Hess.
+* `obnam verify` now accepts both non-option arguments and the `--root`
+  option. Suggested by Joey Hess.
+* `obnam forget` now accepts "generation specifiers", not just numeric
+  generation ids. This means that `obnam forget latest` works.
+* I/O statistics are logged more systematically.
+* `obnam force-lock` introduced, to allow breaking a lock left behind
+  if obnam crashes. But it never does, of course. (Well, except if there's
+  a bug, like when a file changes at the wrong moment.)
+* `obnam genids` introduced, to list generation ids without any other data.
+  The old command `obnam generations` still works, and lists other info
+  about each generation as well, but that's sometimes bad for scripting.
+* The `--dump-memory-profile` option now accepts the value `simple`, for
+  reporting basic memory use. It has such a small impact that it's the
+  default.
+* Obnam now stores the version of the on-disk format in the repository.
+  This should allow it to handle repositories created by a different
+  version and act suitably (hopefully without wiping all your backups).
+
 Version 0.14, released 2010-12-29; an ALPHA release
 ----------------------------------------------------
 
