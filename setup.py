@@ -18,10 +18,8 @@
 from distutils.core import setup, Extension
 import glob
 
-import obnamlib
-
 setup(name='obnam',
-      version=obnamlib.version,
+      version='0.15.1',
       description='Backup software',
       author='Lars Wirzenius',
       author_email='liw@liw.fi',

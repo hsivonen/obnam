@@ -1,3 +1,9 @@
+obnam (0.15.1) squeeze; urgency=low
+
+  * New upstream version.
+
+ -- Lars Wirzenius <liw@liw.fi>  Mon, 21 Mar 2011 08:29:05 +0000
+
 obnam (0.15) squeeze; urgency=low
 
   * New upstream release.

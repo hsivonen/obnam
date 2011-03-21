@@ -5,6 +5,12 @@ Obnam NEWS
 This file summarizes changes between releases of Obnam.
 
 
+Version 0.15.1, released 2011-03-21; an ALPHA release
+----------------------------------------------------
+
+* Fix `setup.py` to not import `obnamlib`, so it works when building under
+  pbuilder on Debian. Meh.
+
 Version 0.15, released 2011-03-21; an ALPHA release
 ----------------------------------------------------
 
