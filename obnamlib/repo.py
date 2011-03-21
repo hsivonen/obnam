@@ -156,20 +156,13 @@ class Repository(object):
     of the previous generation, and the caller needs to modify
     the new generation to match the current state of user data.
     
-    The file 'format' at the root of the repository contains the
+    The file 'metadata/format' at the root of the repository contains the
     version of the repository format it uses. The version is
-    specified using two numbers: major and minor. Compatibility
-    between on-disk format and format supported by this version
-    of obnam is determined as follows: major numbers must match
-    exactly, and the program must have a minor that is the same
-    or larger as the value on disk. The on-disk version is
-    updated when obnam locks the repository root. (Some day a
-    more sophisticated upgrade procedure may be necessary.)
+    specified using a single integer.
 
     '''
     
-    format_major = 1
-    format_minor = 0
+    format_version = 1
 
     def __init__(self, fs, node_size, upload_queue_size, lru_size):
         self.fs = fs
@@ -215,9 +208,9 @@ class Repository(object):
         '''Return a new checksum algorithm.'''
         return hashlib.md5()
 
-    def acceptable_version(self, major, minor):
-        '''Are we compatible with on-disk major/minor format?'''
-        return self.format_major == major and self.format_minor >= minor
+    def acceptable_version(self, version):
+        '''Are we compatible with on-disk format?'''
+        return self.format_version == version
 
     def client_dir(self, client_id):
         '''Return name of sub-directory for a given client.'''
@@ -250,7 +243,7 @@ class Repository(object):
         self.got_root_lock = True
         self.added_clients = []
         self.removed_clients = []
-        self._write_format_version(self.format_major, self.format_minor)
+        self._write_format_version(self.format_version)
 
     @require_root_lock
     def unlock_root(self):
@@ -282,18 +275,17 @@ class Repository(object):
         
         '''
         
-        if self.fs.exists('format'):
-            data = self.fs.cat('format')
+        if self.fs.exists('metadata/format'):
+            data = self.fs.cat('metadata/format')
             lines = data.splitlines()
-            major = int(lines[0])
-            minor = int(lines[1])
-            return major, minor
+            version = int(lines[0])
+            return version
         else:
             return None
         
-    def _write_format_version(self, major, minor):
+    def _write_format_version(self, version):
         '''Write the desired format version to the repository.'''
-        self.fs.overwrite_file('format', '%s\n%s\n' % (major, minor))
+        self.fs.overwrite_file('metadata/format', '%s\n' % version)
 
     def check_format_version(self):
         '''Verify that on-disk format version is compatbile.
@@ -303,13 +295,10 @@ class Repository(object):
         '''
         
         on_disk = self.get_format_version()
-        if on_disk is not None:
-            major, minor = on_disk
-            if not self.acceptable_version(major, minor):
-                raise BadFormat('On-disk format %s.%s is incompabile '
-                                'with program format %s.%s' %
-                                    (major, minor,
-                                     self.format_major, self.format_minor))
+        if on_disk is not None and not self.acceptable_version(on_disk):
+            raise BadFormat('On-disk format %s is incompabile '
+                            'with program format %s' %
+                                (on_disk, self.format_version))
         
     @require_root_lock
     def add_client(self, client_name):
