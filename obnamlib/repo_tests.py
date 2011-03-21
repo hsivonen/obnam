@@ -91,6 +91,14 @@ class RepositoryRootNodeTests(unittest.TestCase):
     def test_does_not_accept_newer_version(self):
         newer_version = self.repo.format_version + 1
         self.assertFalse(self.repo.acceptable_version(newer_version))
+        
+    def test_has_none_version_for_empty_repository(self):
+        self.assertEqual(self.repo.get_format_version(), None)
+        
+    def test_creates_repository_with_format_version(self):
+        self.repo.lock_root()
+        self.assertEqual(self.repo.get_format_version(), 
+                         self.repo.format_version)
 
     def test_lists_no_clients(self):
         self.assertEqual(self.repo.list_clients(), [])
