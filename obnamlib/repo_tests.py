@@ -79,27 +79,18 @@ class RepositoryRootNodeTests(unittest.TestCase):
         shutil.rmtree(self.tempdir)
 
     def test_has_format_version(self):
-        self.assert_(hasattr(self.repo, 'format_major'))
-        self.assert_(hasattr(self.repo, 'format_minor'))
+        self.assert_(hasattr(self.repo, 'format_version'))
 
     def test_accepts_same_format_version(self):
-        self.assert_(self.repo.acceptable_version(self.repo.format_major,
-                                                  self.repo.format_minor))
+        self.assert_(self.repo.acceptable_version(self.repo.format_version))
 
-    def test_accepts_older_format_version(self):
-        old_minor = self.repo.format_minor
-        self.repo.format_minor = old_minor + 1
-        self.assert_(self.repo.acceptable_version(self.repo.format_major,
-                                                  old_minor))
+    def test_does_not_accept_older_format_version(self):
+        older_version = self.repo.format_version - 1
+        self.assertFalse(self.repo.acceptable_version(older_version))
 
-    def test_does_not_accept_older_major(self):
-        old_major = self.repo.format_major
-        self.repo.format_major = old_major + 1
-        self.assertFalse(self.repo.acceptable_version(old_major, 0))
-
-    def test_does_not_accept_newer_minor(self):
-        self.assertFalse(self.repo.acceptable_version(self.repo.format_major,
-                                                  self.repo.format_minor + 1))
+    def test_does_not_accept_newer_version(self):
+        newer_version = self.repo.format_version + 1
+        self.assertFalse(self.repo.acceptable_version(newer_version))
 
     def test_lists_no_clients(self):
         self.assertEqual(self.repo.list_clients(), [])
@@ -145,22 +136,22 @@ class RepositoryRootNodeTests(unittest.TestCase):
     def test_lock_root_adds_version(self):
         self.repo.lock_root()
         self.assertEqual(self.repo.get_format_version(),
-                         (self.repo.format_major, self.repo.format_minor))
+                         self.repo.format_version)
 
     def test_lock_root_fails_if_format_is_incompatible(self):
-        self.repo._write_format_version(0, 0)
+        self.repo._write_format_version(0)
         self.assertRaises(obnamlib.BadFormat, self.repo.lock_root)
 
     def test_list_clients_fails_if_format_is_incompatible(self):
-        self.repo._write_format_version(0, 0)
+        self.repo._write_format_version(0)
         self.assertRaises(obnamlib.BadFormat, self.repo.list_clients)
 
     def test_lock_client_fails_if_format_is_incompatible(self):
-        self.repo._write_format_version(0, 0)
+        self.repo._write_format_version(0)
         self.assertRaises(obnamlib.BadFormat, self.repo.lock_client, 'foo')
 
     def test_open_client_fails_if_format_is_incompatible(self):
-        self.repo._write_format_version(0, 0)
+        self.repo._write_format_version(0)
         self.assertRaises(obnamlib.BadFormat, self.repo.open_client, 'foo')
         
     def test_adding_client_without_root_lock_fails(self):
