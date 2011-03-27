@@ -17,4 +17,9 @@
 def generate_symmetric_key(numbits):
     '''Generate a random numbits key for symmetric encryption.'''
     
-
+    bytes = numbits / 8
+    f = open('/dev/random', 'rb')
+    key = f.read(bytes)
+    f.close()
+    
+    return key
