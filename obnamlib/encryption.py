@@ -99,7 +99,7 @@ def _gpg(args, stdin='', gpghome=None):
     if gpghome is not None:
         env['GNUPGHOME'] = gpghome
     
-    argv = ['gpg', '-q', '--no-tty', '--batch'] + args
+    argv = ['gpg', '-q', '--batch'] + args
     p = subprocess.Popen(argv, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE, env=env)
     out, err = p.communicate(stdin)
@@ -125,6 +125,8 @@ class Keyring(object):
     
     '''
     
+    _keyring_name = 'pubring.gpg'
+    
     def __init__(self, encoded=''):
         self._encoded = encoded
         self._gpghome = None
@@ -132,7 +134,7 @@ class Keyring(object):
         
     def _setup(self):
         self._gpghome = tempfile.mkdtemp()
-        f = open(self._pubring, 'wb')
+        f = open(self._keyring, 'wb')
         f.write(self._encoded)
         f.close()
         
@@ -141,14 +143,12 @@ class Keyring(object):
         self._gpghome = None
         
     @property
-    def _pubring(self):
-        return os.path.join(self._gpghome, 'pubring.gpg')
+    def _keyring(self):
+        return os.path.join(self._gpghome, self._keyring_name)
         
     def _real_keyids(self):
-        self._setup()
-        output = _gpg(['--list-keys', '--with-colons'], gpghome=self._gpghome)
-        self._cleanup()
-        
+        output = self.gpg(False, ['--list-keys', '--with-colons'])
+
         keyids = []
         for line in output.splitlines():
             fields = line.split(':')
@@ -167,21 +167,60 @@ class Keyring(object):
     def __contains__(self, keyid):
         return keyid in self.keyids()
         
-    def _reread_pubring(self):
-        f = open(self._pubring, 'rb')
+    def _reread_keyring(self):
+        f = open(self._keyring, 'rb')
         self._encoded = f.read()
         f.close()
         self._keyids = None
         
     def add(self, key):
-        self._setup()
-        _gpg(['--import'], stdin=key, gpghome=self._gpghome)
-        self._reread_pubring()
-        self._cleanup()
+        self.gpg(True, ['--import'], stdin=key)
         
     def remove(self, keyid):
+        self.gpg(True, ['--delete-key', '--yes', keyid])
+
+    def gpg(self, reread, *args, **kwargs):
         self._setup()
-        _gpg(['--delete-key', '--yes', keyid], gpghome=self._gpghome)
-        self._reread_pubring()
-        self._cleanup()
+        kwargs['gpghome'] = self._gpghome
+        try:
+            result = _gpg(*args, **kwargs)
+        except BaseException: # pragma: no cover
+            self._cleanup()
+            raise
+        else:
+            if reread:
+                self._reread_keyring()
+            self._cleanup()
+            return result
+
+
+class SecretKeyring(Keyring):
+
+    '''Same as Keyring, but for secret keys.'''
+    
+    _keyring_name = 'secring.gpg'
+
+    def _real_keyids(self):
+        output = self.gpg(False, ['--list-secret-keys', '--with-colons'])
+
+        keyids = []
+        for line in output.splitlines():
+            fields = line.split(':')
+            if len(fields) >= 5 and fields[0] == 'sec':
+                keyids.append(fields[4])
+        return keyids
+        
+
+def encrypt_with_keyring(cleartext, keyring):
+    '''Encrypt data with all keys in a keyring.'''
+    recipients = []
+    for keyid in keyring.keyids():
+        recipients += ['-r', keyid]
+    return keyring.gpg(False, ['-e', '--trust-model', 'always'] + recipients,
+                       stdin=cleartext)
+    
+    
+def decrypt_with_secret_keys(encrypted, gpghome=None):
+    '''Decrypt data using secret keys GnuPG finds on its own.'''
+    return _gpg(['-d'], stdin=encrypted, gpghome=gpghome)
 

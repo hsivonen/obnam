@@ -43,7 +43,10 @@ from encryption import (generate_symmetric_key,
                         encrypt_with_symmetric_key,
                         decrypt_with_symmetric_key,
                         get_public_key,
-                        Keyring)
+                        Keyring,
+                        SecretKeyring,
+                        encrypt_with_keyring,
+                        decrypt_with_secret_keys)
 
 from hooks import Hook, HookManager
 from cfg import Configuration

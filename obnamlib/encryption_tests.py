@@ -23,6 +23,13 @@ import unittest
 import obnamlib
 
 
+def cat(filename):
+    f = open(filename, 'rb')
+    data = f.read()
+    f.close()
+    return data
+
+
 class SymmetricEncryptionTests(unittest.TestCase):
 
     # We don't test the quality of keys or encryption here. Doing that is
@@ -121,4 +128,27 @@ uWUO7gMi+AlnxbfXVCTEgw3xhg==
         exported = str(self.keyring)
         keyring2 = obnamlib.Keyring(exported)
         self.assertEqual(keyring2.keyids(), [self.keyid])
+
+
+class SecretKeyringTests(unittest.TestCase):
+
+    def test_lists_correct_key(self):
+        keyid = '3B1802F81B321347'
+        seckeys = obnamlib.SecretKeyring(cat('test-gpghome/secring.gpg'))
+        self.assertEqual(seckeys.keyids(), [keyid])
+
+
+class PublicKeyEncryptionTests(unittest.TestCase):
+
+    def test_roundtrip_works(self):
+        cleartext = 'hello, world'
+        passphrase = 'password1'
+        keyring = obnamlib.Keyring(cat('test-gpghome/pubring.gpg'))
+        seckeys = obnamlib.SecretKeyring(cat('test-gpghome/secring.gpg'))
+        
+        encrypted = obnamlib.encrypt_with_keyring(cleartext, keyring)
+        decrypted = obnamlib.decrypt_with_secret_keys(encrypted,
+                                                      gpghome='test-gpghome')
+    
+        self.assertEqual(decrypted, cleartext)
 
