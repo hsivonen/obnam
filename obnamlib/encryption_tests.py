@@ -21,6 +21,12 @@ import obnamlib
 
 class SymmetricEncryptionTests(unittest.TestCase):
 
+    # We don't test the quality of keys or encryption here. Doing that is
+    # hard to do well, and we'll just assume that reading /dev/random
+    # for keys, and using gpg for encryption, is going to work well.
+    # In these tests, we care about making sure we use the tools right,
+    # not that the tools themselves work right.
+
     def test_generates_key_of_correct_length(self):
         numbits = 16
         key = obnamlib.generate_symmetric_key(numbits)
@@ -30,4 +36,10 @@ class SymmetricEncryptionTests(unittest.TestCase):
         numbits = 15
         key = obnamlib.generate_symmetric_key(numbits)
         self.assertEqual(len(key), 2)
+
+    def test_encrypts_into_different_string_than_cleartext(self):
+        cleartext = 'hello world'
+        key = 'sekr1t'
+        encrypted = obnamlib.encrypt_with_symmetric_key(cleartext, key)
+        self.assertNotEqual(cleartext, encrypted)
 

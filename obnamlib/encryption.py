@@ -23,3 +23,8 @@ def generate_symmetric_key(numbits):
     f.close()
     
     return key
+    
+    
+def encrypt_with_symmetric_key(cleartext, key):
+    '''Encrypt data with symmetric encryption.'''
+    return ''
