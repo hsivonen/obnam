@@ -26,4 +26,8 @@ class SymmetricEncryptionTests(unittest.TestCase):
         key = obnamlib.generate_symmetric_key(numbits)
         self.assertEqual(len(key) * 8, numbits)
 
+    def test_generates_key_with_size_rounded_up(self):
+        numbits = 15
+        key = obnamlib.generate_symmetric_key(numbits)
+        self.assertEqual(len(key), 2)
 
