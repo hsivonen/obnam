@@ -128,6 +128,7 @@ class Keyring(object):
     def __init__(self, encoded=''):
         self._encoded = encoded
         self._gpghome = None
+        self._keyids = None
         
     def _setup(self):
         self._gpghome = tempfile.mkdtemp()
@@ -143,7 +144,7 @@ class Keyring(object):
     def _pubring(self):
         return os.path.join(self._gpghome, 'pubring.gpg')
         
-    def keyids(self):
+    def _real_keyids(self):
         self._setup()
         output = _gpg(['--list-keys', '--with-colons'], gpghome=self._gpghome)
         self._cleanup()
@@ -155,6 +156,11 @@ class Keyring(object):
                 keyids.append(fields[4])
         return keyids
         
+    def keyids(self):
+        if self._keyids is None:
+            self._keyids = self._real_keyids()
+        return self._keyids
+        
     def __str__(self):
         return self._encoded
         
@@ -165,6 +171,7 @@ class Keyring(object):
         f = open(self._pubring, 'rb')
         self._encoded = f.read()
         f.close()
+        self._keyids = None
         
     def add(self, key):
         self._setup()
