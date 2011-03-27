@@ -42,7 +42,8 @@ from sizeparse import SizeSyntaxError, UnitNameError, ByteSizeParser
 from encryption import (generate_symmetric_key,
                         encrypt_with_symmetric_key,
                         decrypt_with_symmetric_key,
-                        get_public_key)
+                        get_public_key,
+                        Keyring)
 
 from hooks import Hook, HookManager
 from cfg import Configuration

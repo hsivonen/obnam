@@ -55,7 +55,7 @@ class SymmetricEncryptionTests(unittest.TestCase):
         self.assertEqual(decrypted, cleartext)
 
 
-class KeyAndKeyringTests(unittest.TestCase):
+class GetPublicKeyTests(unittest.TestCase):
 
     def setUp(self):
         self.dirname = tempfile.mkdtemp()
@@ -69,4 +69,56 @@ class KeyAndKeyringTests(unittest.TestCase):
     def test_exports_key(self):
         key = obnamlib.get_public_key(self.keyid, gpghome=self.gpghome)
         self.assert_('-----BEGIN PGP PUBLIC KEY BLOCK-----' in key)
+
+
+class KeyringTests(unittest.TestCase):
+
+    def setUp(self):
+        self.keyring = obnamlib.Keyring()
+        self.keyid = '3B1802F81B321347'
+        self.key = '''
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+mI0ETY8gwwEEAMrSXBIJseIv9miuwnYlCd7CQCzNb8nHYkpo4o1nEQD3k/h7xj9m
+/0Gd5kLfF+WLwAxSJYb41JjaKs0FeUexSGNePdNFxn2CCZ4moHH19tTlWGfqCNz7
+vcYQpSbPix+zhR7uNqilxtsIrx1iyYwh7L2VKf/KMJ7yXbT+jbAj7fqBABEBAAG0
+CFRlc3QgS2V5iLgEEwECACIFAk2PIMMCGwMGCwkIBwMCBhUIAgkKCwQWAgMBAh4B
+AheAAAoJEDsYAvgbMhNHlEED/1UkiLJ8R3phMRnjLtn+5JobYvOi7WEubnRv1rnN
+MC4MyhFiLux7Z8p3xwt1Pf2GqL7q1dD91NOx+6KS3d1PFmiM/i1fYalZPbzm1gNr
+8sFK2Gxsnd7mmYf2wKIo335Bk21SCmGcNKvmKW2M6ckzPT0q/RZ2hhY9JhHUiLG4
+Lu3muI0ETY8gwwEEAMQoiBCQYky52pDamnH5c7FngCM72AkNq/z0+DHqY202gksd
+Vy63TF7UGIsiCLvY787vPm62sOqYO0uI6PV5xVDGyJh4oI/g2zgNkhXRZrIB1Q+T
+THp7qSmwQUZv8T+HfgxLiaXDq6oV/HWLElcMQ9ClZ3Sxzlu3ZQHrtmY5XridABEB
+AAGInwQYAQIACQUCTY8gwwIbDAAKCRA7GAL4GzITR4hgBAClEurTj5n0/21pWZH0
+Ljmokwa3FM++OZxO7shc1LIVNiAKfLiPigU+XbvSeVWTeajKkvj5LCVxKQiRSiYB
+Z85TYTo06kHvDCYQmFOSGrLsZxMyJCfHML5spF9+bej5cepmuNVIdJK5vlgDiVr3
+uWUO7gMi+AlnxbfXVCTEgw3xhg==
+=j+6W
+-----END PGP PUBLIC KEY BLOCK-----
+'''
+
+    def test_has_no_keys_initially(self):
+        self.assertEqual(self.keyring.keyids(), [])
+        self.assertEqual(str(self.keyring), '')
+
+    def test_gets_no_keys_from_empty_encoded(self):
+        keyring = obnamlib.Keyring(encoded='')
+        self.assertEqual(keyring.keyids(), [])
+        
+    def test_adds_key(self):
+        self.keyring.add(self.key)
+        self.assertEqual(self.keyring.keyids(), [self.keyid])
+        self.assert_(self.keyid in self.keyring)
+        
+    def test_removes_key(self):
+        self.keyring.add(self.key)
+        self.keyring.remove(self.keyid)
+        self.assertEqual(self.keyring.keyids(), [])
+        
+    def test_export_import_roundtrip_works(self):
+        self.keyring.add(self.key)
+        exported = str(self.keyring)
+        keyring2 = obnamlib.Keyring(exported)
+        self.assertEqual(keyring2.keyids(), [self.keyid])
 

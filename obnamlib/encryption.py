@@ -15,6 +15,7 @@
 
 
 import os
+import shutil
 import subprocess
 import tempfile
 
@@ -90,7 +91,7 @@ def decrypt_with_symmetric_key(encrypted, key):
     return _gpg_pipe(['-d'], encrypted, key)
 
 
-def _gpg(args, gpghome=None):
+def _gpg(args, stdin='', gpghome=None):
     '''Run gpg and return its output.'''
     
     env = dict()
@@ -98,10 +99,10 @@ def _gpg(args, gpghome=None):
     if gpghome is not None:
         env['GNUPGHOME'] = gpghome
     
-    argv = ['gpg', '-q', '--batch'] + args
+    argv = ['gpg', '-q', '--no-tty', '--batch'] + args
     p = subprocess.Popen(argv, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE, env=env)
-    out, err = p.communicate('')
+    out, err = p.communicate(stdin)
     
     # Return output data, or deal with errors.
     if p.returncode: # pragma: no cover
@@ -113,4 +114,67 @@ def _gpg(args, gpghome=None):
 def get_public_key(keyid, gpghome=None):
     '''Return the ASCII armored export form of a given public key.'''
     return _gpg(['--export', '--armor', keyid], gpghome=gpghome)
+
+
+
+class Keyring(object):
+
+    '''A simplistic representation of GnuPG keyrings.
+    
+    Just enough functionality for obnam's purposes.
+    
+    '''
+    
+    def __init__(self, encoded=''):
+        self._encoded = encoded
+        self._gpghome = None
+        
+    def _setup(self):
+        self._gpghome = tempfile.mkdtemp()
+        f = open(self._pubring, 'wb')
+        f.write(self._encoded)
+        f.close()
+        
+    def _cleanup(self):
+        shutil.rmtree(self._gpghome)
+        self._gpghome = None
+        
+    @property
+    def _pubring(self):
+        return os.path.join(self._gpghome, 'pubring.gpg')
+        
+    def keyids(self):
+        self._setup()
+        output = _gpg(['--list-keys', '--with-colons'], gpghome=self._gpghome)
+        self._cleanup()
+        
+        keyids = []
+        for line in output.splitlines():
+            fields = line.split(':')
+            if len(fields) >= 5 and fields[0] == 'pub':
+                keyids.append(fields[4])
+        return keyids
+        
+    def __str__(self):
+        return self._encoded
+        
+    def __contains__(self, keyid):
+        return keyid in self.keyids()
+        
+    def _reread_pubring(self):
+        f = open(self._pubring, 'rb')
+        self._encoded = f.read()
+        f.close()
+        
+    def add(self, key):
+        self._setup()
+        _gpg(['--import'], stdin=key, gpghome=self._gpghome)
+        self._reread_pubring()
+        self._cleanup()
+        
+    def remove(self, keyid):
+        self._setup()
+        _gpg(['--delete-key', '--yes', keyid], gpghome=self._gpghome)
+        self._reread_pubring()
+        self._cleanup()
 
