@@ -40,7 +40,8 @@ MAX_ID = 2**64 - 1
 from sizeparse import SizeSyntaxError, UnitNameError, ByteSizeParser
 
 from encryption import (generate_symmetric_key,
-                        encrypt_with_symmetric_key)
+                        encrypt_with_symmetric_key,
+                        decrypt_with_symmetric_key)
 
 from hooks import Hook, HookManager
 from cfg import Configuration
