@@ -89,3 +89,28 @@ def decrypt_with_symmetric_key(encrypted, key):
     '''Decrypt encrypted data with symmetric encryption.'''
     return _gpg_pipe(['-d'], encrypted, key)
 
+
+def _gpg(args, gpghome=None):
+    '''Run gpg and return its output.'''
+    
+    env = dict()
+    env.update(os.environ)
+    if gpghome is not None:
+        env['GNUPGHOME'] = gpghome
+    
+    argv = ['gpg', '-q', '--batch'] + args
+    p = subprocess.Popen(argv, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE, env=env)
+    out, err = p.communicate('')
+    
+    # Return output data, or deal with errors.
+    if p.returncode: # pragma: no cover
+        raise Exception(err)
+        
+    return out
+
+
+def get_public_key(keyid, gpghome=None):
+    '''Return the ASCII armored export form of a given public key.'''
+    return _gpg(['--export', '--armor', keyid], gpghome=gpghome)
+

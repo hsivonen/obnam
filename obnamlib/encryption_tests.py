@@ -14,6 +14,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import os
+import shutil
+import subprocess
+import tempfile
 import unittest
 
 import obnamlib
@@ -49,4 +53,20 @@ class SymmetricEncryptionTests(unittest.TestCase):
         encrypted = obnamlib.encrypt_with_symmetric_key(cleartext, key)
         decrypted = obnamlib.decrypt_with_symmetric_key(encrypted, key)
         self.assertEqual(decrypted, cleartext)
+
+
+class KeyAndKeyringTests(unittest.TestCase):
+
+    def setUp(self):
+        self.dirname = tempfile.mkdtemp()
+        self.gpghome = os.path.join(self.dirname, 'gpghome')
+        shutil.copytree('test-gpghome', self.gpghome)
+        self.keyid = '1B321347'
+        
+    def tearDown(self):
+        shutil.rmtree(self.dirname)
+        
+    def test_exports_key(self):
+        key = obnamlib.get_public_key(self.keyid, gpghome=self.gpghome)
+        self.assert_('-----BEGIN PGP PUBLIC KEY BLOCK-----' in key)
 
