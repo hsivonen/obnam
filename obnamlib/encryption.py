@@ -19,11 +19,11 @@ import subprocess
 import tempfile
 
 
-def generate_symmetric_key(numbits):
+def generate_symmetric_key(numbits, filename='/dev/random'):
     '''Generate a random key of at least numbits for symmetric encryption.'''
     
     bytes = (numbits + 7) / 8
-    f = open('/dev/random', 'rb')
+    f = open(filename, 'rb')
     key = f.read(bytes)
     f.close()
     
