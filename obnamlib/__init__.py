@@ -39,6 +39,8 @@ MAX_ID = 2**64 - 1
 
 from sizeparse import SizeSyntaxError, UnitNameError, ByteSizeParser
 
+from encryption import generate_symmetric_key
+
 from hooks import Hook, HookManager
 from cfg import Configuration
 from interp import Interpreter
