@@ -35,11 +35,7 @@ class ForceLockPlugin(obnamlib.ObnamPlugin):
         logging.info('Repository: %s' % repourl)
         logging.info('Client: %s' % client_name)
 
-        repofs = self.app.fsf.new(repourl)
-        repofs.connect()
-        repo = obnamlib.Repository(repofs, self.app.config['node-size'],
-                                   self.app.config['upload-queue-size'],
-                                   self.app.config['lru-size'])
+        repo = self.app.open_repository()
 
         if client_name not in repo.list_clients():
             logging.warning('Client does not exist in repository.')
@@ -48,9 +44,9 @@ class ForceLockPlugin(obnamlib.ObnamPlugin):
         client_id = repo.clientlist.get_client_id(client_name)
         client_dir = repo.client_dir(client_id)        
         lockname = os.path.join(client_dir, 'lock')
-        if repofs.exists(lockname):
+        if repo.fs.exists(lockname):
             logging.info('Removing lockfile %s' % lockname)
-            repofs.remove(lockname)
+            repo.fs.remove(lockname)
         else:
             logging.info('Client is not locked')
 
