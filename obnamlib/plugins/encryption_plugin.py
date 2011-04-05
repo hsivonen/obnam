@@ -20,7 +20,9 @@ import obnamlib
 class EncryptionPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
-        return
+        self.app.config.new_string(['encrypt-with'],
+                                   'PGP key with which to encrypt data '
+                                        'in the backup repository')
         
         hooks = [
             ('repository-toplevel-init', self.toplevel_init),
@@ -30,28 +32,44 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         for name, callback in hooks:
             self.app.hooks.add_callback(name, callback)
             
-        self.client_keyid = self.app.config['client-keyid']
-        self.client_pubkey = obnamlib.get_public_key(self.client_keyid)
+        self._pubkey = None
 
-    def toplevel_init(self, repo, name):
+    @property
+    def keyid(self):
+        return self.app.config['encrypt-with']
+        
+    @property
+    def pubkey(self):
+        if self._pubkey is None:
+            self._pubkey = obnamlib.get_public_key(self.keyid)
+        return self._pubkey
+
+    def toplevel_init(self, repo, toplevel):
         '''Initialize a new toplevel for encryption.'''
         
+        if not self.keyid:
+            return
+        
         pubkeys = obnamlib.Keyring()
-        pubkeys.add(self.client_pubkey)
+        pubkeys.add(self.pubkey)
 
         symmetric_key = obnamlib.generate_symmetric_key()
         encrypted = obnamlib.encrypt_with_keyring(symmetric_key, pubkeys)
-        repo.fs.write_file(os.path.join(name, 'key'), encrypted)
+        repo.fs.write_file(os.path.join(toplevel, 'key'), encrypted)
 
         encoded = str(pubkeys)
         encrypted = obnamlib.encrypt_symmetric(encoded, symmetric_key)
-        repo.fs.write_file(os.path.join(name, 'userkeys'), encrypted)
+        repo.fs.write_file(os.path.join(toplevel, 'userkeys'), encrypted)
 
     def toplevel_read_data(self, encrypted, repo, toplevel):
+        if not self.keyid:
+            return encrypted
         symmetric_key = self.get_symmetric_key(repo, toplevel)
         return obnamlib.decrypt_with_symmetric_key(encrypted, symmetric_key)
 
     def toplevel_write_data(self, cleartext, repo, toplevel):
+        if not self.keyid:
+            return cleartext
         symmetric_key = self.get_symmetric_key(repo, toplevel)
         return obnamlib.encrypt_with_symmetric_key(cleartext, symmetric_key)
 

@@ -203,16 +203,15 @@ class Repository(object):
     format_version = 1
 
     def __init__(self, fs, node_size, upload_queue_size, lru_size, hooks):
-        hooks = hooks or obnamlib.HookManager()
-        fs = HookedFS(self, fs, hooks)
-        self.fs = fs
-        self.setup_hooks(hooks)
+        self.setup_hooks(hooks or obnamlib.HookManager())
+        self.fs = HookedFS(self, fs, self.hooks)
         self.node_size = node_size
         self.upload_queue_size = upload_queue_size
         self.lru_size = lru_size
         self.got_root_lock = False
-        self.clientlist = obnamlib.ClientList(fs, node_size, upload_queue_size, 
-                                              lru_size, hooks)
+        self.clientlist = obnamlib.ClientList(self.fs, node_size, 
+                                              upload_queue_size, 
+                                              lru_size, self)
         self.got_client_lock = False
         self.client_lockfile = None
         self.current_client = None
@@ -222,21 +221,22 @@ class Repository(object):
         self.removed_clients = []
         self.removed_generations = []
         self.client = None
-        self.chunklist = obnamlib.ChunkList(fs, node_size, upload_queue_size, 
-                                            lru_size, hooks)
-        self.chunksums = obnamlib.ChecksumTree(fs, 'chunksums', 
+        self.chunklist = obnamlib.ChunkList(self.fs, node_size, 
+                                            upload_queue_size, 
+                                            lru_size, self)
+        self.chunksums = obnamlib.ChecksumTree(self.fs, 'chunksums', 
                                                len(self.checksum('')),
                                                node_size, upload_queue_size, 
-                                               lru_size, hooks)
+                                               lru_size, self)
         self.prev_chunkid = None
-        
+
     def setup_hooks(self, hooks):
         self.hooks = hooks
         
         self.hooks.new('repository-toplevel-init')
         self.hooks.new_filter('repository-read-data')
         self.hooks.new_filter('repository-write-data')
-
+        
     def checksum(self, data):
         '''Return checksum of data.
         
@@ -401,7 +401,7 @@ class Repository(object):
         self.client = obnamlib.ClientMetadataTree(self.fs, client_dir, 
                                                   self.node_size,
                                                   self.upload_queue_size, 
-                                                  self.lru_size, self.hooks)
+                                                  self.lru_size, self)
         self.client.init_forest()
 
     @require_client_lock
@@ -444,7 +444,7 @@ class Repository(object):
         self.client = obnamlib.ClientMetadataTree(self.fs, client_dir, 
                                                   self.node_size, 
                                                   self.upload_queue_size, 
-                                                  self.lru_size, self.hooks)
+                                                  self.lru_size, self)
         self.client.init_forest()
         
     @require_open_client

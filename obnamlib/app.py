@@ -96,7 +96,14 @@ class App(object):
         self.hooks.new('plugins-loaded')
         self.hooks.new('config-loaded')
         self.hooks.new('shutdown')
-        
+
+        # The Repository class defines some hooks, but the class
+        # won't be instantiated until much after plugins are enabled,
+        # and since all hooks must be defined when plugins are enabled,
+        # we create one instance here, which will immediately be destroyed.
+        # FIXME: This is fugly.
+        obnamlib.Repository(None, 1000, 1000, 100, self.hooks)
+
     def plugins_dir(self):
         return os.path.join(os.path.dirname(obnamlib.__file__), 'plugins')
 

@@ -26,12 +26,12 @@ class ClientListTests(unittest.TestCase):
     def setUp(self):
         self.tempdir = tempfile.mkdtemp()
         fs = obnamlib.LocalFS(self.tempdir)
-        hooks = obnamlib.HookManager()
-        hooks.new('repository-toplevel-init')
+        self.hooks = obnamlib.HookManager()
+        self.hooks.new('repository-toplevel-init')
         self.list = obnamlib.ClientList(fs, 
                                         obnamlib.DEFAULT_NODE_SIZE,
                                         obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
-                                        obnamlib.DEFAULT_LRU_SIZE, hooks)
+                                        obnamlib.DEFAULT_LRU_SIZE, self)
 
     def tearDown(self):
         shutil.rmtree(self.tempdir)
