@@ -57,7 +57,9 @@ class FilterHookTests(unittest.TestCase):
     def setUp(self):
         self.hook = obnamlib.FilterHook()
 
-    def callback(self, data):
+    def callback(self, data, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
         return data + ['callback']
 
     def test_returns_argument_if_no_callbacks(self):
@@ -67,6 +69,12 @@ class FilterHookTests(unittest.TestCase):
         self.hook.add_callback(self.callback)
         data = self.hook.call_callbacks([])
         self.assertEqual(data, ['callback'])
+
+    def test_calls_callback_with_extra_args(self):
+        self.hook.add_callback(self.callback)
+        self.hook.call_callbacks(['data'], 'extra', kwextra='kwextra')
+        self.assertEqual(self.args, ('extra',))
+        self.assertEqual(self.kwargs, { 'kwextra': 'kwextra' })
 
         
 class HookManagerTests(unittest.TestCase):

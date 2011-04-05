@@ -59,15 +59,18 @@ class FilterHook(Hook):
 
     '''A hook which filters data through callbacks.
     
-    Every hook of this type accepts exactly one argument.
+    Every hook of this type accepts a piece of data as its first argument
     Each callback gets the return value of the previous one as its
     argument. The caller gets the value of the final callback.
     
+    Other arguments (with or without keywords) are passed as-is to
+    each callback.
+    
     '''
     
-    def call_callbacks(self, data):
+    def call_callbacks(self, data, *args, **kwargs):
         for callback in self.callbacks:
-            data = callback(data)
+            data = callback(data, *args, **kwargs)
         return data
 
 
