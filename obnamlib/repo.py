@@ -570,6 +570,9 @@ class Repository(object):
                 break
             self.prev_chunkid = random_chunkid() # pragma: no cover
         self.prev_chunkid = chunkid
+        if not self.fs.exists('chunks'):
+            self.fs.mkdir('chunks')
+            self.hooks.call('repository-toplevel-init', 'chunks')
         dirname = os.path.dirname(filename)
         if not self.fs.exists(dirname):
             self.fs.makedirs(dirname)
