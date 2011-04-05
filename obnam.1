@@ -281,6 +281,21 @@ to keep hourly backups for three days,
 daily backups for a week,
 weekly backups for a month,
 and monthly backups for a year.
+.\"
+.SS "Using encryption"
+.B obnam
+can encrypt all the data it writes to the backup repository.
+It uses 
+.BR gpg (1)
+to do the encryption.
+You need to create a key pair using
+.B "gpg --gen-key"
+(or use an existing one),
+and then tell
+.B obnam
+about it using the
+.B \-\-encrypt\-with
+option.
 .\"---------------------------------------------------------------------
 .SH OPTIONS
 .\"
@@ -419,6 +434,12 @@ command will keep.
 Everything else will be removed.
 See above for a description of
 .IR POLICY .
+.TP
+.BR \-\-encrypt\-with =\fIKEYID
+Encrypt data stored in the backup repository using
+.B gpg
+and the key specified with
+.IR KEYID .
 .\" ------------------------------------------------------------------
 .SH "EXIT STATUS"
 .B obnam
