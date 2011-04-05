@@ -51,14 +51,14 @@ class SymmetricEncryptionTests(unittest.TestCase):
     def test_encrypts_into_different_string_than_cleartext(self):
         cleartext = 'hello world'
         key = 'sekr1t'
-        encrypted = obnamlib.encrypt_with_symmetric_key(cleartext, key)
+        encrypted = obnamlib.encrypt_symmetric(cleartext, key)
         self.assertNotEqual(cleartext, encrypted)
 
     def test_encrypt_decrypt_round_trip(self):
         cleartext = 'hello, world'
         key = 'sekr1t'
-        encrypted = obnamlib.encrypt_with_symmetric_key(cleartext, key)
-        decrypted = obnamlib.decrypt_with_symmetric_key(encrypted, key)
+        encrypted = obnamlib.encrypt_symmetric(cleartext, key)
+        decrypted = obnamlib.decrypt_symmetric(encrypted, key)
         self.assertEqual(decrypted, cleartext)
 
 

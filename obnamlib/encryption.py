@@ -81,12 +81,12 @@ def _gpg_pipe(args, data, passphrase):
     return out
     
     
-def encrypt_with_symmetric_key(cleartext, key):
+def encrypt_symmetric(cleartext, key):
     '''Encrypt data with symmetric encryption.'''
     return _gpg_pipe(['-c'], cleartext, key)
     
     
-def decrypt_with_symmetric_key(encrypted, key):
+def decrypt_symmetric(encrypted, key):
     '''Decrypt encrypted data with symmetric encryption.'''
     return _gpg_pipe(['-d'], encrypted, key)
 
