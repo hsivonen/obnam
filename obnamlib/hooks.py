@@ -103,5 +103,5 @@ class HookManager(object):
         
     def call(self, name, *args, **kwargs):
         '''Call callbacks for a named hook, using given arguments.'''
-        self.hooks[name].call_callbacks(*args, **kwargs)
+        return self.hooks[name].call_callbacks(*args, **kwargs)
 

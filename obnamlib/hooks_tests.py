@@ -105,3 +105,8 @@ class HookManagerTests(unittest.TestCase):
         self.assertEqual(self.args, ('bar',))
         self.assertEqual(self.kwargs, { 'kwarg': 'foobar' })
 
+    def test_call_returns_value_of_callbacks(self):
+        self.hooks.new_filter('bar')
+        self.hooks.add_callback('bar', lambda data: data + 1)
+        self.assertEqual(self.hooks.call('bar', 1), 2)
+
