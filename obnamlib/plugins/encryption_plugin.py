@@ -40,6 +40,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         
     def repository_init(self):
         # create all the relevant toplevels? doesn't Repository do that?
+        pass
 
     def toplevel_init(self, name):
         '''Initialize a new toplevel for encryption.'''
@@ -76,7 +77,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         encoded = str(keyring)
         encrypted = self.toplevel_write_data(toplevel, encoded)
         pathname = os.path.join(toplevel, 'userkeys')
-        self.repo.fs.overwrite_file(, encrypted)
+        self.repo.fs.overwrite_file(pathname, encrypted)
 
     def add_to_userkeys(self, toplevel, public_key):
         userkeys = self.read_keyring(toplevel)
