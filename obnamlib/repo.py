@@ -385,7 +385,10 @@ class Repository(object):
         if client_id is None:
             raise LockFail('client %s does not exit' % client_name)
 
-        client_dir = self.client_dir(client_id)        
+        client_dir = self.client_dir(client_id)
+        if not self.fs.exists(client_dir):
+            self.fs.mkdir(client_dir)
+            self.hooks.call('repository-toplevel-init', self, client_dir)
         lockname = os.path.join(client_dir, 'lock')
         try:
             self.fs.write_file(lockname, '')
