@@ -133,23 +133,37 @@ class HookedFS(object):
 
     '''A class to filter read/written data through hooks.'''
     
-    def __init__(self, fs, hooks):
+    def __init__(self, repo, fs, hooks):
+        self.repo = repo
         self.fs = fs
         self.hooks = hooks
         
     def __getattr__(self, name):
         return getattr(self.fs, name)
         
+    def _get_toplevel(self, filename):
+        parts = filename.split(os.sep)
+        if parts:
+            return parts[0]
+        else: # pragma: no cover
+            raise obnamlib.Error('File at repository root: %s' % filename)
+        
     def cat(self, filename):
         data = self.fs.cat(filename)
-        return self.hooks.call('repository-read-data', data)
+        toplevel = self._get_toplevel(filename)
+        return self.hooks.call('repository-read-data', data,
+                                repository=self.repo, toplevel=toplevel)
         
     def write_file(self, filename, data):
-        data = self.hooks.call('repository-write-data', data)
+        toplevel = self._get_toplevel(filename)
+        data = self.hooks.call('repository-write-data', data,
+                                repository=self.repo, toplevel=toplevel)
         self.fs.write_file(filename, data)
         
     def overwrite_file(self, filename, data):
-        data = self.hooks.call('repository-write-data', data)
+        toplevel = self._get_toplevel(filename)
+        data = self.hooks.call('repository-write-data', data,
+                                repository=self.repo, toplevel=toplevel)
         self.fs.overwrite_file(filename, data)
         
 
@@ -190,7 +204,7 @@ class Repository(object):
 
     def __init__(self, fs, node_size, upload_queue_size, lru_size, hooks):
         hooks = hooks or obnamlib.HookManager()
-        fs = HookedFS(fs, hooks)
+        fs = HookedFS(self, fs, hooks)
         self.fs = fs
         self.setup_hooks(hooks)
         self.node_size = node_size
