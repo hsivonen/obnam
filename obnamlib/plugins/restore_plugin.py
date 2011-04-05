@@ -80,11 +80,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             logging.debug('no args given, so restoring everything')
             args = ['/']
     
-        repofs = self.app.fsf.new(self.app.config['repository'])
-        repofs.connect()
-        self.repo = obnamlib.Repository(repofs, self.app.config['node-size'], 
-                                        self.app.config['upload-queue-size'],
-                                        self.app.config['lru-size'])
+        self.repo = self.app.open_repository()
         self.repo.open_client(self.app.config['client-name'])
         self.fs = self.app.fsf.new(self.app.config['to'], create=True)
         self.fs.connect()
