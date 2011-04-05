@@ -319,6 +319,9 @@ class Repository(object):
         
     def _write_format_version(self, version):
         '''Write the desired format version to the repository.'''
+        if not self.fs.exists('metadata'):
+            self.fs.mkdir('metadata')
+            self.hooks.call('repository-toplevel-init', 'metadata')
         self.fs.overwrite_file('metadata/format', '%s\n' % version)
 
     def check_format_version(self):
