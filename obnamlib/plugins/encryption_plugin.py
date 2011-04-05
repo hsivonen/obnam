@@ -33,7 +33,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         self.client_keyid = self.app.config['client-keyid']
         self.client_pubkey = obnamlib.get_public_key(self.client_keyid)
 
-    def toplevel_init(self, name):
+    def toplevel_init(self, repo, name):
         '''Initialize a new toplevel for encryption.'''
         
         pubkeys = obnamlib.Keyring()
@@ -41,58 +41,58 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
 
         symmetric_key = obnamlib.generate_symmetric_key()
         encrypted = obnamlib.encrypt_with_keyring(symmetric_key, pubkeys)
-        self.repo.fs.write_file(os.path.join(name, 'key'), encrypted)
+        repo.fs.write_file(os.path.join(name, 'key'), encrypted)
 
         encoded = str(pubkeys)
         encrypted = obnamlib.encrypt_symmetric(encoded, symmetric_key)
-        self.repo.fs.write_file(os.path.join(name, 'userkeys'), encrypted)
+        repo.fs.write_file(os.path.join(name, 'userkeys'), encrypted)
 
-    def get_symmetric_key(self, toplevel):
-        encoded = self.repo.fs.cat(os.path.join(toplevel, 'key'))
+    def get_symmetric_key(self, repo, toplevel):
+        encoded = repo.fs.cat(os.path.join(toplevel, 'key'))
         return obnamlib.decrypt_with_secret_keys(encoded)
 
-    def toplevel_read_data(self, toplevel, encrypted):
-        symmetric_key = self.get_symmetric_key(toplevel)
+    def toplevel_read_data(self, repo, toplevel, encrypted):
+        symmetric_key = self.get_symmetric_key(repo, toplevel)
         return obnamlib.decrypt_with_symmetric_key(encrypted, symmetric_key)
 
-    def toplevel_write_data(self, toplevel, cleartext):
-        symmetric_key = self.get_symmetric_key(toplevel)
+    def toplevel_write_data(self, repo, toplevel, cleartext):
+        symmetric_key = self.get_symmetric_key(repo, toplevel)
         return obnamlib.encrypt_with_symmetric_key(cleartext, symmetric_key)
 
-    def read_keyring(self, toplevel):
-        encrypted = self.repo.fs.cat(os.path.join(toplevel, 'userkeys'))
-        encoded = self.toplevel_read_data(toplevel, encrypted)
+    def read_keyring(self, repo, toplevel):
+        encrypted = repo.fs.cat(os.path.join(toplevel, 'userkeys'))
+        encoded = self.toplevel_read_data(repo, toplevel, encrypted)
         return obnamlib.Keyring(encoded=encoded)
 
-    def write_keyring(self, toplevel, keyring):
+    def write_keyring(self, repo, toplevel, keyring):
         encoded = str(keyring)
-        encrypted = self.toplevel_write_data(toplevel, encoded)
+        encrypted = self.toplevel_write_data(repo, toplevel, encoded)
         pathname = os.path.join(toplevel, 'userkeys')
-        self.repo.fs.overwrite_file(pathname, encrypted)
+        repo.fs.overwrite_file(pathname, encrypted)
 
-    def add_to_userkeys(self, toplevel, public_key):
-        userkeys = self.read_keyring(toplevel)
+    def add_to_userkeys(self, repo, toplevel, public_key):
+        userkeys = self.read_keyring(repo, toplevel)
         userkeys.add(public_key)
-        self.write_keyring(toplevel, userkeys)
+        self.write_keyring(repo, toplevel, userkeys)
 
-    def remove_from_userkeys(self, toplevel, keyid):
-        userkeys = self.read_keyring(toplevel)
+    def remove_from_userkeys(self, repo, toplevel, keyid):
+        userkeys = self.read_keyring(repo, toplevel)
         if keyid in userkeys:
             userkeys.remove(keyid)
-            self.write_keyring(toplevel, userkeys)
+            self.write_keyring(repo, toplevel, userkeys)
 
-    def add_client(self, client_public_key):
-        self.add_to_userkeys('metadata', client_public_key)
-        self.add_to_userkeys('clientlist', client_public_key)
-        self.add_to_userkeys('chunks', client_public_key)
-        self.add_to_userkeys('chunksums', client_public_key)
+    def add_client(self, repo, client_public_key):
+        self.add_to_userkeys(repo, 'metadata', client_public_key)
+        self.add_to_userkeys(repo, 'clientlist', client_public_key)
+        self.add_to_userkeys(repo, 'chunks', client_public_key)
+        self.add_to_userkeys(repo, 'chunksums', client_public_key)
         # client will add itself to the clientlist and create its own toplevel
 
-    def remove_client(self, client_keyid):
+    def remove_client(self, repo, client_keyid):
         # client may remove itself, since it has access to the symmetric keys
         # we assume the client-specific toplevel has already been removed
-        self.remove_from_userkeys('chunksums', client_keyid)
-        self.remove_from_userkeys('chunks', client_keyid)
-        self.remove_from_userkeys('clientlist', client_keyid)
-        self.remove_from_userkeys('metadata', client_keyid)
+        self.remove_from_userkeys(repo, 'chunksums', client_keyid)
+        self.remove_from_userkeys(repo, 'chunks', client_keyid)
+        self.remove_from_userkeys(repo, 'clientlist', client_keyid)
+        self.remove_from_userkeys(repo, 'metadata', client_keyid)
 
