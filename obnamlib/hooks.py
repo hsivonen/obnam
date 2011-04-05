@@ -55,6 +55,22 @@ class Hook(object):
             self.callbacks.remove(callback_id)
 
 
+class FilterHook(Hook):
+
+    '''A hook which filters data through callbacks.
+    
+    Every hook of this type accepts exactly one argument.
+    Each callback gets the return value of the previous one as its
+    argument. The caller gets the value of the final callback.
+    
+    '''
+    
+    def call_callbacks(self, data):
+        for callback in self.callbacks:
+            data = callback(data)
+        return data
+
+
 class HookManager(object):
 
     '''Manage the set of hooks the application defines.'''

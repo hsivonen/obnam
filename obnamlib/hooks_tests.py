@@ -50,7 +50,24 @@ class HookTests(unittest.TestCase):
         cb_id = self.hook.add_callback(self.callback)
         self.hook.remove_callback(cb_id)
         self.assertEqual(self.hook.callbacks, [])
+
+
+class FilterHookTests(unittest.TestCase):
+
+    def setUp(self):
+        self.hook = obnamlib.FilterHook()
+
+    def callback(self, data):
+        return data + ['callback']
+
+    def test_returns_argument_if_no_callbacks(self):
+        self.assertEqual(self.hook.call_callbacks(['foo']), ['foo'])
         
+    def test_calls_callback_and_returns_modified_data(self):
+        self.hook.add_callback(self.callback)
+        data = self.hook.call_callbacks([])
+        self.assertEqual(data, ['callback'])
+
         
 class HookManagerTests(unittest.TestCase):
 

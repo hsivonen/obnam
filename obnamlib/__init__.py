@@ -48,7 +48,7 @@ from encryption import (generate_symmetric_key,
                         encrypt_with_keyring,
                         decrypt_with_secret_keys)
 
-from hooks import Hook, HookManager
+from hooks import Hook, FilterHook, HookManager
 from cfg import Configuration
 from interp import Interpreter
 from pluginbase import ObnamPlugin
