@@ -137,3 +137,12 @@ class App(object):
         self.hooks.call('shutdown')
         logging.info('Obnam ends')
 
+    def open_repository(self, create=False): # pragma: no cover
+        repopath = self.config['repository']
+        repofs = self.fsf.new(repopath, create=create)
+        repofs.connect()
+        return obnamlib.Repository(repofs, 
+                                    self.config['node-size'],
+                                    self.config['upload-queue-size'],
+                                    self.config['lru-size'])
+

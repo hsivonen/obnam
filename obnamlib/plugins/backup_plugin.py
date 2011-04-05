@@ -55,12 +55,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         roots = self.app.config['root'] + args
 
-        repopath = self.app.config['repository']
-        repofs = self.app.fsf.new(repopath, create=True)
-        repofs.connect()
-        self.repo = obnamlib.Repository(repofs, self.app.config['node-size'],
-                                        self.app.config['upload-queue-size'],
-                                        self.app.config['lru-size'])
+        self.repo = self.app.open_repository(create=True)
 
         client_name = self.app.config['client-name']
         if client_name not in self.repo.list_clients():
@@ -107,13 +102,13 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                         self.app.hooks.call('error-message', 
                                             'Could not back up %s: %s' %
                                             (pathname, e.strerror))
-                    if repofs.bytes_written - last_checkpoint >= interval:
+                    if self.repo.fs.bytes_written - last_checkpoint >= interval:
                         logging.info('Making checkpoint')
                         self.backup_parents('.')
                         self.repo.commit_client(checkpoint=True)
                         self.repo.lock_client(client_name)
                         self.repo.start_generation()
-                        last_checkpoint = repofs.bytes_written
+                        last_checkpoint = self.repo.fs.bytes_written
                         self.dump_memory_profile('at end of checkpoint')
 
                 self.backup_parents('.')
@@ -122,7 +117,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 self.fs.close()
 
         self.repo.commit_client()
-        repofs.close()
+        self.repo.fs.close()
 
         logging.info('Backup finished.')
         self.dump_memory_profile('at end of backup run')
