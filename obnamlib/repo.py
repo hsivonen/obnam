@@ -152,18 +152,18 @@ class HookedFS(object):
         data = self.fs.cat(filename)
         toplevel = self._get_toplevel(filename)
         return self.hooks.call('repository-read-data', data,
-                                repository=self.repo, toplevel=toplevel)
+                                repo=self.repo, toplevel=toplevel)
         
     def write_file(self, filename, data):
         toplevel = self._get_toplevel(filename)
         data = self.hooks.call('repository-write-data', data,
-                                repository=self.repo, toplevel=toplevel)
+                                repo=self.repo, toplevel=toplevel)
         self.fs.write_file(filename, data)
         
     def overwrite_file(self, filename, data):
         toplevel = self._get_toplevel(filename)
         data = self.hooks.call('repository-write-data', data,
-                                repository=self.repo, toplevel=toplevel)
+                                repo=self.repo, toplevel=toplevel)
         self.fs.overwrite_file(filename, data)
         
 
@@ -335,7 +335,7 @@ class Repository(object):
         '''Write the desired format version to the repository.'''
         if not self.fs.exists('metadata'):
             self.fs.mkdir('metadata')
-            self.hooks.call('repository-toplevel-init', 'metadata')
+            self.hooks.call('repository-toplevel-init', self, 'metadata')
         self.fs.overwrite_file('metadata/format', '%s\n' % version)
 
     def check_format_version(self):
@@ -589,7 +589,7 @@ class Repository(object):
         self.prev_chunkid = chunkid
         if not self.fs.exists('chunks'):
             self.fs.mkdir('chunks')
-            self.hooks.call('repository-toplevel-init', 'chunks')
+            self.hooks.call('repository-toplevel-init', self, 'chunks')
         dirname = os.path.dirname(filename)
         if not self.fs.exists(dirname):
             self.fs.makedirs(dirname)

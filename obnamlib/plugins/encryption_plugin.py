@@ -47,26 +47,26 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         encrypted = obnamlib.encrypt_symmetric(encoded, symmetric_key)
         repo.fs.write_file(os.path.join(name, 'userkeys'), encrypted)
 
+    def toplevel_read_data(self, encrypted, repo, toplevel):
+        symmetric_key = self.get_symmetric_key(repo, toplevel)
+        return obnamlib.decrypt_with_symmetric_key(encrypted, symmetric_key)
+
+    def toplevel_write_data(self, cleartext, repo, toplevel):
+        symmetric_key = self.get_symmetric_key(repo, toplevel)
+        return obnamlib.encrypt_with_symmetric_key(cleartext, symmetric_key)
+
     def get_symmetric_key(self, repo, toplevel):
         encoded = repo.fs.cat(os.path.join(toplevel, 'key'))
         return obnamlib.decrypt_with_secret_keys(encoded)
 
-    def toplevel_read_data(self, repo, toplevel, encrypted):
-        symmetric_key = self.get_symmetric_key(repo, toplevel)
-        return obnamlib.decrypt_with_symmetric_key(encrypted, symmetric_key)
-
-    def toplevel_write_data(self, repo, toplevel, cleartext):
-        symmetric_key = self.get_symmetric_key(repo, toplevel)
-        return obnamlib.encrypt_with_symmetric_key(cleartext, symmetric_key)
-
     def read_keyring(self, repo, toplevel):
         encrypted = repo.fs.cat(os.path.join(toplevel, 'userkeys'))
-        encoded = self.toplevel_read_data(repo, toplevel, encrypted)
+        encoded = self.toplevel_read_data(encrypted, repo, toplevel)
         return obnamlib.Keyring(encoded=encoded)
 
     def write_keyring(self, repo, toplevel, keyring):
         encoded = str(keyring)
-        encrypted = self.toplevel_write_data(repo, toplevel, encoded)
+        encrypted = self.toplevel_write_data(encoded, repo, toplevel)
         pathname = os.path.join(toplevel, 'userkeys')
         repo.fs.overwrite_file(pathname, encrypted)
 
