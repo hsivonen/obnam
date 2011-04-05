@@ -40,11 +40,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
     def open_repository(self):
         self.app.config.require('repository')
         self.app.config.require('client-name')
-        fs = self.app.fsf.new(self.app.config['repository'])
-        fs.connect()
-        self.repo = obnamlib.Repository(fs, self.app.config['node-size'], 
-                                        self.app.config['upload-queue-size'],
-                                        self.app.config['lru-size'])
+        self.repo = self.app.open_repository()
         self.repo.open_client(self.app.config['client-name'])
 
     def clients(self, args):
