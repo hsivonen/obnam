@@ -88,6 +88,11 @@ class HookManager(object):
         if name not in self.hooks:
             self.hooks[name] = Hook()
 
+    def new_filter(self, name):
+        '''Create a new filter hook.'''
+        if name not in self.hooks:
+            self.hooks[name] = FilterHook()
+
     def add_callback(self, name, callback):
         '''Add a callback to a named hook.'''
         return self.hooks[name].add_callback(callback)

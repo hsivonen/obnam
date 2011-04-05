@@ -86,6 +86,10 @@ class HookManagerTests(unittest.TestCase):
     def test_adds_new_hook(self):
         self.assert_(self.hooks.hooks.has_key('foo'))
         
+    def test_adds_new_filter_hook(self):
+        self.hooks.new_filter('bar')
+        self.assert_('bar' in self.hooks.hooks)
+        
     def test_adds_callback(self):
         self.hooks.add_callback('foo', self.callback)
         self.assertEqual(self.hooks.hooks['foo'].callbacks, [self.callback])
