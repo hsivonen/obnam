@@ -22,3 +22,4 @@
 
 ./obnamlib/plugins/__init__.py
 ./obnamlib/repo_tree.py
+./obnamlib/plugins/encryption_plugin.py
