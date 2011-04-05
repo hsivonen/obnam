@@ -189,11 +189,10 @@ class Repository(object):
                                                lru_size)
         self.prev_chunkid = None
         
-        self.hooks = hooks
-        self.setup_hooks()
+        self.setup_hooks(hooks)
         
-    def setup_hooks(self):
-        pass
+    def setup_hooks(self, hooks):
+        self.hooks = hooks or obnamlib.HookManager()
 
     def checksum(self, data):
         '''Return checksum of data.
