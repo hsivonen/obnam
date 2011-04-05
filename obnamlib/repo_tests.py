@@ -68,12 +68,12 @@ class RepositoryRootNodeTests(unittest.TestCase):
         self.fs = obnamlib.LocalFS(self.tempdir)
         self.repo = obnamlib.Repository(self.fs, obnamlib.DEFAULT_NODE_SIZE,
                                         obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
-                                        obnamlib.DEFAULT_LRU_SIZE)
+                                        obnamlib.DEFAULT_LRU_SIZE, None)
         
         self.otherfs = obnamlib.LocalFS(self.tempdir)
         self.other = obnamlib.Repository(self.fs, obnamlib.DEFAULT_NODE_SIZE,
                                          obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
-                                         obnamlib.DEFAULT_LRU_SIZE)
+                                         obnamlib.DEFAULT_LRU_SIZE, None)
 
     def tearDown(self):
         shutil.rmtree(self.tempdir)
@@ -185,7 +185,7 @@ class RepositoryRootNodeTests(unittest.TestCase):
         self.repo.commit_root()
         s2 = obnamlib.Repository(self.fs, obnamlib.DEFAULT_NODE_SIZE,
                                  obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
-                                 obnamlib.DEFAULT_LRU_SIZE)
+                                 obnamlib.DEFAULT_LRU_SIZE, None)
         self.assertEqual(s2.list_clients(), ['foo'])
         
     def test_adding_existing_client_fails(self):
@@ -252,7 +252,7 @@ class RepositoryClientTests(unittest.TestCase):
         self.fs = obnamlib.LocalFS(self.tempdir)
         self.repo = obnamlib.Repository(self.fs, obnamlib.DEFAULT_NODE_SIZE,
                                         obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
-                                        obnamlib.DEFAULT_LRU_SIZE)
+                                        obnamlib.DEFAULT_LRU_SIZE, None)
         self.repo.lock_root()
         self.repo.add_client('client_name')
         self.repo.commit_root()
@@ -261,7 +261,7 @@ class RepositoryClientTests(unittest.TestCase):
         self.other = obnamlib.Repository(self.otherfs, 
                                          obnamlib.DEFAULT_NODE_SIZE,
                                          obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
-                                         obnamlib.DEFAULT_LRU_SIZE)
+                                         obnamlib.DEFAULT_LRU_SIZE, None)
         
         self.dir_meta = obnamlib.Metadata()
         self.dir_meta.st_mode = stat.S_IFDIR | 0777
@@ -536,7 +536,7 @@ class RepositoryChunkTests(unittest.TestCase):
         self.fs = obnamlib.LocalFS(self.tempdir)
         self.repo = obnamlib.Repository(self.fs, obnamlib.DEFAULT_NODE_SIZE,
                                         obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
-                                        obnamlib.DEFAULT_LRU_SIZE)
+                                        obnamlib.DEFAULT_LRU_SIZE, None)
         self.repo.lock_root()
         self.repo.add_client('client_name')
         self.repo.commit_root()
@@ -605,7 +605,7 @@ class RepositoryGetSetChunksTests(unittest.TestCase):
         self.fs = obnamlib.LocalFS(self.tempdir)
         self.repo = obnamlib.Repository(self.fs, obnamlib.DEFAULT_NODE_SIZE,
                                         obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
-                                        obnamlib.DEFAULT_LRU_SIZE)
+                                        obnamlib.DEFAULT_LRU_SIZE, None)
         self.repo.lock_root()
         self.repo.add_client('client_name')
         self.repo.commit_root()
@@ -646,7 +646,7 @@ class RepositoryGenspecTests(unittest.TestCase):
         fs = obnamlib.LocalFS(repodir)
         self.repo = obnamlib.Repository(fs, obnamlib.DEFAULT_NODE_SIZE,
                                         obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
-                                        obnamlib.DEFAULT_LRU_SIZE)
+                                        obnamlib.DEFAULT_LRU_SIZE, None)
         self.repo.lock_root()
         self.repo.add_client('client_name')
         self.repo.commit_root()

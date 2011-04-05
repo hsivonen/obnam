@@ -144,5 +144,6 @@ class App(object):
         return obnamlib.Repository(repofs, 
                                     self.config['node-size'],
                                     self.config['upload-queue-size'],
-                                    self.config['lru-size'])
+                                    self.config['lru-size'],
+                                    self.hooks)
 

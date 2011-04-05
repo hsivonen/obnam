@@ -164,7 +164,7 @@ class Repository(object):
     
     format_version = 1
 
-    def __init__(self, fs, node_size, upload_queue_size, lru_size):
+    def __init__(self, fs, node_size, upload_queue_size, lru_size, hooks):
         self.fs = fs
         self.node_size = node_size
         self.upload_queue_size = upload_queue_size
@@ -188,6 +188,12 @@ class Repository(object):
                                                node_size, upload_queue_size, 
                                                lru_size)
         self.prev_chunkid = None
+        
+        self.hooks = hooks
+        self.setup_hooks()
+        
+    def setup_hooks(self):
+        pass
 
     def checksum(self, data):
         '''Return checksum of data.
