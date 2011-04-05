@@ -35,13 +35,14 @@ class RepositoryTree(object):
     '''
 
     def __init__(self, fs, dirname, key_bytes, node_size, upload_queue_size,
-                 lru_size):
+                 lru_size, repo):
         self.fs = fs
         self.dirname = dirname
         self.key_bytes = key_bytes
         self.node_size = node_size
         self.upload_queue_size = upload_queue_size
         self.lru_size = lru_size
+        self.repo = repo
         self.forest = None
         self.tree = None
         self.keep_just_one_tree = False
@@ -62,6 +63,8 @@ class RepositoryTree(object):
     def start_changes(self):
         if not self.fs.exists(self.dirname):
             self.fs.mkdir(self.dirname)
+            self.repo.hooks.call('repository-toplevel-init', self.repo, 
+                                 self.dirname)
         self.init_forest()
         assert self.forest is not None
         if self.tree is None:

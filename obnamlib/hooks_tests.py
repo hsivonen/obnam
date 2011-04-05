@@ -50,7 +50,32 @@ class HookTests(unittest.TestCase):
         cb_id = self.hook.add_callback(self.callback)
         self.hook.remove_callback(cb_id)
         self.assertEqual(self.hook.callbacks, [])
+
+
+class FilterHookTests(unittest.TestCase):
+
+    def setUp(self):
+        self.hook = obnamlib.FilterHook()
+
+    def callback(self, data, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+        return data + ['callback']
+
+    def test_returns_argument_if_no_callbacks(self):
+        self.assertEqual(self.hook.call_callbacks(['foo']), ['foo'])
         
+    def test_calls_callback_and_returns_modified_data(self):
+        self.hook.add_callback(self.callback)
+        data = self.hook.call_callbacks([])
+        self.assertEqual(data, ['callback'])
+
+    def test_calls_callback_with_extra_args(self):
+        self.hook.add_callback(self.callback)
+        self.hook.call_callbacks(['data'], 'extra', kwextra='kwextra')
+        self.assertEqual(self.args, ('extra',))
+        self.assertEqual(self.kwargs, { 'kwextra': 'kwextra' })
+
         
 class HookManagerTests(unittest.TestCase):
 
@@ -69,6 +94,10 @@ class HookManagerTests(unittest.TestCase):
     def test_adds_new_hook(self):
         self.assert_(self.hooks.hooks.has_key('foo'))
         
+    def test_adds_new_filter_hook(self):
+        self.hooks.new_filter('bar')
+        self.assert_('bar' in self.hooks.hooks)
+        
     def test_adds_callback(self):
         self.hooks.add_callback('foo', self.callback)
         self.assertEqual(self.hooks.hooks['foo'].callbacks, [self.callback])
@@ -83,4 +112,9 @@ class HookManagerTests(unittest.TestCase):
         self.hooks.call('foo', 'bar', kwarg='foobar')
         self.assertEqual(self.args, ('bar',))
         self.assertEqual(self.kwargs, { 'kwarg': 'foobar' })
+
+    def test_call_returns_value_of_callbacks(self):
+        self.hooks.new_filter('bar')
+        self.hooks.add_callback('bar', lambda data: data + 1)
+        self.assertEqual(self.hooks.call('bar', 1), 2)
 

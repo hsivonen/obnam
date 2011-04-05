@@ -27,10 +27,12 @@ class ClientMetadataTreeTests(unittest.TestCase):
     def setUp(self):
         self.tempdir = tempfile.mkdtemp()
         fs = obnamlib.LocalFS(self.tempdir)
+        self.hooks = obnamlib.HookManager()
+        self.hooks.new('repository-toplevel-init')
         self.client = obnamlib.ClientMetadataTree(fs, 'clientid',
                                    obnamlib.DEFAULT_NODE_SIZE,
                                    obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
-                                   obnamlib.DEFAULT_LRU_SIZE)
+                                   obnamlib.DEFAULT_LRU_SIZE, self)
         
     def tearDown(self):
         shutil.rmtree(self.tempdir)
@@ -138,10 +140,13 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
     def setUp(self):
         self.tempdir = tempfile.mkdtemp()
         fs = obnamlib.LocalFS(self.tempdir)
+        self.hooks = obnamlib.HookManager()
+        self.hooks.new('repository-toplevel-init')
         self.client = obnamlib.ClientMetadataTree(fs, 'clientid',
                                             obnamlib.DEFAULT_NODE_SIZE,
                                             obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
-                                            obnamlib.DEFAULT_LRU_SIZE)
+                                            obnamlib.DEFAULT_LRU_SIZE, 
+                                            self)
         self.client.start_generation()
         self.clientid = self.client.get_generation_id(self.client.tree)
         self.file_metadata = obnamlib.Metadata(st_mode=stat.S_IFREG | 0666)

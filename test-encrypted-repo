@@ -1,0 +1,21 @@
+#!/bin/sh
+
+set -e
+
+cmd="./obnam --repository=temp.repo --log=temp.log --log-level=debug"
+cmd="$cmd --encrypt-with=1B321347"
+
+rm -rf temp.gpghome temp.data temp.repo temp.restored temp.log
+
+cp -a test-gpghome temp.gpghome
+export GNUPGHOME=temp.gpghome
+
+cp -a debian temp.data
+summain -r temp.data > temp.data.manifest
+
+$cmd backup temp.data
+$cmd generations
+$cmd restore --generation latest --to temp.restored
+summain -r temp.restored/$(pwd)/temp.data > temp.restored.manifest
+diff -u temp.data.manifest temp.restored.manifest
+

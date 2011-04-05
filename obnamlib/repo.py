@@ -129,6 +129,44 @@ def decode_metadata(encoded):
     return obnamlib.Metadata(**args)
 
 
+class HookedFS(object):
+
+    '''A class to filter read/written data through hooks.'''
+    
+    def __init__(self, repo, fs, hooks):
+        self.repo = repo
+        self.fs = fs
+        self.hooks = hooks
+        
+    def __getattr__(self, name):
+        return getattr(self.fs, name)
+        
+    def _get_toplevel(self, filename):
+        parts = filename.split(os.sep)
+        if len(parts) > 1:
+            return parts[0]
+        else: # pragma: no cover
+            raise obnamlib.Error('File at repository root: %s' % filename)
+        
+    def cat(self, filename):
+        data = self.fs.cat(filename)
+        toplevel = self._get_toplevel(filename)
+        return self.hooks.call('repository-read-data', data,
+                                repo=self.repo, toplevel=toplevel)
+        
+    def write_file(self, filename, data):
+        toplevel = self._get_toplevel(filename)
+        data = self.hooks.call('repository-write-data', data,
+                                repo=self.repo, toplevel=toplevel)
+        self.fs.write_file(filename, data)
+        
+    def overwrite_file(self, filename, data):
+        toplevel = self._get_toplevel(filename)
+        data = self.hooks.call('repository-write-data', data,
+                                repo=self.repo, toplevel=toplevel)
+        self.fs.overwrite_file(filename, data)
+        
+
 class Repository(object):
 
     '''Repository for backup data.
@@ -164,14 +202,16 @@ class Repository(object):
     
     format_version = 1
 
-    def __init__(self, fs, node_size, upload_queue_size, lru_size):
-        self.fs = fs
+    def __init__(self, fs, node_size, upload_queue_size, lru_size, hooks):
+        self.setup_hooks(hooks or obnamlib.HookManager())
+        self.fs = HookedFS(self, fs, self.hooks)
         self.node_size = node_size
         self.upload_queue_size = upload_queue_size
         self.lru_size = lru_size
         self.got_root_lock = False
-        self.clientlist = obnamlib.ClientList(fs, node_size, upload_queue_size, 
-                                              lru_size)
+        self.clientlist = obnamlib.ClientList(self.fs, node_size, 
+                                              upload_queue_size, 
+                                              lru_size, self)
         self.got_client_lock = False
         self.client_lockfile = None
         self.current_client = None
@@ -181,14 +221,22 @@ class Repository(object):
         self.removed_clients = []
         self.removed_generations = []
         self.client = None
-        self.chunklist = obnamlib.ChunkList(fs, node_size, upload_queue_size, 
-                                            lru_size)
-        self.chunksums = obnamlib.ChecksumTree(fs, 'chunksums', 
+        self.chunklist = obnamlib.ChunkList(self.fs, node_size, 
+                                            upload_queue_size, 
+                                            lru_size, self)
+        self.chunksums = obnamlib.ChecksumTree(self.fs, 'chunksums', 
                                                len(self.checksum('')),
                                                node_size, upload_queue_size, 
-                                               lru_size)
+                                               lru_size, self)
         self.prev_chunkid = None
 
+    def setup_hooks(self, hooks):
+        self.hooks = hooks
+        
+        self.hooks.new('repository-toplevel-init')
+        self.hooks.new_filter('repository-read-data')
+        self.hooks.new_filter('repository-write-data')
+        
     def checksum(self, data):
         '''Return checksum of data.
         
@@ -236,7 +284,7 @@ class Repository(object):
         
         self.check_format_version()
         try:
-            self.fs.write_file('root.lock', '')
+            self.fs.fs.write_file('root.lock', '')
         except OSError, e:
             if e.errno == errno.EEXIST:
                 raise LockFail('Lock file root.lock already exists')
@@ -285,6 +333,9 @@ class Repository(object):
         
     def _write_format_version(self, version):
         '''Write the desired format version to the repository.'''
+        if not self.fs.exists('metadata'):
+            self.fs.mkdir('metadata')
+            self.hooks.call('repository-toplevel-init', self, 'metadata')
         self.fs.overwrite_file('metadata/format', '%s\n' % version)
 
     def check_format_version(self):
@@ -334,7 +385,10 @@ class Repository(object):
         if client_id is None:
             raise LockFail('client %s does not exit' % client_name)
 
-        client_dir = self.client_dir(client_id)        
+        client_dir = self.client_dir(client_id)
+        if not self.fs.exists(client_dir):
+            self.fs.mkdir(client_dir)
+            self.hooks.call('repository-toplevel-init', self, client_dir)
         lockname = os.path.join(client_dir, 'lock')
         try:
             self.fs.write_file(lockname, '')
@@ -350,7 +404,7 @@ class Repository(object):
         self.client = obnamlib.ClientMetadataTree(self.fs, client_dir, 
                                                   self.node_size,
                                                   self.upload_queue_size, 
-                                                  self.lru_size)
+                                                  self.lru_size, self)
         self.client.init_forest()
 
     @require_client_lock
@@ -393,7 +447,7 @@ class Repository(object):
         self.client = obnamlib.ClientMetadataTree(self.fs, client_dir, 
                                                   self.node_size, 
                                                   self.upload_queue_size, 
-                                                  self.lru_size)
+                                                  self.lru_size, self)
         self.client.init_forest()
         
     @require_open_client
@@ -536,6 +590,9 @@ class Repository(object):
                 break
             self.prev_chunkid = random_chunkid() # pragma: no cover
         self.prev_chunkid = chunkid
+        if not self.fs.exists('chunks'):
+            self.fs.mkdir('chunks')
+            self.hooks.call('repository-toplevel-init', self, 'chunks')
         dirname = os.path.dirname(filename)
         if not self.fs.exists(dirname):
             self.fs.makedirs(dirname)

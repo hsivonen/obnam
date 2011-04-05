@@ -49,11 +49,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
             args = ['/']
         logging.debug('verifying what: %s' % repr(args))
     
-        fs = self.app.fsf.new(self.app.config['repository'])
-        fs.connect()
-        self.repo = obnamlib.Repository(fs, self.app.config['node-size'], 
-                                        self.app.config['upload-queue-size'],
-                                        self.app.config['lru-size'])
+        self.repo = self.app.open_repository()
         self.repo.open_client(self.app.config['client-name'])
         self.fs = self.app.fsf.new(args[0])
         self.fs.connect()

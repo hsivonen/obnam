@@ -55,6 +55,25 @@ class Hook(object):
             self.callbacks.remove(callback_id)
 
 
+class FilterHook(Hook):
+
+    '''A hook which filters data through callbacks.
+    
+    Every hook of this type accepts a piece of data as its first argument
+    Each callback gets the return value of the previous one as its
+    argument. The caller gets the value of the final callback.
+    
+    Other arguments (with or without keywords) are passed as-is to
+    each callback.
+    
+    '''
+    
+    def call_callbacks(self, data, *args, **kwargs):
+        for callback in self.callbacks:
+            data = callback(data, *args, **kwargs)
+        return data
+
+
 class HookManager(object):
 
     '''Manage the set of hooks the application defines.'''
@@ -72,6 +91,11 @@ class HookManager(object):
         if name not in self.hooks:
             self.hooks[name] = Hook()
 
+    def new_filter(self, name):
+        '''Create a new filter hook.'''
+        if name not in self.hooks:
+            self.hooks[name] = FilterHook()
+
     def add_callback(self, name, callback):
         '''Add a callback to a named hook.'''
         return self.hooks[name].add_callback(callback)
@@ -82,5 +106,5 @@ class HookManager(object):
         
     def call(self, name, *args, **kwargs):
         '''Call callbacks for a named hook, using given arguments.'''
-        self.hooks[name].call_callbacks(*args, **kwargs)
+        return self.hooks[name].call_callbacks(*args, **kwargs)
 

@@ -39,7 +39,16 @@ MAX_ID = 2**64 - 1
 
 from sizeparse import SizeSyntaxError, UnitNameError, ByteSizeParser
 
-from hooks import Hook, HookManager
+from encryption import (generate_symmetric_key,
+                        encrypt_symmetric,
+                        decrypt_symmetric,
+                        get_public_key,
+                        Keyring,
+                        SecretKeyring,
+                        encrypt_with_keyring,
+                        decrypt_with_secret_keys)
+
+from hooks import Hook, FilterHook, HookManager
 from cfg import Configuration
 from interp import Interpreter
 from pluginbase import ObnamPlugin
