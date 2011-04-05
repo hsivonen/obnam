@@ -21,6 +21,8 @@ import obnamlib
 
 class EncryptionPlugin(obnamlib.ObnamPlugin):
 
+    symmetric_key_bits = 8
+
     def enable(self):
         self.app.config.new_string(['encrypt-with'],
                                    'PGP key with which to encrypt data '
@@ -55,7 +57,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         pubkeys = obnamlib.Keyring()
         pubkeys.add(self.pubkey)
 
-        symmetric_key = obnamlib.generate_symmetric_key()
+        symmetric_key = obnamlib.generate_symmetric_key(self.symmetric_key_bits)
         encrypted = obnamlib.encrypt_with_keyring(symmetric_key, pubkeys)
         repo.fs.write_file(os.path.join(toplevel, 'key'), encrypted)
 
