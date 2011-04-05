@@ -27,8 +27,21 @@ class App(object):
     '''Main program for backup program.'''
     
     def __init__(self):
-        self.hooks = obnamlib.HookManager()
+
+        self.setup_config()        
+
+        self.pm = obnamlib.PluginManager()
+        self.pm.locations = [self.plugins_dir()]
+        self.pm.plugin_arguments = (self,)
         
+        self.interp = obnamlib.Interpreter()
+        self.register_command = self.interp.register
+
+        self.setup_hooks()
+
+        self.fsf = obnamlib.VfsFactory()
+        
+    def setup_config(self):
         self.config = obnamlib.Configuration([])
         self.config.new_string(['log'], 'name of log file (%default)')
         self.config['log'] = 'obnam.log'
@@ -74,22 +87,15 @@ class App(object):
         self.config.new_list(['trace'],
                                 'add to filename patters for which trace '
                                 'debugging logging happens')
-
-        self.pm = obnamlib.PluginManager()
-        self.pm.locations = [self.plugins_dir()]
-        self.pm.plugin_arguments = (self,)
-        
-        self.interp = obnamlib.Interpreter()
-        self.register_command = self.interp.register
-
-        self.hooks.new('plugins-loaded')
-        self.hooks.new('config-loaded')
-        self.hooks.new('shutdown')
-        
-        self.fsf = obnamlib.VfsFactory()
         
     def deduce_client_name(self):
         return socket.gethostname()
+
+    def setup_hooks(self):
+        self.hooks = obnamlib.HookManager()
+        self.hooks.new('plugins-loaded')
+        self.hooks.new('config-loaded')
+        self.hooks.new('shutdown')
         
     def plugins_dir(self):
         return os.path.join(os.path.dirname(obnamlib.__file__), 'plugins')
