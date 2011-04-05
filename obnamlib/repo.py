@@ -129,6 +129,30 @@ def decode_metadata(encoded):
     return obnamlib.Metadata(**args)
 
 
+class HookedFS(object):
+
+    '''A class to filter read/written data through hooks.'''
+    
+    def __init__(self, fs, hooks):
+        self.fs = fs
+        self.hooks = hooks
+        
+    def __getattr__(self, name):
+        return getattr(self.fs, name)
+        
+    def cat(self, filename):
+        data = self.fs.cat(filename)
+        return self.hooks.call('repository-read-data', data)
+        
+    def write_file(self, filename, data):
+        data = self.hooks.call('repository-write-data', data)
+        self.fs.write_file(filename, data)
+        
+    def overwrite_file(self, filename, data):
+        data = self.hooks.call('repository-write-data', data)
+        self.fs.overwrite_file(filename, data)
+        
+
 class Repository(object):
 
     '''Repository for backup data.
@@ -165,6 +189,8 @@ class Repository(object):
     format_version = 1
 
     def __init__(self, fs, node_size, upload_queue_size, lru_size, hooks):
+        hooks = hooks or obnamlib.HookManager()
+        fs = HookedFS(fs, hooks)
         self.fs = fs
         self.node_size = node_size
         self.upload_queue_size = upload_queue_size
@@ -192,7 +218,10 @@ class Repository(object):
         self.setup_hooks(hooks)
         
     def setup_hooks(self, hooks):
-        self.hooks = hooks or obnamlib.HookManager()
+        self.hooks = hooks
+        
+        self.hooks.new_filter('repository-read-data')
+        self.hooks.new_filter('repository-write-data')
 
     def checksum(self, data):
         '''Return checksum of data.
