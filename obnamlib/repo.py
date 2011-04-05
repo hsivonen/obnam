@@ -284,7 +284,7 @@ class Repository(object):
         
         self.check_format_version()
         try:
-            self.fs.write_file('root.lock', '')
+            self.fs.fs.write_file('root.lock', '')
         except OSError, e:
             if e.errno == errno.EEXIST:
                 raise LockFail('Lock file root.lock already exists')
