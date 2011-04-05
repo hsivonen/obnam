@@ -69,13 +69,13 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         if not self.keyid:
             return encrypted
         symmetric_key = self.get_symmetric_key(repo, toplevel)
-        return obnamlib.decrypt_with_symmetric_key(encrypted, symmetric_key)
+        return obnamlib.decrypt_symmetric(encrypted, symmetric_key)
 
     def toplevel_write_data(self, cleartext, repo, toplevel):
         if not self.keyid:
             return cleartext
         symmetric_key = self.get_symmetric_key(repo, toplevel)
-        return obnamlib.encrypt_with_symmetric_key(cleartext, symmetric_key)
+        return obnamlib.encrypt_symmetric(cleartext, symmetric_key)
 
     def get_symmetric_key(self, repo, toplevel):
         encoded = repo.fs.fs.cat(os.path.join(toplevel, 'key'))
