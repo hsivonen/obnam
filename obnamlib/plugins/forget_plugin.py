@@ -33,11 +33,7 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
         self.app.config.require('repository')
         self.app.config.require('client-name')
 
-        fs = self.app.fsf.new(self.app.config['repository'])
-        fs.connect()
-        self.repo = obnamlib.Repository(fs, self.app.config['node-size'], 
-                                        self.app.config['upload-queue-size'],
-                                        self.app.config['lru-size'])
+        self.repo = self.app.open_repository()
         self.repo.lock_client(self.app.config['client-name'])
 
         if args:
