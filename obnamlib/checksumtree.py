@@ -29,11 +29,11 @@ class ChecksumTree(obnamlib.RepositoryTree):
     '''
 
     def __init__(self, fs, name, checksum_length, node_size, 
-                 upload_queue_size, lru_size):
+                 upload_queue_size, lru_size, hooks):
         self.fmt = '!%dsQQ' % checksum_length
         key_bytes = len(self.key('', 0, 0))
         obnamlib.RepositoryTree.__init__(self, fs, name, key_bytes, node_size, 
-                                         upload_queue_size, lru_size)
+                                         upload_queue_size, lru_size, hooks)
         self.keep_just_one_tree = True
 
     def key(self, checksum, chunk_id, client_id):

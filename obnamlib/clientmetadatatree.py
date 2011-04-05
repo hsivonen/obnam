@@ -65,11 +65,12 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     TYPE_MAX = 255
     SUBKEY_MAX = struct.pack('!Q', obnamlib.MAX_ID)
     
-    def __init__(self, fs, client_dir, node_size, upload_queue_size, lru_size):
+    def __init__(self, fs, client_dir, node_size, upload_queue_size, lru_size,
+                 hooks):
         key_bytes = len(self.hashkey(0, self.hash_name(''), 0, 0))
         obnamlib.RepositoryTree.__init__(self, fs, client_dir, key_bytes, 
                                          node_size, upload_queue_size, 
-                                         lru_size)
+                                         lru_size, hooks)
         self.genhash = self.hash_name('generation')
         self.known_generations = dict()
         self.chunkids_per_key = max(1,

@@ -27,11 +27,13 @@ class ChecksumTreeTests(unittest.TestCase):
     def setUp(self):
         self.tempdir = tempfile.mkdtemp()
         fs = obnamlib.LocalFS(self.tempdir)
+        hooks = obnamlib.HookManager()
+        hooks.new('repository-toplevel-init')
         self.checksum = hashlib.md5('foo').digest()
         self.tree = obnamlib.ChecksumTree(fs, 'x', len(self.checksum), 
                                           obnamlib.DEFAULT_NODE_SIZE,
                                           obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
-                                          obnamlib.DEFAULT_LRU_SIZE)
+                                          obnamlib.DEFAULT_LRU_SIZE, hooks)
 
     def tearDown(self):
         self.tree.commit()

@@ -192,12 +192,13 @@ class Repository(object):
         hooks = hooks or obnamlib.HookManager()
         fs = HookedFS(fs, hooks)
         self.fs = fs
+        self.setup_hooks(hooks)
         self.node_size = node_size
         self.upload_queue_size = upload_queue_size
         self.lru_size = lru_size
         self.got_root_lock = False
         self.clientlist = obnamlib.ClientList(fs, node_size, upload_queue_size, 
-                                              lru_size)
+                                              lru_size, hooks)
         self.got_client_lock = False
         self.client_lockfile = None
         self.current_client = None
@@ -208,18 +209,17 @@ class Repository(object):
         self.removed_generations = []
         self.client = None
         self.chunklist = obnamlib.ChunkList(fs, node_size, upload_queue_size, 
-                                            lru_size)
+                                            lru_size, hooks)
         self.chunksums = obnamlib.ChecksumTree(fs, 'chunksums', 
                                                len(self.checksum('')),
                                                node_size, upload_queue_size, 
-                                               lru_size)
+                                               lru_size, hooks)
         self.prev_chunkid = None
-        
-        self.setup_hooks(hooks)
         
     def setup_hooks(self, hooks):
         self.hooks = hooks
         
+        self.hooks.new('repository-toplevel-init')
         self.hooks.new_filter('repository-read-data')
         self.hooks.new_filter('repository-write-data')
 
@@ -384,7 +384,7 @@ class Repository(object):
         self.client = obnamlib.ClientMetadataTree(self.fs, client_dir, 
                                                   self.node_size,
                                                   self.upload_queue_size, 
-                                                  self.lru_size)
+                                                  self.lru_size, self.hooks)
         self.client.init_forest()
 
     @require_client_lock
@@ -427,7 +427,7 @@ class Repository(object):
         self.client = obnamlib.ClientMetadataTree(self.fs, client_dir, 
                                                   self.node_size, 
                                                   self.upload_queue_size, 
-                                                  self.lru_size)
+                                                  self.lru_size, self.hooks)
         self.client.init_forest()
         
     @require_open_client

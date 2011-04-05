@@ -36,7 +36,7 @@ class ClientList(obnamlib.RepositoryTree):
     
     '''
 
-    def __init__(self, fs, node_size, upload_queue_size, lru_size):
+    def __init__(self, fs, node_size, upload_queue_size, lru_size, hooks):
         self.hash_len = len(self.hashfunc(''))
         self.fmt = '!%dsQ' % self.hash_len
         self.key_bytes = len(self.key('', 0))
@@ -44,7 +44,7 @@ class ClientList(obnamlib.RepositoryTree):
         self.maxkey = self.hashkey('\xff' * self.hash_len, obnamlib.MAX_ID)
         obnamlib.RepositoryTree.__init__(self, fs, 'clientlist', 
                                          self.key_bytes, node_size, 
-                                         upload_queue_size, lru_size)
+                                         upload_queue_size, lru_size, hooks)
         self.keep_just_one_tree = True
 
     def hashfunc(self, string):

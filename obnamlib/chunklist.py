@@ -32,11 +32,11 @@ class ChunkList(obnamlib.RepositoryTree):
     
     '''
 
-    def __init__(self, fs, node_size, upload_queue_size, lru_size):
+    def __init__(self, fs, node_size, upload_queue_size, lru_size, hooks):
         self.key_bytes = len(self.key(0))
         obnamlib.RepositoryTree.__init__(self, fs, 'chunklist', self.key_bytes, 
                                          node_size, upload_queue_size, 
-                                         lru_size)
+                                         lru_size, hooks)
         self.keep_just_one_tree = True
 
     def key(self, chunk_id):
