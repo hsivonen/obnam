@@ -78,11 +78,11 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         return obnamlib.encrypt_with_symmetric_key(cleartext, symmetric_key)
 
     def get_symmetric_key(self, repo, toplevel):
-        encoded = repo.fs.cat(os.path.join(toplevel, 'key'))
+        encoded = repo.fs.fs.cat(os.path.join(toplevel, 'key'))
         return obnamlib.decrypt_with_secret_keys(encoded)
 
     def read_keyring(self, repo, toplevel):
-        encrypted = repo.fs.cat(os.path.join(toplevel, 'userkeys'))
+        encrypted = repo.fs.fs.cat(os.path.join(toplevel, 'userkeys'))
         encoded = self.toplevel_read_data(encrypted, repo, toplevel)
         return obnamlib.Keyring(encoded=encoded)
 
@@ -90,7 +90,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         encoded = str(keyring)
         encrypted = self.toplevel_write_data(encoded, repo, toplevel)
         pathname = os.path.join(toplevel, 'userkeys')
-        repo.fs.overwrite_file(pathname, encrypted)
+        repo.fs.fs.overwrite_file(pathname, encrypted)
 
     def add_to_userkeys(self, repo, toplevel, public_key):
         userkeys = self.read_keyring(repo, toplevel)
