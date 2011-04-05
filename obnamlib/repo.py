@@ -143,7 +143,7 @@ class HookedFS(object):
         
     def _get_toplevel(self, filename):
         parts = filename.split(os.sep)
-        if parts:
+        if len(parts) > 1:
             return parts[0]
         else: # pragma: no cover
             raise obnamlib.Error('File at repository root: %s' % filename)
