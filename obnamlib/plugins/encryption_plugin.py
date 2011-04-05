@@ -23,8 +23,6 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         return
         
         hooks = [
-            ('repository-open', self.repository_open),
-            ('repository-init', self.repository_init),
             ('repository-toplevel-init', self.toplevel_init),
             ('repository-read-data', self.toplevel_read_data),
             ('repository-write-data', self.toplevel_write_data),
@@ -34,13 +32,6 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
             
         self.client_keyid = self.app.config['client-keyid']
         self.client_pubkey = obnamlib.get_public_key(self.client_keyid)
-
-    def repository_open(self, repo):
-        self.repo = repo
-        
-    def repository_init(self):
-        # create all the relevant toplevels? doesn't Repository do that?
-        pass
 
     def toplevel_init(self, name):
         '''Initialize a new toplevel for encryption.'''
