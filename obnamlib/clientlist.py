@@ -38,6 +38,7 @@ class ClientList(obnamlib.RepositoryTree):
     
     # subkey values
     CLIENT_NAME = 0
+    KEYID = 1
     SUBKEY_MAX = 255
 
     def __init__(self, fs, node_size, upload_queue_size, lru_size, hooks):
@@ -109,4 +110,23 @@ class ClientList(obnamlib.RepositoryTree):
         if client_id is not None:
             key = self.key(client_name, client_id, self.CLIENT_NAME)
             self.tree.remove(key)
+
+    def get_client_keyid(self, client_name):
+        if self.init_forest() and self.forest.trees:
+            t = self.forest.trees[-1]
+            client_id = self.find_client_id(t, client_name)
+            if client_id is not None:
+                key = self.key(client_name, client_id, self.KEYID)
+                for k, v in t.lookup_range(key, key):
+                    return v
+        return None
+        
+    def set_client_keyid(self, client_name, keyid):
+        self.start_changes()
+        client_id = self.find_client_id(self.tree, client_name)
+        key = self.key(client_name, client_id, self.KEYID)
+        if keyid is None:
+            self.tree.remove_range(key, key)
+        else:
+            self.tree.insert(key, keyid)
 

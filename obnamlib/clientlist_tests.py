@@ -64,6 +64,15 @@ class ClientListTests(unittest.TestCase):
         self.list.add_client('foo')
         self.list.remove_client('foo')
         self.assertEqual(self.list.get_client_id('foo'), None)
+        
+    def test_removed_client_has_no_keys(self):
+        self.list.add_client('foo')
+        client_id = self.list.get_client_id('foo')
+        self.list.remove_client('foo')
+        minkey = self.list.key('foo', client_id, 0)
+        maxkey = self.list.key('foo', client_id, self.list.SUBKEY_MAX)
+        pairs = list(self.list.tree.lookup_range(minkey, maxkey))
+        self.assertEqual(pairs, [])
 
     def test_twice_added_client_exists_only_once(self):
         self.list.add_client('foo')
@@ -79,4 +88,19 @@ class ClientListTests(unittest.TestCase):
         self.assertEqual(sorted(self.list.list_clients()), ['bar', 'foo'])
         self.assertNotEqual(self.list.get_client_id('bar'),
                             self.list.get_client_id('foo'))
+
+    def test_client_has_no_public_key_initially(self):
+        self.list.add_client('foo')
+        self.assertEqual(self.list.get_client_keyid('foo'), None)
+
+    def test_sets_client_keyid(self):
+        self.list.add_client('foo')
+        self.list.set_client_keyid('foo', 'cafebeef')
+        self.assertEqual(self.list.get_client_keyid('foo'), 'cafebeef')
+
+    def test_remove_client_keyid(self):
+        self.list.add_client('foo')
+        self.list.set_client_keyid('foo', 'cafebeef')
+        self.list.set_client_keyid('foo', None)
+        self.assertEqual(self.list.get_client_keyid('foo'), None)
 
