@@ -32,11 +32,14 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
             ('repository-toplevel-init', self.toplevel_init),
             ('repository-read-data', self.toplevel_read_data),
             ('repository-write-data', self.toplevel_write_data),
+            ('repository-add-client', self.add_client),
         ]
         for name, callback in hooks:
             self.app.hooks.add_callback(name, callback)
             
         self._pubkey = None
+        
+        self.app.register_command('client-keys', self.client_keys)
 
     @property
     def keyid(self):
@@ -103,18 +106,30 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
             userkeys.remove(keyid)
             self.write_keyring(repo, toplevel, userkeys)
 
-    def add_client(self, repo, client_public_key):
-        self.add_to_userkeys(repo, 'metadata', client_public_key)
-        self.add_to_userkeys(repo, 'clientlist', client_public_key)
-        self.add_to_userkeys(repo, 'chunks', client_public_key)
-        self.add_to_userkeys(repo, 'chunksums', client_public_key)
-        # client will add itself to the clientlist and create its own toplevel
+    def add_client(self, clientlist, client_name):
+        clientlist.set_client_keyid(client_name, self.keyid)
 
-    def remove_client(self, repo, client_keyid):
-        # client may remove itself, since it has access to the symmetric keys
-        # we assume the client-specific toplevel has already been removed
-        self.remove_from_userkeys(repo, 'chunksums', client_keyid)
-        self.remove_from_userkeys(repo, 'chunks', client_keyid)
-        self.remove_from_userkeys(repo, 'clientlist', client_keyid)
-        self.remove_from_userkeys(repo, 'metadata', client_keyid)
+    def client_keys(self, args):
+        repo = self.app.open_repository()
+        clients = repo.list_clients()
+        for client in clients:
+            keyid = repo.clientlist.get_client_keyid(client)
+            if keyid is None:
+                keyid = 'no key'
+            print client, keyid
+
+#    def add_client(self, repo, client_public_key):
+#        self.add_to_userkeys(repo, 'metadata', client_public_key)
+#        self.add_to_userkeys(repo, 'clientlist', client_public_key)
+#        self.add_to_userkeys(repo, 'chunks', client_public_key)
+#        self.add_to_userkeys(repo, 'chunksums', client_public_key)
+#        # client will add itself to the clientlist and create its own toplevel
+
+#    def remove_client(self, repo, client_keyid):
+#        # client may remove itself, since it has access to the symmetric keys
+#        # we assume the client-specific toplevel has already been removed
+#        self.remove_from_userkeys(repo, 'chunksums', client_keyid)
+#        self.remove_from_userkeys(repo, 'chunks', client_keyid)
+#        self.remove_from_userkeys(repo, 'clientlist', client_keyid)
+#        self.remove_from_userkeys(repo, 'metadata', client_keyid)
 

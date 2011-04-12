@@ -19,3 +19,5 @@ $cmd restore --generation latest --to temp.restored
 summain -r temp.restored/$(pwd)/temp.data > temp.restored.manifest
 diff -u temp.data.manifest temp.restored.manifest
 
+echo "client keys:"
+$cmd client-keys
