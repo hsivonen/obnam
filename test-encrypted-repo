@@ -24,3 +24,6 @@ $cmd client-keys
 
 echo "list-keys:"
 $cmd list-keys
+
+echo "list-toplevels:"
+$cmd list-toplevels
