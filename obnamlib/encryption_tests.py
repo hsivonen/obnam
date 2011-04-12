@@ -133,9 +133,10 @@ uWUO7gMi+AlnxbfXVCTEgw3xhg==
 class SecretKeyringTests(unittest.TestCase):
 
     def test_lists_correct_key(self):
-        keyid = '3B1802F81B321347'
+        keyid1 = '3B1802F81B321347'
+        keyid2 = 'DF3D13AA11E69900'
         seckeys = obnamlib.SecretKeyring(cat('test-gpghome/secring.gpg'))
-        self.assertEqual(seckeys.keyids(), [keyid])
+        self.assertEqual(sorted(seckeys.keyids()), sorted([keyid1, keyid2]))
 
 
 class PublicKeyEncryptionTests(unittest.TestCase):
