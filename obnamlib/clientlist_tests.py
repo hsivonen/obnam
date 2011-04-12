@@ -38,12 +38,13 @@ class ClientListTests(unittest.TestCase):
 
     def test_key_bytes_is_correct_length(self):
         self.assertEqual(self.list.key_bytes, 
-                         len(self.list.key('foo', 12765)))
+                         len(self.list.key('foo', 12765, 0)))
 
     def test_unkey_unpacks_key_correctly(self):
-        key = self.list.key('client name', 12765)
-        client_hash, client_id = self.list.unkey(key)
+        key = self.list.key('client name', 12765, 42)
+        client_hash, client_id, subkey = self.list.unkey(key)
         self.assertEqual(client_id, 12765)
+        self.assertEqual(subkey, 42)
 
     def test_reports_none_as_id_for_nonexistent_client(self):
         self.assertEqual(self.list.get_client_id('foo'), None)
