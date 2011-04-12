@@ -97,12 +97,42 @@ It verifies that all clients, generations, directories, files, and
 all file contents still exists in the backup repository.
 It may take quite a long time to run.
 .IP \(bu
-.B force-lock
+.B force\-lock
 removes a lock file for a client in the repository.
 You should only force a lock if you are sure no-one is accessing that
 client's data in the repository.
 A dangling lock might happen, for example, if obnam loses its network
 connection to the backup repository.
+.IP \(bu
+.B client\-keys
+lists the encryption key associated with each client.
+.IP \(bu
+.B list\-keys
+lists the keys that can access the repository,
+and which toplevel directories each key can access.
+Some of the toplevel directories are shared between clients,
+others are specific to a client.
+.IP \(bu
+.B list\-toplevels
+is like 
+.BR list\-keys ,
+but lists toplevels and which keys can access them.
+.IP \(bu
+.B add\-key
+adds an encryption key to the repository.
+By default, they key is added only to the shared toplevel directories,
+but it can also be added to specific clients:
+list the names of the clients on the command line.
+They key is given with the
+.B \-\-keyid
+option.
+Whoever has access to the secret key corresponding to the key id
+can access the backup repository
+(the shared toplevels plus specified clients).
+.IP \(bu
+.B remove\-key
+removes a key from the shared toplevel directories,
+plus any clients specified on the command line.
 .SS "Making backups"
 When you run a backup,
 .B obnam
@@ -440,6 +470,13 @@ Encrypt data stored in the backup repository using
 .B gpg
 and the key specified with
 .IR KEYID .
+.TP
+.BR \-\-keyid =\fIKEYID
+Key identifier to be added to or removed from the repository by the
+.B add\-key
+and
+.B remove\-key
+commands.
 .\" ------------------------------------------------------------------
 .SH "EXIT STATUS"
 .B obnam
