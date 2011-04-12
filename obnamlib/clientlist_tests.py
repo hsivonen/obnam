@@ -58,6 +58,7 @@ class ClientListTests(unittest.TestCase):
 
     def test_added_client_is_listed(self):
         self.list.add_client('foo')
+        self.list.set_client_keyid('foo', 'cafebeef')
         self.assertEqual(self.list.list_clients(), ['foo'])
 
     def test_removed_client_has_none_id(self):
