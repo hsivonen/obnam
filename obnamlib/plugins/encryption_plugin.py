@@ -48,6 +48,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         self.app.register_command('list-toplevels', self.list_toplevels)
         self.app.register_command('add-key', self.add_key)
         self.app.register_command('remove-key', self.remove_key)
+        self.app.register_command('remove-client', self.remove_client)
 
     @property
     def keyid(self):
@@ -179,4 +180,12 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         clients = self._find_clientdirs(repo, args)
         for toplevel in self._shared + clients:
             self.remove_from_userkeys(repo, toplevel, keyid)
+
+    def remove_client(self, args):
+        repo = self.app.open_repository()
+        repo.lock_root()
+        for client_name in args:
+            logging.info('removing client %s' % client_name)
+            repo.remove_client(client_name)
+        repo.commit_root()
 

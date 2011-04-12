@@ -36,3 +36,7 @@ echo "remove key"
 $cmd remove-key --keyid $key2 yeehaa
 $cmd list-keys
 
+echo "remove client"
+$cmd remove-client yeehaa
+$cmd client-keys
+
