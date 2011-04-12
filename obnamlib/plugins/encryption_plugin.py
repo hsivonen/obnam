@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import logging
 import os
 
 import obnamlib
@@ -43,6 +44,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         self.app.register_command('list-keys', self.list_keys)
         self.app.register_command('list-toplevels', self.list_toplevels)
         self.app.register_command('add-key', self.add_key)
+        self.app.register_command('remove-key', self.remove_key)
 
     @property
     def keyid(self):
@@ -106,8 +108,12 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
     def remove_from_userkeys(self, repo, toplevel, keyid):
         userkeys = self.read_keyring(repo, toplevel)
         if keyid in userkeys:
+            logging.debug('removing key %s from %s' % (keyid, toplevel))
             userkeys.remove(keyid)
             self.write_keyring(repo, toplevel, userkeys)
+        else:
+            logging.debug('unable to remove key %s from %s (not there)' %
+                          (keyid, toplevel))
 
     def add_client(self, clientlist, client_name):
         clientlist.set_client_keyid(client_name, self.keyid)
@@ -155,6 +161,13 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
             key = obnamlib.get_public_key(keyid)
             for toplevel in shared:
                 self.add_to_userkeys(repo, toplevel, key)
+
+    def remove_key(self, args):
+        repo = self.app.open_repository()
+        shared = ['chunklist', 'chunks', 'chunksums', 'clientlist', 'metadata']
+        for keyid in args:
+            for toplevel in shared:
+                self.remove_from_userkeys(repo, toplevel, keyid)
 
 #    def add_client(self, repo, client_public_key):
 #        self.add_to_userkeys(repo, 'metadata', client_public_key)
