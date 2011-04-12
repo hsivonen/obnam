@@ -120,21 +120,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
                 keyid = 'no key'
             print client, keyid
 
-    def list_keys(self, args):
-        repo = self.app.open_repository()
-        toplevels = repo.fs.listdir('.')
-        keys = dict()
-        for toplevel in toplevels:
-            userkeys = self.read_keyring(repo, toplevel)
-            for keyid in userkeys.keyids():
-                keys[keyid] = keys.get(keyid, []) + [toplevel]
-        for keyid in keys:
-            print 'key: %s' % keyid
-            for toplevel in keys[keyid]:
-                print '  %s' % toplevel
-
-    def list_toplevels(self, args):
-        repo = self.app.open_repository()
+    def _find_keys_and_toplevels(self, repo):
         toplevels = repo.fs.listdir('.')
         keys = dict()
         tops = dict()
@@ -143,6 +129,19 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
             for keyid in userkeys.keyids():
                 keys[keyid] = keys.get(keyid, []) + [toplevel]
                 tops[toplevel] = tops.get(toplevel, []) + [keyid]
+        return keys, tops
+
+    def list_keys(self, args):
+        repo = self.app.open_repository()
+        keys, tops = self._find_keys_and_toplevels(repo)
+        for keyid in keys:
+            print 'key: %s' % keyid
+            for toplevel in keys[keyid]:
+                print '  %s' % toplevel
+
+    def list_toplevels(self, args):
+        repo = self.app.open_repository()
+        keys, tops = self._find_keys_and_toplevels(repo)
         for toplevel in tops:
             print 'toplevel: %s' % toplevel
             for keyid in tops[toplevel]:
