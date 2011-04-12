@@ -5,6 +5,8 @@ set -e
 cmd="./obnam --repository=temp.repo --log=temp.log --log-level=debug"
 cmd="$cmd --encrypt-with=1B321347"
 
+key2="11E69900"
+
 rm -rf temp.gpghome temp.data temp.repo temp.restored temp.log
 
 cp -a test-gpghome temp.gpghome
@@ -19,6 +21,8 @@ $cmd restore --generation latest --to temp.restored
 summain -r temp.restored/$(pwd)/temp.data > temp.restored.manifest
 diff -u temp.data.manifest temp.restored.manifest
 
+$cmd add-key $key2
+
 echo "client keys:"
 $cmd client-keys
 
@@ -27,3 +31,8 @@ $cmd list-keys
 
 echo "list-toplevels:"
 $cmd list-toplevels
+
+#echo "remove key"
+#$cmd remove-key $key2
+#$cmd list-keys
+

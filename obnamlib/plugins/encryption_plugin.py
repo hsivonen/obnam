@@ -42,6 +42,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         self.app.register_command('client-keys', self.client_keys)
         self.app.register_command('list-keys', self.list_keys)
         self.app.register_command('list-toplevels', self.list_toplevels)
+        self.app.register_command('add-key', self.add_key)
 
     @property
     def keyid(self):
@@ -146,6 +147,14 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
             print 'toplevel: %s' % toplevel
             for keyid in tops[toplevel]:
                 print '  %s' % keyid
+
+    def add_key(self, args):
+        repo = self.app.open_repository()
+        shared = ['chunklist', 'chunks', 'chunksums', 'clientlist', 'metadata']
+        for keyid in args:
+            key = obnamlib.get_public_key(keyid)
+            for toplevel in shared:
+                self.add_to_userkeys(repo, toplevel, key)
 
 #    def add_client(self, repo, client_public_key):
 #        self.add_to_userkeys(repo, 'metadata', client_public_key)
