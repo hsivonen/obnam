@@ -40,6 +40,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         self._pubkey = None
         
         self.app.register_command('client-keys', self.client_keys)
+        self.app.register_command('list-keys', self.list_keys)
 
     @property
     def keyid(self):
@@ -117,6 +118,19 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
             if keyid is None:
                 keyid = 'no key'
             print client, keyid
+
+    def list_keys(self, args):
+        repo = self.app.open_repository()
+        toplevels = repo.fs.listdir('.')
+        keys = dict()
+        for toplevel in toplevels:
+            userkeys = self.read_keyring(repo, toplevel)
+            for keyid in userkeys.keyids():
+                keys[keyid] = keys.get(keyid, []) + [toplevel]
+        for keyid in keys:
+            print 'key: %s' % keyid
+            for toplevel in keys[keyid]:
+                print '  %s' % toplevel
 
 #    def add_client(self, repo, client_public_key):
 #        self.add_to_userkeys(repo, 'metadata', client_public_key)

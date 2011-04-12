@@ -21,3 +21,6 @@ diff -u temp.data.manifest temp.restored.manifest
 
 echo "client keys:"
 $cmd client-keys
+
+echo "list-keys:"
+$cmd list-keys
