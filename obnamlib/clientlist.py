@@ -28,9 +28,11 @@ class ClientList(obnamlib.RepositoryTree):
     The list maps a client name to an arbitrary (string) identifier,
     which is unique within the repository.
     
-    The list is implemented as a B-tree, with a two-part key:
-    128-bit MD5 of client name, and 64-bit unique identifier.
-    The value is the client name.
+    The list is implemented as a B-tree, with a three-part key:
+    128-bit MD5 of client name, 64-bit unique identifier, and subkey
+    identifier. The value depends on the subkey: it's either the
+    client's full name, or the public key identifier the client
+    uses to encrypt their backups.
     
     The client's identifier is a random, unique 64-bit integer.
     
