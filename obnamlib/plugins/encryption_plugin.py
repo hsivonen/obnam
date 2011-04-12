@@ -28,6 +28,9 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         self.app.config.new_string(['encrypt-with'],
                                    'PGP key with which to encrypt data '
                                         'in the backup repository')
+        self.app.config.new_string(['keyid'],
+                                   'PGP key id to add to/remove from '
+                                        'the backup repository')
         
         hooks = [
             ('repository-toplevel-init', self.toplevel_init),
@@ -154,33 +157,26 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
             for keyid in tops[toplevel]:
                 print '  %s' % keyid
 
+    _shared = ['chunklist', 'chunks', 'chunksums', 'clientlist', 'metadata']
+    
+    def _find_clientdirs(self, repo, client_names):
+        return [repo.client_dir(repo.clientlist.get_client_id(x))
+                 for x in client_names]
+
     def add_key(self, args):
+        self.app.config.require('keyid')
         repo = self.app.open_repository()
-        shared = ['chunklist', 'chunks', 'chunksums', 'clientlist', 'metadata']
-        for keyid in args:
-            key = obnamlib.get_public_key(keyid)
-            for toplevel in shared:
-                self.add_to_userkeys(repo, toplevel, key)
+        keyid = self.app.config['keyid']
+        key = obnamlib.get_public_key(keyid)
+        clients = self._find_clientdirs(repo, args)
+        for toplevel in self._shared + clients:
+            self.add_to_userkeys(repo, toplevel, key)
 
     def remove_key(self, args):
+        self.app.config.require('keyid')
         repo = self.app.open_repository()
-        shared = ['chunklist', 'chunks', 'chunksums', 'clientlist', 'metadata']
-        for keyid in args:
-            for toplevel in shared:
-                self.remove_from_userkeys(repo, toplevel, keyid)
-
-#    def add_client(self, repo, client_public_key):
-#        self.add_to_userkeys(repo, 'metadata', client_public_key)
-#        self.add_to_userkeys(repo, 'clientlist', client_public_key)
-#        self.add_to_userkeys(repo, 'chunks', client_public_key)
-#        self.add_to_userkeys(repo, 'chunksums', client_public_key)
-#        # client will add itself to the clientlist and create its own toplevel
-
-#    def remove_client(self, repo, client_keyid):
-#        # client may remove itself, since it has access to the symmetric keys
-#        # we assume the client-specific toplevel has already been removed
-#        self.remove_from_userkeys(repo, 'chunksums', client_keyid)
-#        self.remove_from_userkeys(repo, 'chunks', client_keyid)
-#        self.remove_from_userkeys(repo, 'clientlist', client_keyid)
-#        self.remove_from_userkeys(repo, 'metadata', client_keyid)
+        keyid = self.app.config['keyid']
+        clients = self._find_clientdirs(repo, args)
+        for toplevel in self._shared + clients:
+            self.remove_from_userkeys(repo, toplevel, keyid)
 

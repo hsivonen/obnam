@@ -21,7 +21,7 @@ $cmd restore --generation latest --to temp.restored
 summain -r temp.restored/$(pwd)/temp.data > temp.restored.manifest
 diff -u temp.data.manifest temp.restored.manifest
 
-$cmd add-key $key2
+$cmd add-key --keyid $key2 yeehaa
 
 echo "client keys:"
 $cmd client-keys
@@ -33,6 +33,6 @@ echo "list-toplevels:"
 $cmd list-toplevels
 
 echo "remove key"
-$cmd remove-key $key2
+$cmd remove-key --keyid $key2 yeehaa
 $cmd list-keys
 
