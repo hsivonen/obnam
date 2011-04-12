@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import logging
 import os
 
 import obnamlib
@@ -27,16 +28,27 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         self.app.config.new_string(['encrypt-with'],
                                    'PGP key with which to encrypt data '
                                         'in the backup repository')
+        self.app.config.new_string(['keyid'],
+                                   'PGP key id to add to/remove from '
+                                        'the backup repository')
         
         hooks = [
             ('repository-toplevel-init', self.toplevel_init),
             ('repository-read-data', self.toplevel_read_data),
             ('repository-write-data', self.toplevel_write_data),
+            ('repository-add-client', self.add_client),
         ]
         for name, callback in hooks:
             self.app.hooks.add_callback(name, callback)
             
         self._pubkey = None
+        
+        self.app.register_command('client-keys', self.client_keys)
+        self.app.register_command('list-keys', self.list_keys)
+        self.app.register_command('list-toplevels', self.list_toplevels)
+        self.app.register_command('add-key', self.add_key)
+        self.app.register_command('remove-key', self.remove_key)
+        self.app.register_command('remove-client', self.remove_client)
 
     @property
     def keyid(self):
@@ -100,21 +112,80 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
     def remove_from_userkeys(self, repo, toplevel, keyid):
         userkeys = self.read_keyring(repo, toplevel)
         if keyid in userkeys:
+            logging.debug('removing key %s from %s' % (keyid, toplevel))
             userkeys.remove(keyid)
             self.write_keyring(repo, toplevel, userkeys)
+        else:
+            logging.debug('unable to remove key %s from %s (not there)' %
+                          (keyid, toplevel))
 
-    def add_client(self, repo, client_public_key):
-        self.add_to_userkeys(repo, 'metadata', client_public_key)
-        self.add_to_userkeys(repo, 'clientlist', client_public_key)
-        self.add_to_userkeys(repo, 'chunks', client_public_key)
-        self.add_to_userkeys(repo, 'chunksums', client_public_key)
-        # client will add itself to the clientlist and create its own toplevel
+    def add_client(self, clientlist, client_name):
+        clientlist.set_client_keyid(client_name, self.keyid)
 
-    def remove_client(self, repo, client_keyid):
-        # client may remove itself, since it has access to the symmetric keys
-        # we assume the client-specific toplevel has already been removed
-        self.remove_from_userkeys(repo, 'chunksums', client_keyid)
-        self.remove_from_userkeys(repo, 'chunks', client_keyid)
-        self.remove_from_userkeys(repo, 'clientlist', client_keyid)
-        self.remove_from_userkeys(repo, 'metadata', client_keyid)
+    def client_keys(self, args):
+        repo = self.app.open_repository()
+        clients = repo.list_clients()
+        for client in clients:
+            keyid = repo.clientlist.get_client_keyid(client)
+            if keyid is None:
+                keyid = 'no key'
+            print client, keyid
+
+    def _find_keys_and_toplevels(self, repo):
+        toplevels = repo.fs.listdir('.')
+        keys = dict()
+        tops = dict()
+        for toplevel in toplevels:
+            userkeys = self.read_keyring(repo, toplevel)
+            for keyid in userkeys.keyids():
+                keys[keyid] = keys.get(keyid, []) + [toplevel]
+                tops[toplevel] = tops.get(toplevel, []) + [keyid]
+        return keys, tops
+
+    def list_keys(self, args):
+        repo = self.app.open_repository()
+        keys, tops = self._find_keys_and_toplevels(repo)
+        for keyid in keys:
+            print 'key: %s' % keyid
+            for toplevel in keys[keyid]:
+                print '  %s' % toplevel
+
+    def list_toplevels(self, args):
+        repo = self.app.open_repository()
+        keys, tops = self._find_keys_and_toplevels(repo)
+        for toplevel in tops:
+            print 'toplevel: %s' % toplevel
+            for keyid in tops[toplevel]:
+                print '  %s' % keyid
+
+    _shared = ['chunklist', 'chunks', 'chunksums', 'clientlist', 'metadata']
+    
+    def _find_clientdirs(self, repo, client_names):
+        return [repo.client_dir(repo.clientlist.get_client_id(x))
+                 for x in client_names]
+
+    def add_key(self, args):
+        self.app.config.require('keyid')
+        repo = self.app.open_repository()
+        keyid = self.app.config['keyid']
+        key = obnamlib.get_public_key(keyid)
+        clients = self._find_clientdirs(repo, args)
+        for toplevel in self._shared + clients:
+            self.add_to_userkeys(repo, toplevel, key)
+
+    def remove_key(self, args):
+        self.app.config.require('keyid')
+        repo = self.app.open_repository()
+        keyid = self.app.config['keyid']
+        clients = self._find_clientdirs(repo, args)
+        for toplevel in self._shared + clients:
+            self.remove_from_userkeys(repo, toplevel, keyid)
+
+    def remove_client(self, args):
+        repo = self.app.open_repository()
+        repo.lock_root()
+        for client_name in args:
+            logging.info('removing client %s' % client_name)
+            repo.remove_client(client_name)
+        repo.commit_root()
 

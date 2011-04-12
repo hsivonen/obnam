@@ -236,6 +236,7 @@ class Repository(object):
         self.hooks.new('repository-toplevel-init')
         self.hooks.new_filter('repository-read-data')
         self.hooks.new_filter('repository-write-data')
+        self.hooks.new('repository-add-client')
         
     def checksum(self, data):
         '''Return checksum of data.
@@ -306,6 +307,8 @@ class Repository(object):
         '''Commit changes to root node, and unlock it.'''
         for client_name in self.added_clients:
             self.clientlist.add_client(client_name)
+            self.hooks.call('repository-add-client', 
+                            self.clientlist, client_name)
         self.added_clients = []
         for client_name in self.removed_clients:
             client_id = self.clientlist.get_client_id(client_name)
