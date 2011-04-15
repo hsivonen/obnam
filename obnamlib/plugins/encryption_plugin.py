@@ -22,7 +22,7 @@ import obnamlib
 
 class EncryptionPlugin(obnamlib.ObnamPlugin):
 
-    symmetric_key_bits = 8
+    symmetric_key_bits = 256
 
     def enable(self):
         self.app.config.new_string(['encrypt-with'],
