@@ -5,6 +5,16 @@ Obnam NEWS
 This file summarizes changes between releases of Obnam.
 
 
+Version 0.16, released 2011-03-21; a BETA release
+-------------------------------------------------
+
+* This is the first BETA release. Obnam should now be feature complete
+  for real use. Performance is lacking and there are many bugs remaining.
+  There are no known bugs that would corrupt backed up data, or prevent
+  its recovery.
+* Add encryption support. See the manual page for how to use it.
+
+
 Version 0.15.1, released 2011-03-21; an ALPHA release
 ----------------------------------------------------
 
