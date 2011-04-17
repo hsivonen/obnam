@@ -502,6 +502,11 @@ class EncryptionTests(ObnamTestCase):
         self.assertEqual(self.client_keys(),
                          [(self.client_name, self.gpgkey)])
 
+    def test_removes_client(self):
+        self.obnam(['remove-client', '--repository', self.repo, 
+                    self.client_name])
+        self.assertEqual(self.client_keys(), [])
+
 
 if __name__ == '__main__':
     logging.basicConfig(filename='blackboxtest.log',
