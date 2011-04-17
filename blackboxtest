@@ -56,6 +56,8 @@ class ObnamTestCase(unittest.TestCase):
         self.data = self.mkdir('data')
         self.repo = self.mkdir('repo')
         self.restored = self.mkdir('restored')
+        self.gpghome = os.path.join(self.tempdir, 'gpghome')
+        shutil.copytree('test-gpghome', self.gpghome)
         self.setUpHook()
         
     def setUpHook(self):
@@ -84,9 +86,12 @@ class ObnamTestCase(unittest.TestCase):
         '''
 
         logging.debug('executing %s' % argv)
-        
+
+        env = dict(os.environ)
+        env['GNUPGHOME'] = self.gpghome 
+               
         p = subprocess.Popen(argv, stdout=subprocess.PIPE, 
-                             stderr=subprocess.PIPE)
+                             stderr=subprocess.PIPE, env=env)
         stdout, stderr = p.communicate()
         if stderr_ignore:
             lines = [line for line in stderr.splitlines()
