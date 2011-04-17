@@ -488,6 +488,21 @@ class ForgetTests(ObnamTestCase):
         self.assertEqual(self.disk_usage(chunks), 0)
 
 
+class EncryptionTests(ObnamTestCase):
+
+    def setUpHook(self):
+        self.create_file(self.data, 'foo', 'foo')
+        self.backup()
+
+    def client_keys(self):
+        output = self.obnam(['client-keys', '--repository', self.repo])
+        return [tuple(line.split()) for line in output.splitlines()]
+
+    def test_has_client_key_after_backup(self):
+        self.assertEqual(self.client_keys(),
+                         [(self.client_name, self.gpgkey)])
+
+
 if __name__ == '__main__':
     logging.basicConfig(filename='blackboxtest.log',
                         level=logging.DEBUG,

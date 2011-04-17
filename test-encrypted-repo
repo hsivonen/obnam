@@ -3,7 +3,7 @@
 set -e
 
 cmd="./obnam --repository=temp.repo --log=temp.log --log-level=debug"
-cmd="$cmd --client-name=yeehaa --encrypt-with=3B1802F81B321347"
+cmd="$cmd --client-name=yeehaa --encrypt-with=3B1802F81B321347 --weak-random"
 
 key2="DF3D13AA11E69900"
 
