@@ -1,13 +1,15 @@
 Obnam, a backup program
 =======================
 
-Obnam is a backup program. It is currently ALPHA quality, meaning that
-some things work, but many things don't, there are probably a lot of bugs,
-and if you rely on it, you will turn bitter and hateful, and will abandon
-all hope for civilisation, move into the rain forest, and talk to birds
-for the rest of your life.
+Obnam is a backup program. It is currently in BETA quality, meaning that
+all the necessary features should be there, but there are bugs that may
+annoy you a lot, and performance may be entirely inadequate for you.
+Hopefully using Obnam will no longer turn you bitter and hateful, and 
+make you abandon all hope for civilisation, move into the rain forest, 
+and talk to birds for the rest of your life.
 
-In other words, don't use it for anything real yet.
+It would be inadvisable to rely on Obnam as your only backup solution,
+but it should be ready for evaluation use.
 
 
 Home page
@@ -16,22 +18,19 @@ Home page
 The Obnam home page is at <http://braawi.org/obnam/>, see there
 for more information.
 
-More usefully, perhaps, the on-disk data structure description
-(i.e., how obnam uses copy-on-write B-trees), is at
-<http://braawi.org/obnam/ondisk/>.
-
 
 Installation
 ------------
 
-The source tree contains packaging for Debian. Run "debuild -us -uc" to
+The source tree contains packaging for Debian. Run `debuild -us -uc` to
 build an installation package.
 
-On other systems, using the setup.py file might work: run
-"python setup.py --help" for advice. If not, please tell me how to fix it.
+On other systems, using the `setup.py` file should work: run
+"python setup.py --help" for advice. If not, please report a bug.
+(I've only tested `setup.py` enough for to build the Debian package.)
 
-You need to install my B-tree, and some other libraries and tools, which you 
-can get from:
+You need to install my Python B-tree library, and some other libraries 
+and tools, which you can get from:
 
 * <http://liw.fi/larch/>
 * <http://liw.fi/ttystatus/>
@@ -108,9 +107,12 @@ Feedback
 --------
 
 I welcome bug fixes, enhancements, bug reports, suggestions, requests,
-and other feedback. I prefer e-mail (mailto:liw@liw.fi).
+and other feedback. I prefer e-mail (<mailto:liw@liw.fi>).
 
-It would be helpful if you can run "make clean check" before submitting
+There's a mailing list for Obnam users: send mail to
+<mailto:obnam-help@braawi.org> for instructions.
+
+It would be helpful if you can run `make clean check` before submitting
 a patch, but it is not strictly required.
 
 
@@ -122,7 +124,7 @@ so that can change.)
 
 The code is covered by the GNU General Public License, version 3 or later.
 
-Copyright 2010  Lars Wirzenius
+Copyright 2010, 2011  Lars Wirzenius
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

@@ -1,3 +1,9 @@
+obnam (0.16) squeeze; urgency=low
+
+  * New upstream release. The first BETA release.
+
+ -- Lars Wirzenius <liw@liw.fi>  Sun, 17 Apr 2011 10:45:58 +0100
+
 obnam (0.15.1) squeeze; urgency=low
 
   * New upstream version.
