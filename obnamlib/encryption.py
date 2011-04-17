@@ -28,9 +28,7 @@ def generate_symmetric_key(numbits, filename='/dev/random'):
     key = f.read(bytes)
     f.close()
     
-    # Passphrase should not contain newlines. Hex encode?
-    
-    return key
+    return key.encode('hex')
     
     
 def _gpg_pipe(args, data, passphrase):

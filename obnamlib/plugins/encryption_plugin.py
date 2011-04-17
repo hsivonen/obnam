@@ -31,6 +31,9 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         self.app.config.new_string(['keyid'],
                                    'PGP key id to add to/remove from '
                                         'the backup repository')
+        self.app.config.new_boolean(['weak-random'],
+                                    'use /dev/urandom instead of /dev/random '
+                                        'to generate symmetric keys')
         
         hooks = [
             ('repository-toplevel-init', self.toplevel_init),
@@ -59,6 +62,13 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         if self._pubkey is None:
             self._pubkey = obnamlib.get_public_key(self.keyid)
         return self._pubkey
+        
+    @property
+    def devrandom(self):
+        if self.app.config['weak-random']:
+            return '/dev/urandom'
+        else:
+            return '/dev/random'
 
     def toplevel_init(self, repo, toplevel):
         '''Initialize a new toplevel for encryption.'''
@@ -69,7 +79,9 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         pubkeys = obnamlib.Keyring()
         pubkeys.add(self.pubkey)
 
-        symmetric_key = obnamlib.generate_symmetric_key(self.symmetric_key_bits)
+        symmetric_key = obnamlib.generate_symmetric_key(
+                                self.symmetric_key_bits,
+                                filename=self.devrandom)
         encrypted = obnamlib.encrypt_with_keyring(symmetric_key, pubkeys)
         repo.fs.fs.write_file(os.path.join(toplevel, 'key'), encrypted)
 

@@ -49,6 +49,10 @@ class ObnamTestCase(unittest.TestCase):
     backup operations, and for verifyting results.
 
     '''
+    
+    # These are the keys in test-gpghome.
+    gpgkey = '3B1802F81B321347'
+    gpgkey2 = 'DF3D13AA11E69900'
 
     def setUp(self):
         self.client_name = 'client_name'
@@ -56,6 +60,8 @@ class ObnamTestCase(unittest.TestCase):
         self.data = self.mkdir('data')
         self.repo = self.mkdir('repo')
         self.restored = self.mkdir('restored')
+        self.gpghome = os.path.join(self.tempdir, 'gpghome')
+        shutil.copytree('test-gpghome', self.gpghome)
         self.setUpHook()
         
     def setUpHook(self):
@@ -84,9 +90,12 @@ class ObnamTestCase(unittest.TestCase):
         '''
 
         logging.debug('executing %s' % argv)
-        
+
+        env = dict(os.environ)
+        env['GNUPGHOME'] = self.gpghome 
+               
         p = subprocess.Popen(argv, stdout=subprocess.PIPE, 
-                             stderr=subprocess.PIPE)
+                             stderr=subprocess.PIPE, env=env)
         stdout, stderr = p.communicate()
         if stderr_ignore:
             lines = [line for line in stderr.splitlines()
@@ -103,6 +112,8 @@ class ObnamTestCase(unittest.TestCase):
                             '--quiet',
                             '--log', 'blackboxtest-obnam.log',
                             '--log-level', 'debug',
+                            '--encrypt-with', self.gpgkey,
+                            '--weak-random',
                             '--client-name', self.client_name] +
                            args, stderr_ignore=stderr_ignore)
 
@@ -321,6 +332,12 @@ class ObnamTestCase(unittest.TestCase):
                 self.report_contents(self.data, origs)
                 self.report_contents(self.restored, restoreds)
                 raise Exception('spurious %s in restored data' % name)
+                
+    def remove_encryption_metadata(self, parent, subdir):
+        for x in ['key', 'userkeys']:
+            pathname = os.path.join(parent, subdir, x)
+            if os.path.exists(pathname):
+                os.remove(pathname)
 
 
 class RestoreTests(ObnamTestCase):
@@ -380,15 +397,6 @@ class BackupTests(ObnamTestCase):
         self.backup()
         self.restore()
         self.assert_restored_correctly()
-
-    def test_reuses_chunk(self):
-        n = 100
-        for i in range(n):
-            self.create_file(self.data, 'target%d' % i, 'content1')
-        self.backup()
-
-        s = self.open_repository()
-        self.assertEqual(len(s.list_chunks()), 1)
 
     def test_does_not_include_roots_from_old_gens_unless_specified_again(self):
         foo = self.create_dir(self.data, 'foo')
@@ -463,6 +471,7 @@ class ForgetTests(ObnamTestCase):
         self.create_file(self.data, 'big', self.random_string(1024**2))
         self.backup()
         self.forget(genids=self.generations())
+        self.remove_encryption_metadata(self.repo, 'chunks')
         self.assertEqual(self.disk_usage(os.path.join(self.repo, 'chunks')),
                          0)
     
@@ -475,8 +484,58 @@ class ForgetTests(ObnamTestCase):
         genids = self.generations()
         forgettable = genids[:-1]
         self.forget(genids=forgettable)
+        self.remove_encryption_metadata(self.repo, 'chunks')
         chunks = os.path.join(self.repo, 'chunks')
         self.assertEqual(self.disk_usage(chunks), 0)
+
+
+class EncryptionTests(ObnamTestCase):
+
+    def setUpHook(self):
+        self.create_file(self.data, 'foo', 'foo')
+        self.backup()
+
+    def client_keys(self):
+        output = self.obnam(['client-keys', '--repository', self.repo])
+        return [tuple(line.split()) for line in output.splitlines()]
+
+    def list_keys(self):
+        output = self.obnam(['list-keys', '--repository', self.repo])
+        keys = dict()
+        latest_key = None
+        for line in output.splitlines():
+            if line.startswith('key:'):
+                latest_key = line.split()[1]
+            else:
+                keys[latest_key] = keys.get(latest_key, []) + [line.strip()]
+        for key in keys:
+            keys[key].sort()
+        return keys
+
+    def test_has_client_key_after_backup(self):
+        self.assertEqual(self.client_keys(),
+                         [(self.client_name, self.gpgkey)])
+
+    def test_removes_client(self):
+        self.obnam(['remove-client', '--repository', self.repo, 
+                    self.client_name])
+        self.assertEqual(self.client_keys(), [])
+        
+    def test_only_client_key_listed_initially(self):
+        self.assertEqual(self.list_keys().keys(), [self.gpgkey])
+        
+    def test_adds_key(self):
+        self.obnam(['add-key', '--keyid', self.gpgkey2, 
+                    '--repository', self.repo])
+        self.assertEqual(sorted(self.list_keys().keys()), 
+                         sorted([self.gpgkey, self.gpgkey2]))
+
+    def test_removes_key(self):
+        self.obnam(['add-key', '--keyid', self.gpgkey2, 
+                    '--repository', self.repo])
+        self.obnam(['remove-key', '--keyid', self.gpgkey2, 
+                    '--repository', self.repo])
+        self.assertEqual(self.list_keys().keys(), [self.gpgkey])
 
 
 if __name__ == '__main__':
