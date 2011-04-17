@@ -14,7 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-version = '0.15.1'
+version = '0.16'
 
 
 import _obnam
