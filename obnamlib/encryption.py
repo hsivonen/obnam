@@ -214,7 +214,12 @@ def encrypt_with_keyring(cleartext, keyring):
     recipients = []
     for keyid in keyring.keyids():
         recipients += ['-r', keyid]
-    return keyring.gpg(False, ['-e', '--trust-model', 'always'] + recipients,
+    return keyring.gpg(False, 
+                        ['-e', 
+                         '--trust-model', 'always',
+                         '--no-encrypt-to',
+                         '--no-default-recipient',
+                            ] + recipients,
                        stdin=cleartext)
     
     
