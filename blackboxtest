@@ -49,6 +49,9 @@ class ObnamTestCase(unittest.TestCase):
     backup operations, and for verifyting results.
 
     '''
+    
+    # This is one of the keys in test-gpghome.
+    gpgkey = '3B1802F81B321347'
 
     def setUp(self):
         self.client_name = 'client_name'
@@ -108,6 +111,8 @@ class ObnamTestCase(unittest.TestCase):
                             '--quiet',
                             '--log', 'blackboxtest-obnam.log',
                             '--log-level', 'debug',
+                            '--encrypt-with', self.gpgkey,
+                            '--weak-random',
                             '--client-name', self.client_name] +
                            args, stderr_ignore=stderr_ignore)
 
