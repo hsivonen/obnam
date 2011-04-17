@@ -50,8 +50,9 @@ class ObnamTestCase(unittest.TestCase):
 
     '''
     
-    # This is one of the keys in test-gpghome.
+    # These are the keys in test-gpghome.
     gpgkey = '3B1802F81B321347'
+    gpgkey2 = 'DF3D13AA11E69900'
 
     def setUp(self):
         self.client_name = 'client_name'
@@ -498,6 +499,19 @@ class EncryptionTests(ObnamTestCase):
         output = self.obnam(['client-keys', '--repository', self.repo])
         return [tuple(line.split()) for line in output.splitlines()]
 
+    def list_keys(self):
+        output = self.obnam(['list-keys', '--repository', self.repo])
+        keys = dict()
+        latest_key = None
+        for line in output.splitlines():
+            if line.startswith('key:'):
+                latest_key = line.split()[1]
+            else:
+                keys[latest_key] = keys.get(latest_key, []) + [line.strip()]
+        for key in keys:
+            keys[key].sort()
+        return keys
+
     def test_has_client_key_after_backup(self):
         self.assertEqual(self.client_keys(),
                          [(self.client_name, self.gpgkey)])
@@ -506,6 +520,22 @@ class EncryptionTests(ObnamTestCase):
         self.obnam(['remove-client', '--repository', self.repo, 
                     self.client_name])
         self.assertEqual(self.client_keys(), [])
+        
+    def test_only_client_key_listed_initially(self):
+        self.assertEqual(self.list_keys().keys(), [self.gpgkey])
+        
+    def test_adds_key(self):
+        self.obnam(['add-key', '--keyid', self.gpgkey2, 
+                    '--repository', self.repo])
+        self.assertEqual(sorted(self.list_keys().keys()), 
+                         sorted([self.gpgkey, self.gpgkey2]))
+
+    def test_removes_key(self):
+        self.obnam(['add-key', '--keyid', self.gpgkey2, 
+                    '--repository', self.repo])
+        self.obnam(['remove-key', '--keyid', self.gpgkey2, 
+                    '--repository', self.repo])
+        self.assertEqual(self.list_keys().keys(), [self.gpgkey])
 
 
 if __name__ == '__main__':
