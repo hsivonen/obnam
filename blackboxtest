@@ -391,15 +391,6 @@ class BackupTests(ObnamTestCase):
         self.restore()
         self.assert_restored_correctly()
 
-    def test_reuses_chunk(self):
-        n = 100
-        for i in range(n):
-            self.create_file(self.data, 'target%d' % i, 'content1')
-        self.backup()
-
-        s = self.open_repository()
-        self.assertEqual(len(s.list_chunks()), 1)
-
     def test_does_not_include_roots_from_old_gens_unless_specified_again(self):
         foo = self.create_dir(self.data, 'foo')
         self.backup(roots=[foo])
