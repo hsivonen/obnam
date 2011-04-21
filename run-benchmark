@@ -23,7 +23,7 @@ die()
     exit 1
 }
 
-SEIVOTDIR=$HOME/seivot/make-flexible
+SEIVOTDIR=$HOME/seivot/trunk
 OBNAM_BRANCH="."
 LARCH_BRANCH="$HOME/larch/trunk"
 SIZES="1g/100m 10g/1g 100g/10g"
