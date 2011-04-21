@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright 2010  Lars Wirzenius
+# Copyright 2010, 2011  Lars Wirzenius
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,11 +23,12 @@ die()
     exit 1
 }
 
-SEIVOT=seivot
+SEIVOTDIR=$HOME/seivot/make-flexible
 OBNAM_BRANCH="."
 LARCH_BRANCH="$HOME/larch/trunk"
-SIZES="100m/10m 1000m/100m 10000m/1000m 100000m/10000m"
+SIZES="1g/100m 10g/1g 100g/10g"
 WIKI="$HOME/braawi.org"
+GENERATIONS=5
 
 if [ $# -ge 1 ]
 then
@@ -69,54 +70,27 @@ then
     die "TMPDIR is not set. You'll probably run out of space on /tmp..."
 fi
 
-GENERATIONS=5
 OBNAM_REVNO=$(cd "$OBNAM_BRANCH" && bzr revno)
 LARCH_REVNO=$(cd "$LARCH_BRANCH" && bzr revno)
 
+RESULTS="$WIKI/obnam/benchmarks/$OBNAM_REVNO-$LARCH_REVNO"
+[ -e "$RESULTS" ] && die "$RESULTS already exists"
+mkdir "$RESULTS"
 for pair in $SIZES
 do
     size=$(echo "$pair" | sed 's:/.*::')
     inc=$(echo "$pair" | sed 's:.*/::')
     echo "Benchmark run for size $size inc $inc"
-    results="$WIKI/obnam/benchmarks/$OBNAM_REVNO-$LARCH_REVNO"
-    mkdir -p "$results"
-    basename="$results/obnam-$size"
-    data="$basename.seivot"
-    desc="obnam (r$OBNAM_REVNO) and larch (r$LARCH_REVNO)"
-    desc="$desc for live data size $size with $inc increments"
-    $SEIVOT \
-        --output="$data" \
-        --description="$desc" \
-        --program="obnam+larch" \
-        --revision="$OBNAM_REVNO and $LARCH_REVNO" \
-        --start-size=$size \
-        --inc-size=$inc \
-        --generations=$GENERATIONS \
-        --fullcmd="env OBNAM_PROFILE=obnam.prof \
-                   PYTHONPATH=$LARCH_BRANCH $OBNAM_BRANCH/obnam \
-                   --log-level warning \
-                   --log $basename-\$GEN.log --repository \$STORE \
-                   backup \$DATA && \
-                   cp obnam.prof $basename-\$GEN.prof && \
-                   viewprof obnam.prof cumulative \
-                    > $basename-\$GEN-cumulative.txt && \
-                   viewprof obnam.prof time \
-                    > $basename-\$GEN-time.txt && \
-                   rm -f obnam.prof \
-                    " \
-        measure
-(cd "$results/.."
-    cat <<eof > "$OBNAM_REVNO-$LARCH_REVNO.mdwn"
-[[!meta title="Obnam r$OBNAM_REVNO with larch r$LARCH_REVNO"]]
-
-Benchmark result: Obnam r$OBNAM_REVNO with larch r$LARCH_REVNO
--------------------------------------------------------
-
-$(ls "$OBNAM_REVNO-$LARCH_REVNO"/* |
-  awk '{ printf "* <a href=\"/obnam/benchmarks/%s\">%s</a>\n", $1, $1 }')
-eof
-)
+    
+    $SEIVOTDIR/seivot \
+        --obnam-branch="$OBNAM_BRANCH" \
+        --larch-branch="$LARCH_BRANCH" \
+        --initial-data="$size" \
+        --incremental-data="$inc" \
+        --obnam-profile="$RESULTS/obnam-$size-%(op)s-%(gen)s-%(order)s.txt" \
+        --generations="$GENERATIONS" \
+        --output="$RESULTS/obnam-$size.seivot"
 done
 
-./report-benchmark "$WIKI"/obnam/benchmarks/*/*.seivot \
-	> "$WIKI/obnam/benchmarkreport.mdwn"
+$SEIVOTDIR/seivots-to-csv "$RESULTS"/../*/*.seivot --output-dir "$RESULTS/.."
+
