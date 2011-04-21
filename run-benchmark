@@ -23,7 +23,6 @@ die()
     exit 1
 }
 
-SEIVOTDIR=$HOME/seivot/trunk
 OBNAM_BRANCH="."
 LARCH_BRANCH="$HOME/larch/trunk"
 SIZES="1g/100m"
@@ -54,15 +53,9 @@ then
     shift
 fi
 
-if [ $# -ge 1 ]
-then
-    SEIVOT="$1"
-    shift
-fi
-
 if [ $# != 0 ]
 then
-    die "Usage: $0 [obnam-branch [larch-branch [sizes [wiki-root [path/to/seivot]]]]]"
+    die "Usage: $0 [obnam-branch [larch-branch [sizes [wiki-root]]]]"
 fi
 
 if [ "x$TMPDIR" = x ]
@@ -82,7 +75,7 @@ do
     inc=$(echo "$pair" | sed 's:.*/::')
     echo "Benchmark run for size $size inc $inc"
     
-    $SEIVOTDIR/seivot \
+    seivot \
         --obnam-branch="$OBNAM_BRANCH" \
         --larch-branch="$LARCH_BRANCH" \
         --initial-data="$size" \
@@ -92,5 +85,5 @@ do
         --output="$RESULTS/obnam-$size.seivot"
 done
 
-$SEIVOTDIR/seivots-to-csv "$RESULTS"/../*/*.seivot --output-dir "$RESULTS/.."
+seivots-to-csv "$RESULTS"/../*/*.seivot --output-dir "$RESULTS/.."
 
