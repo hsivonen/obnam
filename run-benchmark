@@ -26,8 +26,10 @@ die()
 OBNAM_BRANCH="."
 LARCH_BRANCH="$HOME/larch/trunk"
 SIZES="1g/100m"
+SIZES="1m/1m"
 WIKI="$HOME/braawi.org"
 GENERATIONS=5
+KEYID="3B1802F81B321347"
 
 if [ $# -ge 1 ]
 then
@@ -69,21 +71,30 @@ LARCH_REVNO=$(cd "$LARCH_BRANCH" && bzr revno)
 RESULTS="$WIKI/obnam/benchmarks/$OBNAM_REVNO-$LARCH_REVNO"
 [ -e "$RESULTS" ] && die "$RESULTS already exists"
 mkdir "$RESULTS"
+
+tempdir="$(mktemp -d)"
+cp -a test-gpghome "$tempdir"
+export GNUPGHOME="$tempdir/test-gpghome"
+
 for pair in $SIZES
 do
     size=$(echo "$pair" | sed 's:/.*::')
     inc=$(echo "$pair" | sed 's:.*/::')
     echo "Benchmark run for size $size inc $inc"
     
-    seivot \
+    $HOME/seivot/trunk/seivot \
         --obnam-branch="$OBNAM_BRANCH" \
         --larch-branch="$LARCH_BRANCH" \
+        --encrypt-with="$KEYID" \
         --initial-data="$size" \
         --incremental-data="$inc" \
         --obnam-profile="$RESULTS/obnam-$size-%(op)s-%(gen)s-%(order)s.txt" \
         --generations="$GENERATIONS" \
-        --output="$RESULTS/obnam-$size.seivot"
+        --output="$RESULTS/obnam-$size.seivot" \
+        || die "seivot failed"
 done
+
+rm -rf "$tempdir"
 
 seivots-to-csv "$RESULTS"/../*/*.seivot --output-dir "$RESULTS/.."
 
