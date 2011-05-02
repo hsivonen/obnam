@@ -56,7 +56,7 @@ class App(object):
         self.config.new_bytesize(['log-max'],
                                  'how large can a log file get before getitng '
                                  'rotated (%default)')
-        self.config['log-max'] = 1000**2
+        self.config['log-max'] = '1m'
         self.config.new_string(['repository'], 'name of backup repository')
         self.config.new_string(['client-name'], 'name of client (%default)')
         self.config['client-name'] = self.deduce_client_name()
@@ -115,7 +115,25 @@ class App(object):
     def plugins_dir(self):
         return os.path.join(os.path.dirname(obnamlib.__file__), 'plugins')
 
+    def rotate_logs(self, filename, keep):
+        def rename(old_suffix, counter):
+            new_suffix = '.%d' % counter
+            if os.path.exists(filename + new_suffix):
+                if counter < keep:
+                    rename(new_suffix, counter + 1)
+                else:
+                    os.remove(filename + new_suffix)
+            os.rename(filename + old_suffix, filename + new_suffix)
+        rename('', 0)
+
     def setup_logging(self):
+        log_filename = self.config['log']
+        log_max = self.config['log-max']
+        log_keep = int(self.config['log-keep'])
+        if (os.path.exists(log_filename) and 
+            os.path.getsize(log_filename) > log_max):
+            self.rotate_logs(log_filename, log_keep)
+        
         formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
         handler = logging.FileHandler(self.config['log'])
         handler.setFormatter(formatter)
