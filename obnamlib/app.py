@@ -49,6 +49,14 @@ class App(object):
                                'log level, one of debug, info, warning, '
                                'error, critical (%default)')
         self.config['log-level'] = 'info'
+        self.config.new_string(['log-keep'],
+                               'how many log files to keep? For normal users '
+                               'only (default: %default)')
+        self.config['log-keep'] = '10'
+        self.config.new_bytesize(['log-max'],
+                                 'how large can a log file get before getitng '
+                                 'rotated (%default)')
+        self.config['log-max'] = 1000**2
         self.config.new_string(['repository'], 'name of backup repository')
         self.config.new_string(['client-name'], 'name of client (%default)')
         self.config['client-name'] = self.deduce_client_name()
