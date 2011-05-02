@@ -40,11 +40,20 @@ class App(object):
         self.setup_hooks()
 
         self.fsf = obnamlib.VfsFactory()
-        
+
+    @property
+    def default_config_file(self):
+        if os.getuid() == 0:
+            return '/var/log/obnam.log'
+        else:
+            cache = (os.environ.get('XDG_CACHE_HOME', '') or
+                     os.path.expanduser('~/.cache'))
+            return os.path.join(cache, 'obnam', 'obnam.log')
+
     def setup_config(self):
         self.config = obnamlib.Configuration([])
         self.config.new_string(['log'], 'name of log file (%default)')
-        self.config['log'] = 'obnam.log'
+        self.config['log'] = self.default_config_file
         self.config.new_string(['log-level'], 
                                'log level, one of debug, info, warning, '
                                'error, critical (%default)')
@@ -133,6 +142,10 @@ class App(object):
         if (os.path.exists(log_filename) and 
             os.path.getsize(log_filename) > log_max):
             self.rotate_logs(log_filename, log_keep)
+        if os.getuid() != 0:
+            log_dir = os.path.dirname(log_filename)
+            if not os.path.exists(log_dir):
+                os.makedirs(log_dir)
         
         formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
         handler = logging.FileHandler(self.config['log'])
