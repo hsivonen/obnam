@@ -144,7 +144,7 @@ class App(object):
             self.rotate_logs(log_filename, log_keep)
         if os.getuid() != 0:
             log_dir = os.path.dirname(log_filename)
-            if not os.path.exists(log_dir):
+            if log_dir and not os.path.exists(log_dir):
                 os.makedirs(log_dir)
         
         formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
