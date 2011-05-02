@@ -104,6 +104,7 @@ class RunObnamBenchmark(cliapp.Application):
                                             '-%(op)s-%(gen)s-%(order)s.txt')
             output = os.path.join(results, 'obnam-%s.seivot' % initial)
             subprocess.check_call([seivot,
+                                   '--drop-caches',
                                    '--obnam-branch', obnam_branch,
                                    '--larch-branch', larch_branch,
                                    '--encrypt-with', self.keyid,
