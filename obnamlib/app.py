@@ -40,15 +40,32 @@ class App(object):
         self.setup_hooks()
 
         self.fsf = obnamlib.VfsFactory()
-        
+
+    @property
+    def default_config_file(self):
+        if os.getuid() == 0:
+            return '/var/log/obnam.log'
+        else:
+            cache = (os.environ.get('XDG_CACHE_HOME', '') or
+                     os.path.expanduser('~/.cache'))
+            return os.path.join(cache, 'obnam', 'obnam.log')
+
     def setup_config(self):
         self.config = obnamlib.Configuration([])
         self.config.new_string(['log'], 'name of log file (%default)')
-        self.config['log'] = 'obnam.log'
+        self.config['log'] = self.default_config_file
         self.config.new_string(['log-level'], 
                                'log level, one of debug, info, warning, '
                                'error, critical (%default)')
         self.config['log-level'] = 'info'
+        self.config.new_string(['log-keep'],
+                               'how many log files to keep? For normal users '
+                               'only (default: %default)')
+        self.config['log-keep'] = '10'
+        self.config.new_bytesize(['log-max'],
+                                 'how large can a log file get before getitng '
+                                 'rotated (%default)')
+        self.config['log-max'] = '1m'
         self.config.new_string(['repository'], 'name of backup repository')
         self.config.new_string(['client-name'], 'name of client (%default)')
         self.config['client-name'] = self.deduce_client_name()
@@ -107,7 +124,29 @@ class App(object):
     def plugins_dir(self):
         return os.path.join(os.path.dirname(obnamlib.__file__), 'plugins')
 
+    def rotate_logs(self, filename, keep):
+        def rename(old_suffix, counter):
+            new_suffix = '.%d' % counter
+            if os.path.exists(filename + new_suffix):
+                if counter < keep:
+                    rename(new_suffix, counter + 1)
+                else:
+                    os.remove(filename + new_suffix)
+            os.rename(filename + old_suffix, filename + new_suffix)
+        rename('', 0)
+
     def setup_logging(self):
+        log_filename = self.config['log']
+        log_max = self.config['log-max']
+        log_keep = int(self.config['log-keep'])
+        if (os.path.exists(log_filename) and 
+            os.path.getsize(log_filename) > log_max):
+            self.rotate_logs(log_filename, log_keep)
+        if os.getuid() != 0:
+            log_dir = os.path.dirname(log_filename)
+            if log_dir and not os.path.exists(log_dir):
+                os.makedirs(log_dir)
+        
         formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
         handler = logging.FileHandler(self.config['log'])
         handler.setFormatter(formatter)

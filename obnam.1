@@ -354,6 +354,33 @@ Default is
 .IR info .
 .\"
 .TP
+.BR \-\-log\-keep =\fIN
+Keep the
+.I N
+last log files.
+This only applies when running as a normal user,
+not when running as root.
+Log files are rotated when
+.B obnam
+starts,
+if they are larger than the limit set with
+.BR \-\-log-max .
+The current log file is renamed to have a
+.I .0
+suffix,
+and if such a file already existed,
+it gets renamed to have a
+.I .1
+suffix, etc.
+.\"
+.TP
+.BR \-\-log\-max =\fISIZE
+If run as a normal user,
+rotate log file if it is larger than 
+.I SIZE
+bytes.
+.\"
+.TP
 .BR \-\-repository =\fIURL
 Store backups in
 .IR URL ,
