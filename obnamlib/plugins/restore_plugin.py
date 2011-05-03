@@ -143,7 +143,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
     def restore_regular_file(self, gen, to_dir, filename, metadata):
         logging.debug('restoring regular %s' % filename)
         to_filename = os.path.join(to_dir, './' + filename)
-        f = self.fs.open(to_filename, 'w')
+        f = self.fs.open(to_filename, 'wb')
 
         chunkids = self.repo.get_file_chunks(gen, filename)
         self.restore_chunks(f, chunkids)
@@ -152,7 +152,21 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         obnamlib.set_metadata(self.fs, to_filename, metadata)
 
     def restore_chunks(self, f, chunkids):
+        zeroes = ''
+        hole_at_end = False
         for chunkid in chunkids:
             data = self.repo.get_chunk(chunkid)
-            f.write(data)
+            if len(data) != len(zeroes):
+                zeroes = '\0' * len(data)
+            if data == zeroes:
+                f.seek(len(data), 1)
+                hole_at_end = True
+            else:
+                f.write(data)
+                hole_at_end = False
+        if hole_at_end:
+            pos = f.tell()
+            if pos > 0:
+                f.seek(-1, 1)
+                f.write('\0')
 
