@@ -362,6 +362,18 @@ class RestoreTests(ObnamTestCase):
         self.assertEqual(restored_files, [bar_restored])
         self.assertFilesEqual(bar_orig, bar_restored)
 
+    def test_restores_sparse_file(self):
+        pathname = os.path.join(self.data, 'sparse')
+        f = open(pathname, 'wb')
+        f.seek(1000**2)
+        f.write('x')
+        f.close()
+        
+        self.backup()
+        self.restore()
+        restored2 = os.path.join(self.restored, './' + self.data)
+        self.assert_same_contents('sparse', self.data, restored2)
+
 
 class BackupTests(ObnamTestCase):
 
