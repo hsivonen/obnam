@@ -371,7 +371,8 @@ class RestoreTests(ObnamTestCase):
         
         self.backup()
         self.restore()
-        self.assert_restored_correctly()
+        restored2 = os.path.join(self.restored, './' + self.data)
+        self.assert_same_contents('sparse', self.data, restored2)
 
 
 class BackupTests(ObnamTestCase):
