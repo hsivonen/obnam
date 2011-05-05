@@ -126,7 +126,7 @@ class ObnamTestCase(unittest.TestCase):
         self.obnam(['--repository', self.repo, 'backup'] + roots)
         self.obnam(['fsck', '--repository', self.repo])
         
-    def restore(self, pathnames=None):
+    def restore(self, pathnames=None, stderr_ignore=None):
         '''Restore the newest generation from a repository.
         
         Data is restored to self.restored.
@@ -136,7 +136,8 @@ class ObnamTestCase(unittest.TestCase):
         logging.debug('restoring %s to %s' % (self.repo, self.restored))
         self.obnam(['restore', '--to', self.restored, 
                     '--generation=latest', '--repository', self.repo] +
-                   (pathnames or []))
+                   (pathnames or []),
+                   stderr_ignore=stderr_ignore)
 
     def verify(self, stderr_ignore=None):
         '''Run 'obnam verify' on the repository.'''
@@ -384,13 +385,15 @@ class RestoreTests(ObnamTestCase):
     def test_fails_if_chunk_is_corrupted(self):
         chunkdir = os.path.join(self.repo, 'chunks')
         for dirname, subdirs, basenames in os.walk(chunkdir):
-            basenames = [x for x in basenames if re.match('\d+$', x)]
-            for chunk in [os.path.join(x) for x in basenames]:
+            basenames = [x for x in basenames 
+                         if x != 'key' and x != 'userkeys']
+            for chunk in [os.path.join(dirname, x) for x in basenames]:
                 f = open(chunk, 'r+b')
                 old_data = f.read()
                 f.seek(0, 0)
                 f.write('X' * len(old_data))
-        self.assertRaises(subprocess.CalledProcessError, self.restore)
+        self.assertRaises(subprocess.CalledProcessError, self.restore,
+                          stderr_ignore='.*')
 
 
 class BackupTests(ObnamTestCase):
