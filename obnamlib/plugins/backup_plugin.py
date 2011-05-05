@@ -162,22 +162,46 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         the directory itself (name, metadata, file list).
         
         '''
+        
+        try:
+            for pathname, metadata in self._real_find_files(root):
+                yield pathname, metadata
+        except OSError, e:
+            logging.error('Error scanning files in: %s' % root)
+            self.app.hooks.call('error-message', 
+                                'Error scanning files in: %s' % root)
 
+    def _real_find_files(self, root):
         generator = self.fs.depth_first(root, prune=self.prune)
         for dirname, subdirs, basenames in generator:
             needed = False
-            for basename in basenames:
-                pathname = os.path.join(dirname, basename)
+            for path, meta in self._real_find_basenames(dirname, basenames):
+                yield path, meta
+                needed = True
+            try:
+                metadata = obnamlib.read_metadata(self.fs, dirname)
+                if not needed:
+                    needed = self.needs_backup(dirname, metadata)
+                if needed:
+                    yield dirname, metadata
+            except OSError, e:
+                logging.error('Error collecting metadata for: %s' % dirname)
+                self.app.hooks.call('error-message', 
+                                    'Error collecting metadata for: %s' % 
+                                        dirname)
+
+    def _real_find_basenames(self, dirname, basenames):
+        for pathname in [os.path.join(dirname, x) for x in basenames]:
+            try:
                 metadata = obnamlib.read_metadata(self.fs, pathname)
                 self.app.hooks.call('progress-found-file', pathname, metadata)
                 if self.needs_backup(pathname, metadata):
                     yield pathname, metadata
-                    needed = True
-            metadata = obnamlib.read_metadata(self.fs, dirname)
-            if not needed:
-                needed = self.needs_backup(dirname, metadata)
-            if needed:
-                yield dirname, metadata
+            except OSError, e:
+                logging.error('Error collecting metadata for: %s' % pathname)
+                self.app.hooks.call('error-message', 
+                                    'Error collecting metadata for: %s' % 
+                                        pathname)
 
     def prune(self, dirname, subdirs, filenames):
         '''Remove unwanted things.'''
