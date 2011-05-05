@@ -137,8 +137,11 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             return
         logging.debug('dumping memory profiling data: %s' % msg)
         logging.debug('VmRSS: %s KiB' % self.vmrss())
-        logging.debug('# objects: %d' % len(gc.get_objects()))
-        logging.debug('# garbage: %d' % len(gc.garbage))
+        if kind in ['heapy', 'meliae']:
+            # These are fairly expensive operations, so we only log them
+            # if we're doing expensive stuff anyway.
+            logging.debug('# objects: %d' % len(gc.get_objects()))
+            logging.debug('# garbage: %d' % len(gc.garbage))
         if kind == 'heapy':
             from guppy import hpy
             h = hpy()
