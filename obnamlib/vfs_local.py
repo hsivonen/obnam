@@ -124,6 +124,9 @@ class LocalFS(obnamlib.VirtualFileSystem):
     def isdir(self, pathname):
         return os.path.isdir(self.join(pathname))
 
+    def mknod(self, pathname, mode):
+        os.mknod(self.join(pathname), mode)
+
     def mkdir(self, pathname):
         os.mkdir(self.join(pathname))
 

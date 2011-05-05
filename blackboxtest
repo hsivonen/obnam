@@ -374,6 +374,13 @@ class RestoreTests(ObnamTestCase):
         restored2 = os.path.join(self.restored, './' + self.data)
         self.assert_same_contents('sparse', self.data, restored2)
 
+    def test_restores_pipe(self):
+        pathname = os.path.join(self.data, 'pipe')
+        os.mknod(pathname, 0600 | stat.S_IFIFO)
+        self.backup()
+        self.restore()
+        self.assert_restored_correctly()
+
 
 class BackupTests(ObnamTestCase):
 

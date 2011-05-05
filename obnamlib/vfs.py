@@ -364,6 +364,10 @@ class VfsTests(object): # pragma: no cover
     def test_listdir_raises_oserror_if_directory_does_not_exist(self):
         self.assertRaises(OSError, self.fs.listdir, 'foo')
 
+    def test_mknod_creates_fifo(self):
+        self.fs.mknod('foo', 0600 | stat.S_IFIFO)
+        self.assertEqual(self.fs.lstat('foo').st_mode, 0600 | stat.S_IFIFO)
+
     def test_mkdir_raises_oserror_if_directory_exists(self):
         self.assertRaises(OSError, self.fs.mkdir, '.')
 

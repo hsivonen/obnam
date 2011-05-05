@@ -16,6 +16,7 @@
 
 import logging
 import os
+import stat
 
 import obnamlib
 
@@ -122,9 +123,9 @@ class RestorePlugin(obnamlib.ObnamPlugin):
                 self.restore_hardlink(to_dir, filename, link, metadata)
             else:
                 self.hardlinks.add(filename, metadata)
-                self.restore_regular_file(gen, to_dir, filename, metadata)
+                self.restore_first_link(gen, to_dir, filename, metadata)
         else:
-            self.restore_regular_file(gen, to_dir, filename, metadata)
+            self.restore_first_link(gen, to_dir, filename, metadata)
     
     def restore_hardlink(self, to_dir, filename, link, metadata):
         logging.debug('restoring hardlink %s to %s' % (filename, link))
@@ -139,6 +140,17 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         logging.debug('restoring symlink %s' % filename)
         to_filename = os.path.join(to_dir, './' + filename)
         obnamlib.set_metadata(self.fs, to_filename, metadata)
+
+    def restore_first_link(self, gen, to_dir, filename, metadata):
+        if stat.S_ISREG(metadata.st_mode):
+            self.restore_regular_file(gen, to_dir, filename, metadata)
+        elif stat.S_ISFIFO(metadata.st_mode):
+            self.restore_fifo(gen, to_dir, filename, metadata)
+        else:
+            msg = ('Unknown file type: %s (%o)' % 
+                   (filename, metadata.st_mode))
+            logging.error(msg)
+            self.app.hooks.call('error-message', msg)
         
     def restore_regular_file(self, gen, to_dir, filename, metadata):
         logging.debug('restoring regular %s' % filename)
@@ -169,4 +181,10 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             if pos > 0:
                 f.seek(-1, 1)
                 f.write('\0')
+
+    def restore_fifo(self, gen, to_dir, filename, metadata):
+        logging.debug('restoring fifo %s' % filename)
+        to_filename = os.path.join(to_dir, './' + filename)
+        self.fs.mknod(to_filename, metadata.st_mode)
+        obnamlib.set_metadata(self.fs, to_filename, metadata)
 

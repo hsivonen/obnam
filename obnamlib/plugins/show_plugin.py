@@ -105,6 +105,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
             (stat.S_IFREG, 0, '-'),
             (stat.S_IFDIR, 0, 'd'),
             (stat.S_IFLNK, 0, 'l'),
+            (stat.S_IFIFO, 0, 'p'),
             (stat.S_IRUSR, 1, 'r'),
             (stat.S_IWUSR, 2, 'w'),
             (stat.S_IXUSR, 3, 'x'),

@@ -56,6 +56,9 @@ class SftpTests(unittest.TestCase, obnamlib.VfsTests):
     def test_link_creates_hard_link(self):
         pass # sftp does not support hardlinking, so not testing it
         
+    def test_mknod_creates_fifo(self):
+        self.assertRaises(NotImplementedError, self.fs.mknod, 'foo', 0)
+        
         
 if __name__ == '__main__':
     unittest.main()

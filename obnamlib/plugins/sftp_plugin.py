@@ -250,6 +250,12 @@ class SftpFS(obnamlib.VirtualFileSystem):
         else:
             return stat.S_ISDIR(st.st_mode)
 
+    def mknod(self, pathname, mode):
+        # SFTP does not provide an mknod, so we can't do this. We 
+        # raise an exception, so upper layers can handle this (we _could_
+        # just fail silently, but that would be silly.)
+        raise NotImplementedError('mknod on SFTP: %s' % pathname)
+
     @ioerror_to_oserror
     def mkdir(self, pathname):
         self.sftp.mkdir(pathname)
