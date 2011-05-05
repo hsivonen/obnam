@@ -266,10 +266,12 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         f = self.fs.open(filename, 'r')
         chunk_size = int(self.app.config['chunk-size'])
         chunkids = []
+        summer = self.repo.new_checksummer()
         while True:
             data = f.read(chunk_size)
             if not data:
                 break
+            summer.update(data)
             chunkids.append(self.backup_file_chunk(data))
             if len(chunkids) >= obnamlib.DEFAULT_CHUNKIDS_PER_GROUP:
                 self.repo.append_file_chunks(filename, chunkids)
@@ -277,6 +279,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 chunkids = []
             self.app.hooks.call('progress-data-uploaded', len(data))
         f.close()
+        self.repo.set_file_checksum(filename, summer.hexdigest())
         if chunkids:
             self.repo.append_file_chunks(filename, chunkids)
         self.dump_memory_profile('at end of file content backup for %s' %
