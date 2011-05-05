@@ -366,3 +366,21 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         return list(set(self.chunk_unkey(key)[0]
                         for key, value in t.lookup_range(minkey, maxkey)))
 
+    def get_file_checksum(self, filename):
+        '''Return whole-file checksum for a file.
+        
+        If not set, return None.
+        
+        '''
+        
+        return None
+        
+    def set_file_checksum(self, filename, checksum):
+        '''Set whole-file checksum for a file.
+        
+        If checksum is None, it is removed.
+        
+        '''
+        
+
+
