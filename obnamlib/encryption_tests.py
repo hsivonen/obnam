@@ -62,6 +62,39 @@ class SymmetricEncryptionTests(unittest.TestCase):
         self.assertEqual(decrypted, cleartext)
 
 
+class SymmetricKeyCacheTests(unittest.TestCase):
+
+    def setUp(self):
+        self.cache = obnamlib.SymmetricKeyCache()
+        self.repo = 'repo'
+        self.repo2 = 'repo2'
+        self.toplevel = 'toplevel'
+        self.key = 'key'
+        self.key2 = 'key2'
+        
+    def test_does_not_have_key_initially(self):
+        self.assertEqual(self.cache.get(self.repo, self.toplevel), None)
+        
+    def test_remembers_key(self):
+        self.cache.put(self.repo, self.toplevel, self.key)
+        self.assertEqual(self.cache.get(self.repo, self.toplevel), self.key)
+
+    def test_does_not_remember_key_for_different_repo(self):
+        self.cache.put(self.repo, self.toplevel, self.key)
+        self.assertEqual(self.cache.get(self.repo2, self.toplevel), None)
+        
+    def test_remembers_keys_for_both_repos(self):
+        self.cache.put(self.repo, self.toplevel, self.key)
+        self.cache.put(self.repo2, self.toplevel, self.key2)
+        self.assertEqual(self.cache.get(self.repo, self.toplevel), self.key)
+        self.assertEqual(self.cache.get(self.repo2, self.toplevel), self.key2)
+
+    def test_clears_cache(self):
+        self.cache.put(self.repo, self.toplevel, self.key)
+        self.cache.clear()
+        self.assertEqual(self.cache.get(self.repo, self.toplevel), None)
+
+
 class GetPublicKeyTests(unittest.TestCase):
 
     def setUp(self):

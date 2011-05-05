@@ -53,12 +53,10 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         self.app.register_command('remove-key', self.remove_key)
         self.app.register_command('remove-client', self.remove_client)
         
-        self._cached_keys = dict()
-        self._cached_repo = None
+        self._symkeys = obnamlib.SymmetricKeyCache()
         
     def disable(self):
-        self._cached_keys = dict()
-        self._cached_repo = None
+        self._symkeys.clear()
 
     @property
     def keyid(self):
@@ -108,22 +106,12 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         symmetric_key = self.get_symmetric_key(repo, toplevel)
         return obnamlib.encrypt_symmetric(cleartext, symmetric_key)
 
-    def _get_cached_key(self, repo, toplevel):
-        if self._cached_repo == repo:
-            return self._cached_keys.get(toplevel, None)
-        else:
-            return None
-
-    def _put_cached_key(self, repo, toplevel, key):
-        if self._cached_repo is None or self._cached_repo == repo:
-            self._cached_keys[toplevel] = key
-
     def get_symmetric_key(self, repo, toplevel):
-        key = self._get_cached_key(repo, toplevel)
+        key = self._symkeys.get(repo, toplevel)
         if key is None:
             encoded = repo.fs.fs.cat(os.path.join(toplevel, 'key'))
             key = obnamlib.decrypt_with_secret_keys(encoded)
-            self._put_cached_key(repo, toplevel, key)
+            self._symkeys.put(repo, toplevel, key)
         return key
 
     def read_keyring(self, repo, toplevel):

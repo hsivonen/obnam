@@ -29,6 +29,27 @@ def generate_symmetric_key(numbits, filename='/dev/random'):
     f.close()
     
     return key.encode('hex')
+
+
+class SymmetricKeyCache(object):
+
+    '''Cache symmetric keys in memory.'''
+    
+    def __init__(self):
+        self.clear()
+    
+    def get(self, repo, toplevel):
+        if repo in self.repos and toplevel in self.repos[repo]:
+            return self.repos[repo][toplevel]
+        return None
+        
+    def put(self, repo, toplevel, key):
+        if repo not in self.repos:
+            self.repos[repo] = {}
+        self.repos[repo][toplevel] = key
+        
+    def clear(self):
+        self.repos = {}
     
     
 def _gpg_pipe(args, data, passphrase):

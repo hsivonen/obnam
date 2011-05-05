@@ -46,7 +46,8 @@ from encryption import (generate_symmetric_key,
                         Keyring,
                         SecretKeyring,
                         encrypt_with_keyring,
-                        decrypt_with_secret_keys)
+                        decrypt_with_secret_keys,
+                        SymmetricKeyCache)
 
 from hooks import Hook, FilterHook, HookManager
 from cfg import Configuration
