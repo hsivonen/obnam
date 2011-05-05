@@ -161,7 +161,8 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
         self.assertEqual(self.client.listdir(self.clientid, '/'), [])
 
     def test_has_no_metadata_initially(self):
-        self.assertRaises(KeyError, self.client.get_metadata, self.clientid, '/foo')
+        self.assertRaises(KeyError, self.client.get_metadata, self.clientid, 
+                          '/foo')
 
     def test_sets_metadata(self):
         self.client.set_metadata('/foo', self.file_encoded)
@@ -323,4 +324,20 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
         self.client.set_file_chunks('/foo', [0])
         self.client.set_file_chunks('/bar', [0])
         self.assertEqual(self.client.list_chunks_in_generation(gen_id), [0])
+
+    def test_file_has_no_checksum(self):
+        gen_id = self.client.get_generation_id(self.client.tree)
+        self.assertEqual(self.client.get_file_checksum(gen_id, '/foo'), None)
+        
+    def test_sets_checksum_for_file(self):
+        gen_id = self.client.get_generation_id(self.client.tree)
+        self.client.set_file_checksum('/foo', 'csum')
+        self.assertEqual(self.client.get_file_checksum(gen_id, '/foo'), 
+                         'csum')
+
+    def test_removes_checksum_for_file(self):
+        gen_id = self.client.get_generation_id(self.client.tree)
+        self.client.set_file_checksum('/foo', 'csum')
+        self.client.set_file_checksum('/foo', None)
+        self.assertEqual(self.client.get_file_checksum(gen_id, '/foo'), None)
 

@@ -79,7 +79,7 @@ class ObnamTestCase(unittest.TestCase):
         os.makedirs(abs_dirname)
         return abs_dirname
 
-    def runcmd(self, argv, stderr_ignore=None):
+    def runcmd(self, argv, stdin='', stderr_ignore=None):
         '''Run an external command.
         
         If the command fails (non-zero exit), raise an exception.
@@ -94,9 +94,10 @@ class ObnamTestCase(unittest.TestCase):
         env = dict(os.environ)
         env['GNUPGHOME'] = self.gpghome 
                
-        p = subprocess.Popen(argv, stdout=subprocess.PIPE, 
+        p = subprocess.Popen(argv, stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE, 
                              stderr=subprocess.PIPE, env=env)
-        stdout, stderr = p.communicate()
+        stdout, stderr = p.communicate(stdin)
         if stderr_ignore:
             lines = [line for line in stderr.splitlines()
                      if not re.match(stderr_ignore, line)]
@@ -126,7 +127,7 @@ class ObnamTestCase(unittest.TestCase):
         self.obnam(['--repository', self.repo, 'backup'] + roots)
         self.obnam(['fsck', '--repository', self.repo])
         
-    def restore(self, pathnames=None):
+    def restore(self, pathnames=None, stderr_ignore=None):
         '''Restore the newest generation from a repository.
         
         Data is restored to self.restored.
@@ -136,7 +137,8 @@ class ObnamTestCase(unittest.TestCase):
         logging.debug('restoring %s to %s' % (self.repo, self.restored))
         self.obnam(['restore', '--to', self.restored, 
                     '--generation=latest', '--repository', self.repo] +
-                   (pathnames or []))
+                   (pathnames or []),
+                   stderr_ignore=stderr_ignore)
 
     def verify(self, stderr_ignore=None):
         '''Run 'obnam verify' on the repository.'''
@@ -381,6 +383,33 @@ class RestoreTests(ObnamTestCase):
         self.restore()
         self.assert_restored_correctly()
 
+    def _mangle_chunks(self):
+        chunkdir = os.path.join(self.repo, 'chunks')
+        for dirname, subdirs, basenames in os.walk(chunkdir):
+            basenames = [x for x in basenames 
+                         if x != 'key' and x != 'userkeys']
+            for chunk in [os.path.join(dirname, x) for x in basenames]:
+                os.remove(chunk)
+                self.runcmd(['gpg', '-e', '-r', self.gpgkey, '-o', chunk],
+                            stdin='meh', stderr_ignore='.*')
+        
+    def test_fails_if_chunk_is_corrupted(self):
+        self._mangle_chunks()
+        self.assertRaises(subprocess.CalledProcessError, self.restore,
+                          stderr_ignore='.*')
+
+    def test_fails_if_file_checksum_is_incorrect(self):
+        # Remove the chunk checksum list, and then modify the chunks,
+        # so that we can do a restore without triggering "bad chunk checksum"
+        # errors. We only want to trigger the whole-file checksum error.
+        shutil.rmtree(os.path.join(self.repo, 'chunklist', 'nodes'))
+        shutil.rmtree(os.path.join(self.repo, 'chunklist', 'refcounts'))
+        os.remove(os.path.join(self.repo, 'chunklist', 'metadata'))
+        
+        self._mangle_chunks()
+
+        self.assertRaises(subprocess.CalledProcessError, self.restore,
+                          stderr_ignore='^Error: There were errors.*')
 
 class BackupTests(ObnamTestCase):
 
