@@ -66,7 +66,8 @@ class App(object):
                                  'how large can a log file get before getitng '
                                  'rotated (%default)')
         self.config['log-max'] = '1m'
-        self.config.new_string(['repository'], 'name of backup repository')
+        self.config.new_string(['repository', 'r'], 
+                               'name of backup repository')
         self.config.new_string(['client-name'], 'name of client (%default)')
         self.config['client-name'] = self.deduce_client_name()
         self.config.new_boolean(['pretend', 'dry-run', 'no-act'],
