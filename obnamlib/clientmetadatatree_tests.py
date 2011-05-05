@@ -326,15 +326,18 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
         self.assertEqual(self.client.list_chunks_in_generation(gen_id), [0])
 
     def test_file_has_no_checksum(self):
-        self.assertEqual(self.client.get_file_checksum('/foo'), None)
+        gen_id = self.client.get_generation_id(self.client.tree)
+        self.assertEqual(self.client.get_file_checksum(gen_id, '/foo'), None)
         
     def test_sets_checksum_for_file(self):
+        gen_id = self.client.get_generation_id(self.client.tree)
         self.client.set_file_checksum('/foo', 'csum')
-        self.assertEqual(self.client.get_file_checksum('/foo'), 
+        self.assertEqual(self.client.get_file_checksum(gen_id, '/foo'), 
                          'csum')
 
     def test_removes_checksum_for_file(self):
+        gen_id = self.client.get_generation_id(self.client.tree)
         self.client.set_file_checksum('/foo', 'csum')
         self.client.set_file_checksum('/foo', None)
-        self.assertEqual(self.client.get_file_checksum('/foo'), None)
+        self.assertEqual(self.client.get_file_checksum(gen_id, '/foo'), None)
 

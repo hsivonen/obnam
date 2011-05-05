@@ -43,6 +43,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     FILE_NUM_CHUNKS = 2     # subkey type for length of list of chunks
     FILE_METADATA = 3       # subkey type for inode fields, etc
     DIR_CONTENTS = 4        # subkey type for list of directory contents
+    FILE_CHECKSUM = 5       # subkey type for file checksum
     
     FILE_METADATA_ENCODED = 0 # subkey value for encoded obnamlib.Metadata().
     
@@ -366,14 +367,20 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         return list(set(self.chunk_unkey(key)[0]
                         for key, value in t.lookup_range(minkey, maxkey)))
 
-    def get_file_checksum(self, filename):
+    def get_file_checksum(self, genid, filename):
         '''Return whole-file checksum for a file.
         
         If not set, return None.
         
         '''
         
-        return None
+        tree = self.find_generation(genid)
+        file_id = self.get_file_id(tree, filename)
+        key = self.fskey(file_id, self.FILE_CHECKSUM, 0)
+        try:
+            return tree.lookup(key)
+        except KeyError:
+            return None
         
     def set_file_checksum(self, filename, checksum):
         '''Set whole-file checksum for a file.
@@ -383,4 +390,10 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         '''
         
 
+        file_id = self.get_file_id(self.tree, filename)
+        key = self.fskey(file_id, self.FILE_CHECKSUM, 0)
+        if checksum is None:
+            self.tree.remove_range(key, key)
+        else:
+            self.tree.insert(key, checksum)
 
