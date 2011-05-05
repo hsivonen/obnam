@@ -678,6 +678,21 @@ class Repository(object):
         '''
         
         self.client.append_file_chunks(filename, chunkids)
+        
+    @require_started_generation
+    def get_file_checksum(self, gen, filename):
+        '''Return checksum for a file.
+        
+        If file has no checksum set, return None.
+        
+        '''
+        return None
+        
+    @require_started_generation
+    def set_file_checksum(self, filename, checksum):
+        '''Set checksum for a file.
+        
+        If checksum is None, then it is removed.'''
 
     @require_open_client
     def genspec(self, spec):
