@@ -168,6 +168,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         hole_at_end = False
         for chunkid in chunkids:
             data = self.repo.get_chunk(chunkid)
+            self.verify_chunk_checksum(data, chunkid)
             if len(data) != len(zeroes):
                 zeroes = '\0' * len(data)
             if data == zeroes:
@@ -181,6 +182,17 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             if pos > 0:
                 f.seek(-1, 1)
                 f.write('\0')
+
+    def verify_chunk_checksum(self, data, chunkid):
+        checksum = self.repo.checksum(data)
+        try:
+            wanted = self.repo.chunklist.get_checksum(chunkid)
+        except KeyError:
+            # Chunk might not be in the tree, but that does not
+            # mean it is invalid. We'll assume it is valid.
+            return
+        if checksum != wanted:
+            raise obnamlib.AppException('chunk %s checksum error' % chunkid)
 
     def restore_fifo(self, gen, to_dir, filename, metadata):
         logging.debug('restoring fifo %s' % filename)
