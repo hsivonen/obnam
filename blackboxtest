@@ -380,6 +380,17 @@ class RestoreTests(ObnamTestCase):
         self.backup()
         self.restore()
         self.assert_restored_correctly()
+        
+    def test_fails_if_chunk_is_corrupted(self):
+        chunkdir = os.path.join(self.repo, 'chunks')
+        for dirname, subdirs, basenames in os.walk(chunkdir):
+            basenames = [x for x in basenames if re.match('\d+$', x)]
+            for chunk in [os.path.join(x) for x in basenames]:
+                f = open(chunk, 'r+b')
+                old_data = f.read()
+                f.seek(0, 0)
+                f.write('X' * len(old_data))
+        self.assertRaises(subprocess.CalledProcessError, self.restore)
 
 
 class BackupTests(ObnamTestCase):
