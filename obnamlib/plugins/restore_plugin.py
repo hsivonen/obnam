@@ -88,6 +88,8 @@ class RestorePlugin(obnamlib.ObnamPlugin):
 
         self.hardlinks = Hardlinks()
         
+        self.errors = False
+        
         gen = self.repo.genspec(self.app.config['generation'])
         for arg in args:
             metadata = self.repo.get_metadata(gen, arg)
@@ -98,6 +100,9 @@ class RestorePlugin(obnamlib.ObnamPlugin):
                 if not self.fs.exists('./' + dirname):
                     self.fs.makedirs('./' + dirname)
                 self.restore_file(gen, '.', arg)
+                
+        if self.errors:
+            raise obnamlib.AppException('There were errors when restoring')
 
     def restore_recursively(self, gen, to_dir, root):
         logging.debug('restoring dir %s' % root)
@@ -155,20 +160,29 @@ class RestorePlugin(obnamlib.ObnamPlugin):
     def restore_regular_file(self, gen, to_dir, filename, metadata):
         logging.debug('restoring regular %s' % filename)
         to_filename = os.path.join(to_dir, './' + filename)
+
         f = self.fs.open(to_filename, 'wb')
-
+        summer = self.repo.new_checksummer()
         chunkids = self.repo.get_file_chunks(gen, filename)
-        self.restore_chunks(f, chunkids)
-
+        self.restore_chunks(f, chunkids, summer)
         f.close()
+
+        correct_checksum = self.repo.get_file_checksum(gen, filename)
+        if summer.hexdigest() != correct_checksum:
+            msg = 'File checksum restore error: %s' % filename
+            logging.error(msg)
+            self.app.hooks.call('error-message', msg)
+            self.errors = True
+
         obnamlib.set_metadata(self.fs, to_filename, metadata)
 
-    def restore_chunks(self, f, chunkids):
+    def restore_chunks(self, f, chunkids, checksummer):
         zeroes = ''
         hole_at_end = False
         for chunkid in chunkids:
             data = self.repo.get_chunk(chunkid)
             self.verify_chunk_checksum(data, chunkid)
+            checksummer.update(data)
             if len(data) != len(zeroes):
                 zeroes = '\0' * len(data)
             if data == zeroes:

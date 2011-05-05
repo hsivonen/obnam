@@ -408,7 +408,8 @@ class RestoreTests(ObnamTestCase):
         
         self._mangle_chunks()
 
-        self.assertRaises(subprocess.CalledProcessError, self.restore)
+        self.assertRaises(subprocess.CalledProcessError, self.restore,
+                          stderr_ignore='^Error: There were errors.*')
 
 class BackupTests(ObnamTestCase):
 
