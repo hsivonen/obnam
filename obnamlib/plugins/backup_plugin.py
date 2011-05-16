@@ -67,7 +67,11 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.repo.lock_client(client_name)
         self.repo.start_generation()
         self.fs = None
-        
+
+        log = os.path.abspath(self.app.config['log'])
+        self.app.config['exclude'].append(log)
+        for pattern in self.app.config['exclude']:
+            logging.debug('Exclude pattern: %s' % pattern)
         self.exclude_pats = [re.compile(x) for x in self.app.config['exclude']]
 
         last_checkpoint = 0
