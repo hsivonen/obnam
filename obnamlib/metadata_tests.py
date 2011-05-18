@@ -25,13 +25,13 @@ import obnamlib
 class FakeFS(object):
 
     def __init__(self):
-        self.st_atime = 1
+        self.st_atime = 1.0
         self.st_blocks = 2
         self.st_dev = 3
         self.st_gid = 4
         self.st_ino = 5
         self.st_mode = 6
-        self.st_mtime = 7
+        self.st_mtime = 7.0
         self.st_nlink = 8
         self.st_size = 9
         self.st_uid = 10
