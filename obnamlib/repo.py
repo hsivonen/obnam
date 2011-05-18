@@ -81,52 +81,102 @@ def require_started_generation(method):
         return method(self, *args, **kwargs)
     
     return helper
-
-
-numeric_fields = [x for x in obnamlib.metadata_fields if x.startswith('st_')]
-string_fields = [x for x in obnamlib.metadata_fields 
-                 if x not in numeric_fields]
-all_fields = numeric_fields + string_fields
-num_numeric = len(numeric_fields)
-metadata_format = struct.Struct('!Q' + 'Q' * len(obnamlib.metadata_fields))
-
+    
+    
+metadata_format = struct.Struct('!Q' +  # flags
+                                'Q' +   # st_mode
+                                'QQ' +  # st_mtime (as two integers)
+                                'QQ' +  # st_atime (as two integers)
+                                'Q' +   # st_nlink
+                                'Q' +   # st_size
+                                'Q' +   # st_uid
+                                'Q' +   # st_gid
+                                'Q' +   # st_dev
+                                'Q' +   # st_ino
+                                'Q' +   # st_blocks
+                                'Q' +   # len of groupname
+                                'Q' +   # len of username
+                                'Q' +   # len of symlink target
+                                '')
 
 def encode_metadata(metadata):
     flags = 0
     for i, name in enumerate(obnamlib.metadata_fields):
         if getattr(metadata, name) is not None:
             flags |= (1 << i)
-    fields = ([flags] +
-              [getattr(metadata, x) or 0 for x in numeric_fields] +
-              [len(getattr(metadata, x) or '') for x in string_fields])
-    string = ''.join(getattr(metadata, x) or '' for x in string_fields)
-    return metadata_format.pack(*fields) + string
-    
 
-def flagtonone(flags, values):
-    for i, value in enumerate(values):
-        if flags & (1 << i):
-            yield value
-        else:
-            yield None
-
+    if metadata.st_mtime is None:
+        mtime_a, mtime_b = 0, 0
+    else:
+        mtime_a, mtime_b = metadata.st_mtime.as_integer_ratio()
+    if metadata.st_atime is None:
+        atime_a, atime_b = 0, 0
+    else:
+        atime_a, atime_b = metadata.st_atime.as_integer_ratio()
+    packed = metadata_format.pack(flags,
+                                  metadata.st_mode or 0,
+                                  mtime_a, mtime_b,
+                                  atime_a, atime_b,
+                                  metadata.st_nlink or 0,
+                                  metadata.st_size or 0,
+                                  metadata.st_uid or 0,
+                                  metadata.st_gid or 0,
+                                  metadata.st_dev or 0,
+                                  metadata.st_ino or 0,
+                                  metadata.st_blocks or 0,
+                                  len(metadata.groupname or ''),
+                                  len(metadata.username or ''),
+                                  len(metadata.target or ''))
+    return (packed + 
+             (metadata.groupname or '') +
+             (metadata.username or '') +
+             (metadata.target or ''))
 
 def decode_metadata(encoded):
-    buf = buffer(encoded)
-    items = metadata_format.unpack_from(buf)
 
+    items = metadata_format.unpack_from(encoded)
     flags = items[0]
-    values = list(items[1:len(numeric_fields)+1])
-    lengths = items[len(numeric_fields)+1:]
+    pos = [1, metadata_format.size]
+    metadata = obnamlib.Metadata()
     
-    offset = metadata_format.size
-    append = values.append
-    for length in lengths:
-        append(encoded[offset:offset + length])
-        offset += length
-
-    args = dict(zip(all_fields, flagtonone(flags, values)))
-    return obnamlib.Metadata(**args)
+    def is_present(field):
+        i = obnamlib.metadata_fields.index(field)
+        return (flags & (1 << i)) != 0
+    
+    def decode_integer(field):
+        if is_present(field):
+            setattr(metadata, field, items[pos[0]])
+        pos[0] += 1
+    
+    def decode_float(field):
+        if is_present(field):
+            a = items[pos[0]]
+            b = items[pos[0]+1]
+            setattr(metadata, field, float(a) / float(b))
+        pos[0] += 2
+    
+    def decode_string(field):
+        if is_present(field):
+            length = items[pos[0]]
+            setattr(metadata, field, encoded[pos[1]:pos[1] + length])
+            pos[1] += length
+        pos[0] += 1
+    
+    decode_integer('st_mode')
+    decode_float('st_mtime')
+    decode_float('st_atime')
+    decode_integer('st_nlink')
+    decode_integer('st_size')
+    decode_integer('st_uid')
+    decode_integer('st_gid')
+    decode_integer('st_dev')
+    decode_integer('st_ino')
+    decode_integer('st_blocks')
+    decode_string('groupname')
+    decode_string('username')
+    decode_string('target')
+    
+    return metadata
 
 
 class HookedFS(object):
