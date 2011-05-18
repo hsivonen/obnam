@@ -38,6 +38,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <sys/stat.h>
 
 
 static PyObject *
@@ -61,17 +62,17 @@ static PyObject *
 lutimes_wrapper(PyObject *self, PyObject *args)
 {
     int ret;
-    long atime;
-    long mtime;
-    struct timeval tv[2];
     const char *filename;
+    struct timeval tv[2];
 
-    if (!PyArg_ParseTuple(args, "sll", &filename, &atime, &mtime))
+    if (!PyArg_ParseTuple(args, "sllll", 
+                          &filename, 
+                          &tv[0].tv_sec,
+                          &tv[0].tv_usec,
+                          &tv[1].tv_sec,
+                          &tv[1].tv_usec))
         return NULL;
-    tv[0].tv_sec = atime;
-    tv[0].tv_usec = 0;
-    tv[1].tv_sec = mtime;
-    tv[1].tv_usec = 0;
+
     ret = lutimes(filename, tv);
     if (ret == -1)
         ret = errno;
