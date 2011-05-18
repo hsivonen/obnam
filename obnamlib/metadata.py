@@ -86,7 +86,7 @@ def read_metadata(fs, filename, getpwuid=None, getgrgid=None):
     stat_result = fs.lstat(filename)
     for field in metadata_fields:
         if field.startswith('st_'):
-            setattr(metadata, field, int(getattr(stat_result, field)))
+            setattr(metadata, field, getattr(stat_result, field))
 
     if stat.S_ISLNK(stat_result.st_mode):
         metadata.target = fs.readlink(filename)

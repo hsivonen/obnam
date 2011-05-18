@@ -235,9 +235,12 @@ class ObnamTestCase(unittest.TestCase):
     def assert_equal_stat_fields(self, filename, stat1, stat2, fieldname):
         field1 = getattr(stat1, fieldname)
         field2 = getattr(stat2, fieldname)
-        self.assertEqual(field1, field2,
-                         '%s stat field %s difference: %s vs %s' %
-                         (filename, fieldname, repr(field1), repr(field2)))
+        msg = ('%s stat field %s difference: %s vs %s' %
+               (filename, fieldname, repr(field1), repr(field2)))
+        if type(field1) == float:
+            self.assertAlmostEqual(field1, field2, places=5, msg=msg)
+        else:
+            self.assertEqual(field1, field2, msg=msg)
 
     def assert_same_stat(self, name, stat1, stat2):
         '''Are two stat results effectively identical?'''
@@ -248,10 +251,7 @@ class ObnamTestCase(unittest.TestCase):
                 self.st = stat_result
                 
             def __getattr__(self, name):
-                if name == 'st_mtime':
-                    return int(getattr(self.st, name))
-                else:
-                    return getattr(self.st, name)
+                return getattr(self.st, name)
 
         self.assert_equal_stat_fields(name, stat1, stat2, 'st_blocks')
         self.assert_equal_stat_fields(name, stat1, stat2, 'st_gid')

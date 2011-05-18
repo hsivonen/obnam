@@ -28,7 +28,7 @@ class MetadataCodingTests(unittest.TestCase):
 
     def test_round_trip(self):
         metadata = obnamlib.metadata.Metadata(st_mode=1, 
-                                              st_mtime=2, 
+                                              st_mtime=2.12756, 
                                               st_nlink=3,
                                               st_size=4, 
                                               st_uid=5, 
@@ -36,7 +36,7 @@ class MetadataCodingTests(unittest.TestCase):
                                               st_dev=7,
                                               st_gid=8, 
                                               st_ino=9,  
-                                              st_atime=10, 
+                                              st_atime=10.123, 
                                               groupname='group',
                                               username='user',
                                               target='target')

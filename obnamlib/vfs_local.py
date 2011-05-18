@@ -17,6 +17,7 @@
 
 import errno
 import logging
+import math
 import os
 import tempfile
 
@@ -102,7 +103,13 @@ class LocalFS(obnamlib.VirtualFileSystem):
         os.chmod(self.join(pathname), mode)
 
     def lutimes(self, pathname, atime, mtime):
-        ret = obnamlib._obnam.lutimes(self.join(pathname), atime, mtime)
+        def split_time(t):
+            frac, whole = math.modf(t)
+            return int(whole), int(frac * 1e6)
+        atime_sec, atime_usec = split_time(atime)
+        mtime_sec, mtime_usec = split_time(mtime)
+        ret = obnamlib._obnam.lutimes(self.join(pathname), atime_sec,
+                                      atime_usec, mtime_sec, mtime_usec)
         if ret != 0:
             raise OSError(ret, errno.errorcode[ret], pathname)
 
