@@ -248,10 +248,7 @@ class ObnamTestCase(unittest.TestCase):
                 self.st = stat_result
                 
             def __getattr__(self, name):
-                if name == 'st_mtime':
-                    return int(getattr(self.st, name))
-                else:
-                    return getattr(self.st, name)
+                return getattr(self.st, name)
 
         self.assert_equal_stat_fields(name, stat1, stat2, 'st_blocks')
         self.assert_equal_stat_fields(name, stat1, stat2, 'st_gid')
