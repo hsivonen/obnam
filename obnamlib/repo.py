@@ -142,25 +142,23 @@ def decode_metadata(encoded):
     def is_present(field):
         i = obnamlib.metadata_fields.index(field)
         return (flags & (1 << i)) != 0
-    
+
+    def decode(field, num_items, inc_offset, getvalue):
+        if is_present(field):
+            value = getvalue(pos[0], pos[1])
+            setattr(metadata, field, value)
+            if inc_offset:
+                pos[1] += len(value)
+        pos[0] += num_items
+
     def decode_integer(field):
-        if is_present(field):
-            setattr(metadata, field, items[pos[0]])
-        pos[0] += 1
-    
+        decode(field, 1, False, lambda i, o: items[i])
+
     def decode_float(field):
-        if is_present(field):
-            a = items[pos[0]]
-            b = items[pos[0]+1]
-            setattr(metadata, field, float(a) / float(b))
-        pos[0] += 2
-    
+        decode(field, 2, False, lambda i, o: float(items[i]) / items[i+1])
+
     def decode_string(field):
-        if is_present(field):
-            length = items[pos[0]]
-            setattr(metadata, field, encoded[pos[1]:pos[1] + length])
-            pos[1] += length
-        pos[0] += 1
+        decode(field, 1, True, lambda i, o: encoded[o:o + items[i]])
     
     decode_integer('st_mode')
     decode_float('st_mtime')
