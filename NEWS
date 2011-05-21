@@ -5,7 +5,43 @@ Obnam NEWS
 This file summarizes changes between releases of Obnam.
 
 
-Version 0.16, released 2011-03-21; a BETA release
+Version 0.17, released 2011-05-21; a BETA release
+-------------------------------------------------
+
+* This is the second BETA release.
+* The `run-benchmark` script now works with the new version of `seivot`.
+  The only benchmark size is one gibibyte, for now, because Obnam's too
+  slow to do big ones in reasonable time. As an aside, the benchmark
+  script got rewritten in Python, so it can be made more flexible.
+* Benchmarks are run using encrypted backups.
+* The kernel buffer cache is dropped before each obnam run, so the
+  benchmark result is more realistic (read: slower).
+* Obnam now rotates its logs. See `--log-max` and `--log-keep` options
+  in the manual page. The default location for the log file is now
+  `~/.cache/obnam/obnam.log` for people, and
+  `/var/log/obnam.log` for root.
+* Obnam now restores sparse files correctly.
+* There have been some speed improvements to Obnam.
+* The `--repository` option now has the shorter alias `-r`, since it
+  gets used so often.
+* `obnam force-lock` now merely gives an error message, instead of a
+  Python stack trace, if the repository does not exist.
+* Obnam now does not crash if files go missing during a backup, or can't
+  be read, or there are other problems with them. It will report the
+  problem, but then continue as if it had never heard of the file.
+* Obnam now supports FIFO files (Unix sockets).
+* Obnam now verifies checksums when it restores files.
+* Obnam now stores the checksum for the whole file, not just the checksum
+  for each chunk of its contents.
+* Obnam's own log file is automatically excluded from backups.
+* Obnam now stores and restores file timestamps to full accuracy,
+  instead of truncating them to whole seconds.
+* The format of the backup repository has changed in an incompatible way,
+  and Obnam will now refuse to use an old repository. This means you
+  will need to use an old version to restore from them, and need to
+  re-backup everything. Sorry.
+
+Version 0.16, released 2011-07-17; a BETA release
 -------------------------------------------------
 
 * This is the first BETA release. Obnam should now be feature complete
@@ -13,7 +49,6 @@ Version 0.16, released 2011-03-21; a BETA release
   There are no known bugs that would corrupt backed up data, or prevent
   its recovery.
 * Add encryption support. See the manual page for how to use it.
-
 
 Version 0.15.1, released 2011-03-21; an ALPHA release
 ----------------------------------------------------
