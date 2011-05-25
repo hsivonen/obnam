@@ -29,7 +29,7 @@ Version 0.17, released 2011-05-21; a BETA release
 * Obnam now does not crash if files go missing during a backup, or can't
   be read, or there are other problems with them. It will report the
   problem, but then continue as if it had never heard of the file.
-* Obnam now supports FIFO files (Unix sockets).
+* Obnam now supports FIFO files.
 * Obnam now verifies checksums when it restores files.
 * Obnam now stores the checksum for the whole file, not just the checksum
   for each chunk of its contents.
