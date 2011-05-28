@@ -459,10 +459,13 @@ class BackupTests(ObnamTestCase):
         cachedir = self.mkdir(os.path.join('data', 'cache'))
         self.create_file(cachedir, 'CACHEDIR.TAG', 
                          'Signature: 8a477f597d28d172789f06886806bc55')
+        self.create_file(cachedir, 'foo', 'foo')
         self.backup(extraopts=['--exclude-caches'])
         self.restore()
-        restored_cachedir = os.path.join(self.restored, './' + cachedir)
-        self.assertFalse(os.path.exists(restored_cachedir))
+
+        x = os.path.join(self.restored, './' + cachedir)
+        self.assertFalse(os.path.exists(os.path.join(x, 'CACHEDIR.TAG')))
+        self.assertFalse(os.path.exists(os.path.join(x, 'foo')))
 
 
 class VerifyTests(ObnamTestCase):
