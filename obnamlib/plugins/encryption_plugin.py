@@ -75,6 +75,14 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         else:
             return '/dev/random'
 
+    def _write_file(self, repo, pathname, contents):
+        repo.fs.fs.write_file(pathname, contents)
+        repo.fs.make_readonly(pathname)
+
+    def _overwrite_file(self, repo, pathname, contents):
+        repo.fs.fs.overwrite_file(pathname, contents)
+        repo.fs.make_readonly(pathname)
+
     def toplevel_init(self, repo, toplevel):
         '''Initialize a new toplevel for encryption.'''
         
@@ -88,11 +96,11 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
                                 self.symmetric_key_bits,
                                 filename=self.devrandom)
         encrypted = obnamlib.encrypt_with_keyring(symmetric_key, pubkeys)
-        repo.fs.fs.write_file(os.path.join(toplevel, 'key'), encrypted)
+        self._write_file(repo, os.path.join(toplevel, 'key'), encrypted)
 
         encoded = str(pubkeys)
         encrypted = obnamlib.encrypt_symmetric(encoded, symmetric_key)
-        repo.fs.fs.write_file(os.path.join(toplevel, 'userkeys'), encrypted)
+        self._write_file(repo, os.path.join(toplevel, 'userkeys'), encrypted)
 
     def toplevel_read_data(self, encrypted, repo, toplevel):
         if not self.keyid:
@@ -123,7 +131,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         encoded = str(keyring)
         encrypted = self.toplevel_write_data(encoded, repo, toplevel)
         pathname = os.path.join(toplevel, 'userkeys')
-        repo.fs.fs.overwrite_file(pathname, encrypted)
+        self._overwrite_file(repo, pathname, encrypted)
 
     def add_to_userkeys(self, repo, toplevel, public_key):
         userkeys = self.read_keyring(repo, toplevel)

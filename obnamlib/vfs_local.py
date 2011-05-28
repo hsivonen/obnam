@@ -20,6 +20,7 @@ import logging
 import math
 import os
 import tempfile
+import tracing
 
 import obnamlib
 
@@ -88,18 +89,22 @@ class LocalFS(obnamlib.VirtualFileSystem):
         return os.path.join(self.cwd, pathname)
 
     def remove(self, pathname):
+        tracing.trace('remove %s', pathname)
         os.remove(self.join(pathname))
 
     def rename(self, old, new):
+        tracing.trace('rename %s %s', old, new)
         os.rename(self.join(old), self.join(new))
 
     def lstat(self, pathname):
         return os.lstat(self.join(pathname))
 
     def chown(self, pathname, uid, gid): # pragma: no cover
+        tracing.trace('chown %s %d %d', pathname, uid, gid)
         os.chown(self.join(pathname), uid, gid)
 
     def chmod(self, pathname, mode):
+        tracing.trace('chmod %s %o', pathname, mode)
         os.chmod(self.join(pathname), mode)
 
     def lutimes(self, pathname, atime, mtime):
@@ -135,12 +140,15 @@ class LocalFS(obnamlib.VirtualFileSystem):
         os.mknod(self.join(pathname), mode)
 
     def mkdir(self, pathname):
+        tracing.trace('mkdir %s', pathname)
         os.mkdir(self.join(pathname))
 
     def makedirs(self, pathname):
+        tracing.trace('makedirs %s', pathname)
         os.makedirs(self.join(pathname))
 
     def rmdir(self, pathname):
+        tracing.trace('rmdir %s', pathname)
         os.rmdir(self.join(pathname))
 
     def cat(self, pathname):
@@ -158,6 +166,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
         return data
 
     def write_file(self, pathname, contents):
+        tracing.trace('write_file %s', pathname)
         tempname = self._write_to_tempfile(pathname, contents)
         path = self.join(pathname)
         try:
@@ -168,6 +177,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
         os.remove(tempname)
 
     def overwrite_file(self, pathname, contents, make_backup=True):
+        tracing.trace('overwrite_file %s', pathname)
         tempname = self._write_to_tempfile(pathname, contents)
         path = self.join(pathname)
 

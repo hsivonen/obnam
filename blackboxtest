@@ -113,6 +113,8 @@ class ObnamTestCase(unittest.TestCase):
                             '--quiet',
                             '--log', 'blackboxtest-obnam.log',
                             '--log-level', 'debug',
+                            '--trace', 'repo',
+                            '--trace', 'vfs',
                             '--encrypt-with', self.gpgkey,
                             '--weak-random',
                             '--client-name', self.client_name] +
@@ -466,6 +468,16 @@ class BackupTests(ObnamTestCase):
         x = os.path.join(self.restored, './' + cachedir)
         self.assertFalse(os.path.exists(os.path.join(x, 'CACHEDIR.TAG')))
         self.assertFalse(os.path.exists(os.path.join(x, 'foo')))
+
+    def test_makes_repository_files_have_correct_perms(self):
+        self.create_file(self.data, 'foo', 'foo')
+        self.backup()
+        for path, st in self.find_everything(self.repo):
+            perms = stat.S_IMODE(st.st_mode)
+            if stat.S_ISREG(st.st_mode):
+                self.assertEqual(perms, stat.S_IRUSR, 
+                                 'file perms must be readonly for %s not %o' % 
+                                    (path, perms))
 
 
 class VerifyTests(ObnamTestCase):

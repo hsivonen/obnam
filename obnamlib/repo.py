@@ -19,8 +19,10 @@ import hashlib
 import logging
 import os
 import random
+import stat
 import struct
 import time
+import tracing
 
 import obnamlib
 
@@ -203,16 +205,23 @@ class HookedFS(object):
                                 repo=self.repo, toplevel=toplevel)
         
     def write_file(self, filename, data):
+        tracing.trace('writing hooked %s' % filename)
         toplevel = self._get_toplevel(filename)
         data = self.hooks.call('repository-write-data', data,
                                 repo=self.repo, toplevel=toplevel)
         self.fs.write_file(filename, data)
+        self.make_readonly(filename)
         
     def overwrite_file(self, filename, data):
+        tracing.trace('overwriting hooked %s' % filename)
         toplevel = self._get_toplevel(filename)
         data = self.hooks.call('repository-write-data', data,
                                 repo=self.repo, toplevel=toplevel)
         self.fs.overwrite_file(filename, data)
+        self.make_readonly(filename)
+        
+    def make_readonly(self, filename):
+        self.fs.chmod(filename, stat.S_IRUSR)
         
 
 class Repository(object):
