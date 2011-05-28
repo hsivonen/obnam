@@ -504,6 +504,15 @@ Key identifier to be added to or removed from the repository by the
 and
 .B remove\-key
 commands.
+.TP
+.BR \-\-exclude\-caches
+Automatically exclude cache directories from being backed up.
+The directory itself gets backed up, but nothing in it does.
+A cache directory is one that contains a file called
+.I CACHEDIR.TAG
+as specified in the
+.I http://www.bford.info/cachedir/
+standard.
 .\" ------------------------------------------------------------------
 .SH "EXIT STATUS"
 .B obnam
