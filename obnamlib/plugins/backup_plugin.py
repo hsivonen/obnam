@@ -33,6 +33,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                                  'regular expression for pathnames to '
                                  'exclude from backup (can be used multiple '
                                  'times)')
+        self.app.config.new_boolean(['exclude-caches'],
+                                    'exclude directories (and their subdirs) '
+                                    'that contain a CACHEDIR.TAG file')
         self.app.config.new_processed(['checkpoint'],
                                       'make a checkpoint after a given size, '
                                       'default unit is MiB (%default)',
@@ -216,6 +219,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 for item in items:
                     path = os.path.join(dirname, item)
                     if pat.search(path):
+                        tracing.trace('excluding (pattern): %s' % path)
                         delete.add(item)
             for path in delete:
                 i = items.index(path)
@@ -224,6 +228,24 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             
         prune_list(subdirs)
         prune_list(filenames)
+        
+        if (self.app.config['exclude-caches'] and 
+            self.is_cachedir(dirname, filenames)):
+            tracing.trace('excluding (cache): %s' % dirname)
+            del subdirs[:]
+            del filenames[:]
+
+    def is_cachedir(self, dirname, filenames):
+        tag_filename = 'CACHEDIR.TAG'
+        tag_contents = 'Signature: 8a477f597d28d172789f06886806bc55'
+        if tag_filename not in filenames:
+            return False
+
+        pathname = os.path.join(dirname, tag_filename)
+        f = self.fs.open(pathname, 'r')
+        data = f.read(len(tag_contents))
+        f.close()
+        return data == tag_contents
 
     def needs_backup(self, pathname, current):
         '''Does a given file need to be backed up?'''
