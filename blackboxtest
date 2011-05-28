@@ -118,13 +118,13 @@ class ObnamTestCase(unittest.TestCase):
                             '--client-name', self.client_name] +
                            args, stderr_ignore=stderr_ignore)
 
-    def backup(self, roots=None):
+    def backup(self, roots=None, extraopts=[]):
         '''Back up the data directory to the repository.'''
 
         if roots is None:
             roots = [self.data]
         logging.debug('backing up %s to %s' % (roots, self.repo))
-        self.obnam(['--repository', self.repo, 'backup'] + roots)
+        self.obnam(['--repository', self.repo, 'backup'] + extraopts + roots)
         self.obnam(['fsck', '--repository', self.repo])
         
     def restore(self, pathnames=None, stderr_ignore=None):
@@ -459,7 +459,7 @@ class BackupTests(ObnamTestCase):
         cachedir = self.mkdir(os.path.join('data', 'cache'))
         self.create_file(cachedir, 'CACHEDIR.TAG', 
                          'Signature: 8a477f597d28d172789f06886806bc55')
-        self.backup()
+        self.backup(extraopts=['--exclude-caches'])
         self.restore()
         restored_cachedir = os.path.join(self.restored, './' + cachedir)
         self.assertFalse(os.path.exists(restored_cachedir))
