@@ -455,6 +455,15 @@ class BackupTests(ObnamTestCase):
         parent = os.path.join(self.restored, './' + self.data)
         self.assertEqual(os.listdir(parent), ['bar'])
 
+    def test_excludes_cache_directory(self):
+        cachedir = self.mkdir(os.path.join('data', 'cache'))
+        self.create_file(cachedir, 'CACHEDIR.TAG', 
+                         'Signature: 8a477f597d28d172789f06886806bc55')
+        self.backup()
+        self.restore()
+        restored_cachedir = os.path.join(self.restored, './' + cachedir)
+        self.assertFalse(os.path.exists(restored_cachedir))
+
 
 class VerifyTests(ObnamTestCase):
 
