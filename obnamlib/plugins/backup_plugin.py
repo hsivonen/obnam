@@ -19,6 +19,7 @@ import logging
 import os
 import re
 import stat
+import traceback
 import tracing
 
 import obnamlib
@@ -174,9 +175,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             for pathname, metadata in self._real_find_files(root):
                 yield pathname, metadata
         except OSError, e:
-            logging.error('Error scanning files in: %s' % root)
-            self.app.hooks.call('error-message', 
-                                'Error scanning files in: %s' % root)
+            msg = 'Error scanning files: %s' % e.filename
+            logging.error(msg)
+            logging.error('Traceback:\n%s' % traceback.format_exc())
+            self.app.hooks.call('error-message', msg)
 
     def _real_find_files(self, root):
         generator = self.fs.depth_first(root, prune=self.prune)
