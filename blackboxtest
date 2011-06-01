@@ -177,6 +177,8 @@ class ObnamTestCase(unittest.TestCase):
         f = open(pathname, 'w')
         f.write(contents)
         f.close()
+        
+        return pathname
 
     def remove_file(self, root, relative):
         '''Remove a file.'''
@@ -478,6 +480,26 @@ class BackupTests(ObnamTestCase):
                 self.assertEqual(perms, stat.S_IRUSR, 
                                  'file perms must be readonly for %s not %o' % 
                                     (path, perms))
+
+    def test_skips_unreadable_directory_but_backs_up_rest(self):
+        self.create_file(self.data, 'aaa', 'aaa')
+        bbb = os.path.join(self.data, 'bbb')
+        os.mkdir(bbb, 0)
+        self.create_file(self.data, 'ccc', 'ccc')
+        self.backup()
+        self.restore()
+        os.rmdir(bbb) # remove the problematic dir so verify works
+        self.assert_restored_correctly()
+    
+    def test_skips_unreadable_file_but_backs_up_rest(self):
+        self.create_file(self.data, 'aaa', 'aaa')
+        bbb = self.create_file(self.data, 'bbb', 'bbb')
+        os.chmod(bbb, 0)
+        self.create_file(self.data, 'ccc', 'ccc')
+        self.backup()
+        self.restore()
+        os.remove(bbb) # remove the problematic file so verify works
+        self.assert_restored_correctly()
 
 
 class VerifyTests(ObnamTestCase):
