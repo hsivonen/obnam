@@ -225,11 +225,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     if pat.search(path):
                         tracing.trace('excluding (pattern): %s' % path)
                         delete.add(item)
-            for path in delete:
-                i = items.index(path)
-                del items[i]
-            items.sort()
-            
+            items[:] = sorted(item for item in items if not item in delete)            
+
         prune_list(subdirs)
         prune_list(filenames)
         
