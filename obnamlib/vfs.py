@@ -197,9 +197,17 @@ class VirtualFileSystem(object):
         
         top is relative to VFS root, and so is the returned directory name.
         
+        If there are any errors, they are logged (logged.error), but
+        the walking continues.
+        
         '''
 
-        names = self.listdir(top)
+        try:
+            names = self.listdir(top)
+        except OSError, e:
+            logging.error('Can\'t read directory %s: %s' % (top, e.strerror))
+            return
+
         dirs = []
         nondirs = []
         for name in names:
@@ -209,6 +217,9 @@ class VirtualFileSystem(object):
             except OSError, e:
                 if e.errno != errno.ENOENT:
                     raise
+                else:
+                    logging.error('Can\'t lstat %s: %s' % 
+                                  (e.filename, e.strerror))
             else:
                 is_dir = stat.S_ISDIR(st.st_mode)
             if is_dir:
