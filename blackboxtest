@@ -479,6 +479,17 @@ class BackupTests(ObnamTestCase):
                                  'file perms must be readonly for %s not %o' % 
                                     (path, perms))
 
+    def test_skips_unreadable_directory_but_backs_up_rest(self):
+        self.create_file(self.data, 'aaa', 'aaa')
+        bbb = os.path.join(self.data, 'bbb')
+        os.mkdir(bbb, 0)
+        self.create_file(self.data, 'ccc', 'ccc')
+        self.backup()
+        self.restore()
+        os.rmdir(bbb) # remove the problematic dir so verify works
+        self.assert_restored_correctly()
+        
+
 
 class VerifyTests(ObnamTestCase):
 
