@@ -99,17 +99,19 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 for pathname, metadata in self.find_files(absroot):
                     tracing.trace('Backing up %s', pathname)
                     try:
-                        self.backup_metadata(pathname, metadata)
                         if stat.S_ISDIR(metadata.st_mode):
                             self.backup_dir_contents(pathname)
                         elif stat.S_ISREG(metadata.st_mode):
                             self.backup_file_contents(pathname)
+                        self.backup_metadata(pathname, metadata)
                     except OSError, e:
-                        logging.error('Could not back up %s: %s' % 
-                                      (pathname, e.strerror))
-                        self.app.hooks.call('error-message', 
-                                            'Could not back up %s: %s' %
-                                            (pathname, e.strerror))
+                        msg = 'Can\'t back up %s: %s' % (pathname, e.strerror)
+                        logging.error(msg)
+                        self.app.hooks.call('error-message', msg)
+                    except IOError, e:
+                        msg = 'Can\'t back up %s: %s' % (pathname, e.strerror)
+                        logging.error(msg)
+                        self.app.hooks.call('error-message', msg)
                     if self.repo.fs.bytes_written - last_checkpoint >= interval:
                         logging.info('Making checkpoint')
                         self.backup_parents('.')
