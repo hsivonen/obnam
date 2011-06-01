@@ -495,6 +495,7 @@ class BackupTests(ObnamTestCase):
         self.create_file(self.data, 'aaa', 'aaa')
         bbb = self.create_file(self.data, 'bbb', 'bbb')
         os.chmod(bbb, 0)
+        self.create_file(self.data, 'ccc', 'ccc')
         self.backup()
         self.restore()
         os.remove(bbb) # remove the problematic file so verify works
