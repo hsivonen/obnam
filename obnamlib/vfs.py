@@ -176,7 +176,7 @@ class VirtualFileSystem(object):
 
         '''
 
-    def depth_first(self, top, prune=None):
+    def depth_first(self, top, prune=None, skiperror=False):
         '''Walk a directory tree depth-first, except for unwanted subdirs.
         
         This is, essentially, 'os.walk(top, topdown=False)', except that
@@ -198,15 +198,20 @@ class VirtualFileSystem(object):
         top is relative to VFS root, and so is the returned directory name.
         
         If there are any errors, they are logged (logged.error), but
-        the walking continues.
+        the walking continues, unless skiperror=False, in which case
+        the the listdir for top causes an exception to be raised.
         
         '''
 
         try:
             names = self.listdir(top)
         except OSError, e:
-            logging.error('Can\'t read directory %s: %s' % (top, e.strerror))
-            return
+            if skiperror:
+                logging.error('Can\'t read directory %s: %s' % 
+                              (top, e.strerror))
+                return
+            else:
+                raise
 
         dirs = []
         nondirs = []
@@ -230,7 +235,7 @@ class VirtualFileSystem(object):
             prune(top, dirs, nondirs)
         for name in dirs:
             path = os.path.join(top, name)
-            for x in self.depth_first(path, prune=prune):
+            for x in self.depth_first(path, prune=prune, skiperror=True):
                 yield x
         yield top, dirs, nondirs
         
