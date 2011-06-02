@@ -210,7 +210,7 @@ class VirtualFileSystem(object):
         for name in names:
             pathname = os.path.join(dirname, name)
             try:
-                st = os.lstat(pathname)
+                st = self.lstat(pathname)
             except OSError, e:
                 log('lstat failed: %s: %s' % (e.filename, e.strerror))
             else:
@@ -226,9 +226,9 @@ class VirtualFileSystem(object):
 
         if dirst is None:
             try:
-                dirst = os.lstat(dirname)
+                dirst = self.lstat(dirname)
             except OSError, e:
-                log('lstat failed: %s: %s' % (e.filename, e.strerror))
+                log('lstat for dir failed: %s: %s' % (e.filename, e.strerror))
                 return
 
         yield dirname, dirst
