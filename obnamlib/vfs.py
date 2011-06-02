@@ -203,7 +203,7 @@ class VirtualFileSystem(object):
         try:
             names = self.listdir(dirname)
         except OSError, e:
-            logging.error('listdir failed: %s: %s' % (e.filename, e.strerror))
+            log('listdir failed: %s: %s' % (e.filename, e.strerror))
             names = []
             
         queue = []
@@ -212,7 +212,7 @@ class VirtualFileSystem(object):
             try:
                 st = os.lstat(pathname)
             except OSError, e:
-                logging.error('lstat failed: %s: %s' % (e.filename, e.strerror))
+                log('lstat failed: %s: %s' % (e.filename, e.strerror))
             else:
                 if ok is None or ok(pathname, st):
                     if stat.S_ISDIR(st.st_mode):
@@ -228,7 +228,7 @@ class VirtualFileSystem(object):
             try:
                 dirst = os.lstat(dirname)
             except OSError, e:
-                logging.error('lstat failed: %s: %s' % (e.filename, e.strerror))
+                log('lstat failed: %s: %s' % (e.filename, e.strerror))
                 return
 
         yield dirname, dirst
@@ -634,8 +634,10 @@ class VfsTests(object): # pragma: no cover
         self.set_up_depth_first()
         def raiser(dirname):
             raise OSError((123, 'oops', dirname))
+        def logerror(msg):
+            pass
         self.fs.listdir = raiser
-        result = list(self.fs.scan_tree(self.basepath))
+        result = list(self.fs.scan_tree(self.basepath, log=logerror))
         self.assertEqual(len(result), 1)
         pathname, st = result[0]
         self.assertEqual(pathname, self.basepath)
