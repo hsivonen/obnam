@@ -687,8 +687,9 @@ class Repository(object):
         '''Return list of ids of all chunks in repository.'''
         result = []
         if self.fs.exists('chunks'):
-            for dirname, subdirs, basenames in self.fs.depth_first('chunks'):
-                for basename in basenames:
+            for pathname, st in self.fs.scan_tree('chunks'):
+                if stat.S_ISREG(st.st_mode):
+                    basename = os.path.basename(pathname)
                     result.append(int(basename, 16))
         return result
 
