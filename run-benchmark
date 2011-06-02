@@ -116,6 +116,13 @@ class RunObnamBenchmark(cliapp.Application):
                                   env=env)
 
         shutil.rmtree(tempdir)
+        
+        with open(results + '.mdwn', 'w') as f:
+            f.write('Benchmark results for Obnam r%s and larch r%s\n' %
+                    (obnam_revno, larch_revno))
+            f.write('%s\n\n' % ('=' * 20))
+            for basename in sorted(os.listdir(results)):
+                f.write('* [[%s/%s]]\n' % (results, basename))
 
         seivots = glob.glob(results + '/../*/*.seivot')
         csv_dir = results + '/..'
