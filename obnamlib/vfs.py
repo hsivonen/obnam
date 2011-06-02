@@ -176,6 +176,63 @@ class VirtualFileSystem(object):
 
         '''
 
+    def scan_tree(self, dirname, ok=None, dirst=None, log=logging.error):
+        '''Scan a tree for files.
+        
+        Return a generator that returns ``(pathname, stat_result)``
+        pairs for each file and directory in the tree, in 
+        depth-first order.
+        
+        If ``ok`` is not None, it must be a function that determines
+        if a particular file or directory should be returned.
+        It gets the pathname and stat result as arguments, and
+        should return True or False. If it returns False on a
+        directory, ``scan_tree`` will not recurse into the
+        directory.
+        
+        ``dirst`` is for internal optimization, and should not
+        be used by the caller. ``log`` is used by unit tests and
+        should not be used by the caller.
+        
+        Errors from calling ``listdir`` or ``lstat`` are logged,
+        but do not stop the scanning. Such files or directories are
+        not returned, however.
+        
+        '''
+
+        try:
+            names = self.listdir(dirname)
+        except OSError, e:
+            logging.error('listdir failed: %s: %s' % (e.filename, e.strerror))
+            names = []
+            
+        queue = []
+        for name in names:
+            pathname = os.path.join(dirname, name)
+            try:
+                st = os.lstat(pathname)
+            except OSError, e:
+                logging.error('lstat failed: %s: %s' % (e.filename, e.strerror))
+            else:
+                if ok is None or ok(pathname, st):
+                    if stat.S_ISDIR(st.st_mode):
+                        for t in self.scan_tree(pathname, ok=ok, dirst=st):
+                            yield t
+                    else:
+                        queue.append((pathname, st))
+
+        for pathname, st in queue:
+            yield pathname, st
+
+        if dirst is None:
+            try:
+                dirst = os.lstat(dirname)
+            except OSError, e:
+                logging.error('lstat failed: %s: %s' % (e.filename, e.strerror))
+                return
+
+        yield dirname, dirst
+
     def depth_first(self, top, prune=None, skiperror=False):
         '''Walk a directory tree depth-first, except for unwanted subdirs.
         
@@ -571,6 +628,31 @@ class VfsTests(object): # pragma: no cover
             self.fs.mkdir(dirname)
         self.dirs.insert(0, self.basepath)
         self.fs.symlink('foo', 'symfoo')
+        self.pathnames = self.dirs + [os.path.join(self.basepath, 'symfoo')]
+
+    def test_scan_tree_returns_nothing_if_listdir_fails(self):
+        self.set_up_depth_first()
+        def raiser(dirname):
+            raise OSError((123, 'oops', dirname))
+        self.fs.listdir = raiser
+        result = list(self.fs.scan_tree(self.basepath))
+        self.assertEqual(len(result), 1)
+        pathname, st = result[0]
+        self.assertEqual(pathname, self.basepath)
+
+    def test_scan_tree_returns_the_right_stuff(self):
+        self.set_up_depth_first()
+        result = list(self.fs.scan_tree(self.basepath))
+        pathnames = [pathname for pathname, st in result]
+        self.assertEqual(sorted(pathnames), sorted(self.pathnames))
+    
+    def test_scan_tree_filters_away_unwanted(self):
+        def ok(pathname, st):
+            return stat.S_ISDIR(st.st_mode)
+        self.set_up_depth_first()
+        result = list(self.fs.scan_tree(self.basepath, ok=ok))
+        pathnames = [pathname for pathname, st in result]
+        self.assertEqual(sorted(pathnames), sorted(self.dirs))
     
     def test_depth_first_finds_all_dirs(self):
         self.set_up_depth_first()
