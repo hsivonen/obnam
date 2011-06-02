@@ -552,9 +552,8 @@ class ForgetTests(ObnamTestCase):
     def disk_usage(self, root):
         usage = 0
         fs = obnamlib.LocalFS(root)
-        for dirname, subdirs, filenames in fs.depth_first('.'):
-            for filename in filenames:
-                st = fs.lstat(os.path.join(dirname, filename))
+        for pathname, st in fs.scan_tree('.'):
+            if stat.S_ISREG(st.st_mode):
                 usage += st.st_blocks * 512
         return usage
     
