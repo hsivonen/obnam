@@ -166,87 +166,33 @@ class BackupPlugin(obnamlib.ObnamPlugin):
     def find_files(self, root):
         '''Find all files and directories that need to be backed up.
         
-        This is a generator.
+        This is a generator. It yields (pathname, metadata) pairs.
         
         The caller should not recurse through directories, just backup
         the directory itself (name, metadata, file list).
         
         '''
-        
-        try:
-            for pathname, metadata in self._real_find_files(root):
+        for pathname, st in self.fs.scan_tree(root, ok=self.can_be_backed_up):
+            metadata = obnamlib.read_metadata(self.fs, pathname)
+            if self.needs_backup(pathname, metadata):
                 yield pathname, metadata
-        except OSError, e:
-            msg = 'Error scanning files: %s' % e.filename
-            logging.error(msg)
-            logging.error('Traceback:\n%s' % traceback.format_exc())
-            self.app.hooks.call('error-message', msg)
 
-    def _real_find_files(self, root):
-        generator = self.fs.depth_first(root, prune=self.prune)
-        for dirname, subdirs, basenames in generator:
-            needed = False
-            for path, meta in self._real_find_basenames(dirname, basenames):
-                yield path, meta
-                needed = True
-            try:
-                metadata = obnamlib.read_metadata(self.fs, dirname)
-                if not needed:
-                    needed = self.needs_backup(dirname, metadata)
-                if needed:
-                    yield dirname, metadata
-            except OSError, e:
-                logging.error('Error collecting metadata for: %s' % dirname)
-                self.app.hooks.call('error-message', 
-                                    'Error collecting metadata for: %s' % 
-                                        dirname)
+    def can_be_backed_up(self, pathname, st):
+        for pat in self.exclude_pats:
+            if pat.search(pathname):
+                tracing.trace('excluding (pattern): %s' % pathname)
+                return False
 
-    def _real_find_basenames(self, dirname, basenames):
-        for pathname in [os.path.join(dirname, x) for x in basenames]:
-            try:
-                metadata = obnamlib.read_metadata(self.fs, pathname)
-                self.app.hooks.call('progress-found-file', pathname, metadata)
-                if self.needs_backup(pathname, metadata):
-                    yield pathname, metadata
-            except OSError, e:
-                logging.error('Error collecting metadata for: %s' % pathname)
-                self.app.hooks.call('error-message', 
-                                    'Error collecting metadata for: %s' % 
-                                        pathname)
-
-    def prune(self, dirname, subdirs, filenames):
-        '''Remove unwanted things.'''
-
-        def prune_list(items):
-            delete = set()
-            for pat in self.exclude_pats:
-                for item in items:
-                    path = os.path.join(dirname, item)
-                    if pat.search(path):
-                        tracing.trace('excluding (pattern): %s' % path)
-                        delete.add(item)
-            items[:] = sorted(item for item in items if not item in delete)            
-
-        prune_list(subdirs)
-        prune_list(filenames)
+        if stat.S_ISDIR(st.st_mode) and self.app.config['exclude-caches']:
+            tag_filename = 'CACHEDIR.TAG'
+            tag_contents = 'Signature: 8a477f597d28d172789f06886806bc55'
+            tag_path = os.path.join(pathname, 'CACHEDIR.TAG')
+            if self.fs.exists(tag_path):
+                with self.fs.open(tag_path, 'rb') as f:
+                    data = f.read(len(tag_contents))
+                    return data != tag_contents
         
-        if (self.app.config['exclude-caches'] and 
-            self.is_cachedir(dirname, filenames)):
-            tracing.trace('excluding (cache): %s' % dirname)
-            del subdirs[:]
-            del filenames[:]
-
-    def is_cachedir(self, dirname, filenames):
-        tag_filename = 'CACHEDIR.TAG'
-        tag_contents = 'Signature: 8a477f597d28d172789f06886806bc55'
-        if tag_filename not in filenames:
-            return False
-
-        pathname = os.path.join(dirname, tag_filename)
-        f = self.fs.open(pathname, 'r')
-        data = f.read(len(tag_contents))
-        f.close()
-        return data == tag_contents
+        return True
 
     def needs_backup(self, pathname, current):
         '''Does a given file need to be backed up?'''

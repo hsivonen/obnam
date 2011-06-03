@@ -113,10 +113,11 @@ class VirtualFileSystem(object):
     def rmtree(self, dirname):
         '''Remove a directory tree, including its contents.'''
         if self.isdir(dirname):
-            for dirname, dirnames, basenames in self.depth_first(dirname):
-                for basename in basenames:
-                    self.remove(os.path.join(dirname, basename))
-                self.rmdir(dirname)
+            for pathname, st in self.scan_tree(dirname):
+                if stat.S_ISDIR(st.st_mode):
+                    self.rmdir(pathname)
+                else:
+                    self.remove(pathname)
 
     def remove(self, pathname):
         '''Remove a file.'''
@@ -176,69 +177,63 @@ class VirtualFileSystem(object):
 
         '''
 
-    def depth_first(self, top, prune=None, skiperror=False):
-        '''Walk a directory tree depth-first, except for unwanted subdirs.
+    def scan_tree(self, dirname, ok=None, dirst=None, log=logging.error):
+        '''Scan a tree for files.
         
-        This is, essentially, 'os.walk(top, topdown=False)', except that
-        if the prune argument is set, we call it before descending to 
-        sub-directories to allow it to remove any directories and files
-        the caller does not want to know about.
+        Return a generator that returns ``(pathname, stat_result)``
+        pairs for each file and directory in the tree, in 
+        depth-first order.
         
-        If set, prune must be a function that gets three arguments (current
-        directory, list of sub-directory names, list of files in directory),
-        and must modify the two lists _in_place_. For example:
+        If ``ok`` is not None, it must be a function that determines
+        if a particular file or directory should be returned.
+        It gets the pathname and stat result as arguments, and
+        should return True or False. If it returns False on a
+        directory, ``scan_tree`` will not recurse into the
+        directory.
         
-        def prune(dirname, dirnames, filenames):
-            if '.bzr' in dirnames:
-                dirnames.remove('.bzr')
+        ``dirst`` is for internal optimization, and should not
+        be used by the caller. ``log`` is used by unit tests and
+        should not be used by the caller.
         
-        The dirnames and filenames lists contain basenames, relative to
-        dirname.
-        
-        top is relative to VFS root, and so is the returned directory name.
-        
-        If there are any errors, they are logged (logged.error), but
-        the walking continues, unless skiperror=False, in which case
-        the the listdir for top causes an exception to be raised.
+        Errors from calling ``listdir`` or ``lstat`` are logged,
+        but do not stop the scanning. Such files or directories are
+        not returned, however.
         
         '''
 
         try:
-            names = self.listdir(top)
+            names = self.listdir(dirname)
         except OSError, e:
-            if skiperror:
-                logging.error('Can\'t read directory %s: %s' % 
-                              (top, e.strerror))
-                return
-            else:
-                raise
-
-        dirs = []
-        nondirs = []
+            log('listdir failed: %s: %s' % (e.filename, e.strerror))
+            names = []
+            
+        queue = []
         for name in names:
-            is_dir = False
+            pathname = os.path.join(dirname, name)
             try:
-                st = self.lstat(os.path.join(top, name))
+                st = self.lstat(pathname)
             except OSError, e:
-                if e.errno != errno.ENOENT:
-                    raise
-                else:
-                    logging.error('Can\'t lstat %s: %s' % 
-                                  (e.filename, e.strerror))
+                log('lstat failed: %s: %s' % (e.filename, e.strerror))
             else:
-                is_dir = stat.S_ISDIR(st.st_mode)
-            if is_dir:
-                dirs.append(name)
-            else:
-                nondirs.append(name)
-        if prune:
-            prune(top, dirs, nondirs)
-        for name in dirs:
-            path = os.path.join(top, name)
-            for x in self.depth_first(path, prune=prune, skiperror=True):
-                yield x
-        yield top, dirs, nondirs
-        
+                if ok is None or ok(pathname, st):
+                    if stat.S_ISDIR(st.st_mode):
+                        for t in self.scan_tree(pathname, ok=ok, dirst=st):
+                            yield t
+                    else:
+                        queue.append((pathname, st))
+
+        for pathname, st in queue:
+            yield pathname, st
+
+        if dirst is None:
+            try:
+                dirst = self.lstat(dirname)
+            except OSError, e:
+                log('lstat for dir failed: %s: %s' % (e.filename, e.strerror))
+                return
+
+        yield dirname, dirst
+
         
 class VfsFactory:
 
@@ -564,32 +559,38 @@ class VfsTests(object): # pragma: no cover
         self.fs.overwrite_file('foo', 'foo')
         self.assertEqual(self.fs.bytes_written, 3)
 
-    def set_up_depth_first(self):
+    def set_up_scan_tree(self):
         self.dirs = ['foo', 'foo/bar', 'foobar']
         self.dirs = [os.path.join(self.basepath, x) for x in self.dirs]
         for dirname in self.dirs:
             self.fs.mkdir(dirname)
         self.dirs.insert(0, self.basepath)
         self.fs.symlink('foo', 'symfoo')
+        self.pathnames = self.dirs + [os.path.join(self.basepath, 'symfoo')]
+
+    def test_scan_tree_returns_nothing_if_listdir_fails(self):
+        self.set_up_scan_tree()
+        def raiser(dirname):
+            raise OSError((123, 'oops', dirname))
+        def logerror(msg):
+            pass
+        self.fs.listdir = raiser
+        result = list(self.fs.scan_tree(self.basepath, log=logerror))
+        self.assertEqual(len(result), 1)
+        pathname, st = result[0]
+        self.assertEqual(pathname, self.basepath)
+
+    def test_scan_tree_returns_the_right_stuff(self):
+        self.set_up_scan_tree()
+        result = list(self.fs.scan_tree(self.basepath))
+        pathnames = [pathname for pathname, st in result]
+        self.assertEqual(sorted(pathnames), sorted(self.pathnames))
     
-    def test_depth_first_finds_all_dirs(self):
-        self.set_up_depth_first()
-        dirs = [x[0] for x in self.fs.depth_first(self.basepath)]
-        self.failUnlessEqual(sorted(dirs), sorted(self.dirs))
-
-    def prune(self, dirname, dirnames, filenames):
-        if 'foo' in dirnames:
-            dirnames.remove('foo')
-
-    def test_depth_first_finds_all_airs_except_the_pruned_one(self):
-        self.set_up_depth_first()
-        correct = [x 
-                   for x in self.dirs 
-                   if not x.endswith('/foo') and not '/foo/' in x]
-        dirs = [x[0] 
-                for x in self.fs.depth_first(self.basepath, prune=self.prune)]
-        self.failUnlessEqual(sorted(dirs), sorted(correct))
-
-    def test_depth_first_raises_oserror_if_directory_does_not_exist(self):
-        self.assertRaises(OSError, list, self.fs.depth_first('notexist'))
+    def test_scan_tree_filters_away_unwanted(self):
+        def ok(pathname, st):
+            return stat.S_ISDIR(st.st_mode)
+        self.set_up_scan_tree()
+        result = list(self.fs.scan_tree(self.basepath, ok=ok))
+        pathnames = [pathname for pathname, st in result]
+        self.assertEqual(sorted(pathnames), sorted(self.dirs))
 
