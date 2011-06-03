@@ -37,6 +37,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.app.config.new_boolean(['exclude-caches'],
                                     'exclude directories (and their subdirs) '
                                     'that contain a CACHEDIR.TAG file')
+        self.app.config.new_boolean(['one-file-system'],
+                                    'exclude directories (and their subdirs) '
+                                    'that are in a different filesystem')
         self.app.config.new_processed(['checkpoint'],
                                       'make a checkpoint after a given size, '
                                       'default unit is MiB (%default)',
@@ -96,6 +99,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             for absroot in absroots:
                 logging.info('Backing up root %s' % absroot)
                 self.fs.reinit(absroot)
+                self.root_metadata = self.fs.lstat(absroot)
                 for pathname, metadata in self.find_files(absroot):
                     tracing.trace('Backing up %s', pathname)
                     try:
@@ -178,6 +182,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 yield pathname, metadata
 
     def can_be_backed_up(self, pathname, st):
+        if self.app.config['one-file-system']:
+            if st.st_dev != self.root_metadata.st_dev: return False
+
         for pat in self.exclude_pats:
             if pat.search(pathname):
                 tracing.trace('excluding (pattern): %s' % pathname)
