@@ -151,7 +151,7 @@ class SetMetadataTests(unittest.TestCase):
 
         self.uid_set = None
         self.gid_set = None
-        self.fs.chown = self.fake_chown
+        self.fs.lchown = self.fake_lchown
 
         obnamlib.set_metadata(self.fs, self.filename, self.metadata)
         
@@ -161,7 +161,7 @@ class SetMetadataTests(unittest.TestCase):
         self.fs.close()
         os.remove(self.filename)
 
-    def fake_chown(self, filename, uid, gid):
+    def fake_lchown(self, filename, uid, gid):
         self.uid_set = uid
         self.gid_set = gid
         

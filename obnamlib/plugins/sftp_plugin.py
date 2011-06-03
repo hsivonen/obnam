@@ -286,8 +286,11 @@ class SftpFS(obnamlib.VirtualFileSystem):
         return self.sftp.lstat(pathname)
 
     @ioerror_to_oserror
-    def chown(self, pathname, uid, gid):
-        self.sftp.chown(pathname, uid, gid)
+    def lchown(self, pathname, uid, gid):
+        if stat.S_ISLNK(self.lstat(pathname).st_mode):
+            logging.warning('NOT changing ownership of symlink %s' % pathname)
+        else:
+            self.sftp.chown(pathname, uid, gid)
         
     @ioerror_to_oserror
     def chmod(self, pathname, mode):

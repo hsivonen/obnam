@@ -99,9 +99,9 @@ class LocalFS(obnamlib.VirtualFileSystem):
     def lstat(self, pathname):
         return os.lstat(self.join(pathname))
 
-    def chown(self, pathname, uid, gid): # pragma: no cover
-        tracing.trace('chown %s %d %d', pathname, uid, gid)
-        os.chown(self.join(pathname), uid, gid)
+    def lchown(self, pathname, uid, gid): # pragma: no cover
+        tracing.trace('lchown %s %d %d', pathname, uid, gid)
+        os.lchown(self.join(pathname), uid, gid)
 
     def chmod(self, pathname, mode):
         tracing.trace('chmod %s %o', pathname, mode)

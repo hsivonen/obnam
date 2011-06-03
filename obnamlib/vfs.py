@@ -128,8 +128,8 @@ class VirtualFileSystem(object):
     def lstat(self, pathname):
         '''Like os.lstat.'''
 
-    def chown(self, pathname, uid, gid):
-        '''Like os.chown.'''
+    def lchown(self, pathname, uid, gid):
+        '''Like os.lchown.'''
 
     def chmod(self, pathname, mode):
         '''Like os.chmod.'''

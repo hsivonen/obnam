@@ -128,5 +128,5 @@ def set_metadata(fs, filename, metadata, getuid=None):
 
     getuid = getuid or os.getuid
     if getuid() == 0:
-        fs.chown(filename, metadata.st_uid, metadata.st_gid)
+        fs.lchown(filename, metadata.st_uid, metadata.st_gid)
 

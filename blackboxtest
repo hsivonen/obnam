@@ -442,6 +442,12 @@ class BackupTests(ObnamTestCase):
         self.restore()
         self.assert_restored_correctly()
 
+    def test_handles_dangling_symlink(self):
+        os.symlink('target', os.path.join(self.data, 'symlink'))
+        self.backup()
+        self.restore()
+        self.assert_restored_correctly()
+
     def test_handles_hardlink(self):
         self.create_file(self.data, 'target', 'content1')
         os.link(os.path.join(self.data, 'target'), 
@@ -488,7 +494,11 @@ class BackupTests(ObnamTestCase):
         self.create_file(self.data, 'ccc', 'ccc')
         self.backup()
         self.restore()
-        os.rmdir(bbb) # remove the problematic dir so verify works
+        # Remove the problematic directory so that verify works.
+        # Don't do this if running as root, since in that case
+        # obnam _can_ back it up. (Yes, this is convoluted.)
+        if os.getuid() != 0:
+            os.rmdir(bbb)
         self.assert_restored_correctly()
     
     def test_skips_unreadable_file_but_backs_up_rest(self):
@@ -498,7 +508,11 @@ class BackupTests(ObnamTestCase):
         self.create_file(self.data, 'ccc', 'ccc')
         self.backup()
         self.restore()
-        os.remove(bbb) # remove the problematic file so verify works
+        # Remove the problematic directory so that verify works.
+        # Don't do this if running as root, since in that case
+        # obnam _can_ back it up. (Yes, this is convoluted.)
+        if os.getuid() != 0:
+            os.remove(bbb)
         self.assert_restored_correctly()
 
 
