@@ -442,6 +442,12 @@ class BackupTests(ObnamTestCase):
         self.restore()
         self.assert_restored_correctly()
 
+    def test_handles_dangling_symlink(self):
+        os.symlink('target', os.path.join(self.data, 'symlink'))
+        self.backup()
+        self.restore()
+        self.assert_restored_correctly()
+
     def test_handles_hardlink(self):
         self.create_file(self.data, 'target', 'content1')
         os.link(os.path.join(self.data, 'target'), 
