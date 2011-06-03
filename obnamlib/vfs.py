@@ -113,10 +113,11 @@ class VirtualFileSystem(object):
     def rmtree(self, dirname):
         '''Remove a directory tree, including its contents.'''
         if self.isdir(dirname):
-            for dirname, dirnames, basenames in self.depth_first(dirname):
-                for basename in basenames:
-                    self.remove(os.path.join(dirname, basename))
-                self.rmdir(dirname)
+            for pathname, st in self.scan_tree(dirname):
+                if stat.S_ISDIR(st.st_mode):
+                    self.rmdir(pathname)
+                else:
+                    self.remove(pathname)
 
     def remove(self, pathname):
         '''Remove a file.'''
