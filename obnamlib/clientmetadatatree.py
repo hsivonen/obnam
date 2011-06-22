@@ -79,7 +79,11 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
 
     def hash_name(self, filename):
         '''Return hash of filename suitable for use as main key.'''
-        return hashlib.md5(filename).digest()[:8]
+        def hash(s):
+            return hashlib.md5(s).digest()[:4]
+        dirname = os.path.dirname(filename)
+        basename = os.path.basename(filename)
+        return hash(dirname) + hash(basename)
 
     def hashkey(self, prefix, mainhash, subtype, subkey):
         '''Compute a full key.
