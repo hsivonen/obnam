@@ -171,19 +171,22 @@ class ObnamBenchmark(cliapp.Application):
                               pair))
 
             table.add_column('oper', '%s')
-            table.add_column('gen0 speed', '%s')
-            table.add_column('gen0 RAM', '%s')
-            table.add_column('slowest inc', '%s')
-            table.add_column('largest inc', '%s')
+            table.add_column('time', '%s')
+            table.add_column('Mbit/s', '%s')
+            table.add_column('RAM', '%s')
+            table.add_column('slowest', '%s')
+            table.add_column('largest', '%s')
             
             for oper in self.opers:
+                gen0_time = self.compute_time(cp, '0', oper)
                 gen0_speed = self.compute_speed(cp, '0', oper)
                 gen0_ram = self.compute_ram(cp, '0', oper)
                 slowest = min(self.compute_speed(cp, gen, oper) 
                               for gen in self.incrementals(cp))
                 largest = min(self.compute_speed(cp, gen, oper) 
                               for gen in self.incrementals(cp))
-                table.add_row((oper, gen0_speed, gen0_ram, slowest, largest))
+                table.add_row((oper, gen0_time, gen0_speed, gen0_ram, 
+                               slowest, largest))
 
             table.write_plaintext(self.output)
 
@@ -237,6 +240,9 @@ class ObnamBenchmark(cliapp.Application):
     def parse_size_pair(self, pair):
         return pair.split('/', 1)
 
+    def compute_time(self, cp, gen, oper):
+        return '%.0f' % cp.getfloat(gen, '%s.real' % oper)
+
     def compute_speed(self, cp, gen, oper):
         bytes = cp.getfloat(gen, 'backup.new-data')
         duration = cp.getfloat(gen, '%s.real' % oper)
@@ -245,10 +251,9 @@ class ObnamBenchmark(cliapp.Application):
         return '%.1f' % speed
     
     def compute_ram(self, cp, gen, oper):
-        bytes = cp.getfloat(gen, '%s.maxrss' % oper)
-        mibi = 2**20
-        size = bytes / mibi
-        return '%.0f' % size
+        kibibytes = cp.getfloat(gen, '%s.maxrss' % oper)
+        mebibytes = kibibytes / 1024
+        return '%.0f' % mebibytes
 
     def incrementals(self, cp):
         return [x for x in cp.sections() if x not in ['meta', '0']]
