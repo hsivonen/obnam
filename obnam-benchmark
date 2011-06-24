@@ -170,7 +170,7 @@ class ObnamBenchmark(cliapp.Application):
                               larch_revno,
                               pair))
 
-            table.add_column('oper', '%s')
+            table.add_column('oper', '%-10s')
             table.add_column('time', '%.0f')
             table.add_column('Mbit/s', '%.1f')
             table.add_column('RAM', '%.0f')
