@@ -171,11 +171,11 @@ class ObnamBenchmark(cliapp.Application):
                               pair))
 
             table.add_column('oper', '%s')
-            table.add_column('time', '%s')
-            table.add_column('Mbit/s', '%s')
-            table.add_column('RAM', '%s')
-            table.add_column('slowest', '%s')
-            table.add_column('largest', '%s')
+            table.add_column('time', '%.0f')
+            table.add_column('Mbit/s', '%.1f')
+            table.add_column('RAM', '%.0f')
+            table.add_column('slowest', '%.1f')
+            table.add_column('largest', '%.0f')
             
             for oper in self.opers:
                 gen0_time = self.compute_time(cp, '0', oper)
@@ -241,19 +241,18 @@ class ObnamBenchmark(cliapp.Application):
         return pair.split('/', 1)
 
     def compute_time(self, cp, gen, oper):
-        return '%.0f' % cp.getfloat(gen, '%s.real' % oper)
+        return cp.getfloat(gen, '%s.real' % oper)
 
     def compute_speed(self, cp, gen, oper):
         bytes = cp.getfloat(gen, 'backup.new-data')
         duration = cp.getfloat(gen, '%s.real' % oper)
         mega = 10**6
         speed = 8*bytes / duration / mega
-        return '%.1f' % speed
+        return speed
     
     def compute_ram(self, cp, gen, oper):
         kibibytes = cp.getfloat(gen, '%s.maxrss' % oper)
-        mebibytes = kibibytes / 1024
-        return '%.0f' % mebibytes
+        return kibibytes / 1024
 
     def incrementals(self, cp):
         return [x for x in cp.sections() if x not in ['meta', '0']]
