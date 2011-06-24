@@ -42,17 +42,34 @@ class Table(object):
         self.columns.append((heading, format))
 
     def add_row(self, data):
+        assert len(data) == len(self.columns)
         self.rows.append(data)
 
     def write_plaintext(self, f):
         if self.caption:
             f.write('%s\n%s\n\n' % (self.caption, '-' * len(self.caption)))
-            
-        widths = [len(heading) for heading, format in self.columns]
+        
+        cells = []
+        cells.append([heading for heading, format in self.columns])
+        for row in self.rows:
+            cells.append([self.format_cell(row[i], self.columns[i][1])
+                          for i in range(len(self.columns))])
+
+        widths = self.compute_column_widths(cells)
         
         f.write('%s\n' % self.format_headings(widths))
         for row in self.rows:
             f.write('%s\n' % self.format_row(row, widths))
+
+    def format_cell(self, data, format):
+        return format % data
+
+    def compute_column_widths(self, cells):
+        widths = [0] * len(self.columns)
+        for row in cells:
+            for i, data in enumerate(row):
+                widths[i] = max(widths[i], len(data))
+        return widths
 
     def format_headings(self, widths):
         headings = ['%-*s' % (widths[i], self.columns[i][0])
@@ -154,10 +171,10 @@ class ObnamBenchmark(cliapp.Application):
                               pair))
 
             table.add_column('oper', '%s')
-            table.add_column('gen0 speed (Mbit/s)', '%s')
-            table.add_column('gen0 RAM (MiB)', '%s')
-            table.add_column('slowest (Mbit/s)', '%s')
-            table.add_column('largest (MiB)', '%s')
+            table.add_column('gen0 speed', '%s')
+            table.add_column('gen0 RAM', '%s')
+            table.add_column('slowest inc', '%s')
+            table.add_column('largest inc', '%s')
             
             for oper in self.opers:
                 gen0_speed = self.compute_speed(cp, '0', oper)
