@@ -27,6 +27,44 @@ import subprocess
 import tempfile
 
 
+class Table(object):
+
+    '''Represent tabular data for formatting purposes.'''
+    
+    sep = '  '
+    
+    def __init__(self):
+        self.caption = None
+        self.columns = []
+        self.rows = []
+
+    def add_column(self, heading, format):
+        self.columns.append((heading, format))
+
+    def add_row(self, data):
+        self.rows.append(data)
+
+    def write_plaintext(self, f):
+        if self.caption:
+            f.write('%s\n%s\n\n' % (self.caption, '-' * len(self.caption)))
+            
+        widths = [len(heading) for heading, format in self.columns]
+        
+        f.write('%s\n' % self.format_headings(widths))
+        for row in self.rows:
+            f.write('%s\n' % self.format_row(row, widths))
+
+    def format_headings(self, widths):
+        headings = ['%-*s' % (widths[i], self.columns[i][0])
+                    for i in range(len(widths))]
+        return self.sep.join(headings)
+        
+    def format_row(self, row, widths):
+        cells = ['%*s' % (widths[i], self.columns[i][1] % row[i])
+                 for i in range(len(widths))]
+        return self.sep.join(cells)
+
+
 class ObnamBenchmark(cliapp.Application):
 
     default_sizes = ['1g/100m']
@@ -107,19 +145,20 @@ class ObnamBenchmark(cliapp.Application):
             cp = ConfigParser.RawConfigParser()
             cp.read(output)
 
-            self.output.write('''\
-# %(hostname)s-%(branch)s-%(obnamrevno)s-%(larchrevno)s (%(size)s)
+            table = Table()
+            table.caption = ('%s-%s-%s-%s (%s)' %
+                             (self.hostname,
+                              self.obnam_branch_name,
+                              obnam_revno,
+                              larch_revno,
+                              pair))
 
-[[!table data="""
-oper | gen0 speed (Mbit/s) | gen0 RAM (MiB) | slowest (Mbit/s) | largest (MiB)
-''' % {
-    'hostname': self.hostname,
-    'branch': self.obnam_branch_name,
-    'obnamrevno': obnam_revno,
-    'larchrevno': larch_revno,
-    'size': pair,
-})
-
+            table.add_column('oper', '%s')
+            table.add_column('gen0 speed (Mbit/s)', '%s')
+            table.add_column('gen0 RAM (MiB)', '%s')
+            table.add_column('slowest (Mbit/s)', '%s')
+            table.add_column('largest (MiB)', '%s')
+            
             for oper in self.opers:
                 gen0_speed = self.compute_speed(cp, '0', oper)
                 gen0_ram = self.compute_ram(cp, '0', oper)
@@ -127,17 +166,9 @@ oper | gen0 speed (Mbit/s) | gen0 RAM (MiB) | slowest (Mbit/s) | largest (MiB)
                               for gen in self.incrementals(cp))
                 largest = min(self.compute_speed(cp, gen, oper) 
                               for gen in self.incrementals(cp))
-                self.output.write('''\
-%(oper)s | %(gen0speed)s | %(gen0ram)s | %(slowest)s | %(largest)s
-''' % {
-    'oper': oper,
-    'gen0speed': gen0_speed,
-    'gen0ram': gen0_ram,
-    'slowest': slowest,
-    'largest': largest,
-})
+                table.add_row((oper, gen0_speed, gen0_ram, slowest, largest))
 
-            self.output.write('"""]]\n\n')
+            table.write_plaintext(self.output)
 
         shutil.rmtree(tempdir)
         
