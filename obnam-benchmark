@@ -157,7 +157,7 @@ class ObnamBenchmark(cliapp.Application):
                 obnam_profile = os.path.join(results, 
                                              'obnam-' + initial + 
                                              '-' + profile +
-                                                '-%(op)s-%(gen)s-%(order)s.txt')
+                                                '-%(op)s-%(gen)s.prof')
                 output = os.path.join(results, 
                                       'obnam-%s-%s.seivot' % 
                                         (initial, profile))
