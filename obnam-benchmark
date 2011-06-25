@@ -158,7 +158,9 @@ class ObnamBenchmark(cliapp.Application):
                                              'obnam-' + initial + 
                                              '-' + profile +
                                                 '-%(op)s-%(gen)s-%(order)s.txt')
-                output = os.path.join(results, 'obnam-%s.seivot' % initial)
+                output = os.path.join(results, 
+                                      'obnam-%s-%s.seivot' % 
+                                        (initial, profile))
                 subprocess.check_call([seivot,
     #                                   '--drop-caches',
                                        '--obnam-branch', obnam_branch,
