@@ -144,7 +144,7 @@ class ObnamBenchmark(cliapp.Application):
         sizes = self.settings['size'] or self.default_sizes
         logging.debug('sizes: %s' % repr(sizes))
 
-        for profile, file_size in self.profiles.iteritems():
+        for profile, file_size in sorted(self.profiles.iteritems()):
             for pair in sizes:
                 initial, inc = self.parse_size_pair(pair)
 
@@ -243,11 +243,12 @@ class ObnamBenchmark(cliapp.Application):
                           size_pair))
 
         table.add_column('oper', '%-10s')
-        table.add_column('time', '%.0f')
-        table.add_column('Mbit/s', '%.1f')
-        table.add_column('RAM', '%.0f')
-        table.add_column('slowest', '%.1f')
-        table.add_column('largest', '%.0f')
+        table.add_column('time (s)', '%.0f')
+        table.add_column('Mb/s', '%.1f')
+        table.add_column('RAM (MiB)', '%.0f')
+        table.add_column('slowest (Mb/s)', '%.1f')
+        table.add_column('largest (MiB)', '%.0f')
+        table.add_column('repo (MiB)', '%.1f')
         
         for oper in self.opers:
             gen0_time = self.compute_time(cp, '0', oper)
@@ -257,8 +258,9 @@ class ObnamBenchmark(cliapp.Application):
                           for gen in self.incrementals(cp))
             largest = min(self.compute_speed(cp, gen, oper) 
                           for gen in self.incrementals(cp))
+            repo_size = self.compute_repo_size(cp, '0', oper)
             table.add_row((oper, gen0_time, gen0_speed, gen0_ram, 
-                           slowest, largest))
+                           slowest, largest, repo_size))
 
         table.write_plaintext(self.output)
 
@@ -275,6 +277,10 @@ class ObnamBenchmark(cliapp.Application):
     def compute_ram(self, cp, gen, oper):
         kibibytes = cp.getfloat(gen, '%s.maxrss' % oper)
         return kibibytes / 1024
+    
+    def compute_repo_size(self, cp, gen, oper):
+        bytes = cp.getfloat(gen, '%s.repo-size-after' % oper)
+        return float(bytes) / (1024**2)
 
     def incrementals(self, cp):
         return [x for x in cp.sections() if x not in ['meta', '0']]
