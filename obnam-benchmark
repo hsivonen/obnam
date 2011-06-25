@@ -164,7 +164,7 @@ class ObnamBenchmark(cliapp.Application):
                                       'obnam-%s-%s.seivot' % 
                                         (initial, profile))
                 subprocess.check_call([seivot,
-    #                                   '--drop-caches',
+                                       '--drop-caches',
                                        '--obnam-branch', obnam_branch,
                                        '--larch-branch', larch_branch,
                                        '--encrypt-with', self.keyid,
