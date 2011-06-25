@@ -159,36 +159,7 @@ class ObnamBenchmark(cliapp.Application):
                                    '--output', output],
                                   env=env)
 
-            cp = ConfigParser.RawConfigParser()
-            cp.read(output)
-
-            table = Table()
-            table.caption = ('%s-%s-%s-%s (%s)' %
-                             (self.hostname,
-                              self.obnam_branch_name,
-                              obnam_revno,
-                              larch_revno,
-                              pair))
-
-            table.add_column('oper', '%-10s')
-            table.add_column('time', '%.0f')
-            table.add_column('Mbit/s', '%.1f')
-            table.add_column('RAM', '%.0f')
-            table.add_column('slowest', '%.1f')
-            table.add_column('largest', '%.0f')
-            
-            for oper in self.opers:
-                gen0_time = self.compute_time(cp, '0', oper)
-                gen0_speed = self.compute_speed(cp, '0', oper)
-                gen0_ram = self.compute_ram(cp, '0', oper)
-                slowest = min(self.compute_speed(cp, gen, oper) 
-                              for gen in self.incrementals(cp))
-                largest = min(self.compute_speed(cp, gen, oper) 
-                              for gen in self.incrementals(cp))
-                table.add_row((oper, gen0_time, gen0_speed, gen0_ram, 
-                               slowest, largest))
-
-            table.write_plaintext(self.output)
+            self.report(output, obnam_revno, larch_revno, pair)
 
         shutil.rmtree(tempdir)
         
@@ -239,6 +210,38 @@ class ObnamBenchmark(cliapp.Application):
         
     def parse_size_pair(self, pair):
         return pair.split('/', 1)
+
+    def report(self, seivot_filename, obnam_revno, larch_revno, size_pair):
+        cp = ConfigParser.RawConfigParser()
+        cp.read(seivot_filename)
+
+        table = Table()
+        table.caption = ('%s-%s-%s-%s (%s)' %
+                         (self.hostname,
+                          self.obnam_branch_name,
+                          obnam_revno,
+                          larch_revno,
+                          size_pair))
+
+        table.add_column('oper', '%-10s')
+        table.add_column('time', '%.0f')
+        table.add_column('Mbit/s', '%.1f')
+        table.add_column('RAM', '%.0f')
+        table.add_column('slowest', '%.1f')
+        table.add_column('largest', '%.0f')
+        
+        for oper in self.opers:
+            gen0_time = self.compute_time(cp, '0', oper)
+            gen0_speed = self.compute_speed(cp, '0', oper)
+            gen0_ram = self.compute_ram(cp, '0', oper)
+            slowest = min(self.compute_speed(cp, gen, oper) 
+                          for gen in self.incrementals(cp))
+            largest = min(self.compute_speed(cp, gen, oper) 
+                          for gen in self.incrementals(cp))
+            table.add_row((oper, gen0_time, gen0_speed, gen0_ram, 
+                           slowest, largest))
+
+        table.write_plaintext(self.output)
 
     def compute_time(self, cp, gen, oper):
         return cp.getfloat(gen, '%s.real' % oper)
