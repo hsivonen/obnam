@@ -271,7 +271,13 @@ class ObnamBenchmark(cliapp.Application):
         return cp.getfloat(gen, '%s.real' % oper)
 
     def compute_speed(self, cp, gen, oper):
-        bytes = cp.getfloat(gen, 'backup.new-data')
+        keys = {
+            'backup': 'backup.new-data',
+            'restore': 'restore.repo-bytes-read',
+            'list_files': 'forget.repo-bytes-read',
+            'forget': 'forget.repo-bytes-read',
+        }
+        bytes = cp.getfloat(gen, keys[oper])
         duration = cp.getfloat(gen, '%s.real' % oper)
         mega = 10**6
         speed = 8*bytes / duration / mega
