@@ -258,7 +258,8 @@ class ObnamBenchmark(cliapp.Application):
                           for gen in self.incrementals(cp))
             largest = min(self.compute_speed(cp, gen, oper) 
                           for gen in self.incrementals(cp))
-            repo_size = self.compute_repo_size(cp, '0', oper)
+            repo_size = max(self.compute_repo_size(cp, gen, oper)
+                            for gen in self.gens(cp))
             table.add_row((oper, gen0_time, gen0_speed, gen0_ram, 
                            slowest, largest, repo_size))
 
@@ -281,6 +282,9 @@ class ObnamBenchmark(cliapp.Application):
     def compute_repo_size(self, cp, gen, oper):
         bytes = cp.getfloat(gen, '%s.repo-size-after' % oper)
         return float(bytes) / (1024**2)
+
+    def gens(self, cp):
+        return [x for x in cp.sections() if x != 'meta']
 
     def incrementals(self, cp):
         return [x for x in cp.sections() if x not in ['meta', '0']]
