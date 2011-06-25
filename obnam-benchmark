@@ -1,0 +1,296 @@
+#!/usr/bin/python
+#
+# Copyright 2010, 2011  Lars Wirzenius
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+import cliapp
+import ConfigParser
+import glob
+import logging
+import os
+import shutil
+import socket
+import subprocess
+import tempfile
+
+
+class Table(object):
+
+    '''Represent tabular data for formatting purposes.'''
+    
+    sep = '  '
+    
+    def __init__(self):
+        self.caption = None
+        self.columns = []
+        self.rows = []
+
+    def add_column(self, heading1, heading2, format):
+        self.columns.append((heading1, heading2, format))
+
+    def add_row(self, data):
+        assert len(data) == len(self.columns)
+        self.rows.append(data)
+
+    def write_plaintext(self, f):
+        if self.caption:
+            f.write('%s\n%s\n\n' % (self.caption, '-' * len(self.caption)))
+        
+        cells = []
+        cells.append([h1 for h1, h2, format in self.columns])
+        cells.append([h2 for h1, h2, format in self.columns])
+        for row in self.rows:
+            cells.append([self.format_cell(row[i], self.columns[i][2])
+                          for i in range(len(self.columns))])
+
+        widths = self.compute_column_widths(cells)
+        
+        f.write('%s\n' % self.format_headings(widths, 0))
+        f.write('%s\n' % self.format_headings(widths, 1))
+        for row in self.rows:
+            f.write('%s\n' % self.format_row(row, widths))
+
+    def format_cell(self, data, format):
+        return format % data
+
+    def compute_column_widths(self, cells):
+        widths = [0] * len(self.columns)
+        for row in cells:
+            for i, data in enumerate(row):
+                widths[i] = max(widths[i], len(data))
+        return widths
+
+    def format_headings(self, widths, which):
+        headings = ['%-*s' % (widths[i], self.columns[i][which])
+                    for i in range(len(widths))]
+        return self.sep.join(headings)
+        
+    def format_row(self, row, widths):
+        cells = ['%*s' % (widths[i], self.columns[i][2] % row[i])
+                 for i in range(len(widths))]
+        return self.sep.join(cells)
+
+
+class ObnamBenchmark(cliapp.Application):
+
+    default_sizes = ['1g/100m']
+    keyid = '3B1802F81B321347'
+    opers = ('backup', 'restore', 'list_files', 'forget')
+    
+    profiles = {
+        'mailspool': 4096,
+        'mediaserver': 100 * 1024**2,
+    }
+
+    def add_settings(self):
+        self.settings.string(['obnam-branch'],
+                             'use DIR as the obnam branch to benchmark '
+                                '(default: %default)',
+                              metavar='DIR',
+                              default='.')
+        self.settings.string(['larch-branch'],
+                             'use DIR as the larch branch (default: %default)',
+                             metavar='DIR',
+                             default=os.path.expanduser('~/larch/trunk'))
+        self.settings.string(['seivot-branch'],
+                             'use DIR as the seivot branch '
+                                '(default: installed seivot)',
+                             metavar='DIR')
+        self.settings.string(['wiki'],
+                             'use DIR as the wiki branch (default: %default)',
+                             metavar='DIR',
+                             default=os.path.expanduser('~/braawi.org'))
+        
+        self.settings.string_list(['size'],
+                                  'add PAIR to list of sizes to '
+                                    'benchmark (e.g., 10g/1m)',
+                                  metavar='PAIR')
+        self.settings.integer(['generations'],
+                              'benchmark N generations (default: %default)',
+                              metavar='N',
+                              default=5)
+
+    def process_args(self, args):
+        self.require_tmpdir()
+
+        obnam_revno = self.bzr_revno(self.settings['obnam-branch'])
+        larch_revno = self.bzr_revno(self.settings['larch-branch'])
+
+        results = self.results_dir(obnam_revno, larch_revno)
+        
+        obnam_branch = self.settings['obnam-branch']
+        larch_branch = self.settings['larch-branch']
+        if self.settings['seivot-branch']:
+            seivot = os.path.join(self.settings['seivot-branch'], 'seivot')
+        else:
+            seivot = 'seivot'
+
+        generations = self.settings['generations']
+        
+        tempdir = tempfile.mkdtemp()
+        env = self.setup_gnupghome(tempdir)
+        
+        sizes = self.settings['size'] or self.default_sizes
+        logging.debug('sizes: %s' % repr(sizes))
+
+        for profile, file_size in sorted(self.profiles.iteritems()):
+            for pair in sizes:
+                initial, inc = self.parse_size_pair(pair)
+
+                msg = 'Profile %s, size %s inc %s' % (profile, initial, inc)
+                print
+                print msg
+                print '-' * len(msg)
+                print
+
+                obnam_profile = os.path.join(results, 
+                                             'obnam-' + initial + 
+                                             '-' + profile +
+                                                '-%(op)s-%(gen)s.prof')
+                output = os.path.join(results, 
+                                      'obnam-%s-%s.seivot' % 
+                                        (initial, profile))
+                subprocess.check_call([seivot,
+    #                                   '--drop-caches',
+                                       '--obnam-branch', obnam_branch,
+                                       '--larch-branch', larch_branch,
+                                       '--encrypt-with', self.keyid,
+                                       '--initial-data', initial,
+                                       '--incremental-data', inc,
+                                       '--file-size', str(file_size),
+                                       '--obnam-profile', obnam_profile,
+                                       '--generations', str(generations),
+                                       '--output', output],
+                                      env=env)
+
+                print
+                self.report(output, profile, obnam_revno, larch_revno, pair)
+
+        shutil.rmtree(tempdir)
+        
+    def require_tmpdir(self):
+        if 'TMPDIR' not in os.environ:
+            raise cliapp.AppException('TMPDIR is not set. '
+                                       'You would probably run out of space '
+                                       'on /tmp.')
+        logging.debug('TMPDIR=%s' % repr(os.environ['TMPDIR']))
+
+    @property
+    def hostname(self):
+        return socket.gethostname()
+        
+    @property
+    def obnam_branch_name(self):
+        obnam_branch = os.path.abspath(self.settings['obnam-branch'])
+        return os.path.basename(obnam_branch)
+
+    def results_dir(self, obnam_revno, larch_revno):
+        results = os.path.join('..', 'benchmarks',
+                               '-'.join([self.hostname, self.obnam_branch_name,
+                                         str(obnam_revno), str(larch_revno)]))
+
+        if os.path.exists(results):
+            raise cliapp.AppException('%s already exists' % results)
+        os.mkdir(results)
+        
+        return results
+
+    def setup_gnupghome(self, tempdir):
+        gnupghome = os.path.join(tempdir, 'gnupghome')
+        shutil.copytree('test-gpghome', gnupghome)
+        env = dict(os.environ)
+        env['GNUPGHOME'] = gnupghome
+        return env
+
+    def bzr_revno(self, branch):
+        p = subprocess.Popen(['bzr', 'revno'], cwd=branch,
+                             stdout=subprocess.PIPE)
+        out, err = p.communicate()
+        if p.returncode != 0:
+            raise cliapp.AppException('bzr failed')
+
+        revno = out.strip()
+        logging.debug('bzr branch %s has revno %s' % (branch, revno))
+        return revno
+        
+    def parse_size_pair(self, pair):
+        return pair.split('/', 1)
+
+    def report(self, seivot_filename, profile, obnam_revno, larch_revno, 
+               size_pair):
+
+        cp = ConfigParser.RawConfigParser()
+        cp.read(seivot_filename)
+
+        table = Table()
+        table.caption = ('%s-%s-%s-%s-%s (%s)' %
+                         (self.hostname,
+                          self.obnam_branch_name,
+                          obnam_revno,
+                          larch_revno,
+                          profile,
+                          size_pair))
+
+        table.add_column('oper', '', '%-10s')
+        table.add_column('time', '(s)', '%.0f')
+        table.add_column('gen0', 'Mb/s', '%.1f')
+        table.add_column('RAM', '(MiB)', '%.0f')
+        table.add_column('slowest', '(Mb/s)', '%.1f')
+        table.add_column('largest', '(MiB)', '%.0f')
+        table.add_column('max repo', '(MiB)', '%.1f')
+        
+        for oper in self.opers:
+            gen0_time = self.compute_time(cp, '0', oper)
+            gen0_speed = self.compute_speed(cp, '0', oper)
+            gen0_ram = self.compute_ram(cp, '0', oper)
+            slowest = min(self.compute_speed(cp, gen, oper) 
+                          for gen in self.incrementals(cp))
+            largest = min(self.compute_speed(cp, gen, oper) 
+                          for gen in self.incrementals(cp))
+            repo_size = max(self.compute_repo_size(cp, gen, oper)
+                            for gen in self.gens(cp))
+            table.add_row((oper, gen0_time, gen0_speed, gen0_ram, 
+                           slowest, largest, repo_size))
+
+        table.write_plaintext(self.output)
+
+    def compute_time(self, cp, gen, oper):
+        return cp.getfloat(gen, '%s.real' % oper)
+
+    def compute_speed(self, cp, gen, oper):
+        bytes = cp.getfloat(gen, 'backup.new-data')
+        duration = cp.getfloat(gen, '%s.real' % oper)
+        mega = 10**6
+        speed = 8*bytes / duration / mega
+        return speed
+    
+    def compute_ram(self, cp, gen, oper):
+        kibibytes = cp.getfloat(gen, '%s.maxrss' % oper)
+        return kibibytes / 1024
+    
+    def compute_repo_size(self, cp, gen, oper):
+        bytes = cp.getfloat(gen, '%s.repo-size-after' % oper)
+        return float(bytes) / (1024**2)
+
+    def gens(self, cp):
+        return [x for x in cp.sections() if x != 'meta']
+
+    def incrementals(self, cp):
+        return [x for x in cp.sections() if x not in ['meta', '0']]
+
+if __name__ == '__main__':
+    ObnamBenchmark().run()
+
