@@ -38,8 +38,8 @@ class Table(object):
         self.columns = []
         self.rows = []
 
-    def add_column(self, heading, format):
-        self.columns.append((heading, format))
+    def add_column(self, heading1, heading2, format):
+        self.columns.append((heading1, heading2, format))
 
     def add_row(self, data):
         assert len(data) == len(self.columns)
@@ -50,14 +50,16 @@ class Table(object):
             f.write('%s\n%s\n\n' % (self.caption, '-' * len(self.caption)))
         
         cells = []
-        cells.append([heading for heading, format in self.columns])
+        cells.append([h1 for h1, h2, format in self.columns])
+        cells.append([h2 for h1, h2, format in self.columns])
         for row in self.rows:
-            cells.append([self.format_cell(row[i], self.columns[i][1])
+            cells.append([self.format_cell(row[i], self.columns[i][2])
                           for i in range(len(self.columns))])
 
         widths = self.compute_column_widths(cells)
         
-        f.write('%s\n' % self.format_headings(widths))
+        f.write('%s\n' % self.format_headings(widths, 0))
+        f.write('%s\n' % self.format_headings(widths, 1))
         for row in self.rows:
             f.write('%s\n' % self.format_row(row, widths))
 
@@ -71,13 +73,13 @@ class Table(object):
                 widths[i] = max(widths[i], len(data))
         return widths
 
-    def format_headings(self, widths):
-        headings = ['%-*s' % (widths[i], self.columns[i][0])
+    def format_headings(self, widths, which):
+        headings = ['%-*s' % (widths[i], self.columns[i][which])
                     for i in range(len(widths))]
         return self.sep.join(headings)
         
     def format_row(self, row, widths):
-        cells = ['%*s' % (widths[i], self.columns[i][1] % row[i])
+        cells = ['%*s' % (widths[i], self.columns[i][2] % row[i])
                  for i in range(len(widths))]
         return self.sep.join(cells)
 
@@ -242,13 +244,13 @@ class ObnamBenchmark(cliapp.Application):
                           profile,
                           size_pair))
 
-        table.add_column('oper', '%-10s')
-        table.add_column('time (s)', '%.0f')
-        table.add_column('Mb/s', '%.1f')
-        table.add_column('RAM (MiB)', '%.0f')
-        table.add_column('slowest (Mb/s)', '%.1f')
-        table.add_column('largest (MiB)', '%.0f')
-        table.add_column('repo (MiB)', '%.1f')
+        table.add_column('oper', '', '%-10s')
+        table.add_column('time', '(s)', '%.0f')
+        table.add_column('gen0', 'Mb/s', '%.1f')
+        table.add_column('RAM', '(MiB)', '%.0f')
+        table.add_column('slowest', '(Mb/s)', '%.1f')
+        table.add_column('largest', '(MiB)', '%.0f')
+        table.add_column('max repo', '(MiB)', '%.1f')
         
         for oper in self.opers:
             gen0_time = self.compute_time(cp, '0', oper)
