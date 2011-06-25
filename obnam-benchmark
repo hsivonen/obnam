@@ -87,6 +87,11 @@ class ObnamBenchmark(cliapp.Application):
     default_sizes = ['1g/100m']
     keyid = '3B1802F81B321347'
     opers = ('backup', 'restore', 'list_files', 'forget')
+    
+    profiles = {
+        'mailspool': 4096,
+        'mediaserver': 100 * 1024**2,
+    }
 
     def add_settings(self):
         self.settings.string(['obnam-branch'],
@@ -139,27 +144,36 @@ class ObnamBenchmark(cliapp.Application):
         sizes = self.settings['size'] or self.default_sizes
         logging.debug('sizes: %s' % repr(sizes))
 
-        for pair in sizes:
-            initial, inc = self.parse_size_pair(pair)
-            print 'Benchmark run for size %s inc %s' % (initial, inc)
+        for profile, file_size in self.profiles.iteritems():
+            for pair in sizes:
+                initial, inc = self.parse_size_pair(pair)
 
-            obnam_profile = os.path.join(results, 
-                                         'obnam-' + initial + 
-                                            '-%(op)s-%(gen)s-%(order)s.txt')
-            output = os.path.join(results, 'obnam-%s.seivot' % initial)
-            subprocess.check_call([seivot,
-#                                   '--drop-caches',
-                                   '--obnam-branch', obnam_branch,
-                                   '--larch-branch', larch_branch,
-                                   '--encrypt-with', self.keyid,
-                                   '--initial-data', initial,
-                                   '--incremental-data', inc,
-                                   '--obnam-profile', obnam_profile,
-                                   '--generations', str(generations),
-                                   '--output', output],
-                                  env=env)
+                msg = 'Profile %s, size %s inc %s' % (profile, initial, inc)
+                print
+                print msg
+                print '-' * len(msg)
+                print
 
-            self.report(output, obnam_revno, larch_revno, pair)
+                obnam_profile = os.path.join(results, 
+                                             'obnam-' + initial + 
+                                             '-' + profile +
+                                                '-%(op)s-%(gen)s-%(order)s.txt')
+                output = os.path.join(results, 'obnam-%s.seivot' % initial)
+                subprocess.check_call([seivot,
+    #                                   '--drop-caches',
+                                       '--obnam-branch', obnam_branch,
+                                       '--larch-branch', larch_branch,
+                                       '--encrypt-with', self.keyid,
+                                       '--initial-data', initial,
+                                       '--incremental-data', inc,
+                                       '--file-size', str(file_size),
+                                       '--obnam-profile', obnam_profile,
+                                       '--generations', str(generations),
+                                       '--output', output],
+                                      env=env)
+
+                print
+                self.report(output, profile, obnam_revno, larch_revno, pair)
 
         shutil.rmtree(tempdir)
         
@@ -211,16 +225,19 @@ class ObnamBenchmark(cliapp.Application):
     def parse_size_pair(self, pair):
         return pair.split('/', 1)
 
-    def report(self, seivot_filename, obnam_revno, larch_revno, size_pair):
+    def report(self, seivot_filename, profile, obnam_revno, larch_revno, 
+               size_pair):
+
         cp = ConfigParser.RawConfigParser()
         cp.read(seivot_filename)
 
         table = Table()
-        table.caption = ('%s-%s-%s-%s (%s)' %
+        table.caption = ('%s-%s-%s-%s-%s (%s)' %
                          (self.hostname,
                           self.obnam_branch_name,
                           obnam_revno,
                           larch_revno,
+                          profile,
                           size_pair))
 
         table.add_column('oper', '%-10s')
