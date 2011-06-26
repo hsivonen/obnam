@@ -75,23 +75,14 @@ def _gpg_pipe(args, data, passphrase):
     os.write(keypipe[1], passphrase + '\n')
     os.close(keypipe[1])
     
-    # Write the data to temporary file. Remove its name at once, so that
-    # if we crash, it gets removed automatically by the kernel.
-    
-    datafd, dataname = tempfile.mkstemp()
-    os.remove(dataname)
-    os.write(datafd, data)
-    os.lseek(datafd, 0, 0)
-    
     # Actually run gpg.
     
     argv = ['gpg', '--passphrase-fd', str(keypipe[0]), '-q', '--batch'] + args
-    p = subprocess.Popen(argv, stdin=datafd, stdout=subprocess.PIPE,
+    p = subprocess.Popen(argv, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
-    out, err = p.communicate()
+    out, err = p.communicate(data)
     
     os.close(keypipe[0])
-    os.close(datafd)
     
     # Return output data, or deal with errors.
     if p.returncode: # pragma: no cover
