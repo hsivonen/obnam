@@ -113,6 +113,8 @@ class ObnamBenchmark(cliapp.Application):
                              'use DIR as the wiki branch (default: %default)',
                              metavar='DIR',
                              default=os.path.expanduser('~/braawi.org'))
+        self.settings.boolean(['with-encryption'],
+                              'run benchmark using encryption')
         
         self.settings.string_list(['size'],
                                   'add PAIR to list of sizes to '
@@ -163,18 +165,19 @@ class ObnamBenchmark(cliapp.Application):
                 output = os.path.join(results, 
                                       'obnam-%s-%s.seivot' % 
                                         (initial, profile))
-                subprocess.check_call([seivot,
-                                       '--drop-caches',
-                                       '--obnam-branch', obnam_branch,
-                                       '--larch-branch', larch_branch,
-                                       '--encrypt-with', self.keyid,
-                                       '--initial-data', initial,
-                                       '--incremental-data', inc,
-                                       '--file-size', str(file_size),
-                                       '--obnam-profile', obnam_profile,
-                                       '--generations', str(generations),
-                                       '--output', output],
-                                      env=env)
+                argv = [seivot,
+                        '--drop-caches',
+                        '--obnam-branch', obnam_branch,
+                        '--larch-branch', larch_branch,
+                        '--initial-data', initial,
+                        '--incremental-data', inc,
+                        '--file-size', str(file_size),
+                        '--obnam-profile', obnam_profile,
+                        '--generations', str(generations),
+                        '--output', output]
+                if self.settings['with-encryption']:
+                    argv.extend(['--encrypt-with', self.keyid])
+                subprocess.check_call(argv, env=env)
 
                 print
                 self.report(output, profile, obnam_revno, larch_revno, pair)
