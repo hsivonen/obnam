@@ -40,7 +40,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     PREFIX_FS_META = 0      # prefix
     FILE_NAME = 0           # subkey type for storing pathnames
     FILE_CHUNKS = 1         # subkey type for list of chunks
-    FILE_NUM_CHUNKS = 2     # subkey type for length of list of chunks
+    _UNUSED_1 = 2           # no longer in use
     FILE_METADATA = 3       # subkey type for inode fields, etc
     DIR_CONTENTS = 4        # subkey type for list of directory contents
     FILE_CHECKSUM = 5       # subkey type for file checksum
@@ -146,14 +146,8 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         
         return self.hash_name(pathname)
 
-    def _lookup_int(self, tree, key, default=None):
-        if default is None:
-            return struct.unpack('!Q', tree.lookup(key))[0]
-        else:
-            try:
-                return struct.unpack('!Q', tree.lookup(key))[0]
-            except KeyError:
-                return default
+    def _lookup_int(self, tree, key):
+        return struct.unpack('!Q', tree.lookup(key))[0]
 
     def _insert_int(self, tree, key, value):
         return tree.insert(key, struct.pack('!Q', value))
@@ -343,8 +337,11 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
 
     def append_file_chunks(self, filename, chunkids):
         file_id = self.get_file_id(self.tree, filename)
-        lenkey = self.fskey(file_id, self.FILE_NUM_CHUNKS, 0)
-        i = self._lookup_int(self.tree, lenkey, 0)
+
+        minkey = self.fskey(file_id, self.FILE_CHUNKS, 0)
+        maxkey = self.fskey(file_id, self.FILE_CHUNKS, self.SUBKEY_MAX)
+        i = len(list(self.tree.lookup_range(minkey, maxkey)))
+
         while chunkids:
             some = chunkids[:self.chunkids_per_key]
             self._insert_chunks(self.tree, file_id, i, some)
@@ -352,7 +349,6 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
                 self.tree.insert(self.chunk_key(chunkid, file_id), '')
             i += 1
             chunkids = chunkids[self.chunkids_per_key:]
-        self._insert_int(self.tree, lenkey, i)
 
     def chunk_in_use(self, gen_id, chunk_id):
         '''Is a chunk used by a generation?'''
