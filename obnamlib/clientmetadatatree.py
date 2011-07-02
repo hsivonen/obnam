@@ -40,7 +40,6 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     PREFIX_FS_META = 0      # prefix
     FILE_NAME = 0           # subkey type for storing pathnames
     FILE_CHUNKS = 1         # subkey type for list of chunks
-    _UNUSED_1 = 2           # no longer in use
     FILE_METADATA = 3       # subkey type for inode fields, etc
     DIR_CONTENTS = 4        # subkey type for list of directory contents
     FILE_CHECKSUM = 5       # subkey type for file checksum
