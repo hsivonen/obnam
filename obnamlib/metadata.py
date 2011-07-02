@@ -80,6 +80,23 @@ class Metadata(object):
         return self.st_mode is not None and stat.S_ISREG(self.st_mode)
 
 
+# Caching versions of username/groupname lookups.
+# These work on the assumption that the mappings from uid/gid do not
+# change during the runtime of the backup.
+
+_uid_to_username = {}
+def _cached_getpwuid(uid): # pragma: no cover
+    if uid not in _uid_to_username:
+        _uid_to_username[uid] = pwd.getpwuid(uid)
+    return _uid_to_username[uid]
+    
+_gid_to_groupname = {}
+def _cached_getgrgid(gid): # pragma: no cover
+    if gid not in _gid_to_groupname:
+        _gid_to_groupname[gid] = grp.getgrgid(gid)
+    return _gid_to_groupname[gid]
+
+
 def read_metadata(fs, filename, getpwuid=None, getgrgid=None):
     '''Return object detailing metadata for a filesystem entry.'''
     metadata = Metadata()
@@ -93,13 +110,13 @@ def read_metadata(fs, filename, getpwuid=None, getgrgid=None):
     else:
         metadata.target = ''
 
-    getgrgid = getgrgid or grp.getgrgid
+    getgrgid = getgrgid or _cached_getgrgid
     try:
         metadata.groupname = getgrgid(metadata.st_gid)[0]
     except KeyError:
         metadata.groupname = None
 
-    getpwuid = getpwuid or pwd.getpwuid
+    getpwuid = getpwuid or _cached_getpwuid
     try:
         metadata.username = getpwuid(metadata.st_uid)[0]
     except KeyError:
