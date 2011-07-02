@@ -257,7 +257,7 @@ class Repository(object):
 
     '''
     
-    format_version = 2
+    format_version = 3
 
     def __init__(self, fs, node_size, upload_queue_size, lru_size, hooks):
         self.setup_hooks(hooks or obnamlib.HookManager())
