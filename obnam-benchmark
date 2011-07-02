@@ -165,22 +165,23 @@ class ObnamBenchmark(cliapp.Application):
                 output = os.path.join(results, 
                                       'obnam-%s-%s.seivot' % 
                                         (initial, profile))
-                argv = [seivot,
-                        '--drop-caches',
-                        '--obnam-branch', obnam_branch,
-                        '--larch-branch', larch_branch,
-                        '--initial-data', initial,
-                        '--incremental-data', inc,
-                        '--file-size', str(file_size),
-                        '--obnam-profile', obnam_profile,
-                        '--generations', str(generations),
-                        '--output', output]
-                if self.settings['with-encryption']:
-                    argv.extend(['--encrypt-with', self.keyid])
-                subprocess.check_call(argv, env=env)
-
-                print
-                self.report(output, profile, obnam_revno, larch_revno, pair)
+                if os.path.exists(output):
+                    print ('%s already exists, not re-running benchmark' %
+                            output)
+                else:
+                    argv = [seivot,
+                            '--drop-caches',
+                            '--obnam-branch', obnam_branch,
+                            '--larch-branch', larch_branch,
+                            '--initial-data', initial,
+                            '--incremental-data', inc,
+                            '--file-size', str(file_size),
+                            '--obnam-profile', obnam_profile,
+                            '--generations', str(generations),
+                            '--output', output]
+                    if self.settings['with-encryption']:
+                        argv.extend(['--encrypt-with', self.keyid])
+                    subprocess.check_call(argv, env=env)
 
         shutil.rmtree(tempdir)
         
@@ -205,9 +206,8 @@ class ObnamBenchmark(cliapp.Application):
                                '-'.join([self.hostname, self.obnam_branch_name,
                                          str(obnam_revno), str(larch_revno)]))
 
-        if os.path.exists(results):
-            raise cliapp.AppException('%s already exists' % results)
-        os.mkdir(results)
+        if not os.path.exists(results):
+            os.mkdir(results)
         
         return results
 
