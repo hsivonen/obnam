@@ -339,7 +339,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
 
         minkey = self.fskey(file_id, self.FILE_CHUNKS, 0)
         maxkey = self.fskey(file_id, self.FILE_CHUNKS, self.SUBKEY_MAX)
-        i = len(list(self.tree.lookup_range(minkey, maxkey)))
+        i = self.tree.count_range(minkey, maxkey)
 
         while chunkids:
             some = chunkids[:self.chunkids_per_key]
