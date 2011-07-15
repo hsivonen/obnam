@@ -366,33 +366,3 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         return list(set(self.chunk_unkey(key)[0]
                         for key, value in t.lookup_range(minkey, maxkey)))
 
-    def get_file_checksum(self, genid, filename):
-        '''Return whole-file checksum for a file.
-        
-        If not set, return None.
-        
-        '''
-        
-        tree = self.find_generation(genid)
-        file_id = self.get_file_id(tree, filename)
-        key = self.fskey(file_id, self.FILE_CHECKSUM, 0)
-        try:
-            return tree.lookup(key)
-        except KeyError:
-            return None
-        
-    def set_file_checksum(self, filename, checksum):
-        '''Set whole-file checksum for a file.
-        
-        If checksum is None, it is removed.
-        
-        '''
-        
-
-        file_id = self.get_file_id(self.tree, filename)
-        key = self.fskey(file_id, self.FILE_CHECKSUM, 0)
-        if checksum is None:
-            self.tree.remove_range(key, key)
-        else:
-            self.tree.insert(key, checksum)
-

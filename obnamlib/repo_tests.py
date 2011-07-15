@@ -600,38 +600,6 @@ class RepositoryGetSetChunksTests(unittest.TestCase):
         self.assertEqual(sorted(chunkids), [1, 2, 3, 4])
 
 
-class RepositoryGetSetFileChecksumTests(unittest.TestCase):
-
-    def setUp(self):
-        self.tempdir = tempfile.mkdtemp()
-
-        self.fs = obnamlib.LocalFS(self.tempdir)
-        self.repo = obnamlib.Repository(self.fs, obnamlib.DEFAULT_NODE_SIZE,
-                                        obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
-                                        obnamlib.DEFAULT_LRU_SIZE, None)
-        self.repo.lock_root()
-        self.repo.add_client('client_name')
-        self.repo.commit_root()
-        self.repo.lock_client('client_name')
-        self.gen = self.repo.start_generation()
-        self.repo.create('/foo', obnamlib.Metadata())
-
-    def tearDown(self):
-        shutil.rmtree(self.tempdir)
-
-    def test_file_has_no_checksum(self):
-        self.assertEqual(self.repo.get_file_checksum(self.gen, '/foo'), None)
-        
-    def test_sets_checksum_for_file(self):
-        self.repo.set_file_checksum('/foo', 'csum')
-        self.assertEqual(self.repo.get_file_checksum(self.gen, '/foo'), 'csum')
-
-    def test_removes_checksum_for_file(self):
-        self.repo.set_file_checksum('/foo', 'csum')
-        self.repo.set_file_checksum('/foo', None)
-        self.assertEqual(self.repo.get_file_checksum(self.gen, '/foo'), None)
-
-
 class RepositoryGenspecTests(unittest.TestCase):
 
     def setUp(self):

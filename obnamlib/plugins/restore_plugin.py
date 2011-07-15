@@ -167,8 +167,8 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         self.restore_chunks(f, chunkids, summer)
         f.close()
 
-        correct_checksum = self.repo.get_file_checksum(gen, filename)
-        if summer.hexdigest() != correct_checksum:
+        correct_checksum = metadata.md5
+        if summer.digest() != correct_checksum:
             msg = 'File checksum restore error: %s' % filename
             logging.error(msg)
             self.app.hooks.call('error-message', msg)

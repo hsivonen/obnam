@@ -106,7 +106,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                         if stat.S_ISDIR(metadata.st_mode):
                             self.backup_dir_contents(pathname)
                         elif stat.S_ISREG(metadata.st_mode):
-                            self.backup_file_contents(pathname)
+                            assert metadata.md5 is None
+                            metadata.md5 = self.backup_file_contents(pathname)
                         self.backup_metadata(pathname, metadata)
                     except OSError, e:
                         msg = 'Can\'t back up %s: %s' % (pathname, e.strerror)
@@ -260,11 +261,11 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 chunkids = []
             self.app.hooks.call('progress-data-uploaded', len(data))
         f.close()
-        self.repo.set_file_checksum(filename, summer.hexdigest())
         if chunkids:
             self.repo.append_file_chunks(filename, chunkids)
         self.dump_memory_profile('at end of file content backup for %s' %
                                  filename)
+        return summer.digest()
         
     def backup_file_chunk(self, data):
         '''Back up a chunk of data by putting it into the repository.'''
