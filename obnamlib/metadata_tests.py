@@ -97,6 +97,14 @@ class MetadataTests(unittest.TestCase):
         metadata = obnamlib.Metadata()
         self.assertFalse(metadata.isfile())
 
+    def test_has_no_md5_by_default(self):
+        metadata = obnamlib.Metadata()
+        self.assertEqual(metadata.md5, None)
+
+    def test_sets_md5(self):
+        metadata = obnamlib.Metadata(md5='checksum')
+        self.assertEqual(metadata.md5, 'checksum')
+
 
 class ReadMetadataTests(unittest.TestCase):
 
@@ -205,4 +213,41 @@ class SetMetadataTests(unittest.TestCase):
         st = os.lstat(self.filename)
         self.assertEqual(st.st_mode, self.metadata.st_mode)
         self.assertEqual(st.st_mtime, self.metadata.st_mtime)
+
+
+class MetadataCodingTests(unittest.TestCase):
+
+    def test_round_trip(self):
+        metadata = obnamlib.metadata.Metadata(st_mode=1, 
+                                              st_mtime=2.12756, 
+                                              st_nlink=3,
+                                              st_size=4, 
+                                              st_uid=5, 
+                                              st_blocks=6, 
+                                              st_dev=7,
+                                              st_gid=8, 
+                                              st_ino=9,  
+                                              st_atime=10.123, 
+                                              groupname='group',
+                                              username='user',
+                                              target='target',
+                                              md5='checksum')
+        encoded = obnamlib.encode_metadata(metadata)
+        decoded = obnamlib.decode_metadata(encoded)
+        for name in dir(metadata):
+            if name in obnamlib.metadata.metadata_fields:
+                self.assertEqual(getattr(metadata, name), 
+                                 getattr(decoded, name),
+                                 'attribute %s must be equal (%s vs %s)' % 
+                                    (name, getattr(metadata, name),
+                                     getattr(decoded, name)))
+
+    def test_round_trip_for_None_values(self):
+        metadata = obnamlib.metadata.Metadata()
+        encoded = obnamlib.encode_metadata(metadata)
+        decoded = obnamlib.decode_metadata(encoded)
+        for name in dir(metadata):
+            if name in obnamlib.metadata.metadata_fields:
+                self.assertEqual(getattr(decoded, name), None,
+                                 'attribute %s must be None' % name)
 

@@ -56,7 +56,7 @@ from pluginbase import ObnamPlugin
 from vfs import VirtualFileSystem, VfsFactory, VfsTests
 from vfs_local import LocalFS
 from metadata import (read_metadata, set_metadata, Metadata, metadata_fields,
-                      metadata_verify_fields)
+                      metadata_verify_fields, encode_metadata, decode_metadata)
 from repo_tree import RepositoryTree
 from chunklist import ChunkList
 from clientlist import ClientList
