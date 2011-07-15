@@ -18,6 +18,9 @@ import grp
 import os
 import pwd
 import stat
+import struct
+
+import obnamlib
 
 
 metadata_verify_fields = (
@@ -146,4 +149,98 @@ def set_metadata(fs, filename, metadata, getuid=None):
     getuid = getuid or os.getuid
     if getuid() == 0:
         fs.lchown(filename, metadata.st_uid, metadata.st_gid)
+    
+    
+metadata_format = struct.Struct('!Q' +  # flags
+                                'Q' +   # st_mode
+                                'QQ' +  # st_mtime (as two integers)
+                                'QQ' +  # st_atime (as two integers)
+                                'Q' +   # st_nlink
+                                'Q' +   # st_size
+                                'Q' +   # st_uid
+                                'Q' +   # st_gid
+                                'Q' +   # st_dev
+                                'Q' +   # st_ino
+                                'Q' +   # st_blocks
+                                'Q' +   # len of groupname
+                                'Q' +   # len of username
+                                'Q' +   # len of symlink target
+                                '')
+
+def encode_metadata(metadata):
+    flags = 0
+    for i, name in enumerate(obnamlib.metadata_fields):
+        if getattr(metadata, name) is not None:
+            flags |= (1 << i)
+
+    if metadata.st_mtime is None:
+        mtime_a, mtime_b = 0, 0
+    else:
+        mtime_a, mtime_b = metadata.st_mtime.as_integer_ratio()
+    if metadata.st_atime is None:
+        atime_a, atime_b = 0, 0
+    else:
+        atime_a, atime_b = metadata.st_atime.as_integer_ratio()
+    packed = metadata_format.pack(flags,
+                                  metadata.st_mode or 0,
+                                  mtime_a, mtime_b,
+                                  atime_a, atime_b,
+                                  metadata.st_nlink or 0,
+                                  metadata.st_size or 0,
+                                  metadata.st_uid or 0,
+                                  metadata.st_gid or 0,
+                                  metadata.st_dev or 0,
+                                  metadata.st_ino or 0,
+                                  metadata.st_blocks or 0,
+                                  len(metadata.groupname or ''),
+                                  len(metadata.username or ''),
+                                  len(metadata.target or ''))
+    return (packed + 
+             (metadata.groupname or '') +
+             (metadata.username or '') +
+             (metadata.target or ''))
+
+def decode_metadata(encoded):
+
+    items = metadata_format.unpack_from(encoded)
+    flags = items[0]
+    pos = [1, metadata_format.size]
+    metadata = obnamlib.Metadata()
+    
+    def is_present(field):
+        i = obnamlib.metadata_fields.index(field)
+        return (flags & (1 << i)) != 0
+
+    def decode(field, num_items, inc_offset, getvalue):
+        if is_present(field):
+            value = getvalue(pos[0], pos[1])
+            setattr(metadata, field, value)
+            if inc_offset:
+                pos[1] += len(value)
+        pos[0] += num_items
+
+    def decode_integer(field):
+        decode(field, 1, False, lambda i, o: items[i])
+
+    def decode_float(field):
+        decode(field, 2, False, lambda i, o: float(items[i]) / items[i+1])
+
+    def decode_string(field):
+        decode(field, 1, True, lambda i, o: encoded[o:o + items[i]])
+    
+    decode_integer('st_mode')
+    decode_float('st_mtime')
+    decode_float('st_atime')
+    decode_integer('st_nlink')
+    decode_integer('st_size')
+    decode_integer('st_uid')
+    decode_integer('st_gid')
+    decode_integer('st_dev')
+    decode_integer('st_ino')
+    decode_integer('st_blocks')
+    decode_string('groupname')
+    decode_string('username')
+    decode_string('target')
+    
+    return metadata
 

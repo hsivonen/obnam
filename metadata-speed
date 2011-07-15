@@ -37,10 +37,10 @@ def main():
     fs = obnamlib.LocalFS('.')
     fs.connect()
     metadata = obnamlib.read_metadata(fs, '.')
-    encoded = obnamlib.repo.encode_metadata(metadata)
+    encoded = obnamlib.encode_metadata(metadata)
     calibrate = measure(n, lambda: None)
-    encode = measure(n, lambda: obnamlib.repo.encode_metadata(metadata))
-    decode = measure(n, lambda: obnamlib.repo.decode_metadata(encoded))
+    encode = measure(n, lambda: obnamlib.encode_metadata(metadata))
+    decode = measure(n, lambda: obnamlib.decode_metadata(encoded))
     print 'encode: %.1f s' % (n/(encode - calibrate))
     print 'decode: %.1f s' % (n/(decode - calibrate))
 
