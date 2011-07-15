@@ -230,7 +230,8 @@ class MetadataCodingTests(unittest.TestCase):
                                               st_atime=10.123, 
                                               groupname='group',
                                               username='user',
-                                              target='target')
+                                              target='target',
+                                              md5='checksum')
         encoded = obnamlib.encode_metadata(metadata)
         decoded = obnamlib.decode_metadata(encoded)
         for name in dir(metadata):

@@ -167,6 +167,7 @@ metadata_format = struct.Struct('!Q' +  # flags
                                 'Q' +   # len of groupname
                                 'Q' +   # len of username
                                 'Q' +   # len of symlink target
+                                'Q' +   # len of md5
                                 '')
 
 def encode_metadata(metadata):
@@ -196,11 +197,13 @@ def encode_metadata(metadata):
                                   metadata.st_blocks or 0,
                                   len(metadata.groupname or ''),
                                   len(metadata.username or ''),
-                                  len(metadata.target or ''))
+                                  len(metadata.target or ''),
+                                  len(metadata.md5 or ''))
     return (packed + 
              (metadata.groupname or '') +
              (metadata.username or '') +
-             (metadata.target or ''))
+             (metadata.target or '') +
+             (metadata.md5 or ''))
 
 def decode_metadata(encoded):
 
@@ -243,6 +246,7 @@ def decode_metadata(encoded):
     decode_string('groupname')
     decode_string('username')
     decode_string('target')
+    decode_string('md5')
     
     return metadata
 
