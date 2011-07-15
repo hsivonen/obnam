@@ -97,6 +97,14 @@ class MetadataTests(unittest.TestCase):
         metadata = obnamlib.Metadata()
         self.assertFalse(metadata.isfile())
 
+    def test_has_no_md5_by_default(self):
+        metadata = obnamlib.Metadata()
+        self.assertEqual(metadata.md5, None)
+
+    def test_sets_md5(self):
+        metadata = obnamlib.Metadata(md5='checksum')
+        self.assertEqual(metadata.md5, 'checksum')
+
 
 class ReadMetadataTests(unittest.TestCase):
 

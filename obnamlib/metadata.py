@@ -28,7 +28,7 @@ metadata_verify_fields = (
     'groupname', 'username', 'target',
 )
 metadata_fields = metadata_verify_fields + (
-    'st_blocks', 'st_dev', 'st_gid', 'st_ino',  'st_atime', 
+    'st_blocks', 'st_dev', 'st_gid', 'st_ino',  'st_atime', 'md5',
 )
 
 
@@ -64,6 +64,8 @@ class Metadata(object):
     Additionally, the fields 'groupname' and 'username' are stored. They
     contain the textual names that correspond to st_gid and st_uid. When
     restoring, the names will be preferred by default.
+    
+    The 'md5' field optionally stores the whole-file checksum for the file.
     
     '''
     
