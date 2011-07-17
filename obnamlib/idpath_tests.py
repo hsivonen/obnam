@@ -56,13 +56,25 @@ class IdPathTests(unittest.TestCase):
         subdir = os.path.dirname(subpath)
         self.assertEqual(len(subdir.split(os.sep)), self.depth)
 
+    def create_paths(self, num_ids):
+        paths = []
+        for i in range(num_ids):
+            path = self.idpath.convert(i)
+            paths.append(path)
+            dirname = os.path.dirname(path)
+            if not os.path.exists(dirname):
+                os.makedirs(dirname)
+            with open(path, 'w'):
+                pass # need to create file so next convert knows about it
+        return paths
+
     def test_puts_up_to_max_ids_per_leaf_directory(self):
-        paths = [self.idpath.convert(i) for i in range(self.max)]
+        paths = self.create_paths(self.max)
         dirnames = set(os.path.join(x) for x in paths)
         self.assertEqual(len(dirnames), 1)
 
     def test_puts_more_than_max_ids_in_different_leaves(self):
-        paths = [self.idpath.convert(i) for i in range(self.max + 1)]
+        paths = self.create_paths(self.max + 1)
         dirnames = [os.path.join(x) for x in paths]
         nameset = set(dirnames)
         self.assertEqual(len(nameset), 2)
