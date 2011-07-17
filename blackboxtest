@@ -232,7 +232,10 @@ class ObnamTestCase(unittest.TestCase):
         fs = obnamlib.LocalFS(self.repo)
         s = obnamlib.Repository(fs, obnamlib.DEFAULT_NODE_SIZE,
                                 obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
-                                obnamlib.DEFAULT_LRU_SIZE, None)
+                                obnamlib.DEFAULT_LRU_SIZE, None,
+                                obnamlib.IDPATH_DEPTH,
+                                obnamlib.IDPATH_BITS,
+                                obnamlib.IDPATH_SKIP)
         s.open_client(self.client_name)
         return s
 

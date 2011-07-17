@@ -165,7 +165,8 @@ class Repository(object):
     
     format_version = 3
 
-    def __init__(self, fs, node_size, upload_queue_size, lru_size, hooks):
+    def __init__(self, fs, node_size, upload_queue_size, lru_size, hooks,
+                 idpath_depth, idpath_bits, idpath_skip):
         self.setup_hooks(hooks or obnamlib.HookManager())
         self.fs = HookedFS(self, fs, self.hooks)
         self.node_size = node_size
@@ -192,10 +193,8 @@ class Repository(object):
                                                node_size, upload_queue_size, 
                                                lru_size, self)
         self.prev_chunkid = None
-        self.chunk_idpath = obnamlib.IdPath('chunks', 
-                                            obnamlib.IDPATH_DEPTH,
-                                            obnamlib.IDPATH_BITS,
-                                            obnamlib.IDPATH_SKIP)
+        self.chunk_idpath = obnamlib.IdPath('chunks', idpath_depth, 
+                                            idpath_bits, idpath_skip)
 
     def setup_hooks(self, hooks):
         self.hooks = hooks

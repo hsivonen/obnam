@@ -28,7 +28,10 @@ def find_objids(fs):
 
 fs = obnamlib.LocalFS(sys.argv[1])
 repo = obnamlib.Repository(fs, obnamlib.DEFAULT_NODE_SIZE, 
-                       obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE)
+                       obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE, None,
+                       obnamlib.IDPATH_DEPTH,
+                       obnamlib.IDPATH_BITS,
+                       obnamlib.IDPATH_SKIP)
 for objid in find_objids(fs):
     obj = repo.get_object(objid)
     print 'id %s (%s):' % (obj.id, obj.__class__.__name__)
