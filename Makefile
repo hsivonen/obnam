@@ -15,7 +15,7 @@ check: all
 	python -m CoverageTestRunner --ignore-missing-from=without-tests
 	rm .coverage
 	python blackboxtest
-	fakeroot python blackboxtest
+#	fakeroot python blackboxtest
 	
 clean:
 	rm -f _obnam.so obnamlib/*.pyc obnamlib/plugins/*.pyc test-plugins/*.pyc
