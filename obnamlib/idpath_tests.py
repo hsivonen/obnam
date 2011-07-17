@@ -75,7 +75,7 @@ class IdPathTests(unittest.TestCase):
 
     def test_puts_more_than_max_ids_in_different_leaves(self):
         paths = self.create_paths(self.max + 1)
-        dirnames = [os.path.join(x) for x in paths]
+        dirnames = [os.path.dirname(x) for x in paths]
         nameset = set(dirnames)
         self.assertEqual(len(nameset), 2)
         first = nameset.pop()
