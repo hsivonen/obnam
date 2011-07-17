@@ -28,15 +28,6 @@ class App(cliapp.Application):
 
     '''Main program for backup program.'''
     
-    @property
-    def default_config_file(self):
-        if os.getuid() == 0:
-            return '/var/log/obnam.log'
-        else:
-            cache = (os.environ.get('XDG_CACHE_HOME', '') or
-                     os.path.expanduser('~/.cache'))
-            return os.path.join(cache, 'obnam', 'obnam.log')
-
     def add_settings(self):
         self.config = self.settings
 
