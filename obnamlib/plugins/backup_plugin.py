@@ -102,6 +102,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 self.root_metadata = self.fs.lstat(absroot)
                 for pathname, metadata in self.find_files(absroot):
                     tracing.trace('Backing up %s', pathname)
+                    self.app.hooks.call('progress-found-file', 
+                                        pathname, metadata)
                     try:
                         if stat.S_ISDIR(metadata.st_mode):
                             self.backup_dir_contents(pathname)
