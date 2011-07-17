@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import cliapp
 import logging
 import os
 import socket
@@ -22,11 +23,12 @@ import tracing
 import obnamlib
 
 
-class App(object):
+class App(cliapp.Application):
 
     '''Main program for backup program.'''
     
     def __init__(self):
+        cliapp.Application.__init__(self)
 
         self.setup_config()        
 
