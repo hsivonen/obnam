@@ -192,6 +192,10 @@ class Repository(object):
                                                node_size, upload_queue_size, 
                                                lru_size, self)
         self.prev_chunkid = None
+        self.chunk_idpath = obnamlib.IdPath('chunks', 
+                                            obnamlib.IDPATH_DEPTH,
+                                            obnamlib.IDPATH_BITS,
+                                            obnamlib.IDPATH_SKIP)
 
     def setup_hooks(self, hooks):
         self.hooks = hooks
@@ -521,9 +525,10 @@ class Repository(object):
         self.client.remove(filename)
 
     def _chunk_filename(self, chunkid):
-        basename = '%x' % chunkid
-        subdir = '%d' % (chunkid / (2**13))
-        return os.path.join('chunks', subdir, basename)
+#        basename = '%x' % chunkid
+#        subdir = '%d' % (chunkid / (2**13))
+#        return os.path.join('chunks', subdir, basename)
+        return self.chunk_idpath.convert(chunkid)
 
     @require_started_generation
     def put_chunk(self, data, checksum):

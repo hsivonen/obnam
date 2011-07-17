@@ -40,6 +40,6 @@ class IdPath(object):
             return (identifier >> n) & level_mask
             
         subdirs = ['%d' % level_bits(i) for i in range(self.depth)]
-        parts = [self.dirname] + subdirs + [str(identifier)]
+        parts = [self.dirname] + subdirs + ['%x' % identifier]
         return os.path.join(*parts)
 

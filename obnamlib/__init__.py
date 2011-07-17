@@ -32,6 +32,13 @@ DEFAULT_UPLOAD_QUEUE_SIZE = 1024
 DEFAULT_LRU_SIZE = 500
 DEFAULT_CHUNKIDS_PER_GROUP = 1024
 
+# The following values have been determined empirically on a laptop
+# with an encrypted ext4 filesystem. Other values might be better for
+# other situations.
+IDPATH_DEPTH = 3
+IDPATH_BITS = 12
+IDPATH_SKIP = 13
+
 # Maximum identifier for clients, chunks, files, etc. This is the largest
 # unsigned 64-bit value. In various places we assume 64-bit field sizes
 # for on-disk data structures.
