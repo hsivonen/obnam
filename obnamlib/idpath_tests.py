@@ -14,6 +14,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import shutil
+import tempfile
 import unittest
 
 import obnamlib
@@ -22,8 +24,16 @@ import obnamlib
 class IdPathTests(unittest.TestCase):
 
     def setUp(self):
-        self.idpath = obnamlib.IdPath()
-        
+        self.tempdir = tempfile.mkdtemp()
+        self.idpath = obnamlib.IdPath(self.tempdir)
+    
+    def tearDown(self):
+        shutil.rmtree(self.tempdir)
+    
     def test_returns_string(self):
         self.assertEqual(type(self.idpath.convert(1)), str)
+
+    def test_starts_with_designated_path(self):
+        path = self.idpath.convert(1)
+        self.assert_(path.startswith(self.tempdir))
 

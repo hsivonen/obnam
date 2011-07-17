@@ -23,6 +23,9 @@ class IdPath(object):
     
     '''
     
+    def __init__(self, dirname):
+        self.dirname = dirname
+    
     def convert(self, identifier):
-        return ''
+        return self.dirname
 
