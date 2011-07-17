@@ -106,6 +106,18 @@ class App(object):
                                 'add to filename patters for which trace '
                                 'debugging logging happens')
         
+        self.config.new_bytesize(['idpath-depth'],
+                                 'depth of chunk id mapping')
+        self.config['idpath-depth'] = str(obnamlib.IDPATH_DEPTH)
+        
+        self.config.new_bytesize(['idpath-bits'],
+                                 'chunk id level size')
+        self.config['idpath-bits'] = str(obnamlib.IDPATH_BITS)
+        
+        self.config.new_bytesize(['idpath-skip'],
+                                 'chunk id mapping lowest bits skip')
+        self.config['idpath-skip'] = str(obnamlib.IDPATH_SKIP)
+        
     def deduce_client_name(self):
         return socket.gethostname()
 
@@ -120,7 +132,7 @@ class App(object):
         # and since all hooks must be defined when plugins are enabled,
         # we create one instance here, which will immediately be destroyed.
         # FIXME: This is fugly.
-        obnamlib.Repository(None, 1000, 1000, 100, self.hooks)
+        obnamlib.Repository(None, 1000, 1000, 100, self.hooks, 10, 10, 10)
 
     def plugins_dir(self):
         return os.path.join(os.path.dirname(obnamlib.__file__), 'plugins')
@@ -192,5 +204,8 @@ class App(object):
                                     self.config['node-size'],
                                     self.config['upload-queue-size'],
                                     self.config['lru-size'],
-                                    self.hooks)
+                                    self.hooks,
+                                    self.config['idpath-depth'],
+                                    self.config['idpath-bits'],
+                                    self.config['idpath-skip'])
 
