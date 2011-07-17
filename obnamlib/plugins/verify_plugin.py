@@ -58,6 +58,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         self.failed = False
         gen = self.repo.genspec(self.app.config['generation'])
         for arg in args:
+            arg = os.path.normpath(arg)
             metadata = self.repo.get_metadata(gen, arg)
             try:
                 if metadata.isdir():
