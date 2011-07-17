@@ -26,9 +26,10 @@ class IdPath(object):
     
     '''
     
-    def __init__(self, dirname, depth):
+    def __init__(self, dirname, depth, max_per_leaf):
         self.dirname = dirname
         self.depth = depth
+        self.max = max_per_leaf
     
     def convert(self, identifier):
         parts = [self.dirname] + ['foo'] * self.depth + [str(identifier)]

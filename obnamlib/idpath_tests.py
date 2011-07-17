@@ -27,7 +27,8 @@ class IdPathTests(unittest.TestCase):
     def setUp(self):
         self.tempdir = tempfile.mkdtemp()
         self.depth = 3
-        self.idpath = obnamlib.IdPath(self.tempdir, self.depth)
+        self.max = 4
+        self.idpath = obnamlib.IdPath(self.tempdir, self.depth, self.max)
     
     def tearDown(self):
         shutil.rmtree(self.tempdir)
@@ -54,4 +55,21 @@ class IdPathTests(unittest.TestCase):
         subpath = path[len(self.tempdir + os.sep):]
         subdir = os.path.dirname(subpath)
         self.assertEqual(len(subdir.split(os.sep)), self.depth)
+
+    def test_puts_up_to_max_ids_per_leaf_directory(self):
+        paths = [self.idpath.convert(i) for i in range(self.max)]
+        dirnames = set(os.path.join(x) for x in paths)
+        self.assertEqual(len(dirnames), 1)
+
+    def test_puts_more_than_max_ids_in_different_leaves(self):
+        paths = [self.idpath.convert(i) for i in range(self.max + 1)]
+        dirnames = [os.path.join(x) for x in paths]
+        nameset = set(dirnames)
+        self.assertEqual(len(nameset), 2)
+        first = nameset.pop()
+        second = nameset.pop()
+        first_count = len(x for x in dirnames if x == first)
+        second_count = len(x for x in dirnames if x == second)
+        self.assertEqual(min(first_count, second_count), 1)
+        self.assertEqual(max(first_count, second_count), self.max)
 
