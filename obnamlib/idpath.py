@@ -21,15 +21,15 @@ class IdPath(object):
 
     '''Convert a numeric id to a pathname.
     
-    The ids are stored in a directory hierarchy, the shape of which
-    can be adjusted by parameters to the class.
+    The ids are stored in a directory hierarchy, the depth of which
+    can be adjusted by a parameter to the class. The ids are assumed
+    to be non-negative integers.
     
     '''
     
-    def __init__(self, dirname, depth, max_per_leaf):
+    def __init__(self, dirname, depth):
         self.dirname = dirname
         self.depth = depth
-        self.max = max_per_leaf
     
     def convert(self, identifier):
         parts = [self.dirname] + ['foo'] * self.depth + [str(identifier)]
