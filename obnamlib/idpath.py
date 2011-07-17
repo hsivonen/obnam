@@ -27,10 +27,10 @@ class IdPath(object):
     
     '''
     
-    def __init__(self, dirname, depth):
+    def __init__(self, dirname, depth, bits_per_depth):
         self.dirname = dirname
         self.depth = depth
-        self.bits_per_depth = 1
+        self.bits_per_depth = bits_per_depth
     
     def convert(self, identifier):
         mask = 2**self.bits_per_depth - 1
