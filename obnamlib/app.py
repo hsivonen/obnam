@@ -70,7 +70,13 @@ class App(cliapp.Application):
         self.config.string_list(['trace'],
                                 'add to filename patters for which trace '
                                 'debugging logging happens')
-        
+
+        # The following needs to be done here, because it needs
+        # to be done before option processing. This is a bit ugly,
+        # but the best we can do with the current cliapp structure.
+        # Possibly cliapp will provide a better hook for us to use
+        # later on, but this is reality now.
+
         self.pm = obnamlib.PluginManager()
         self.pm.locations = [self.plugins_dir()]
         self.pm.plugin_arguments = (self,)
