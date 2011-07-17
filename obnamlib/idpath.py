@@ -27,16 +27,19 @@ class IdPath(object):
     
     '''
     
-    def __init__(self, dirname, depth, bits_per_depth):
+    def __init__(self, dirname, depth, bits_per_level, skip_bits):
         self.dirname = dirname
         self.depth = depth
-        self.bits_per_depth = bits_per_depth
+        self.bits_per_level = bits_per_level
+        self.skip_bits = skip_bits
     
     def convert(self, identifier):
-        mask = 2**self.bits_per_depth - 1
-        subdirs = ['%d' % 
-                    ((identifier >> (i * self.bits_per_depth)) & mask)
-                   for i in range(self.depth)]
+        def level_bits(level):
+            level_mask = 2**self.bits_per_level - 1
+            n = self.skip_bits + level * self.bits_per_level
+            return (identifier >> n) & level_mask
+            
+        subdirs = ['%d' % level_bits(i) for i in range(self.depth)]
         parts = [self.dirname] + subdirs + [str(identifier)]
         return os.path.join(*parts)
 

@@ -26,8 +26,10 @@ def main():
     n = int(sys.argv[1])
     dirname = sys.argv[2]
     depth = int(sys.argv[3])
+    bits = int(sys.argv[4])
+    skip = int(sys.argv[5])
     
-    idpath = obnamlib.IdPath(dirname, depth)
+    idpath = obnamlib.IdPath(dirname, depth, bits, skip)
     start = time.time()
     for i in xrange(n):
         path = idpath.convert(i)
@@ -40,7 +42,7 @@ def main():
 
     duration = end - start
     speed = n / duration
-    print '%.1f seconds, %.1f ids/s' % (duration, speed)    
+    print '%d ids, %.1f seconds, %.1f ids/s' % (n, duration, speed)    
 
 if __name__ == '__main__':
     main()

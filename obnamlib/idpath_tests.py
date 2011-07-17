@@ -27,8 +27,9 @@ class IdPathTests(unittest.TestCase):
     def setUp(self):
         self.tempdir = tempfile.mkdtemp()
         self.depth = 3
-        self.bits = 1
-        self.idpath = obnamlib.IdPath(self.tempdir, self.depth, self.bits)
+        bits = 1
+        skip = 0
+        self.idpath = obnamlib.IdPath(self.tempdir, self.depth, bits, skip)
     
     def tearDown(self):
         shutil.rmtree(self.tempdir)
