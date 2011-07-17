@@ -525,9 +525,6 @@ class Repository(object):
         self.client.remove(filename)
 
     def _chunk_filename(self, chunkid):
-#        basename = '%x' % chunkid
-#        subdir = '%d' % (chunkid / (2**13))
-#        return os.path.join('chunks', subdir, basename)
         return self.chunk_idpath.convert(chunkid)
 
     @require_started_generation
