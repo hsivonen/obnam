@@ -38,10 +38,10 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         self.app.register_command('ls', self.ls)
 
     def open_repository(self):
-        self.app.config.require('repository')
-        self.app.config.require('client-name')
+        self.app.require('repository')
+        self.app.require('client-name')
         self.repo = self.app.open_repository()
-        self.repo.open_client(self.app.config['client-name'])
+        self.repo.open_client(self.app.settings['client-name'])
 
     def clients(self, args):
         self.open_repository()

@@ -15,35 +15,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import logging
-import os
-import sys
-import traceback
-
 import obnamlib
 
 
-def main():
-    try:
-        obnamlib.App().run()
-    except obnamlib.AppException, e:
-        logging.critical(str(e))
-        sys.stderr.write('Error: %s\n' % str(e))
-        sys.exit(1)
-    except SystemExit, e:
-        sys.exit(e.code)
-    except BaseException, e:
-        logging.critical(traceback.format_exc())
-        sys.stderr.write(traceback.format_exc())
-        sys.exit(1)
+obnamlib.App(progname='obnam', version=obnamlib.version).run()
 
-
-if __name__ == '__main__':
-    profname = os.environ.get('OBNAM_PROFILE')
-    if profname:
-        import cProfile
-        if profname == 'yes':
-            profname = 'obnam.prof'
-        cProfile.run('main()', profname)
-    else:
-        main()

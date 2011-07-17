@@ -26,11 +26,11 @@ class ForceLockPlugin(obnamlib.ObnamPlugin):
         self.app.register_command('force-lock', self.force_lock)
 
     def force_lock(self, args):
-        self.app.config.require('repository')
-        self.app.config.require('client-name')
+        self.app.require('repository')
+        self.app.require('client-name')
 
-        repourl = self.app.config['repository']
-        client_name = self.app.config['client-name']
+        repourl = self.app.settings['repository']
+        client_name = self.app.settings['client-name']
         logging.info('Forcing lock')
         logging.info('Repository: %s' % repourl)
         logging.info('Client: %s' % client_name)

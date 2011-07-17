@@ -25,22 +25,22 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
     
     def enable(self):
         self.app.register_command('forget', self.forget)
-        self.app.config.new_string(['keep'],
-                                   'policy for what generations to keep '
-                                   'when forgetting')
+        self.app.settings.string(['keep'],
+                                  'policy for what generations to keep '
+                                  'when forgetting')
 
     def forget(self, args):
-        self.app.config.require('repository')
-        self.app.config.require('client-name')
+        self.app.require('repository')
+        self.app.require('client-name')
 
         self.repo = self.app.open_repository()
-        self.repo.lock_client(self.app.config['client-name'])
+        self.repo.lock_client(self.app.settings['client-name'])
 
         if args:
             for genspec in args:
                 genid = self.repo.genspec(genspec)
                 self.remove(genid)
-        elif self.app.config['keep']:
+        elif self.app.settings['keep']:
             genlist = []
             dt = datetime.datetime(1970, 1, 1, 0, 0, 0)
             for genid in self.repo.list_generations():
@@ -48,7 +48,7 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
                 genlist.append((genid, dt.fromtimestamp(end)))
 
             fp = obnamlib.ForgetPolicy()
-            rules = fp.parse(self.app.config['keep'])
+            rules = fp.parse(self.app.settings['keep'])
             keeplist = fp.match(rules, genlist)
             keepids = set(genid for genid, dt in keeplist)
 
@@ -59,7 +59,7 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
         self.repo.commit_client()
 
     def remove(self, genid):
-        if self.app.config['pretend']:
+        if self.app.settings['pretend']:
             self.app.hooks.call('status', 'pretending to remove %s' % genid)
         else:
             self.repo.remove_generation(genid)

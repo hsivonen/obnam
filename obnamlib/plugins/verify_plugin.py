@@ -35,28 +35,28 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         self.app.register_command('verify', self.verify)
 
     def verify(self, args):
-        self.app.config.require('repository')
-        self.app.config.require('client-name')
-        self.app.config.require('generation')
+        self.app.require('repository')
+        self.app.require('client-name')
+        self.app.require('generation')
 
         logging.debug('verifying generation %s' % 
-                        self.app.config['generation'])
+                        self.app.settings['generation'])
         if not args:
-            self.app.config.require('root')
-            args = self.app.config['root']
+            self.app.require('root')
+            args = self.app.settings['root']
         if not args:
             logging.debug('no roots/args given, so verifying everything')
             args = ['/']
         logging.debug('verifying what: %s' % repr(args))
     
         self.repo = self.app.open_repository()
-        self.repo.open_client(self.app.config['client-name'])
+        self.repo.open_client(self.app.settings['client-name'])
         self.fs = self.app.fsf.new(args[0])
         self.fs.connect()
         self.fs.reinit('/')
 
         self.failed = False
-        gen = self.repo.genspec(self.app.config['generation'])
+        gen = self.repo.genspec(self.app.settings['generation'])
         for arg in args:
             arg = os.path.normpath(arg)
             metadata = self.repo.get_metadata(gen, arg)

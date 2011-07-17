@@ -24,7 +24,7 @@ import obnamlib
 class TerminalStatusPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
-        self.app.config.new_boolean(['quiet'], 'be silent')
+        self.app.settings.boolean(['quiet'], 'be silent')
 
         self.ts = ttystatus.TerminalStatus(period=0.25)
         self.ts['uploaded-bytes'] = 0
@@ -55,7 +55,7 @@ class TerminalStatusPlugin(obnamlib.ObnamPlugin):
         self.ts.add(ttystatus.ByteSpeed('uploaded-bytes'))
         self.ts.add(ttystatus.Literal(') '))
         self.ts.add(ttystatus.Pathname('current-file'))
-        if self.app.config['quiet']:
+        if self.app.settings['quiet']:
             self.ts.disable()
 
     def found_file_cb(self, filename, metadata):
@@ -73,7 +73,7 @@ class TerminalStatusPlugin(obnamlib.ObnamPlugin):
         self.ts['uploaded-bytes'] += amount
 
     def status_cb(self, msg):
-        if not self.app.config['quiet']:
+        if not self.app.settings['quiet']:
             self.ts.notify(msg)
 
     def error_message_cb(self, msg):

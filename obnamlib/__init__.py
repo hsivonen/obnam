@@ -14,16 +14,19 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import cliapp
+
+
 version = '0.17'
 
 
 import _obnam
 from pluginmgr import PluginManager
 
-class AppException(Exception):
+class AppException(cliapp.AppException):
     pass
 
-class Error(Exception):
+class Error(cliapp.AppException):
     pass
 
 DEFAULT_NODE_SIZE = 64 * 1024
@@ -57,7 +60,6 @@ from encryption import (generate_symmetric_key,
                         SymmetricKeyCache)
 
 from hooks import Hook, FilterHook, HookManager
-from cfg import Configuration
 from interp import Interpreter
 from pluginbase import ObnamPlugin
 from vfs import VirtualFileSystem, VfsFactory, VfsTests

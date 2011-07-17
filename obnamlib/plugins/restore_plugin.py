@@ -61,20 +61,20 @@ class RestorePlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
         self.app.register_command('restore', self.restore)
-        self.app.config.new_string(['to'], 'where to restore')
-        self.app.config.new_string(['generation'], 
-                                   'which generation to restore')
-        self.app.config['generation'] = 'latest'
+        self.app.settings.string(['to'], 'where to restore')
+        self.app.settings.string(['generation'], 
+                                'which generation to restore',
+                                 default='latest')
 
     def restore(self, args):
-        self.app.config.require('repository')
-        self.app.config.require('client-name')
-        self.app.config.require('generation')
-        self.app.config.require('to')
+        self.app.require('repository')
+        self.app.require('client-name')
+        self.app.require('generation')
+        self.app.require('to')
 
         logging.debug('restoring generation %s' % 
-                        self.app.config['generation'])
-        logging.debug('restoring to %s' % self.app.config['to'])
+                        self.app.settings['generation'])
+        logging.debug('restoring to %s' % self.app.settings['to'])
     
         logging.debug('restoring what: %s' % repr(args))
         if not args:
@@ -82,15 +82,15 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             args = ['/']
     
         self.repo = self.app.open_repository()
-        self.repo.open_client(self.app.config['client-name'])
-        self.fs = self.app.fsf.new(self.app.config['to'], create=True)
+        self.repo.open_client(self.app.settings['client-name'])
+        self.fs = self.app.fsf.new(self.app.settings['to'], create=True)
         self.fs.connect()
 
         self.hardlinks = Hardlinks()
         
         self.errors = False
         
-        gen = self.repo.genspec(self.app.config['generation'])
+        gen = self.repo.genspec(self.app.settings['generation'])
         for arg in args:
             metadata = self.repo.get_metadata(gen, arg)
             if metadata.isdir():
