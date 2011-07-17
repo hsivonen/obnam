@@ -14,6 +14,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import os
+
+
 class IdPath(object):
 
     '''Convert a numeric id to a pathname.
@@ -27,5 +30,5 @@ class IdPath(object):
         self.dirname = dirname
     
     def convert(self, identifier):
-        return self.dirname
+        return os.path.join(self.dirname, str(identifier))
 

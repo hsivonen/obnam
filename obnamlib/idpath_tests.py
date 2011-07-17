@@ -37,3 +37,8 @@ class IdPathTests(unittest.TestCase):
         path = self.idpath.convert(1)
         self.assert_(path.startswith(self.tempdir))
 
+    def test_different_ids_return_different_values(self):
+        path1 = self.idpath.convert(42)
+        path2 = self.idpath.convert(1024)
+        self.assertNotEqual(path1, path2)
+
