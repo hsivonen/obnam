@@ -61,16 +61,16 @@ class RestorePlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
         self.app.register_command('restore', self.restore)
-        self.app.config.new_string(['to'], 'where to restore')
-        self.app.config.new_string(['generation'], 
-                                   'which generation to restore')
-        self.app.config['generation'] = 'latest'
+        self.app.settings.string(['to'], 'where to restore')
+        self.app.settings.string(['generation'], 
+                                'which generation to restore',
+                                 default='latest')
 
     def restore(self, args):
-        self.app.config.require('repository')
-        self.app.config.require('client-name')
-        self.app.config.require('generation')
-        self.app.config.require('to')
+        self.app.require('repository')
+        self.app.require('client-name')
+        self.app.require('generation')
+        self.app.require('to')
 
         logging.debug('restoring generation %s' % 
                         self.app.config['generation'])

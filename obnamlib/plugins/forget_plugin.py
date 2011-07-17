@@ -25,13 +25,13 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
     
     def enable(self):
         self.app.register_command('forget', self.forget)
-        self.app.config.new_string(['keep'],
-                                   'policy for what generations to keep '
-                                   'when forgetting')
+        self.app.settings.string(['keep'],
+                                  'policy for what generations to keep '
+                                  'when forgetting')
 
     def forget(self, args):
-        self.app.config.require('repository')
-        self.app.config.require('client-name')
+        self.app.require('repository')
+        self.app.require('client-name')
 
         self.repo = self.app.open_repository()
         self.repo.lock_client(self.app.config['client-name'])

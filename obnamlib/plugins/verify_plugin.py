@@ -35,14 +35,14 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         self.app.register_command('verify', self.verify)
 
     def verify(self, args):
-        self.app.config.require('repository')
-        self.app.config.require('client-name')
-        self.app.config.require('generation')
+        self.app.require('repository')
+        self.app.require('client-name')
+        self.app.require('generation')
 
         logging.debug('verifying generation %s' % 
                         self.app.config['generation'])
         if not args:
-            self.app.config.require('root')
+            self.app.require('root')
             args = self.app.config['root']
         if not args:
             logging.debug('no roots/args given, so verifying everything')

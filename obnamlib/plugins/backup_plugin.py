@@ -29,22 +29,21 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
         self.app.register_command('backup', self.backup)
-        self.app.config.new_list(['root'], 'what to backup')
-        self.app.config.new_list(['exclude'], 
+        self.app.settings.string_list(['root'], 'what to backup')
+        self.app.settings.string_list(['exclude'], 
                                  'regular expression for pathnames to '
                                  'exclude from backup (can be used multiple '
                                  'times)')
-        self.app.config.new_boolean(['exclude-caches'],
+        self.app.settings.boolean(['exclude-caches'],
                                     'exclude directories (and their subdirs) '
                                     'that contain a CACHEDIR.TAG file')
-        self.app.config.new_boolean(['one-file-system'],
+        self.app.settings.boolean(['one-file-system'],
                                     'exclude directories (and their subdirs) '
                                     'that are in a different filesystem')
-        self.app.config.new_processed(['checkpoint'],
+        self.app.settings.bytesize(['checkpoint'],
                                       'make a checkpoint after a given size, '
                                       'default unit is MiB (%default)',
-                                      self.parse_checkpoint_size)
-        self.app.config['checkpoint'] = '1 GiB'
+                                    default=1024**3)
 
     def parse_checkpoint_size(self, value):
         p = obnamlib.ByteSizeParser()
@@ -57,8 +56,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         logging.info('Checkpoints every %s bytes' % 
                         self.app.config['checkpoint'])
 
-        self.app.config.require('repository')
-        self.app.config.require('client-name')
+        self.app.require('repository')
+        self.app.require('client-name')
 
         roots = self.app.config['root'] + args
 

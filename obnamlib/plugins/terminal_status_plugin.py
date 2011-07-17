@@ -24,7 +24,7 @@ import obnamlib
 class TerminalStatusPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
-        self.app.config.new_boolean(['quiet'], 'be silent')
+        self.app.settings.boolean(['quiet'], 'be silent')
 
         self.ts = ttystatus.TerminalStatus(period=0.25)
         self.ts['uploaded-bytes'] = 0

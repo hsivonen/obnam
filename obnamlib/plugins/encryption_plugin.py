@@ -23,16 +23,16 @@ import obnamlib
 class EncryptionPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
-        self.app.config.new_string(['encrypt-with'],
+        self.app.settings.string(['encrypt-with'],
                                    'PGP key with which to encrypt data '
                                         'in the backup repository')
-        self.app.config.new_string(['keyid'],
+        self.app.settings.string(['keyid'],
                                    'PGP key id to add to/remove from '
                                         'the backup repository')
-        self.app.config.new_boolean(['weak-random'],
+        self.app.settings.boolean(['weak-random'],
                                     'use /dev/urandom instead of /dev/random '
                                         'to generate symmetric keys')
-        self.app.config.new_string(['symmetric-key-bits'],
+        self.app.settings.string(['symmetric-key-bits'],
                                    'size of symmetric key, in bits')
         
         hooks = [
@@ -198,7 +198,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
                  for x in client_names]
 
     def add_key(self, args):
-        self.app.config.require('keyid')
+        self.app.require('keyid')
         repo = self.app.open_repository()
         keyid = self.app.config['keyid']
         key = obnamlib.get_public_key(keyid)
@@ -207,7 +207,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
             self.add_to_userkeys(repo, toplevel, key)
 
     def remove_key(self, args):
-        self.app.config.require('keyid')
+        self.app.require('keyid')
         repo = self.app.open_repository()
         keyid = self.app.config['keyid']
         clients = self._find_clientdirs(repo, args)

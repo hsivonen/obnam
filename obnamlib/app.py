@@ -19,6 +19,7 @@ import logging
 import os
 import socket
 import tracing
+import sys
 
 import obnamlib
 
@@ -53,58 +54,45 @@ class App(cliapp.Application):
             return os.path.join(cache, 'obnam', 'obnam.log')
 
     def setup_config(self):
-        self.config = obnamlib.Configuration([])
-        self.config.new_string(['log'], 'name of log file (%default)')
-        self.config['log'] = self.default_config_file
-        self.config.new_string(['log-level'], 
-                               'log level, one of debug, info, warning, '
-                               'error, critical (%default)')
-        self.config['log-level'] = 'info'
-        self.config.new_string(['log-keep'],
-                               'how many log files to keep? For normal users '
-                               'only (default: %default)')
-        self.config['log-keep'] = '10'
-        self.config.new_bytesize(['log-max'],
-                                 'how large can a log file get before getitng '
-                                 'rotated (%default)')
-        self.config['log-max'] = '1m'
-        self.config.new_string(['repository', 'r'], 
-                               'name of backup repository')
-        self.config.new_string(['client-name'], 'name of client (%default)')
-        self.config['client-name'] = self.deduce_client_name()
-        self.config.new_boolean(['pretend', 'dry-run', 'no-act'],
-                                'do not write or remove anything, just '
+        self.config = self.settings
+
+        self.config.string(['repository', 'r'], 'name of backup repository')
+
+        self.config.string(['client-name'], 'name of client (%default)',
+                           default=self.deduce_client_name())
+
+        self.config.boolean(['pretend', 'dry-run', 'no-act'],
+                           'do not write or remove anything, just '
                                 'pretend to do that')
 
-        self.config.new_bytesize(['node-size'],
-                                 'size of B-tree nodes on disk '
-                                 '(default: %default)')
-        self.config['node-size'] = '%s' % obnamlib.DEFAULT_NODE_SIZE
+        self.config.bytesize(['node-size'],
+                             'size of B-tree nodes on disk '
+                                 '(default: %default)',
+                              default=obnamlib.DEFAULT_NODE_SIZE)
 
-        self.config.new_bytesize(['chunk-size'],
-                                 'size of chunks of file data backed up '
-                                 '(default: %default)')
-        self.config['chunk-size'] = '%s' % obnamlib.DEFAULT_CHUNK_SIZE
+        self.config.bytesize(['chunk-size'],
+                            'size of chunks of file data backed up '
+                                 '(default: %default)',
+                             default=obnamlib.DEFAULT_CHUNK_SIZE)
 
-        self.config.new_bytesize(['upload-queue-size'],
-                                 'length of upload queue for B-tree nodes '
-                                 '(default: %default)')
-        self.config['upload-queue-size'] = \
-            '%s' % obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE
+        self.config.bytesize(['upload-queue-size'],
+                            'length of upload queue for B-tree nodes '
+                                 '(default: %default)',
+                            default=obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE)
 
-        self.config.new_bytesize(['lru-size'],
-                                 'size of LRU cache for B-tree nodes '
-                                 '(default: %default)')
-        self.config['lru-size'] = '%s' % obnamlib.DEFAULT_LRU_SIZE
+        self.config.bytesize(['lru-size'],
+                             'size of LRU cache for B-tree nodes '
+                                 '(default: %default)',
+                             default=obnamlib.DEFAULT_LRU_SIZE)
 
-        self.config.new_string(['dump-memory-profile'],
-                                'make memory profiling dumps '
+        self.config.choice(['dump-memory-profile'],
+                           ['simple', 'none', 'meliae', 'heapy'],
+                           'make memory profiling dumps '
                                 'after each checkpoint and at end? '
                                 'set to none, simple, meliae, or heapy '
                                 '(default: %default)')
-        self.config['dump-memory-profile'] = 'simple'
 
-        self.config.new_list(['trace'],
+        self.config.string_list(['trace'],
                                 'add to filename patters for which trace '
                                 'debugging logging happens')
         
@@ -173,13 +161,14 @@ class App(cliapp.Application):
         self.pm.load_plugins()
         self.pm.enable_plugins()
         self.hooks.call('plugins-loaded')
-        self.config.load()
+        self.settings.load_configs()
+        args = self.settings.parse_args(sys.argv[1:])
         self.hooks.call('config-loaded')
         self.setup_logging()
         logging.info('Obnam %s starts' % obnamlib.version)
-        if self.config.args:
-            logging.info('Executing command: %s' % self.config.args[0])
-            self.interp.execute(self.config.args[0], self.config.args[1:])
+        if args:
+            logging.info('Executing command: %s' % args[0])
+            self.interp.execute(args[0], args[1:])
         else:
             raise obnamlib.AppException('Usage error: '
                                         'must give operation on command line')
@@ -195,4 +184,10 @@ class App(cliapp.Application):
                                     self.config['upload-queue-size'],
                                     self.config['lru-size'],
                                     self.hooks)
+
+    def require(self, setting):
+        '''Make sure the named option is set.'''
+        
+        if not self.settings[setting]:
+            raise obnamlib.Error('you must use option --%s' % setting)
 
