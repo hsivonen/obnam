@@ -29,8 +29,8 @@ class ForceLockPlugin(obnamlib.ObnamPlugin):
         self.app.require('repository')
         self.app.require('client-name')
 
-        repourl = self.app.config['repository']
-        client_name = self.app.config['client-name']
+        repourl = self.app.settings['repository']
+        client_name = self.app.settings['client-name']
         logging.info('Forcing lock')
         logging.info('Repository: %s' % repourl)
         logging.info('Client: %s' % client_name)

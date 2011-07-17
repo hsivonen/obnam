@@ -60,7 +60,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
 
     @property
     def keyid(self):
-        return self.app.config['encrypt-with']
+        return self.app.settings['encrypt-with']
         
     @property
     def pubkey(self):
@@ -70,14 +70,14 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         
     @property
     def devrandom(self):
-        if self.app.config['weak-random']:
+        if self.app.settings['weak-random']:
             return '/dev/urandom'
         else:
             return '/dev/random'
 
     @property
     def symmetric_key_bits(self):
-        return int(self.app.config['symmetric-key-bits'] or '256')
+        return int(self.app.settings['symmetric-key-bits'] or '256')
 
     def _write_file(self, repo, pathname, contents):
         repo.fs.fs.write_file(pathname, contents)
@@ -200,7 +200,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
     def add_key(self, args):
         self.app.require('keyid')
         repo = self.app.open_repository()
-        keyid = self.app.config['keyid']
+        keyid = self.app.settings['keyid']
         key = obnamlib.get_public_key(keyid)
         clients = self._find_clientdirs(repo, args)
         for toplevel in self._shared + clients:
@@ -209,7 +209,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
     def remove_key(self, args):
         self.app.require('keyid')
         repo = self.app.open_repository()
-        keyid = self.app.config['keyid']
+        keyid = self.app.settings['keyid']
         clients = self._find_clientdirs(repo, args)
         for toplevel in self._shared + clients:
             self.remove_from_userkeys(repo, toplevel, keyid)

@@ -54,16 +54,16 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         logging.info('Backup starts')
 
         logging.info('Checkpoints every %s bytes' % 
-                        self.app.config['checkpoint'])
+                        self.app.settings['checkpoint'])
 
         self.app.require('repository')
         self.app.require('client-name')
 
-        roots = self.app.config['root'] + args
+        roots = self.app.settings['root'] + args
 
         self.repo = self.app.open_repository(create=True)
 
-        client_name = self.app.config['client-name']
+        client_name = self.app.settings['client-name']
         if client_name not in self.repo.list_clients():
             tracing.trace('adding new client %s' % client_name)
             self.repo.lock_root()
@@ -74,15 +74,15 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.repo.start_generation()
         self.fs = None
 
-        log = os.path.abspath(self.app.config['log'])
-        self.app.config['exclude'].append(log)
-        for pattern in self.app.config['exclude']:
+        log = os.path.abspath(self.app.settings['log'])
+        self.app.settings['exclude'].append(log)
+        for pattern in self.app.settings['exclude']:
             logging.debug('Exclude pattern: %s' % pattern)
-        self.exclude_pats = [re.compile(x) for x in self.app.config['exclude']]
+        self.exclude_pats = [re.compile(x) for x in self.app.settings['exclude']]
 
         last_checkpoint = 0
         self.memory_dump_counter = 0
-        interval = self.app.config['checkpoint']
+        interval = self.app.settings['checkpoint']
 
         if roots:
             self.fs = self.app.fsf.new(roots[0])
@@ -148,7 +148,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         return rss
 
     def dump_memory_profile(self, msg):
-        kind = self.app.config['dump-memory-profile']
+        kind = self.app.settings['dump-memory-profile']
         if kind == 'none':
             return
         logging.debug('dumping memory profiling data: %s' % msg)
@@ -184,7 +184,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 yield pathname, metadata
 
     def can_be_backed_up(self, pathname, st):
-        if self.app.config['one-file-system']:
+        if self.app.settings['one-file-system']:
             if st.st_dev != self.root_metadata.st_dev: 
                 return False
 
@@ -193,7 +193,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 tracing.trace('excluding (pattern): %s' % pathname)
                 return False
 
-        if stat.S_ISDIR(st.st_mode) and self.app.config['exclude-caches']:
+        if stat.S_ISDIR(st.st_mode) and self.app.settings['exclude-caches']:
             tag_filename = 'CACHEDIR.TAG'
             tag_contents = 'Signature: 8a477f597d28d172789f06886806bc55'
             tag_path = os.path.join(pathname, 'CACHEDIR.TAG')
@@ -247,7 +247,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         tracing.trace('backup_file_contents: %s', filename)
         self.repo.set_file_chunks(filename, [])
         f = self.fs.open(filename, 'r')
-        chunk_size = int(self.app.config['chunk-size'])
+        chunk_size = int(self.app.settings['chunk-size'])
         chunkids = []
         summer = self.repo.new_checksummer()
         while True:

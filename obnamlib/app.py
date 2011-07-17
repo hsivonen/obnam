@@ -29,45 +29,43 @@ class App(cliapp.Application):
     '''Main program for backup program.'''
     
     def add_settings(self):
-        self.config = self.settings
+        self.settings.string(['repository', 'r'], 'name of backup repository')
 
-        self.config.string(['repository', 'r'], 'name of backup repository')
-
-        self.config.string(['client-name'], 'name of client (%default)',
+        self.settings.string(['client-name'], 'name of client (%default)',
                            default=self.deduce_client_name())
 
-        self.config.boolean(['pretend', 'dry-run', 'no-act'],
+        self.settings.boolean(['pretend', 'dry-run', 'no-act'],
                            'do not write or remove anything, just '
                                 'pretend to do that')
 
-        self.config.bytesize(['node-size'],
+        self.settings.bytesize(['node-size'],
                              'size of B-tree nodes on disk '
                                  '(default: %default)',
                               default=obnamlib.DEFAULT_NODE_SIZE)
 
-        self.config.bytesize(['chunk-size'],
+        self.settings.bytesize(['chunk-size'],
                             'size of chunks of file data backed up '
                                  '(default: %default)',
                              default=obnamlib.DEFAULT_CHUNK_SIZE)
 
-        self.config.bytesize(['upload-queue-size'],
+        self.settings.bytesize(['upload-queue-size'],
                             'length of upload queue for B-tree nodes '
                                  '(default: %default)',
                             default=obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE)
 
-        self.config.bytesize(['lru-size'],
+        self.settings.bytesize(['lru-size'],
                              'size of LRU cache for B-tree nodes '
                                  '(default: %default)',
                              default=obnamlib.DEFAULT_LRU_SIZE)
 
-        self.config.choice(['dump-memory-profile'],
+        self.settings.choice(['dump-memory-profile'],
                            ['simple', 'none', 'meliae', 'heapy'],
                            'make memory profiling dumps '
                                 'after each checkpoint and at end? '
                                 'set to none, simple, meliae, or heapy '
                                 '(default: %default)')
 
-        self.config.string_list(['trace'],
+        self.settings.string_list(['trace'],
                                 'add to filename patters for which trace '
                                 'debugging logging happens')
 
@@ -124,13 +122,13 @@ class App(cliapp.Application):
         logging.info('Obnam ends')
 
     def open_repository(self, create=False): # pragma: no cover
-        repopath = self.config['repository']
+        repopath = self.settings['repository']
         repofs = self.fsf.new(repopath, create=create)
         repofs.connect()
         return obnamlib.Repository(repofs, 
-                                    self.config['node-size'],
-                                    self.config['upload-queue-size'],
-                                    self.config['lru-size'],
+                                    self.settings['node-size'],
+                                    self.settings['upload-queue-size'],
+                                    self.settings['lru-size'],
                                     self.hooks)
 
     def require(self, setting):

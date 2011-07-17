@@ -27,7 +27,7 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         
     def fsck(self, args):
         self.app.require('repository')
-        logging.debug('fsck on %s' % self.app.config['repository'])
+        logging.debug('fsck on %s' % self.app.settings['repository'])
         self.repo = self.app.open_repository()
         self.check_root()
 
