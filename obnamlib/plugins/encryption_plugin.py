@@ -22,8 +22,6 @@ import obnamlib
 
 class EncryptionPlugin(obnamlib.ObnamPlugin):
 
-    symmetric_key_bits = 256
-
     def enable(self):
         self.app.config.new_string(['encrypt-with'],
                                    'PGP key with which to encrypt data '
@@ -34,6 +32,8 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         self.app.config.new_boolean(['weak-random'],
                                     'use /dev/urandom instead of /dev/random '
                                         'to generate symmetric keys')
+        self.app.config.new_string(['symmetric-key-bits'],
+                                   'size of symmetric key, in bits')
         
         hooks = [
             ('repository-toplevel-init', self.toplevel_init),
@@ -74,6 +74,10 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
             return '/dev/urandom'
         else:
             return '/dev/random'
+
+    @property
+    def symmetric_key_bits(self):
+        return int(self.app.config['symmetric-key-bits'] or '256')
 
     def _write_file(self, repo, pathname, contents):
         repo.fs.fs.write_file(pathname, contents)
