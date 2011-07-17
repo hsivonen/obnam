@@ -44,6 +44,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                                       'make a checkpoint after a given size, '
                                       'default unit is MiB (%default)',
                                     default=1024**3)
+        self.app.settings.integer(['chunkids-per-group'],
+                                  'encode NUM chunk ids per group (%default)',
+                                  metavar='NUM',
+                                  default=obnamlib.DEFAULT_CHUNKIDS_PER_GROUP)
 
     def parse_checkpoint_size(self, value):
         p = obnamlib.ByteSizeParser()
@@ -256,7 +260,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 break
             summer.update(data)
             chunkids.append(self.backup_file_chunk(data))
-            if len(chunkids) >= obnamlib.DEFAULT_CHUNKIDS_PER_GROUP:
+            if len(chunkids) >= self.app.settings['chunkids-per-group']:
                 self.repo.append_file_chunks(filename, chunkids)
                 self.dump_memory_profile('after appending some chunkids')
                 chunkids = []
