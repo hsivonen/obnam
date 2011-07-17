@@ -26,9 +26,11 @@ class IdPath(object):
     
     '''
     
-    def __init__(self, dirname):
+    def __init__(self, dirname, depth):
         self.dirname = dirname
+        self.depth = depth
     
     def convert(self, identifier):
-        return os.path.join(self.dirname, str(identifier))
+        parts = [self.dirname] + ['foo'] * self.depth + [str(identifier)]
+        return os.path.join(*parts)
 

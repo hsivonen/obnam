@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import os
 import shutil
 import tempfile
 import unittest
@@ -25,7 +26,8 @@ class IdPathTests(unittest.TestCase):
 
     def setUp(self):
         self.tempdir = tempfile.mkdtemp()
-        self.idpath = obnamlib.IdPath(self.tempdir)
+        self.depth = 3
+        self.idpath = obnamlib.IdPath(self.tempdir, self.depth)
     
     def tearDown(self):
         shutil.rmtree(self.tempdir)
@@ -46,4 +48,10 @@ class IdPathTests(unittest.TestCase):
         path1 = self.idpath.convert(42)
         path2 = self.idpath.convert(42)
         self.assertEqual(path1, path2)
+
+    def test_uses_desired_depth(self):
+        path = self.idpath.convert(1)
+        subpath = path[len(self.tempdir + os.sep):]
+        subdir = os.path.dirname(subpath)
+        self.assertEqual(len(subdir.split(os.sep)), self.depth)
 
