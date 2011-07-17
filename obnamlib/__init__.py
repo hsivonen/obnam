@@ -14,16 +14,19 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import cliapp
+
+
 version = '0.17'
 
 
 import _obnam
 from pluginmgr import PluginManager
 
-class AppException(Exception):
+class AppException(cliapp.AppException):
     pass
 
-class Error(Exception):
+class Error(cliapp.AppException):
     pass
 
 DEFAULT_NODE_SIZE = 64 * 1024
