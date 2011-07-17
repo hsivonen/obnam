@@ -42,3 +42,8 @@ class IdPathTests(unittest.TestCase):
         path2 = self.idpath.convert(1024)
         self.assertNotEqual(path1, path2)
 
+    def test_same_id_returns_same_path(self):
+        path1 = self.idpath.convert(42)
+        path2 = self.idpath.convert(42)
+        self.assertEqual(path1, path2)
+
