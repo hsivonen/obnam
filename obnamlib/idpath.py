@@ -30,8 +30,13 @@ class IdPath(object):
     def __init__(self, dirname, depth):
         self.dirname = dirname
         self.depth = depth
+        self.bits_per_depth = 1
     
     def convert(self, identifier):
-        parts = [self.dirname] + ['foo'] * self.depth + [str(identifier)]
+        mask = 2**self.bits_per_depth - 1
+        subdirs = ['%d' % 
+                    ((identifier >> (i * self.bits_per_depth)) & mask)
+                   for i in range(self.depth)]
+        parts = [self.dirname] + subdirs + [str(identifier)]
         return os.path.join(*parts)
 
