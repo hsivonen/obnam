@@ -32,10 +32,10 @@ class ShowPlugin(obnamlib.ObnamPlugin):
     '''
 
     def enable(self):
-        self.app.register_command('clients', self.clients)
-        self.app.register_command('generations', self.generations)
-        self.app.register_command('genids', self.genids)
-        self.app.register_command('ls', self.ls)
+        self.app.add_subcommand('clients', self.clients)
+        self.app.add_subcommand('generations', self.generations)
+        self.app.add_subcommand('genids', self.genids)
+        self.app.add_subcommand('ls', self.ls)
 
     def open_repository(self):
         self.app.require('repository')
@@ -44,11 +44,13 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         self.repo.open_client(self.app.settings['client-name'])
 
     def clients(self, args):
+        '''List clients using the repository.'''
         self.open_repository()
         for client_name in self.repo.list_clients():
             print client_name
     
     def generations(self, args):
+        '''List backup generations for client.'''
         self.open_repository()
         for gen in self.repo.list_generations():
             start, end = self.repo.get_generation_times(gen)
@@ -64,11 +66,13 @@ class ShowPlugin(obnamlib.ObnamPlugin):
                               checkpoint))
     
     def genids(self, args):
+        '''List generation ids for client.'''
         self.open_repository()
         for gen in self.repo.list_generations():
             sys.stdout.write('%s\n' % gen)
 
     def ls(self, args):
+        '''List contents of a generation.'''
         self.open_repository()
         for gen in args or ["latest"]:
             gen = self.repo.genspec(gen)

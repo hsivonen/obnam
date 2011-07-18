@@ -90,9 +90,6 @@ class App(cliapp.Application):
         self.pm.locations = [self.plugins_dir()]
         self.pm.plugin_arguments = (self,)
         
-        self.interp = obnamlib.Interpreter()
-        self.register_command = self.interp.register
-
         self.setup_hooks()
 
         self.fsf = obnamlib.VfsFactory()
@@ -123,12 +120,7 @@ class App(cliapp.Application):
     def process_args(self, args):
         self.hooks.call('config-loaded')
         logging.info('Obnam %s starts' % obnamlib.version)
-        if args:
-            logging.info('Executing command: %s' % args[0])
-            self.interp.execute(args[0], args[1:])
-        else:
-            raise obnamlib.AppException('Usage error: '
-                                        'must give operation on command line')
+        cliapp.Application.process_args(self, args)
         self.hooks.call('shutdown')
         logging.info('Obnam ends')
 

@@ -28,7 +28,7 @@ import obnamlib
 class BackupPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
-        self.app.register_command('backup', self.backup)
+        self.app.add_subcommand('backup', self.backup)
         self.app.settings.string_list(['root'], 'what to backup')
         self.app.settings.string_list(['exclude'], 
                                  'regular expression for pathnames to '
@@ -55,6 +55,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         return p.parse(value)
         
     def backup(self, args):
+        '''Backup data to repository.'''
         logging.info('Backup starts')
 
         logging.info('Checkpoints every %s bytes' % 

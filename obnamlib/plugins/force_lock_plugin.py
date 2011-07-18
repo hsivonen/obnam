@@ -23,9 +23,10 @@ import obnamlib
 class ForceLockPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
-        self.app.register_command('force-lock', self.force_lock)
+        self.app.add_subcommand('force-lock', self.force_lock)
 
     def force_lock(self, args):
+        '''Force a locked repository to be open.'''
         self.app.require('repository')
         self.app.require('client-name')
 

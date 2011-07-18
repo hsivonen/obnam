@@ -23,9 +23,10 @@ import obnamlib
 class FsckPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
-        self.app.register_command('fsck', self.fsck)
+        self.app.add_subcommand('fsck', self.fsck)
         
     def fsck(self, args):
+        '''Verify internal consistency of backup repository.'''
         self.app.require('repository')
         logging.debug('fsck on %s' % self.app.settings['repository'])
         self.repo = self.app.open_repository()
