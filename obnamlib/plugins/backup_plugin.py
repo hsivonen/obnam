@@ -55,6 +55,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         return p.parse(value)
         
     def backup(self, args):
+        '''Backup data to repository.'''
         logging.info('Backup starts')
 
         logging.info('Checkpoints every %s bytes' % 

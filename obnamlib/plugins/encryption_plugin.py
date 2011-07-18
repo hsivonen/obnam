@@ -156,6 +156,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         clientlist.set_client_keyid(client_name, self.keyid)
 
     def client_keys(self, args):
+        '''List clients and their keys in the repository.'''
         repo = self.app.open_repository()
         clients = repo.list_clients()
         for client in clients:
@@ -176,6 +177,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         return keys, tops
 
     def list_keys(self, args):
+        '''List keys and the repository toplevels they're used in.'''
         repo = self.app.open_repository()
         keys, tops = self._find_keys_and_toplevels(repo)
         for keyid in keys:
@@ -184,6 +186,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
                 print '  %s' % toplevel
 
     def list_toplevels(self, args):
+        '''List repository toplevel directories and their keys.'''
         repo = self.app.open_repository()
         keys, tops = self._find_keys_and_toplevels(repo)
         for toplevel in tops:
@@ -198,6 +201,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
                  for x in client_names]
 
     def add_key(self, args):
+        '''Add a key to the repository.'''
         self.app.require('keyid')
         repo = self.app.open_repository()
         keyid = self.app.settings['keyid']
@@ -207,6 +211,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
             self.add_to_userkeys(repo, toplevel, key)
 
     def remove_key(self, args):
+        '''Remove a key from the repository.'''
         self.app.require('keyid')
         repo = self.app.open_repository()
         keyid = self.app.settings['keyid']
@@ -215,6 +220,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
             self.remove_from_userkeys(repo, toplevel, keyid)
 
     def remove_client(self, args):
+        '''Remove client and its key from repository.'''
         repo = self.app.open_repository()
         repo.lock_root()
         for client_name in args:
