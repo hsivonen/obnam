@@ -16,6 +16,7 @@
 
 
 import errno
+import fcntl
 import logging
 import math
 import os
@@ -128,7 +129,11 @@ class LocalFS(obnamlib.VirtualFileSystem):
         os.symlink(existing, self.join(new))
 
     def open(self, pathname, mode):
-        return LocalFSFile(self.join(pathname), mode)
+        f = LocalFSFile(self.join(pathname), mode)
+        flags = fcntl.fcntl(f.fileno(), fcntl.F_GETFL)
+        flags |= os.O_NOATIME
+        fcntl.fcntl(f.fileno(), fcntl.F_SETFL, flags)
+        return f
 
     def exists(self, pathname):
         return os.path.exists(self.join(pathname))
