@@ -42,7 +42,6 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     FILE_CHUNKS = 1         # subkey type for list of chunks
     FILE_METADATA = 3       # subkey type for inode fields, etc
     DIR_CONTENTS = 4        # subkey type for list of directory contents
-    FILE_CHECKSUM = 5       # subkey type for file checksum
     
     FILE_METADATA_ENCODED = 0 # subkey value for encoded obnamlib.Metadata().
     
