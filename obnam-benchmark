@@ -124,6 +124,9 @@ class ObnamBenchmark(cliapp.Application):
                               'benchmark N generations (default: %default)',
                               metavar='N',
                               default=5)
+        self.settings.string(['use-existing'], 
+                             'use existing DIR for initial generation',
+                             metavar='DIR')
 
     def process_args(self, args):
         self.require_tmpdir()
