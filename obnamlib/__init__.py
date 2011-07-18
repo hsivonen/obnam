@@ -60,7 +60,6 @@ from encryption import (generate_symmetric_key,
                         SymmetricKeyCache)
 
 from hooks import Hook, FilterHook, HookManager
-from interp import Interpreter
 from pluginbase import ObnamPlugin
 from vfs import VirtualFileSystem, VfsFactory, VfsTests
 from vfs_local import LocalFS

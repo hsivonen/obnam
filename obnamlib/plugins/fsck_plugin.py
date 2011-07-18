@@ -23,7 +23,7 @@ import obnamlib
 class FsckPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
-        self.app.register_command('fsck', self.fsck)
+        self.app.add_subcommand('fsck', self.fsck)
         
     def fsck(self, args):
         self.app.require('repository')

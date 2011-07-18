@@ -46,12 +46,12 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
             
         self._pubkey = None
         
-        self.app.register_command('client-keys', self.client_keys)
-        self.app.register_command('list-keys', self.list_keys)
-        self.app.register_command('list-toplevels', self.list_toplevels)
-        self.app.register_command('add-key', self.add_key)
-        self.app.register_command('remove-key', self.remove_key)
-        self.app.register_command('remove-client', self.remove_client)
+        self.app.add_subcommand('client-keys', self.client_keys)
+        self.app.add_subcommand('list-keys', self.list_keys)
+        self.app.add_subcommand('list-toplevels', self.list_toplevels)
+        self.app.add_subcommand('add-key', self.add_key)
+        self.app.add_subcommand('remove-key', self.remove_key)
+        self.app.add_subcommand('remove-client', self.remove_client)
         
         self._symkeys = obnamlib.SymmetricKeyCache()
         

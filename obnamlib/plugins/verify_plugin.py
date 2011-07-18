@@ -32,7 +32,7 @@ class Fail(Exception):
 class VerifyPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
-        self.app.register_command('verify', self.verify)
+        self.app.add_subcommand('verify', self.verify)
 
     def verify(self, args):
         self.app.require('repository')

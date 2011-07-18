@@ -32,10 +32,10 @@ class ShowPlugin(obnamlib.ObnamPlugin):
     '''
 
     def enable(self):
-        self.app.register_command('clients', self.clients)
-        self.app.register_command('generations', self.generations)
-        self.app.register_command('genids', self.genids)
-        self.app.register_command('ls', self.ls)
+        self.app.add_subcommand('clients', self.clients)
+        self.app.add_subcommand('generations', self.generations)
+        self.app.add_subcommand('genids', self.genids)
+        self.app.add_subcommand('ls', self.ls)
 
     def open_repository(self):
         self.app.require('repository')
