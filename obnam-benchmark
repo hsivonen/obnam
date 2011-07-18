@@ -124,6 +124,9 @@ class ObnamBenchmark(cliapp.Application):
                               'benchmark N generations (default: %default)',
                               metavar='N',
                               default=5)
+        self.settings.string(['use-existing'], 
+                             'use existing DIR for initial generation',
+                             metavar='DIR')
 
     def process_args(self, args):
         self.require_tmpdir()
@@ -173,12 +176,16 @@ class ObnamBenchmark(cliapp.Application):
                             '--drop-caches',
                             '--obnam-branch', obnam_branch,
                             '--larch-branch', larch_branch,
-                            '--initial-data', initial,
                             '--incremental-data', inc,
                             '--file-size', str(file_size),
                             '--obnam-profile', obnam_profile,
                             '--generations', str(generations),
                             '--output', output]
+                    if self.settings['use-existing']:
+                        argv.extend(['--use-existing', 
+                                     self.settings['use-existing']])
+                    else:
+                        argv.extend(['--initial-data', initial])
                     if self.settings['with-encryption']:
                         argv.extend(['--encrypt-with', self.keyid])
                     subprocess.check_call(argv, env=env)
