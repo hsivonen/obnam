@@ -62,6 +62,7 @@ class VirtualFileSystem(object):
         
     def close(self):
         '''Close connection to filesystem.'''
+        self.log_stats()
 
     def reinit(self, new_baseurl, create=False):
         '''Go back to the beginning.
