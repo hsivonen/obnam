@@ -171,6 +171,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
             self.transport.close()
             self.transport = None
         self.sftp = None
+        obnamlib.VirtualFileSystem.close(self)
 
     @ioerror_to_oserror
     def reinit(self, baseurl, create=False):
