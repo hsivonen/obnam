@@ -179,7 +179,7 @@ def encode_metadata(metadata):
     if metadata.st_mtime is None:
         mtime_a, mtime_b = 0, 0
     else:
-        mtime_a, mtime_b = metadata.st_mtime.as_integer_ratio()
+        mtime_a, mtime_b = float(metadata.st_mtime).as_integer_ratio()
     if metadata.st_atime is None:
         atime_a, atime_b = 0, 0
     else:
