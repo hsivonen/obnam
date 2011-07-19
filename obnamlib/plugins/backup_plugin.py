@@ -100,9 +100,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 
             self.remove_old_roots(absroots)
 
-            for absroot in absroots:
-                logging.info('Backing up root %s' % absroot)
-                self.fs.reinit(absroot)
+            for root in roots:
+                logging.info('Backing up root %s' % root)
+                self.fs.reinit(root)
+                absroot = self.fs.abspath('.')
                 self.root_metadata = self.fs.lstat(absroot)
                 for pathname, metadata in self.find_files(absroot):
                     tracing.trace('Backing up %s', pathname)
