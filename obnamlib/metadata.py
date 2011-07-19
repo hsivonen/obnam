@@ -176,14 +176,13 @@ def encode_metadata(metadata):
         if getattr(metadata, name) is not None:
             flags |= (1 << i)
 
-    if metadata.st_mtime is None:
-        mtime_a, mtime_b = 0, 0
-    else:
-        mtime_a, mtime_b = float(metadata.st_mtime).as_integer_ratio()
-    if metadata.st_atime is None:
-        atime_a, atime_b = 0, 0
-    else:
-        atime_a, atime_b = metadata.st_atime.as_integer_ratio()
+    def encode_time(t):
+        if t is None:
+            return 0, 0
+        else:
+            return float(t).as_integer_ratio()
+    mtime_a, mtime_b = encode_time(metadata.st_mtime)
+    atime_a, atime_b = encode_time(metadata.st_atime)
     packed = metadata_format.pack(flags,
                                   metadata.st_mode or 0,
                                   mtime_a, mtime_b,
