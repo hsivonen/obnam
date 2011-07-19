@@ -107,7 +107,7 @@ def read_metadata(fs, filename, getpwuid=None, getgrgid=None):
     metadata = Metadata()
     stat_result = fs.lstat(filename)
     for field in metadata_fields:
-        if field.startswith('st_'):
+        if field.startswith('st_') and hasattr(stat_result, field):
             setattr(metadata, field, getattr(stat_result, field))
 
     if stat.S_ISLNK(stat_result.st_mode):
