@@ -3,8 +3,9 @@ obnam (0.18) squeeze; urgency=low
   * New upstream release. Third BETA release.
   * debian/pycompat: useless, removed.
   * Converted to use dh_python2.
+  * Bump Standards-Version. No other changes necessary.
 
- -- Lars Wirzenius <liw@liw.fi>  Wed, 20 Jul 2011 23:04:35 +0100
+ -- Lars Wirzenius <liw@liw.fi>  Wed, 20 Jul 2011 23:20:44 +0100
 
 obnam (0.17) squeeze; urgency=low
 
