@@ -18,5 +18,5 @@
 import obnamlib
 
 
-obnamlib.App(progname='obnam', version=obnamlib.version).run()
+obnamlib.App(progname='obnam', version=obnamlib.__version__).run()
 
