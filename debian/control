@@ -3,19 +3,18 @@ Maintainer: Lars Wirzenius <liw@liw.fi>
 Section: python
 Priority: optional
 Standards-Version: 3.9.0
-Build-Depends: debhelper (>= 7.3.8), python-support (>= 1.0.3), 
-    python (>= 2.5), extrautils, python-coverage-test-runner, 
-    python-larch (>= 0.13), python-all-dev, python-ttystatus (>= 0.8),
-    python-paramiko, python-tracing (>= 0.2), fakeroot
+Build-Depends: debhelper (>= 7.3.8), python-all-dev (>= 2.6.3~3), 
+    extrautils, python-coverage-test-runner, 
+    python-larch (>= 0.13), python-ttystatus (>= 0.8),
+    python-paramiko, python-tracing (>= 0.2), fakeroot, python-cliapp (>= 0.14)
 Homepage: http://braawi.org/obnam/
-XS-Python-Version: >= 2.5
+X-Python-Version: >= 2.6
 
 Package: obnam
 Architecture: any
 Depends: ${shlibs:Depends}, ${python:Depends}, ${misc:Depends}, 
-    python (>= 2.5), python-larch (>= 0.13), python-ttystatus (>= 0.8),
-    python-paramiko, python-tracing (>= 0.2)
-XB-Python-Version: ${python:Versions}
+    python-larch (>= 0.13), python-ttystatus (>= 0.8),
+    python-paramiko, python-tracing (>= 0.2), python-cliapp (>= 0.14)
 Description: online backup application
  Obnam makes backups.
  .
