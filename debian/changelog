@@ -1,3 +1,10 @@
+obnam (0.18) squeeze; urgency=low
+
+  * New upstream release. Third BETA release.
+  * debian/pycompat: useless, removed.
+
+ -- Lars Wirzenius <liw@liw.fi>  Sat, 21 May 2011 08:41:29 +0100
+
 obnam (0.17) squeeze; urgency=low
 
   * New upstream release. Second BETA release.
