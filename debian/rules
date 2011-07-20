@@ -3,6 +3,9 @@
 	dh $@ --with=python2 --with-buildsystem=python_distutils
 
 override_dh_auto_build:
-	dh_auto_build $@ --with=python2 --with-buildsystem=python_distutils
+	$(MAKE) all
 	setuppy-debian-versions-match
+
+override_dh_auto_install:
+	python setup.py install --prefix=debian/obnam
 
