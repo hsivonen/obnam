@@ -5,6 +5,50 @@ Obnam NEWS
 This file summarizes changes between releases of Obnam.
 
 
+Version 0.18, released 2011-07-20; a BETA release
+-------------------------------------------------
+
+* The repository format has again changed in an incompatible manner,
+  so you will need to re-backup everything again. (If this is a problem,
+  tell me, and I'll consider adding backwards compatibility before 1.0
+  is released.)
+* New option `--exclude-caches` allows automatic exclusion of cache
+  directories that are marked as such.
+* Obnam now makes files in the repository be read-only, so that they're
+  that much harder to delete by mistake.
+* Error message about files that can't be backed up now mentions the
+  correct file.
+* Bugfix: unreadable files and directories no longer cause the backup
+  to fail. The problems are reported, but the backup continues.
+  Thanks to Jeff Epler for reporting the bug.
+* Speed improvement from Jeff Epler for excluding files from backups.
+* Various other speed improvements.
+* Bugfix: restoring symlinks now works even if the symlink is restored
+  before its target. Also, the permissions of the symlink (rather than its
+  target) are now restored correctly. Thanks to Jeff Epler for an 
+  exemplary bug report.
+* New option `--one-file-system`, from Jeff Epler.
+* New benchmarking tool `obnam-benchmark`, which is more flexible than
+  the old `run-benchmark`.
+* When encrypting/decrypting data with GnuPG, temporary files are no
+  longer used.
+* When verifying, `.../foo` and `.../foo/` now work the same way.
+* New option `--symmetric-key-bits`.
+* The chunk directory uses more hierarchy levels, and the way chunks
+  are stored there is now user-configurable (but you'll get into trouble
+  if you don't always use the same configuration). This should speed
+  things up a bit once the number of chunks grows very large.
+* New `--chunkids-per-group` option, for yet more knobs to tweak when
+  searching for optimal performance.
+* Local files are now opened using `O_NOATIME` so they can be backed
+  up without affecting timestamps.
+* Now uses the `cliapp` framework for writing command line applications.
+  The primary user-visible effect is that the manpage now has an
+  accurate list of options.
+* Bugfix: Obnam now again reports VFS I/O statistics.
+* Bugfix: Obnam can again back up live data that is accessed using sftp.
+  Thanks to Tapani Tarvainen for reporting the problem.
+
 Version 0.17, released 2011-05-21; a BETA release
 -------------------------------------------------
 

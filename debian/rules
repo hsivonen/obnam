@@ -1,11 +1,11 @@
 #!/usr/bin/make -f
 %:
-	dh $@ --with-buildsystem=python_distutils
+	dh $@ --with=python2 --with-buildsystem=python_distutils
+
+override_dh_auto_build:
+	$(MAKE) all
+	setuppy-debian-versions-match
 
 override_dh_auto_install:
 	python setup.py install --prefix=debian/obnam/usr
-	
-override_dh_auto_build:
-	dh_auto_build $@ --with-buildsystem=python_distutils
-	setuppy-debian-versions-match
 
