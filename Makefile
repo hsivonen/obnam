@@ -14,9 +14,11 @@ _obnam.so: _obnammodule.c
 obnam.1: obnam.1.in
 	./obnam --generate-manpage=obnam.1.in > obnam.1
 
-check: all
+fast-check:
 	python -m CoverageTestRunner --ignore-missing-from=without-tests
 	rm .coverage
+
+check: fast-check
 	python blackboxtest
 	fakeroot python blackboxtest
 	
