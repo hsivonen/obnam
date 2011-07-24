@@ -118,6 +118,8 @@ class App(cliapp.Application):
         return os.path.join(os.path.dirname(obnamlib.__file__), 'plugins')
 
     def process_args(self, args):
+        for pattern in self.settings['trace']:
+            tracing.trace_add_pattern(pattern)
         self.hooks.call('config-loaded')
         logging.info('Obnam %s starts' % obnamlib.__version__)
         cliapp.Application.process_args(self, args)
