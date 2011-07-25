@@ -482,7 +482,11 @@ class VfsTests(object): # pragma: no cover
         self.fs.write_file('foo', 'foo')
         self.assertRaises(OSError, self.fs.symlink, 'bar', 'foo')
 
-    def test_opens_existing_file_ok(self):
+    def test_opens_existing_file_ok_for_reading(self):
+        self.fs.write_file('foo', '')
+        self.assert_(self.fs.open('foo', 'r'))
+
+    def test_opens_existing_file_ok_for_writing(self):
         self.fs.write_file('foo', '')
         self.assert_(self.fs.open('foo', 'w'))
 
