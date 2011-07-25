@@ -130,9 +130,12 @@ class LocalFS(obnamlib.VirtualFileSystem):
 
     def open(self, pathname, mode):
         f = LocalFSFile(self.join(pathname), mode)
-        flags = fcntl.fcntl(f.fileno(), fcntl.F_GETFL)
-        flags |= os.O_NOATIME
-        fcntl.fcntl(f.fileno(), fcntl.F_SETFL, flags)
+        try:
+            flags = fcntl.fcntl(f.fileno(), fcntl.F_GETFL)
+            flags |= os.O_NOATIME
+            fcntl.fcntl(f.fileno(), fcntl.F_SETFL, flags)
+        except IOError: # pragma: no cover
+            return f # ignore any problems setting flags
         return f
 
     def exists(self, pathname):
