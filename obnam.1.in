@@ -322,6 +322,47 @@ and then tell
 about it using the
 .B \-\-encrypt\-with
 option.
+.SS "Configuration files"
+.B obnam
+will look for configuration files in a number of location.
+See the FILES section for a list.
+All files are treated as if they are were one with the contents of all
+files catenated.
+.PP
+The files are in INI format,
+and only the 
+.I [config]
+section is used
+(any other sections are ignored).
+.PP
+The long names of options are used as keys for configuration
+variables.
+Any setting that can be set from the command line can be set in a configuration
+file, in the
+.I [config]
+section.
+.PP
+For example, the options in the following command line:
+.sp 1
+.RS
+obnam --repository=/backups --exclude='\.wav$' backup
+.RE
+.sp 1
+could be replaced with the following configuration file:
+.sp 1
+.nf
+.RS
+[config]
+repository: /backup
+exclude: \.wav$
+.RE
+.fi
+.sp 1
+(You can use either 
+.I foo=value
+or
+.I foo: value
+syntax in the files.)
 .\"---------------------------------------------------------------------
 .SH OPTIONS
 .\" ------------------------------------------------------------------
@@ -337,7 +378,18 @@ It does not obey any unusual environment variables,
 but it does obey the usual ones when running external programs,
 creating temporary files, etc.
 .SH FILES
-There will some day be a configuration file, which will be documented here.
+.I /etc/obnam.conf
+.br
+.I /etc/obnam/*.conf
+.br
+.I ~/.obnam.conf
+.br
+.I ~/.config/obnam/*.conf
+.RS
+Configuration files for
+.BR obnam .
+It is not an error for any or all of the files to not exist.
+.RE
 .SH EXAMPLE
 To back up your home directory to a server:
 .IP
