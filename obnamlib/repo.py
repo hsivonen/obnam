@@ -37,54 +37,6 @@ class BadFormat(obnamlib.AppException):
     pass
 
 
-def require_root_lock(method):
-    '''Decorator for ensuring the repository's root node is locked.'''
-    
-    def helper(self, *args, **kwargs):
-        if not self.got_root_lock:
-            raise LockFail('have not got lock on root node')
-        return method(self, *args, **kwargs)
-    
-    return helper
-
-
-def require_client_lock(method):
-    '''Decorator for ensuring the currently open client is locked by us.'''
-    
-    def helper(self, *args, **kwargs):
-        if not self.got_client_lock:
-            raise LockFail('have not got lock on client')
-        return method(self, *args, **kwargs)
-    
-    return helper
-
-
-def require_open_client(method):
-    '''Decorator for ensuring repository has an open client.
-    
-    client may be read/write (locked) or read-only.
-    
-    '''
-    
-    def helper(self, *args, **kwargs):
-        if self.current_client is None:
-            raise obnamlib.Error('client is not open')
-        return method(self, *args, **kwargs)
-    
-    return helper
-
-
-def require_started_generation(method):
-    '''Decorator for ensuring a new generation has been started. '''
-    
-    def helper(self, *args, **kwargs):
-        if self.new_generation is None:
-            raise obnamlib.Error('new generation has not started')
-        return method(self, *args, **kwargs)
-    
-    return helper
-
-
 class HookedFS(object):
 
     '''A class to filter read/written data through hooks.'''
@@ -241,6 +193,26 @@ class Repository(object):
         clients = listed.union(added).difference(removed)
         return list(clients)
 
+    def require_root_lock(self):
+        '''Ensure we have the lock on the repository's root node.'''
+        if not self.got_root_lock:
+            raise LockFail('have not got lock on root node')
+
+    def require_client_lock(self):
+        '''Ensure we have the lock on the currently open client.'''
+        if not self.got_client_lock:
+                raise LockFail('have not got lock on client')
+
+    def require_open_client(self):
+        '''Ensure we have opened the client (r/w or r/o).'''
+        if self.current_client is None:
+            raise obnamlib.Error('client is not open')
+
+    def require_started_generation(self):
+        '''Ensure we have started a new generation.'''
+        if self.new_generation is None:
+            raise obnamlib.Error('new generation has not started')
+
     def lock_root(self):
         '''Lock root node.
         
@@ -260,17 +232,17 @@ class Repository(object):
         self.removed_clients = []
         self._write_format_version(self.format_version)
 
-    @require_root_lock
     def unlock_root(self):
         '''Unlock root node without committing changes made.'''
+        self.require_root_lock()
         self.added_clients = []
         self.removed_clients = []
         self.fs.remove('root.lock')
         self.got_root_lock = False
         
-    @require_root_lock
     def commit_root(self):
         '''Commit changes to root node, and unlock it.'''
+        self.require_root_lock()
         for client_name in self.added_clients:
             self.clientlist.add_client(client_name)
             self.hooks.call('repository-add-client', 
@@ -320,15 +292,14 @@ class Repository(object):
                             'with program format %s' %
                                 (on_disk, self.format_version))
         
-    @require_root_lock
     def add_client(self, client_name):
         '''Add a new client to the repository.'''
+        self.require_root_lock()
         if client_name in self.list_clients():
             raise obnamlib.Error('client %s already exists in repository' % 
                                  client_name)
         self.added_clients.append(client_name)
         
-    @require_root_lock
     def remove_client(self, client_name):
         '''Remove a client from the repository.
         
@@ -336,7 +307,7 @@ class Repository(object):
         actual file data unless other clients also use it.
         
         '''
-        
+        self.require_root_lock()
         if client_name not in self.list_clients():
             raise obnamlib.Error('client %s does not exist' % client_name)
         self.removed_clients.append(client_name)
@@ -376,9 +347,9 @@ class Repository(object):
                                                   self.lru_size, self)
         self.client.init_forest()
 
-    @require_client_lock
     def unlock_client(self):
         '''Unlock currently locked client, without committing changes.'''
+        self.require_client_lock()
         self.new_generation = None
         for genid in self.added_generations:
             self._really_remove_generation(genid)
@@ -391,9 +362,9 @@ class Repository(object):
         self.current_client = None
         self.current_client_id = None
 
-    @require_client_lock
     def commit_client(self, checkpoint=False):
         '''Commit changes to and unlock currently locked client.'''
+        self.require_client_lock()
         if self.new_generation:
             self.client.set_current_generation_is_checkpoint(checkpoint)
         self.added_generations = []
@@ -419,17 +390,16 @@ class Repository(object):
                                                   self.lru_size, self)
         self.client.init_forest()
         
-    @require_open_client
     def list_generations(self):
         '''List existing generations for currently open client.'''
+        self.require_open_client()
         return self.client.list_generations()
         
-    @require_open_client
     def get_is_checkpoint(self, genid):
         '''Is a generation a checkpoint one?'''
+        self.require_open_client()
         return self.client.get_is_checkpoint(genid)
         
-    @require_client_lock
     def start_generation(self):
         '''Start a new generation.
         
@@ -437,6 +407,7 @@ class Repository(object):
         one (or empty, if first generation).
         
         '''
+        self.require_client_lock()
         if self.new_generation is not None:
             raise obnamlib.Error('Cannot start two new generations')
         self.client.start_generation()
@@ -445,7 +416,6 @@ class Repository(object):
         self.added_generations.append(self.new_generation)
         return self.new_generation
 
-    @require_client_lock
     def _really_remove_generation(self, gen_id):
         '''Really remove a committed generation.
         
@@ -474,20 +444,20 @@ class Repository(object):
                 if not self.chunksums.chunk_is_used(checksum, chunk_id):
                     self.remove_chunk(chunk_id)
 
+        self.require_client_lock()
         logging.debug('_really_remove_generation: %d' % gen_id)
         chunk_ids = self.client.list_chunks_in_generation(gen_id)
         chunk_ids = filter_away_chunks_used_by_other_gens(chunk_ids, gen_id)
         remove_unused_chunks(chunk_ids)
         self.client.remove_generation(gen_id)
 
-    @require_client_lock
     def remove_generation(self, gen):
         '''Remove a committed generation.'''
+        self.require_client_lock()
         if gen == self.new_generation:
             raise obnamlib.Error('cannot remove started generation')
         self.removed_generations.append(gen)
 
-    @require_open_client
     def get_generation_times(self, gen):
         '''Return start and end times of a generation.
         
@@ -495,38 +465,38 @@ class Repository(object):
         
         '''
 
+        self.require_open_client()
         return self.client.get_generation_times(gen)
 
-    @require_open_client
     def listdir(self, gen, dirname):
         '''Return list of basenames in a directory within generation.'''
+        self.require_open_client()
         return self.client.listdir(gen, dirname)
         
-    @require_open_client
     def get_metadata(self, gen, filename):
         '''Return metadata for a file in a generation.'''
 
+        self.require_open_client()
         try:
             encoded = self.client.get_metadata(gen, filename)
         except KeyError:
             raise obnamlib.Error('%s does not exist' % filename)
         return obnamlib.decode_metadata(encoded)
 
-    @require_started_generation
     def create(self, filename, metadata):
         '''Create a new (empty) file in the new generation.'''
+        self.require_started_generation()
         encoded = obnamlib.encode_metadata(metadata)
         self.client.create(filename, encoded)
 
-    @require_started_generation
     def remove(self, filename):
         '''Remove file or directory or directory tree from generation.'''
+        self.require_started_generation()
         self.client.remove(filename)
 
     def _chunk_filename(self, chunkid):
         return self.chunk_idpath.convert(chunkid)
 
-    @require_started_generation
     def put_chunk(self, data, checksum):
         '''Put chunk of data into repository.
         
@@ -548,6 +518,7 @@ class Repository(object):
         def random_chunkid():
             return random.randint(0, obnamlib.MAX_ID)
         
+        self.require_started_generation()
         if self.prev_chunkid is None:
             self.prev_chunkid = random_chunkid()
         while True:
@@ -569,17 +540,16 @@ class Repository(object):
         self.chunksums.add(checksum, chunkid, self.current_client_id)
         return chunkid
         
-    @require_open_client
     def get_chunk(self, chunkid):
         '''Return data of chunk with given id.'''
+        self.require_open_client()
         return self.fs.cat(self._chunk_filename(chunkid))
         
-    @require_open_client
     def chunk_exists(self, chunkid):
         '''Does a chunk exist in the repository?'''
+        self.require_open_client()
         return self.fs.exists(self._chunk_filename(chunkid))
         
-    @require_open_client
     def find_chunks(self, checksum):
         '''Return identifiers of chunks with given checksum.
         
@@ -587,11 +557,12 @@ class Repository(object):
         
         '''
 
+        self.require_open_client()
         return self.chunksums.find(checksum)
 
-    @require_open_client
     def list_chunks(self):
         '''Return list of ids of all chunks in repository.'''
+        self.require_open_client()
         result = []
         if self.fs.exists('chunks'):
             for pathname, st in self.fs.scan_tree('chunks'):
@@ -600,7 +571,6 @@ class Repository(object):
                     result.append(int(basename, 16))
         return result
 
-    @require_open_client
     def remove_chunk(self, chunk_id):
         '''Remove a chunk from the repository.
         
@@ -612,6 +582,7 @@ class Repository(object):
         
         '''
 
+        self.require_open_client()
         self.chunklist.remove(chunk_id)
         filename = self._chunk_filename(chunk_id)
         try:
@@ -619,12 +590,11 @@ class Repository(object):
         except OSError:
             pass
 
-    @require_open_client
     def get_file_chunks(self, gen, filename):
         '''Return list of ids of chunks belonging to a file.'''
+        self.require_open_client()
         return self.client.get_file_chunks(gen, filename)
 
-    @require_started_generation
     def set_file_chunks(self, filename, chunkids):
         '''Set ids of chunks belonging to a file.
         
@@ -632,9 +602,9 @@ class Repository(object):
         
         '''
         
+        self.require_started_generation()
         self.client.set_file_chunks(filename, chunkids)
 
-    @require_started_generation
     def append_file_chunks(self, filename, chunkids):
         '''Append to list of ids of chunks belonging to a file.
         
@@ -642,12 +612,13 @@ class Repository(object):
         
         '''
         
+        self.require_started_generation()
         self.client.append_file_chunks(filename, chunkids)
         
-    @require_open_client
     def genspec(self, spec):
         '''Interpret a generation specification.'''
 
+        self.require_open_client()
         gens = self.list_generations()
         if not gens:
             raise obnamlib.Error('No generations')

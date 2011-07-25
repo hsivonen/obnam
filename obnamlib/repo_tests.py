@@ -430,7 +430,7 @@ class RepositoryClientTests(unittest.TestCase):
         self.assertEqual(self.repo.listdir(gen, '/'), [])
 
     def test_create_fails_unless_generation_is_started(self):
-        self.assertRaises(obnamlib.Error, self.repo.create, None, '', None)
+        self.assertRaises(obnamlib.Error, self.repo.create, None, None)
 
     def test_create_adds_file(self):
         self.repo.lock_client('client_name')
