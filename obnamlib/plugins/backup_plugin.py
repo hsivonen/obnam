@@ -187,9 +187,14 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         
         '''
         for pathname, st in self.fs.scan_tree(root, ok=self.can_be_backed_up):
-            metadata = obnamlib.read_metadata(self.fs, pathname)
-            if self.needs_backup(pathname, metadata):
-                yield pathname, metadata
+            try:
+                metadata = obnamlib.read_metadata(self.fs, pathname)
+                if self.needs_backup(pathname, metadata):
+                    yield pathname, metadata
+            except BaseException, e:
+                msg = 'Cannot back up %s: %s' % (pathname, str(e))
+                logging.error(msg)
+                self.app.hooks.call('error-message', msg)
 
     def can_be_backed_up(self, pathname, st):
         if self.app.settings['one-file-system']:
