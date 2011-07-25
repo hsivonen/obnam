@@ -119,10 +119,12 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     except OSError, e:
                         msg = 'Can\'t back up %s: %s' % (pathname, e.strerror)
                         logging.error(msg)
+                        logging.debug(repr(e))
                         self.app.hooks.call('error-message', msg)
                     except IOError, e:
                         msg = 'Can\'t back up %s: %s' % (pathname, e.strerror)
                         logging.error(msg)
+                        logging.debug(repr(e))
                         self.app.hooks.call('error-message', msg)
                     if self.repo.fs.bytes_written - last_checkpoint >= interval:
                         logging.info('Making checkpoint')
@@ -251,27 +253,36 @@ class BackupPlugin(obnamlib.ObnamPlugin):
     def backup_file_contents(self, filename):
         '''Back up contents of a regular file.'''
         tracing.trace('backup_file_contents: %s', filename)
+        tracing.trace('setting file chunks to empty')
         self.repo.set_file_chunks(filename, [])
+        tracing.trace('opening file for reading')
         f = self.fs.open(filename, 'r')
         chunk_size = int(self.app.settings['chunk-size'])
         chunkids = []
         summer = self.repo.new_checksummer()
         while True:
+            tracing.trace('reading some data')
             data = f.read(chunk_size)
             if not data:
+                tracing.trace('end of data')
                 break
+            tracing.trace('got %d bytes of data' % len(data))
             summer.update(data)
             chunkids.append(self.backup_file_chunk(data))
             if len(chunkids) >= self.app.settings['chunkids-per-group']:
+                tracing.trace('adding %d chunkids to file' % len(chunkids))
                 self.repo.append_file_chunks(filename, chunkids)
                 self.dump_memory_profile('after appending some chunkids')
                 chunkids = []
             self.app.hooks.call('progress-data-uploaded', len(data))
+        tracing.trace('closing file')
         f.close()
         if chunkids:
+            tracing.trace('adding final %d chunkids to file' % len(chunkids))
             self.repo.append_file_chunks(filename, chunkids)
         self.dump_memory_profile('at end of file content backup for %s' %
                                  filename)
+        tracing.trace('done backing up file contents')
         return summer.digest()
         
     def backup_file_chunk(self, data):
