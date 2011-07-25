@@ -106,11 +106,11 @@ class Plugin(object):
     
     def enable(self):
         '''Enable the plugin.'''
-        raise Exception('Unimplemented')
+        raise NotImplemented()
     
     def disable(self):
         '''Disable the plugin.'''
-        raise Exception('Unimplemented')
+        raise NotImplemented()
 
 
 class PluginManager(object):

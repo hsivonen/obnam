@@ -22,7 +22,7 @@ import sys
 import obnamlib
 
 
-class Fail(Exception):
+class Fail(obnamlib.AppException):
 
     def __init__(self, filename, reason):
         self.filename = filename

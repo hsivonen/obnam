@@ -27,12 +27,12 @@ import tracing
 import obnamlib
 
 
-class LockFail(Exception):
+class LockFail(obnamlib.AppException):
 
     pass
 
 
-class BadFormat(Exception):
+class BadFormat(obnamlib.AppException):
 
     pass
 

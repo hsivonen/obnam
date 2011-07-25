@@ -330,7 +330,7 @@ class ObnamTestCase(unittest.TestCase):
                 logging.error('file %s not in restored data' % name)
                 self.report_contents(self.data, origs)
                 self.report_contents(self.restored, restoreds)
-                raise Exception('%s not in restored data' % name)
+                raise cliapp.AppException('%s not in restored data' % name)
             restored_stat = restoreds[name]
             self.assert_same_stat(name, orig_stat, restored_stat)
             if stat.S_ISREG(orig_stat.st_mode):
@@ -340,7 +340,8 @@ class ObnamTestCase(unittest.TestCase):
                 logging.error('spurious file %s in restored data' % name)
                 self.report_contents(self.data, origs)
                 self.report_contents(self.restored, restoreds)
-                raise Exception('spurious %s in restored data' % name)
+                raise cliapp.AppException('spurious %s in restored data' % 
+                                           name)
                 
     def remove_encryption_metadata(self, parent, subdir):
         for x in ['key', 'userkeys']:

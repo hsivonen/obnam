@@ -16,8 +16,10 @@
 
 import re
 
+import obnamlib
 
-class UnitError(Exception):
+
+class UnitError(obnamlib.AppException):
 
     def __str__(self):
         return self.msg
