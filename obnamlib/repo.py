@@ -220,7 +220,8 @@ class Repository(object):
         by commit_root() or unlock_root().
         
         '''
-        
+
+        tracing.trace('locking root')        
         self.check_format_version()
         try:
             self.fs.fs.write_file('root.lock', '')
@@ -234,6 +235,7 @@ class Repository(object):
 
     def unlock_root(self):
         '''Unlock root node without committing changes made.'''
+        tracing.trace('unlocking root')
         self.require_root_lock()
         self.added_clients = []
         self.removed_clients = []
@@ -242,6 +244,7 @@ class Repository(object):
         
     def commit_root(self):
         '''Commit changes to root node, and unlock it.'''
+        tracing.trace('committing root')
         self.require_root_lock()
         for client_name in self.added_clients:
             self.clientlist.add_client(client_name)
@@ -274,6 +277,7 @@ class Repository(object):
         
     def _write_format_version(self, version):
         '''Write the desired format version to the repository.'''
+        tracing.trace('write format version')
         if not self.fs.exists('metadata'):
             self.fs.mkdir('metadata')
             self.hooks.call('repository-toplevel-init', self, 'metadata')
@@ -294,6 +298,7 @@ class Repository(object):
         
     def add_client(self, client_name):
         '''Add a new client to the repository.'''
+        tracing.trace('client_name=%s', client_name)
         self.require_root_lock()
         if client_name in self.list_clients():
             raise obnamlib.Error('client %s already exists in repository' % 
@@ -307,6 +312,8 @@ class Repository(object):
         actual file data unless other clients also use it.
         
         '''
+        
+        tracing.trace('client_name=%s', client_name)
         self.require_root_lock()
         if client_name not in self.list_clients():
             raise obnamlib.Error('client %s does not exist' % client_name)
@@ -320,6 +327,7 @@ class Repository(object):
 
         '''
 
+        tracing.trace('client_name=%s', client_name)
         self.check_format_version()
         client_id = self.clientlist.get_client_id(client_name)
         if client_id is None:
@@ -349,6 +357,7 @@ class Repository(object):
 
     def unlock_client(self):
         '''Unlock currently locked client, without committing changes.'''
+        tracing.trace('unlocking client')
         self.require_client_lock()
         self.new_generation = None
         for genid in self.added_generations:
@@ -364,6 +373,7 @@ class Repository(object):
 
     def commit_client(self, checkpoint=False):
         '''Commit changes to and unlock currently locked client.'''
+        tracing.trace('committing client (checkpoint=%s)', checkpoint)
         self.require_client_lock()
         if self.new_generation:
             self.client.set_current_generation_is_checkpoint(checkpoint)
@@ -377,6 +387,7 @@ class Repository(object):
         
     def open_client(self, client_name):
         '''Open a client for read-only operation.'''
+        tracing.trace('open r/o client_name=%s' % client_name)
         self.check_format_version()
         client_id = self.clientlist.get_client_id(client_name)
         if client_id is None:
@@ -407,6 +418,7 @@ class Repository(object):
         one (or empty, if first generation).
         
         '''
+        tracing.trace('start new generation')
         self.require_client_lock()
         if self.new_generation is not None:
             raise obnamlib.Error('Cannot start two new generations')
@@ -518,6 +530,7 @@ class Repository(object):
         def random_chunkid():
             return random.randint(0, obnamlib.MAX_ID)
         
+        tracing.trace('putting chunk (checksum=%s)', repr(checksum))
         self.require_started_generation()
         if self.prev_chunkid is None:
             self.prev_chunkid = random_chunkid()
@@ -527,6 +540,7 @@ class Repository(object):
             if not self.fs.exists(filename):
                 break
             self.prev_chunkid = random_chunkid() # pragma: no cover
+        tracing.trace('chunkid=%s', chunkid)
         self.prev_chunkid = chunkid
         if not self.fs.exists('chunks'):
             self.fs.mkdir('chunks')
@@ -582,6 +596,7 @@ class Repository(object):
         
         '''
 
+        tracing.trace('chunk_id=%s', chunk_id)
         self.require_open_client()
         self.chunklist.remove(chunk_id)
         filename = self._chunk_filename(chunk_id)

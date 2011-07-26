@@ -18,12 +18,15 @@ import os
 import shutil
 import subprocess
 import tempfile
+import tracing
 
 import obnamlib
 
 
 def generate_symmetric_key(numbits, filename='/dev/random'):
     '''Generate a random key of at least numbits for symmetric encryption.'''
+
+    tracing.trace('numbits=%d', numbits)
     
     bytes = (numbits + 7) / 8
     f = open(filename, 'rb')
@@ -80,6 +83,7 @@ def _gpg_pipe(args, data, passphrase):
     # Actually run gpg.
     
     argv = ['gpg', '--passphrase-fd', str(keypipe[0]), '-q', '--batch'] + args
+    tracing.trace('argv=%s', repr(argv))
     p = subprocess.Popen(argv, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
     out, err = p.communicate(data)
@@ -112,6 +116,7 @@ def _gpg(args, stdin='', gpghome=None):
         env['GNUPGHOME'] = gpghome
     
     argv = ['gpg', '-q', '--batch'] + args
+    tracing.trace('argv=%s', repr(argv))
     p = subprocess.Popen(argv, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE, env=env)
     out, err = p.communicate(stdin)

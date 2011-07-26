@@ -17,6 +17,7 @@
 import hashlib
 import struct
 import random
+import tracing
 
 import obnamlib
 
@@ -33,6 +34,7 @@ class ChunkList(obnamlib.RepositoryTree):
     '''
 
     def __init__(self, fs, node_size, upload_queue_size, lru_size, hooks):
+        tracing.trace('new ChunkList')
         self.key_bytes = len(self.key(0))
         obnamlib.RepositoryTree.__init__(self, fs, 'chunklist', self.key_bytes, 
                                          node_size, upload_queue_size, 
@@ -43,6 +45,8 @@ class ChunkList(obnamlib.RepositoryTree):
         return struct.pack('!Q', chunk_id)
 
     def add(self, chunk_id, checksum):
+        tracing.trace('chunk_id=%s', chunk_id)
+        tracing.trace('checksum=%s', repr(checksum))
         self.start_changes()
         self.tree.insert(self.key(chunk_id), checksum)
         
@@ -53,6 +57,7 @@ class ChunkList(obnamlib.RepositoryTree):
         raise KeyError(chunk_id)
         
     def remove(self, chunk_id):
+        tracing.trace('chunk_id=%s', chunk_id)
         self.start_changes()
         key = self.key(chunk_id)
         self.tree.remove_range(key, key)

@@ -15,6 +15,7 @@
 
 
 import larch
+import tracing
 
 import obnamlib
 
@@ -49,8 +50,10 @@ class RepositoryTree(object):
 
     def init_forest(self):
         if self.forest is None:
+            tracing.trace('initializing forest dirname=%s', self.dirname)
             assert self.tree is None
             if not self.fs.exists(self.dirname):
+                tracing.trace('%s does not exist', self.dirname)
                 return False
             self.forest = larch.open_forest(key_size=self.key_bytes,
                                             node_size=self.node_size,
@@ -61,7 +64,9 @@ class RepositoryTree(object):
         return True
 
     def start_changes(self):
+        tracing.trace('start changes for %s', self.dirname)
         if not self.fs.exists(self.dirname):
+            tracing.trace('create %s', self.dirname)
             self.fs.mkdir(self.dirname)
             self.repo.hooks.call('repository-toplevel-init', self.repo, 
                                  self.dirname)
@@ -70,13 +75,19 @@ class RepositoryTree(object):
         if self.tree is None:
             if self.forest.trees:
                 self.tree = self.forest.new_tree(self.forest.trees[-1])
+                tracing.trace('use newest tree %s (of %d)', self.tree.root.id,
+                                len(self.forest.trees))
             else:
                 self.tree = self.forest.new_tree()
+                tracing.trace('new tree root id %s', self.tree.root.id)
 
     def commit(self):
+        tracing.trace('committing')
         if self.forest:
             if self.keep_just_one_tree:
                 while len(self.forest.trees) > 1:
+                    tracing.trace('not keeping tree with root id %s',
+                                  self.forest.trees[0].root.id)
                     self.forest.remove_tree(self.forest.trees[0])
             self.forest.commit()
             self.tree = None

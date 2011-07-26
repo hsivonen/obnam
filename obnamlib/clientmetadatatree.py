@@ -19,6 +19,7 @@ import logging
 import os
 import struct
 import time
+import tracing
 
 import obnamlib
 
@@ -66,6 +67,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     
     def __init__(self, fs, client_dir, node_size, upload_queue_size, lru_size,
                  hooks):
+        tracing.trace('new ClientMetadataTree, client_dir=%s' % client_dir)
         key_bytes = len(self.hashkey(0, self.hash_name(''), 0, 0))
         obnamlib.RepositoryTree.__init__(self, fs, client_dir, key_bytes, 
                                          node_size, upload_queue_size, 
@@ -77,6 +79,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
 
     def hash_name(self, filename):
         '''Return hash of filename suitable for use as main key.'''
+        tracing.trace(repr(filename))
         def hash(s):
             return hashlib.md5(s).digest()[:4]
         dirname = os.path.dirname(filename)
@@ -151,6 +154,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         return tree.insert(key, struct.pack('!Q', value))
 
     def commit(self, current_time=time.time):
+        tracing.trace('committing ClientMetadataTree')
         if self.tree:
             now = int(current_time())
             self._insert_int(self.tree, self.genkey(self.GEN_ENDED), now)
@@ -177,6 +181,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
             return []
 
     def start_generation(self, current_time=time.time):
+        tracing.trace('start new generation')
         self.start_changes()
         gen_id = self.forest.new_id()
         now = int(current_time())
@@ -184,6 +189,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         self._insert_int(self.tree, self.genkey(self.GEN_STARTED), now)
 
     def set_current_generation_is_checkpoint(self, is_checkpoint):
+        tracing.trace('is_checkpoint=%s', is_checkpoint)
         value = 1 if is_checkpoint else 0
         key = self.genkey(self.GEN_IS_CHECKPOINT)
         self._insert_int(self.tree, key, value)
@@ -197,6 +203,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
             return 0
 
     def remove_generation(self, genid):
+        tracing.trace('genid=%s', genid)
         tree = self.find_generation(genid)
         if tree == self.tree:
             self.tree = None
@@ -217,6 +224,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
                 self._lookup_time(tree, self.GEN_ENDED))
 
     def create(self, filename, encoded_metadata):
+        tracing.trace('filename=%s', filename)
         file_id = self.get_file_id(self.tree, filename)
         gen_id = self.get_generation_id(self.tree)
         try:
@@ -224,10 +232,12 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         except KeyError:
             old_metadata = None
         if encoded_metadata != old_metadata:
+            tracing.trace('new or changed metadata')
             self.set_metadata(filename, encoded_metadata)
 
         # Add to parent's contents, unless already there.
         parent = os.path.dirname(filename)
+        tracing.trace('parent=%s', parent)
         if parent != filename: # root dir is its own parent
             basename = os.path.basename(filename)
             parent_id = self.get_file_id(self.tree, parent)
@@ -236,8 +246,10 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
             # churn in the tree if nothing changes.
             try:
                 self.tree.lookup(key)
+                tracing.trace('was already in parent') # pragma: no cover
             except KeyError:
                 self.tree.insert(key, basename)
+                tracing.trace('added to parent')
 
     def get_metadata(self, genid, filename):
         tree = self.find_generation(genid)
@@ -247,6 +259,8 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         return tree.lookup(key)
 
     def set_metadata(self, filename, encoded_metadata):
+        tracing.trace('filename=%s', filename)
+
         file_id = self.get_file_id(self.tree, filename)
         key1 = self.fskey(file_id, self.FILE_NAME, file_id)
         self.tree.insert(key1, filename)
@@ -256,6 +270,8 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         self.tree.insert(key2, encoded_metadata)
 
     def remove(self, filename):
+        tracing.trace('filename=%s', filename)
+
         file_id = self.get_file_id(self.tree, filename)
         genid = self.get_generation_id(self.tree)
 
@@ -320,6 +336,9 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         tree.insert(key, encoded)
 
     def set_file_chunks(self, filename, chunkids):
+        tracing.trace('filename=%s', filename)
+        tracing.trace('chunkids=%s', repr(chunkids))
+    
         file_id = self.get_file_id(self.tree, filename)
         minkey = self.fskey(file_id, self.FILE_CHUNKS, 0)
         maxkey = self.fskey(file_id, self.FILE_CHUNKS, self.SUBKEY_MAX)
@@ -334,6 +353,9 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         self.append_file_chunks(filename, chunkids)
 
     def append_file_chunks(self, filename, chunkids):
+        tracing.trace('filename=%s', filename)
+        tracing.trace('chunkids=%s', repr(chunkids))
+
         file_id = self.get_file_id(self.tree, filename)
 
         minkey = self.fskey(file_id, self.FILE_CHUNKS, 0)

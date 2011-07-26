@@ -127,6 +127,7 @@ class App(cliapp.Application):
         logging.info('Obnam ends')
 
     def open_repository(self, create=False): # pragma: no cover
+        logging.debug('opening repository (create=%s)' % create)
         repopath = self.settings['repository']
         repofs = self.fsf.new(repopath, create=create)
         repofs.connect()

@@ -50,6 +50,8 @@ class LocalFS(obnamlib.VirtualFileSystem):
     chunk_size = 1024 * 1024
     
     def __init__(self, baseurl, create=False):
+        tracing.trace('baseurl=%s', baseurl)
+        tracing.trace('create=%s', create)
         obnamlib.VirtualFileSystem.__init__(self, baseurl)
         self.reinit(baseurl, create=create)
 
@@ -57,9 +59,12 @@ class LocalFS(obnamlib.VirtualFileSystem):
         # We fake chdir so that it doesn't mess with the caller's 
         # perception of current working directory. This also benefits
         # unit tests. To do this, we store the baseurl as the cwd.
+        tracing.trace('baseurl=%s', baseurl)
+        tracing.trace('create=%s', create)
         self.cwd = os.path.abspath(baseurl)
         if not self.isdir('.'):
             if create:
+                tracing.trace('creating %s', baseurl)
                 os.mkdir(baseurl)
             else:
                 raise OSError(errno.ENOENT, self.cwd)
@@ -68,12 +73,14 @@ class LocalFS(obnamlib.VirtualFileSystem):
         return self.cwd
 
     def chdir(self, pathname):
+        tracing.trace('LocalFS(%s).chdir(%s)', self.baseurl, pathname)
         newcwd = os.path.abspath(self.join(pathname))
         if not os.path.isdir(newcwd):
             raise OSError('%s is not a directory' % newcwd)
         self.cwd = newcwd
 
     def lock(self, lockname):
+        tracing.trace('lockname=%s', lockname)
         try:
             self.write_file(lockname, "")
         except OSError, e:
@@ -84,6 +91,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
                 raise
 
     def unlock(self, lockname):
+        tracing.trace('lockname=%s', lockname)
         if self.exists(lockname):
             self.remove(lockname)
 
@@ -121,21 +129,28 @@ class LocalFS(obnamlib.VirtualFileSystem):
             raise OSError(ret, errno.errorcode[ret], pathname)
 
     def link(self, existing, new):
+        tracing.trace('existing=%s', existing)
+        tracing.trace('new=%s', new)
         os.link(self.join(existing), self.join(new))
 
     def readlink(self, pathname):
         return os.readlink(self.join(pathname))
 
     def symlink(self, existing, new):
+        tracing.trace('existing=%s', existing)
+        tracing.trace('new=%s', new)
         os.symlink(existing, self.join(new))
 
     def open(self, pathname, mode):
+        tracing.trace('pathname=%s', pathname)
+        tracing.trace('mode=%s', mode)
         f = LocalFSFile(self.join(pathname), mode)
         try:
             flags = fcntl.fcntl(f.fileno(), fcntl.F_GETFL)
             flags |= os.O_NOATIME
             fcntl.fcntl(f.fileno(), fcntl.F_SETFL, flags)
-        except IOError: # pragma: no cover
+        except IOError, e: # pragma: no cover
+            tracing.trace('fcntl F_SETFL failed: %s', repr(e))
             return f # ignore any problems setting flags
         return f
 
@@ -146,6 +161,8 @@ class LocalFS(obnamlib.VirtualFileSystem):
         return os.path.isdir(self.join(pathname))
 
     def mknod(self, pathname, mode):
+        tracing.trace('pathmame=%s', pathname)
+        tracing.trace('mode=%o', mode)
         os.mknod(self.join(pathname), mode)
 
     def mkdir(self, pathname):

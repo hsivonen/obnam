@@ -15,6 +15,7 @@
 
 
 import struct
+import tracing
 
 import obnamlib
 
@@ -30,6 +31,7 @@ class ChecksumTree(obnamlib.RepositoryTree):
 
     def __init__(self, fs, name, checksum_length, node_size, 
                  upload_queue_size, lru_size, hooks):
+        tracing.trace('new ChecksumTree name=%s' % name)
         self.fmt = '!%dsQQ' % checksum_length
         key_bytes = len(self.key('', 0, 0))
         obnamlib.RepositoryTree.__init__(self, fs, name, key_bytes, node_size, 
@@ -43,6 +45,9 @@ class ChecksumTree(obnamlib.RepositoryTree):
         return struct.unpack(self.fmt, key)
 
     def add(self, checksum, chunk_id, client_id):
+        tracing.trace('checksum=%s', repr(checksum))
+        tracing.trace('chunk_id=%s', chunk_id)
+        tracing.trace('client_id=%s', client_id)
         self.start_changes()
         key = self.key(checksum, chunk_id, client_id)
         self.tree.insert(key, '')
@@ -58,6 +63,9 @@ class ChecksumTree(obnamlib.RepositoryTree):
             return []
 
     def remove(self, checksum, chunk_id, client_id):
+        tracing.trace('checksum=%s', repr(checksum))
+        tracing.trace('chunk_id=%s', chunk_id)
+        tracing.trace('client_id=%s', client_id)
         self.start_changes()
         key = self.key(checksum, chunk_id, client_id)
         self.tree.remove_range(key, key)
