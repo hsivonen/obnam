@@ -79,8 +79,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.repo.start_generation()
         self.fs = None
 
-        log = os.path.abspath(self.app.settings['log'])
-        self.app.settings['exclude'].append(log)
+        log = self.app.settings['log']
+        if log:
+            log = self.app.settings['log']
+            self.app.settings['exclude'].append(log)
         for pattern in self.app.settings['exclude']:
             logging.debug('Exclude pattern: %s' % pattern)
         self.exclude_pats = [re.compile(x) for x in self.app.settings['exclude']]
