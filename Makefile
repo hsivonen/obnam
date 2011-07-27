@@ -24,3 +24,4 @@ check: fast-check
 clean:
 	rm -f _obnam.so obnamlib/*.pyc obnamlib/plugins/*.pyc test-plugins/*.pyc
 	rm -f blackboxtest.log blackboxtest-obnam.log obnam.prof obnam.1
+	rm -rf build
