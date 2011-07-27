@@ -140,7 +140,3 @@ class App(cliapp.Application):
                                     self.settings['idpath-bits'],
                                     self.settings['idpath-skip'])
 
-    def require(self, setting):
-        '''Make sure the named option is set.'''
-        self.settings.require(setting)
-

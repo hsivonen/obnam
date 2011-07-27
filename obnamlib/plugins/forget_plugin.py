@@ -31,8 +31,8 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
 
     def forget(self, args):
         '''Forget (remove) specified backup generations.'''
-        self.app.require('repository')
-        self.app.require('client-name')
+        self.app.settings.require('repository')
+        self.app.settings.require('client-name')
 
         self.repo = self.app.open_repository()
         self.repo.lock_client(self.app.settings['client-name'])

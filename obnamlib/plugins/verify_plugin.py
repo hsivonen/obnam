@@ -36,14 +36,14 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
 
     def verify(self, args):
         '''Verify that live data and backed up data match.'''
-        self.app.require('repository')
-        self.app.require('client-name')
-        self.app.require('generation')
+        self.app.settings.require('repository')
+        self.app.settings.require('client-name')
+        self.app.settings.require('generation')
 
         logging.debug('verifying generation %s' % 
                         self.app.settings['generation'])
         if not args:
-            self.app.require('root')
+            self.app.settings.require('root')
             args = self.app.settings['root']
         if not args:
             logging.debug('no roots/args given, so verifying everything')

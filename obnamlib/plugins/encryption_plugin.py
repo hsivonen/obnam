@@ -202,7 +202,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
 
     def add_key(self, args):
         '''Add a key to the repository.'''
-        self.app.require('keyid')
+        self.app.settings.require('keyid')
         repo = self.app.open_repository()
         keyid = self.app.settings['keyid']
         key = obnamlib.get_public_key(keyid)
@@ -212,7 +212,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
 
     def remove_key(self, args):
         '''Remove a key from the repository.'''
-        self.app.require('keyid')
+        self.app.settings.require('keyid')
         repo = self.app.open_repository()
         keyid = self.app.settings['keyid']
         clients = self._find_clientdirs(repo, args)

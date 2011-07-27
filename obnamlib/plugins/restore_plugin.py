@@ -68,10 +68,10 @@ class RestorePlugin(obnamlib.ObnamPlugin):
 
     def restore(self, args):
         '''Restore some or all files from a generation.'''
-        self.app.require('repository')
-        self.app.require('client-name')
-        self.app.require('generation')
-        self.app.require('to')
+        self.app.settings.require('repository')
+        self.app.settings.require('client-name')
+        self.app.settings.require('generation')
+        self.app.settings.require('to')
 
         logging.debug('restoring generation %s' % 
                         self.app.settings['generation'])

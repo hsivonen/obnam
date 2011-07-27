@@ -61,8 +61,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         logging.info('Checkpoints every %s bytes' % 
                         self.app.settings['checkpoint'])
 
-        self.app.require('repository')
-        self.app.require('client-name')
+        self.app.settings.require('repository')
+        self.app.settings.require('client-name')
 
         roots = self.app.settings['root'] + args
 
