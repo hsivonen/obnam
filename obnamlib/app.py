@@ -142,7 +142,5 @@ class App(cliapp.Application):
 
     def require(self, setting):
         '''Make sure the named option is set.'''
-        
-        if not self.settings[setting]:
-            raise obnamlib.Error('you must use option --%s' % setting)
+        self.settings.require(setting)
 
