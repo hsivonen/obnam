@@ -3,10 +3,15 @@ Maintainer: Lars Wirzenius <liw@liw.fi>
 Section: python
 Priority: optional
 Standards-Version: 3.9.2
-Build-Depends: debhelper (>= 7.3.8), python-all-dev (>= 2.6.3~3), 
-    extrautils, python-coverage-test-runner, 
-    python-larch (>= 0.13), python-ttystatus (>= 0.8),
-    python-paramiko, python-tracing (>= 0.2), fakeroot, python-cliapp (>= 0.14)
+Build-Depends: debhelper (>= 7.3.8), 
+    python-all-dev (>= 2.6.3~3), 
+    python-coverage-test-runner, 
+    python-larch (>= 0.13), 
+    python-ttystatus (>= 0.8),
+    python-paramiko, 
+    python-tracing (>= 0.2), 
+    fakeroot, 
+    python-cliapp (>= 0.14)
 Homepage: http://braawi.org/obnam/
 X-Python-Version: >= 2.6
 
