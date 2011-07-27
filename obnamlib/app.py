@@ -34,10 +34,6 @@ class App(cliapp.Application):
         self.settings.string(['client-name'], 'name of client (%default)',
                            default=self.deduce_client_name())
 
-        self.settings.boolean(['pretend', 'dry-run', 'no-act'],
-                           'do not write or remove anything, just '
-                                'pretend to do that')
-
         self.settings.bytesize(['node-size'],
                              'size of B-tree nodes on disk '
                                  '(default: %default)',
