@@ -1,0 +1,133 @@
+.\" Copyright 2011 Lars Wirzenius <liw@liw.fi>
+.\" 
+.\" This program is free software: you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation, either version 3 of the License, or
+.\" (at your option) any later version.
+.\" 
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\" 
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program.  If not, see <http://www.gnu.org/licenses/>.
+.\"
+.TH OBNAM-BENCHMARK 1
+.SH NAME
+obnam-benchmark \- benchmark obnam
+.SH SYNOPSIS
+.SH DESCRIPTION
+.B obnam-benchmark
+benchmarks the
+.BR obnam (1)
+backup application,
+by measuring how much time it takes to do a backup, restore, etc,
+in various scenarios.
+.B obnam-benchmark
+uses the
+.BR seivot (1)
+tool for actually running the benchmarks,
+but makes some helpful assumptions about things,
+to make it simpler to run than running
+.B seivot
+directly.
+.PP
+Benchmarks are run using two different usage profiles:
+.I mailspool
+(all files are small), and
+.I mediaserver 
+(all files are big).
+For each profile,
+test data of the desired total size is generated,
+backed up,
+and then several incremental generations are backed up,
+each adding some more generated test data.
+Then other operations are run against the backup repository:
+restoring,
+listing the contents of,
+and removing each generation.
+.PP
+The result of the benchmark is a 
+.I .seivot
+file per profile,
+plus a Python profiler file for each run of
+.BR obnam .
+These are stored in 
+.IR ../benchmarks .
+A set of
+.I .seivot
+files can be summarized for comparison with
+.BR seivots-summary (1).
+The profiling files can be viewed with the usual Python tools:
+see the 
+.B pstats
+module.
+.PP
+The benchmarks are run against a version of 
+.B obnam
+checked out from version control.
+It is not (currently) possible to run the benchmark against an installed
+version of
+.BR obnam.
+Also the
+.I larch
+Python library,
+which 
+.B obnam
+needs,
+needs to be checked out from version control.
+The
+.B \-\-obnam\-branch
+and
+.B \-\-larch\-branch
+options set the locations,
+if the defaults are not correct.
+.SH OPTIONS
+.SH ENVIRONMENT
+.TP
+.BR TMPDIR
+This variable 
+.I must
+be set.
+It controls where the temporary files (generated test data) is stored.
+If this variable was not set,
+they'd be put into
+.IR /tmp ,
+which easily fills up,
+to the detriment of the entire system.
+Thus.
+.B obnam-benchmark
+requires that the location is set explicitly.
+(You can still use
+.I /tmp
+if you want, but you have to set 
+.B TMPDIR
+explicitly.)
+.SH FILES
+.TP
+.BR ../benchmarks/
+The default directory where results of the benchmark are stored,
+in a subdirectory named after the branch and revision numbers.
+.SH EXAMPLE
+To run a small benchmark:
+.IP
+TMPDIR=/var/tmp obnam-benchmark --size=10m/1m
+.PP
+To run a benchmark using existing data:
+.IP
+TMPDIR=/var/tmp obnam-benchmark --use-existing=$HOME/Mail
+.PP
+To view the currently available benchmark results:
+.IP
+seivots-summary ../benchmarks/*/*mail*.seivot | less -S
+.br
+seivots-summary ../benchmarks/*/*media*.seivot | less -S
+.PP
+(You need to run
+.B seivots-summary
+once per usage profile.)
+.SH "SEE ALSO"
+.BR obnam (1),
+.BR seivot (1),
+.BR seivots-summary (1).

@@ -3,7 +3,7 @@ PYTHON = python
 prefix = /usr/local
 bindir = $(prefix)/bin
 
-all: _obnam.so obnam.1
+all: _obnam.so obnam.1 obnam-benchmark.1
 
 _obnam.so: _obnammodule.c
 	if $(PYTHON) setup.py build > setup.log 2>&1; then \
@@ -13,6 +13,10 @@ _obnam.so: _obnammodule.c
 
 obnam.1: obnam.1.in
 	./obnam --generate-manpage=obnam.1.in > obnam.1
+
+obnam-benchmark.1: obnam-benchmark.1.in obnam-benchmark
+	./obnam-benchmark --generate-manpage=obnam-benchmark.1.in \
+		> obnam-benchmark.1
 
 fast-check:
 	python -m CoverageTestRunner --ignore-missing-from=without-tests
@@ -24,4 +28,5 @@ check: fast-check
 clean:
 	rm -f _obnam.so obnamlib/*.pyc obnamlib/plugins/*.pyc test-plugins/*.pyc
 	rm -f blackboxtest.log blackboxtest-obnam.log obnam.prof obnam.1
+	rm -f obnam-benchmark.1
 	rm -rf build
