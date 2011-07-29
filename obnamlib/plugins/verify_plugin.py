@@ -18,6 +18,7 @@ import logging
 import os
 import stat
 import sys
+import urlparse
 
 import obnamlib
 
@@ -54,12 +55,17 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         self.repo.open_client(self.app.settings['client-name'])
         self.fs = self.app.fsf.new(args[0])
         self.fs.connect()
-        self.fs.reinit('/')
+        t = urlparse.urlparse(args[0])
+        root_url = urlparse.urlunparse((t[0], t[1], '/', t[3], t[4], t[5]))
+        logging.debug('t: %s' % repr(t))
+        logging.debug('root_url: %s' % repr(root_url))
+        self.fs.reinit(root_url)
 
         self.failed = False
         gen = self.repo.genspec(self.app.settings['generation'])
         for arg in args:
-            arg = os.path.normpath(arg)
+            scheme, netloc, path, query, fragment = urlparse.urlsplit(arg)
+            arg = os.path.normpath(path)
             metadata = self.repo.get_metadata(gen, arg)
             try:
                 if metadata.isdir():
