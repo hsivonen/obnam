@@ -127,6 +127,9 @@ class ObnamBenchmark(cliapp.Application):
         self.settings.string(['use-existing'], 
                              'use existing DIR for initial generation',
                              metavar='DIR')
+        self.settings.boolean(['use-sftp-repository'],
+                              'access the repository over SFTP '
+                                '(requires ssh to localhost to work)')
 
     def process_args(self, args):
         self.require_tmpdir()
