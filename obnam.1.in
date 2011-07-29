@@ -220,6 +220,18 @@ unless it starts with
 in which case it is relative to the user's home directory on the server.
 .PP
 See the EXAMPLES section for examples of URLs.
+.PP
+You can use
+.B sftp
+URLs for the repository, or the live data (root),
+but note that due to limitations in the protocol,
+and its implementation in the 
+.B paramiko
+library,
+some things will not work very well for accessing live data over
+.BR sftp .
+Most importantly,
+the handling of of hardlinks is rather suboptimal.
 .SS "Generation specifications"
 When not using the latest generation,
 you will need to specify which one you need.
