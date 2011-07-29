@@ -190,7 +190,7 @@ class ObnamBenchmark(cliapp.Application):
                     else:
                         argv.extend(['--initial-data', initial])
                     if self.settings['use-sftp-repository']:
-                        argv.append('--use-sftp')
+                        argv.append('--use-sftp-repository')
                     if self.settings['with-encryption']:
                         argv.extend(['--encrypt-with', self.keyid])
                     subprocess.check_call(argv, env=env)
