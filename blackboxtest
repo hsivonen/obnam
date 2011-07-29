@@ -61,8 +61,10 @@ class ObnamTestCase(unittest.TestCase):
         self.data_dir = self.mkdir('data')
         if os.environ.get('OBNAM_TEST_SFTP_ROOT') == 'yes':
             self.data = 'sftp://localhost%s' % self.data_dir
+            self.round_time = lambda t: float(int(t))
         else:
             self.data = self.data_dir
+            self.round_time = lambda t: t
 
         self.repo_dir = self.mkdir('repo')
         if os.environ.get('OBNAM_TEST_SFTP_REPOSITORY') == 'yes':
@@ -256,6 +258,8 @@ class ObnamTestCase(unittest.TestCase):
         msg = ('%s stat field %s difference: %s vs %s' %
                (filename, fieldname, repr(field1), repr(field2)))
         if type(field1) == float:
+            field1 = self.round_time(field1)
+            field2 = self.round_time(field2)
             self.assertAlmostEqual(field1, field2, places=5, msg=msg)
         else:
             self.assertEqual(field1, field2, msg=msg)
