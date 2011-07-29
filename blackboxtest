@@ -284,8 +284,13 @@ class ObnamTestCase(unittest.TestCase):
         self.assert_equal_stat_fields(name, stat1, stat2, 'st_blocks')
         self.assert_equal_stat_fields(name, stat1, stat2, 'st_gid')
         self.assert_equal_stat_fields(name, stat1, stat2, 'st_mode')
-        self.assert_equal_stat_fields(name, Fake(stat1), Fake(stat2), 'st_mtime')
-        self.assert_equal_stat_fields(name, stat1, stat2, 'st_nlink')
+        self.assert_equal_stat_fields(name, Fake(stat1), Fake(stat2), 
+                                      'st_mtime')
+        if self.data == self.data_dir:
+            # We can only check this when accessing the live data via the
+            # local filesystem. SFTP (or paramiko) does not return st_nlink,
+            # so we fake it, so this test always fails for them.
+            self.assert_equal_stat_fields(name, stat1, stat2, 'st_nlink')
         self.assert_equal_stat_fields(name, stat1, stat2, 'st_size')
         self.assert_equal_stat_fields(name, stat1, stat2, 'st_uid')
 
