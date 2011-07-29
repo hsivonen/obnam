@@ -24,6 +24,10 @@ fast-check:
 
 check: fast-check
 	python blackboxtest
+
+network-tests:
+	./test-sftpfs
+	OBNAM_TEST_SFTP_ROOT=yes OBNAM_TEST_SFTP_REPOSITORY=yes ./blackboxtest
 	
 clean:
 	rm -f _obnam.so obnamlib/*.pyc obnamlib/plugins/*.pyc test-plugins/*.pyc

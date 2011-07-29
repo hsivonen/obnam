@@ -443,8 +443,11 @@ class VfsTests(object): # pragma: no cover
         self.fs.rename('foo', 'bar')
         self.assertEqual(self.fs.cat('bar'), 'foo')
 
-    def test_lstat_returns_result(self):
-        self.assert_(self.fs.lstat('.'))
+    def test_lstat_returns_result_with_all_required_fields(self):
+        st = self.fs.lstat('.')
+        for field in obnamlib.metadata_fields:
+            if field.startswith('st_'):
+                self.assert_(hasattr(st, field), 'stat must return %s' % field)
 
     def test_lstat_raises_oserror_for_nonexistent_entry(self):
         self.assertRaises(OSError, self.fs.lstat, 'notexists')

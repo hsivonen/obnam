@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (C) 2009, 2010  Lars Wirzenius <liw@liw.fi>
+# Copyright (C) 2009, 2010, 2011  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -57,9 +57,28 @@ class ObnamTestCase(unittest.TestCase):
     def setUp(self):
         self.client_name = 'client_name'
         self.tempdir = tempfile.mkdtemp()
-        self.data = self.mkdir('data')
-        self.repo = self.mkdir('repo')
-        self.restored = self.mkdir('restored')
+
+        self.data_dir = self.mkdir('data')
+        if os.environ.get('OBNAM_TEST_SFTP_ROOT') == 'yes':
+            self.data = 'sftp://localhost%s' % self.data_dir
+            self.round_time = lambda t: float(int(t))
+        else:
+            self.data = self.data_dir
+            self.round_time = lambda t: t
+
+        self.repo_dir = self.mkdir('repo')
+        if os.environ.get('OBNAM_TEST_SFTP_REPOSITORY') == 'yes':
+            self.repo = 'sftp://localhost%s' % self.repo_dir
+        else:
+            self.repo = self.repo_dir
+
+        self.restored_dir = self.mkdir('restored')
+        # restored_dir and url are always the same, since we can't do proper
+        # restoreds over SFTP, so we always do them to the local filesystem.
+        # This is because SFTP fails to support hardlink creation, mknod,
+        # and perhaps other stuff.
+        self.restored = self.restored_dir
+
         self.gpghome = os.path.join(self.tempdir, 'gpghome')
         shutil.copytree('test-gpghome', self.gpghome)
         self.setUpHook()
@@ -229,7 +248,7 @@ class ObnamTestCase(unittest.TestCase):
     def open_repository(self):
         '''Open the repository.'''
 
-        fs = obnamlib.LocalFS(self.repo)
+        fs = obnamlib.LocalFS(self.repo_dir)
         s = obnamlib.Repository(fs, obnamlib.DEFAULT_NODE_SIZE,
                                 obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
                                 obnamlib.DEFAULT_LRU_SIZE, None,
@@ -245,6 +264,8 @@ class ObnamTestCase(unittest.TestCase):
         msg = ('%s stat field %s difference: %s vs %s' %
                (filename, fieldname, repr(field1), repr(field2)))
         if type(field1) == float:
+            field1 = self.round_time(field1)
+            field2 = self.round_time(field2)
             self.assertAlmostEqual(field1, field2, places=5, msg=msg)
         else:
             self.assertEqual(field1, field2, msg=msg)
@@ -263,8 +284,13 @@ class ObnamTestCase(unittest.TestCase):
         self.assert_equal_stat_fields(name, stat1, stat2, 'st_blocks')
         self.assert_equal_stat_fields(name, stat1, stat2, 'st_gid')
         self.assert_equal_stat_fields(name, stat1, stat2, 'st_mode')
-        self.assert_equal_stat_fields(name, Fake(stat1), Fake(stat2), 'st_mtime')
-        self.assert_equal_stat_fields(name, stat1, stat2, 'st_nlink')
+        self.assert_equal_stat_fields(name, Fake(stat1), Fake(stat2), 
+                                      'st_mtime')
+        if self.data == self.data_dir:
+            # We can only check this when accessing the live data via the
+            # local filesystem. SFTP (or paramiko) does not return st_nlink,
+            # so we fake it, so this test always fails for them.
+            self.assert_equal_stat_fields(name, stat1, stat2, 'st_nlink')
         self.assert_equal_stat_fields(name, stat1, stat2, 'st_size')
         self.assert_equal_stat_fields(name, stat1, stat2, 'st_uid')
 
@@ -320,26 +346,26 @@ class ObnamTestCase(unittest.TestCase):
         
         '''
         
-        origs = dict(self.find_everything(self.data))
-        basename = os.path.basename(self.data)
-        restored2 = os.path.join(self.restored, './' + self.data)
+        origs = dict(self.find_everything(self.data_dir))
+        basename = os.path.basename(self.data_dir)
+        restored2 = os.path.join(self.restored_dir, './' + self.data_dir)
         restoreds = dict(self.find_everything(restored2))
         
         for name, orig_stat in origs.iteritems():
             if name not in restoreds:
                 logging.error('file %s not in restored data' % name)
-                self.report_contents(self.data, origs)
-                self.report_contents(self.restored, restoreds)
+                self.report_contents(self.data_dir, origs)
+                self.report_contents(self.restored_dir, restoreds)
                 raise cliapp.AppException('%s not in restored data' % name)
             restored_stat = restoreds[name]
             self.assert_same_stat(name, orig_stat, restored_stat)
             if stat.S_ISREG(orig_stat.st_mode):
-                self.assert_same_contents(name, self.data, restored2)
+                self.assert_same_contents(name, self.data_dir, restored2)
         for name, restored_stat in restoreds.iteritems():
             if name not in origs:
                 logging.error('spurious file %s in restored data' % name)
-                self.report_contents(self.data, origs)
-                self.report_contents(self.restored, restoreds)
+                self.report_contents(self.data_dir, origs)
+                self.report_contents(self.restored_dir, restoreds)
                 raise cliapp.AppException('spurious %s in restored data' % 
                                            name)
                 
@@ -353,8 +379,8 @@ class ObnamTestCase(unittest.TestCase):
 class RestoreTests(ObnamTestCase):
 
     def setUpHook(self):
-        self.create_file(self.data, 'foo', 'foo')
-        self.create_file(self.data, 'bar', 'bar')
+        self.create_file(self.data_dir, 'foo', 'foo')
+        self.create_file(self.data_dir, 'bar', 'bar')
         self.backup()
 
     def test_restores_identical_data(self):
@@ -362,18 +388,18 @@ class RestoreTests(ObnamTestCase):
         self.assert_restored_correctly()
 
     def test_restores_individual_file(self):
-        bar_orig = os.path.join(self.data, 'bar')
+        bar_orig = os.path.join(self.data_dir, 'bar')
         self.restore([bar_orig])
-        restored_files = [os.path.join(self.restored, x)
-                          for x, y in self.find_everything(self.restored)
+        restored_files = [os.path.join(self.restored_dir, x)
+                          for x, y in self.find_everything(self.restored_dir)
                           if stat.S_ISREG(y.st_mode)]
-        bar_restored = os.path.join(self.restored, './' + bar_orig)
+        bar_restored = os.path.join(self.restored_dir, './' + bar_orig)
         bar_restored = os.path.normpath(bar_restored)
         self.assertEqual(restored_files, [bar_restored])
         self.assertFilesEqual(bar_orig, bar_restored)
 
     def test_restores_sparse_file(self):
-        pathname = os.path.join(self.data, 'sparse')
+        pathname = os.path.join(self.data_dir, 'sparse')
         f = open(pathname, 'wb')
         f.seek(1000**2)
         f.write('x')
@@ -381,18 +407,18 @@ class RestoreTests(ObnamTestCase):
         
         self.backup()
         self.restore()
-        restored2 = os.path.join(self.restored, './' + self.data)
-        self.assert_same_contents('sparse', self.data, restored2)
+        restored2 = os.path.join(self.restored_dir, './' + self.data_dir)
+        self.assert_same_contents('sparse', self.data_dir, restored2)
 
     def test_restores_pipe(self):
-        pathname = os.path.join(self.data, 'pipe')
+        pathname = os.path.join(self.data_dir, 'pipe')
         os.mknod(pathname, 0600 | stat.S_IFIFO)
         self.backup()
         self.restore()
         self.assert_restored_correctly()
 
     def _mangle_chunks(self):
-        chunkdir = os.path.join(self.repo, 'chunks')
+        chunkdir = os.path.join(self.repo_dir, 'chunks')
         for dirname, subdirs, basenames in os.walk(chunkdir):
             basenames = [x for x in basenames 
                          if x != 'key' and x != 'userkeys']
@@ -410,9 +436,9 @@ class RestoreTests(ObnamTestCase):
         # Remove the chunk checksum list, and then modify the chunks,
         # so that we can do a restore without triggering "bad chunk checksum"
         # errors. We only want to trigger the whole-file checksum error.
-        shutil.rmtree(os.path.join(self.repo, 'chunklist', 'nodes'))
-        shutil.rmtree(os.path.join(self.repo, 'chunklist', 'refcounts'))
-        os.remove(os.path.join(self.repo, 'chunklist', 'metadata'))
+        shutil.rmtree(os.path.join(self.repo_dir, 'chunklist', 'nodes'))
+        shutil.rmtree(os.path.join(self.repo_dir, 'chunklist', 'refcounts'))
+        os.remove(os.path.join(self.repo_dir, 'chunklist', 'metadata'))
         
         self._mangle_chunks()
 
@@ -422,17 +448,17 @@ class RestoreTests(ObnamTestCase):
 class BackupTests(ObnamTestCase):
 
     def test_makes_two_generations(self):
-        self.create_file(self.data, 'foo', 'foo')
+        self.create_file(self.data_dir, 'foo', 'foo')
         self.backup()
-        self.create_file(self.data, 'bar', 'bar')
-        self.remove_file(self.data, 'foo')
+        self.create_file(self.data_dir, 'bar', 'bar')
+        self.remove_file(self.data_dir, 'foo')
         self.backup()
         self.restore()
         self.assert_restored_correctly()
 
     def test_handles_two_roots(self):
-        root1 = self.create_dir(self.data, 'root1')
-        root2 = self.create_dir(self.data, 'root2')
+        root1 = self.create_dir(self.data_dir, 'root1')
+        root2 = self.create_dir(self.data_dir, 'root2')
         self.create_file(root1, 'file1', 'content1')
         self.create_file(root2, 'file2', 'content2')
         self.backup([root1, root2])
@@ -440,51 +466,51 @@ class BackupTests(ObnamTestCase):
         self.assert_restored_correctly()
 
     def test_handles_symlink(self):
-        self.create_file(self.data, 'target', 'content1')
-        os.symlink('target', os.path.join(self.data, 'symlink'))
+        self.create_file(self.data_dir, 'target', 'content1')
+        os.symlink('target', os.path.join(self.data_dir, 'symlink'))
         self.backup()
         self.restore()
         self.assert_restored_correctly()
 
     def test_handles_dangling_symlink(self):
-        os.symlink('target', os.path.join(self.data, 'symlink'))
+        os.symlink('target', os.path.join(self.data_dir, 'symlink'))
         self.backup()
         self.restore()
         self.assert_restored_correctly()
 
     def test_handles_hardlink(self):
-        self.create_file(self.data, 'target', 'content1')
-        os.link(os.path.join(self.data, 'target'), 
-                os.path.join(self.data, 'hardlink'))
+        self.create_file(self.data_dir, 'target', 'content1')
+        os.link(os.path.join(self.data_dir, 'target'), 
+                os.path.join(self.data_dir, 'hardlink'))
         self.backup()
         self.restore()
         self.assert_restored_correctly()
 
     def test_does_not_include_roots_from_old_gens_unless_specified_again(self):
-        foo = self.create_dir(self.data, 'foo')
+        foo = self.create_dir(self.data_dir, 'foo')
         self.backup(roots=[foo])
-        bar = self.create_dir(self.data, 'bar')
+        bar = self.create_dir(self.data_dir, 'bar')
         self.backup(roots=[bar])
         self.restore()
-        parent = os.path.join(self.restored, './' + self.data)
+        parent = os.path.join(self.restored_dir, './' + self.data_dir)
         self.assertEqual(os.listdir(parent), ['bar'])
 
     def test_excludes_cache_directory(self):
-        cachedir = self.mkdir(os.path.join('data', 'cache'))
+        cachedir = self.mkdir(os.path.join(self.data_dir, 'cache'))
         self.create_file(cachedir, 'CACHEDIR.TAG', 
                          'Signature: 8a477f597d28d172789f06886806bc55')
         self.create_file(cachedir, 'foo', 'foo')
         self.backup(extraopts=['--exclude-caches'])
         self.restore()
 
-        x = os.path.join(self.restored, './' + cachedir)
+        x = os.path.join(self.restored_dir, './' + cachedir)
         self.assertFalse(os.path.exists(os.path.join(x, 'CACHEDIR.TAG')))
         self.assertFalse(os.path.exists(os.path.join(x, 'foo')))
 
     def test_makes_repository_files_have_correct_perms(self):
-        self.create_file(self.data, 'foo', 'foo')
+        self.create_file(self.data_dir, 'foo', 'foo')
         self.backup()
-        for path, st in self.find_everything(self.repo):
+        for path, st in self.find_everything(self.repo_dir):
             perms = stat.S_IMODE(st.st_mode)
             if stat.S_ISREG(st.st_mode):
                 self.assertEqual(perms, stat.S_IRUSR, 
@@ -492,10 +518,10 @@ class BackupTests(ObnamTestCase):
                                     (path, perms))
 
     def test_skips_unreadable_directory_but_backs_up_rest(self):
-        self.create_file(self.data, 'aaa', 'aaa')
-        bbb = os.path.join(self.data, 'bbb')
+        self.create_file(self.data_dir, 'aaa', 'aaa')
+        bbb = os.path.join(self.data_dir, 'bbb')
         os.mkdir(bbb, 0)
-        self.create_file(self.data, 'ccc', 'ccc')
+        self.create_file(self.data_dir, 'ccc', 'ccc')
         self.backup()
         self.restore()
         # Remove the problematic directory so that verify works.
@@ -506,10 +532,10 @@ class BackupTests(ObnamTestCase):
         self.assert_restored_correctly()
     
     def test_skips_unreadable_file_but_backs_up_rest(self):
-        self.create_file(self.data, 'aaa', 'aaa')
-        bbb = self.create_file(self.data, 'bbb', 'bbb')
+        self.create_file(self.data_dir, 'aaa', 'aaa')
+        bbb = self.create_file(self.data_dir, 'bbb', 'bbb')
         os.chmod(bbb, 0)
-        self.create_file(self.data, 'ccc', 'ccc')
+        self.create_file(self.data_dir, 'ccc', 'ccc')
         self.backup()
         self.restore()
         # Remove the problematic directory so that verify works.
@@ -523,18 +549,18 @@ class BackupTests(ObnamTestCase):
 class VerifyTests(ObnamTestCase):
 
     def test_accepts_unchanged_backup(self):
-        self.create_file(self.data, 'foo', 'foo')
-        self.create_file(self.data, 'bar', 'bar')
+        self.create_file(self.data_dir, 'foo', 'foo')
+        self.create_file(self.data_dir, 'bar', 'bar')
         self.backup()
         self.verify()
 
     def test_notices_changed_data(self):
-        self.create_file(self.data, 'foo', 'foo')
-        self.create_file(self.data, 'bar', 'bar')
+        self.create_file(self.data_dir, 'foo', 'foo')
+        self.create_file(self.data_dir, 'bar', 'bar')
         self.backup()
-        self.remove_file(self.data, 'foo')
-        self.remove_file(self.data, 'bar')
-        self.create_file(self.data, 'foo', 'changed data')
+        self.remove_file(self.data_dir, 'foo')
+        self.remove_file(self.data_dir, 'bar')
+        self.create_file(self.data_dir, 'foo', 'changed data')
         self.assertRaises(subprocess.CalledProcessError, self.verify,
                           r'^Error: verify failure')
 
@@ -542,8 +568,8 @@ class VerifyTests(ObnamTestCase):
 class ForgetTests(ObnamTestCase):
 
     def setUpHook(self):
-        self.create_file(self.data, 'foo', 'foo')
-        self.create_file(self.data, 'bar', 'bar')
+        self.create_file(self.data_dir, 'foo', 'foo')
+        self.create_file(self.data_dir, 'bar', 'bar')
         self.backup()
         self.backup()
 
@@ -579,31 +605,31 @@ class ForgetTests(ObnamTestCase):
         return ''.join(chr(random.randint(0, 255)) for i in xrange(size))
     
     def test_removes_unwanted_data(self):
-        self.create_file(self.data, 'big', self.random_string(1024**2))
+        self.create_file(self.data_dir, 'big', self.random_string(1024**2))
         self.backup()
         self.forget(genids=self.generations())
-        self.remove_encryption_metadata(self.repo, 'chunks')
-        self.assertEqual(self.disk_usage(os.path.join(self.repo, 'chunks')),
-                         0)
+        self.remove_encryption_metadata(self.repo_dir, 'chunks')
+        chunks = os.path.join(self.repo_dir, 'chunks')
+        self.assertEqual(self.disk_usage(chunks), 0)
     
     def test_removes_unwanted_data_with_empty_generation_remaining(self):
-        self.create_file(self.data, 'big', self.random_string(1024**2))
+        self.create_file(self.data_dir, 'big', self.random_string(1024**2))
         self.backup()
-        shutil.rmtree(self.data)
-        os.mkdir(self.data)
+        shutil.rmtree(self.data_dir)
+        os.mkdir(self.data_dir)
         self.backup()
         genids = self.generations()
         forgettable = genids[:-1]
         self.forget(genids=forgettable)
-        self.remove_encryption_metadata(self.repo, 'chunks')
-        chunks = os.path.join(self.repo, 'chunks')
+        self.remove_encryption_metadata(self.repo_dir, 'chunks')
+        chunks = os.path.join(self.repo_dir, 'chunks')
         self.assertEqual(self.disk_usage(chunks), 0)
 
 
 class EncryptionTests(ObnamTestCase):
 
     def setUpHook(self):
-        self.create_file(self.data, 'foo', 'foo')
+        self.create_file(self.data_dir, 'foo', 'foo')
         self.backup()
 
     def client_keys(self):

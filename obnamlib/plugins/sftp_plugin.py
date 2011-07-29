@@ -16,6 +16,7 @@
 
 
 import errno
+import hashlib
 import logging
 import os
 import pwd
@@ -284,7 +285,22 @@ class SftpFS(obnamlib.VirtualFileSystem):
     
     @ioerror_to_oserror
     def lstat(self, pathname):
-        return self.sftp.lstat(pathname)
+        st = self.sftp.lstat(pathname)
+
+        # SFTP and/or paramiko fail to return some of the required fields,
+        # so we add them, using faked data.
+        defaults = {
+            'st_blocks': (st.st_size / 512) +
+                         (1 if st.st_size % 512 else 0),
+            'st_dev': 0,
+            'st_ino': int(hashlib.md5(pathname).hexdigest()[:8], 16),
+            'st_nlink': 1,
+        }
+        for name, value in defaults.iteritems():
+            if not hasattr(st, name):
+                setattr(st, name, value)
+
+        return st
 
     @ioerror_to_oserror
     def lchown(self, pathname, uid, gid):
