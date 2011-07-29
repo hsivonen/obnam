@@ -72,7 +72,13 @@ class ObnamTestCase(unittest.TestCase):
         else:
             self.repo = self.repo_dir
 
-        self.restored = self.mkdir('restored')
+        self.restored_dir = self.mkdir('restored')
+        # restored_dir and url are always the same, since we can't do proper
+        # restoreds over SFTP, so we always do them to the local filesystem.
+        # This is because SFTP fails to support hardlink creation, mknod,
+        # and perhaps other stuff.
+        self.restored = self.restored_dir
+
         self.gpghome = os.path.join(self.tempdir, 'gpghome')
         shutil.copytree('test-gpghome', self.gpghome)
         self.setUpHook()
@@ -337,14 +343,14 @@ class ObnamTestCase(unittest.TestCase):
         
         origs = dict(self.find_everything(self.data_dir))
         basename = os.path.basename(self.data_dir)
-        restored2 = os.path.join(self.restored, './' + self.data_dir)
+        restored2 = os.path.join(self.restored_dir, './' + self.data_dir)
         restoreds = dict(self.find_everything(restored2))
         
         for name, orig_stat in origs.iteritems():
             if name not in restoreds:
                 logging.error('file %s not in restored data' % name)
                 self.report_contents(self.data_dir, origs)
-                self.report_contents(self.restored, restoreds)
+                self.report_contents(self.restored_dir, restoreds)
                 raise cliapp.AppException('%s not in restored data' % name)
             restored_stat = restoreds[name]
             self.assert_same_stat(name, orig_stat, restored_stat)
@@ -354,7 +360,7 @@ class ObnamTestCase(unittest.TestCase):
             if name not in origs:
                 logging.error('spurious file %s in restored data' % name)
                 self.report_contents(self.data_dir, origs)
-                self.report_contents(self.restored, restoreds)
+                self.report_contents(self.restored_dir, restoreds)
                 raise cliapp.AppException('spurious %s in restored data' % 
                                            name)
                 
@@ -379,10 +385,10 @@ class RestoreTests(ObnamTestCase):
     def test_restores_individual_file(self):
         bar_orig = os.path.join(self.data_dir, 'bar')
         self.restore([bar_orig])
-        restored_files = [os.path.join(self.restored, x)
-                          for x, y in self.find_everything(self.restored)
+        restored_files = [os.path.join(self.restored_dir, x)
+                          for x, y in self.find_everything(self.restored_dir)
                           if stat.S_ISREG(y.st_mode)]
-        bar_restored = os.path.join(self.restored, './' + bar_orig)
+        bar_restored = os.path.join(self.restored_dir, './' + bar_orig)
         bar_restored = os.path.normpath(bar_restored)
         self.assertEqual(restored_files, [bar_restored])
         self.assertFilesEqual(bar_orig, bar_restored)
@@ -396,7 +402,7 @@ class RestoreTests(ObnamTestCase):
         
         self.backup()
         self.restore()
-        restored2 = os.path.join(self.restored, './' + self.data_dir)
+        restored2 = os.path.join(self.restored_dir, './' + self.data_dir)
         self.assert_same_contents('sparse', self.data_dir, restored2)
 
     def test_restores_pipe(self):
@@ -481,7 +487,7 @@ class BackupTests(ObnamTestCase):
         bar = self.create_dir(self.data_dir, 'bar')
         self.backup(roots=[bar])
         self.restore()
-        parent = os.path.join(self.restored, './' + self.data_dir)
+        parent = os.path.join(self.restored_dir, './' + self.data_dir)
         self.assertEqual(os.listdir(parent), ['bar'])
 
     def test_excludes_cache_directory(self):
@@ -492,7 +498,7 @@ class BackupTests(ObnamTestCase):
         self.backup(extraopts=['--exclude-caches'])
         self.restore()
 
-        x = os.path.join(self.restored, './' + cachedir)
+        x = os.path.join(self.restored_dir, './' + cachedir)
         self.assertFalse(os.path.exists(os.path.join(x, 'CACHEDIR.TAG')))
         self.assertFalse(os.path.exists(os.path.join(x, 'foo')))
 
