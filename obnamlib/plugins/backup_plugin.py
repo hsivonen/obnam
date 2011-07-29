@@ -213,9 +213,11 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             tag_contents = 'Signature: 8a477f597d28d172789f06886806bc55'
             tag_path = os.path.join(pathname, 'CACHEDIR.TAG')
             if self.fs.exists(tag_path):
-                with self.fs.open(tag_path, 'rb') as f:
-                    data = f.read(len(tag_contents))
-                    return data != tag_contents
+                # Can't use with, because Paramiko's SFTPFile does not work.
+                f = self.fs.open(tag_path, 'rb')
+                data = f.read(len(tag_contents))
+                f.close()
+                return data != tag_contents
         
         return True
 
