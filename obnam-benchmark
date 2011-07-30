@@ -96,6 +96,8 @@ class ObnamBenchmark(cliapp.Application):
     }
 
     def add_settings(self):
+        self.settings.string(['results'], 'put results under DIR (%default)',
+                            metavar='DIR', default='../benchmarks')
         self.settings.string(['obnam-branch'],
                              'use DIR as the obnam branch to benchmark '
                                 '(default: %default)',
@@ -219,7 +221,7 @@ class ObnamBenchmark(cliapp.Application):
         return os.path.basename(obnam_branch)
 
     def results_dir(self, obnam_revno, larch_revno):
-        results = os.path.join('..', 'benchmarks',
+        results = os.path.join(self.settings['results'],
                                '-'.join([self.hostname, self.obnam_branch_name,
                                          str(obnam_revno), str(larch_revno)]))
 
