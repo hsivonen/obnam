@@ -16,6 +16,7 @@
 
 import errno
 import hashlib
+import larch
 import logging
 import os
 import random
@@ -145,8 +146,8 @@ class Repository(object):
                                                node_size, upload_queue_size, 
                                                lru_size, self)
         self.prev_chunkid = None
-        self.chunk_idpath = obnamlib.IdPath('chunks', idpath_depth, 
-                                            idpath_bits, idpath_skip)
+        self.chunk_idpath = larch.IdPath('chunks', idpath_depth, 
+                                         idpath_bits, idpath_skip)
 
     def setup_hooks(self, hooks):
         self.hooks = hooks
