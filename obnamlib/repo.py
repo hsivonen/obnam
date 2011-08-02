@@ -116,7 +116,7 @@ class Repository(object):
 
     '''
     
-    format_version = 3
+    format_version = 4
 
     def __init__(self, fs, node_size, upload_queue_size, lru_size, hooks,
                  idpath_depth, idpath_bits, idpath_skip):
