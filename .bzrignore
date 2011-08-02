@@ -2,3 +2,4 @@ obnam.log
 temp.*
 *.log
 obnam.1
+obnam-benchmark.1
