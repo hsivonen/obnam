@@ -189,6 +189,7 @@ class ObnamBenchmark(cliapp.Application):
                             '--file-size', str(file_size),
                             '--obnam-profile', obnam_profile,
                             '--generations', str(generations),
+                            '--profile-name', profile,
                             '--output', output]
                     if self.settings['use-existing']:
                         argv.extend(['--use-existing', 
