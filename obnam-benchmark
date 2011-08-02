@@ -135,6 +135,7 @@ class ObnamBenchmark(cliapp.Application):
         self.settings.boolean(['use-sftp-root'],
                               'access the live data over SFTP '
                                 '(requires ssh to localhost to work)')
+        self.settings.string(['description'], 'describe benchmark')
 
     def process_args(self, args):
         self.require_tmpdir()
@@ -200,6 +201,9 @@ class ObnamBenchmark(cliapp.Application):
                         argv.append('--use-sftp-root')
                     if self.settings['with-encryption']:
                         argv.extend(['--encrypt-with', self.keyid])
+                    if self.settings['description']:
+                        argv.extend(['--description', 
+                                     self.settings['description']])
                     subprocess.check_call(argv, env=env)
 
         shutil.rmtree(tempdir)
