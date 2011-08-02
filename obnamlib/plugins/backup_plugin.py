@@ -85,7 +85,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.app.settings['exclude'].append(log)
         for pattern in self.app.settings['exclude']:
             logging.debug('Exclude pattern: %s' % pattern)
-        self.exclude_pats = [re.compile(x) for x in self.app.settings['exclude']]
+        self.exclude_pats = [re.compile(x) 
+                             for x in self.app.settings['exclude']]
 
         last_checkpoint = 0
         self.memory_dump_counter = 0
