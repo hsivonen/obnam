@@ -160,7 +160,13 @@ class ObnamBenchmark(cliapp.Application):
         sizes = self.settings['size'] or self.default_sizes
         logging.debug('sizes: %s' % repr(sizes))
 
-        for profile, file_size in sorted(self.profiles.iteritems()):
+        if self.settings['use-existing']:
+            profiles = sorted(('existing+%s' % name, size)
+                              for name, size in self.profiles.iteritems())
+        else:
+            profiles = sorted(self.profiles.iteritems())
+
+        for profile, file_size in profiles:
             for pair in sizes:
                 initial, inc = self.parse_size_pair(pair)
 
