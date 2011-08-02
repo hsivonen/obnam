@@ -109,7 +109,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 absroot = self.fs.abspath('.')
                 self.root_metadata = self.fs.lstat(absroot)
                 for pathname, metadata in self.find_files(absroot):
-                    tracing.trace('Backing up %s', pathname)
+                    logging.debug('Backing up %s' % pathname)
                     self.app.hooks.call('progress-found-file', 
                                         pathname, metadata)
                     try:
@@ -190,6 +190,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         
         '''
         for pathname, st in self.fs.scan_tree(root, ok=self.can_be_backed_up):
+            tracing.trace('considering %s' % pathname)
             try:
                 metadata = obnamlib.read_metadata(self.fs, pathname)
                 if self.needs_backup(pathname, metadata):
@@ -202,11 +203,13 @@ class BackupPlugin(obnamlib.ObnamPlugin):
     def can_be_backed_up(self, pathname, st):
         if self.app.settings['one-file-system']:
             if st.st_dev != self.root_metadata.st_dev: 
+                logging.info('Excluding (one-file-system): %s' %
+                             pathname)
                 return False
 
         for pat in self.exclude_pats:
             if pat.search(pathname):
-                tracing.trace('excluding (pattern): %s' % pathname)
+                logging.info('Excluding (pattern): %s' % pathname)
                 return False
 
         if stat.S_ISDIR(st.st_mode) and self.app.settings['exclude-caches']:
@@ -218,7 +221,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 f = self.fs.open(tag_path, 'rb')
                 data = f.read(len(tag_contents))
                 f.close()
-                return data != tag_contents
+                if data == tag_contents:
+                    logging.info('Excluding (cache dir): %s' % pathname)
+                    return False
         
         return True
 
