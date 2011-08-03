@@ -5,6 +5,54 @@ Obnam NEWS
 This file summarizes changes between releases of Obnam.
 
 
+Version 0.19, released 2011-08-03; a BETA release
+-------------------------------------------------
+
+INCOMPATIBILITY CHANGES:
+
+* We now require version 0.21 of the `larch` library, and this requires
+  bumping the repository format. This means old backup repositories can't
+  be used with this version, and you need to back up everything again.
+  (Please tell me when this becomes a problem.)
+
+BUG FIXES:
+
+* Found one more place where a file going missing during a backup may
+  cause a crash.
+* Typo in error message about on-disk formats fixed.
+  (Thanks, Tapani Tarvainen.)
+* The `--trace` option works again.
+* `fcntl.F_SETFL` does not seem to work on file descriptors for files
+  owned by root that are read-only to the user running obnam. Worked
+  around by ignoring any problems with setting the flags.
+* The funnest bug in this release: if no log file was specified with `--log`,
+  the current working directory was excluded from the backup.
+
+USER VISIBLE CHANGES:
+
+* `obnam(1)` manual page now discusses how configuration files are used.
+* The manual page describes problems using sftp to access live data.
+* The documentation for `--no-act` was clarified to say it only works
+  for `forget. (Thanks, Daniel Silverstone.)
+* `obnam-benchmark` now has a manual page.
+* The backup plugin logs files it excludes, so the user can find out what's
+  going on. A confused user is an unhappy user.
+
+INTERNAL STUFF:
+
+* Tracing statements added to various parts of the code, to help debug
+  mysterious problems.
+* All exceptions are derived from `obnamlib.AppException` or
+  `obnamlib.Error`, and those are derived from `cliapp.AppException`,
+  so that the user gets nicer error messages than Python stack traces.
+* `blackboxtests` is no longer run under fakeroot, because Debian packages
+  are built under fakeroot, and fakeroot within fakeroot causes trouble.
+  However, the point of running tests under fakeroot was to make sure
+  certain kinds of bugs are caught, and since Debian package building runs
+  the tests anyway, the test coverage is not actually diminished.
+* The `Makefile` has new targets `fast-check` and `network-tests`. The
+  latter runs tests over sftp to localhost.
+
 Version 0.18, released 2011-07-20; a BETA release
 -------------------------------------------------
 

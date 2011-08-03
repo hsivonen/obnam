@@ -17,7 +17,7 @@
 import cliapp
 
 
-__version__ = '0.18'
+__version__ = '0.19'
 
 
 import _obnam
