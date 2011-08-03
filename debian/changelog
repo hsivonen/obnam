@@ -5,6 +5,7 @@ obnam (0.19-1) squeeze; urgency=low
   * Install files with setup.py --install-layout=deb.
   * Upgrade dependency on python-larch to 0.21.
   * Update package description.
+  * Convert into non-native package.
 
  -- Lars Wirzenius <liw@liw.fi>  Wed, 03 Aug 2011 19:08:08 +0100
 
