@@ -20,8 +20,20 @@ Architecture: any
 Depends: ${shlibs:Depends}, ${python:Depends}, ${misc:Depends}, 
     python-larch (>= 0.21~), python-ttystatus (>= 0.8),
     python-paramiko, python-tracing (>= 0.2), python-cliapp (>= 0.14)
-Description: online backup application
- Obnam makes backups.
+Description: online and disk-based backup application
+ Obnam makes backups. Backups can be stored on local hard disks, or online 
+ via the SSH SFTP protocol. The backup server, if used, does not require any 
+ special software, on top of SSH.
  .
- This Debian package description is woefully inadequate. Please help
- me improve it.
+  * Snapshot backups. Every generation looks like a complete snapshot, so you 
+    don't need to care about full versus incremental backups, or rotate real 
+    or virtual tapes.
+  * Data de-duplication, across files, and backup generations. If the backup 
+    repository already contains a particular chunk of data, it will be re-used, 
+    even if it was in another file in an older backup generation. This way, you 
+    don't need to worry about moving around large files, or modifying them.
+  * Encrypted backups, using GnuPG.
+  * Push or pull operation, depending on what you need. You can run Obnam on 
+    the client, and push backups to the server, or on the server, and pull 
+    from the client over SFTP.
+
