@@ -149,9 +149,6 @@ class Repository(object):
         self.chunk_idpath = larch.IdPath('chunks', idpath_depth, 
                                          idpath_bits, idpath_skip)
 
-        logging.debug('Repository initialized. format_version=%s' % 
-                        self.format_version)
-
     def setup_hooks(self, hooks):
         self.hooks = hooks
         
