@@ -30,6 +30,9 @@ class ShowPlugin(obnamlib.ObnamPlugin):
     objects, or the contents of a backup generation.
     
     '''
+    
+    leftists = (2, 3, 6)
+    min_widths = (1, 1, 1, 1, 6, 20, 1)
 
     def enable(self):
         self.app.add_subcommand('clients', self.clients)
@@ -92,15 +95,23 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         print
         print '%s:' % dirname
         subdirs = []
+        everything = []
         for basename in self.repo.listdir(gen, dirname):
+            fields = self.fields(gen, dirname, basename)
             full = os.path.join(dirname, basename)
-            print self.format(gen, dirname, basename)
+            everything.append(fields)
             if self.isdir(gen, full):
                 subdirs.append(full)
+
+        if everything:
+            widths = self.widths(everything)
+            for fields in everything:
+                print self.format(widths, fields)
+
         for subdir in subdirs:
             self.show_objects(gen, subdir)
 
-    def format(self, gen, dirname, basename):
+    def fields(self, gen, dirname, basename):
         full = os.path.join(dirname, basename)
         metadata = self.repo.get_metadata(gen, full)
 
@@ -134,12 +145,28 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         else:
             name = basename
 
-        return ('%s %2d %-8s %-8s %5d %s %s' % 
-                (perms, 
-                 metadata.st_nlink or 0, 
+        return (perms, 
+                 str(metadata.st_nlink or 0), 
                  metadata.username or '', 
                  metadata.groupname or '',
-                 metadata.st_size or 0, 
+                 str(metadata.st_size or 0), 
                  timestamp, 
-                 name))
+                 name)
+
+    def widths(self, everything):
+        w = list(self.min_widths)
+        for fields in everything:
+            for i, field in enumerate(fields):
+                w[i] = max(w[i], len(field))
+        return w
+
+    def format(self, widths, fields):
+        return ' '. join(self.align(widths[i], fields[i], i)
+                          for i in range(len(fields)))
+
+    def align(self, width, field, field_no):
+        if field_no in self.leftists:
+            return '%-*s' % (width, field)
+        else:
+            return '%*s' % (width, field)
 
