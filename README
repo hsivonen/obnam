@@ -34,8 +34,9 @@ and tools, which you can get from:
 
 * <http://liw.fi/larch/>
 * <http://liw.fi/ttystatus/>
-* <http://liw.fi/coverage-test-runner/>
+* <http://liw.fi/coverage-test-runner/> (for automatic tests)
 * <http://liw.fi/tracing/>
+* <http://liw.fi/seivot/> (for benchmarks)
 
 You also need third party libraries:
 
@@ -79,11 +80,28 @@ To run automatic tests:
 You need my CoverageTestRunner to run tests, see above for where to get it.
 A couple of scripts exist to run benchmarks and profiles:
 
-    ./run-benchmark
-    viewprof obnam.prof cumulative | less -S
+    ./metadata-speed 10000
+    ./obnam-benchmark --size=1m/100k --results /tmp/benchmark-results
+    viewprof /tmp/benchmark-results/*/*backup-0.prof
+    seivots-summary /tmp/benchmark-results/*/*.seivot | less -S
     
-viewprof is a little helper script I wrote, around the Python pstats module.
-You can use your own, or get mine from extrautils (see above).
+There are two kinds of results: Python profiling output, and `.seivot`
+files.
+
+For the former, `viewprof` is a little helper script I wrote, 
+around the Python pstats module.
+You can use your own, or get mine from extrautils 
+(<http://liw.fi/extrautils/>). Running the benchmarks under profiling
+makes them a little slower (typically around 10% for me, when I've
+compared), but that's OK: the absolute numbers of the benchmarks are
+less important than the relative ones. It's nice to be able to look at
+the profiler output, if a benchmark is surprisingly slow, without
+having to re-run it.
+
+`seivots-summary` is a tool to display summaries of the measurements
+made during a benchmark run. `seivot` is the tool that makes the
+measurements. I typically save a number of benchmark results, so that
+I can see how my changes affect performance over time.
 
 If you make any changes, I welcome patches, either as plain diffs, bzr
 bundles, or public repositories I can merge from.
