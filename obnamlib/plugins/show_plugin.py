@@ -92,15 +92,17 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         print
         print '%s:' % dirname
         subdirs = []
+        nondirs = []
         for basename in self.repo.listdir(gen, dirname):
+            fields = self.fields(gen, dirname, basename)
             full = os.path.join(dirname, basename)
-            print self.format(gen, dirname, basename)
+            print self.format(fields)
             if self.isdir(gen, full):
                 subdirs.append(full)
         for subdir in subdirs:
             self.show_objects(gen, subdir)
 
-    def format(self, gen, dirname, basename):
+    def fields(self, gen, dirname, basename):
         full = os.path.join(dirname, basename)
         metadata = self.repo.get_metadata(gen, full)
 
@@ -134,12 +136,14 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         else:
             name = basename
 
-        return ('%s %2d %-8s %-8s %5d %s %s' % 
-                (perms, 
+        return (perms, 
                  metadata.st_nlink or 0, 
                  metadata.username or '', 
                  metadata.groupname or '',
                  metadata.st_size or 0, 
                  timestamp, 
-                 name))
+                 name)
+
+    def format(self, fields):
+        return '%s %2d %-8s %-8s %5d %s %s' % fields
 
