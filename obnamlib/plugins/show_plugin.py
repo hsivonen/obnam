@@ -92,13 +92,17 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         print
         print '%s:' % dirname
         subdirs = []
-        nondirs = []
+        everything = []
         for basename in self.repo.listdir(gen, dirname):
             fields = self.fields(gen, dirname, basename)
             full = os.path.join(dirname, basename)
-            print self.format(fields)
+            everything.append(fields)
             if self.isdir(gen, full):
                 subdirs.append(full)
+
+        for fields in everything:
+            print self.format(fields)
+
         for subdir in subdirs:
             self.show_objects(gen, subdir)
 
