@@ -271,7 +271,14 @@ class Repository(object):
         if self.fs.exists('metadata/format'):
             data = self.fs.cat('metadata/format')
             lines = data.splitlines()
-            version = int(lines[0])
+            line = lines[0]
+            try:
+                version = int(line)
+            except ValueError, e:
+                msg = ('Invalid repository format version (%s) -- '
+                            'forgot encryption?' %
+                       repr(line))
+                raise obnamlib.AppException(msg)
             return version
         else:
             return None
