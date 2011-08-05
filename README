@@ -73,8 +73,8 @@ To build:
     
 To run automatic tests:
 
-    make check
-    python test-sftpfs # Read it first, though. Requires ssh setup.
+    make check 
+    make network-tests # Requires ssh access to localhost.
     
 You need my CoverageTestRunner to run tests, see above for where to get it.
 A couple of scripts exist to run benchmarks and profiles:
