@@ -30,6 +30,9 @@ class ShowPlugin(obnamlib.ObnamPlugin):
     objects, or the contents of a backup generation.
     
     '''
+    
+    leftists = (2, 3, 6)
+    min_widths = (1, 1, 1, 1, 6, 20, 1)
 
     def enable(self):
         self.app.add_subcommand('clients', self.clients)
@@ -100,8 +103,10 @@ class ShowPlugin(obnamlib.ObnamPlugin):
             if self.isdir(gen, full):
                 subdirs.append(full)
 
-        for fields in everything:
-            print self.format(fields)
+        if everything:
+            widths = self.widths(everything)
+            for fields in everything:
+                print self.format(widths, fields)
 
         for subdir in subdirs:
             self.show_objects(gen, subdir)
@@ -141,13 +146,27 @@ class ShowPlugin(obnamlib.ObnamPlugin):
             name = basename
 
         return (perms, 
-                 metadata.st_nlink or 0, 
+                 str(metadata.st_nlink or 0), 
                  metadata.username or '', 
                  metadata.groupname or '',
-                 metadata.st_size or 0, 
+                 str(metadata.st_size or 0), 
                  timestamp, 
                  name)
 
-    def format(self, fields):
-        return '%s %2d %-8s %-8s %5d %s %s' % fields
+    def widths(self, everything):
+        w = list(self.min_widths)
+        for fields in everything:
+            for i, field in enumerate(fields):
+                w[i] = max(w[i], len(field))
+        return w
+
+    def format(self, widths, fields):
+        return ' '. join(self.align(widths[i], fields[i], i)
+                          for i in range(len(fields)))
+
+    def align(self, width, field, field_no):
+        if field_no in self.leftists:
+            return '%-*s' % (width, field)
+        else:
+            return '%*s' % (width, field)
 
