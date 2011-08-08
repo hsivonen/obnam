@@ -152,6 +152,8 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             self.restore_regular_file(gen, to_dir, filename, metadata)
         elif stat.S_ISFIFO(metadata.st_mode):
             self.restore_fifo(gen, to_dir, filename, metadata)
+        elif stat.S_ISSOCK(metadata.st_mode):
+            self.restore_socket(gen, to_dir, filename, metadata)
         else:
             msg = ('Unknown file type: %s (%o)' % 
                    (filename, metadata.st_mode))
@@ -211,6 +213,12 @@ class RestorePlugin(obnamlib.ObnamPlugin):
 
     def restore_fifo(self, gen, to_dir, filename, metadata):
         logging.debug('restoring fifo %s' % filename)
+        to_filename = os.path.join(to_dir, './' + filename)
+        self.fs.mknod(to_filename, metadata.st_mode)
+        obnamlib.set_metadata(self.fs, to_filename, metadata)
+
+    def restore_socket(self, gen, to_dir, filename, metadata):
+        logging.debug('restoring socket %s' % filename)
         to_filename = os.path.join(to_dir, './' + filename)
         self.fs.mknod(to_filename, metadata.st_mode)
         obnamlib.set_metadata(self.fs, to_filename, metadata)

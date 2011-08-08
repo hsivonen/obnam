@@ -356,7 +356,7 @@ class ObnamTestCase(unittest.TestCase):
                 logging.error('file %s not in restored data' % name)
                 self.report_contents(self.data_dir, origs)
                 self.report_contents(self.restored_dir, restoreds)
-                raise cliapp.AppException('%s not in restored data' % name)
+                raise Exception('%s not in restored data' % name)
             restored_stat = restoreds[name]
             self.assert_same_stat(name, orig_stat, restored_stat)
             if stat.S_ISREG(orig_stat.st_mode):
@@ -413,6 +413,13 @@ class RestoreTests(ObnamTestCase):
     def test_restores_pipe(self):
         pathname = os.path.join(self.data_dir, 'pipe')
         os.mknod(pathname, 0600 | stat.S_IFIFO)
+        self.backup()
+        self.restore()
+        self.assert_restored_correctly()
+
+    def test_restores_socket(self):
+        pathname = os.path.join(self.data_dir, 'socket')
+        os.mknod(pathname, 0600 | stat.S_IFSOCK)
         self.backup()
         self.restore()
         self.assert_restored_correctly()

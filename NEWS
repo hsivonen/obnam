@@ -20,6 +20,7 @@ USER VISIBLE CHANGES:
 * The error message when trying to use an encrypted repository without
   encryption is now better (and suggests missing encryption being the
   reason). Thanks, chrysn.
+* Obnam now supports backing up of Unix sockets.
 
 Version 0.19, released 2011-08-03; a BETA release
 -------------------------------------------------
