@@ -23,7 +23,7 @@ import urlparse
 import obnamlib
 
 
-class Fail(obnamlib.AppException):
+class Fail(obnamlib.Error):
 
     def __init__(self, filename, reason):
         self.filename = filename

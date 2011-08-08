@@ -28,12 +28,12 @@ import tracing
 import obnamlib
 
 
-class LockFail(obnamlib.AppException):
+class LockFail(obnamlib.Error):
 
     pass
 
 
-class BadFormat(obnamlib.AppException):
+class BadFormat(obnamlib.Error):
 
     pass
 
@@ -278,7 +278,7 @@ class Repository(object):
                 msg = ('Invalid repository format version (%s) -- '
                             'forgot encryption?' %
                        repr(line))
-                raise obnamlib.AppException(msg)
+                raise obnamlib.Error(msg)
             return version
         else:
             return None

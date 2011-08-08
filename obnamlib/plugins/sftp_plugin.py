@@ -146,13 +146,11 @@ class SftpFS(obnamlib.VirtualFileSystem):
         known_hosts = os.path.expanduser('~/.ssh/known_hosts')
         keys = paramiko.util.load_host_keys(known_hosts)
         if hostname not in keys:
-            raise obnamlib.AppException('Host not in known_hosts: %s' % 
-                                        hostname)
+            raise obnamlib.Error('Host not in known_hosts: %s' % hostname)
         elif not keys[hostname].has_key(key.get_name()):
-            raise obnamlib.AppException('No host key for %s' % hostname)
+            raise obnamlib.Error('No host key for %s' % hostname)
         elif keys[hostname][key.get_name()] != key:
-            raise obnamlib.AppException('Host key has changed for %s' % 
-                                        hostname)
+            raise obnamlib.Error('Host key has changed for %s' % hostname)
     
     def _authenticate(self, username):
         agent = paramiko.Agent()
@@ -163,8 +161,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
                 return
             except paramiko.SSHException:
                 pass
-        raise obnamlib.AppException('Can\'t authenticate to SSH server '
-                                    'using agent.')
+        raise obnamlib.Error('Can\'t authenticate to SSH server using agent.')
 
     def close(self):
         self.sftp.close()
@@ -228,8 +225,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
             self.write_file(lockname, '')
         except IOError, e:
             if e.errno == errno.EEXIST:
-                raise obnamlib.AppException('Lock %s already exists' % 
-                                            lockname)
+                raise obnamlib.Error('Lock %s already exists' % lockname)
             else:
                 raise
 
@@ -328,7 +324,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
         self.sftp.utime(pathname, (atime, mtime))
 
     def link(self, existing_path, new_path):
-        raise obnamlib.AppException('Cannot hardlink on SFTP. Sorry.')
+        raise obnamlib.Error('Cannot hardlink on SFTP. Sorry.')
 
     def readlink(self, symlink):
         return self.sftp.readlink(symlink)

@@ -23,11 +23,10 @@ __version__ = '0.19'
 import _obnam
 from pluginmgr import PluginManager
 
-class AppException(cliapp.AppException):
-    pass
 
 class Error(cliapp.AppException):
     pass
+
 
 DEFAULT_NODE_SIZE = 64 * 1024
 DEFAULT_CHUNK_SIZE = 64 * 1024

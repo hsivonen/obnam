@@ -103,7 +103,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
                 self.restore_file(gen, '.', arg)
                 
         if self.errors:
-            raise obnamlib.AppException('There were errors when restoring')
+            raise obnamlib.Error('There were errors when restoring')
 
     def restore_recursively(self, gen, to_dir, root):
         logging.debug('restoring dir %s' % root)
@@ -207,7 +207,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             # mean it is invalid. We'll assume it is valid.
             return
         if checksum != wanted:
-            raise obnamlib.AppException('chunk %s checksum error' % chunkid)
+            raise obnamlib.Error('chunk %s checksum error' % chunkid)
 
     def restore_fifo(self, gen, to_dir, filename, metadata):
         logging.debug('restoring fifo %s' % filename)

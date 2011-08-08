@@ -19,7 +19,7 @@ import re
 import obnamlib
 
 
-class UnitError(obnamlib.AppException):
+class UnitError(obnamlib.Error):
 
     def __str__(self):
         return self.msg

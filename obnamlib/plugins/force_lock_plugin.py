@@ -39,9 +39,9 @@ class ForceLockPlugin(obnamlib.ObnamPlugin):
         try:
             repo = self.app.open_repository()
         except OSError, e:
-            raise obnamlib.AppException('Repository does not exist '
-                                         'or cannot be accessed.\n' +
-                                         str(e))
+            raise obnamlib.Error('Repository does not exist ' 
+                                  'or cannot be accessed.\n' +
+                                  str(e))
 
         if client_name not in repo.list_clients():
             logging.warning('Client does not exist in repository.')
