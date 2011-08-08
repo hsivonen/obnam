@@ -220,7 +220,8 @@ class SftpFS(obnamlib.VirtualFileSystem):
 
     @ioerror_to_oserror
     def listdir(self, pathname):
-        return self.sftp.listdir(pathname)
+        return [x if type(x) == str else x.encode('utf-8')
+                 for x in self.sftp.listdir(pathname)]
 
     def lock(self, lockname):
         try:

@@ -8,6 +8,11 @@ This file summarizes changes between releases of Obnam.
 Version 0.20, released UNRELEASED; a BETA release
 -------------------------------------------------
 
+BUG FIXES:
+
+* Non-ASCII filenames over SFTP root now work. (Thanks, Tapani Tarvainen,
+  for the reproducible bug report.)
+
 USER VISIBLE CHANGES:
 
 * The output of `obnam ls` now formats the columns a little prettier,

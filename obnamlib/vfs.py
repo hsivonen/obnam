@@ -373,6 +373,12 @@ class VfsTests(object): # pragma: no cover
         self.fs.mkdir('foo')
         self.assert_(self.fs.isdir('foo'))
 
+    def test_listdir_returns_plain_strings_only(self):
+        self.fs.write_file(u'M\u00E4kel\u00E4', 'data')
+        names = self.fs.listdir('.')
+        types = [type(x) for x in names]
+        self.assertEqual(types, [str])
+
     def test_listdir_raises_oserror_if_directory_does_not_exist(self):
         self.assertRaises(OSError, self.fs.listdir, 'foo')
 
