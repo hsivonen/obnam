@@ -274,7 +274,7 @@ class Repository(object):
             line = lines[0]
             try:
                 version = int(line)
-            except ValueError, e:
+            except ValueError, e: # pragma: no cover
                 msg = ('Invalid repository format version (%s) -- '
                             'forgot encryption?' %
                        repr(line))
