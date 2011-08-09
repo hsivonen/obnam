@@ -374,7 +374,7 @@ class VfsTests(object): # pragma: no cover
         self.assert_(self.fs.isdir('foo'))
 
     def test_listdir_returns_plain_strings_only(self):
-        self.fs.write_file(u'M\u00E4kel\u00E4', 'data')
+        self.fs.write_file(u'M\u00E4kel\u00E4'.encode('utf-8'), 'data')
         names = self.fs.listdir('.')
         types = [type(x) for x in names]
         self.assertEqual(types, [str])
