@@ -107,6 +107,12 @@ class SftpFS(obnamlib.VirtualFileSystem):
         self.sftp = None
         self.reinit(baseurl, create=create)
         
+    def _to_string(self, str_or_unicode):
+        if type(str_or_unicode) is unicode:
+            return str_or_unicode.encode('utf-8')
+        else:
+            return str_or_unicode
+        
     def connect(self):
         if not self._connect_openssh():
             self._connect_paramiko()
@@ -209,7 +215,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
         return pwd.getpwuid(os.getuid()).pw_name
 
     def getcwd(self):
-        return self.sftp.getcwd()
+        return self._to_string(self.sftp.getcwd())
 
     @ioerror_to_oserror
     def chdir(self, pathname):
@@ -217,8 +223,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
 
     @ioerror_to_oserror
     def listdir(self, pathname):
-        return [x if type(x) == str else x.encode('utf-8')
-                 for x in self.sftp.listdir(pathname)]
+        return [self._to_string(x) for x in self.sftp.listdir(pathname)]
 
     def lock(self, lockname):
         try:
@@ -327,7 +332,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
         raise obnamlib.Error('Cannot hardlink on SFTP. Sorry.')
 
     def readlink(self, symlink):
-        return self.sftp.readlink(symlink)
+        return self._to_string(self.sftp.readlink(symlink))
 
     @ioerror_to_oserror
     def symlink(self, source, destination):

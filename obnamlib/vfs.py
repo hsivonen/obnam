@@ -282,6 +282,8 @@ class VfsTests(object): # pragma: no cover
     at start.
     
     '''
+    
+    non_ascii_name = u'm\u00e4kel\u00e4'.encode('utf-8')
 
     def test_abspath_returns_input_for_absolute_path(self):
         self.assertEqual(self.fs.abspath('/foo/bar'), '/foo/bar')
@@ -292,6 +294,11 @@ class VfsTests(object): # pragma: no cover
 
     def test_abspath_normalizes_path(self):
         self.assertEqual(self.fs.abspath('foo/..'), self.basepath)
+
+    def test_abspath_returns_plain_string(self):
+        self.fs.mkdir(self.non_ascii_name)
+        self.fs.chdir(self.non_ascii_name)
+        self.assertEqual(type(self.fs.abspath('.')), str)
 
     def test_reinit_works(self):
         self.fs.chdir('/')
@@ -311,6 +318,11 @@ class VfsTests(object): # pragma: no cover
 
     def test_getcwd_returns_dirname(self):
         self.assertEqual(self.fs.getcwd(), self.basepath)
+
+    def test_getcwd_returns_plain_string(self):
+        self.fs.mkdir(self.non_ascii_name)
+        self.fs.chdir(self.non_ascii_name)
+        self.assertEqual(type(self.fs.getcwd()), str)
 
     def test_chdir_changes_only_fs_cwd_not_process_cwd(self):
         process_cwd = os.getcwd()
@@ -486,6 +498,12 @@ class VfsTests(object): # pragma: no cover
         self.fs.symlink('foo', 'bar')
         target = self.fs.readlink('bar')
         self.assertEqual(target, 'foo')
+
+    def test_readlink_returns_plain_string(self):
+        self.fs.symlink(self.non_ascii_name, self.non_ascii_name)
+        target = self.fs.readlink(self.non_ascii_name)
+        self.assertEqual(target, self.non_ascii_name)
+        self.assertEqual(type(target), str)
 
     def test_symlink_raises_oserror_if_name_exists(self):
         self.fs.write_file('foo', 'foo')
