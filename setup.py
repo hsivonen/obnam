@@ -19,7 +19,7 @@ from distutils.core import setup, Extension
 import glob
 
 setup(name='obnam',
-      version='0.20',
+      version='0.20.1',
       description='Backup software',
       author='Lars Wirzenius',
       author_email='liw@liw.fi',
