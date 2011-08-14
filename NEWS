@@ -5,6 +5,14 @@ Obnam NEWS
 This file summarizes changes between releases of Obnam.
 
 
+Version 0.21, released UNRELEASED; a BETA release
+-------------------------------------------------
+
+BUG FIXES:
+
+* Negative timestamps for files now work. Thanks to Jamil Djadala
+  for reporting the bug.
+
 Version 0.20.1, released 2011-08-11; a BETA release
 -------------------------------------------------
 
