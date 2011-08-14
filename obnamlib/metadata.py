@@ -155,8 +155,8 @@ def set_metadata(fs, filename, metadata, getuid=None):
     
 metadata_format = struct.Struct('!Q' +  # flags
                                 'Q' +   # st_mode
-                                'QQ' +  # st_mtime (as two integers)
-                                'QQ' +  # st_atime (as two integers)
+                                'qQ' +  # st_mtime (as two integers)
+                                'qQ' +  # st_atime (as two integers)
                                 'Q' +   # st_nlink
                                 'Q' +   # st_size
                                 'Q' +   # st_uid
