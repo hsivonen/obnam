@@ -302,7 +302,26 @@ class SftpFS(obnamlib.VirtualFileSystem):
             if not hasattr(st, name):
                 setattr(st, name, value)
 
+        # Paramiko seems to deal with unsigned timestamps only, at least
+        # in version 1.7.6. We therefore force the timestamps into
+        # a signed 32-bit value. This limits the range, but allows
+        # timestamps that are negative (before 1970). Once paramiko is
+        # fixed, this code can be removed.
+        st.st_mtime = self._force_32bit_timestamp(st.st_mtime)
+        st.st_atime = self._force_32bit_timestamp(st.st_atime)
+
         return st
+
+    def _force_32bit_timestamp(self, timestamp):
+        if timestamp is None:
+            return None
+
+        max_int32 = 2**31 - 1 # max positive 32 signed integer value
+        if timestamp > max_int32:
+            timestamp -= 2**32
+            if timestamp > max_int32:
+                timestamp = max_int32 # it's too large, need to lose info
+        return timestamp
 
     @ioerror_to_oserror
     def lchown(self, pathname, uid, gid):
