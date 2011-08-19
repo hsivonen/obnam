@@ -41,8 +41,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                                     'exclude directories (and their subdirs) '
                                     'that are in a different filesystem')
         self.app.settings.bytesize(['checkpoint'],
-                                      'make a checkpoint after a given size, '
-                                      'default unit is MiB (%default)',
+                                      'make a checkpoint after a given SIZE '
+                                      '(%default)',
+                                    metavar='SIZE',
                                     default=1024**3)
         self.app.settings.integer(['chunkids-per-group'],
                                   'encode NUM chunk ids per group (%default)',
