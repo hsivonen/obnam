@@ -101,6 +101,9 @@ class RestorePlugin(obnamlib.ObnamPlugin):
                 if not self.fs.exists('./' + dirname):
                     self.fs.makedirs('./' + dirname)
                 self.restore_file(gen, '.', arg)
+
+        self.repo.fs.close()
+        self.fs.close()
                 
         if self.errors:
             raise obnamlib.Error('There were errors when restoring')
