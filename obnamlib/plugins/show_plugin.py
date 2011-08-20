@@ -51,6 +51,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         self.open_repository()
         for client_name in self.repo.list_clients():
             print client_name
+        self.repo.fs.close()
     
     def generations(self, args):
         '''List backup generations for client.'''
@@ -67,12 +68,14 @@ class ShowPlugin(obnamlib.ObnamPlugin):
                               self.format_time(start), 
                               self.format_time(end),
                               checkpoint))
+        self.repo.fs.close()
     
     def genids(self, args):
         '''List generation ids for client.'''
         self.open_repository()
         for gen in self.repo.list_generations():
             sys.stdout.write('%s\n' % gen)
+        self.repo.fs.close()
 
     def ls(self, args):
         '''List contents of a generation.'''
@@ -83,6 +86,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
             ended = self.format_time(0)
             print 'Generation %s (%s - %s)' % (gen, started, ended)
             self.show_objects(gen, '/')
+        self.repo.fs.close()
     
     def format_time(self, timestamp):
         return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp))

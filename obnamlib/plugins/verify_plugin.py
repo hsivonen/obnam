@@ -75,6 +75,9 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
             except Fail, e:
                 self.log_fail(e)
 
+        self.fs.close()
+        self.repo.fs.close()
+
         if self.failed:
             sys.exit(1)
         print "Verify did not find problems."

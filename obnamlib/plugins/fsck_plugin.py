@@ -31,6 +31,7 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         logging.debug('fsck on %s' % self.app.settings['repository'])
         self.repo = self.app.open_repository()
         self.check_root()
+        self.repo.fs.close()
 
     def check_root(self):
         '''Check the root node.'''

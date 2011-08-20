@@ -55,4 +55,5 @@ class ForceLockPlugin(obnamlib.ObnamPlugin):
             repo.fs.remove(lockname)
         else:
             logging.info('Client is not locked')
+        repo.fs.close()
 

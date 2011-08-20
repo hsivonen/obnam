@@ -60,6 +60,7 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
                     self.remove(genid)
 
         self.repo.commit_client()
+        self.repo.fs.close()
 
     def remove(self, genid):
         if self.app.settings['pretend']:
