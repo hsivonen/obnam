@@ -64,7 +64,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.app.settings.require('repository')
         self.app.settings.require('client-name')
 
-        roots = self.app.settings['root'] + args
+        self.compile_exclusion_patterns()
+        self.memory_dump_counter = 0
 
         self.repo = self.app.open_repository(create=True)
         client_name = self.app.settings['client-name']
@@ -73,14 +74,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.repo.lock_client(client_name)
         self.repo.start_generation()
         self.fs = None
-
-        self.compile_exclusion_patterns()
-        
-        self.memory_dump_counter = 0
-
+        roots = self.app.settings['root'] + args
         if roots:
             self.backup_roots(roots)
-
         self.repo.commit_client()
         self.repo.fs.close()
 
