@@ -58,28 +58,44 @@ class BackupPlugin(obnamlib.ObnamPlugin):
     def backup(self, args):
         '''Backup data to repository.'''
         logging.info('Backup starts')
-
         logging.info('Checkpoints every %s bytes' % 
                         self.app.settings['checkpoint'])
 
         self.app.settings.require('repository')
         self.app.settings.require('client-name')
 
-        roots = self.app.settings['root'] + args
+        self.compile_exclusion_patterns()
+        self.memory_dump_counter = 0
 
         self.repo = self.app.open_repository(create=True)
-
         client_name = self.app.settings['client-name']
+        self.add_client(client_name)
+
+        self.repo.lock_client(client_name)
+        try:
+            self.repo.start_generation()
+            self.fs = None
+            roots = self.app.settings['root'] + args
+            if roots:
+                self.backup_roots(roots)
+            self.repo.commit_client()
+            self.repo.fs.close()
+
+            logging.info('Backup finished.')
+            self.dump_memory_profile('at end of backup run')
+        except BaseException:
+            logging.info('Unlocking client because of error')
+            self.repo.unlock_client()
+            raise
+
+    def add_client(self, client_name):
         if client_name not in self.repo.list_clients():
             tracing.trace('adding new client %s' % client_name)
             self.repo.lock_root()
             self.repo.add_client(client_name)
             self.repo.commit_root()
 
-        self.repo.lock_client(client_name)
-        self.repo.start_generation()
-        self.fs = None
-
+    def compile_exclusion_patterns(self):
         log = self.app.settings['log']
         if log:
             log = self.app.settings['log']
@@ -88,65 +104,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             logging.debug('Exclude pattern: %s' % pattern)
         self.exclude_pats = [re.compile(x) 
                              for x in self.app.settings['exclude']]
-
-        last_checkpoint = 0
-        self.memory_dump_counter = 0
-        interval = self.app.settings['checkpoint']
-
-        if roots:
-            self.fs = self.app.fsf.new(roots[0])
-            self.fs.connect()
-
-            absroots = []
-            for root in roots:
-                self.fs.reinit(root)
-                absroots.append(self.fs.abspath('.'))
-                
-            self.remove_old_roots(absroots)
-
-            for root in roots:
-                logging.info('Backing up root %s' % root)
-                self.fs.reinit(root)
-                absroot = self.fs.abspath('.')
-                self.root_metadata = self.fs.lstat(absroot)
-                for pathname, metadata in self.find_files(absroot):
-                    logging.debug('Backing up %s' % pathname)
-                    try:
-                        if stat.S_ISDIR(metadata.st_mode):
-                            self.backup_dir_contents(pathname)
-                        elif stat.S_ISREG(metadata.st_mode):
-                            assert metadata.md5 is None
-                            metadata.md5 = self.backup_file_contents(pathname)
-                        self.backup_metadata(pathname, metadata)
-                    except OSError, e:
-                        msg = 'Can\'t back up %s: %s' % (pathname, e.strerror)
-                        logging.error(msg)
-                        logging.debug(repr(e))
-                        self.app.hooks.call('error-message', msg)
-                    except IOError, e:
-                        msg = 'Can\'t back up %s: %s' % (pathname, e.strerror)
-                        logging.error(msg)
-                        logging.debug(repr(e))
-                        self.app.hooks.call('error-message', msg)
-                    if self.repo.fs.bytes_written - last_checkpoint >= interval:
-                        logging.info('Making checkpoint')
-                        self.backup_parents('.')
-                        self.repo.commit_client(checkpoint=True)
-                        self.repo.lock_client(client_name)
-                        self.repo.start_generation()
-                        last_checkpoint = self.repo.fs.bytes_written
-                        self.dump_memory_profile('at end of checkpoint')
-
-                self.backup_parents('.')
-
-            if self.fs:
-                self.fs.close()
-
-        self.repo.commit_client()
-        self.repo.fs.close()
-
-        logging.info('Backup finished.')
-        self.dump_memory_profile('at end of backup run')
 
     def vmrss(self):
         f = open('/proc/self/status')
@@ -178,6 +135,58 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             from meliae import scanner
             scanner.dump_all_objects(filename)
             self.memory_dump_counter += 1
+
+    def backup_roots(self, roots):
+        self.fs = self.app.fsf.new(roots[0])
+        self.fs.connect()
+
+        absroots = []
+        for root in roots:
+            self.fs.reinit(root)
+            absroots.append(self.fs.abspath('.'))
+            
+        self.remove_old_roots(absroots)
+
+        last_checkpoint = 0
+        interval = self.app.settings['checkpoint']
+
+        for root in roots:
+            logging.info('Backing up root %s' % root)
+            self.fs.reinit(root)
+            absroot = self.fs.abspath('.')
+            self.root_metadata = self.fs.lstat(absroot)
+            for pathname, metadata in self.find_files(absroot):
+                logging.debug('Backing up %s' % pathname)
+                try:
+                    if stat.S_ISDIR(metadata.st_mode):
+                        self.backup_dir_contents(pathname)
+                    elif stat.S_ISREG(metadata.st_mode):
+                        assert metadata.md5 is None
+                        metadata.md5 = self.backup_file_contents(pathname)
+                    self.backup_metadata(pathname, metadata)
+                except OSError, e:
+                    msg = 'Can\'t back up %s: %s' % (pathname, e.strerror)
+                    logging.error(msg)
+                    logging.debug(repr(e))
+                    self.app.hooks.call('error-message', msg)
+                except IOError, e:
+                    msg = 'Can\'t back up %s: %s' % (pathname, e.strerror)
+                    logging.error(msg)
+                    logging.debug(repr(e))
+                    self.app.hooks.call('error-message', msg)
+                if self.repo.fs.bytes_written - last_checkpoint >= interval:
+                    logging.info('Making checkpoint')
+                    self.backup_parents('.')
+                    self.repo.commit_client(checkpoint=True)
+                    self.repo.lock_client(client_name)
+                    self.repo.start_generation()
+                    last_checkpoint = self.repo.fs.bytes_written
+                    self.dump_memory_profile('at end of checkpoint')
+
+            self.backup_parents('.')
+
+        if self.fs:
+            self.fs.close()
 
     def find_files(self, root):
         '''Find all files and directories that need to be backed up.

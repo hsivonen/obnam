@@ -8,6 +8,12 @@ This file summarizes changes between releases of Obnam.
 Version 0.21, released UNRELEASED; a BETA release
 -------------------------------------------------
 
+USER VISIBLE CHANGES:
+
+* Obnam will now unlock the repository if there's an error during a backup.
+  For the most part, the `force-lock` operation should now be unnecessary,
+  but it's still there in case it's useful some day.
+
 BUG FIXES:
 
 * Negative timestamps for files now work. Thanks to Jamil Djadala
