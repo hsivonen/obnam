@@ -58,7 +58,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
     def backup(self, args):
         '''Backup data to repository.'''
         logging.info('Backup starts')
-
         logging.info('Checkpoints every %s bytes' % 
                         self.app.settings['checkpoint'])
 
@@ -68,13 +67,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         roots = self.app.settings['root'] + args
 
         self.repo = self.app.open_repository(create=True)
-
         client_name = self.app.settings['client-name']
-        if client_name not in self.repo.list_clients():
-            tracing.trace('adding new client %s' % client_name)
-            self.repo.lock_root()
-            self.repo.add_client(client_name)
-            self.repo.commit_root()
+        self.add_client(client_name)
 
         self.repo.lock_client(client_name)
         self.repo.start_generation()
@@ -147,6 +141,13 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         logging.info('Backup finished.')
         self.dump_memory_profile('at end of backup run')
+
+    def add_client(self, client_name):
+        if client_name not in self.repo.list_clients():
+            tracing.trace('adding new client %s' % client_name)
+            self.repo.lock_root()
+            self.repo.add_client(client_name)
+            self.repo.commit_root()
 
     def vmrss(self):
         f = open('/proc/self/status')
