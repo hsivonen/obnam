@@ -82,7 +82,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.repo.fs.close()
 
             logging.info('Backup finished.')
-            self.dump_memory_profile('at end of backup run')
+            self.app.dump_memory_profile('at end of backup run')
         except BaseException:
             logging.info('Unlocking client because of error')
             self.repo.unlock_client()
@@ -104,37 +104,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             logging.debug('Exclude pattern: %s' % pattern)
         self.exclude_pats = [re.compile(x) 
                              for x in self.app.settings['exclude']]
-
-    def vmrss(self):
-        f = open('/proc/self/status')
-        rss = 0
-        for line in f:
-            if line.startswith('VmRSS'):
-                rss = line.split()[1]
-        f.close()
-        return rss
-
-    def dump_memory_profile(self, msg):
-        kind = self.app.settings['dump-memory-profile']
-        if kind == 'none':
-            return
-        logging.debug('dumping memory profiling data: %s' % msg)
-        logging.debug('VmRSS: %s KiB' % self.vmrss())
-        if kind in ['heapy', 'meliae']:
-            # These are fairly expensive operations, so we only log them
-            # if we're doing expensive stuff anyway.
-            logging.debug('# objects: %d' % len(gc.get_objects()))
-            logging.debug('# garbage: %d' % len(gc.garbage))
-        if kind == 'heapy':
-            from guppy import hpy
-            h = hpy()
-            logging.debug('memory profile:\n%s' % h.heap())
-        elif kind == 'meliae':
-            filename = 'obnam-%d.meliae' % self.memory_dump_counter
-            logging.debug('memory profile: see %s' % filename)
-            from meliae import scanner
-            scanner.dump_all_objects(filename)
-            self.memory_dump_counter += 1
 
     def backup_roots(self, roots):
         self.fs = self.app.fsf.new(roots[0])
@@ -181,7 +150,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     self.repo.lock_client(client_name)
                     self.repo.start_generation()
                     last_checkpoint = self.repo.fs.bytes_written
-                    self.dump_memory_profile('at end of checkpoint')
+                    self.app.dump_memory_profile('at end of checkpoint')
 
             self.backup_parents('.')
 
@@ -296,7 +265,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             if len(chunkids) >= self.app.settings['chunkids-per-group']:
                 tracing.trace('adding %d chunkids to file' % len(chunkids))
                 self.repo.append_file_chunks(filename, chunkids)
-                self.dump_memory_profile('after appending some chunkids')
+                self.app.dump_memory_profile('after appending some chunkids')
                 chunkids = []
             self.app.hooks.call('progress-data-uploaded', len(data))
         tracing.trace('closing file')
@@ -304,8 +273,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         if chunkids:
             tracing.trace('adding final %d chunkids to file' % len(chunkids))
             self.repo.append_file_chunks(filename, chunkids)
-        self.dump_memory_profile('at end of file content backup for %s' %
-                                 filename)
+        self.app.dump_memory_profile('at end of file content backup for %s' %
+                                     filename)
         tracing.trace('done backing up file contents')
         return summer.digest()
         

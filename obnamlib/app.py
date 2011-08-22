@@ -54,13 +54,6 @@ class App(cliapp.Application):
                                  '(default: %default)',
                              default=obnamlib.DEFAULT_LRU_SIZE)
 
-        self.settings.choice(['dump-memory-profile'],
-                           ['simple', 'none', 'meliae', 'heapy'],
-                           'make memory profiling dumps '
-                                'after each checkpoint and at end? '
-                                'set to none, simple, meliae, or heapy '
-                                '(default: %default)')
-
         self.settings.string_list(['trace'],
                                 'add to filename patters for which trace '
                                 'debugging logging happens')
