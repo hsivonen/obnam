@@ -74,15 +74,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.repo.start_generation()
         self.fs = None
 
-        log = self.app.settings['log']
-        if log:
-            log = self.app.settings['log']
-            self.app.settings['exclude'].append(log)
-        for pattern in self.app.settings['exclude']:
-            logging.debug('Exclude pattern: %s' % pattern)
-        self.exclude_pats = [re.compile(x) 
-                             for x in self.app.settings['exclude']]
-
+        self.compile_exclusion_patterns()
+        
         self.memory_dump_counter = 0
 
         if roots:
@@ -100,6 +93,16 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.repo.lock_root()
             self.repo.add_client(client_name)
             self.repo.commit_root()
+
+    def compile_exclusion_patterns(self):
+        log = self.app.settings['log']
+        if log:
+            log = self.app.settings['log']
+            self.app.settings['exclude'].append(log)
+        for pattern in self.app.settings['exclude']:
+            logging.debug('Exclude pattern: %s' % pattern)
+        self.exclude_pats = [re.compile(x) 
+                             for x in self.app.settings['exclude']]
 
     def vmrss(self):
         f = open('/proc/self/status')
