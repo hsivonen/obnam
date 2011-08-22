@@ -72,16 +72,21 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.add_client(client_name)
 
         self.repo.lock_client(client_name)
-        self.repo.start_generation()
-        self.fs = None
-        roots = self.app.settings['root'] + args
-        if roots:
-            self.backup_roots(roots)
-        self.repo.commit_client()
-        self.repo.fs.close()
+        try:
+            self.repo.start_generation()
+            self.fs = None
+            roots = self.app.settings['root'] + args
+            if roots:
+                self.backup_roots(roots)
+            self.repo.commit_client()
+            self.repo.fs.close()
 
-        logging.info('Backup finished.')
-        self.dump_memory_profile('at end of backup run')
+            logging.info('Backup finished.')
+            self.dump_memory_profile('at end of backup run')
+        except BaseException:
+            logging.info('Unlocking client because of error')
+            self.repo.unlock_client()
+            raise
 
     def add_client(self, client_name):
         if client_name not in self.repo.list_clients():
