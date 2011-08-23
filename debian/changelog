@@ -4,9 +4,10 @@ obnam (0.21-1) unstable; urgency=low
   * First upload to Debian. (Closes: #636444)
   * debian/control: Update python-cliapp versioned dependency to match
     the version that provides dump_memory_profile.
-  * debian/control: Add dependency on python-all-dbg.
+  * Tweak packaging to match upstream change from Makefile+setup.py to just
+    setup.py.
 
- -- Lars Wirzenius <liw@liw.fi>  Tue, 23 Aug 2011 10:51:07 +0100
+ -- Lars Wirzenius <liw@liw.fi>  Tue, 23 Aug 2011 18:07:07 +0100
 
 obnam (0.20.1-1) squeeze; urgency=low
 
