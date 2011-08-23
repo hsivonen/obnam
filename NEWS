@@ -5,7 +5,7 @@ Obnam NEWS
 This file summarizes changes between releases of Obnam.
 
 
-Version 0.21, released UNRELEASED; a BETA release
+Version 0.21, released 2011-08-23; a BETA release
 -------------------------------------------------
 
 USER VISIBLE CHANGES:
@@ -18,6 +18,10 @@ BUG FIXES:
 
 * Negative timestamps for files now work. Thanks to Jamil Djadala
   for reporting the bug.
+* The documentation for --checkpoint units fixed. Thanks, user weinzwang
+  from IRC.
+* The connections to the repository and live data filesystem are now
+  properly closed. This makes benchmark read/write statistics be correct.
 
 Version 0.20.1, released 2011-08-11; a BETA release
 -------------------------------------------------

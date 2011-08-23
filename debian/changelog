@@ -1,10 +1,13 @@
-obnam (0.21-1) UNRELEASED; urgency=low
+obnam (0.21-1) unstable; urgency=low
 
   * New upstream release.
+  * First upload to Debian. (Closes: #636444)
   * debian/control: Update python-cliapp versioned dependency to match
     the version that provides dump_memory_profile.
+  * Tweak packaging to match upstream change from Makefile+setup.py to just
+    setup.py.
 
- -- Lars Wirzenius <liw@liw.fi>  Mon, 22 Aug 2011 18:16:27 +0100
+ -- Lars Wirzenius <liw@liw.fi>  Tue, 23 Aug 2011 18:07:07 +0100
 
 obnam (0.20.1-1) squeeze; urgency=low
 
