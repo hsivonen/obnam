@@ -2,11 +2,3 @@
 %:
 	dh $@ --with=python2 --with-buildsystem=python_distutils
 
-override_dh_auto_build:
-	dh_auto_build --with=python2 --with-buildsystem=python_distutils
-	$(MAKE) all
-
-override_dh_auto_install:
-	dh_auto_install --with=python2 --with-buildsystem=python_distutils
-	python setup.py install --prefix=debian/obnam/usr --install-layout=deb
-
