@@ -5,6 +5,7 @@ Priority: optional
 Standards-Version: 3.9.2
 Build-Depends: debhelper (>= 7.3.8), 
     python-all-dev (>= 2.6.3~3), 
+    python-all-dbg (>= 2.6.3~3), 
     python-coverage-test-runner, 
     python-larch (>= 0.21~), 
     python-ttystatus (>= 0.8),
