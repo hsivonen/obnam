@@ -85,7 +85,7 @@ setup(name='obnam',
       url='http://braawi.org/obnam/',
       scripts=['obnam', 'obnam-benchmark'],
       packages=['obnamlib', 'obnamlib.plugins'],
-      ext_modules=[Extension('_obnam', sources=['_obnammodule.c'])],
+      ext_modules=[Extension('obnamlib._obnam', sources=['_obnammodule.c'])],
       data_files=[('share/man/man1', glob.glob('*.1'))],
       cmdclass={
         'build': GenerateManpage,
