@@ -6,6 +6,7 @@ obnam (0.21-1) unstable; urgency=low
     the version that provides dump_memory_profile.
   * Tweak packaging to match upstream change from Makefile+setup.py to just
     setup.py.
+  * debian/control: Provide python-obnam.
 
  -- Lars Wirzenius <liw@liw.fi>  Tue, 23 Aug 2011 18:07:07 +0100
 
