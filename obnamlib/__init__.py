@@ -20,7 +20,19 @@ import cliapp
 __version__ = '0.21'
 
 
-import _obnam
+
+# Import _obnam if it is there. We need to be able to do things without
+# it, especially at build time, while we're generating manual pages.
+# If _obnam is not there, substitute a dummy that throws an exception
+# if used.
+class DummyExtension(object):
+    def __getattr__(self, name):
+        raise Exception('Trying to use _obnam, but that was not found.')
+try:
+    import _obna
+except ImportError:
+    _obnam = DummyExtension()
+
 from pluginmgr import PluginManager
 
 
