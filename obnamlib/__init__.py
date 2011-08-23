@@ -29,7 +29,7 @@ class DummyExtension(object):
     def __getattr__(self, name):
         raise Exception('Trying to use _obnam, but that was not found.')
 try:
-    import _obna
+    import _obnam
 except ImportError:
     _obnam = DummyExtension()
 
