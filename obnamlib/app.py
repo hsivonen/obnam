@@ -18,8 +18,9 @@ import cliapp
 import logging
 import os
 import socket
-import tracing
+import StringIO
 import sys
+import tracing
 
 import obnamlib
 
@@ -107,6 +108,7 @@ class App(cliapp.Application):
         return os.path.join(os.path.dirname(obnamlib.__file__), 'plugins')
 
     def process_args(self, args):
+        self.log_config()
         for pattern in self.settings['trace']:
             tracing.trace_add_pattern(pattern)
         self.hooks.call('config-loaded')
@@ -114,6 +116,12 @@ class App(cliapp.Application):
         cliapp.Application.process_args(self, args)
         self.hooks.call('shutdown')
         logging.info('Obnam ends')
+
+    def log_config(self):
+        '''Log current configuration into the log file.'''
+        f = StringIO.StringIO()
+        self.settings.dump_config(f)
+        logging.debug('Current configuration:\n%s' % f.getvalue())
 
     def open_repository(self, create=False): # pragma: no cover
         logging.debug('opening repository (create=%s)' % create)

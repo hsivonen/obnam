@@ -8,6 +8,12 @@ This file summarizes changes between releases of Obnam.
 Version 0.22, released UNRELEASED; a BETA release
 -------------------------------------------------
 
+USER VISIBLE CHANGES:
+
+* Obnam now reports its current configuration in the log file at startup.
+  This will hopefully remove one round of "did you use the --foo option?"
+  questions between developers and bug reporters.
+
 BUG FIXES:
 
 * The repository is now unlocked on exit only if it is still locked.
