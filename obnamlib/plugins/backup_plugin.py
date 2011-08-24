@@ -84,8 +84,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             logging.info('Backup finished.')
             self.app.dump_memory_profile('at end of backup run')
         except BaseException:
-            logging.info('Unlocking client because of error')
-            self.repo.unlock_client()
+            if self.repo.got_client_lock:
+                logging.info('Unlocking client because of error')
+                self.repo.unlock_client()
             raise
 
     def add_client(self, client_name):
