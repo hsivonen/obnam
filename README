@@ -70,12 +70,13 @@ at a bzr repository, it is not useful to browse it by hand.
 
 To build:
 
-    make
+    python setup build_ext -i
+    rm -rf build
     
 To run automatic tests:
 
-    make check 
-    make network-tests # Requires ssh access to localhost.
+    python setup.py check
+    python setuo.py check --network # Requires ssh access to localhost.
     
 You need my CoverageTestRunner to run tests, see above for where to get it.
 A couple of scripts exist to run benchmarks and profiles:
