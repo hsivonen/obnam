@@ -2,3 +2,7 @@
 %:
 	dh $@ --with=python2 --with-buildsystem=python_distutils
 
+override_dh_auto_test:
+	python setup.py build_ext -i
+	rm -rf build
+	python setup.py check
