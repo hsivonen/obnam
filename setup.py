@@ -21,6 +21,7 @@ from distutils.command.build import build
 from distutils.command.clean import clean
 import glob
 import os
+import shutil
 import subprocess
 
 class GenerateManpage(build):
@@ -46,6 +47,8 @@ class CleanMore(clean):
                 os.remove(x)
         self.remove_pyc('obnamlib')
         self.remove_pyc('test-plugins')
+        if os.path.isdir('build'):
+            shutil.rmtree('build')
         
     def remove_pyc(self, rootdir):
         for dirname, subdirs, basenames in os.walk(rootdir):
