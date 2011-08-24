@@ -148,7 +148,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     logging.info('Making checkpoint')
                     self.backup_parents('.')
                     self.repo.commit_client(checkpoint=True)
-                    self.repo.lock_client(client_name)
+                    self.repo.lock_client(self.app.settings['client-name'])
                     self.repo.start_generation()
                     last_checkpoint = self.repo.fs.bytes_written
                     self.app.dump_memory_profile('at end of checkpoint')
@@ -174,6 +174,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 self.app.hooks.call('progress-found-file', pathname, metadata)
                 if self.needs_backup(pathname, metadata):
                     yield pathname, metadata
+            except GeneratorExit:
+                raise
             except BaseException, e:
                 msg = 'Cannot back up %s: %s' % (pathname, str(e))
                 logging.error(msg)
