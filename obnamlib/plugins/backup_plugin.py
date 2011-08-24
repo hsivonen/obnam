@@ -176,6 +176,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     yield pathname, metadata
             except GeneratorExit:
                 raise
+            except KeyboardInterrupt:
+                logging.error('Keyboard interrupt')
+                raise
             except BaseException, e:
                 msg = 'Cannot back up %s: %s' % (pathname, str(e))
                 logging.error(msg)
