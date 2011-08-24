@@ -40,10 +40,19 @@ class CleanMore(clean):
     def run(self):
         clean.run(self)
         for x in ['blackboxtest.log', 'blackboxtest-obnam.log',
-                  'obnam.1', 'obnam-benchmark.1']:
+                  'obnam.1', 'obnam-benchmark.1',
+                  'obnamlib/_obnam.so']:
             if os.path.exists(x):
                 os.remove(x)
-
+        self.remove_pyc('obnamlib')
+        self.remove_pyc('test-plugins')
+        
+    def remove_pyc(self, rootdir):
+        for dirname, subdirs, basenames in os.walk(rootdir):
+            for x in [os.path.join(dirname, base)
+                       for base in basenames
+                       if base.endswith('.pyc')]:
+                os.remove(x)
 
 class Check(Command):
 
