@@ -40,7 +40,7 @@ class CleanMore(clean):
     def run(self):
         clean.run(self)
         for x in ['blackboxtest.log', 'blackboxtest-obnam.log',
-                  'obnam.1', 'obnam-benchmark.1',
+                  'obnam.1', 'obnam-benchmark.1', '.coverage',
                   'obnamlib/_obnam.so']:
             if os.path.exists(x):
                 os.remove(x)
