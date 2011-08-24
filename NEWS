@@ -5,6 +5,23 @@ Obnam NEWS
 This file summarizes changes between releases of Obnam.
 
 
+Version 0.22, released UNRELEASED; a BETA release
+-------------------------------------------------
+
+BUG FIXES:
+
+* The repository is now unlocked on exit only if it is still locked.
+* A wrongly caught `GeneratorExit` is now dealt with properly.
+* Keyboard interrupts are logged, so they don't show up as anonymous errors.
+
+CHANGES RELEVANT TO DEVELOPERS ONLY:
+
+* `setup.py` has been enhanced to work more like the old `Makefile` did:
+  `clean` removes more artifacts. Instructions in `README` have been updated
+  to point at `setup.py`.
+* Compiler warning about `_XOPEN_SOURCE` re-definition fixed.
+* Tests are now again run during a Debian package build.
+
 Version 0.21, released 2011-08-23; a BETA release
 -------------------------------------------------
 
