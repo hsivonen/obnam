@@ -63,8 +63,6 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
         self.repo.fs.close()
 
     def remove(self, genid):
-        if self.app.settings['pretend']:
-            self.app.hooks.call('status', 'pretending to remove %s' % genid)
-        else:
+        if not self.app.settings['pretend']:
             self.repo.remove_generation(genid)
 

@@ -4,6 +4,15 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
+Version 0.23, released UNRELEASED; a BETA release
+-------------------------------------------------
+
+INTERNAL CHANGES:
+
+* Got rid of terminal status plugin. Now, the `Application` class provides
+  a `ttystatus.TerminalStatus` instance instead, in the `ts` attribute.
+  Other plugings are supposed to use that for progress reporting and
+  messaging to the user.
 
 Version 0.22, released 2011-08-25; a BETA release
 -------------------------------------------------
