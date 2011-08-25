@@ -21,6 +21,7 @@ import socket
 import StringIO
 import sys
 import tracing
+import ttystatus
 
 import obnamlib
 
@@ -70,11 +71,15 @@ class App(cliapp.Application):
                               'chunk id mapping lowest bits skip',
                               default=obnamlib.IDPATH_SKIP)
 
+        self.settings.boolean(['quiet'], 'be silent')
+
         # The following needs to be done here, because it needs
         # to be done before option processing. This is a bit ugly,
         # but the best we can do with the current cliapp structure.
         # Possibly cliapp will provide a better hook for us to use
         # later on, but this is reality now.
+
+        self.setup_ttystatus()
 
         self.pm = obnamlib.PluginManager()
         self.pm.locations = [self.plugins_dir()]
@@ -122,6 +127,11 @@ class App(cliapp.Application):
         f = StringIO.StringIO()
         self.settings.dump_config(f)
         logging.debug('Current configuration:\n%s' % f.getvalue())
+
+    def setup_ttystatus(self):
+        self.ts = ttystatus.TerminalStatus(period=0.25)
+        if self.settings['quiet']:
+            self.ts.disable()
 
     def open_repository(self, create=False): # pragma: no cover
         logging.debug('opening repository (create=%s)' % create)

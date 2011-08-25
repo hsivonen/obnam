@@ -21,6 +21,7 @@ import re
 import stat
 import traceback
 import tracing
+import ttystatus
 
 import obnamlib
 
@@ -49,6 +50,29 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                                   'encode NUM chunk ids per group (%default)',
                                   metavar='NUM',
                                   default=obnamlib.DEFAULT_CHUNKIDS_PER_GROUP)
+        self.configure_ttystatus()
+
+    def configure_ttystatus(self):
+        self.app.ts.add(ttystatus.ElapsedTime())
+        self.app.ts.add(ttystatus.Literal(' '))
+        self.app.ts.add(ttystatus.Counter('current-file'))
+        self.app.ts.add(ttystatus.Literal(' files; '))
+        self.app.ts.add(ttystatus.ByteSize('uploaded-bytes'))
+        self.app.ts.add(ttystatus.Literal(' up ('))
+        self.app.ts.add(ttystatus.ByteSpeed('uploaded-bytes'))
+        self.app.ts.add(ttystatus.Literal(') '))
+        self.app.ts.add(ttystatus.Pathname('current-file'))
+
+    def update_progress_with_file(self, filename, metadata):
+        self.app.ts['current-file'] = filename
+
+    def update_progress_with_upload(self, amount):
+        self.ts['uploaded-bytes'] += amount
+
+    def error(self, msg, exc=None):
+        logging.error(msg)
+        if exc:
+            logging.debug(repr(exc))
 
     def parse_checkpoint_size(self, value):
         p = obnamlib.ByteSizeParser()
@@ -136,14 +160,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     self.backup_metadata(pathname, metadata)
                 except OSError, e:
                     msg = 'Can\'t back up %s: %s' % (pathname, e.strerror)
-                    logging.error(msg)
-                    logging.debug(repr(e))
-                    self.app.hooks.call('error-message', msg)
+                    self.error(msg, e)
                 except IOError, e:
                     msg = 'Can\'t back up %s: %s' % (pathname, e.strerror)
-                    logging.error(msg)
-                    logging.debug(repr(e))
-                    self.app.hooks.call('error-message', msg)
+                    self.error(msg, e)
                 if self.repo.fs.bytes_written - last_checkpoint >= interval:
                     logging.info('Making checkpoint')
                     self.backup_parents('.')
@@ -171,7 +191,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             tracing.trace('considering %s' % pathname)
             try:
                 metadata = obnamlib.read_metadata(self.fs, pathname)
-                self.app.hooks.call('progress-found-file', pathname, metadata)
+                self.update_progress_with_file(pathname, metadata)
                 if self.needs_backup(pathname, metadata):
                     yield pathname, metadata
             except GeneratorExit:
@@ -181,8 +201,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 raise
             except BaseException, e:
                 msg = 'Cannot back up %s: %s' % (pathname, str(e))
-                logging.error(msg)
-                self.app.hooks.call('error-message', msg)
+                self.error(msg, e)
 
     def can_be_backed_up(self, pathname, st):
         if self.app.settings['one-file-system']:
@@ -273,7 +292,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 self.repo.append_file_chunks(filename, chunkids)
                 self.app.dump_memory_profile('after appending some chunkids')
                 chunkids = []
-            self.app.hooks.call('progress-data-uploaded', len(data))
+            self.update_progress_with_upload(len(data))
         tracing.trace('closing file')
         f.close()
         if chunkids:
