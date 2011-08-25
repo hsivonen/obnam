@@ -1,2 +1,2 @@
 [config]
-basetgz = /home/pbuilder-tgz/sid-amd64-pristine.tgz, squeeze:amd64:/home/pbuilder-tgz/squeeze-amd64-custom.tgz, squeeze:i386:/home/pbuilder-tgz/squeeze-i386-custom.tgz
+basetgz = /home/pbuilder-tgz/sid-amd64-pristine.tgz, squeeze:/home/pbuilder-tgz/squeeze-amd64-custom.tgz, squeeze:i386:/home/pbuilder-tgz/squeeze-i386-custom.tgz
