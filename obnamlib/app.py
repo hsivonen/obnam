@@ -113,6 +113,8 @@ class App(cliapp.Application):
         return os.path.join(os.path.dirname(obnamlib.__file__), 'plugins')
 
     def process_args(self, args):
+        if self.settings['quiet']:
+            self.ts.disable()
         self.log_config()
         for pattern in self.settings['trace']:
             tracing.trace_add_pattern(pattern)
