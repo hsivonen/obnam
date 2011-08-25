@@ -161,7 +161,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             msg = ('Unknown file type: %s (%o)' % 
                    (filename, metadata.st_mode))
             logging.error(msg)
-            self.app.hooks.call('error-message', msg)
+            self.app.ts.notify(msg)
         
     def restore_regular_file(self, gen, to_dir, filename, metadata):
         logging.debug('restoring regular %s' % filename)
@@ -177,7 +177,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         if summer.digest() != correct_checksum:
             msg = 'File checksum restore error: %s' % filename
             logging.error(msg)
-            self.app.hooks.call('error-message', msg)
+            self.app.ts.notify(msg)
             self.errors = True
 
         obnamlib.set_metadata(self.fs, to_filename, metadata)

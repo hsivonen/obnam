@@ -84,9 +84,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
 
     def log_fail(self, e):
         logging.error('verify failure for %s: %s' % (e.filename, e.reason))
-        self.app.hooks.call('error-message',
-                            'verify failure: %s: %s' % 
-                            (e.filename, e.reason))
+        self.app.ts.notify('verify failure: %s: %s' % (e.filename, e.reason))
         self.failed = True
 
     def verify_recursively(self, gen, root):
