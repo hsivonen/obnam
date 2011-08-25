@@ -53,6 +53,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.configure_ttystatus()
 
     def configure_ttystatus(self):
+        self.app.ts['current-file'] = ''
+        self.app.ts['uploaded-bytes'] = 0
+        
         self.app.ts.add(ttystatus.ElapsedTime())
         self.app.ts.add(ttystatus.Literal(' '))
         self.app.ts.add(ttystatus.Counter('current-file'))
@@ -67,7 +70,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.app.ts['current-file'] = filename
 
     def update_progress_with_upload(self, amount):
-        self.ts['uploaded-bytes'] += amount
+        self.app.ts['uploaded-bytes'] += amount
 
     def error(self, msg, exc=None):
         logging.error(msg)
