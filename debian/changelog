@@ -1,10 +1,10 @@
-obnam (0.22-1) UNRELEASED; urgency=low
+obnam (0.22-1) unstable; urgency=low
 
   * New upstream release.
   * debian/control: Update versioned depedendency on python-cliapp. Upstream
     now uses the dump_config feature in cliapp 0.18.
 
- -- Lars Wirzenius <liw@liw.fi>  Wed, 24 Aug 2011 17:53:12 +0100
+ -- Lars Wirzenius <liw@liw.fi>  Thu, 25 Aug 2011 08:31:10 +0100
 
 obnam (0.21-1) unstable; urgency=low
 
