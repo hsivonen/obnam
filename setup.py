@@ -90,7 +90,7 @@ class Check(Command):
 
 
 setup(name='obnam',
-      version='0.21',
+      version='0.22',
       description='Backup software',
       author='Lars Wirzenius',
       author_email='liw@liw.fi',
