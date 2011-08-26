@@ -136,6 +136,8 @@ class ObnamBenchmark(cliapp.Application):
                               'access the live data over SFTP '
                                 '(requires ssh to localhost to work)')
         self.settings.string(['description'], 'describe benchmark')
+        
+        self.settings.boolean(['verify'], 'verify restores')
 
     def process_args(self, args):
         self.require_tmpdir()
@@ -211,6 +213,8 @@ class ObnamBenchmark(cliapp.Application):
                     if self.settings['description']:
                         argv.extend(['--description', 
                                      self.settings['description']])
+                    if self.settings['verify']:
+                        argv.append('--verify')
                     subprocess.check_call(argv, env=env)
 
         shutil.rmtree(tempdir)
