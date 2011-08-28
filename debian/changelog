@@ -1,3 +1,9 @@
+obnam (0.22-2) unstable; urgency=low
+
+  * Fix FTBFS problem. (Closes: #639561)
+
+ -- Lars Wirzenius <liw@liw.fi>  Sun, 28 Aug 2011 16:29:27 +0100
+
 obnam (0.22-1) unstable; urgency=low
 
   * New upstream release.
