@@ -3,6 +3,7 @@
 	dh $@ --with=python2 --with-buildsystem=python_distutils
 
 override_dh_auto_test:
-	python setup.py build_ext -i
-	rm -rf build
+	cp -a test-gpghome temp.gpghome
+	env GNUPGHOME=temp.gpghome python setup.py build_ext -i
+	rm -rf build temp.gpghome
 	python setup.py check
