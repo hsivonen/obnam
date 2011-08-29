@@ -7,6 +7,10 @@ This file summarizes changes between releases of Obnam.
 Version 0.23, released UNRELEASED; a BETA release
 -------------------------------------------------
 
+USER VISIBLE CHANGES:
+
+* `restore` now shows a rudimentary progress bar.
+
 INTERNAL CHANGES:
 
 * Got rid of terminal status plugin. Now, the `Application` class provides
