@@ -227,7 +227,10 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     def _lookup_count(self, genid, count_type):
         tree = self.find_generation(genid)
         key = self.genkey(count_type)
-        return self._lookup_int(tree, key)
+        try:
+            return self._lookup_int(tree, key)
+        except KeyError:
+            return 0
 
     def _insert_count(self, genid, count_type, count):
         tree = self.find_generation(genid)
