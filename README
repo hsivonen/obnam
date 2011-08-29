@@ -68,15 +68,14 @@ The canonical version control repository for obnam itself is at:
 The 'trunk' branch is the main development one. Note that the URL points
 at a bzr repository, it is not useful to browse it by hand.
 
-To build:
+To build and run automatic tests:
 
-    python setup build_ext -i
-    rm -rf build
-    
-To run automatic tests:
+    ./check
+    ./check --fast # unit tests only, no blackboxtests
+    ./check --network # requires ssh access to localhost
 
-    python setup.py check
-    python setuo.py check --network # Requires ssh access to localhost.
+`check` is a wrapper around `python setup.py`, but since using that
+takes several steps, the script makes things easier.
     
 You need my CoverageTestRunner to run tests, see above for where to get it.
 A couple of scripts exist to run benchmarks and profiles:
