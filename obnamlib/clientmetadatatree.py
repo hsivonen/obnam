@@ -58,6 +58,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     GEN_STARTED = 1         # subkey type for when generation was started
     GEN_ENDED = 2           # subkey type for when generation was ended
     GEN_IS_CHECKPOINT = 3   # subkey type for whether generation is checkpoint
+    GEN_FILE_COUNT = 4      # subkey type for count of files+dirs in generation
     
     # Maximum values for the subkey type field, and the subkey field.
     # Both have a minimum value of 0.
@@ -222,6 +223,19 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         tree = self.find_generation(genid)
         return (self._lookup_time(tree, self.GEN_STARTED),
                 self._lookup_time(tree, self.GEN_ENDED))
+
+    def _lookup_count(self, genid, count_type):
+        tree = self.find_generation(genid)
+        key = self.genkey(count_type)
+        return self._lookup_int(tree, key)
+
+    def _insert_count(self, genid, count_type, count):
+        tree = self.find_generation(genid)
+        key = self.genkey(count_type)
+        return self._insert_int(tree, key, count)
+
+    def get_generation_file_count(self, genid):
+        return self._lookup_count(genid, self.GEN_FILE_COUNT)
 
     def create(self, filename, encoded_metadata):
         tracing.trace('filename=%s', filename)
