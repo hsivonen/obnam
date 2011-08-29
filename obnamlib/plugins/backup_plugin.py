@@ -50,7 +50,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                                   'encode NUM chunk ids per group (%default)',
                                   metavar='NUM',
                                   default=obnamlib.DEFAULT_CHUNKIDS_PER_GROUP)
-        self.configure_ttystatus()
 
     def configure_ttystatus(self):
         self.app.ts['current-file'] = ''
@@ -90,6 +89,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         self.app.settings.require('repository')
         self.app.settings.require('client-name')
+
+        self.configure_ttystatus()
 
         self.compile_exclusion_patterns()
         self.memory_dump_counter = 0

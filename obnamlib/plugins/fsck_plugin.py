@@ -25,7 +25,8 @@ class FsckPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
         self.app.add_subcommand('fsck', self.fsck)
-        
+
+    def configure_ttystatus(self):        
         self.app.ts['what'] = 'nothing yet'
         self.app.ts.add(ttystatus.Literal('Checking: '))
         self.app.ts.add(ttystatus.String('what'))
@@ -34,6 +35,7 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         '''Verify internal consistency of backup repository.'''
         self.app.settings.require('repository')
         logging.debug('fsck on %s' % self.app.settings['repository'])
+        self.configure_ttystatus()
         self.repo = self.app.open_repository()
         self.check_root()
         self.repo.fs.close()

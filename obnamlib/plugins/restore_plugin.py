@@ -17,6 +17,7 @@
 import logging
 import os
 import stat
+import ttystatus
 
 import obnamlib
 
@@ -66,6 +67,18 @@ class RestorePlugin(obnamlib.ObnamPlugin):
                                 'which generation to restore',
                                  default='latest')
 
+    def configure_ttystatus(self):
+        self.app.ts['current'] = ''
+        self.app.ts['total'] = 0
+        
+        self.app.ts.add(ttystatus.ElapsedTime())
+        self.app.ts.add(ttystatus.Literal(' '))
+        self.app.ts.add(ttystatus.Counter('current'))
+        self.app.ts.add(ttystatus.Literal('/'))
+        self.app.ts.add(ttystatus.Integer('total'))
+        self.app.ts.add(ttystatus.Literal(': '))
+        self.app.ts.add(ttystatus.Pathname('current'))
+
     def restore(self, args):
         '''Restore some or all files from a generation.'''
         self.app.settings.require('repository')
@@ -92,6 +105,10 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         self.errors = False
         
         gen = self.repo.genspec(self.app.settings['generation'])
+
+        self.configure_ttystatus()
+        self.app.ts['total'] = self.repo.client.get_generation_file_count(gen)
+
         for arg in args:
             metadata = self.repo.get_metadata(gen, arg)
             if metadata.isdir():
@@ -104,12 +121,15 @@ class RestorePlugin(obnamlib.ObnamPlugin):
 
         self.repo.fs.close()
         self.fs.close()
+        
+        self.app.ts.finish()
                 
         if self.errors:
             raise obnamlib.Error('There were errors when restoring')
 
     def restore_recursively(self, gen, to_dir, root):
         logging.debug('restoring dir %s' % root)
+        self.app.ts['current'] = root
         if not self.fs.exists('./' + root):
             self.fs.makedirs('./' + root)
         for basename in self.repo.listdir(gen, root):
@@ -123,6 +143,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         obnamlib.set_metadata(self.fs, './' + root, metadata)
 
     def restore_file(self, gen, to_dir, filename):
+        self.app.ts['current'] = filename
         metadata = self.repo.get_metadata(gen, filename)
         if metadata.islink():
             self.restore_symlink(gen, to_dir, filename, metadata)
