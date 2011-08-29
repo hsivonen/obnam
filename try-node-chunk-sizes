@@ -12,6 +12,8 @@ sizes="8kib 16kib"
 
 conf="$(mktemp)"
 
+rm -rf try-sizes
+mkdir try-sizes
 for node_size in $sizes
 do
     for chunk_size in $sizes
