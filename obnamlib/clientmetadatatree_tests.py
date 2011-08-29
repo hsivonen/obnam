@@ -151,6 +151,18 @@ class ClientMetadataTreeTests(unittest.TestCase):
 
         self.assertEqual(self.client.get_generation_file_count(genid), 0)
 
+    def test_does_not_increment_count_for_recreated_files(self):
+        self.client.start_generation()
+        self.client.create('/foo', self.file_encoded)
+        self.client.commit()
+
+        self.client.start_generation()
+        genid = self.client.get_generation_id(self.client.tree)
+        self.client.create('/foo', self.file_encoded)
+        self.client.commit()
+
+        self.assertEqual(self.client.get_generation_file_count(genid), 1)
+
     def test_finds_generation_the_first_time(self):
         self.client.start_generation()
         tree = self.client.tree
