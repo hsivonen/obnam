@@ -70,12 +70,18 @@ class RestorePlugin(obnamlib.ObnamPlugin):
     def configure_ttystatus(self):
         self.app.ts['current'] = ''
         self.app.ts['total'] = 0
+        self.app.ts['current-bytes'] = 0
+        self.app.ts['total-bytes'] = 0
         
         self.app.ts.add(ttystatus.ElapsedTime())
         self.app.ts.add(ttystatus.Literal(' '))
         self.app.ts.add(ttystatus.Counter('current'))
         self.app.ts.add(ttystatus.Literal('/'))
         self.app.ts.add(ttystatus.Integer('total'))
+        self.app.ts.add(ttystatus.Literal(' '))
+        self.app.ts.add(ttystatus.ByteSize('current-bytes'))
+        self.app.ts.add(ttystatus.Literal('/'))
+        self.app.ts.add(ttystatus.ByteSize('total-bytes'))
         self.app.ts.add(ttystatus.Literal(': '))
         self.app.ts.add(ttystatus.Pathname('current'))
 
@@ -108,6 +114,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
 
         self.configure_ttystatus()
         self.app.ts['total'] = self.repo.client.get_generation_file_count(gen)
+        self.app.ts['total-bytes'] = self.repo.client.get_generation_data(gen)
 
         for arg in args:
             metadata = self.repo.get_metadata(gen, arg)
