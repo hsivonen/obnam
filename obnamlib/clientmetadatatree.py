@@ -263,10 +263,12 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
             self.file_count += 1
         else:
             old = obnamlib.decode_metadata(old_metadata)
-            self.total_data -= old.st_size or 0
+            if old.isfile():
+                self.total_data -= old.st_size or 0
 
         metadata = obnamlib.decode_metadata(encoded_metadata)
-        self.total_data += metadata.st_size or 0
+        if metadata.isfile():
+            self.total_data += metadata.st_size or 0
 
         if encoded_metadata != old_metadata:
             tracing.trace('new or changed metadata')
@@ -319,7 +321,8 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
             pass
         else:
             metadata = obnamlib.decode_metadata(encoded_metadata)
-            self.total_data -= metadata.st_size or 0
+            if metadata.isfile():
+                self.total_data -= metadata.st_size or 0
 
         # Remove any children.
         minkey = self.fskey(file_id, self.DIR_CONTENTS, 0)
