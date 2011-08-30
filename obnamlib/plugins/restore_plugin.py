@@ -225,6 +225,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             else:
                 f.write(data)
                 hole_at_end = False
+            self.app.ts['current-bytes'] += len(data)
         if hole_at_end:
             pos = f.tell()
             if pos > 0:
