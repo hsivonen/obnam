@@ -33,7 +33,9 @@ class ClientMetadataTreeTests(unittest.TestCase):
                                    obnamlib.DEFAULT_NODE_SIZE,
                                    obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
                                    obnamlib.DEFAULT_LRU_SIZE, self)
-        self.file_metadata = obnamlib.Metadata(st_mode=stat.S_IFREG | 0666)
+        self.file_size = 123
+        self.file_metadata = obnamlib.Metadata(st_mode=stat.S_IFREG | 0666,
+                                               st_size=self.file_size)
         self.file_encoded = obnamlib.encode_metadata(self.file_metadata)
         
     def tearDown(self):
@@ -162,6 +164,71 @@ class ClientMetadataTreeTests(unittest.TestCase):
         self.client.commit()
 
         self.assertEqual(self.client.get_generation_file_count(genid), 1)
+
+    def test_single_empty_generation_has_no_data(self):
+        self.client.start_generation()
+        genid = self.client.get_generation_id(self.client.tree)
+        self.client.commit()
+        self.assertEqual(self.client.get_generation_data(genid), 0)
+
+    def test_has_data_in_first_generation(self):
+        self.client.start_generation()
+        genid = self.client.get_generation_id(self.client.tree)
+        self.client.create('/foo', self.file_encoded)
+        self.client.commit()
+        self.assertEqual(self.client.get_generation_data(genid),
+                         self.file_size)
+
+    def test_counts_new_files_in_second_generation(self):
+        self.client.start_generation()
+        self.client.create('/foo', self.file_encoded)
+        self.client.commit()
+
+        self.client.start_generation()
+        genid = self.client.get_generation_id(self.client.tree)
+        self.client.create('/bar', self.file_encoded)
+        self.client.commit()
+
+        self.assertEqual(self.client.get_generation_data(genid),
+                         2 * self.file_size)
+
+    def test_counts_replaced_data_in_second_generation(self):
+        self.client.start_generation()
+        self.client.create('/foo', self.file_encoded)
+        self.client.commit()
+
+        self.client.start_generation()
+        genid = self.client.get_generation_id(self.client.tree)
+        self.client.create('/foo', self.file_encoded)
+        self.client.commit()
+
+        self.assertEqual(self.client.get_generation_data(genid),
+                         self.file_size)
+
+    def test_discounts_deleted_data_in_second_generation(self):
+        self.client.start_generation()
+        self.client.create('/foo', self.file_encoded)
+        self.client.commit()
+
+        self.client.start_generation()
+        genid = self.client.get_generation_id(self.client.tree)
+        self.client.remove('/foo')
+        self.client.commit()
+
+        self.assertEqual(self.client.get_generation_data(genid), 0)
+
+    def test_does_not_increment_data_for_recreated_files(self):
+        self.client.start_generation()
+        self.client.create('/foo', self.file_encoded)
+        self.client.commit()
+
+        self.client.start_generation()
+        genid = self.client.get_generation_id(self.client.tree)
+        self.client.create('/foo', self.file_encoded)
+        self.client.commit()
+
+        self.assertEqual(self.client.get_generation_data(genid), 
+                         self.file_size)
 
     def test_finds_generation_the_first_time(self):
         self.client.start_generation()
