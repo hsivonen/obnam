@@ -17,6 +17,8 @@ INTERNAL CHANGES:
   a `ttystatus.TerminalStatus` instance instead, in the `ts` attribute.
   Other plugings are supposed to use that for progress reporting and
   messaging to the user.
+* The `posix_fadvise` system call is used only if available. This should
+  improve Obnam's portability a bit.
 
 Version 0.22, released 2011-08-25; a BETA release
 -------------------------------------------------
