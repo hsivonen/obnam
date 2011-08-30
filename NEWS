@@ -9,7 +9,7 @@ Version 0.23, released UNRELEASED; a BETA release
 
 USER VISIBLE CHANGES:
 
-* `restore` now shows a rudimentary progress bar.
+* `restore` now shows a progress bar.
 
 INTERNAL CHANGES:
 
