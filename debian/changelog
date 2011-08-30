@@ -1,3 +1,10 @@
+obnam (0.23-1) UNRELEASED; urgency=low
+
+  * debian/control: Depend on new ttystatus that fixes zero division
+    bug.
+
+ -- Lars Wirzenius <liw@liw.fi>  Wed, 31 Aug 2011 00:19:36 +0100
+
 obnam (0.22-2) unstable; urgency=low
 
   * Fix FTBFS problem. (Closes: #639561)
