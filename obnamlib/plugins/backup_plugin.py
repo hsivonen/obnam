@@ -108,6 +108,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 self.backup_roots(roots)
             self.repo.commit_client()
             self.repo.fs.close()
+            self.app.ts.finish()
 
             logging.info('Backup finished.')
             self.app.dump_memory_profile('at end of backup run')
@@ -116,7 +117,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 logging.info('Unlocking client because of error')
                 self.repo.unlock_client()
             raise
-
+            
     def add_client(self, client_name):
         if client_name not in self.repo.list_clients():
             tracing.trace('adding new client %s' % client_name)
