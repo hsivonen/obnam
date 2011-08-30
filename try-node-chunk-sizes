@@ -28,6 +28,7 @@ eof
         output="try-sizes/${node_size}-${chunk_size}.seivot"
         $HOME/seivot/trunk/seivot \
             --output="$output" \
+            --drop-caches \
             --obnam-config="$conf" \
             --generations=2 \
             --incremental=1 \
