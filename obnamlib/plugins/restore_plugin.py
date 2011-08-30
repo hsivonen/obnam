@@ -76,13 +76,11 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         self.app.ts.add(ttystatus.ElapsedTime())
         self.app.ts.add(ttystatus.Literal(' '))
         self.app.ts.add(ttystatus.Counter('current'))
-        self.app.ts.add(ttystatus.Literal('/'))
-        self.app.ts.add(ttystatus.Integer('total'))
         self.app.ts.add(ttystatus.Literal(' files, '))
         self.app.ts.add(ttystatus.ByteSize('current-bytes'))
-        self.app.ts.add(ttystatus.Literal('/'))
-        self.app.ts.add(ttystatus.ByteSize('total-bytes'))
-        self.app.ts.add(ttystatus.Literal(': '))
+        self.app.ts.add(ttystatus.Literal(' ('))
+        self.app.ts.add(ttystatus.PercentDone('current-bytes', 'total-bytes'))
+        self.app.ts.add(ttystatus.Literal('): '))
         self.app.ts.add(ttystatus.Pathname('current'))
 
     def restore(self, args):
