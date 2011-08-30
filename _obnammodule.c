@@ -46,6 +46,7 @@
 static PyObject *
 fadvise_dontneed(PyObject *self, PyObject *args)
 {
+#if POSIX_FADV_DONTNEED
     int fd;
     /* Can't use off_t for offset and len, since PyArg_ParseTuple
        doesn't know it. */
@@ -57,6 +58,9 @@ fadvise_dontneed(PyObject *self, PyObject *args)
         return NULL;
     ret = posix_fadvise(fd, offset, len, POSIX_FADV_DONTNEED);
     return Py_BuildValue("i", ret);
+#else
+    return Py_BuildValue("i", 0);
+#endif
 }
 
 
