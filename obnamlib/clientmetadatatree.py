@@ -59,6 +59,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     GEN_ENDED = 2           # subkey type for when generation was ended
     GEN_IS_CHECKPOINT = 3   # subkey type for whether generation is checkpoint
     GEN_FILE_COUNT = 4      # subkey type for count of files+dirs in generation
+    GEN_TOTAL_DATA = 5      # subkey type for sum of all file sizes in gen
     
     # Maximum values for the subkey type field, and the subkey field.
     # Both have a minimum value of 0.
@@ -159,9 +160,9 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         if self.tree:
             now = int(current_time())
             self._insert_int(self.tree, self.genkey(self.GEN_ENDED), now)
-            self._insert_count(self.get_generation_id(self.tree),
-                               self.GEN_FILE_COUNT,
-                               self.file_count)
+            genid = self.get_generation_id(self.tree)
+            self._insert_count(genid, self.GEN_FILE_COUNT, self.file_count)
+            self._insert_count(genid, self.GEN_TOTAL_DATA, self.total_data)
         obnamlib.RepositoryTree.commit(self)
 
     def find_generation(self, genid):
@@ -191,7 +192,8 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         now = int(current_time())
         self._insert_int(self.tree, self.genkey(self.GEN_ID), gen_id)
         self._insert_int(self.tree, self.genkey(self.GEN_STARTED), now)
-        self.file_count = self._lookup_count(gen_id, self.GEN_FILE_COUNT)
+        self.file_count = self.get_generation_files(gen_id)
+        self.total_data = self.get_generation_data(gen_id)
 
     def set_current_generation_is_checkpoint(self, is_checkpoint):
         tracing.trace('is_checkpoint=%s', is_checkpoint)
@@ -228,6 +230,12 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         return (self._lookup_time(tree, self.GEN_STARTED),
                 self._lookup_time(tree, self.GEN_ENDED))
 
+    def get_generation_files(self, genid):
+        return self._lookup_count(genid, self.GEN_FILE_COUNT)
+
+    def get_generation_data(self, genid):
+        return self._lookup_count(genid, self.GEN_TOTAL_DATA)
+
     def _lookup_count(self, genid, count_type):
         tree = self.find_generation(genid)
         key = self.genkey(count_type)
@@ -253,6 +261,15 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         except KeyError:
             old_metadata = None
             self.file_count += 1
+        else:
+            old = obnamlib.decode_metadata(old_metadata)
+            if old.isfile():
+                self.total_data -= old.st_size or 0
+
+        metadata = obnamlib.decode_metadata(encoded_metadata)
+        if metadata.isfile():
+            self.total_data += metadata.st_size or 0
+
         if encoded_metadata != old_metadata:
             tracing.trace('new or changed metadata')
             self.set_metadata(filename, encoded_metadata)
@@ -297,6 +314,15 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         file_id = self.get_file_id(self.tree, filename)
         genid = self.get_generation_id(self.tree)
         self.file_count -= 1
+        
+        try:
+            encoded_metadata = self.get_metadata(genid, filename)
+        except KeyError:
+            pass
+        else:
+            metadata = obnamlib.decode_metadata(encoded_metadata)
+            if metadata.isfile():
+                self.total_data -= metadata.st_size or 0
 
         # Remove any children.
         minkey = self.fskey(file_id, self.DIR_CONTENTS, 0)

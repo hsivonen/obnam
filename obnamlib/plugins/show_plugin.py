@@ -63,10 +63,12 @@ class ShowPlugin(obnamlib.ObnamPlugin):
                 checkpoint = ' (checkpoint)'
             else:
                 checkpoint = ''
-            sys.stdout.write('%s\t%s .. %s%s\n' %
+            sys.stdout.write('%s\t%s .. %s (%d files, %d bytes) %s\n' %
                              (gen, 
                               self.format_time(start), 
                               self.format_time(end),
+                              self.repo.client.get_generation_files(gen),
+                              self.repo.client.get_generation_data(gen),
                               checkpoint))
         self.repo.fs.close()
     
