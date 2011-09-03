@@ -73,15 +73,12 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         self.app.ts['current-bytes'] = 0
         self.app.ts['total-bytes'] = 0
         
-        self.app.ts.add(ttystatus.ElapsedTime())
-        self.app.ts.add(ttystatus.Literal(' '))
-        self.app.ts.add(ttystatus.Counter('current'))
-        self.app.ts.add(ttystatus.Literal(' files, '))
-        self.app.ts.add(ttystatus.ByteSize('current-bytes'))
-        self.app.ts.add(ttystatus.Literal(' ('))
-        self.app.ts.add(ttystatus.PercentDone('current-bytes', 'total-bytes'))
-        self.app.ts.add(ttystatus.Literal('): '))
-        self.app.ts.add(ttystatus.Pathname('current'))
+        self.app.ts.format('%RemainingTime(current-bytes,total-bytes) '
+                           '%Counter(current) files '
+                           '%ByteSize(current-bytes) '
+                           '(%PercentDone(current-bytes,total-bytes)) '
+                           '%ByteSpeed(current-bytes) '
+                           '%Pathname(current)')
 
     def restore(self, args):
         '''Restore some or all files from a generation.'''
