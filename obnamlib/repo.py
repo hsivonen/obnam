@@ -339,7 +339,7 @@ class Repository(object):
         self.check_format_version()
         client_id = self.clientlist.get_client_id(client_name)
         if client_id is None:
-            raise LockFail('client %s does not exit' % client_name)
+            raise LockFail('client %s does not exist' % client_name)
 
         client_dir = self.client_dir(client_id)
         if not self.fs.exists(client_dir):
