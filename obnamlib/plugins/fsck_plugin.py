@@ -42,6 +42,38 @@ class WorkItem(object):
         pass
 
 
+class CheckDirectory(WorkItem):
+
+    def __init__(self, client_name, genid, dirname):
+        self.client_name = client_name
+        self.genid = genid
+        self.dirname = dirname
+        self.name = ('client %s generation %s directory %s' % 
+                        (client_name, genid, dirname))
+        
+    def do(self):
+        self.repo.open_client(self.client_name)
+        self.repo.get_metadata(self.genid, self.dirname)
+        for basename in self.repo.listdir(self.genid, self.dirname):
+            pathname = os.path.join(self.dirname, basename)
+            metadata = self.repo.get_metadata(self.genid, pathname)
+            if metadata.isdir():
+                yield CheckDirectory(self.client_name, self.genid, pathname)
+#            else:
+#                self.check_file(genid, pathname)
+
+
+class CheckGeneration(WorkItem):
+
+    def __init__(self, client_name, genid):
+        self.client_name = client_name
+        self.genid = genid
+        self.name = 'client %s generation %s' % (client_name, genid)
+        
+    def do(self):
+        return [CheckDirectory(self.client_name, self.genid, '/')]
+
+
 class CheckClientExists(WorkItem):
 
     def __init__(self, client_name):
@@ -64,8 +96,7 @@ class CheckClient(WorkItem):
     def do(self):
         self.repo.open_client(self.client_name)
         for genid in self.repo.list_generations():
-            pass
-#            yield CheckGeneration(self.client_name, genid)
+            yield CheckGeneration(self.client_name, genid)
 
 
 class CheckClientlist(WorkItem):
@@ -114,25 +145,6 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         work.ts = self.app.ts
         work.repo = self.repo
         self.work_items.append(work)
-
-#    def check_generation(self, genid):
-#        '''Check a generation.'''
-#        logging.debug('Checking generation %s' % genid)
-#        self.app.ts['what'] = 'Checking generation %s' % genid
-#        self.check_dir(genid, '/')
-
-#    def check_dir(self, genid, dirname):
-#        '''Check a directory.'''
-#        logging.debug('Checking directory %s' % dirname)
-#        self.app.ts['what'] = 'Checking dir %s' % dirname
-#        self.repo.get_metadata(genid, dirname)
-#        for basename in self.repo.listdir(genid, dirname):
-#            pathname = os.path.join(dirname, basename)
-#            metadata = self.repo.get_metadata(genid, pathname)
-#            if metadata.isdir():
-#                self.check_dir(genid, pathname)
-#            else:
-#                self.check_file(genid, pathname)
 #                
 #    def check_file(self, genid, filename):
 #        '''Check a non-directory.'''
