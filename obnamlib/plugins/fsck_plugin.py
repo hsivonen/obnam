@@ -38,9 +38,6 @@ class WorkItem(object):
         else:
             return self.__class__.__name__
 
-    def scan(self):
-        return []
-
     def do(self):
         pass
 
@@ -58,16 +55,28 @@ class CheckClientExists(WorkItem):
                           self.client_name)
 
 
+class CheckClient(WorkItem):
+
+    def __init__(self, client_name):
+        self.client_name = client_name
+        self.name = 'client %s' % client_name
+
+    def do(self):
+        self.repo.open_client(self.client_name)
+        for genid in self.repo.list_generations():
+            pass
+#            yield CheckGeneration(self.client_name, genid)
+
+
 class CheckClientlist(WorkItem):
 
     name = 'client list'
 
-    def scan(self):
+    def do(self):
         for client_name in self.repo.clientlist.list_clients():
             yield CheckClientExists(client_name)
-
-    def do(self):
-        pass
+        for client_name in self.repo.clientlist.list_clients():
+            yield CheckClient(client_name)
 
 
 class FsckPlugin(obnamlib.ObnamPlugin):
@@ -92,16 +101,24 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         logging.debug('fsck on %s' % self.app.settings['repository'])
         self.repo = self.app.open_repository()
 
-        self.configure_ttystatus_stage1()
-        work_items = self.find_work()
-
-        self.configure_ttystatus_stage2(work_items)
-        for work in work_items:
+        self.work_items = []
+        self.add_item(CheckClientlist())
+        self.configure_ttystatus_stage2(self.work_items)
+        i = 0
+        while i < len(self.work_items):
+            work = self.work_items[i]
             self.app.ts['item'] = work
-            work.do()
+            for more in work.do() or []:
+                self.add_item(more)
+            i += 1
 
         self.repo.fs.close()
         self.app.ts.finish()
+
+    def add_item(self, work):
+        work.ts = self.app.ts
+        work.repo = self.repo
+        self.work_items.append(work)
 
     def find_work(self):
         work_items = []
@@ -115,20 +132,10 @@ class FsckPlugin(obnamlib.ObnamPlugin):
             queue.extend(list(work.scan()))
         return work_items
 
-#    def check_root(self):
-#        '''Check the root node.'''
-#        logging.debug('Checking root node')
-#        self.app.ts['what'] = 'Checking root node'
-#        for client in self.repo.list_clients():
-#            self.check_client(client)
-#    
 #    def check_client(self, client_name):
 #        '''Check a client.'''
 #        logging.debug('Checking client %s' % client_name)
 #        self.app.ts['what'] = 'Checking client %s' % client_name
-#        self.repo.open_client(client_name)
-#        for genid in self.repo.list_generations():
-#            self.check_generation(genid)
 
 #    def check_generation(self, genid):
 #        '''Check a generation.'''
