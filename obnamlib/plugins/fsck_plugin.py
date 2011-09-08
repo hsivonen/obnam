@@ -33,7 +33,10 @@ class WorkItem(object):
     '''
 
     def __str__(self):
-        return self.__class__.__name__
+        if hasattr(self, 'name'):
+            return self.name
+        else:
+            return self.__class__.__name__
 
     def scan(self):
         return []
@@ -46,6 +49,7 @@ class CheckClientExists(WorkItem):
 
     def __init__(self, client_name):
         self.client_name = client_name
+        self.name = 'does client %s exist?' % client_name
 
     def do(self):
         client_id = self.repo.clientlist.get_client_id(self.client_name)
@@ -55,6 +59,8 @@ class CheckClientExists(WorkItem):
 
 
 class CheckClientlist(WorkItem):
+
+    name = 'client list'
 
     def scan(self):
         for client_name in self.repo.clientlist.list_clients():
