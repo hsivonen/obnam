@@ -54,9 +54,13 @@ class CheckChunk(WorkItem):
         else:
             data = self.repo.get_chunk(self.chunkid)
             checksum = self.repo.checksum(data)
-            correct = self.repo.chunklist.get_checksum(self.chunkid)
-            if checksum != correct:
-                self.ts.error('chunk %s has wrong checksum' % self.chunkid)
+            try:
+                correct = self.repo.chunklist.get_checksum(self.chunkid)
+            except KeyError:
+                self.ts.error('chunk %s not in chunklist' % self.chunkid)
+            else:
+                if checksum != correct:
+                    self.ts.error('chunk %s has wrong checksum' % self.chunkid)
 
 
 class CheckFile(WorkItem):
