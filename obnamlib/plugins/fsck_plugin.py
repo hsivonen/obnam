@@ -84,12 +84,7 @@ class FsckPlugin(obnamlib.ObnamPlugin):
     def enable(self):
         self.app.add_subcommand('fsck', self.fsck)
 
-    def configure_ttystatus_stage1(self):
-        self.app.ts.clear()
-        self.app.ts['work'] = ''
-        self.app.ts.format('Scanning: %String(work)')
-
-    def configure_ttystatus_stage2(self, work_items):
+    def configure_ttystatus(self, work_items):
         self.app.ts.clear()
         self.app.ts['item'] = None
         self.app.ts['items'] = work_items
@@ -103,7 +98,7 @@ class FsckPlugin(obnamlib.ObnamPlugin):
 
         self.work_items = []
         self.add_item(CheckClientlist())
-        self.configure_ttystatus_stage2(self.work_items)
+        self.configure_ttystatus(self.work_items)
         i = 0
         while i < len(self.work_items):
             work = self.work_items[i]
