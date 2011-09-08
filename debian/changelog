@@ -1,7 +1,7 @@
 obnam (0.23-1) UNRELEASED; urgency=low
 
-  * debian/control: Depend on new ttystatus that fixes zero division
-    bug.
+  * debian/control: Depend on newer ttystatus for fix to zero division
+    bug, and non-string values for String widget.
 
  -- Lars Wirzenius <liw@liw.fi>  Wed, 31 Aug 2011 00:19:36 +0100
 
