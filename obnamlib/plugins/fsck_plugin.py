@@ -49,7 +49,8 @@ class CheckChunk(WorkItem):
         self.name = 'chunk %s' % chunkid
 
     def do(self):
-        self.repo.chunk_exists(self.chunkid)
+        if not self.repo.chunk_exists(self.chunkid):
+            self.ts.error('chunk %s does not exist' % self.chunkid)
 
 
 class CheckFile(WorkItem):
