@@ -115,23 +115,6 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         work.repo = self.repo
         self.work_items.append(work)
 
-    def find_work(self):
-        work_items = []
-        queue = [CheckClientlist()]
-        while queue:
-            work = queue.pop(0)
-            self.app.ts['work'] = str(work)
-            work.ts = self.app.ts
-            work.repo = self.repo
-            work_items.append(work)
-            queue.extend(list(work.scan()))
-        return work_items
-
-#    def check_client(self, client_name):
-#        '''Check a client.'''
-#        logging.debug('Checking client %s' % client_name)
-#        self.app.ts['what'] = 'Checking client %s' % client_name
-
 #    def check_generation(self, genid):
 #        '''Check a generation.'''
 #        logging.debug('Checking generation %s' % genid)
