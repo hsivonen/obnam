@@ -16,6 +16,7 @@
 
 import logging
 import os
+import sys
 import ttystatus
 
 import obnamlib
@@ -51,20 +52,20 @@ class CheckChunk(WorkItem):
 
     def do(self):
         if not self.repo.chunk_exists(self.chunkid):
-            self.ts.error('chunk %s does not exist' % self.chunkid)
+            self.error('chunk %s does not exist' % self.chunkid)
         else:
             data = self.repo.get_chunk(self.chunkid)
             checksum = self.repo.checksum(data)
             try:
                 correct = self.repo.chunklist.get_checksum(self.chunkid)
             except KeyError:
-                self.ts.error('chunk %s not in chunklist' % self.chunkid)
+                self.error('chunk %s not in chunklist' % self.chunkid)
             else:
                 if checksum != correct:
-                    self.ts.error('chunk %s has wrong checksum' % self.chunkid)
+                    self.error('chunk %s has wrong checksum' % self.chunkid)
 
             if self.chunkid not in self.repo.chunksums.find(checksum):
-                self.ts.error('chunk %s not in chunksums' % self.chunkid)
+                self.error('chunk %s not in chunksums' % self.chunkid)
 
             self.checksummer.update(data)
         self.chunkids_seen.add(self.chunkid)
@@ -80,7 +81,7 @@ class CheckFileChecksum(WorkItem):
         
     def do(self):
         if self.correct != self.checksummer.digest():
-            self.ts.error('%s whole-file checksum mismatch' % self.name)
+            self.error('%s whole-file checksum mismatch' % self.name)
 
 
 class CheckFile(WorkItem):
@@ -143,7 +144,7 @@ class CheckClientExists(WorkItem):
     def do(self):
         client_id = self.repo.clientlist.get_client_id(self.client_name)
         if client_id is None:
-            self.ts.error('Client %s is in client list, but has no id' %
+            self.error('Client %s is in client list, but has no id' %
                           self.client_name)
 
 
@@ -178,7 +179,7 @@ class CheckForExtraChunks(WorkItem):
     def do(self):
         for chunkid in self.repo.list_chunks():
             if chunkid not in self.chunkids_seen:
-                self.ts.error('chunk %s not used by anyone' % chunkid)
+                self.error('chunk %s not used by anyone' % chunkid)
 
 
 class CheckRepository(WorkItem):
@@ -207,6 +208,7 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         logging.debug('fsck on %s' % self.app.settings['repository'])
         self.repo = self.app.open_repository()
 
+        self.errors = 0
         self.chunkids_seen = set()
         self.work_items = []
         self.add_item(CheckRepository())
@@ -228,10 +230,17 @@ class FsckPlugin(obnamlib.ObnamPlugin):
 
         self.repo.fs.close()
         self.app.ts.finish()
+        
+        if self.errors:
+            sys.exit(1)
 
     def add_item(self, work):
-        work.ts = self.app.ts
+        work.error = self.error
         work.repo = self.repo
         work.chunkids_seen = self.chunkids_seen
         self.work_items.append(work)
+
+    def error(self, msg):
+        self.app.ts.error(msg)
+        self.errors += 1
 
