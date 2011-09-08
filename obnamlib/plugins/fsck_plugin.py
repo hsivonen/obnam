@@ -42,14 +42,40 @@ class WorkItem(object):
         pass
 
 
+class CheckChunk(WorkItem):
+
+    def __init__(self, chunkid):
+        self.chunkid = chunkid
+        self.name = 'chunk %s' % chunkid
+
+    def do(self):
+        self.repo.chunk_exists(self.chunkid)
+
+
+class CheckFile(WorkItem):
+
+    def __init__(self, client_name, genid, filename):
+        self.client_name = client_name
+        self.genid = genid
+        self.filename = filename
+        self.name = '%s:%s:%s' % (client_name, genid, filename)
+
+    def do(self):
+        self.repo.open_client(self.client_name)
+        metadata = self.repo.get_metadata(self.genid, self.filename)
+        if metadata.isfile():
+            for chunkid in self.repo.get_file_chunks(self.genid, 
+                                                      self.filename):
+                yield CheckChunk(chunkid)
+
+
 class CheckDirectory(WorkItem):
 
     def __init__(self, client_name, genid, dirname):
         self.client_name = client_name
         self.genid = genid
         self.dirname = dirname
-        self.name = ('client %s generation %s directory %s' % 
-                        (client_name, genid, dirname))
+        self.name = '%s:%s:%s' % (client_name, genid, dirname)
         
     def do(self):
         self.repo.open_client(self.client_name)
@@ -59,8 +85,8 @@ class CheckDirectory(WorkItem):
             metadata = self.repo.get_metadata(self.genid, pathname)
             if metadata.isdir():
                 yield CheckDirectory(self.client_name, self.genid, pathname)
-#            else:
-#                self.check_file(genid, pathname)
+            else:
+                yield CheckFile(self.client_name, self.genid, pathname)
 
 
 class CheckGeneration(WorkItem):
@@ -68,7 +94,7 @@ class CheckGeneration(WorkItem):
     def __init__(self, client_name, genid):
         self.client_name = client_name
         self.genid = genid
-        self.name = 'client %s generation %s' % (client_name, genid)
+        self.name = '%s:%s' % (client_name, genid)
         
     def do(self):
         return [CheckDirectory(self.client_name, self.genid, '/')]
@@ -145,18 +171,4 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         work.ts = self.app.ts
         work.repo = self.repo
         self.work_items.append(work)
-#                
-#    def check_file(self, genid, filename):
-#        '''Check a non-directory.'''
-#        logging.debug('Checking file %s' % filename)
-#        self.app.ts['what'] = 'Checking file %s' % filename
-#        metadata = self.repo.get_metadata(genid, filename)
-#        if metadata.isfile():
-#            for chunkid in self.repo.get_file_chunks(genid, filename):
-#                self.check_chunk(chunkid)
-
-#    def check_chunk(self, chunkid):
-#        '''Check a chunk.'''
-#        logging.debug('Checking chunk %s' % chunkid)
-#        self.repo.chunk_exists(chunkid)
 
