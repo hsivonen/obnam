@@ -44,8 +44,9 @@ class WorkItem(object):
 
 class CheckChunk(WorkItem):
 
-    def __init__(self, chunkid):
+    def __init__(self, chunkid, checksummer):
         self.chunkid = chunkid
+        self.checksummer = checksummer
         self.name = 'chunk %s' % chunkid
 
     def do(self):
@@ -65,6 +66,21 @@ class CheckChunk(WorkItem):
             if self.chunkid not in self.repo.chunksums.find(checksum):
                 self.ts.error('chunk %s not in chunksums' % self.chunkid)
 
+            self.checksummer.update(data)
+
+
+class CheckFileChecksum(WorkItem):
+
+    def __init__(self, filename, correct, chunkids, checksummer):
+        self.name = '%s checksum' % filename
+        self.correct = correct
+        self.chunkids = chunkids
+        self.checksummer = checksummer
+        
+    def do(self):
+        if self.correct != self.checksummer.digest():
+            self.ts.error('%s whole-file checksum mismatch' % self.name)
+
 
 class CheckFile(WorkItem):
 
@@ -78,9 +94,12 @@ class CheckFile(WorkItem):
         self.repo.open_client(self.client_name)
         metadata = self.repo.get_metadata(self.genid, self.filename)
         if metadata.isfile():
-            for chunkid in self.repo.get_file_chunks(self.genid, 
-                                                      self.filename):
-                yield CheckChunk(chunkid)
+            chunkids = self.repo.get_file_chunks(self.genid, self.filename)
+            checksummer = self.repo.new_checksummer()
+            for chunkid in chunkids:
+                yield CheckChunk(chunkid, checksummer)
+            yield CheckFileChecksum(self.name, metadata.md5, chunkids,
+                                     checksummer)
 
 
 class CheckDirectory(WorkItem):
