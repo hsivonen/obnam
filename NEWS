@@ -10,6 +10,8 @@ Version 0.23, released UNRELEASED; a BETA release
 USER VISIBLE CHANGES:
 
 * `restore` now shows a progress bar.
+* `fsck` now has more useful progress reporting, and does more checking,
+  including the integrity of the contents of file content.
 
 INTERNAL CHANGES:
 
