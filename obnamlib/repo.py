@@ -20,6 +20,7 @@ import larch
 import logging
 import os
 import random
+import re
 import stat
 import struct
 import time
@@ -585,9 +586,10 @@ class Repository(object):
     def list_chunks(self):
         '''Return list of ids of all chunks in repository.'''
         result = []
+        pat = re.compile(r'^.*/.*/[0-9a-fA-F]+$')
         if self.fs.exists('chunks'):
             for pathname, st in self.fs.scan_tree('chunks'):
-                if stat.S_ISREG(st.st_mode):
+                if stat.S_ISREG(st.st_mode) and pat.match(pathname):
                     basename = os.path.basename(pathname)
                     result.append(int(basename, 16))
         return result
