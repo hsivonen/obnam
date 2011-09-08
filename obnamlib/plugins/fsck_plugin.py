@@ -16,7 +16,6 @@
 
 import logging
 import os
-import time
 import ttystatus
 
 import obnamlib
@@ -85,7 +84,6 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         return work_items
 
     def init(self, work):
-        time.sleep(1)
         self.app.ts['work'] = str(work)
         work.ts = self.app.ts
         work.repo = self.repo
