@@ -35,11 +35,30 @@ class WorkItem(object):
     def __str__(self):
         return self.__class__.__name__
 
+    def scan(self):
+        return []
+
     def do(self):
         pass
 
 
+class CheckClientExists(WorkItem):
+
+    def __init__(self, client_name):
+        self.client_name = client_name
+
+    def do(self):
+        client_id = self.repo.clientlist.get_client_id(self.client_name)
+        if client_id is None:
+            self.ts.error('Client %s is in client list, but has no id' %
+                          self.client_name)
+
+
 class CheckClientlist(WorkItem):
+
+    def scan(self):
+        for client_name in self.repo.clientlist.list_clients():
+            yield CheckClientExists(client_name)
 
     def do(self):
         pass
@@ -80,14 +99,15 @@ class FsckPlugin(obnamlib.ObnamPlugin):
 
     def find_work(self):
         work_items = []
-        work_items.append(self.init(CheckClientlist()))
+        queue = [CheckClientlist()]
+        while queue:
+            work = queue.pop(0)
+            self.app.ts['work'] = str(work)
+            work.ts = self.app.ts
+            work.repo = self.repo
+            work_items.append(work)
+            queue.extend(list(work.scan()))
         return work_items
-
-    def init(self, work):
-        self.app.ts['work'] = str(work)
-        work.ts = self.app.ts
-        work.repo = self.repo
-        return work
 
 #    def check_root(self):
 #        '''Check the root node.'''
