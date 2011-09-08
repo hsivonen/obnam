@@ -584,7 +584,6 @@ class Repository(object):
 
     def list_chunks(self):
         '''Return list of ids of all chunks in repository.'''
-        self.require_open_client()
         result = []
         if self.fs.exists('chunks'):
             for pathname, st in self.fs.scan_tree('chunks'):

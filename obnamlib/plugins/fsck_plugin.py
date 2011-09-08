@@ -67,6 +67,7 @@ class CheckChunk(WorkItem):
                 self.ts.error('chunk %s not in chunksums' % self.chunkid)
 
             self.checksummer.update(data)
+        self.chunkids_seen.add(self.chunkid)
 
 
 class CheckFileChecksum(WorkItem):
@@ -169,6 +170,26 @@ class CheckClientlist(WorkItem):
             yield CheckClient(client_name)
 
 
+class CheckForExtraChunks(WorkItem):
+
+    def __init__(self):
+        self.name = 'extra chunks'
+        
+    def do(self):
+        for chunkid in self.repo.list_chunks():
+            if chunkid not in self.chunkids_seen:
+                self.ts.error('chunk %s not used by anyone' % chunkid)
+
+
+class CheckRepository(WorkItem):
+
+    def __init__(self):
+        self.name = 'repository'
+        
+    def do(self):
+        yield CheckClientlist()
+
+
 class FsckPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
@@ -186,16 +207,24 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         logging.debug('fsck on %s' % self.app.settings['repository'])
         self.repo = self.app.open_repository()
 
+        self.chunkids_seen = set()
         self.work_items = []
-        self.add_item(CheckClientlist())
+        self.add_item(CheckRepository())
+        final_items = [CheckForExtraChunks()]
+        
         self.configure_ttystatus(self.work_items)
         i = 0
         while i < len(self.work_items):
             work = self.work_items[i]
+            logging.debug('doing: %s' % str(work))
             self.app.ts['item'] = work
             for more in work.do() or []:
                 self.add_item(more)
             i += 1
+            if i == len(self.work_items):
+                for work in final_items:
+                    self.add_item(work)
+                final_items = []
 
         self.repo.fs.close()
         self.app.ts.finish()
@@ -203,5 +232,6 @@ class FsckPlugin(obnamlib.ObnamPlugin):
     def add_item(self, work):
         work.ts = self.app.ts
         work.repo = self.repo
+        work.chunkids_seen = self.chunkids_seen
         self.work_items.append(work)
 
