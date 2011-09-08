@@ -16,9 +16,34 @@
 
 import logging
 import os
+import time
 import ttystatus
 
 import obnamlib
+
+
+class WorkItem(object):
+
+    '''A work item for fsck.
+    
+    Subclass must define a ``name`` attribute, and override the ``do``
+    method to do the actual work. Whoever creates a WorkItem shall
+    set the ``ts`` attribute to be a ``ttystatus.TerminalStatus``
+    instance, and ``repo`` to the repository being used.
+    
+    '''
+
+    def __str__(self):
+        return self.__class__.__name__
+
+    def do(self):
+        pass
+
+
+class CheckClientlist(WorkItem):
+
+    def do(self):
+        pass
 
 
 class FsckPlugin(obnamlib.ObnamPlugin):
@@ -26,65 +51,91 @@ class FsckPlugin(obnamlib.ObnamPlugin):
     def enable(self):
         self.app.add_subcommand('fsck', self.fsck)
 
-    def configure_ttystatus(self):        
-        self.app.ts['what'] = 'nothing yet'
-        self.app.ts.add(ttystatus.Literal('Checking: '))
-        self.app.ts.add(ttystatus.String('what'))
+    def configure_ttystatus_stage1(self):
+        self.app.ts.clear()
+        self.app.ts['work'] = ''
+        self.app.ts.format('Scanning: %String(work)')
+
+    def configure_ttystatus_stage2(self, work_items):
+        self.app.ts.clear()
+        self.app.ts['item'] = None
+        self.app.ts['items'] = work_items
+        self.app.ts.format('Checking %Index(item,items): %String(item)')
         
     def fsck(self, args):
         '''Verify internal consistency of backup repository.'''
         self.app.settings.require('repository')
         logging.debug('fsck on %s' % self.app.settings['repository'])
-        self.configure_ttystatus()
         self.repo = self.app.open_repository()
-        self.check_root()
+
+        self.configure_ttystatus_stage1()
+        work_items = self.find_work()
+
+        self.configure_ttystatus_stage2(work_items)
+        for work in work_items:
+            self.app.ts['item'] = work
+            work.do()
+
         self.repo.fs.close()
+        self.app.ts.finish()
 
-    def check_root(self):
-        '''Check the root node.'''
-        logging.debug('Checking root node')
-        self.app.ts['what'] = 'Checking root node'
-        for client in self.repo.list_clients():
-            self.check_client(client)
-    
-    def check_client(self, client_name):
-        '''Check a client.'''
-        logging.debug('Checking client %s' % client_name)
-        self.app.ts['what'] = 'Checking client %s' % client_name
-        self.repo.open_client(client_name)
-        for genid in self.repo.list_generations():
-            self.check_generation(genid)
+    def find_work(self):
+        work_items = []
+        work_items.append(self.init(CheckClientlist()))
+        return work_items
 
-    def check_generation(self, genid):
-        '''Check a generation.'''
-        logging.debug('Checking generation %s' % genid)
-        self.app.ts['what'] = 'Checking generation %s' % genid
-        self.check_dir(genid, '/')
+    def init(self, work):
+        time.sleep(1)
+        self.app.ts['work'] = str(work)
+        work.ts = self.app.ts
+        work.repo = self.repo
+        return work
 
-    def check_dir(self, genid, dirname):
-        '''Check a directory.'''
-        logging.debug('Checking directory %s' % dirname)
-        self.app.ts['what'] = 'Checking dir %s' % dirname
-        self.repo.get_metadata(genid, dirname)
-        for basename in self.repo.listdir(genid, dirname):
-            pathname = os.path.join(dirname, basename)
-            metadata = self.repo.get_metadata(genid, pathname)
-            if metadata.isdir():
-                self.check_dir(genid, pathname)
-            else:
-                self.check_file(genid, pathname)
-                
-    def check_file(self, genid, filename):
-        '''Check a non-directory.'''
-        logging.debug('Checking file %s' % filename)
-        self.app.ts['what'] = 'Checking file %s' % filename
-        metadata = self.repo.get_metadata(genid, filename)
-        if metadata.isfile():
-            for chunkid in self.repo.get_file_chunks(genid, filename):
-                self.check_chunk(chunkid)
+#    def check_root(self):
+#        '''Check the root node.'''
+#        logging.debug('Checking root node')
+#        self.app.ts['what'] = 'Checking root node'
+#        for client in self.repo.list_clients():
+#            self.check_client(client)
+#    
+#    def check_client(self, client_name):
+#        '''Check a client.'''
+#        logging.debug('Checking client %s' % client_name)
+#        self.app.ts['what'] = 'Checking client %s' % client_name
+#        self.repo.open_client(client_name)
+#        for genid in self.repo.list_generations():
+#            self.check_generation(genid)
 
-    def check_chunk(self, chunkid):
-        '''Check a chunk.'''
-        logging.debug('Checking chunk %s' % chunkid)
-        self.repo.chunk_exists(chunkid)
+#    def check_generation(self, genid):
+#        '''Check a generation.'''
+#        logging.debug('Checking generation %s' % genid)
+#        self.app.ts['what'] = 'Checking generation %s' % genid
+#        self.check_dir(genid, '/')
+
+#    def check_dir(self, genid, dirname):
+#        '''Check a directory.'''
+#        logging.debug('Checking directory %s' % dirname)
+#        self.app.ts['what'] = 'Checking dir %s' % dirname
+#        self.repo.get_metadata(genid, dirname)
+#        for basename in self.repo.listdir(genid, dirname):
+#            pathname = os.path.join(dirname, basename)
+#            metadata = self.repo.get_metadata(genid, pathname)
+#            if metadata.isdir():
+#                self.check_dir(genid, pathname)
+#            else:
+#                self.check_file(genid, pathname)
+#                
+#    def check_file(self, genid, filename):
+#        '''Check a non-directory.'''
+#        logging.debug('Checking file %s' % filename)
+#        self.app.ts['what'] = 'Checking file %s' % filename
+#        metadata = self.repo.get_metadata(genid, filename)
+#        if metadata.isfile():
+#            for chunkid in self.repo.get_file_chunks(genid, filename):
+#                self.check_chunk(chunkid)
+
+#    def check_chunk(self, chunkid):
+#        '''Check a chunk.'''
+#        logging.debug('Checking chunk %s' % chunkid)
+#        self.repo.chunk_exists(chunkid)
 
