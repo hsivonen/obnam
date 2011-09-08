@@ -62,6 +62,9 @@ class CheckChunk(WorkItem):
                 if checksum != correct:
                     self.ts.error('chunk %s has wrong checksum' % self.chunkid)
 
+            if self.chunkid not in self.repo.chunksums.find(checksum):
+                self.ts.error('chunk %s not in chunksums' % self.chunkid)
+
 
 class CheckFile(WorkItem):
 
