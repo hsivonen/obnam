@@ -51,6 +51,12 @@ class CheckChunk(WorkItem):
     def do(self):
         if not self.repo.chunk_exists(self.chunkid):
             self.ts.error('chunk %s does not exist' % self.chunkid)
+        else:
+            data = self.repo.get_chunk(self.chunkid)
+            checksum = self.repo.checksum(data)
+            correct = self.repo.chunklist.get_checksum(self.chunkid)
+            if checksum != correct:
+                self.ts.error('chunk %s has wrong checksum' % self.chunkid)
 
 
 class CheckFile(WorkItem):
