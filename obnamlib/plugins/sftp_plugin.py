@@ -24,6 +24,7 @@ import random
 import socket
 import stat
 import subprocess
+import time
 import urlparse
 
 # As of 2010-07-10, Debian's paramiko package triggers
@@ -102,10 +103,17 @@ class SftpFS(obnamlib.VirtualFileSystem):
     
     '''
 
-    def __init__(self, baseurl, create=False):
+    def __init__(self, baseurl, create=False, settings=None):
         obnamlib.VirtualFileSystem.__init__(self, baseurl)
         self.sftp = None
+        self.settings = settings
         self.reinit(baseurl, create=create)
+
+    def _delay(self):
+        if self.settings:
+            ms = self.settings['sftp-delay']
+            if ms > 0:
+                time.sleep(ms * 0.001)
         
     def _to_string(self, str_or_unicode):
         if type(str_or_unicode) is unicode:
@@ -176,6 +184,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
             self.transport = None
         self.sftp = None
         obnamlib.VirtualFileSystem.close(self)
+        self._delay()
 
     @ioerror_to_oserror
     def reinit(self, baseurl, create=False):
@@ -204,6 +213,8 @@ class SftpFS(obnamlib.VirtualFileSystem):
         self.user = user
         self.path = path
         self.create_path_if_missing = create
+
+        self._delay()
         
         if self.sftp:
             if create and not self.exists(path):
@@ -215,14 +226,17 @@ class SftpFS(obnamlib.VirtualFileSystem):
         return pwd.getpwuid(os.getuid()).pw_name
 
     def getcwd(self):
+        self._delay()
         return self._to_string(self.sftp.getcwd())
 
     @ioerror_to_oserror
     def chdir(self, pathname):
+        self._delay()
         self.sftp.chdir(pathname)
 
     @ioerror_to_oserror
     def listdir(self, pathname):
+        self._delay()
         return [self._to_string(x) for x in self.sftp.listdir(pathname)]
 
     def lock(self, lockname):
@@ -239,6 +253,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
             self.remove(lockname)
 
     def exists(self, pathname):
+        self._delay()
         try:
             self.lstat(pathname)
         except OSError:
@@ -247,6 +262,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
             return True
 
     def isdir(self, pathname):
+        self._delay()
         try:
             st = self.lstat(pathname)
         except OSError:
@@ -262,10 +278,12 @@ class SftpFS(obnamlib.VirtualFileSystem):
 
     @ioerror_to_oserror
     def mkdir(self, pathname):
+        self._delay()
         self.sftp.mkdir(pathname)
         
     @ioerror_to_oserror
     def makedirs(self, pathname):
+        self._delay()
         parent = os.path.dirname(pathname)
         if parent and parent != pathname and not self.exists(parent):
             self.makedirs(parent)
@@ -273,20 +291,24 @@ class SftpFS(obnamlib.VirtualFileSystem):
 
     @ioerror_to_oserror
     def rmdir(self, pathname):
+        self._delay()
         self.sftp.rmdir(pathname)
         
     @ioerror_to_oserror
     def remove(self, pathname):
+        self._delay()
         self.sftp.remove(pathname)
 
     @ioerror_to_oserror
     def rename(self, old, new):
+        self._delay()
         if self.exists(new):
             self.remove(new)
         self.sftp.rename(old, new)
     
     @ioerror_to_oserror
     def lstat(self, pathname):
+        self._delay()
         st = self.sftp.lstat(pathname)
 
         # SFTP and/or paramiko fail to return some of the required fields,
@@ -325,6 +347,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
 
     @ioerror_to_oserror
     def lchown(self, pathname, uid, gid):
+        self._delay()
         if stat.S_ISLNK(self.lstat(pathname).st_mode):
             logging.warning('NOT changing ownership of symlink %s' % pathname)
         else:
@@ -332,6 +355,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
         
     @ioerror_to_oserror
     def chmod(self, pathname, mode):
+        self._delay()
         self.sftp.chmod(pathname, mode)
         
     @ioerror_to_oserror
@@ -340,6 +364,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
         # Sftp does not have a way of doing that. This means if the restore
         # target is over sftp, symlinks and their targets will have wrong
         # mtimes.
+        self._delay()
         if getattr(self, 'lutimes_warned', False):
             logging.warning('lutimes used over SFTP, this does not work '
                             'against symlinks (warning appears only first '
@@ -351,16 +376,20 @@ class SftpFS(obnamlib.VirtualFileSystem):
         raise obnamlib.Error('Cannot hardlink on SFTP. Sorry.')
 
     def readlink(self, symlink):
+        self._delay()
         return self._to_string(self.sftp.readlink(symlink))
 
     @ioerror_to_oserror
     def symlink(self, source, destination):
+        self._delay()
         self.sftp.symlink(source, destination)
 
     def open(self, pathname, mode):
+        self._delay()
         return self.sftp.file(pathname, mode)
 
     def cat(self, pathname):
+        self._delay()
         f = self.open(pathname, 'r')
         chunks = []
         while True:
@@ -375,6 +404,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
         return ''.join(chunks)
 
     def write_file(self, pathname, contents):
+        self._delay()
         if self.exists(pathname):
             raise OSError(errno.EEXIST, 'File exists', pathname)
         self._write_helper(pathname, 'wx', contents)
@@ -395,6 +425,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
                 return pathname
 
     def overwrite_file(self, pathname, contents, make_backup=True):
+        self._delay()
         dirname = os.path.dirname(pathname)
         tempname = self._tempfile(dirname)
         self._write_helper(tempname, 'wx', contents)
@@ -416,6 +447,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
                 pass
         
     def _write_helper(self, pathname, mode, contents):
+        self._delay()
         dirname = os.path.dirname(pathname)
         if dirname and not self.exists(dirname):
             self.makedirs(dirname)
@@ -431,5 +463,8 @@ class SftpFS(obnamlib.VirtualFileSystem):
 class SftpPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
-        self.app.fsf.register('sftp', SftpFS)
+        self.app.settings.integer(['sftp-delay'],
+                                  'add an artificial delay (in milliseconds) '
+                                    'to all SFTP transfers')
+        self.app.fsf.register('sftp', SftpFS, settings=self.app.settings)
 

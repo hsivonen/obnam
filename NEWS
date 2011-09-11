@@ -12,6 +12,11 @@ USER VISIBLE CHANGES:
 * `restore` now shows a progress bar.
 * `fsck` now has more useful progress reporting, and does more checking,
   including the integrity of the contents of file content.
+  
+DEVELOPER CHANGES:
+
+* New `--sftp-delay=100` option can be used to simulate SFTP backups over
+  networks with long round trip times.
 
 INTERNAL CHANGES:
 
