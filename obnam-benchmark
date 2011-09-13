@@ -135,6 +135,9 @@ class ObnamBenchmark(cliapp.Application):
         self.settings.boolean(['use-sftp-root'],
                               'access the live data over SFTP '
                                 '(requires ssh to localhost to work)')
+        self.settings.integer(['sftp-delay'],
+                              'add artifical delay to sftp transfers '
+                                '(in milliseconds)')
         self.settings.string(['description'], 'describe benchmark')
         
         self.settings.boolean(['verify'], 'verify restores')
@@ -198,6 +201,7 @@ class ObnamBenchmark(cliapp.Application):
                             '--obnam-profile', obnam_profile,
                             '--generations', str(generations),
                             '--profile-name', profile,
+                            '--sftp-delay', str(self.settings['sftp-delay']),
                             '--output', output]
                     if self.settings['use-existing']:
                         argv.extend(['--use-existing', 
