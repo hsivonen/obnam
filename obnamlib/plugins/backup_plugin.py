@@ -195,7 +195,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         for pathname, st in self.fs.scan_tree(root, ok=self.can_be_backed_up):
             tracing.trace('considering %s' % pathname)
             try:
-                metadata = obnamlib.read_metadata(self.fs, pathname)
+                metadata = obnamlib.read_metadata(self.fs, pathname, st=st)
                 self.update_progress_with_file(pathname, metadata)
                 if self.needs_backup(pathname, metadata):
                     yield pathname, metadata
