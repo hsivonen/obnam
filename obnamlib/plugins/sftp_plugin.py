@@ -249,11 +249,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
                 raise
 
     def unlock(self, lockname):
-        try:
-            self.remove(lockname)
-        except OSError, e:
-            if e.errno != errno.ENOENT:
-                raise
+        self._remove_if_exists(lockname)
 
     def exists(self, pathname):
         self._delay()
@@ -302,11 +298,18 @@ class SftpFS(obnamlib.VirtualFileSystem):
         self._delay()
         self.sftp.remove(pathname)
 
+    def _remove_if_exists(self, pathname):
+        '''Like remove, but OK if file does not exist.'''
+        try:
+            self.remove(pathname)
+        except OSError, e:
+            if e.errno != errno.ENOENT:
+                raise
+
     @ioerror_to_oserror
     def rename(self, old, new):
         self._delay()
-        if self.exists(new):
-            self.remove(new)
+        self._remove_if_exists(new)
         self.sftp.rename(old, new)
     
     @ioerror_to_oserror
