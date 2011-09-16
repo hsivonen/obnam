@@ -102,6 +102,10 @@ class SftpFS(obnamlib.VirtualFileSystem):
     
     
     '''
+    
+    # 32 KiB is the chunk size that gives me the fastest speed
+    # for sftp transfers. I don't know why the size matters.
+    chunk_size = 32 * 1024
 
     def __init__(self, baseurl, create=False, settings=None):
         obnamlib.VirtualFileSystem.__init__(self, baseurl)
@@ -390,9 +394,9 @@ class SftpFS(obnamlib.VirtualFileSystem):
         self._delay()
         self.sftp.symlink(source, destination)
 
-    def open(self, pathname, mode):
+    def open(self, pathname, mode, bufsize=-1):
         self._delay()
-        f = self.sftp.file(pathname, mode)
+        f = self.sftp.file(pathname, mode, bufsize=bufsize)
         f.set_pipelined(True)
         return f
 
@@ -402,9 +406,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
         f.prefetch()
         chunks = []
         while True:
-            # 32 KiB is the chunk size that gives me the fastest speed
-            # for sftp transfers. I don't know why the size matters.
-            chunk = f.read(32 * 1024)
+            chunk = f.read(self.chunk_size)
             if not chunk:
                 break
             chunks.append(chunk)
@@ -457,10 +459,9 @@ class SftpFS(obnamlib.VirtualFileSystem):
         dirname = os.path.dirname(pathname)
         if dirname and not self.exists(dirname):
             self.makedirs(dirname)
-        f = self.open(pathname, mode)
-        chunk_size = 32 * 1024
-        for pos in range(0, len(contents), chunk_size):
-            chunk = contents[pos:pos + chunk_size]
+        f = self.open(pathname, mode, bufsize=self.chunk_size)
+        for pos in range(0, len(contents), self.chunk_size):
+            chunk = contents[pos:pos + self.chunk_size]
             f.write(chunk)
             self.bytes_written += len(chunk)
         f.close()
