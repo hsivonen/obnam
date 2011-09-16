@@ -439,18 +439,15 @@ class SftpFS(obnamlib.VirtualFileSystem):
         # Rename existing to have a .bak suffix. If _that_ file already
         # exists, remove that.
         bak = pathname + ".bak"
+        self._remove_if_exists(bak)
         try:
-            self.remove(bak)
-        except OSError:
-            pass
-        if self.exists(pathname):
             self.rename(pathname, bak)
+        except OSError, e:
+            if e.errno != errno.ENOENT:
+                raise
         self.rename(tempname, pathname)
         if not make_backup:
-            try:
-                self.remove(bak)
-            except OSError:
-                pass
+            self._remove_if_exists(bak)
         
     def _write_helper(self, pathname, mode, contents):
         self._delay()
