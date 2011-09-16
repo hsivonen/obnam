@@ -396,9 +396,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
 
     def open(self, pathname, mode, bufsize=-1):
         self._delay()
-        f = self.sftp.file(pathname, mode, bufsize=bufsize)
-        f.set_pipelined(True)
-        return f
+        return self.sftp.file(pathname, mode, bufsize=bufsize)
 
     def cat(self, pathname):
         self._delay()
