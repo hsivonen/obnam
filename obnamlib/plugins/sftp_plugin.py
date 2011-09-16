@@ -409,10 +409,9 @@ class SftpFS(obnamlib.VirtualFileSystem):
         f.close()
         return ''.join(chunks)
 
+    @ioerror_to_oserror
     def write_file(self, pathname, contents):
         self._delay()
-        if self.exists(pathname):
-            raise OSError(errno.EEXIST, 'File exists', pathname)
         self._write_helper(pathname, 'wx', contents)
 
     def _tempfile(self, dirname):
@@ -430,6 +429,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
             if not self.exists(pathname):
                 return pathname
 
+    @ioerror_to_oserror
     def overwrite_file(self, pathname, contents, make_backup=True):
         self._delay()
         dirname = os.path.dirname(pathname)
