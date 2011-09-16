@@ -399,6 +399,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
     def cat(self, pathname):
         self._delay()
         f = self.open(pathname, 'r')
+        f.prefetch()
         chunks = []
         while True:
             # 32 KiB is the chunk size that gives me the fastest speed
