@@ -102,10 +102,10 @@ def _cached_getgrgid(gid): # pragma: no cover
     return _gid_to_groupname[gid]
 
 
-def read_metadata(fs, filename, getpwuid=None, getgrgid=None):
+def read_metadata(fs, filename, st=None, getpwuid=None, getgrgid=None):
     '''Return object detailing metadata for a filesystem entry.'''
     metadata = Metadata()
-    stat_result = fs.lstat(filename)
+    stat_result = st or fs.lstat(filename)
     for field in metadata_fields:
         if field.startswith('st_') and hasattr(stat_result, field):
             setattr(metadata, field, getattr(stat_result, field))

@@ -86,6 +86,9 @@ class VirtualFileSystem(object):
     def listdir(self, pathname):
         '''Return list of basenames of entities at pathname.'''
 
+    def listdir2(self, pathname):
+        '''Return list of basenames and stats of entities at pathname.'''
+
     def lock(self, lockname):
         '''Create a lock file with the given name.'''
 
@@ -203,25 +206,20 @@ class VirtualFileSystem(object):
         '''
 
         try:
-            names = self.listdir(dirname)
+            pairs = self.listdir2(dirname)
         except OSError, e:
             log('listdir failed: %s: %s' % (e.filename, e.strerror))
-            names = []
+            pairs = []
             
         queue = []
-        for name in names:
+        for name, st in pairs:
             pathname = os.path.join(dirname, name)
-            try:
-                st = self.lstat(pathname)
-            except OSError, e:
-                log('lstat failed: %s: %s' % (e.filename, e.strerror))
-            else:
-                if ok is None or ok(pathname, st):
-                    if stat.S_ISDIR(st.st_mode):
-                        for t in self.scan_tree(pathname, ok=ok, dirst=st):
-                            yield t
-                    else:
-                        queue.append((pathname, st))
+            if ok is None or ok(pathname, st):
+                if stat.S_ISDIR(st.st_mode):
+                    for t in self.scan_tree(pathname, ok=ok, dirst=st):
+                        yield t
+                else:
+                    queue.append((pathname, st))
 
         for pathname, st in queue:
             yield pathname, st
@@ -394,6 +392,27 @@ class VfsTests(object): # pragma: no cover
 
     def test_listdir_raises_oserror_if_directory_does_not_exist(self):
         self.assertRaises(OSError, self.fs.listdir, 'foo')
+
+    def test_listdir2_returns_name_stat_pairs(self):
+        funny = u'M\u00E4kel\u00E4'.encode('utf-8')
+        self.fs.write_file(funny, 'data')
+        pairs = self.fs.listdir2('.')
+        self.assertEqual(len(pairs), 1)
+        self.assertEqual(len(pairs[0]), 2)
+        name, st = pairs[0]
+        self.assertEqual(type(name), str)
+        self.assertEqual(name, funny)
+        self.assert_(hasattr(st, 'st_mode'))
+        self.assert_(hasattr(st, 'st_mtime'))
+
+    def test_listdir2_returns_plain_strings_only(self):
+        self.fs.write_file(u'M\u00E4kel\u00E4'.encode('utf-8'), 'data')
+        names = [name for name, st in self.fs.listdir2('.')]
+        types = [type(x) for x in names]
+        self.assertEqual(types, [str])
+
+    def test_listdir2_raises_oserror_if_directory_does_not_exist(self):
+        self.assertRaises(OSError, self.fs.listdir2, 'foo')
 
     def test_mknod_creates_fifo(self):
         self.fs.mknod('foo', 0600 | stat.S_IFIFO)
@@ -607,7 +626,7 @@ class VfsTests(object): # pragma: no cover
             raise OSError((123, 'oops', dirname))
         def logerror(msg):
             pass
-        self.fs.listdir = raiser
+        self.fs.listdir2 = raiser
         result = list(self.fs.scan_tree(self.basepath, log=logerror))
         self.assertEqual(len(result), 1)
         pathname, st = result[0]
