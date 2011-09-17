@@ -283,9 +283,11 @@ class SftpFS(obnamlib.VirtualFileSystem):
         self._delay()
 #        return [(x, self.lstat(os.path.join(pathname, x)))
 #                 for x in self.listdir(pathname)]
-        return [(self._to_string(st.filename), 
-                  self._fix_stat(st.filename, st)) 
-                 for st in self.sftp.listdir_attr(pathname)]
+
+        attrs = self.sftp.listdir_attr(pathname)
+        pairs = [(self._to_string(st.filename), st) for st in attrs]
+        fixed = [(name, self._fix_stat(name, st)) for name, st in pairs]
+        return fixed
 
     def lock(self, lockname):
         try:
