@@ -281,9 +281,6 @@ class SftpFS(obnamlib.VirtualFileSystem):
     @ioerror_to_oserror
     def listdir2(self, pathname):
         self._delay()
-#        return [(x, self.lstat(os.path.join(pathname, x)))
-#                 for x in self.listdir(pathname)]
-
         attrs = self.sftp.listdir_attr(pathname)
         pairs = [(self._to_string(st.filename), st) for st in attrs]
         fixed = [(name, self._fix_stat(name, st)) for name, st in pairs]
