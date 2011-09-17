@@ -108,8 +108,11 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         except OSError, e:
             raise Fail(filename, 'missing or inaccessible: %s' % e.strerror)
         for field in obnamlib.metadata_verify_fields:
-            if getattr(backed_up, field) != getattr(live_data, field):
-                raise Fail(filename, 'metadata change: %s' % field)
+            v1 = getattr(backed_up, field)
+            v2 = getattr(live_data, field)
+            if v1 != v2:
+                raise Fail(filename, 
+                            'metadata change: %s (%s vs %s)' % (field, v1, v2))
 
     def verify_file(self, gen, filename):
         self.verify_metadata(gen, filename)
