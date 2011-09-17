@@ -243,6 +243,50 @@ class SftpFS(obnamlib.VirtualFileSystem):
         self._delay()
         return [self._to_string(x) for x in self.sftp.listdir(pathname)]
 
+    def _force_32bit_timestamp(self, timestamp):
+        if timestamp is None:
+            return None
+
+        max_int32 = 2**31 - 1 # max positive 32 signed integer value
+        if timestamp > max_int32:
+            timestamp -= 2**32
+            if timestamp > max_int32:
+                timestamp = max_int32 # it's too large, need to lose info
+        return timestamp
+
+    def _fix_stat(self, pathname, st):
+        # SFTP and/or paramiko fail to return some of the required fields,
+        # so we add them, using faked data.
+        defaults = {
+            'st_blocks': (st.st_size / 512) +
+                         (1 if st.st_size % 512 else 0),
+            'st_dev': 0,
+            'st_ino': int(hashlib.md5(pathname).hexdigest()[:8], 16),
+            'st_nlink': 1,
+        }
+        for name, value in defaults.iteritems():
+            if not hasattr(st, name):
+                setattr(st, name, value)
+
+        # Paramiko seems to deal with unsigned timestamps only, at least
+        # in version 1.7.6. We therefore force the timestamps into
+        # a signed 32-bit value. This limits the range, but allows
+        # timestamps that are negative (before 1970). Once paramiko is
+        # fixed, this code can be removed.
+        st.st_mtime = self._force_32bit_timestamp(st.st_mtime)
+        st.st_atime = self._force_32bit_timestamp(st.st_atime)
+
+        return st        
+
+    @ioerror_to_oserror
+    def listdir2(self, pathname):
+        self._delay()
+#        return [(x, self.lstat(os.path.join(pathname, x)))
+#                 for x in self.listdir(pathname)]
+        return [(self._to_string(st.filename), 
+                  self._fix_stat(st.filename, st)) 
+                 for st in self.sftp.listdir_attr(pathname)]
+
     def lock(self, lockname):
         try:
             self.write_file(lockname, '')
@@ -320,40 +364,8 @@ class SftpFS(obnamlib.VirtualFileSystem):
     def lstat(self, pathname):
         self._delay()
         st = self.sftp.lstat(pathname)
-
-        # SFTP and/or paramiko fail to return some of the required fields,
-        # so we add them, using faked data.
-        defaults = {
-            'st_blocks': (st.st_size / 512) +
-                         (1 if st.st_size % 512 else 0),
-            'st_dev': 0,
-            'st_ino': int(hashlib.md5(pathname).hexdigest()[:8], 16),
-            'st_nlink': 1,
-        }
-        for name, value in defaults.iteritems():
-            if not hasattr(st, name):
-                setattr(st, name, value)
-
-        # Paramiko seems to deal with unsigned timestamps only, at least
-        # in version 1.7.6. We therefore force the timestamps into
-        # a signed 32-bit value. This limits the range, but allows
-        # timestamps that are negative (before 1970). Once paramiko is
-        # fixed, this code can be removed.
-        st.st_mtime = self._force_32bit_timestamp(st.st_mtime)
-        st.st_atime = self._force_32bit_timestamp(st.st_atime)
-
+        self._fix_stat(pathname, st)
         return st
-
-    def _force_32bit_timestamp(self, timestamp):
-        if timestamp is None:
-            return None
-
-        max_int32 = 2**31 - 1 # max positive 32 signed integer value
-        if timestamp > max_int32:
-            timestamp -= 2**32
-            if timestamp > max_int32:
-                timestamp = max_int32 # it's too large, need to lose info
-        return timestamp
 
     @ioerror_to_oserror
     def lchown(self, pathname, uid, gid):
