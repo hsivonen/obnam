@@ -151,6 +151,22 @@ class CheckGeneration(WorkItem):
         return [CheckDirectory(self.client_name, self.genid, '/')]
 
 
+class CheckGenerationIdsAreDifferent(WorkItem):
+
+    def __init__(self, client_name, genids):
+        self.client_name = client_name
+        self.genids = list(genids)
+    
+    def do(self):
+        done = set()
+        while self.genids:
+            genid = self.genids.pop()
+            if genid in done:
+                self.error('%s: duplicate generation id %s' % genid)
+            else:
+                done.add(genid)
+
+
 class CheckClientExists(WorkItem):
 
     def __init__(self, client_name):
@@ -172,6 +188,8 @@ class CheckClient(WorkItem):
 
     def do(self):
         self.repo.open_client(self.client_name)
+        yield CheckGenerationIdsAreDifferent(self.client_name,
+                                              self.repo.list_generations())
         for genid in self.repo.list_generations():
             yield CheckGeneration(self.client_name, genid)
 
