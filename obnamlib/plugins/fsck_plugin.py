@@ -243,6 +243,9 @@ class CheckBTree(WorkItem):
         self.name = 'B-tree %s' % dirname
 
     def do(self):
+        if not self.repo.fs.exists(self.dirname):
+            logging.debug('B-tree %s does not exist, skipping' % self.dirname)
+            return
         logging.debug('Checking B-tree %s' % self.dirname)
         forest = larch.open_forest(dirname=self.dirname, vfs=self.repo.fs)
         fsck = larch.fsck.Fsck(forest, self.error)
@@ -259,8 +262,8 @@ class CheckRepository(WorkItem):
     def do(self):
         logging.debug('Checking repository')
         yield CheckBTree('clientlist')
-#        yield CheckBTree('chunklist')
-#        yield CheckBTree('chunksums')
+        yield CheckBTree('chunklist')
+        yield CheckBTree('chunksums')
         yield CheckClientlist()
 
 
