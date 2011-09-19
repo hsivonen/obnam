@@ -155,8 +155,16 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
     def add_client(self, clientlist, client_name):
         clientlist.set_client_keyid(client_name, self.keyid)
 
+    def quit_if_unencrypted(self):
+        if self.app.settings['encrypt-with']:
+            return False
+        self.app.output.write('Warning: Encryption not in use.\n')
+        return True
+
     def client_keys(self, args):
         '''List clients and their keys in the repository.'''
+        if self.quit_if_unencrypted():
+            return
         repo = self.app.open_repository()
         clients = repo.list_clients()
         for client in clients:
@@ -178,6 +186,8 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
 
     def list_keys(self, args):
         '''List keys and the repository toplevels they're used in.'''
+        if self.quit_if_unencrypted():
+            return
         repo = self.app.open_repository()
         keys, tops = self._find_keys_and_toplevels(repo)
         for keyid in keys:
@@ -187,6 +197,8 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
 
     def list_toplevels(self, args):
         '''List repository toplevel directories and their keys.'''
+        if self.quit_if_unencrypted():
+            return
         repo = self.app.open_repository()
         keys, tops = self._find_keys_and_toplevels(repo)
         for toplevel in tops:
@@ -202,6 +214,8 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
 
     def add_key(self, args):
         '''Add a key to the repository.'''
+        if self.quit_if_unencrypted():
+            return
         self.app.settings.require('keyid')
         repo = self.app.open_repository()
         keyid = self.app.settings['keyid']
@@ -212,6 +226,8 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
 
     def remove_key(self, args):
         '''Remove a key from the repository.'''
+        if self.quit_if_unencrypted():
+            return
         self.app.settings.require('keyid')
         repo = self.app.open_repository()
         keyid = self.app.settings['keyid']
@@ -221,6 +237,8 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
 
     def remove_client(self, args):
         '''Remove client and its key from repository.'''
+        if self.quit_if_unencrypted():
+            return
         repo = self.app.open_repository()
         repo.lock_root()
         for client_name in args:

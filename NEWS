@@ -14,6 +14,8 @@ USER VISIBLE CHANGES:
   including the integrity of the contents of file content.
 * `force-lock` now gives a warning if the client does not exist in the
   repository.
+* Subcommands for encryption now give a warning if encryption key is not
+  given.
 
 DEVELOPER CHANGES:
 
