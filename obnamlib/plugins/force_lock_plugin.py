@@ -44,7 +44,9 @@ class ForceLockPlugin(obnamlib.ObnamPlugin):
                                   str(e))
 
         if client_name not in repo.list_clients():
-            logging.warning('Client does not exist in repository.')
+            msg = 'Client does not exist in repository.'
+            logging.warning(msg)
+            self.app.output.write('Warning: %s\n' % msg)
             return
 
         client_id = repo.clientlist.get_client_id(client_name)
