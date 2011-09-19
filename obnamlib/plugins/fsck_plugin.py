@@ -132,6 +132,22 @@ class CheckGeneration(WorkItem):
         self.name = '%s:%s' % (client_name, genid)
         
     def do(self):
+        started, ended = self.repo.client.get_generation_times(self.genid)
+        if started is None:
+            self.error('%s:%s: no generation start time' %
+                        (self.client_name, self.genid))
+        if ended is None:
+            self.error('%s:%s: no generation end time' %
+                        (self.client_name, self.genid))
+
+        n = self.repo.client.get_generation_files(self.genid)
+        if n is None:
+            self.error('%s:%s: no file count' % (self.client_name, self.genid))
+
+        n = self.repo.client.get_generation_data(self.genid)
+        if n is None:
+            self.error('%s:%s: no total data' % (self.client_name, self.genid))
+
         return [CheckDirectory(self.client_name, self.genid, '/')]
 
 
