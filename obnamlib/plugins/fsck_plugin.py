@@ -140,7 +140,7 @@ class CheckGeneration(WorkItem):
             self.error('%s:%s: no generation end time' %
                         (self.client_name, self.genid))
 
-        n = self.repo.client.get_generation_files(self.genid)
+        n = self.repo.client.get_generation_file_count(self.genid)
         if n is None:
             self.error('%s:%s: no file count' % (self.client_name, self.genid))
 

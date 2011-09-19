@@ -67,7 +67,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
                              (gen, 
                               self.format_time(start), 
                               self.format_time(end),
-                              self.repo.client.get_generation_files(gen),
+                              self.repo.client.get_generation_file_count(gen),
                               self.repo.client.get_generation_data(gen),
                               checkpoint))
         self.repo.fs.close()
