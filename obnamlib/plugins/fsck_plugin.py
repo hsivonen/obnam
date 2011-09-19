@@ -51,6 +51,7 @@ class CheckChunk(WorkItem):
         self.name = 'chunk %s' % chunkid
 
     def do(self):
+        logging.debug('Checking chunk %s' % self.chunkid)
         if not self.repo.chunk_exists(self.chunkid):
             self.error('chunk %s does not exist' % self.chunkid)
         else:
@@ -74,12 +75,14 @@ class CheckChunk(WorkItem):
 class CheckFileChecksum(WorkItem):
 
     def __init__(self, filename, correct, chunkids, checksummer):
+        self.filename = filename
         self.name = '%s checksum' % filename
         self.correct = correct
         self.chunkids = chunkids
         self.checksummer = checksummer
         
     def do(self):
+        logging.debug('Checking whole-file checksum for %s' % self.filename)
         if self.correct != self.checksummer.digest():
             self.error('%s whole-file checksum mismatch' % self.name)
 
@@ -93,6 +96,8 @@ class CheckFile(WorkItem):
         self.name = '%s:%s:%s' % (client_name, genid, filename)
 
     def do(self):
+        logging.debug('Checking client=%s genid=%s filename=%s' %
+                        (self.client_name, self.genid, self.filename))
         self.repo.open_client(self.client_name)
         metadata = self.repo.get_metadata(self.genid, self.filename)
         if metadata.isfile():
@@ -113,6 +118,8 @@ class CheckDirectory(WorkItem):
         self.name = '%s:%s:%s' % (client_name, genid, dirname)
         
     def do(self):
+        logging.debug('Checking client=%s genid=%s dirname=%s' %
+                        (self.client_name, self.genid, self.dirname))
         self.repo.open_client(self.client_name)
         self.repo.get_metadata(self.genid, self.dirname)
         for basename in self.repo.listdir(self.genid, self.dirname):
@@ -132,6 +139,9 @@ class CheckGeneration(WorkItem):
         self.name = '%s:%s' % (client_name, genid)
         
     def do(self):
+        logging.debug('Checking client=%s genid=%s' % 
+                        (self.client_name, self.genid))
+
         started, ended = self.repo.client.get_generation_times(self.genid)
         if started is None:
             self.error('%s:%s: no generation start time' %
@@ -158,6 +168,8 @@ class CheckGenerationIdsAreDifferent(WorkItem):
         self.genids = list(genids)
     
     def do(self):
+        logging.debug('Checking genid uniqueness for client=%s' % 
+                        self.client_name)
         done = set()
         while self.genids:
             genid = self.genids.pop()
@@ -174,6 +186,7 @@ class CheckClientExists(WorkItem):
         self.name = 'does client %s exist?' % client_name
 
     def do(self):
+        logging.debug('Checking client=%s exists' % self.client_name)
         client_id = self.repo.clientlist.get_client_id(self.client_name)
         if client_id is None:
             self.error('Client %s is in client list, but has no id' %
@@ -187,6 +200,7 @@ class CheckClient(WorkItem):
         self.name = 'client %s' % client_name
 
     def do(self):
+        logging.debug('Checking client=%s' % self.client_name)
         self.repo.open_client(self.client_name)
         yield CheckGenerationIdsAreDifferent(self.client_name,
                                               self.repo.list_generations())
@@ -199,6 +213,7 @@ class CheckClientlist(WorkItem):
     name = 'client list'
 
     def do(self):
+        logging.debug('Checking clientlist')
         for client_name in self.repo.clientlist.list_clients():
             yield CheckClientExists(client_name)
         for client_name in self.repo.clientlist.list_clients():
@@ -211,6 +226,7 @@ class CheckForExtraChunks(WorkItem):
         self.name = 'extra chunks'
         
     def do(self):
+        logging.debug('Checking for extra chunks')
         for chunkid in self.repo.list_chunks():
             if chunkid not in self.chunkids_seen:
                 self.error('chunk %s not used by anyone' % chunkid)
@@ -222,6 +238,7 @@ class CheckRepository(WorkItem):
         self.name = 'repository'
         
     def do(self):
+        logging.debug('Checking repository')
         yield CheckClientlist()
 
 
