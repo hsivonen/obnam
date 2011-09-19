@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import larch.fsck
 import logging
 import os
 import sys
@@ -214,9 +215,12 @@ class CheckClientlist(WorkItem):
 
     def do(self):
         logging.debug('Checking clientlist')
-        for client_name in self.repo.clientlist.list_clients():
+        clients = self.repo.clientlist.list_clients()
+#        for client_name in clients:
+#            yield CheckBTree(client_name)
+        for client_name in clients:
             yield CheckClientExists(client_name)
-        for client_name in self.repo.clientlist.list_clients():
+        for client_name in clients:
             yield CheckClient(client_name)
 
 
@@ -232,6 +236,21 @@ class CheckForExtraChunks(WorkItem):
                 self.error('chunk %s not used by anyone' % chunkid)
 
 
+class CheckBTree(WorkItem):
+
+    def __init__(self, dirname):
+        self.dirname = dirname
+        self.name = 'B-tree %s' % dirname
+
+    def do(self):
+        logging.debug('Checking B-tree %s' % self.dirname)
+        forest = larch.open_forest(dirname=self.dirname, vfs=self.repo.fs)
+        fsck = larch.fsck.Fsck(forest, self.error)
+        fsck.find_work()
+        for work in fsck.work:
+            work.do()
+
+
 class CheckRepository(WorkItem):
 
     def __init__(self):
@@ -239,6 +258,9 @@ class CheckRepository(WorkItem):
         
     def do(self):
         logging.debug('Checking repository')
+        yield CheckBTree('clientlist')
+#        yield CheckBTree('chunklist')
+#        yield CheckBTree('chunksums')
         yield CheckClientlist()
 
 
