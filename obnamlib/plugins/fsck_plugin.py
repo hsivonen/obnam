@@ -216,8 +216,10 @@ class CheckClientlist(WorkItem):
     def do(self):
         logging.debug('Checking clientlist')
         clients = self.repo.clientlist.list_clients()
-#        for client_name in clients:
-#            yield CheckBTree(client_name)
+        for client_name in clients:
+            client_id = self.repo.clientlist.get_client_id(client_name)
+            client_dir = self.repo.client_dir(client_id)
+            yield CheckBTree(str(client_dir))
         for client_name in clients:
             yield CheckClientExists(client_name)
         for client_name in clients:
