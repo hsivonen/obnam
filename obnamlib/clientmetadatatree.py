@@ -192,8 +192,8 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         now = int(current_time())
         self._insert_int(self.tree, self.genkey(self.GEN_ID), gen_id)
         self._insert_int(self.tree, self.genkey(self.GEN_STARTED), now)
-        self.file_count = self.get_generation_files(gen_id)
-        self.total_data = self.get_generation_data(gen_id)
+        self.file_count = self.get_generation_file_count(gen_id) or 0
+        self.total_data = self.get_generation_data(gen_id) or 0
 
     def set_current_generation_is_checkpoint(self, is_checkpoint):
         tracing.trace('is_checkpoint=%s', is_checkpoint)
@@ -230,9 +230,6 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         return (self._lookup_time(tree, self.GEN_STARTED),
                 self._lookup_time(tree, self.GEN_ENDED))
 
-    def get_generation_files(self, genid):
-        return self._lookup_count(genid, self.GEN_FILE_COUNT)
-
     def get_generation_data(self, genid):
         return self._lookup_count(genid, self.GEN_TOTAL_DATA)
 
@@ -242,7 +239,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         try:
             return self._lookup_int(tree, key)
         except KeyError:
-            return 0
+            return None
 
     def _insert_count(self, genid, count_type, count):
         tree = self.find_generation(genid)

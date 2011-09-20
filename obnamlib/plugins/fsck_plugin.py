@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import larch.fsck
 import logging
 import os
 import sys
@@ -51,6 +52,7 @@ class CheckChunk(WorkItem):
         self.name = 'chunk %s' % chunkid
 
     def do(self):
+        logging.debug('Checking chunk %s' % self.chunkid)
         if not self.repo.chunk_exists(self.chunkid):
             self.error('chunk %s does not exist' % self.chunkid)
         else:
@@ -74,12 +76,14 @@ class CheckChunk(WorkItem):
 class CheckFileChecksum(WorkItem):
 
     def __init__(self, filename, correct, chunkids, checksummer):
+        self.filename = filename
         self.name = '%s checksum' % filename
         self.correct = correct
         self.chunkids = chunkids
         self.checksummer = checksummer
         
     def do(self):
+        logging.debug('Checking whole-file checksum for %s' % self.filename)
         if self.correct != self.checksummer.digest():
             self.error('%s whole-file checksum mismatch' % self.name)
 
@@ -93,6 +97,8 @@ class CheckFile(WorkItem):
         self.name = '%s:%s:%s' % (client_name, genid, filename)
 
     def do(self):
+        logging.debug('Checking client=%s genid=%s filename=%s' %
+                        (self.client_name, self.genid, self.filename))
         self.repo.open_client(self.client_name)
         metadata = self.repo.get_metadata(self.genid, self.filename)
         if metadata.isfile():
@@ -113,6 +119,8 @@ class CheckDirectory(WorkItem):
         self.name = '%s:%s:%s' % (client_name, genid, dirname)
         
     def do(self):
+        logging.debug('Checking client=%s genid=%s dirname=%s' %
+                        (self.client_name, self.genid, self.dirname))
         self.repo.open_client(self.client_name)
         self.repo.get_metadata(self.genid, self.dirname)
         for basename in self.repo.listdir(self.genid, self.dirname):
@@ -132,7 +140,44 @@ class CheckGeneration(WorkItem):
         self.name = '%s:%s' % (client_name, genid)
         
     def do(self):
+        logging.debug('Checking client=%s genid=%s' % 
+                        (self.client_name, self.genid))
+
+        started, ended = self.repo.client.get_generation_times(self.genid)
+        if started is None:
+            self.error('%s:%s: no generation start time' %
+                        (self.client_name, self.genid))
+        if ended is None:
+            self.error('%s:%s: no generation end time' %
+                        (self.client_name, self.genid))
+
+        n = self.repo.client.get_generation_file_count(self.genid)
+        if n is None:
+            self.error('%s:%s: no file count' % (self.client_name, self.genid))
+
+        n = self.repo.client.get_generation_data(self.genid)
+        if n is None:
+            self.error('%s:%s: no total data' % (self.client_name, self.genid))
+
         return [CheckDirectory(self.client_name, self.genid, '/')]
+
+
+class CheckGenerationIdsAreDifferent(WorkItem):
+
+    def __init__(self, client_name, genids):
+        self.client_name = client_name
+        self.genids = list(genids)
+    
+    def do(self):
+        logging.debug('Checking genid uniqueness for client=%s' % 
+                        self.client_name)
+        done = set()
+        while self.genids:
+            genid = self.genids.pop()
+            if genid in done:
+                self.error('%s: duplicate generation id %s' % genid)
+            else:
+                done.add(genid)
 
 
 class CheckClientExists(WorkItem):
@@ -142,6 +187,7 @@ class CheckClientExists(WorkItem):
         self.name = 'does client %s exist?' % client_name
 
     def do(self):
+        logging.debug('Checking client=%s exists' % self.client_name)
         client_id = self.repo.clientlist.get_client_id(self.client_name)
         if client_id is None:
             self.error('Client %s is in client list, but has no id' %
@@ -155,7 +201,10 @@ class CheckClient(WorkItem):
         self.name = 'client %s' % client_name
 
     def do(self):
+        logging.debug('Checking client=%s' % self.client_name)
         self.repo.open_client(self.client_name)
+        yield CheckGenerationIdsAreDifferent(self.client_name,
+                                              self.repo.list_generations())
         for genid in self.repo.list_generations():
             yield CheckGeneration(self.client_name, genid)
 
@@ -165,9 +214,15 @@ class CheckClientlist(WorkItem):
     name = 'client list'
 
     def do(self):
-        for client_name in self.repo.clientlist.list_clients():
+        logging.debug('Checking clientlist')
+        clients = self.repo.clientlist.list_clients()
+        for client_name in clients:
+            client_id = self.repo.clientlist.get_client_id(client_name)
+            client_dir = self.repo.client_dir(client_id)
+            yield CheckBTree(str(client_dir))
+        for client_name in clients:
             yield CheckClientExists(client_name)
-        for client_name in self.repo.clientlist.list_clients():
+        for client_name in clients:
             yield CheckClient(client_name)
 
 
@@ -177,9 +232,28 @@ class CheckForExtraChunks(WorkItem):
         self.name = 'extra chunks'
         
     def do(self):
+        logging.debug('Checking for extra chunks')
         for chunkid in self.repo.list_chunks():
             if chunkid not in self.chunkids_seen:
                 self.error('chunk %s not used by anyone' % chunkid)
+
+
+class CheckBTree(WorkItem):
+
+    def __init__(self, dirname):
+        self.dirname = dirname
+        self.name = 'B-tree %s' % dirname
+
+    def do(self):
+        if not self.repo.fs.exists(self.dirname):
+            logging.debug('B-tree %s does not exist, skipping' % self.dirname)
+            return
+        logging.debug('Checking B-tree %s' % self.dirname)
+        forest = larch.open_forest(dirname=self.dirname, vfs=self.repo.fs)
+        fsck = larch.fsck.Fsck(forest, self.error)
+        fsck.find_work()
+        for work in fsck.work:
+            work.do()
 
 
 class CheckRepository(WorkItem):
@@ -188,6 +262,10 @@ class CheckRepository(WorkItem):
         self.name = 'repository'
         
     def do(self):
+        logging.debug('Checking repository')
+        yield CheckBTree('clientlist')
+        yield CheckBTree('chunklist')
+        yield CheckBTree('chunksums')
         yield CheckClientlist()
 
 
