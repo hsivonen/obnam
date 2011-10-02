@@ -250,7 +250,8 @@ class CheckBTree(WorkItem):
             return
         logging.debug('Checking B-tree %s' % self.dirname)
         forest = larch.open_forest(dirname=self.dirname, vfs=self.repo.fs)
-        fsck = larch.fsck.Fsck(forest, self.error)
+        fsck = larch.fsck.Fsck(forest, self.warning, self.error, 
+                               self.settings['fsck-fix'])
         fsck.find_work()
         for work in fsck.work:
             work.do()
@@ -273,6 +274,8 @@ class FsckPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
         self.app.add_subcommand('fsck', self.fsck)
+        self.app.settings.boolean(['fsck-fix'], 
+                                  'should fsck try to fix problems?')
 
     def configure_ttystatus(self, work_items):
         self.app.ts.clear()
@@ -313,12 +316,17 @@ class FsckPlugin(obnamlib.ObnamPlugin):
             sys.exit(1)
 
     def add_item(self, work):
+        work.warning = self.warning
         work.error = self.error
         work.repo = self.repo
+        work.settings = self.app.settings
         work.chunkids_seen = self.chunkids_seen
         self.work_items.append(work)
 
     def error(self, msg):
         self.app.ts.error(msg)
         self.errors += 1
+
+    def warning(self, msg):
+        self.app.ts.notify(msg)
 

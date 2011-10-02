@@ -20,6 +20,9 @@ USER VISIBLE CHANGES:
   repository.
 * Subcommands for encryption now give a warning if encryption key is not
   given.
+* The `--fsck-fix` option will now instruct `obnam fsck` to try to fix
+  problems found. For this release, it only means fixing B-tree missing
+  node problems, but more will follow.
 
 DEVELOPER CHANGES:
 
