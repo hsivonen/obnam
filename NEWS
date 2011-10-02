@@ -4,7 +4,7 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
-Version 0.23, released UNRELEASED; a BETA release
+Version 0.23, released 2011-10-02; a BETA release
 -------------------------------------------------
 
 USER VISIBLE CHANGES:
@@ -23,11 +23,20 @@ USER VISIBLE CHANGES:
 * The `--fsck-fix` option will now instruct `obnam fsck` to try to fix
   problems found. For this release, it only means fixing B-tree missing
   node problems, but more will follow.
+* The default sizes have been changed for B-tree nodes (256 KiB) 
+  and file contents chunks (1 MiB), based on benchmarking. 
+* SFTP protocol use has been optimized, which should result in some
+  more speed. This also highlights the need to change obnam so it can
+  do uploads in the background.
+* If a client does not exist in the repository, `force-lock` now gives
+  a warning to the user, rather than ignoring it silently.
 
 DEVELOPER CHANGES:
 
 * New `--sftp-delay=100` option can be used to simulate SFTP backups over
   networks with long round trip times.
+* `obnam-benchmark` can now use `--sftp-delay` and other changes to make
+  it more useful.
 
 INTERNAL CHANGES:
 

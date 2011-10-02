@@ -1,7 +1,9 @@
-obnam (0.23-1) UNRELEASED; urgency=low
+obnam (0.23-1) unstable; urgency=low
 
+  * New upstream release.
   * debian/control: Depend on newer ttystatus for fix to zero division
     bug, and non-string values for String widget.
+  * debian/control: Update versioned dependency for python-larch to 0.25.
 
  -- Lars Wirzenius <liw@liw.fi>  Wed, 31 Aug 2011 00:19:36 +0100
 
