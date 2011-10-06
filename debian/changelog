@@ -1,3 +1,10 @@
+obnam (0.24-1) unstable; urgency=low
+
+  * New upstream release.
+    - manpage typo fixes (Closes: #644440)
+
+ -- Lars Wirzenius <liw@liw.fi>  Thu, 06 Oct 2011 08:20:34 +0100
+
 obnam (0.23-1) unstable; urgency=low
 
   * New upstream release.
