@@ -64,7 +64,7 @@ This can be useful for scripting.
 .IP \(bu
 .B ls
 lists the contents of a given generation, similar to 
-.BR ls \-lAR .
+.BR "ls \-lAR" .
 .IP \(bu
 .B verify
 compares data in the backup with actual user data,
@@ -116,7 +116,7 @@ but lists toplevels and which keys can access them.
 .IP \(bu
 .B add\-key
 adds an encryption key to the repository.
-By default, they key is added only to the shared toplevel directories,
+By default, the key is added only to the shared toplevel directories,
 but it can also be added to specific clients:
 list the names of the clients on the command line.
 They key is given with the
