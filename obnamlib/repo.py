@@ -47,6 +47,7 @@ class HookedFS(object):
         self.repo = repo
         self.fs = fs
         self.hooks = hooks
+        self.do_make_readonly = True
         
     def __getattr__(self, name):
         return getattr(self.fs, name)
@@ -81,7 +82,15 @@ class HookedFS(object):
         self.make_readonly(filename)
         
     def make_readonly(self, filename):
-        self.fs.chmod(filename, stat.S_IRUSR)
+        if self.do_make_readonly:
+            try:
+                self.fs.chmod(filename, stat.S_IRUSR)
+            except OSError, e:
+                if e.errno != errno.EPERM:
+                    raise
+                else:
+                    logging.debug('Ignoring chmod error in repository')
+                    self.do_make_readonly = False
         
 
 class Repository(object):
