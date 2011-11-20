@@ -85,7 +85,7 @@ class HookedFS(object):
         if self.do_make_readonly:
             try:
                 self.fs.chmod(filename, stat.S_IRUSR)
-            except OSError, e:
+            except OSError, e: # pragma: no cover
                 if e.errno != errno.EPERM:
                     raise
                 else:
