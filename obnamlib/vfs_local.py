@@ -106,7 +106,29 @@ class LocalFS(obnamlib.VirtualFileSystem):
         os.rename(self.join(old), self.join(new))
 
     def lstat(self, pathname):
-        return os.lstat(self.join(pathname))
+        (ret, dev, ino, mode, nlink, uid, gid, rdev, size, blksize, blocks,
+         atime_sec, atime_nsec, mtime_sec, mtime_nsec, 
+         ctime_sec, ctime_nsec) = obnamlib._obnam.lstat(self.join(pathname))
+        if ret != 0:
+            raise OSError((ret, os.strerror(ret), pathname))
+        return obnamlib.Metadata(
+                    st_dev=dev,
+                    st_ino=ino,
+                    st_mode=mode,
+                    st_nlink=nlink,
+                    st_uid=uid,
+                    st_gid=gid,
+                    st_rdev=rdev,
+                    st_size=size,
+                    st_blksize=blksize,
+                    st_blocks=blocks,
+                    st_atime_sec=atime_sec,
+                    st_atime_nsec=atime_nsec,
+                    st_mtime_sec=mtime_sec,
+                    st_mtime_nsec=mtime_nsec,
+                    st_ctime_sec=ctime_sec,
+                    st_ctime_nsec=ctime_nsec
+                )
 
     def lchown(self, pathname, uid, gid): # pragma: no cover
         tracing.trace('lchown %s %d %d', pathname, uid, gid)
