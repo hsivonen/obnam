@@ -25,13 +25,15 @@ import obnamlib
 class FakeFS(object):
 
     def __init__(self):
-        self.st_atime = 1.0
+        self.st_atime_sec = 1
+        self.st_atime_nsec = 11
         self.st_blocks = 2
         self.st_dev = 3
         self.st_gid = 4
         self.st_ino = 5
         self.st_mode = 6
-        self.st_mtime = 7.0
+        self.st_mtime_sec = 7
+        self.st_mtime_nsec = 71
         self.st_nlink = 8
         self.st_size = 9
         self.st_uid = 10
@@ -62,8 +64,8 @@ class FakeFS(object):
 class MetadataTests(unittest.TestCase):
 
     def test_sets_mtime_from_kwarg(self):
-        metadata = obnamlib.Metadata(st_mtime=123)
-        self.assertEqual(metadata.st_mtime, 123)
+        metadata = obnamlib.Metadata(st_mtime_sec=123)
+        self.assertEqual(metadata.st_mtime_sec, 123)
 
     def test_isdir_returns_false_for_regular_file(self):
         metadata = obnamlib.Metadata(st_mode=stat.S_IFREG)
@@ -105,6 +107,20 @@ class MetadataTests(unittest.TestCase):
         metadata = obnamlib.Metadata(md5='checksum')
         self.assertEqual(metadata.md5, 'checksum')
 
+    def test_is_equal_to_itself(self):
+        metadata = obnamlib.Metadata(st_mode=stat.S_IFREG)
+        self.assertEqual(metadata, metadata)
+
+    def test_less_than_works(self):
+        m1 = obnamlib.Metadata(st_size=1)
+        m2 = obnamlib.Metadata(st_size=2)
+        self.assert_(m1 < m2)
+
+    def test_greater_than_works(self):
+        m1 = obnamlib.Metadata(st_size=1)
+        m2 = obnamlib.Metadata(st_size=2)
+        self.assert_(m2 > m1)
+
 
 class ReadMetadataTests(unittest.TestCase):
 
@@ -115,8 +131,9 @@ class ReadMetadataTests(unittest.TestCase):
         metadata = obnamlib.read_metadata(self.fakefs, 'foo', 
                                           getpwuid=self.fakefs.getpwuid,
                                           getgrgid=self.fakefs.getgrgid)
-        fields = ['st_atime', 'st_blocks', 'st_dev', 'st_gid', 'st_ino',
-                  'st_mode', 'st_mtime', 'st_nlink', 'st_size', 'st_uid',
+        fields = ['st_atime_sec','st_atime_nsec', 'st_blocks', 'st_dev', 
+                  'st_gid', 'st_ino', 'st_mode', 'st_mtime_sec', 
+                  'st_mtime_nsec', 'st_nlink', 'st_size', 'st_uid',
                   'groupname', 'username']
         for field in fields:
             self.assertEqual(getattr(metadata, field),
@@ -145,9 +162,11 @@ class SetMetadataTests(unittest.TestCase):
 
     def setUp(self):
         self.metadata = obnamlib.Metadata()
-        self.metadata.st_atime = 12765
+        self.metadata.st_atime_sec = 12765
+        self.metadata.st_atime_nsec = 0
         self.metadata.st_mode = 42 | stat.S_IFREG
-        self.metadata.st_mtime = 10**9
+        self.metadata.st_mtime_sec = 10**9
+        self.metadata.st_mtime_nsec = 0
         self.metadata.st_uid = 1234
         self.metadata.st_gid = 5678
         
@@ -174,13 +193,13 @@ class SetMetadataTests(unittest.TestCase):
         self.gid_set = gid
         
     def test_sets_atime(self):
-        self.assertEqual(self.st.st_atime, self.metadata.st_atime)
+        self.assertEqual(self.st.st_atime, self.metadata.st_atime_sec)
 
     def test_sets_mode(self):
         self.assertEqual(self.st.st_mode, self.metadata.st_mode)
 
     def test_sets_mtime(self):
-        self.assertEqual(self.st.st_mtime, self.metadata.st_mtime)
+        self.assertEqual(self.st.st_mtime, self.metadata.st_mtime_sec)
 
     def test_does_not_set_uid_when_not_running_as_root(self):
         self.assertEqual(self.st.st_uid, os.getuid())
@@ -212,14 +231,15 @@ class SetMetadataTests(unittest.TestCase):
         obnamlib.set_metadata(self.fs, self.filename, self.metadata)
         st = os.lstat(self.filename)
         self.assertEqual(st.st_mode, self.metadata.st_mode)
-        self.assertEqual(st.st_mtime, self.metadata.st_mtime)
+        self.assertEqual(st.st_mtime, self.metadata.st_mtime_sec)
 
 
 class MetadataCodingTests(unittest.TestCase):
 
     def test_round_trip(self):
         metadata = obnamlib.metadata.Metadata(st_mode=1, 
-                                              st_mtime=2.12756, 
+                                              st_mtime_sec=2, 
+                                              st_mtime_nsec=12756,
                                               st_nlink=3,
                                               st_size=4, 
                                               st_uid=5, 
@@ -227,7 +247,8 @@ class MetadataCodingTests(unittest.TestCase):
                                               st_dev=7,
                                               st_gid=8, 
                                               st_ino=9,  
-                                              st_atime=10.123, 
+                                              st_atime_sec=10, 
+                                              st_atime_nsec=123, 
                                               groupname='group',
                                               username='user',
                                               target='target',

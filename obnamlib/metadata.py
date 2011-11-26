@@ -44,21 +44,23 @@ class Metadata(object):
     
     We do not store all stat(2) fields. Here's a commentary on all fields:
     
-        field?      stored? why
+        field?          stored? why
     
-        st_atime    yes     mutt compars atime with mtime to see if msg is new
-        st_blksize  no      no way to restore, not useful backed up
-        st_blocks   yes     used to see if restore should create holes in file
-        st_ctime    no      no way to restore, not useful backed up
-        st_dev      yes     used to restore hardlinks
-        st_gid      yes     used to restore group ownership
-        st_ino      yes     used to restore hardlinks
-        st_mode     yes     used to restore permissions
-        st_mtime    yes     used to restore mtime
-        st_nlink    yes     used to restore hardlinks
-        st_rdev     no      no use (correct me if I'm wrong about this)
-        st_size     yes     user needs it to see size of file in backup
-        st_uid      yes     used to restored ownership
+        st_atime_sec    yes     mutt compares atime, mtime to see ifmsg is new
+        st_atime_nsec   yes     mutt compares atime, mtime to see ifmsg is new
+        st_blksize      no      no way to restore, not useful backed up
+        st_blocks       yes     should restore create holes in file?
+        st_ctime        no      no way to restore, not useful backed up
+        st_dev          yes     used to restore hardlinks
+        st_gid          yes     used to restore group ownership
+        st_ino          yes     used to restore hardlinks
+        st_mode         yes     used to restore permissions
+        st_mtime_sec    yes     used to restore mtime
+        st_mtime_nsec   yes     used to restore mtime
+        st_nlink        yes     used to restore hardlinks
+        st_rdev         no      no use (correct me if I'm wrong about this)
+        st_size         yes     user needs it to see size of file in backup
+        st_uid          yes     used to restored ownership
 
     The field 'target' stores the target of a symlink.
         
@@ -84,6 +86,23 @@ class Metadata(object):
 
     def isfile(self):
         return self.st_mode is not None and stat.S_ISREG(self.st_mode)
+
+    def __repr__(self): # pragma: no cover
+        fields = ', '.join('%s=%s' % (k, getattr(self, k))
+                           for k in metadata_fields)
+        return 'Metadata(%s)' % fields
+
+    def __cmp__(self, other):
+        for field in metadata_fields:
+            ours = getattr(self, field)
+            theirs = getattr(other, field)
+            if ours == theirs:
+                continue
+            if ours < theirs:
+                return -1
+            if ours > theirs:
+                return +1
+        return 0
 
 
 # Caching versions of username/groupname lookups.
@@ -147,7 +166,8 @@ def set_metadata(fs, filename, metadata, getuid=None):
         fs.symlink(metadata.target, filename)
     else:
         fs.chmod(filename, metadata.st_mode)
-    fs.lutimes(filename, metadata.st_atime, metadata.st_mtime)
+    fs.lutimes(filename, metadata.st_atime_sec, metadata.st_atime_nsec, 
+               metadata.st_mtime_sec, metadata.st_mtime_nsec)
 
     getuid = getuid or os.getuid
     if getuid() == 0:
@@ -156,8 +176,8 @@ def set_metadata(fs, filename, metadata, getuid=None):
     
 metadata_format = struct.Struct('!Q' +  # flags
                                 'Q' +   # st_mode
-                                'qQ' +  # st_mtime (as two integers)
-                                'qQ' +  # st_atime (as two integers)
+                                'qQ' +  # st_mtime_sec and _nsec
+                                'qQ' +  # st_atime_sec and _nsec
                                 'Q' +   # st_nlink
                                 'Q' +   # st_size
                                 'Q' +   # st_uid
@@ -177,17 +197,12 @@ def encode_metadata(metadata):
         if getattr(metadata, name) is not None:
             flags |= (1 << i)
 
-    def encode_time(t):
-        if t is None:
-            return 0, 0
-        else:
-            return float(t).as_integer_ratio()
-    mtime_a, mtime_b = encode_time(metadata.st_mtime)
-    atime_a, atime_b = encode_time(metadata.st_atime)
     packed = metadata_format.pack(flags,
                                   metadata.st_mode or 0,
-                                  mtime_a, mtime_b,
-                                  atime_a, atime_b,
+                                  metadata.st_mtime_sec or 0,
+                                  metadata.st_mtime_nsec or 0,
+                                  metadata.st_atime_sec or 0,
+                                  metadata.st_atime_nsec or 0,
                                   metadata.st_nlink or 0,
                                   metadata.st_size or 0,
                                   metadata.st_uid or 0,
@@ -227,15 +242,14 @@ def decode_metadata(encoded):
     def decode_integer(field):
         decode(field, 1, False, lambda i, o: items[i])
 
-    def decode_float(field):
-        decode(field, 2, False, lambda i, o: float(items[i]) / items[i+1])
-
     def decode_string(field):
         decode(field, 1, True, lambda i, o: encoded[o:o + items[i]])
     
     decode_integer('st_mode')
-    decode_float('st_mtime')
-    decode_float('st_atime')
+    decode_integer('st_mtime_sec')
+    decode_integer('st_mtime_nsec')
+    decode_integer('st_atime_sec')
+    decode_integer('st_atime_nsec')
     decode_integer('st_nlink')
     decode_integer('st_size')
     decode_integer('st_uid')
