@@ -106,7 +106,29 @@ class LocalFS(obnamlib.VirtualFileSystem):
         os.rename(self.join(old), self.join(new))
 
     def lstat(self, pathname):
-        return os.lstat(self.join(pathname))
+        (ret, dev, ino, mode, nlink, uid, gid, rdev, size, blksize, blocks,
+         atime_sec, atime_nsec, mtime_sec, mtime_nsec, 
+         ctime_sec, ctime_nsec) = obnamlib._obnam.lstat(self.join(pathname))
+        if ret != 0:
+            raise OSError((ret, os.strerror(ret), pathname))
+        return obnamlib.Metadata(
+                    st_dev=dev,
+                    st_ino=ino,
+                    st_mode=mode,
+                    st_nlink=nlink,
+                    st_uid=uid,
+                    st_gid=gid,
+                    st_rdev=rdev,
+                    st_size=size,
+                    st_blksize=blksize,
+                    st_blocks=blocks,
+                    st_atime_sec=atime_sec,
+                    st_atime_nsec=atime_nsec,
+                    st_mtime_sec=mtime_sec,
+                    st_mtime_nsec=mtime_nsec,
+                    st_ctime_sec=ctime_sec,
+                    st_ctime_nsec=ctime_nsec
+                )
 
     def lchown(self, pathname, uid, gid): # pragma: no cover
         tracing.trace('lchown %s %d %d', pathname, uid, gid)
@@ -116,16 +138,16 @@ class LocalFS(obnamlib.VirtualFileSystem):
         tracing.trace('chmod %s %o', pathname, mode)
         os.chmod(self.join(pathname), mode)
 
-    def lutimes(self, pathname, atime, mtime):
-        def split_time(t):
-            frac, whole = math.modf(t)
-            return int(whole), int(frac * 1e6)
-        atime_sec, atime_usec = split_time(atime)
-        mtime_sec, mtime_usec = split_time(mtime)
-        ret = obnamlib._obnam.lutimes(self.join(pathname), atime_sec,
-                                      atime_usec, mtime_sec, mtime_usec)
+    def lutimes(self, pathname, atime_sec, atime_nsec, mtime_sec, mtime_nsec):
+        assert atime_sec is not None
+        assert atime_nsec is not None
+        assert mtime_sec is not None
+        assert mtime_nsec is not None
+        ret = obnamlib._obnam.lutimes(self.join(pathname), 
+                                      atime_sec, int(atime_nsec / 1000), 
+                                      mtime_sec, int(mtime_nsec / 1000))
         if ret != 0:
-            raise OSError(ret, errno.errorcode[ret], pathname)
+            raise OSError(ret, os.strerror(ret), pathname)
 
     def link(self, existing, new):
         tracing.trace('existing=%s', existing)

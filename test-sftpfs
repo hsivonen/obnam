@@ -58,6 +58,16 @@ class SftpTests(unittest.TestCase, obnamlib.VfsTests):
         
     def test_mknod_creates_fifo(self):
         self.assertRaises(NotImplementedError, self.fs.mknod, 'foo', 0)
+
+    # Override method from the VfsTests class. SFTP doesn't do sub-second
+    # timestamps, so we fix the test here to not set those fields to nonzero.
+    def test_lutimes_sets_times_correctly(self):
+        self.fs.mkdir('foo')
+        self.fs.lutimes('foo', 1, 2*1000, 3, 4*1000)
+        self.assertEqual(self.fs.lstat('foo').st_atime_sec, 1)
+        self.assertEqual(self.fs.lstat('foo').st_atime_nsec, 0)
+        self.assertEqual(self.fs.lstat('foo').st_mtime_sec, 3)
+        self.assertEqual(self.fs.lstat('foo').st_mtime_nsec, 0)
         
         
 if __name__ == '__main__':

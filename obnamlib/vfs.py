@@ -138,7 +138,7 @@ class VirtualFileSystem(object):
     def chmod(self, pathname, mode):
         '''Like os.chmod.'''
 
-    def lutimes(self, pathname, atime, mtime):
+    def lutimes(self, pathname, atime_sec, atime_nsec, mtime_sec, mtime_nsec):
         '''Like lutimes(2).'''
 
     def link(self, existing_path, new_path):
@@ -403,7 +403,9 @@ class VfsTests(object): # pragma: no cover
         self.assertEqual(type(name), str)
         self.assertEqual(name, funny)
         self.assert_(hasattr(st, 'st_mode'))
-        self.assert_(hasattr(st, 'st_mtime'))
+        self.assertFalse(hasattr(st, 'st_mtime'))
+        self.assert_(hasattr(st, 'st_mtime_sec'))
+        self.assert_(hasattr(st, 'st_mtime_nsec'))
 
     def test_listdir2_returns_plain_strings_only(self):
         self.fs.write_file(u'M\u00E4kel\u00E4'.encode('utf-8'), 'data')
@@ -500,12 +502,14 @@ class VfsTests(object): # pragma: no cover
 
     def test_lutimes_sets_times_correctly(self):
         self.fs.mkdir('foo')
-        self.fs.lutimes('foo', 1, 2)
-        self.assertEqual(self.fs.lstat('foo').st_atime, 1)
-        self.assertEqual(self.fs.lstat('foo').st_mtime, 2)
+        self.fs.lutimes('foo', 1, 2*1000, 3, 4*1000)
+        self.assertEqual(self.fs.lstat('foo').st_atime_sec, 1)
+        self.assertEqual(self.fs.lstat('foo').st_atime_nsec, 2*1000)
+        self.assertEqual(self.fs.lstat('foo').st_mtime_sec, 3)
+        self.assertEqual(self.fs.lstat('foo').st_mtime_nsec, 4*1000)
 
     def test_lutimes_raises_oserror_for_nonexistent_entry(self):
-        self.assertRaises(OSError, self.fs.lutimes, 'notexists', 1, 2)
+        self.assertRaises(OSError, self.fs.lutimes, 'notexists', 1, 2, 3, 4)
 
     def test_link_creates_hard_link(self):
         self.fs.write_file('foo', 'foo')

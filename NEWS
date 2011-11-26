@@ -7,7 +7,15 @@ This file summarizes changes between releases of Obnam.
 Version 0.24, released UNRELEASED; a BETA release
 -------------------------------------------------
 
-* 
+USER VISIBLE CHANGES
+
+* The way file timestamps (modification and access times) have changed,
+  to fix inaccuracies introduced by the old way. Times are now stored
+  as two integers giving full seconds and nanoseconds past the full
+  second, instead of the weird earlier system that was imposed by Python's
+  use of floating point for the timestamps. This causes the repository
+  format version to be bumped, resulting in a need to start over with an
+  empty repository.
 
 Version 0.23, released 2011-10-02; a BETA release
 -------------------------------------------------
