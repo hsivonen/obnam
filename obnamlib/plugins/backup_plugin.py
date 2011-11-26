@@ -248,7 +248,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             # File does not exist in the previous generation, so it
             # does need to be backed up.
             return True
-        return (current.st_mtime != old.st_mtime or
+        return (current.st_mtime_sec != old.st_mtime_sec or
+                current.st_mtime_nsec != old.st_mtime_nsec or
                 current.st_mode != old.st_mode or
                 current.st_nlink != old.st_nlink or
                 current.st_size != old.st_size or

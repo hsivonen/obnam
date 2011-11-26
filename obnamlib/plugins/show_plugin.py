@@ -144,7 +144,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         perms = ''.join(perms)
         
         timestamp = time.strftime('%Y-%m-%d %H:%M:%S', 
-                                  time.gmtime(metadata.st_mtime))
+                                  time.gmtime(metadata.st_mtime_sec))
 
         if metadata.islink():
             name = '%s -> %s' % (basename, metadata.target)
