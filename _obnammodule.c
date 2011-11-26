@@ -37,10 +37,13 @@
 #ifndef _XOPEN_SOURCE
 #define _XOPEN_SOURCE 600
 #endif
+#define _POSIX_C_SOURCE 200809L
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <sys/types.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 
 static PyObject *
@@ -86,11 +89,47 @@ lutimes_wrapper(PyObject *self, PyObject *args)
 }
 
 
+static PyObject *
+lstat_wrapper(PyObject *self, PyObject *args)
+{
+    int ret;
+    const char *filename;
+    struct stat st = {0};
+
+    if (!PyArg_ParseTuple(args, "s", &filename))
+        return NULL;
+
+    ret = lstat(filename, &st);
+    if (ret == -1)
+        ret = errno;
+    return Py_BuildValue("illllllllllllllll", 
+                         ret,
+                         (long long) st.st_dev,
+                         (long long) st.st_ino,
+                         (long long) st.st_mode,
+                         (long long) st.st_nlink,
+                         (long long) st.st_uid,
+                         (long long) st.st_gid,
+                         (long long) st.st_rdev,
+                         (long long) st.st_size,
+                         (long long) st.st_blksize,
+                         (long long) st.st_blocks,
+                         (long long) st.st_atim.tv_sec,
+                         (long long) st.st_atim.tv_nsec,
+                         (long long) st.st_mtim.tv_sec,
+                         (long long) st.st_mtim.tv_nsec,
+                         (long long) st.st_ctim.tv_sec,
+                         (long long) st.st_ctim.tv_nsec);
+}
+
+
 static PyMethodDef methods[] = {
     {"fadvise_dontneed",  fadvise_dontneed, METH_VARARGS, 
      "Call posix_fadvise(2) with POSIX_FADV_DONTNEED argument."},
     {"lutimes", lutimes_wrapper, METH_VARARGS,
      "lutimes(2) wrapper; args are filename, atime, and mtime."},
+    {"lstat", lstat_wrapper, METH_VARARGS,
+     "lstat(2) wrapper; arg is filename, returns tuple."},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
