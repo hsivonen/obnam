@@ -138,16 +138,16 @@ class LocalFS(obnamlib.VirtualFileSystem):
         tracing.trace('chmod %s %o', pathname, mode)
         os.chmod(self.join(pathname), mode)
 
-    def lutimes(self, pathname, atime, mtime):
-        def split_time(t):
-            frac, whole = math.modf(t)
-            return int(whole), int(frac * 1e6)
-        atime_sec, atime_usec = split_time(atime)
-        mtime_sec, mtime_usec = split_time(mtime)
-        ret = obnamlib._obnam.lutimes(self.join(pathname), atime_sec,
-                                      atime_usec, mtime_sec, mtime_usec)
+    def lutimes(self, pathname, atime_sec, atime_nsec, mtime_sec, mtime_nsec):
+        assert atime_sec is not None
+        assert atime_nsec is not None
+        assert mtime_sec is not None
+        assert mtime_nsec is not None
+        ret = obnamlib._obnam.lutimes(self.join(pathname), 
+                                      atime_sec, int(atime_nsec / 1000), 
+                                      mtime_sec, int(mtime_nsec / 1000))
         if ret != 0:
-            raise OSError(ret, errno.errorcode[ret], pathname)
+            raise OSError(ret, os.strerror(ret), pathname)
 
     def link(self, existing, new):
         tracing.trace('existing=%s', existing)
