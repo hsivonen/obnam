@@ -273,8 +273,17 @@ class SftpFS(obnamlib.VirtualFileSystem):
         # a signed 32-bit value. This limits the range, but allows
         # timestamps that are negative (before 1970). Once paramiko is
         # fixed, this code can be removed.
-        st.st_mtime = self._force_32bit_timestamp(st.st_mtime)
-        st.st_atime = self._force_32bit_timestamp(st.st_atime)
+        st.st_mtime_sec = self._force_32bit_timestamp(st.st_mtime)
+        st.st_atime_sec = self._force_32bit_timestamp(st.st_atime)
+        
+        # Within Obnam, we pretend stat results have st_Xtime_sec and
+        # st_Xtime_nsec, but not st_Xtime. Remove those fields.
+        del st.st_mtime
+        del st.st_atime
+        
+        # We only get integer timestamps, so set these explicitly to 0.
+        st.st_mtime_nsec = 0
+        st.st_atime_nsec = 0
 
         return st        
 
@@ -380,7 +389,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
         self.sftp.chmod(pathname, mode)
         
     @ioerror_to_oserror
-    def lutimes(self, pathname, atime, mtime):
+    def lutimes(self, pathname, atime_sec, atime_nsec, mtime_sec, mtime_nsec):
         # FIXME: This does not work for symlinks!
         # Sftp does not have a way of doing that. This means if the restore
         # target is over sftp, symlinks and their targets will have wrong
@@ -391,7 +400,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
                             'against symlinks (warning appears only first '
                             'time)')
             self.lutimes_warned = True
-        self.sftp.utime(pathname, (atime, mtime))
+        self.sftp.utime(pathname, (atime_sec, mtime_sec))
 
     def link(self, existing_path, new_path):
         raise obnamlib.Error('Cannot hardlink on SFTP. Sorry.')
