@@ -26,6 +26,7 @@ import obnamlib
 metadata_verify_fields = (
     'st_mode', 'st_mtime_sec', 'st_mtime_nsec', 
     'st_nlink', 'st_size', 'st_uid', 'groupname', 'username', 'target',
+    'xattr',
 )
 metadata_fields = metadata_verify_fields + (
     'st_blocks', 'st_dev', 'st_gid', 'st_ino',  'st_atime_sec', 
@@ -69,6 +70,9 @@ class Metadata(object):
     restoring, the names will be preferred by default.
     
     The 'md5' field optionally stores the whole-file checksum for the file.
+    
+    The 'xattr' field optionally stores extended attributes encoded as
+    a binary blob.
     
     '''
     
@@ -120,6 +124,40 @@ def _cached_getgrgid(gid): # pragma: no cover
     if gid not in _gid_to_groupname:
         _gid_to_groupname[gid] = grp.getgrgid(gid)
     return _gid_to_groupname[gid]
+
+
+def get_xattrs_as_blob(fs, filename): # pragma: no cover
+    names = fs.llistxattr(filename)
+    values = [fs.lgetxattr(filename, name) for name in names]
+
+    name_blob = ''.join('%s\0' % name for name in names)
+
+    lengths = [len(v) for v in values]
+    fmt = '!' + 'Q' * len(values)
+    value_blob = struct.pack(fmt, *lengths) + ''.join(values)
+
+    return ('%s%s%s' % 
+            (struct.pack('!Q', len(name_blob)),
+             name_blob,
+             value_blob))
+
+
+def set_xattrs_as_blob(fs, filename, blob): # pragma: no cover
+    sizesize = struct.calcsize('!Q')
+    name_blob_size = struct.unpack('!Q', blob[:sizesize])[0]
+    name_blob = blob[sizesize : sizesize + name_blob_size]
+    value_blob = blob[sizesize + name_blob_size : ]
+
+    names = [s for s in name_blob.split('\0')[:-1]]
+    fmt = '!' + 'Q' * len(names)
+    lengths_size = sizesize * len(names)
+    lengths = struct.unpack(fmt, value_blob[:lengths_size])
+    
+    pos = lengths_size
+    for i, name in enumerate(names):
+        value = value_blob[pos:pos + lengths[i]]
+        pos += lengths[i]
+        fs.lsetxattr(filename, name, value)
 
 
 def read_metadata(fs, filename, st=None, getpwuid=None, getgrgid=None):
@@ -189,6 +227,7 @@ metadata_format = struct.Struct('!Q' +  # flags
                                 'Q' +   # len of username
                                 'Q' +   # len of symlink target
                                 'Q' +   # len of md5
+                                'Q' +   # len of xattr
                                 '')
 
 def encode_metadata(metadata):
@@ -213,12 +252,15 @@ def encode_metadata(metadata):
                                   len(metadata.groupname or ''),
                                   len(metadata.username or ''),
                                   len(metadata.target or ''),
-                                  len(metadata.md5 or ''))
+                                  len(metadata.md5 or ''),
+                                  len(metadata.xattr or ''))
     return (packed + 
              (metadata.groupname or '') +
              (metadata.username or '') +
              (metadata.target or '') +
-             (metadata.md5 or ''))
+             (metadata.md5 or '') +
+             (metadata.xattr or ''))
+
 
 def decode_metadata(encoded):
 
@@ -261,6 +303,7 @@ def decode_metadata(encoded):
     decode_string('username')
     decode_string('target')
     decode_string('md5')
+    decode_string('xattr')
     
     return metadata
 
