@@ -142,7 +142,7 @@ llistxattr_wrapper(PyObject *self, PyObject *args)
         char *buf = malloc(bufsize);
         ssize_t n = llistxattr(filename, buf, bufsize);
 
-        if (n >= 0)
+        if (n > 0)
             o = Py_BuildValue("s#", buf, (int) n);
         else if (n == -1 && errno != ERANGE)
             o = Py_BuildValue("i", errno);
@@ -156,7 +156,29 @@ llistxattr_wrapper(PyObject *self, PyObject *args)
 static PyObject *
 lgetxattr_wrapper(PyObject *self, PyObject *args)
 {
-    return NULL;
+    const char *filename;
+    const char *attrname;
+    size_t bufsize;
+    PyObject *o;
+
+    if (!PyArg_ParseTuple(args, "ss", &filename, &attrname))
+        return NULL;
+
+    bufsize = 0;
+    o = NULL;
+    do {
+        bufsize += 1024;
+        char *buf = malloc(bufsize);
+        ssize_t n = lgetxattr(filename, attrname, buf, bufsize);
+
+        if (n > 0)
+            o = Py_BuildValue("s#", buf, (int) n);
+        else if (n == -1 && errno != ERANGE)
+            o = Py_BuildValue("i", errno);
+        free(buf);
+    } while (o == NULL);
+    
+    return o;
 }
 
 
@@ -176,9 +198,9 @@ static PyMethodDef methods[] = {
      "lstat(2) wrapper; arg is filename, returns tuple."},
     {"llistxattr", llistxattr_wrapper, METH_VARARGS,
      "llistxattr(2) wrapper; arg is filename, returns tuple."},
-    {"lgetxattrs", lgetxattr_wrapper, METH_VARARGS,
+    {"lgetxattr", lgetxattr_wrapper, METH_VARARGS,
      "lgetxattr(2) wrapper; arg is filename, returns tuple."},
-    {"lsetxattrs", lsetxattr_wrapper, METH_VARARGS,
+    {"lsetxattr", lsetxattr_wrapper, METH_VARARGS,
      "lsetxattr(2) wrapper; arg is filename, returns errno."},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
