@@ -43,7 +43,9 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <attr/xattr.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 
 static PyObject *
@@ -123,6 +125,48 @@ lstat_wrapper(PyObject *self, PyObject *args)
 }
 
 
+static PyObject *
+llistxattr_wrapper(PyObject *self, PyObject *args)
+{
+    const char *filename;
+    size_t bufsize;
+    PyObject *o;
+
+    if (!PyArg_ParseTuple(args, "s", &filename))
+        return NULL;
+
+    bufsize = 0;
+    o = NULL;
+    do {
+        bufsize += 1024;
+        char *buf = malloc(bufsize);
+        ssize_t n = llistxattr(filename, buf, bufsize);
+
+        if (n >= 0)
+            o = Py_BuildValue("s#", buf, (int) n);
+        else if (n == -1 && errno != ERANGE)
+            o = Py_BuildValue("i", errno);
+        free(buf);
+    } while (o == NULL);
+    
+    return o;
+}
+
+
+static PyObject *
+lgetxattr_wrapper(PyObject *self, PyObject *args)
+{
+    return NULL;
+}
+
+
+static PyObject *
+lsetxattr_wrapper(PyObject *self, PyObject *args)
+{
+    return NULL;
+}
+
+
 static PyMethodDef methods[] = {
     {"fadvise_dontneed",  fadvise_dontneed, METH_VARARGS, 
      "Call posix_fadvise(2) with POSIX_FADV_DONTNEED argument."},
@@ -130,6 +174,12 @@ static PyMethodDef methods[] = {
      "lutimes(2) wrapper; args are filename, atime, and mtime."},
     {"lstat", lstat_wrapper, METH_VARARGS,
      "lstat(2) wrapper; arg is filename, returns tuple."},
+    {"llistxattr", llistxattr_wrapper, METH_VARARGS,
+     "llistxattr(2) wrapper; arg is filename, returns tuple."},
+    {"lgetxattrs", lgetxattr_wrapper, METH_VARARGS,
+     "lgetxattr(2) wrapper; arg is filename, returns tuple."},
+    {"lsetxattrs", lsetxattr_wrapper, METH_VARARGS,
+     "lsetxattr(2) wrapper; arg is filename, returns errno."},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
