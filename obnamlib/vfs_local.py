@@ -130,6 +130,24 @@ class LocalFS(obnamlib.VirtualFileSystem):
                     st_ctime_nsec=ctime_nsec
                 )
 
+    def llistxattr(self, filename): # pragma: no cover
+        ret = obnamlib._obnam.llistxattr(self.join(filename))
+        if type(ret) is int:
+            raise OSError((ret, os.strerror(ret), filename))
+        return [s for s in ret.split('\0') if s]
+
+    def lgetxattr(self, filename, attrname): # pragma: no cover
+        ret = obnamlib._obnam.lgetxattr(self.join(filename), attrname)
+        if type(ret) is int:
+            raise OSError((ret, os.strerror(ret), filename))
+        return ret
+
+    def lsetxattr(self, filename, attrname, attrvalue): # pragma: no cover
+        ret = obnamlib._obnam.lsetxattr(self.join(filename), 
+                                        attrname, attrvalue)
+        if ret != 0:
+            raise OSError((ret, os.strerror(ret), filename))
+
     def lchown(self, pathname, uid, gid): # pragma: no cover
         tracing.trace('lchown %s %d %d', pathname, uid, gid)
         os.lchown(self.join(pathname), uid, gid)

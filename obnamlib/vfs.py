@@ -132,6 +132,16 @@ class VirtualFileSystem(object):
     def lstat(self, pathname):
         '''Like os.lstat.'''
 
+    def llistxattr(self, pathname):
+        '''Return list of names of extended attributes for file.'''
+        return []
+        
+    def lgetxattr(self, pathname, attrname):
+        '''Return value of an extended attribute.'''
+        
+    def lsetxattr(self, pathname, attrname, attrvalue):
+        '''Set value of an extended attribute.'''
+
     def lchown(self, pathname, uid, gid):
         '''Like os.lchown.'''
 
