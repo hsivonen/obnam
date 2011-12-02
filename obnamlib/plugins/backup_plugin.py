@@ -63,12 +63,15 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.app.ts.add(ttystatus.Literal(' up ('))
         self.app.ts.add(ttystatus.ByteSpeed('uploaded-bytes'))
         self.app.ts.add(ttystatus.Literal(') '))
+        self.app.ts.add(ttystatus.String('what'))
         self.app.ts.add(ttystatus.Pathname('current-file'))
 
     def update_progress_with_file(self, filename, metadata):
+        self.app.ts['what'] = ''
         self.app.ts['current-file'] = filename
 
     def update_progress_with_upload(self, amount):
+        self.app.ts['what'] = ''
         self.app.ts['uploaded-bytes'] += amount
 
     def error(self, msg, exc=None):
@@ -91,6 +94,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.app.settings.require('client-name')
 
         self.configure_ttystatus()
+        self.app.ts['what'] = 'setting up;'
 
         self.compile_exclusion_patterns()
         self.memory_dump_counter = 0
@@ -106,8 +110,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             roots = self.app.settings['root'] + args
             if roots:
                 self.backup_roots(roots)
+            self.app.ts['what'] = 'committing changes;'
             self.repo.commit_client()
             self.repo.fs.close()
+            self.app.ts['what'] = ''
             self.app.ts.finish()
 
             logging.info('Backup finished.')
@@ -171,6 +177,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     self.error(msg, e)
                 if self.repo.fs.bytes_written - last_checkpoint >= interval:
                     logging.info('Making checkpoint')
+                    self.app.ts['what'] = 'making checkpoint;'
                     self.backup_parents('.')
                     self.repo.commit_client(checkpoint=True)
                     self.repo.lock_client(self.app.settings['client-name'])
