@@ -185,7 +185,19 @@ lgetxattr_wrapper(PyObject *self, PyObject *args)
 static PyObject *
 lsetxattr_wrapper(PyObject *self, PyObject *args)
 {
-    return NULL;
+    const char *filename;
+    const char *name;
+    const char *value;
+    int size;
+    int ret;
+
+    if (!PyArg_ParseTuple(args, "sss#", &filename, &name, &value, &size))
+        return NULL;
+
+    ret = lsetxattr(filename, name, value, size, 0);
+    if (ret == -1)
+        ret = errno;
+    return Py_BuildValue("i", ret);
 }
 
 
