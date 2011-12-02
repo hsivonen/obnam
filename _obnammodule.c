@@ -142,7 +142,7 @@ llistxattr_wrapper(PyObject *self, PyObject *args)
         char *buf = malloc(bufsize);
         ssize_t n = llistxattr(filename, buf, bufsize);
 
-        if (n > 0)
+        if (n >= 0)
             o = Py_BuildValue("s#", buf, (int) n);
         else if (n == -1 && errno != ERANGE)
             o = Py_BuildValue("i", errno);
