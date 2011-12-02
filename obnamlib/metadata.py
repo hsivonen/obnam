@@ -128,6 +128,8 @@ def _cached_getgrgid(gid): # pragma: no cover
 
 def get_xattrs_as_blob(fs, filename): # pragma: no cover
     names = fs.llistxattr(filename)
+    if not names:
+        return None
     values = [fs.lgetxattr(filename, name) for name in names]
 
     name_blob = ''.join('%s\0' % name for name in names)
@@ -142,7 +144,7 @@ def get_xattrs_as_blob(fs, filename): # pragma: no cover
              value_blob))
 
 
-def set_xattrs_as_blob(fs, filename, blob): # pragma: no cover
+def set_xattrs_from_blob(fs, filename, blob): # pragma: no cover
     sizesize = struct.calcsize('!Q')
     name_blob_size = struct.unpack('!Q', blob[:sizesize])[0]
     name_blob = blob[sizesize : sizesize + name_blob_size]
@@ -185,6 +187,8 @@ def read_metadata(fs, filename, st=None, getpwuid=None, getgrgid=None):
     except KeyError:
         metadata.username = None
 
+    metadata.xattr = get_xattrs_as_blob(fs, filename)
+
     return metadata
 
 
@@ -204,6 +208,10 @@ def set_metadata(fs, filename, metadata, getuid=None):
         fs.symlink(metadata.target, filename)
     else:
         fs.chmod(filename, metadata.st_mode)
+
+    if metadata.xattr:
+        set_xattrs_from_blob(fs, filename, metadata.xattr)
+
     fs.lutimes(filename, metadata.st_atime_sec, metadata.st_atime_nsec, 
                metadata.st_mtime_sec, metadata.st_mtime_nsec)
 
