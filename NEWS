@@ -16,6 +16,9 @@ USER VISIBLE CHANGES
   use of floating point for the timestamps. This causes the repository
   format version to be bumped, resulting in a need to start over with an
   empty repository.
+* Extended file attributes are now backed up from and restored to local
+  filesystems. They are neither backed up, nor restored for live data
+  accessed over SFTP.
 
 Version 0.23, released 2011-10-02; a BETA release
 -------------------------------------------------
