@@ -111,6 +111,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         self.app.ts['total'] = self.repo.client.get_generation_file_count(gen)
         self.app.ts['total-bytes'] = self.repo.client.get_generation_data(gen)
 
+        self.app.dump_memory_profile('at beginning after setup')
         for arg in args:
             metadata = self.repo.get_metadata(gen, arg)
             if metadata.isdir():
@@ -120,6 +121,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
                 if not self.fs.exists('./' + dirname):
                     self.fs.makedirs('./' + dirname)
                 self.restore_file(gen, '.', arg)
+            self.app.dump_memory_profile('at restoring %s' % repr(arg))
 
         self.repo.fs.close()
         self.fs.close()
@@ -143,6 +145,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
                 self.restore_file(gen, to_dir, full)
         metadata = self.repo.get_metadata(gen, root)
         obnamlib.set_metadata(self.fs, './' + root, metadata)
+        self.app.dump_memory_profile('after recursing through %s' % repr(root))
 
     def restore_file(self, gen, to_dir, filename):
         self.app.ts['current'] = filename

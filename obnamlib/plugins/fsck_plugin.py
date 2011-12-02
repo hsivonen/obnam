@@ -322,6 +322,7 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         work.settings = self.app.settings
         work.chunkids_seen = self.chunkids_seen
         self.work_items.append(work)
+        self.app.dump_memory_profile('after adding %s' % repr(work))
 
     def error(self, msg):
         self.app.ts.error(msg)

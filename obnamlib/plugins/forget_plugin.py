@@ -39,10 +39,12 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
         self.repo = self.app.open_repository()
         self.repo.lock_client(self.app.settings['client-name'])
 
+        self.app.dump_memory_profile('at beginning')
         if args:
             for genspec in args:
                 genid = self.repo.genspec(genspec)
                 self.remove(genid)
+                self.app.dump_memory_profile('after removing %s' % genid)
         elif self.app.settings['keep']:
             genlist = []
             dt = datetime.datetime(1970, 1, 1, 0, 0, 0)
@@ -58,8 +60,10 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
             for genid, dt in genlist:
                 if genid not in keepids:
                     self.remove(genid)
+                    self.app.dump_memory_profile('after removing %s' % genid)
 
         self.repo.commit_client()
+        self.app.dump_memory_profile('after committing')
         self.repo.fs.close()
 
     def remove(self, genid):
