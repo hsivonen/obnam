@@ -86,7 +86,7 @@ class Table(object):
 
 class ObnamBenchmark(cliapp.Application):
 
-    default_sizes = ['50m/5m', '500m/50m', '1g/100m']
+    default_sizes = ['1g/100m']
     keyid = '3B1802F81B321347'
     opers = ('backup', 'restore', 'list_files', 'forget')
     
