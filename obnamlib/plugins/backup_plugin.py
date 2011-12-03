@@ -355,7 +355,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 if data == data2:
                     return chunkid
             else:
-                return put
+                return put()
         elif mode == 'fatalist':
             existing = find()
             if existing:
