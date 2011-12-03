@@ -50,6 +50,15 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                                   'encode NUM chunk ids per group (%default)',
                                   metavar='NUM',
                                   default=obnamlib.DEFAULT_CHUNKIDS_PER_GROUP)
+        self.app.settings.choice(['deduplicate'],
+                                 ['fatalist', 'never', 'verify'],
+                                 'find duplicate data in backed up data '
+                                    'and store it only once; three modes '
+                                    'are available: never de-duplicate, '
+                                    'verify that no hash collisions happen, '
+                                    'or (the default) fatalistically accept '
+                                    'the risk of collisions',
+                                 metavar='MODE')
 
     def configure_ttystatus(self):
         self.app.ts['current-file'] = ''
