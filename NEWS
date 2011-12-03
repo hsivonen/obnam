@@ -19,6 +19,8 @@ USER VISIBLE CHANGES
 * Extended file attributes are now backed up from and restored to local
   filesystems. They are neither backed up, nor restored for live data
   accessed over SFTP.
+* If the `--exclude` regular expression is wrong, Obnam now gives an
+  error message and then ignores the regexp, rather than crashing.
 
 Version 0.23, released 2011-10-02; a BETA release
 -------------------------------------------------

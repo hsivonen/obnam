@@ -138,8 +138,15 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.app.settings['exclude'].append(log)
         for pattern in self.app.settings['exclude']:
             logging.debug('Exclude pattern: %s' % pattern)
-        self.exclude_pats = [re.compile(x) 
-                             for x in self.app.settings['exclude']]
+
+        self.exclude_pats = []
+        for x in self.app.settings['exclude']:
+            try:
+                self.exclude_pats.append(re.compile(x))
+            except re.error, e:
+                msg = 'error compiling regular expression "%s": %s' % (x, e)
+                logging.error(msg)
+                self.app.ts.error(msg)
 
     def backup_roots(self, roots):
         self.fs = self.app.fsf.new(roots[0])
