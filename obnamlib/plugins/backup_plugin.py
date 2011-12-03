@@ -50,6 +50,15 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                                   'encode NUM chunk ids per group (%default)',
                                   metavar='NUM',
                                   default=obnamlib.DEFAULT_CHUNKIDS_PER_GROUP)
+        self.app.settings.choice(['deduplicate'],
+                                 ['fatalist', 'never', 'verify'],
+                                 'find duplicate data in backed up data '
+                                    'and store it only once; three modes '
+                                    'are available: never de-duplicate, '
+                                    'verify that no hash collisions happen, '
+                                    'or (the default) fatalistically accept '
+                                    'the risk of collisions',
+                                 metavar='MODE')
 
     def configure_ttystatus(self):
         self.app.ts['current-file'] = ''
@@ -325,13 +334,39 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         
     def backup_file_chunk(self, data):
         '''Back up a chunk of data by putting it into the repository.'''
+
+        def find():
+            return self.repo.find_chunks(checksum)
+
+        def get(chunkid):
+            return self.repo.get_chunk(chunkid)
+
+        def put():
+            return self.repo.put_chunk(data, checksum)
+
         checksum = self.repo.checksum(data)
-        existing = self.repo.find_chunks(checksum)
-        if existing:
-            chunkid = existing[0]
+
+        mode = self.app.settings['deduplicate']
+        if mode == 'never':
+            return put()
+        elif mode == 'verify':
+            for chunkid in find():
+                data2 = get(chunkid)
+                if data == data2:
+                    return chunkid
+            else:
+                return put()
+        elif mode == 'fatalist':
+            existing = find()
+            if existing:
+                return existing[0]
+            else:
+                return put()
         else:
-            chunkid = self.repo.put_chunk(data, checksum)
-        return chunkid
+            if not hasattr(self, 'bad_deduplicate_reported'):
+                logging.error('unknown --deduplicate setting value')
+                self.bad_deduplicate_reported = True
+            return put()
 
     def backup_dir_contents(self, root):
         '''Back up the list of files in a directory.'''
