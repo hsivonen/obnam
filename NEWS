@@ -21,6 +21,7 @@ USER VISIBLE CHANGES
   accessed over SFTP.
 * If the `--exclude` regular expression is wrong, Obnam now gives an
   error message and then ignores the regexp, rather than crashing.
+* There is now a compression plugin, enabled with `--compress-with=gzip`.
 
 Version 0.23, released 2011-10-02; a BETA release
 -------------------------------------------------

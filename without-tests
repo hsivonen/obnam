@@ -23,6 +23,7 @@
 ./obnamlib/plugins/__init__.py
 ./obnamlib/repo_tree.py
 ./obnamlib/plugins/encryption_plugin.py
+./obnamlib/plugins/compression_plugin.py
 
 ./.pc/debian-changes-0.22-2/obnamlib/app.py
 ./.pc/debian-changes-0.22-2/obnamlib/plugins/forget_plugin.py
