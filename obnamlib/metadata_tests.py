@@ -60,6 +60,9 @@ class FakeFS(object):
     def fail_getgrgid(self, gid):
         raise KeyError(gid)
 
+    def llistxattr(self, filename):
+        return []
+
 
 class MetadataTests(unittest.TestCase):
 

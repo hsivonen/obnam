@@ -209,7 +209,7 @@ def set_metadata(fs, filename, metadata, getuid=None):
     else:
         fs.chmod(filename, metadata.st_mode)
 
-    if metadata.xattr:
+    if metadata.xattr: # pragma: no cover
         set_xattrs_from_blob(fs, filename, metadata.xattr)
 
     fs.lutimes(filename, metadata.st_atime_sec, metadata.st_atime_nsec, 
