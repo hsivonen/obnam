@@ -33,7 +33,8 @@ class Fail(obnamlib.Error):
 class VerifyPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
-        self.app.add_subcommand('verify', self.verify)
+        self.app.add_subcommand('verify', self.verify,
+                                arg_synopsis='[FILE]...')
 
     def verify(self, args):
         '''Verify that live data and backed up data match.'''

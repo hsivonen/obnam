@@ -24,7 +24,8 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
     '''Forget generations.'''
     
     def enable(self):
-        self.app.add_subcommand('forget', self.forget)
+        self.app.add_subcommand('forget', self.forget,
+                                arg_synopsis='[GENERATION]...')
         self.app.settings.string(['keep'],
                                   'policy for what generations to keep '
                                   'when forgetting')

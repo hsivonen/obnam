@@ -38,7 +38,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         self.app.add_subcommand('clients', self.clients)
         self.app.add_subcommand('generations', self.generations)
         self.app.add_subcommand('genids', self.genids)
-        self.app.add_subcommand('ls', self.ls)
+        self.app.add_subcommand('ls', self.ls, arg_synopsis='[GENERATION]...')
 
     def open_repository(self):
         self.app.settings.require('repository')

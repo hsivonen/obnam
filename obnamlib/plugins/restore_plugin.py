@@ -61,7 +61,8 @@ class RestorePlugin(obnamlib.ObnamPlugin):
     # just b if b is an absolute path.
 
     def enable(self):
-        self.app.add_subcommand('restore', self.restore)
+        self.app.add_subcommand('restore', self.restore, 
+                                arg_synopsis='[FILE]...')
         self.app.settings.string(['to'], 'where to restore')
         self.app.settings.string(['generation'], 
                                 'which generation to restore',
