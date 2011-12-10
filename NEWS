@@ -27,6 +27,8 @@ USER VISIBLE CHANGES
   `verify` (slow, but handles hash collisions gracefully); and
   `fatalist` (fast, but lossy, if there is a hash collision). `fatalist`
   is the default mode.
+* Restores now obey the `--dry-run` option. Thanks to Peter Palfreder for
+  the bug report.
 
 Version 0.23, released 2011-10-02; a BETA release
 -------------------------------------------------
