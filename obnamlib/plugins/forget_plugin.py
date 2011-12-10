@@ -28,8 +28,6 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
         self.app.settings.string(['keep'],
                                   'policy for what generations to keep '
                                   'when forgetting')
-        self.app.settings.boolean(['pretend', 'dry-run', 'no-act'],
-                           'for forget, do not actually remove generations')
 
     def forget(self, args):
         '''Forget (remove) specified backup generations.'''
