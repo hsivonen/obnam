@@ -67,6 +67,10 @@ class RestorePlugin(obnamlib.ObnamPlugin):
                                 'which generation to restore',
                                  default='latest')
 
+    @property
+    def write_ok(self):
+        return not self.app.settings['dry-run']
+
     def configure_ttystatus(self):
         self.app.ts['current'] = ''
         self.app.ts['total'] = 0
@@ -98,8 +102,11 @@ class RestorePlugin(obnamlib.ObnamPlugin):
     
         self.repo = self.app.open_repository()
         self.repo.open_client(self.app.settings['client-name'])
-        self.fs = self.app.fsf.new(self.app.settings['to'], create=True)
-        self.fs.connect()
+        if self.write_ok:
+            self.fs = self.app.fsf.new(self.app.settings['to'], create=True)
+            self.fs.connect()
+        else:
+            self.fs = None # this will trigger error if we try to really write
 
         self.hardlinks = Hardlinks()
         
@@ -124,7 +131,8 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             self.app.dump_memory_profile('at restoring %s' % repr(arg))
 
         self.repo.fs.close()
-        self.fs.close()
+        if self.write_ok:
+            self.fs.close()
         
         self.app.ts.finish()
                 
@@ -134,7 +142,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
     def restore_recursively(self, gen, to_dir, root):
         logging.debug('restoring dir %s' % root)
         self.app.ts['current'] = root
-        if not self.fs.exists('./' + root):
+        if self.write_ok and not self.fs.exists('./' + root):
             self.fs.makedirs('./' + root)
         for basename in self.repo.listdir(gen, root):
             full = os.path.join(root, basename)
@@ -143,8 +151,9 @@ class RestorePlugin(obnamlib.ObnamPlugin):
                 self.restore_recursively(gen, to_dir, full)
             else:
                 self.restore_file(gen, to_dir, full)
-        metadata = self.repo.get_metadata(gen, root)
-        obnamlib.set_metadata(self.fs, './' + root, metadata)
+        if self.write_ok:
+            metadata = self.repo.get_metadata(gen, root)
+            obnamlib.set_metadata(self.fs, './' + root, metadata)
         self.app.dump_memory_profile('after recursing through %s' % repr(root))
 
     def restore_file(self, gen, to_dir, filename):
@@ -164,17 +173,19 @@ class RestorePlugin(obnamlib.ObnamPlugin):
     
     def restore_hardlink(self, to_dir, filename, link, metadata):
         logging.debug('restoring hardlink %s to %s' % (filename, link))
-        to_filename = os.path.join(to_dir, './' + filename)
-        to_link = os.path.join(to_dir, './' + link)
-        logging.debug('to_filename: %s' % to_filename)
-        logging.debug('to_link: %s' % to_link)
-        self.fs.link(to_link, to_filename)
-        self.hardlinks.forget(metadata)
+        if self.write_ok:
+            to_filename = os.path.join(to_dir, './' + filename)
+            to_link = os.path.join(to_dir, './' + link)
+            logging.debug('to_filename: %s' % to_filename)
+            logging.debug('to_link: %s' % to_link)
+            self.fs.link(to_link, to_filename)
+            self.hardlinks.forget(metadata)
         
     def restore_symlink(self, gen, to_dir, filename, metadata):
         logging.debug('restoring symlink %s' % filename)
-        to_filename = os.path.join(to_dir, './' + filename)
-        obnamlib.set_metadata(self.fs, to_filename, metadata)
+        if self.write_ok:
+            to_filename = os.path.join(to_dir, './' + filename)
+            obnamlib.set_metadata(self.fs, to_filename, metadata)
 
     def restore_first_link(self, gen, to_dir, filename, metadata):
         if stat.S_ISREG(metadata.st_mode):
@@ -191,22 +202,23 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         
     def restore_regular_file(self, gen, to_dir, filename, metadata):
         logging.debug('restoring regular %s' % filename)
-        to_filename = os.path.join(to_dir, './' + filename)
+        if self.write_ok:
+            to_filename = os.path.join(to_dir, './' + filename)
 
-        f = self.fs.open(to_filename, 'wb')
-        summer = self.repo.new_checksummer()
-        chunkids = self.repo.get_file_chunks(gen, filename)
-        self.restore_chunks(f, chunkids, summer)
-        f.close()
+            f = self.fs.open(to_filename, 'wb')
+            summer = self.repo.new_checksummer()
+            chunkids = self.repo.get_file_chunks(gen, filename)
+            self.restore_chunks(f, chunkids, summer)
+            f.close()
 
-        correct_checksum = metadata.md5
-        if summer.digest() != correct_checksum:
-            msg = 'File checksum restore error: %s' % filename
-            logging.error(msg)
-            self.app.ts.notify(msg)
-            self.errors = True
+            correct_checksum = metadata.md5
+            if summer.digest() != correct_checksum:
+                msg = 'File checksum restore error: %s' % filename
+                logging.error(msg)
+                self.app.ts.notify(msg)
+                self.errors = True
 
-        obnamlib.set_metadata(self.fs, to_filename, metadata)
+            obnamlib.set_metadata(self.fs, to_filename, metadata)
 
     def restore_chunks(self, f, chunkids, checksummer):
         zeroes = ''
@@ -243,13 +255,15 @@ class RestorePlugin(obnamlib.ObnamPlugin):
 
     def restore_fifo(self, gen, to_dir, filename, metadata):
         logging.debug('restoring fifo %s' % filename)
-        to_filename = os.path.join(to_dir, './' + filename)
-        self.fs.mknod(to_filename, metadata.st_mode)
-        obnamlib.set_metadata(self.fs, to_filename, metadata)
+        if self.write_ok:
+            to_filename = os.path.join(to_dir, './' + filename)
+            self.fs.mknod(to_filename, metadata.st_mode)
+            obnamlib.set_metadata(self.fs, to_filename, metadata)
 
     def restore_socket(self, gen, to_dir, filename, metadata):
         logging.debug('restoring socket %s' % filename)
-        to_filename = os.path.join(to_dir, './' + filename)
-        self.fs.mknod(to_filename, metadata.st_mode)
-        obnamlib.set_metadata(self.fs, to_filename, metadata)
+        if self.write_ok:
+            to_filename = os.path.join(to_dir, './' + filename)
+            self.fs.mknod(to_filename, metadata.st_mode)
+            obnamlib.set_metadata(self.fs, to_filename, metadata)
 

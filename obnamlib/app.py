@@ -74,7 +74,8 @@ class App(cliapp.Application):
         self.settings.boolean(['quiet'], 'be silent')
 
         self.settings.boolean(['pretend', 'dry-run', 'no-act'],
-                           'for forget, do not actually change anything')
+                           'do not actually change anything (works with '
+                           'forget and restore only)')
 
         # The following needs to be done here, because it needs
         # to be done before option processing. This is a bit ugly,
