@@ -2,6 +2,7 @@ obnam (0.24-1) unstable; urgency=low
 
   * New upstream release.
     - manpage typo fixes (Closes: #644440)
+  * debian/control: new build dependency libattr1-dev.
 
  -- Lars Wirzenius <liw@liw.fi>  Thu, 06 Oct 2011 08:20:34 +0100
 
