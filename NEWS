@@ -31,6 +31,7 @@ USER VISIBLE CHANGES
   the bug report.
 * New option `--verify-randomly` allows you to check only a part of the
   backup, instead of everything.
+* Verify now has some progress reporting.
 
 Version 0.23, released 2011-10-02; a BETA release
 -------------------------------------------------
