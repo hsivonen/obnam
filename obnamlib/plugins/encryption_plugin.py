@@ -160,6 +160,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         if self.app.settings['encrypt-with']:
             return False
         self.app.output.write('Warning: Encryption not in use.\n')
+        self.app.output.write('(Use --encrypt-with to set key.)\n')
         return True
 
     def client_keys(self, args):
