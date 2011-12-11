@@ -73,14 +73,27 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         self.failed = False
         gen = self.repo.genspec(self.app.settings['generation'])
 
+        self.app.ts['done'] = 0
+        self.app.ts['total'] = 0
+        self.app.ts['filename'] = ''
+        self.app.ts.format('verifying file %Counter(filename)/%Integer(total) '
+                            '%PercentDone(done,total): '
+                            '%Pathname(filename)')
+
         num_randomly = self.app.settings['verify-randomly']
         if num_randomly == 0:
+            self.app.ts['total'] = \
+                self.repo.client.get_generation_file_count(gen)
             for filename, metadata in self.walk(gen, args):
+                self.app.ts['filename'] = filename
                 self.verify_metadata(gen, filename, metadata)
                 if metadata.isfile():
                     self.verify_regular_file(gen, filename, metadata)
+                self.app.ts['done'] += 1
         else:
             logging.debug('verifying %d files randomly' % num_randomly)
+            self.app.ts['total'] = num_randomly
+            self.app.ts.notify('finding all files to choose randomly')
             filenames = [filename
                          for filename, metadata in self.walk(gen, args)
                          if metadata.isfile()]
@@ -90,12 +103,15 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
                 filenames.remove(filename)
                 chosen.append(filename)
             for filename in chosen:
+                self.app.ts['filename'] = filename
                 metadata = self.repo.get_metadata(gen, filename)
                 self.verify_metadata(gen, filename, metadata)
                 self.verify_regular_file(gen, filename, metadata)            
+                self.app.ts['done'] += 1
 
         self.fs.close()
         self.repo.fs.close()
+        self.app.ts.finish()
 
         if self.failed:
             sys.exit(1)
