@@ -30,6 +30,9 @@ class Fail(obnamlib.Error):
         self.filename = filename
         self.reason = reason
 
+    def __str__(self):
+        return '%s: %s' % (self.filename, self.reason)
+
 
 class VerifyPlugin(obnamlib.ObnamPlugin):
 
@@ -82,7 +85,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
                          for filename, metadata in self.walk(gen, args)
                          if metadata.isfile()]
             chosen = []
-            for i in range(num_randomly):
+            for i in range(min(num_randomly, len(filenames))):
                 filename = random.choice(filenames)
                 filenames.remove(filename)
                 chosen.append(filename)
