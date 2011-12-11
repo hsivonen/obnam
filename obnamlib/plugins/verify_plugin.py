@@ -16,6 +16,7 @@
 
 import logging
 import os
+import random
 import stat
 import sys
 import urlparse
@@ -29,12 +30,19 @@ class Fail(obnamlib.Error):
         self.filename = filename
         self.reason = reason
 
+    def __str__(self):
+        return '%s: %s' % (self.filename, self.reason)
+
 
 class VerifyPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
         self.app.add_subcommand('verify', self.verify,
                                 arg_synopsis='[FILE]...')
+        self.app.settings.integer(['verify-randomly'],
+                                  'verify N files randomly from the backup '
+                                    '(default is zero, meaning everything)',
+                                  metavar='N')
 
     def verify(self, args):
         '''Verify that live data and backed up data match.'''
@@ -51,7 +59,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
             logging.debug('no roots/args given, so verifying everything')
             args = ['/']
         logging.debug('verifying what: %s' % repr(args))
-    
+
         self.repo = self.app.open_repository()
         self.repo.open_client(self.app.settings['client-name'])
         self.fs = self.app.fsf.new(args[0])
@@ -64,17 +72,27 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
 
         self.failed = False
         gen = self.repo.genspec(self.app.settings['generation'])
-        for arg in args:
-            scheme, netloc, path, query, fragment = urlparse.urlsplit(arg)
-            arg = os.path.normpath(path)
-            metadata = self.repo.get_metadata(gen, arg)
-            try:
-                if metadata.isdir():
-                    self.verify_recursively(gen, arg)
-                else:
-                    self.verify_file(gen, arg)
-            except Fail, e:
-                self.log_fail(e)
+
+        num_randomly = self.app.settings['verify-randomly']
+        if num_randomly == 0:
+            for filename, metadata in self.walk(gen, args):
+                self.verify_metadata(gen, filename, metadata)
+                if metadata.isfile():
+                    self.verify_regular_file(gen, filename, metadata)
+        else:
+            logging.debug('verifying %d files randomly' % num_randomly)
+            filenames = [filename
+                         for filename, metadata in self.walk(gen, args)
+                         if metadata.isfile()]
+            chosen = []
+            for i in range(min(num_randomly, len(filenames))):
+                filename = random.choice(filenames)
+                filenames.remove(filename)
+                chosen.append(filename)
+            for filename in chosen:
+                metadata = self.repo.get_metadata(gen, filename)
+                self.verify_metadata(gen, filename, metadata)
+                self.verify_regular_file(gen, filename, metadata)            
 
         self.fs.close()
         self.repo.fs.close()
@@ -88,22 +106,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         self.app.ts.notify('verify failure: %s: %s' % (e.filename, e.reason))
         self.failed = True
 
-    def verify_recursively(self, gen, root):
-        logging.debug('verifying dir %s' % root)
-        self.verify_metadata(gen, root)
-        for basename in self.repo.listdir(gen, root):
-            full = os.path.join(root, basename)
-            metadata = self.repo.get_metadata(gen, full)
-            try:
-                if metadata.isdir():
-                    self.verify_recursively(gen, full)
-                else:
-                    self.verify_file(gen, full)
-            except Fail, e:
-                self.log_fail(e)
-
-    def verify_metadata(self, gen, filename):
-        backed_up = self.repo.get_metadata(gen, filename)
+    def verify_metadata(self, gen, filename, backed_up):
         try:
             live_data = obnamlib.read_metadata(self.fs, filename)
         except OSError, e:
@@ -115,12 +118,6 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
                 raise Fail(filename, 
                             'metadata change: %s (%s vs %s)' % (field, v1, v2))
 
-    def verify_file(self, gen, filename):
-        self.verify_metadata(gen, filename)
-        metadata = self.repo.get_metadata(gen, filename)
-        if stat.S_ISREG(metadata.st_mode):
-            self.verify_regular_file(gen, filename, metadata)
-    
     def verify_regular_file(self, gen, filename, metadata):
         logging.debug('verifying regular %s' % filename)
         f = self.fs.open(filename, 'r')
@@ -138,4 +135,25 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
             if backed_up != live_data:
                 return False
         return True
+
+    def walk(self, gen, args):
+        '''Iterate over each pathname specified by arguments.
+        
+        This is a generator.
+        
+        '''
+        
+        for arg in args:
+            scheme, netloc, path, query, fragment = urlparse.urlsplit(arg)
+            arg = os.path.normpath(path)
+            metadata = self.repo.get_metadata(gen, arg)
+            yield arg, metadata
+            try:
+                if metadata.isdir():
+                    kids = self.repo.listdir(gen, arg)
+                    kidpaths = [os.path.join(arg, kid) for kid in kids]
+                    for x in self.walk(gen, kidpaths):
+                        yield x
+            except Fail, e:
+                self.log_fail(e)
 

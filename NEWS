@@ -29,6 +29,8 @@ USER VISIBLE CHANGES
   is the default mode.
 * Restores now obey the `--dry-run` option. Thanks to Peter Palfreder for
   the bug report.
+* New option `--verify-randomly` allows you to check only a part of the
+  backup, instead of everything.
 
 Version 0.23, released 2011-10-02; a BETA release
 -------------------------------------------------
