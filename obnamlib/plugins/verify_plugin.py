@@ -16,6 +16,7 @@
 
 import logging
 import os
+import random
 import stat
 import sys
 import urlparse
@@ -83,7 +84,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
             chosen = []
             for i in range(num_randomly):
                 filename = random.choice(filenames)
-                filenams.remove(filename)
+                filenames.remove(filename)
                 chosen.append(filename)
             for filename in chosen:
                 metadata = self.repo.get_metadata(gen, filename)
