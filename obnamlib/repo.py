@@ -461,9 +461,9 @@ class Repository(object):
                 if other_id != gen_id:
                     other_chunks = self.client.list_chunks_in_generation(
                                         other_id)
-                    chunk_ids = [chunk_id
-                                 for chunk_id in chunk_ids
-                                 if chunk_id not in other_chunks]
+                    other_chunks = set(other_chunks)
+                    chunk_ids = chunk_ids.difference(other_chunks)
+
             return chunk_ids
 
         def remove_unused_chunks(chunk_ids):
@@ -476,7 +476,7 @@ class Repository(object):
 
         self.require_client_lock()
         logging.debug('_really_remove_generation: %d' % gen_id)
-        chunk_ids = self.client.list_chunks_in_generation(gen_id)
+        chunk_ids = set(self.client.list_chunks_in_generation(gen_id))
         chunk_ids = filter_away_chunks_used_by_other_gens(chunk_ids, gen_id)
         remove_unused_chunks(chunk_ids)
         self.client.remove_generation(gen_id)
