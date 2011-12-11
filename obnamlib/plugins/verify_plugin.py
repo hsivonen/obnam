@@ -51,17 +51,11 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         if not args:
             self.app.settings.require('root')
             args = self.app.settings['root']
-        self.num_randomly = self.app.settings['verify-randomly']
-        self.num_verified_randomly = 0
         if not args:
-            if self.num_randomly == 0:
-                logging.debug('no roots/args given, so verifying everything')
-            else:
-                logging.debug('verifying %d files randomly' % 
-                                self.num_randomly)
+            logging.debug('no roots/args given, so verifying everything')
             args = ['/']
         logging.debug('verifying what: %s' % repr(args))
-    
+
         self.repo = self.app.open_repository()
         self.repo.open_client(self.app.settings['client-name'])
         self.fs = self.app.fsf.new(args[0])
@@ -75,10 +69,26 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         self.failed = False
         gen = self.repo.genspec(self.app.settings['generation'])
 
-        for filename, metadata in self.walk(gen, args):
-            self.verify_metadata(gen, filename, metadata)
-            if metadata.isfile():
-                self.verify_regular_file(gen, filename, metadata)
+        num_randomly = self.app.settings['verify-randomly']
+        if num_randomly == 0:
+            for filename, metadata in self.walk(gen, args):
+                self.verify_metadata(gen, filename, metadata)
+                if metadata.isfile():
+                    self.verify_regular_file(gen, filename, metadata)
+        else:
+            logging.debug('verifying %d files randomly' % num_randomly)
+            filenames = [filename
+                         for filename, metadata in self.walk(gen, args)
+                         if metadata.isfile()]
+            chosen = []
+            for i in range(num_randomly):
+                filename = random.choice(filenames)
+                filenams.remove(filename)
+                chosen.append(filename)
+            for filename in chosen:
+                metadata = self.repo.get_metadata(gen, filename)
+                self.verify_metadata(gen, filename, metadata)
+                self.verify_regular_file(gen, filename, metadata)            
 
         self.fs.close()
         self.repo.fs.close()
