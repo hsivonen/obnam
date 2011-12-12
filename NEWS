@@ -32,6 +32,7 @@ USER VISIBLE CHANGES
 * New option `--verify-randomly` allows you to check only a part of the
   backup, instead of everything.
 * Verify now has some progress reporting.
+* Forget is now much faster.
 
 Version 0.23, released 2011-10-02; a BETA release
 -------------------------------------------------
