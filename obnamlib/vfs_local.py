@@ -236,9 +236,15 @@ class LocalFS(obnamlib.VirtualFileSystem):
         path = self.join(pathname)
         try:
             os.link(tempname, path)
-        except OSError:
-            os.remove(tempname)
-            raise
+        except OSError, e: # pragma: no cover
+            # sshfs does not implement link(2), so we fudge it here.
+            # FIXME: This has race conditions and should be made atomic.
+            if e.errno != errno.ENOSYS:
+                os.remove(tempname)
+                raise
+            if os.path.exists(path):
+                raise OSError(errno.EEXIST, os.strerror(errno.EEXIST), path)
+            os.rename(tempname, path)
         os.remove(tempname)
 
     def overwrite_file(self, pathname, contents, make_backup=True):

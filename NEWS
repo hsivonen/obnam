@@ -34,6 +34,11 @@ USER VISIBLE CHANGES
 * Verify now has some progress reporting.
 * Forget is now much faster.
 
+BUG FIXES:
+
+* Now works with a repository on sshfs. Thanks to Dafydd Harries for
+  reporting the problem.
+
 Version 0.23, released 2011-10-02; a BETA release
 -------------------------------------------------
 
