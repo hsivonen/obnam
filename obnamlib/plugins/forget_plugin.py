@@ -34,13 +34,19 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
         '''Forget (remove) specified backup generations.'''
         self.app.settings.require('repository')
         self.app.settings.require('client-name')
+        
+        self.app.ts['gen'] = None
+        self.app.ts['gens'] = []
+        self.app.ts.format('forgetting generation %Index(gen,gens)')
 
         self.repo = self.app.open_repository()
         self.repo.lock_client(self.app.settings['client-name'])
 
         self.app.dump_memory_profile('at beginning')
         if args:
+            self.app.ts['gens'] = args
             for genspec in args:
+                self.app.ts['gen'] = genspec
                 genid = self.repo.genspec(genspec)
                 self.remove(genid)
                 self.app.dump_memory_profile('after removing %s' % genid)
@@ -55,15 +61,20 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
             rules = fp.parse(self.app.settings['keep'])
             keeplist = fp.match(rules, genlist)
             keepids = set(genid for genid, dt in keeplist)
+            removeids = [genid 
+                         for genid, dt in genlist 
+                         if genid not in keepids]
 
-            for genid, dt in genlist:
-                if genid not in keepids:
-                    self.remove(genid)
-                    self.app.dump_memory_profile('after removing %s' % genid)
+            self.app.ts['gens'] = removeids
+            for genid in removeids:
+                self.app.ts['gen'] = genid
+                self.remove(genid)
+                self.app.dump_memory_profile('after removing %s' % genid)
 
         self.repo.commit_client()
         self.app.dump_memory_profile('after committing')
         self.repo.fs.close()
+        self.app.ts.finish()
 
     def remove(self, genid):
         if not self.app.settings['pretend']:
