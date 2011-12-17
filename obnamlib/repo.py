@@ -666,3 +666,23 @@ class Repository(object):
                 return intspec
             else:
                 raise obnamlib.Error('Generation %s not found' % spec)
+
+    def walk(self, gen, args):
+        '''Iterate over each pathname specified by arguments.
+        
+        This is a generator. Each return value is a tuple consisting
+        of a pathname and its corresponding metadata. Directories are
+        recursed into.
+        
+        '''
+        
+        for arg in args:
+            arg = os.path.normpath(arg)
+            metadata = self.get_metadata(gen, arg)
+            yield arg, metadata
+            if metadata.isdir():
+                kids = self.listdir(gen, arg)
+                kidpaths = [os.path.join(arg, kid) for kid in kids]
+                for x in self.walk(gen, kidpaths):
+                    yield x
+

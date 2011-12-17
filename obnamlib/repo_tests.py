@@ -708,6 +708,7 @@ class RepositoryWalkTests(unittest.TestCase):
         self.repo.create('/foo/bar', file_meta)
         
         self.repo.commit_client()
+        self.repo.open_client('client_name')
         
         found = list(self.repo.walk(gen, ['/']))
         self.assertEqual(found,
