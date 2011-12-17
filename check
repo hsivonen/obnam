@@ -22,3 +22,4 @@ python setup.py clean
 python setup.py build_ext -i
 rm -rf build
 python setup.py check "$@"
+cmdtest -c ./obnam tests
