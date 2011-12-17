@@ -218,7 +218,6 @@ class RepositoryRootNodeTests(unittest.TestCase):
 
 class RepositoryClientTests(unittest.TestCase):
 
-
     def setUp(self):
         self.tempdir = tempfile.mkdtemp()
 
@@ -673,4 +672,46 @@ class RepositoryGenspecTests(unittest.TestCase):
     def test_nonexistent_spec_raises_error(self):
         self.backup()
         self.assertRaises(obnamlib.Error, self.repo.genspec, 1234)
+
+
+class RepositoryWalkTests(unittest.TestCase):
+
+    def setUp(self):
+        self.tempdir = tempfile.mkdtemp()
+
+        self.fs = obnamlib.LocalFS(self.tempdir)
+        self.repo = obnamlib.Repository(self.fs, obnamlib.DEFAULT_NODE_SIZE,
+                                        obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
+                                        obnamlib.DEFAULT_LRU_SIZE, None,
+                                        obnamlib.IDPATH_DEPTH,
+                                        obnamlib.IDPATH_BITS,
+                                        obnamlib.IDPATH_SKIP)
+        self.repo.lock_root()
+        self.repo.add_client('client_name')
+        self.repo.commit_root()
+
+    def tearDown(self):
+        shutil.rmtree(self.tempdir)
+
+    def test_walk_find_everything(self):
+        dir_meta = obnamlib.Metadata()
+        dir_meta.st_mode = stat.S_IFDIR | 0777
+        
+        file_meta = obnamlib.Metadata()
+        file_meta.st_mode = stat.S_IFREG | 0644
+        
+        self.repo.lock_client('client_name')
+        gen = self.repo.start_generation()
+        
+        self.repo.create('/', dir_meta)
+        self.repo.create('/foo', dir_meta)
+        self.repo.create('/foo/bar', file_meta)
+        
+        self.repo.commit_client()
+        
+        found = list(self.repo.walk(gen, ['/']))
+        self.assertEqual(found,
+                         [('/', dir_meta),
+                          ('/foo', dir_meta),
+                          ('/foo/bar', file_meta)])
 
