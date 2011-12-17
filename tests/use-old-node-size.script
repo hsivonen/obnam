@@ -14,12 +14,22 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
 set -e
 
+# Obnam settings.
+opts="--quiet --no-default-config"
 
-python setup.py clean
-python setup.py build_ext -i
-rm -rf build
-python setup.py check "$@"
-cmdtest -c ./obnam tests
+# Generate test data.
+data="$DATADIR/data"
+genbackupdata --quiet --create=1M "$data"
+
+# Backup with one node size.
+repo="$DATADIR/repo"
+./obnam $opts backup -r "$repo" "$data" --node-size=4k
+
+# Backup with another node size setting.
+./obnam $opts backup -r "$repo" "$data" --node-size=16k
+
+# Check that there's two generations.
+./obnam $opts genids -r "$repo"
+
