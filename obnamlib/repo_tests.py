@@ -716,3 +716,10 @@ class RepositoryWalkTests(unittest.TestCase):
                           ('/foo', self.dir_meta),
                           ('/foo/bar', self.file_meta)])
 
+    def test_walk_find_depth_first(self):
+        found = list(self.repo.walk(self.gen, '/', depth_first=True))
+        self.assertEqual(reversed(found),
+                         [('/', self.dir_meta),
+                          ('/foo', self.dir_meta),
+                          ('/foo/bar', self.file_meta)])
+
