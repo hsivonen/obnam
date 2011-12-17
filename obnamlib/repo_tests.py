@@ -690,29 +690,29 @@ class RepositoryWalkTests(unittest.TestCase):
         self.repo.add_client('client_name')
         self.repo.commit_root()
 
+        self.dir_meta = obnamlib.Metadata()
+        self.dir_meta.st_mode = stat.S_IFDIR | 0777
+        
+        self.file_meta = obnamlib.Metadata()
+        self.file_meta.st_mode = stat.S_IFREG | 0644
+        
+        self.repo.lock_client('client_name')
+        self.gen = self.repo.start_generation()
+        
+        self.repo.create('/', self.dir_meta)
+        self.repo.create('/foo', self.dir_meta)
+        self.repo.create('/foo/bar', self.file_meta)
+        
+        self.repo.commit_client()
+        self.repo.open_client('client_name')
+
     def tearDown(self):
         shutil.rmtree(self.tempdir)
 
     def test_walk_find_everything(self):
-        dir_meta = obnamlib.Metadata()
-        dir_meta.st_mode = stat.S_IFDIR | 0777
-        
-        file_meta = obnamlib.Metadata()
-        file_meta.st_mode = stat.S_IFREG | 0644
-        
-        self.repo.lock_client('client_name')
-        gen = self.repo.start_generation()
-        
-        self.repo.create('/', dir_meta)
-        self.repo.create('/foo', dir_meta)
-        self.repo.create('/foo/bar', file_meta)
-        
-        self.repo.commit_client()
-        self.repo.open_client('client_name')
-        
-        found = list(self.repo.walk(gen, '/'))
+        found = list(self.repo.walk(self.gen, '/'))
         self.assertEqual(found,
-                         [('/', dir_meta),
-                          ('/foo', dir_meta),
-                          ('/foo/bar', file_meta)])
+                         [('/', self.dir_meta),
+                          ('/foo', self.dir_meta),
+                          ('/foo/bar', self.file_meta)])
 
