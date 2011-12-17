@@ -33,6 +33,8 @@ USER VISIBLE CHANGES
   backup, instead of everything.
 * Verify now has some progress reporting.
 * Forget is now much faster.
+* Forget now has progress reporting. It is not fast enough to do without,
+  sorry.
 
 BUG FIXES:
 
