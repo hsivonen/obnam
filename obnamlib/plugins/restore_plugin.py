@@ -135,7 +135,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             raise obnamlib.Error('There were errors when restoring')
 
     def restore_something(self, gen, to_dir, root):
-        for pathname, metadata in self.repo.walk(gen, root):
+        for pathname, metadata in self.repo.walk(gen, root, depth_first=True):
             if metadata.isdir():
                 self.restore_dir(gen, to_dir, pathname)
             else:
