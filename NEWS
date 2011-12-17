@@ -40,6 +40,9 @@ BUG FIXES:
 
 * Now works with a repository on sshfs. Thanks to Dafydd Harries for
   reporting the problem.
+* Now depends on a newer version of the larch library, fixing a problem
+  when the Obnam default node size changes and an existing repository
+  has a different size.
 
 Version 0.23, released 2011-10-02; a BETA release
 -------------------------------------------------
