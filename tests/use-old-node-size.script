@@ -31,5 +31,5 @@ repo="$DATADIR/repo"
 ./obnam $opts backup -r "$repo" "$data" --node-size=16k
 
 # Check that there's two generations.
-./obnam $opts genids -r "$repo"
+./obnam $opts genids -r "$repo" | wc -l
 

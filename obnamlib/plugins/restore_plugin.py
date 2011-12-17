@@ -120,15 +120,9 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         self.app.ts['total-bytes'] = self.repo.client.get_generation_data(gen)
 
         self.app.dump_memory_profile('at beginning after setup')
+
         for arg in args:
-            metadata = self.repo.get_metadata(gen, arg)
-            if metadata.isdir():
-                self.restore_recursively(gen, '.', arg)
-            else:
-                dirname = os.path.dirname(arg)
-                if not self.fs.exists('./' + dirname):
-                    self.fs.makedirs('./' + dirname)
-                self.restore_file(gen, '.', arg)
+            self.restore_something(gen, '.', arg)
             self.app.dump_memory_profile('at restoring %s' % repr(arg))
 
         self.repo.fs.close()
@@ -140,18 +134,21 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         if self.errors:
             raise obnamlib.Error('There were errors when restoring')
 
-    def restore_recursively(self, gen, to_dir, root):
+    def restore_something(self, gen, to_dir, root):
+        for pathname, metadata in self.repo.walk(gen, root, depth_first=True):
+            if metadata.isdir():
+                self.restore_dir(gen, to_dir, pathname)
+            else:
+                dirname = os.path.dirname(pathname)
+                if self.write_ok and not self.fs.exists('./' + dirname):
+                    self.fs.makedirs('./' + dirname)
+                self.restore_file(gen, to_dir, pathname)
+
+    def restore_dir(self, gen, to_dir, root):
         logging.debug('restoring dir %s' % root)
         self.app.ts['current'] = root
         if self.write_ok and not self.fs.exists('./' + root):
             self.fs.makedirs('./' + root)
-        for basename in self.repo.listdir(gen, root):
-            full = os.path.join(root, basename)
-            metadata = self.repo.get_metadata(gen, full)
-            if metadata.isdir():
-                self.restore_recursively(gen, to_dir, full)
-            else:
-                self.restore_file(gen, to_dir, full)
         if self.write_ok:
             metadata = self.repo.get_metadata(gen, root)
             obnamlib.set_metadata(self.fs, './' + root, metadata)

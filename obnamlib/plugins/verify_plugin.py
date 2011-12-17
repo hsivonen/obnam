@@ -162,14 +162,6 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         for arg in args:
             scheme, netloc, path, query, fragment = urlparse.urlsplit(arg)
             arg = os.path.normpath(path)
-            metadata = self.repo.get_metadata(gen, arg)
-            yield arg, metadata
-            try:
-                if metadata.isdir():
-                    kids = self.repo.listdir(gen, arg)
-                    kidpaths = [os.path.join(arg, kid) for kid in kids]
-                    for x in self.walk(gen, kidpaths):
-                        yield x
-            except Fail, e:
-                self.log_fail(e)
+            for x in self.repo.walk(gen, arg):
+                yield x
 

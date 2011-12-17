@@ -218,7 +218,6 @@ class RepositoryRootNodeTests(unittest.TestCase):
 
 class RepositoryClientTests(unittest.TestCase):
 
-
     def setUp(self):
         self.tempdir = tempfile.mkdtemp()
 
@@ -673,4 +672,54 @@ class RepositoryGenspecTests(unittest.TestCase):
     def test_nonexistent_spec_raises_error(self):
         self.backup()
         self.assertRaises(obnamlib.Error, self.repo.genspec, 1234)
+
+
+class RepositoryWalkTests(unittest.TestCase):
+
+    def setUp(self):
+        self.tempdir = tempfile.mkdtemp()
+
+        self.fs = obnamlib.LocalFS(self.tempdir)
+        self.repo = obnamlib.Repository(self.fs, obnamlib.DEFAULT_NODE_SIZE,
+                                        obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
+                                        obnamlib.DEFAULT_LRU_SIZE, None,
+                                        obnamlib.IDPATH_DEPTH,
+                                        obnamlib.IDPATH_BITS,
+                                        obnamlib.IDPATH_SKIP)
+        self.repo.lock_root()
+        self.repo.add_client('client_name')
+        self.repo.commit_root()
+
+        self.dir_meta = obnamlib.Metadata()
+        self.dir_meta.st_mode = stat.S_IFDIR | 0777
+        
+        self.file_meta = obnamlib.Metadata()
+        self.file_meta.st_mode = stat.S_IFREG | 0644
+        
+        self.repo.lock_client('client_name')
+        self.gen = self.repo.start_generation()
+        
+        self.repo.create('/', self.dir_meta)
+        self.repo.create('/foo', self.dir_meta)
+        self.repo.create('/foo/bar', self.file_meta)
+        
+        self.repo.commit_client()
+        self.repo.open_client('client_name')
+
+    def tearDown(self):
+        shutil.rmtree(self.tempdir)
+
+    def test_walk_find_everything(self):
+        found = list(self.repo.walk(self.gen, '/'))
+        self.assertEqual(found,
+                         [('/', self.dir_meta),
+                          ('/foo', self.dir_meta),
+                          ('/foo/bar', self.file_meta)])
+
+    def test_walk_find_depth_first(self):
+        found = list(self.repo.walk(self.gen, '/', depth_first=True))
+        self.assertEqual(found,
+                         [('/foo/bar', self.file_meta),
+                          ('/foo', self.dir_meta),
+                          ('/', self.dir_meta)])
 
