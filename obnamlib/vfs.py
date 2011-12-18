@@ -505,6 +505,10 @@ class VfsTests(object): # pragma: no cover
             if field.startswith('st_'):
                 self.assert_(hasattr(st, field), 'stat must return %s' % field)
 
+    def test_lstat_returns_right_filetype_for_directory(self):
+        st = self.fs.lstat('.')
+        self.assert_(stat.S_ISDIR(st.st_mode))
+
     def test_lstat_raises_oserror_for_nonexistent_entry(self):
         self.assertRaises(OSError, self.fs.lstat, 'notexists')
 
