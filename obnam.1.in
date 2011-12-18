@@ -414,6 +414,12 @@ To restore your latest backup from the server:
 obnam restore \-\-repository sftp://your.server/~/backups \\
 \-\-to /var/tmp/my.home.dir
 .PP
+To restore just one file or directory:
+.IP
+.nf
+obnam restore \-\-repository sftp://your.server/~/backups \\
+\-\-to /var/tmp/my.home.dir $HOME/myfile.txt
+.PP
 To check that the backup worked:
 .IP
 .nf
