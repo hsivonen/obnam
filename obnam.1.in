@@ -49,6 +49,8 @@ after that an incremental one.
 .B restore
 is the opposite of a backup.
 It copies backed up data from the backup repository to a target directory.
+You can restore everything in a generation,
+or just selected files.
 .IP \(bu
 .B clients
 lists the clients that are backed up to the repository.
