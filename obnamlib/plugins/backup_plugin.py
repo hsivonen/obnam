@@ -85,6 +85,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.app.ts['uploaded-bytes'] += amount
 
     def error(self, msg, exc=None):
+        self.errors = True
         logging.error(msg)
         if exc:
             logging.debug(repr(exc))
@@ -114,6 +115,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.add_client(client_name)
 
         self.repo.lock_client(client_name)
+        self.errors = False
         try:
             self.repo.start_generation()
             self.fs = None
@@ -169,6 +171,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             
         self.remove_old_roots(absroots)
 
+        checkpoints = []
         last_checkpoint = 0
         interval = self.app.settings['checkpoint']
 
@@ -195,6 +198,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 if self.repo.fs.bytes_written - last_checkpoint >= interval:
                     logging.info('Making checkpoint')
                     self.app.ts['what'] = 'making checkpoint;'
+                    checkpoints.append(self.repo.new_generation)
                     self.backup_parents('.')
                     self.repo.commit_client(checkpoint=True)
                     self.repo.lock_client(self.app.settings['client-name'])
@@ -203,6 +207,12 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     self.app.dump_memory_profile('at end of checkpoint')
 
             self.backup_parents('.')
+
+        if not self.errors:
+            for i, gen in enumerate(checkpoints):
+                self.app.ts['what'] = ('removing checkpoint %d/%d' %
+                                        (i+1, len(checkpoints)))
+                self.repo.remove_generation(gen)
 
         if self.fs:
             self.fs.close()
