@@ -104,7 +104,7 @@ lstat_wrapper(PyObject *self, PyObject *args)
     ret = lstat(filename, &st);
     if (ret == -1)
         ret = errno;
-    return Py_BuildValue("illllllllllllllll", 
+    return Py_BuildValue("iLLLLLLLLLLLLLLLL", 
                          ret,
                          (long long) st.st_dev,
                          (long long) st.st_ino,
