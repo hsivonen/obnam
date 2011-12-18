@@ -69,6 +69,12 @@ class SftpTests(unittest.TestCase, obnamlib.VfsTests):
         self.assertEqual(self.fs.lstat('foo').st_mtime_sec, 3)
         self.assertEqual(self.fs.lstat('foo').st_mtime_nsec, 0)
         
+    def test_get_username_returns_None_for_zero(self):
+        self.assertEqual(self.fs.get_username(0), None)
+    
+    def test_get_groupname_returns_None_for_zero(self):
+        self.assertEqual(self.fs.get_groupname(0), None)
+        
         
 if __name__ == '__main__':
     unittest.main()
