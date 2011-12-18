@@ -35,6 +35,8 @@ USER VISIBLE CHANGES
 * Forget is now much faster.
 * Forget now has progress reporting. It is not fast enough to do without,
   sorry.
+* Backup now removes any checkpoint generations it created during a backup
+  run, if it succeeds without errors.
 
 BUG FIXES:
 
