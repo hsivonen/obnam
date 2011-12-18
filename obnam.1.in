@@ -425,13 +425,15 @@ obnam restore \-\-repository sftp://your.server/~/backups \\
 To check that the backup worked:
 .IP
 .nf
-obnam verify \-\-repository sftp://your.server/~/backups /path/to/file
+obnam verify \-\-repository sftp://your.server/~/backups \\
+/path/to/file
 .PP
 To remove old backups, keeping the newest backup for each day for
 ten years:
 .IP
 .nf
-obnam forget \-\-repository sftp://your.server/~/backups \-\-keep 3650d
+obnam forget \-\-repository sftp://your.server/~/backups \\
+\-\-keep 3650d
 .PP
 To verify that the backup repository is OK:
 .IP
