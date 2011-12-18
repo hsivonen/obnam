@@ -45,6 +45,8 @@ BUG FIXES:
 * Now depends on a newer version of the larch library, fixing a problem
   when the Obnam default node size changes and an existing repository
   has a different size.
+* User and group names for sftp live data are no longer queried from the
+  local system. Instead, they're marked as unknown.
 
 Version 0.23, released 2011-10-02; a BETA release
 -------------------------------------------------
