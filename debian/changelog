@@ -2,10 +2,15 @@ obnam (0.24-1) unstable; urgency=low
 
   * New upstream release.
     - manpage typo fixes (Closes: #644440)
+    - "obnam backup" fails with "[Errno 38] Function not implemented",
+      turns out to be sshfs not supporting link(2) (Closes: #649767)
+    - restore of particular files/trees not documented (Closes: #649877)
+    - "obnam add-key" gives an unhelpful error message (Closes: #649768)
   * debian/control:
     - new build dependency libattr1-dev
     - bump larch dependencies to 0.26 so that default node size changes
       don't cause crashes
+  * debian/source/format: drop back to 1.0 for simplicity
 
  -- Lars Wirzenius <liw@liw.fi>  Thu, 06 Oct 2011 08:20:34 +0100
 
