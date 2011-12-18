@@ -132,6 +132,12 @@ class VirtualFileSystem(object):
     def lstat(self, pathname):
         '''Like os.lstat.'''
 
+    def get_username(self, uid):
+        '''Return name for user, or None if not known.'''
+
+    def get_groupname(self, gid):
+        '''Return name for group, or None if not known.'''
+
     def llistxattr(self, pathname):
         '''Return list of names of extended attributes for file.'''
         return []
