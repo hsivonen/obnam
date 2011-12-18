@@ -17,9 +17,11 @@
 
 import errno
 import fcntl
+import grp
 import logging
 import math
 import os
+import pwd
 import tempfile
 import tracing
 
@@ -129,6 +131,12 @@ class LocalFS(obnamlib.VirtualFileSystem):
                     st_ctime_sec=ctime_sec,
                     st_ctime_nsec=ctime_nsec
                 )
+
+    def get_username(self, uid):
+        return pwd.getpwuid(uid)[0]
+
+    def get_groupname(self, gid):
+        return grp.getgrgid(gid)[0]
 
     def llistxattr(self, filename): # pragma: no cover
         ret = obnamlib._obnam.llistxattr(self.join(filename))

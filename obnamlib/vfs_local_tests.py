@@ -40,3 +40,10 @@ class LocalFSTests(obnamlib.VfsTests, unittest.TestCase):
 
     def test_join_treats_absolute_path_as_absolute(self):
         self.assertEqual(self.fs.join('/foo'), '/foo')
+        
+    def test_get_username_returns_root_for_zero(self):
+        self.assertEqual(self.fs.get_username(0), 'root')
+    
+    def test_get_groupname_returns_root_for_zero(self):
+        self.assertEqual(self.fs.get_groupname(0), 'root')
+
