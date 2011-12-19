@@ -137,26 +137,24 @@ class RestorePlugin(obnamlib.ObnamPlugin):
     def restore_something(self, gen, to_dir, root):
         for pathname, metadata in self.repo.walk(gen, root, depth_first=True):
             if metadata.isdir():
-                self.restore_dir(gen, to_dir, pathname)
+                self.restore_dir(gen, to_dir, pathname, metadata)
             else:
                 dirname = os.path.dirname(pathname)
                 if self.write_ok and not self.fs.exists('./' + dirname):
                     self.fs.makedirs('./' + dirname)
-                self.restore_file(gen, to_dir, pathname)
+                self.restore_file(gen, to_dir, pathname, metadata)
 
-    def restore_dir(self, gen, to_dir, root):
+    def restore_dir(self, gen, to_dir, root, metadata):
         logging.debug('restoring dir %s' % root)
         self.app.ts['current'] = root
         if self.write_ok and not self.fs.exists('./' + root):
             self.fs.makedirs('./' + root)
         if self.write_ok:
-            metadata = self.repo.get_metadata(gen, root)
             obnamlib.set_metadata(self.fs, './' + root, metadata)
         self.app.dump_memory_profile('after recursing through %s' % repr(root))
 
-    def restore_file(self, gen, to_dir, filename):
+    def restore_file(self, gen, to_dir, filename, metadata):
         self.app.ts['current'] = filename
-        metadata = self.repo.get_metadata(gen, filename)
         if metadata.islink():
             self.restore_symlink(gen, to_dir, filename, metadata)
         elif metadata.st_nlink > 1:
