@@ -140,6 +140,8 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             dirname = os.path.dirname(pathname)
             if self.write_ok and not self.fs.exists('./' + dirname):
                 self.fs.makedirs('./' + dirname)
+    
+            set_metadata = True
             if metadata.isdir():
                 self.restore_dir(gen, to_dir, pathname, metadata)
             elif metadata.islink():
@@ -148,18 +150,20 @@ class RestorePlugin(obnamlib.ObnamPlugin):
                 link = self.hardlinks.filename(metadata)
                 if link:
                     self.restore_hardlink(to_dir, pathname, link, metadata)
+                    set_metadata = False
                 else:
                     self.hardlinks.add(pathname, metadata)
                     self.restore_first_link(gen, to_dir, pathname, metadata)
             else:
                 self.restore_first_link(gen, to_dir, pathname, metadata)
+            if set_metadata and self.write_ok:
+                obnamlib.set_metadata(self.fs, './' + pathname, metadata)
 
     def restore_dir(self, gen, to_dir, root, metadata):
         logging.debug('restoring dir %s' % root)
         if self.write_ok:
             if not self.fs.exists('./' + root):
                 self.fs.mkdir('./' + root)
-            obnamlib.set_metadata(self.fs, './' + root, metadata)
         self.app.dump_memory_profile('after recursing through %s' % repr(root))
 
     def restore_hardlink(self, to_dir, filename, link, metadata):
@@ -174,9 +178,6 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         
     def restore_symlink(self, gen, to_dir, filename, metadata):
         logging.debug('restoring symlink %s' % filename)
-        if self.write_ok:
-            to_filename = os.path.join(to_dir, './' + filename)
-            obnamlib.set_metadata(self.fs, to_filename, metadata)
 
     def restore_first_link(self, gen, to_dir, filename, metadata):
         if stat.S_ISREG(metadata.st_mode):
@@ -208,8 +209,6 @@ class RestorePlugin(obnamlib.ObnamPlugin):
                 logging.error(msg)
                 self.app.ts.notify(msg)
                 self.errors = True
-
-            obnamlib.set_metadata(self.fs, to_filename, metadata)
 
     def restore_chunks(self, f, chunkids, checksummer):
         zeroes = ''
@@ -249,12 +248,10 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         if self.write_ok:
             to_filename = os.path.join(to_dir, './' + filename)
             self.fs.mknod(to_filename, metadata.st_mode)
-            obnamlib.set_metadata(self.fs, to_filename, metadata)
 
     def restore_socket(self, gen, to_dir, filename, metadata):
         logging.debug('restoring socket %s' % filename)
         if self.write_ok:
             to_filename = os.path.join(to_dir, './' + filename)
             self.fs.mknod(to_filename, metadata.st_mode)
-            obnamlib.set_metadata(self.fs, to_filename, metadata)
 
