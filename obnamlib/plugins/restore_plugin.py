@@ -136,37 +136,32 @@ class RestorePlugin(obnamlib.ObnamPlugin):
 
     def restore_something(self, gen, to_dir, root):
         for pathname, metadata in self.repo.walk(gen, root, depth_first=True):
+            self.app.ts['current'] = pathname
+            dirname = os.path.dirname(pathname)
+            if self.write_ok and not self.fs.exists('./' + dirname):
+                self.fs.makedirs('./' + dirname)
             if metadata.isdir():
                 self.restore_dir(gen, to_dir, pathname, metadata)
+            elif metadata.islink():
+                self.restore_symlink(gen, to_dir, pathname, metadata)
+            elif metadata.st_nlink > 1:
+                link = self.hardlinks.filename(metadata)
+                if link:
+                    self.restore_hardlink(to_dir, pathname, link, metadata)
+                else:
+                    self.hardlinks.add(pathname, metadata)
+                    self.restore_first_link(gen, to_dir, pathname, metadata)
             else:
-                dirname = os.path.dirname(pathname)
-                if self.write_ok and not self.fs.exists('./' + dirname):
-                    self.fs.makedirs('./' + dirname)
-                self.restore_file(gen, to_dir, pathname, metadata)
+                self.restore_first_link(gen, to_dir, pathname, metadata)
 
     def restore_dir(self, gen, to_dir, root, metadata):
         logging.debug('restoring dir %s' % root)
-        self.app.ts['current'] = root
-        if self.write_ok and not self.fs.exists('./' + root):
-            self.fs.makedirs('./' + root)
         if self.write_ok:
+            if not self.fs.exists('./' + root):
+                self.fs.mkdir('./' + root)
             obnamlib.set_metadata(self.fs, './' + root, metadata)
         self.app.dump_memory_profile('after recursing through %s' % repr(root))
 
-    def restore_file(self, gen, to_dir, filename, metadata):
-        self.app.ts['current'] = filename
-        if metadata.islink():
-            self.restore_symlink(gen, to_dir, filename, metadata)
-        elif metadata.st_nlink > 1:
-            link = self.hardlinks.filename(metadata)
-            if link:
-                self.restore_hardlink(to_dir, filename, link, metadata)
-            else:
-                self.hardlinks.add(filename, metadata)
-                self.restore_first_link(gen, to_dir, filename, metadata)
-        else:
-            self.restore_first_link(gen, to_dir, filename, metadata)
-    
     def restore_hardlink(self, to_dir, filename, link, metadata):
         logging.debug('restoring hardlink %s to %s' % (filename, link))
         if self.write_ok:
