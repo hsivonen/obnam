@@ -4,6 +4,13 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
+Version 0.24.1, released UNRELEASED; a BETA release
+-------------------------------------------------
+
+* Fix test case for file timestamps with sub-second resolution. Not all
+  filesystems have that, so the test case has been changed to accept lack
+  of sub-second timestamps.
+
 Version 0.24, released 2011-12-18; a BETA release
 -------------------------------------------------
 

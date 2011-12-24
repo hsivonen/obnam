@@ -522,11 +522,17 @@ class VfsTests(object): # pragma: no cover
 
     def test_lutimes_sets_times_correctly(self):
         self.fs.mkdir('foo')
+
         self.fs.lutimes('foo', 1, 2*1000, 3, 4*1000)
+
         self.assertEqual(self.fs.lstat('foo').st_atime_sec, 1)
-        self.assertEqual(self.fs.lstat('foo').st_atime_nsec, 2*1000)
+        # not all filesystems support sub-second timestamps; those that 
+        # do not, return 0, so we have to accept either that or the correct
+        # value, but no other vlaues
+        self.assert_(self.fs.lstat('foo').st_atime_nsec in [0, 2*1000])
+
         self.assertEqual(self.fs.lstat('foo').st_mtime_sec, 3)
-        self.assertEqual(self.fs.lstat('foo').st_mtime_nsec, 4*1000)
+        self.assert_(self.fs.lstat('foo').st_mtime_nsec in [0, 4*1000])
 
     def test_lutimes_raises_oserror_for_nonexistent_entry(self):
         self.assertRaises(OSError, self.fs.lutimes, 'notexists', 1, 2, 3, 4)
