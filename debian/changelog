@@ -1,3 +1,12 @@
+obnam (0.24.1-1) unstable; urgency=low
+
+  * New upstream release.
+    - fixes test case failure on filesystems that do not store sub-second
+      timestamps, which caused failures to build from source on Debian
+      build daemons
+
+ -- Lars Wirzenius <liw@liw.fi>  Sat, 24 Dec 2011 14:03:21 +0000
+
 obnam (0.24-1) unstable; urgency=low
 
   * New upstream release.
