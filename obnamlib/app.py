@@ -116,6 +116,13 @@ class App(cliapp.Application):
     def plugins_dir(self):
         return os.path.join(os.path.dirname(obnamlib.__file__), 'plugins')
 
+    def setup_logging(self):
+        log = self.settings['log']
+        if log and log != 'syslog' and not os.path.exists(log):
+            fd = os.open(log, os.O_WRONLY | os.O_CREAT, 0600)
+            os.close(fd)
+        cliapp.Application.setup_logging(self)
+
     def process_args(self, args):
         if self.settings['quiet']:
             self.ts.disable()
