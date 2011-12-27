@@ -131,6 +131,15 @@ can access the backup repository
 .B remove\-key
 removes a key from the shared toplevel directories,
 plus any clients specified on the command line.
+.IP \(bu
+.B nagios\-last\-backup\-age
+is a check that exits with non-zero return if a backup age exceeds a certain
+threshold.  It is suitable for use as a check plugin for nagios.  Thresholds
+can be given the
+.B \-\-warn-age
+and
+.B \-\-critical-age
+options.
 .SS "Making backups"
 When you run a backup,
 .B obnam
