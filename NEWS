@@ -15,6 +15,11 @@ Version 0.25, released UNRELEASED; a BETA release
 * Some clarification on how the forget policy works, prompted by questions
   from Peter Palfrader.
 
+BUG FIXES:
+
+* `obnam ls` now shows the correct timestamps for generations.
+  Thanks, Anders Wirzenius.
+
 Version 0.24.1, released 2011-12-24; a BETA release
 -------------------------------------------------
 
