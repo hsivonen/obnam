@@ -175,6 +175,11 @@ class App(cliapp.Application):
         with the --pretend-time setting.
         
         '''
-        
-        return time.time()
+
+        s = self.settings['pretend-time']
+        if s:
+            t = time.strptime(s, '%Y-%m-%d %H:%M:%S')
+            return time.mktime(t)
+        else:
+            return time.time()
 
