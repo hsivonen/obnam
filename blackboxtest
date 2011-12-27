@@ -29,6 +29,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+import time
 import traceback
 import unittest
 
@@ -256,7 +257,8 @@ class ObnamTestCase(unittest.TestCase):
                                 obnamlib.DEFAULT_LRU_SIZE, None,
                                 obnamlib.IDPATH_DEPTH,
                                 obnamlib.IDPATH_BITS,
-                                obnamlib.IDPATH_SKIP)
+                                obnamlib.IDPATH_SKIP,
+                                time.time)
         s.open_client(self.client_name)
         return s
 

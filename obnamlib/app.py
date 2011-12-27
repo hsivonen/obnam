@@ -20,6 +20,7 @@ import os
 import socket
 import StringIO
 import sys
+import time
 import tracing
 import ttystatus
 
@@ -76,6 +77,11 @@ class App(cliapp.Application):
         self.settings.boolean(['pretend', 'dry-run', 'no-act'],
                            'do not actually change anything (works with '
                            'forget and restore only)')
+                           
+        self.settings.string(['pretend-time'],
+                             'pretend it is TIMESTAMP (YYYY-MM-DD HH:MM:SS); '
+                                'this is only useful for testing purposes',
+                             metavar='TIMESTAMP')
 
         # The following needs to be done here, because it needs
         # to be done before option processing. This is a bit ugly,
@@ -111,7 +117,8 @@ class App(cliapp.Application):
         # and since all hooks must be defined when plugins are enabled,
         # we create one instance here, which will immediately be destroyed.
         # FIXME: This is fugly.
-        obnamlib.Repository(None, 1000, 1000, 100, self.hooks, 10, 10, 10)
+        obnamlib.Repository(None, 1000, 1000, 100, self.hooks, 10, 10, 10,
+                            self.time)
 
     def plugins_dir(self):
         return os.path.join(os.path.dirname(obnamlib.__file__), 'plugins')
@@ -158,5 +165,16 @@ class App(cliapp.Application):
                                     self.hooks,
                                     self.settings['idpath-depth'],
                                     self.settings['idpath-bits'],
-                                    self.settings['idpath-skip'])
+                                    self.settings['idpath-skip'],
+                                    self.time)
+
+    def time(self):
+        '''Return current time in seconds since epoch.
+        
+        This is a wrapper around time.time() so that it can be overridden
+        with the --pretend-time setting.
+        
+        '''
+        
+        return time.time()
 

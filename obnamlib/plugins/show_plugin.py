@@ -107,7 +107,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
             if most_recent is None or start > most_recent: most_recent = start
         self.repo.fs.close()
 
-        now = time.time()
+        now = self.app.time()
         if (now - most_recent > critical_age):
             print "CRITICAL: backup is old.  last backup was %s."%(
                 self.format_time(most_recent))

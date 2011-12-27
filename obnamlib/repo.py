@@ -129,7 +129,9 @@ class Repository(object):
     format_version = 5
 
     def __init__(self, fs, node_size, upload_queue_size, lru_size, hooks,
-                 idpath_depth, idpath_bits, idpath_skip):
+                 idpath_depth, idpath_bits, idpath_skip, current_time):
+
+        self.current_time = current_time
         self.setup_hooks(hooks or obnamlib.HookManager())
         self.fs = HookedFS(self, fs, self.hooks)
         self.node_size = node_size
