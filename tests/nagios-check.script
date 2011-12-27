@@ -1,0 +1,47 @@
+#!/bin/sh
+# Copyright 2011  Lars Wirzenius
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+set -e
+
+# Obnam settings.
+opts="--quiet --no-default-config"
+
+# Generate test data.
+data="$DATADIR/nagios-check-data"
+genbackupdata --quiet --create=1k "$data"
+
+# Backup.
+repo="$DATADIR/nagios-check-repo"
+./obnam $opts backup -r "$repo" "$data"
+
+# Make sure enough time passes.
+# FIXME: This should fake the timestamps rather than slow down the test suite.
+# But there's no easy way to do that right now.
+sleep 2
+
+# Check there's a warning.
+if ! ./obnam $opts -r "$repo" nagios-last-backup-age --warn-age=1s | 
+    sed 's/last backup.*//'
+then
+    echo 'correctly returned non-zero exit code'
+fi
+
+# Check there's an error.
+if ! ./obnam $opts -r "$repo" nagios-last-backup-age --critical-age=1s | 
+    sed 's/last backup.*//'
+then
+    echo 'correctly returned non-zero exit code'
+fi
