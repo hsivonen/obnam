@@ -15,6 +15,7 @@
 
 
 import os
+import re
 import stat
 import sys
 import time
@@ -39,6 +40,27 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         self.app.add_subcommand('generations', self.generations)
         self.app.add_subcommand('genids', self.genids)
         self.app.add_subcommand('ls', self.ls, arg_synopsis='[GENERATION]...')
+        self.app.add_subcommand('nagios-last-backup-age', 
+                                self.nagios_last_backup_age)
+
+        self.app.settings.string(['warn-age'],
+                                 'for nagios-last-backup-age: maximum age (by '
+                                    'default in hours) for the most recent '
+                                    'backup before status is warning. '
+                                    'Accepts one char unit specifier '
+                                    '(s,m,h,d for seconds, minutes, hours, '
+                                    'and days.', 
+                                  metavar='AGE',
+                                  default=obnamlib.DEFAULT_NAGIOS_WARN_AGE)
+        self.app.settings.string(['critical-age'],
+                                 'for nagios-last-backup-age: maximum age '
+                                    '(by default in hours) for the most '
+                                    'recent backup before statis is critical. '
+                                    'Accepts one char unit specifier '
+                                    '(s,m,h,d for seconds, minutes, hours, '
+                                    'and days.', 
+                                  metavar='AGE',
+                                  default=obnamlib.DEFAULT_NAGIOS_WARN_AGE)
 
     def open_repository(self):
         self.app.settings.require('repository')
@@ -71,7 +93,32 @@ class ShowPlugin(obnamlib.ObnamPlugin):
                               self.repo.client.get_generation_data(gen),
                               checkpoint))
         self.repo.fs.close()
-    
+
+    def nagios_last_backup_age(self, args):
+        '''Check if the most recent generation is recent enough.'''
+        self.open_repository()
+        most_recent = None
+
+        warn_age = self._convert_time(self.app.settings['warn-age'])
+        critical_age = self._convert_time(self.app.settings['critical-age'])
+
+        for gen in self.repo.list_generations():
+            start, end = self.repo.get_generation_times(gen)
+            if most_recent is None or start > most_recent: most_recent = start
+        self.repo.fs.close()
+
+        now = time.time()
+        if (now - most_recent > critical_age):
+            print "CRITICAL: backup is old.  last backup was %s."%(
+                self.format_time(most_recent))
+            sys.exit(2)
+        elif (now - most_recent > warn_age):
+            print "WARNING: backup is old.  last backup was %s."%(
+                self.format_time(most_recent))
+            sys.exit(2)
+        print "OK: backup is recent.  last backup was %s."%(
+            self.format_time(most_recent))
+
     def genids(self, args):
         '''List generation ids for client.'''
         self.open_repository()
@@ -175,4 +222,25 @@ class ShowPlugin(obnamlib.ObnamPlugin):
             return '%-*s' % (width, field)
         else:
             return '%*s' % (width, field)
+
+    def _convert_time(self, s, default_unit='h'):
+        m = re.match('([0-9]+)([smhdw])?$', s)
+        if m is None: raise ValueError
+        ticks = int(m.group(1))
+        unit = m.group(2)
+        if unit is None: unit = default_unit
+
+        if unit == 's':
+            None
+        elif unit == 'm':
+            ticks *= 60
+        elif unit == 'h':
+            ticks *= 60*60
+        elif unit == 'd':
+            ticks *= 60*60*24
+        elif unit == 'w':
+            ticks *= 60*60*24*7
+        else:
+            raise ValueError
+        return ticks
 
