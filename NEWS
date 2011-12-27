@@ -12,6 +12,8 @@ Version 0.25, released UNRELEASED; a BETA release
 * The `nagios-last-backup-age` subcommand is useful for setting up Nagios
   (or similar systems) to check that backups get run properly. Thanks to
   Peter Palfrader for the patch.
+* Some clarification on how the forget policy works, prompted by questions
+  from Peter Palfrader.
 
 Version 0.24.1, released 2011-12-24; a BETA release
 -------------------------------------------------

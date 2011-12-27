@@ -281,9 +281,10 @@ for hour, day, week, month, and year.
 .PP
 A policy of
 .I 30d
-means to keep the latest backup for each day, for thirty days.
+means to keep the latest backup for each day when a backup was made,
+and keep the last 30 such backups.
 Any backups in between will be removed,
-as will any backups older than thirty days.
+as will any backups older than the oldest kept backup.
 .PP
 As an example, assume backups are taken every hour, on the hour:
 at 00:00, 01:00, 02:00, and so on, until 23:00.
@@ -293,6 +294,12 @@ command is run at 23:15, with the above policy,
 it will keep the backup taken at 23:00 on each day,
 and remove every other backup that day.
 It will also remove backups older than 30 days.
+.PP
+If backups are made every other day, at noon,
+.B forget
+would keep the 30 last backups,
+or 60 days worth of backups,
+with the above policy.
 .PP
 Note that obnam will only inspect timestamps in the backup repository,
 and does not care what the actual current time is.
@@ -330,6 +337,13 @@ to keep hourly backups for three days,
 daily backups for a week,
 weekly backups for a month,
 and monthly backups for a year.
+.PP
+The way the policy works is a bit complicated.
+Run
+.B forget
+with the
+.B \-\-pretend
+option to make sure you're removing the right ones.
 .\"
 .SS "Using encryption"
 .B obnam
