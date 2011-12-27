@@ -9,6 +9,9 @@ Version 0.25, released UNRELEASED; a BETA release
 
 * Log files are now created with permissions that allow only the owner
   to read or write them. This fixes a privacy leak.
+* The `nagios-last-backup-age` subcommand is useful for setting up Nagios
+  (or similar systems) to check that backups get run properly. Thanks to
+  Peter Palfrader for the patch.
 
 Version 0.24.1, released 2011-12-24; a BETA release
 -------------------------------------------------
