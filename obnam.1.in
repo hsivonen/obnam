@@ -400,6 +400,19 @@ exclude: \.wav$
 or
 .I foo: value
 syntax in the files.)
+.SS "Repository format and upgrades"
+Different versions of
+.B obnam
+may use a different repository format.
+At the moment, each version only supports its own format.
+There will eventually be a way to upgrade a repository to the current format,
+but for now, if you upgrade the program to an incompatible version,
+you need to start over with a new repository.
+You should probably not remove the old repository until after you have
+made a successful backup to the new repository.
+.PP
+If you think this is a silly state of affairs, you're entirely correct.
+Please voice your concern about this in the Obnam bug tracker.
 .\"---------------------------------------------------------------------
 .SH OPTIONS
 .\" ------------------------------------------------------------------
