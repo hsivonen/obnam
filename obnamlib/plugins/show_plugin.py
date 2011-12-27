@@ -44,7 +44,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
                                 self.nagios_last_backup_age)
 
         self.app.settings.string(['warn-age'],
-                                 'for nagios-last-backup-age: maximum age (by 
+                                 'for nagios-last-backup-age: maximum age (by '
                                     'default in hours) for the most recent '
                                     'backup before status is warning. '
                                     'Accepts one char unit specifier '
