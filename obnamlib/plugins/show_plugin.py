@@ -131,8 +131,9 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         self.open_repository()
         for gen in args or ["latest"]:
             gen = self.repo.genspec(gen)
-            started = self.format_time(0)
-            ended = self.format_time(0)
+            started, ended = self.repo.client.get_generation_times(gen)
+            started = self.format_time(started)
+            ended = self.format_time(ended)
             print 'Generation %s (%s - %s)' % (gen, started, ended)
             self.show_objects(gen, '/')
         self.repo.fs.close()
