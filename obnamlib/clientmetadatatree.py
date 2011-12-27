@@ -18,7 +18,6 @@ import hashlib
 import logging
 import os
 import struct
-import time
 import tracing
 
 import obnamlib
@@ -68,12 +67,13 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     SUBKEY_MAX = struct.pack('!Q', obnamlib.MAX_ID)
     
     def __init__(self, fs, client_dir, node_size, upload_queue_size, lru_size,
-                 hooks):
+                 repo):
         tracing.trace('new ClientMetadataTree, client_dir=%s' % client_dir)
+        self.current_time = repo.current_time
         key_bytes = len(self.hashkey(0, self.hash_name(''), 0, 0))
         obnamlib.RepositoryTree.__init__(self, fs, client_dir, key_bytes, 
                                          node_size, upload_queue_size, 
-                                         lru_size, hooks)
+                                         lru_size, repo)
         self.genhash = self.hash_name('generation')
         self.known_generations = dict()
         self.chunkids_per_key = max(1,
@@ -155,10 +155,10 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     def _insert_int(self, tree, key, value):
         return tree.insert(key, struct.pack('!Q', value))
 
-    def commit(self, current_time=time.time):
+    def commit(self):
         tracing.trace('committing ClientMetadataTree')
         if self.tree:
-            now = int(current_time())
+            now = int(self.current_time())
             self._insert_int(self.tree, self.genkey(self.GEN_ENDED), now)
             genid = self.get_generation_id(self.tree)
             self._insert_count(genid, self.GEN_FILE_COUNT, self.file_count)
@@ -185,11 +185,11 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         else:
             return []
 
-    def start_generation(self, current_time=time.time):
+    def start_generation(self):
         tracing.trace('start new generation')
         self.start_changes()
         gen_id = self.forest.new_id()
-        now = int(current_time())
+        now = int(self.current_time())
         self._insert_int(self.tree, self.genkey(self.GEN_ID), gen_id)
         self._insert_int(self.tree, self.genkey(self.GEN_STARTED), now)
         self.file_count = self.get_generation_file_count(gen_id) or 0

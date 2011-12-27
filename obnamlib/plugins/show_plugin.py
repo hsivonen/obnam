@@ -107,7 +107,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
             if most_recent is None or start > most_recent: most_recent = start
         self.repo.fs.close()
 
-        now = time.time()
+        now = self.app.time()
         if (now - most_recent > critical_age):
             print "CRITICAL: backup is old.  last backup was %s."%(
                 self.format_time(most_recent))
@@ -131,8 +131,9 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         self.open_repository()
         for gen in args or ["latest"]:
             gen = self.repo.genspec(gen)
-            started = self.format_time(0)
-            ended = self.format_time(0)
+            started, ended = self.repo.client.get_generation_times(gen)
+            started = self.format_time(started)
+            ended = self.format_time(ended)
             print 'Generation %s (%s - %s)' % (gen, started, ended)
             self.show_objects(gen, '/')
         self.repo.fs.close()

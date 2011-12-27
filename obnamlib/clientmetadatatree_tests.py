@@ -17,6 +17,7 @@
 import shutil
 import stat
 import tempfile
+import time
 import unittest
 
 import obnamlib
@@ -24,7 +25,11 @@ import obnamlib
 
 class ClientMetadataTreeTests(unittest.TestCase):
 
+    def current_time(self):
+        return time.time() if self.now is None else self.now
+
     def setUp(self):
+        self.now = None
         self.tempdir = tempfile.mkdtemp()
         fs = obnamlib.LocalFS(self.tempdir)
         self.hooks = obnamlib.HookManager()
@@ -48,7 +53,8 @@ class ClientMetadataTreeTests(unittest.TestCase):
         self.assertEqual(self.client.list_generations(), [])
 
     def test_starts_generation(self):
-        self.client.start_generation(current_time=lambda: 12765)
+        self.now = 12765
+        self.client.start_generation()
         self.assertNotEqual(self.client.tree, None)
         
         def lookup(x):
@@ -61,11 +67,13 @@ class ClientMetadataTreeTests(unittest.TestCase):
         self.assertFalse(self.client.get_is_checkpoint(genid))
 
     def test_starts_second_generation(self):
-        self.client.start_generation(current_time=lambda: 1)
+        self.now = 1
+        self.client.start_generation()
         genid1 = self.client.get_generation_id(self.client.tree)
         self.client.commit()
         self.assertEqual(self.client.tree, None)
-        self.client.start_generation(current_time=lambda: 2)
+        self.now = 2
+        self.client.start_generation()
         self.assertNotEqual(self.client.tree, None)
         
         def lookup(x):
@@ -106,14 +114,17 @@ class ClientMetadataTreeTests(unittest.TestCase):
         self.assertEqual(self.client.tree, None)
 
     def test_started_generation_has_start_time(self):
-        self.client.start_generation(current_time=lambda: 1)
+        self.now = 1
+        self.client.start_generation()
         genid = self.client.get_generation_id(self.client.tree)
         self.assertEqual(self.client.get_generation_times(genid), (1, None))
 
     def test_committed_generation_has_times(self):
-        self.client.start_generation(current_time=lambda: 1)
+        self.now = 1
+        self.client.start_generation()
         genid = self.client.get_generation_id(self.client.tree)
-        self.client.commit(current_time=lambda: 2)
+        self.now = 2
+        self.client.commit()
         self.assertEqual(self.client.get_generation_times(genid), (1, 2))
 
     def test_single_empty_generation_counts_zero_files(self):
@@ -255,7 +266,11 @@ class ClientMetadataTreeTests(unittest.TestCase):
 
 class ClientMetadataTreeFileOpsTests(unittest.TestCase):
 
+    def current_time(self):
+        return time.time() if self.now is None else self.now
+
     def setUp(self):
+        self.now = None
         self.tempdir = tempfile.mkdtemp()
         fs = obnamlib.LocalFS(self.tempdir)
         self.hooks = obnamlib.HookManager()
