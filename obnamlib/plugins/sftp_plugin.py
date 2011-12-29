@@ -491,5 +491,12 @@ class SftpPlugin(obnamlib.ObnamPlugin):
         self.app.settings.integer(['sftp-delay'],
                                   'add an artificial delay (in milliseconds) '
                                     'to all SFTP transfers')
+
+        self.app.settings.string(['ssh-key'],
+                                 'use FILENAME as the ssh private key for '
+                                    'sftp access (default is using keys known '
+                                    'to ssh-agent)',
+                                 metavar='FILENAME')
+
         self.app.fsf.register('sftp', SftpFS, settings=self.app.settings)
 
