@@ -14,6 +14,10 @@ Version 0.25, released UNRELEASED; a BETA release
   Peter Palfrader for the patch.
 * Some clarification on how the forget policy works, prompted by questions
   from Peter Palfrader.
+* New settings `ssh-known-hosts` (for choosing which file to check for 
+  known host keys), `strict-ssh-host-keys` (for disallowing unknown host
+  keys), and `ssh-key` (for choosing which key file to use for SSH 
+  connections) allow better and safer use of ssh.
 
 BUG FIXES:
 
