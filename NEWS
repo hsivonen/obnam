@@ -18,6 +18,8 @@ Version 0.25, released UNRELEASED; a BETA release
   known host keys), `strict-ssh-host-keys` (for disallowing unknown host
   keys), and `ssh-key` (for choosing which key file to use for SSH 
   connections) allow better and safer use of ssh.
+* Checkpoints will now happen even in the middle of files (but between
+  chunks).
 
 BUG FIXES:
 
