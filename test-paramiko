@@ -100,23 +100,28 @@ except OSError:
                 os.path.expanduser('~/.ssh/known_hosts'))
     except IOError:
         print '*** Unable to open host keys file'
-        keys = {}
+        sys.exit(1)
 
     t = transport
     hostname = host
     key = t.get_remote_server_key()
-    if not keys.has_key(hostname):
-        print '*** WARNING: Unknown host key!'
-        print 'hostname:', repr(hostname)
-        print 'keys:', repr(keys.keys())
-    elif not keys[hostname].has_key(key.get_name()):
-        print '*** WARNING: Unknown host key!'
-    elif keys[hostname][key.get_name()] != key:
-        print '*** WARNING: Host key has changed!!!'
-        sys.exit(1)
-    else:
-        print '*** Host key OK.'
 
+    k = keys.lookup(hostname)
+    if k is None:
+        print 'unknown host %s (using it anyway)' % hostname
+    else:
+        key_type = key.get_name()
+        if not k.has_key(key_type):
+            print 'no key of type %s for %s' % (key_type, hostname)
+            print 'accepting host key anyway'
+        else:
+            host_key = k[key_type]
+            if host_key != key:
+                print 'wrong host key for %s' % hostname
+                sys.exit(1)
+            else:
+                print 'good host key for %s' % hostname
+        
     sftp = paramiko.SFTPClient.from_transport(transport)
 else:
     sftp = paramiko.SFTPClient(SSHChannelAdapter(proc))
