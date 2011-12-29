@@ -184,12 +184,17 @@ class SftpFS(obnamlib.VirtualFileSystem):
 
         known_keys = known_hosts.lookup(hostname)
         if known_keys is None:
+            if self.settings['strict-ssh-host-keys']:
+                raise obnamlib.Error('No known host key for %s' % hostname)
             logging.warning('No known host keys for %s; accepting offered key'
                             % hostname)
             return
 
         offered_type = offered_key.get_name()
         if not known_keys.has_key(offered_type):
+            if self.settings['strict-ssh-host-keys']:
+                raise obnamlib.Error('No known type %s host key for %s' % 
+                                     (offered_type, hostname))
             logging.warning('No known host key of type %s for %s; accepting '
                             'offered key' % (offered_type, hostname))
         
@@ -545,6 +550,11 @@ class SftpPlugin(obnamlib.ObnamPlugin):
                                     'sftp access (default is using keys known '
                                     'to ssh-agent)',
                                  metavar='FILENAME')
+
+        self.app.settings.boolean(['strict-ssh-host-keys'],
+                                  'require that the ssh host key must be '
+                                    'known and correct to be accepted; '
+                                    'default is to accept unknown keys')
 
         self.app.settings.boolean(['pure-paramiko'],
                                  'do not use openssh even if available, '

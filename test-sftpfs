@@ -26,6 +26,7 @@ ssh connections using the ssh agent.
 '''
 
 
+import logging
 import os
 import shutil
 import tempfile
@@ -41,10 +42,11 @@ class SftpTests(unittest.TestCase, obnamlib.VfsTests):
         self.basepath = tempfile.mkdtemp()
         baseurl = 'sftp://localhost%s' % self.basepath
         settings = {
-            'pure-paramiko': False,
+            'pure-paramiko': True,
             'create': True,
             'sftp-delay': 0,
             'ssh-key': '',
+            'strict-ssh-host-keys': False,
         }
         self.fs = obnamlib.plugins.sftp_plugin.SftpFS(baseurl, 
                                                       settings=settings)
@@ -84,4 +86,5 @@ class SftpTests(unittest.TestCase, obnamlib.VfsTests):
         
         
 if __name__ == '__main__':
+    logging.basicConfig(filename='/dev/null')
     unittest.main()
