@@ -74,7 +74,9 @@ if username is not None:
     args.extend(['-l', username])
 args.extend(['-s', host, subsystem])
 
+proc = transport = None
 try:
+    raise OSError(None, None, None)
     proc = subprocess.Popen(args,
                             stdin=subprocess.PIPE,
                             stdout=subprocess.PIPE,
@@ -92,6 +94,29 @@ except OSError:
             pass
     else:
         raise Exception('no auth')
+
+    try:
+        keys = paramiko.util.load_host_keys(
+                os.path.expanduser('~/.ssh/known_hosts'))
+    except IOError:
+        print '*** Unable to open host keys file'
+        keys = {}
+
+    t = transport
+    hostname = host
+    key = t.get_remote_server_key()
+    if not keys.has_key(hostname):
+        print '*** WARNING: Unknown host key!'
+        print 'hostname:', repr(hostname)
+        print 'keys:', repr(keys.keys())
+    elif not keys[hostname].has_key(key.get_name()):
+        print '*** WARNING: Unknown host key!'
+    elif keys[hostname][key.get_name()] != key:
+        print '*** WARNING: Host key has changed!!!'
+        sys.exit(1)
+    else:
+        print '*** Host key OK.'
+
     sftp = paramiko.SFTPClient.from_transport(transport)
 else:
     sftp = paramiko.SFTPClient(SSHChannelAdapter(proc))
@@ -105,6 +130,12 @@ while True:
         break
     n += len(data)
 end = time.time()
+f.close()
+sftp.close()
+if transport:
+    transport.close()
+if proc:
+    proc.close()
 
 duration = end - start
 n = float(n)
