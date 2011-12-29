@@ -143,8 +143,15 @@ class SftpFS(obnamlib.VirtualFileSystem):
                 '-s']
         if self.settings and self.settings['ssh-key']:
             args += ['-i', self.settings['ssh-key']]
+        if self.settings and self.settings['strict-ssh-host-keys']:
+            args += ['-o', 'StrictHostKeyChecking=yes']
+        if self.settings and self.settings['ssh-known-hosts']:
+            args += ['-o', 
+                     'UserKnownHostsFile=%s' % 
+                        self.settings['ssh-known-hosts']]
         args += [self.host, 'sftp']
 
+        logging.debug('executing openssh: %s' % args)
         try:
             proc = subprocess.Popen(args,
                                     stdin=subprocess.PIPE,
