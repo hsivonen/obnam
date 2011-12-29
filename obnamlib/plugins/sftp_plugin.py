@@ -87,6 +87,7 @@ class SSHChannelAdapter(object):
         return 'obnam SSHChannelAdapter'
 
     def close(self):
+        logging.debug('SSHChannelAdapter.close called')
         for func in [self.proc.stdin.close, self.proc.stdout.close, 
                      self.proc.wait]:
             try:
@@ -133,13 +134,6 @@ class SftpFS(obnamlib.VirtualFileSystem):
             self.mkdir(self.path)
         self.chdir(self.path)
 
-    def _connect_paramiko(self):
-        self.transport = paramiko.Transport((self.host, self.port))
-        self.transport.connect()
-        self._check_host_key(self.host)
-        self._authenticate(self.user)
-        self.sftp = paramiko.SFTPClient.from_transport(self.transport)
-
     def _connect_openssh(self):
         args = ['ssh',
                 '-oForwardX11=no', '-oForwardAgent=no',
@@ -163,16 +157,41 @@ class SftpFS(obnamlib.VirtualFileSystem):
         self.sftp = paramiko.SFTPClient(SSHChannelAdapter(proc))
         return True
 
+    def _connect_paramiko(self):
+        logging.debug('connect_paramiko: host=%s port=%s' % (self.host, self.port))
+        self.transport = paramiko.Transport((self.host, self.port))
+        self.transport.connect()
+        logging.debug('connect_paramiko: connected')
+        try:
+            self._check_host_key(self.host)
+        except BaseException, e:
+            self.transport.close()
+            self.transport = None
+            raise
+        logging.debug('connect_paramiko: host key checked')
+        self._authenticate(self.user)
+        logging.debug('connect_paramiko: authenticated')
+        self.sftp = paramiko.SFTPClient.from_transport(self.transport)
+        logging.debug('connect_paramiko: end')
+
     def _check_host_key(self, hostname):
+        logging.debug('checking ssh host key for %s' % hostname)
         key = self.transport.get_remote_server_key()
+        logging.debug('got host key for %s' % hostname)
         known_hosts = os.path.expanduser('~/.ssh/known_hosts')
         keys = paramiko.util.load_host_keys(known_hosts)
-        if hostname not in keys:
+        logging.debug('got list of known host keys for user')
+        logging.debug('keys: %s' % repr(keys))
+        if not keys.has_key(hostname):
             raise obnamlib.Error('Host not in known_hosts: %s' % hostname)
-        elif not keys[hostname].has_key(key.get_name()):
+        logging.debug('keys[hostname]: %s' % repr(keys[hostname]))
+        logging.debug('we know of a host key for %s' % hostname)
+        if not keys[hostname].has_key(key.get_name()):
             raise obnamlib.Error('No host key for %s' % hostname)
-        elif keys[hostname][key.get_name()] != key:
+        logging.debug('something something host key for %s' % hostname)
+        if keys[hostname][key.get_name()] != key:
             raise obnamlib.Error('Host key has changed for %s' % hostname)
+        logging.debug('host key for %s checks out ok' % hostname)
     
     def _authenticate(self, username):
         for key in self._find_auth_keys():
@@ -203,11 +222,12 @@ class SftpFS(obnamlib.VirtualFileSystem):
         return agent.get_keys()
 
     def close(self):
+        logging.debug('SftpFS.close called')
         self.sftp.close()
+        self.sftp = None
         if self.transport:
             self.transport.close()
             self.transport = None
-        self.sftp = None
         obnamlib.VirtualFileSystem.close(self)
         self._delay()
 
