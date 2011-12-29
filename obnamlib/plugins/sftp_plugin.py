@@ -146,7 +146,10 @@ class SftpFS(obnamlib.VirtualFileSystem):
                 '-oClearAllForwardings=yes', '-oProtocol=2',
                 '-p', str(self.port),
                 '-l', self.user,
-                '-s', self.host, 'sftp']
+                '-s']
+        if self.settings and self.settings['ssh-key']:
+            args += ['-i', self.settings['ssh-key']]
+        args += [self.host, 'sftp']
 
         try:
             proc = subprocess.Popen(args,

@@ -44,6 +44,7 @@ class SftpTests(unittest.TestCase, obnamlib.VfsTests):
             'pure-paramiko': False,
             'create': True,
             'sftp-delay': 0,
+            'ssh-key': '',
         }
         self.fs = obnamlib.plugins.sftp_plugin.SftpFS(baseurl, 
                                                       settings=settings)
