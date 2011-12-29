@@ -126,7 +126,8 @@ class SftpFS(obnamlib.VirtualFileSystem):
             return str_or_unicode
         
     def connect(self):
-        if not self._connect_openssh():
+        try_openssh = not self.settings or not self.settings['pure-paramiko']
+        if not try_openssh or not self._connect_openssh():
             self._connect_paramiko()
         if self.create_path_if_missing and not self.exists(self.path):
             self.mkdir(self.path)
@@ -171,15 +172,32 @@ class SftpFS(obnamlib.VirtualFileSystem):
             raise obnamlib.Error('Host key has changed for %s' % hostname)
     
     def _authenticate(self, username):
-        agent = paramiko.Agent()
-        agent_keys = agent.get_keys()
-        for key in agent_keys:
+        for key in self._find_auth_keys():
             try:
                 self.transport.auth_publickey(username, key)
                 return
             except paramiko.SSHException:
                 pass
-        raise obnamlib.Error('Can\'t authenticate to SSH server using agent.')
+        raise obnamlib.Error('Can\'t authenticate to SSH server using key.')
+
+    def _find_auth_keys(self):
+        if self.settings and self.settings['ssh-key']:
+            return [self._load_from_key_file(self.settings['ssh-key'])]
+        else:
+            return self._load_from_agent()
+
+    def _load_from_key_file(self, filename):
+        try:
+            key = paramiko.RSAKey.from_private_key_file(filename)
+        except paramiko.PasswordRequiredException:
+            password = getpass.getpass('RSA key password for %s: ' %
+                                        filename)
+            key = paramiko.RSAKey.from_private_key_file(filename, password)
+        return key
+
+    def _load_from_agent(self):
+        agent = paramiko.Agent()
+        return agent.get_keys()
 
     def close(self):
         self.sftp.close()
@@ -493,10 +511,14 @@ class SftpPlugin(obnamlib.ObnamPlugin):
                                     'to all SFTP transfers')
 
         self.app.settings.string(['ssh-key'],
-                                 'use FILENAME as the ssh private key for '
+                                 'use FILENAME as the ssh RSA private key for '
                                     'sftp access (default is using keys known '
                                     'to ssh-agent)',
                                  metavar='FILENAME')
+
+        self.app.settings.boolean(['pure-paramiko'],
+                                 'do not use openssh even if available, '
+                                    'use paramiko only instead')
 
         self.app.fsf.register('sftp', SftpFS, settings=self.app.settings)
 

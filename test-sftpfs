@@ -40,7 +40,13 @@ class SftpTests(unittest.TestCase, obnamlib.VfsTests):
     def setUp(self):
         self.basepath = tempfile.mkdtemp()
         baseurl = 'sftp://localhost%s' % self.basepath
-        self.fs = obnamlib.plugins.sftp_plugin.SftpFS(baseurl)
+        settings = {
+            'pure-paramiko': False,
+            'create': True,
+            'sftp-delay': 0,
+        }
+        self.fs = obnamlib.plugins.sftp_plugin.SftpFS(baseurl, 
+                                                      settings=settings)
         self.fs.connect()
         
     def tearDown(self):
