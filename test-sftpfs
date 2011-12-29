@@ -47,6 +47,7 @@ class SftpTests(unittest.TestCase, obnamlib.VfsTests):
             'sftp-delay': 0,
             'ssh-key': '',
             'strict-ssh-host-keys': False,
+            'ssh-known-hosts': '/dev/null',
         }
         self.fs = obnamlib.plugins.sftp_plugin.SftpFS(baseurl, 
                                                       settings=settings)

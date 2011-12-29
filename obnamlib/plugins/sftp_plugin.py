@@ -179,7 +179,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
 
         offered_key = self.transport.get_remote_server_key()
 
-        known_hosts_path = os.path.expanduser('~/.ssh/known_hosts')
+        known_hosts_path = self.settings['ssh-known-hosts']
         known_hosts = paramiko.util.load_host_keys(known_hosts_path)
 
         known_keys = known_hosts.lookup(hostname)
@@ -555,6 +555,13 @@ class SftpPlugin(obnamlib.ObnamPlugin):
                                   'require that the ssh host key must be '
                                     'known and correct to be accepted; '
                                     'default is to accept unknown keys')
+
+        self.app.settings.string(['ssh-known-hosts'],
+                                 'filename of the user\'s known hosts file '
+                                    '(default: %default)',
+                                 metavar='FILENAME',
+                                 default=
+                                    os.path.expanduser('~/.ssh/known_hosts'))
 
         self.app.settings.boolean(['pure-paramiko'],
                                  'do not use openssh even if available, '
