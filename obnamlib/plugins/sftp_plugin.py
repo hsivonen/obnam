@@ -176,22 +176,29 @@ class SftpFS(obnamlib.VirtualFileSystem):
 
     def _check_host_key(self, hostname):
         logging.debug('checking ssh host key for %s' % hostname)
-        key = self.transport.get_remote_server_key()
-        logging.debug('got host key for %s' % hostname)
-        known_hosts = os.path.expanduser('~/.ssh/known_hosts')
-        keys = paramiko.util.load_host_keys(known_hosts)
-        logging.debug('got list of known host keys for user')
-        logging.debug('keys: %s' % repr(keys))
-        if not keys.has_key(hostname):
-            raise obnamlib.Error('Host not in known_hosts: %s' % hostname)
-        logging.debug('keys[hostname]: %s' % repr(keys[hostname]))
-        logging.debug('we know of a host key for %s' % hostname)
-        if not keys[hostname].has_key(key.get_name()):
-            raise obnamlib.Error('No host key for %s' % hostname)
-        logging.debug('something something host key for %s' % hostname)
-        if keys[hostname][key.get_name()] != key:
-            raise obnamlib.Error('Host key has changed for %s' % hostname)
-        logging.debug('host key for %s checks out ok' % hostname)
+
+        offered_key = self.transport.get_remote_server_key()
+
+        known_hosts_path = os.path.expanduser('~/.ssh/known_hosts')
+        known_hosts = paramiko.util.load_host_keys(known_hosts_path)
+
+        known_keys = known_hosts.lookup(hostname)
+        if known_keys is None:
+            logging.warning('No known host keys for %s; accepting offered key'
+                            % hostname)
+            return
+
+        offered_type = offered_key.get_name()
+        if not known_keys.has_key(offered_type):
+            logging.warning('No known host key of type %s for %s; accepting '
+                            'offered key' % (offered_type, hostname))
+        
+        known_key = known_keys[offered_type]
+        if offered_key != known_key:
+            raise obnamlib.Error('SSH server %s offered wrong public key' %
+                                 hostname)
+            
+        logging.debug('Host key for %s OK' % hostname)        
     
     def _authenticate(self, username):
         for key in self._find_auth_keys():
