@@ -1,3 +1,9 @@
+obnam (0.25-1) unstable; urgency=low
+
+  * Depend on python-larch 0.27, for fsck WorkItem changes
+
+ -- Lars Wirzenius <liw@liw.fi>  Thu, 29 Dec 2011 14:02:03 +0000
+
 obnam (0.24.1-1) unstable; urgency=low
 
   * New upstream release.

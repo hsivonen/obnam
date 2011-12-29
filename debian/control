@@ -6,7 +6,7 @@ Standards-Version: 3.9.2
 Build-Depends: debhelper (>= 7.3.8), 
     python-all-dev (>= 2.6.3~3), 
     python-coverage-test-runner, 
-    python-larch (>= 0.26~), 
+    python-larch (>= 0.27~), 
     python-ttystatus (>= 0.15),
     python-paramiko, 
     python-tracing (>= 0.2), 
@@ -20,7 +20,7 @@ Package: obnam
 Provides: python-obnam
 Architecture: any
 Depends: ${shlibs:Depends}, ${python:Depends}, ${misc:Depends}, 
-    python-larch (>= 0.26~), python-ttystatus (>= 0.15),
+    python-larch (>= 0.27~), python-ttystatus (>= 0.15),
     python-paramiko, python-tracing (>= 0.2), python-cliapp (>= 0.18)
 Description: online and disk-based backup application
  Obnam makes backups. Backups can be stored on local hard disks, or online 
