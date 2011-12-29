@@ -29,8 +29,7 @@ class WorkItem(object):
     
     Subclass must define a ``name`` attribute, and override the ``do``
     method to do the actual work. Whoever creates a WorkItem shall
-    set the ``ts`` attribute to be a ``ttystatus.TerminalStatus``
-    instance, and ``repo`` to the repository being used.
+    set the ``repo`` to the repository being used.
     
     '''
 
