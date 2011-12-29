@@ -23,24 +23,14 @@ import ttystatus
 import obnamlib
 
 
-class WorkItem(object):
+class WorkItem(larch.fsck.WorkItem):
 
     '''A work item for fsck.
     
-    Subclass must define a ``name`` attribute, and override the ``do``
-    method to do the actual work. Whoever creates a WorkItem shall
-    set the ``repo`` to the repository being used.
+    Whoever creates a WorkItem shall set the ``repo`` to the repository 
+    being used.
     
     '''
-
-    def __str__(self):
-        if hasattr(self, 'name'):
-            return self.name
-        else:
-            return self.__class__.__name__
-
-    def do(self):
-        pass
 
 
 class CheckChunk(WorkItem):
