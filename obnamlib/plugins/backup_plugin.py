@@ -60,6 +60,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                                     'or (the default) fatalistically accept '
                                     'the risk of collisions',
                                  metavar='MODE')
+        self.app.settings.boolean(['leave-checkpoints'],
+                                  'leave checkpoint generations at the end '
+                                    'of a successful backup run')
 
     def configure_ttystatus(self):
         self.app.ts['current-file'] = ''
@@ -195,11 +198,12 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 except IOError, e:
                     msg = 'Can\'t back up %s: %s' % (pathname, e.strerror)
                     self.error(msg, e)
-                self.make_checkpoint_if_it_is_time()
+                if self.time_for_checkpoint():
+                    self.make_checkpoint()
 
             self.backup_parents('.')
 
-        if not self.errors:
+        if not self.errors and not self.app.settings['leave-checkpoints']:
             for i, gen in enumerate(self.checkpoints):
                 self.app.ts['what'] = ('removing checkpoint %d/%d' %
                                         (i+1, len(self.checkpoints)))
@@ -208,17 +212,20 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         if self.fs:
             self.fs.close()
 
-    def make_checkpoint_if_it_is_time(self):
-        if self.repo.fs.bytes_written - self.last_checkpoint >= self.interval:
-            logging.info('Making checkpoint')
-            self.app.ts['what'] = 'making checkpoint;'
-            self.checkpoints.append(self.repo.new_generation)
-            self.backup_parents('.')
-            self.repo.commit_client(checkpoint=True)
-            self.repo.lock_client(self.app.settings['client-name'])
-            self.repo.start_generation()
-            self.last_checkpoint = self.repo.fs.bytes_written
-            self.app.dump_memory_profile('at end of checkpoint')
+    def time_for_checkpoint(self):
+        bytes_since = (self.repo.fs.bytes_written - self.last_checkpoint)
+        return bytes_since >= self.interval
+
+    def make_checkpoint(self):
+        logging.info('Making checkpoint')
+        self.app.ts['what'] = 'making checkpoint;'
+        self.checkpoints.append(self.repo.new_generation)
+        self.backup_parents('.')
+        self.repo.commit_client(checkpoint=True)
+        self.repo.lock_client(self.app.settings['client-name'])
+        self.repo.start_generation()
+        self.last_checkpoint = self.repo.fs.bytes_written
+        self.app.dump_memory_profile('at end of checkpoint')
 
     def find_files(self, root):
         '''Find all files and directories that need to be backed up.
@@ -336,6 +343,13 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 self.app.dump_memory_profile('after appending some chunkids')
                 chunkids = []
             self.update_progress_with_upload(len(data))
+            
+            if self.time_for_checkpoint():
+                logging.debug('making checkpoint in the middle of a file')
+                self.repo.append_file_chunks(filename, chunkids)
+                chunkids = []
+                self.make_checkpoint()
+            
         tracing.trace('closing file')
         f.close()
         if chunkids:
