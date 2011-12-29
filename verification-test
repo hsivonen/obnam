@@ -1,0 +1,106 @@
+#!/bin/sh
+#
+# Obnam verification test.
+#
+# This script runs and verifies backups with Obnam. There are two stages.
+# In the first stage, the user makes backups frequently for some period
+# of time (e.g., daily for a week). In the second stage, every backup
+# generation is restored and the restored data compared with the original.
+# The test succeeds if all generations can be restored and verified
+# successfully.
+#
+# The verification is done using the summain(1) checksumming and manifest
+# generation tool. Obnam has an internal verification command, but it is
+# better to use an independent tool. summain(1) is a better choice than,
+# say, md5sum, since it includes much of the inode metadata in the manifest,
+# so that restoring file permissions, etc, are also verified.
+# 
+# To use this script, run it one the following ways:
+#
+#   ./verification-test backup REPO DIR
+#   ./verification-test verify REPO DIR
+#
+# You must run this script from the Obnam source directory.
+# The repository must be a local directory.
+# You can choose any DIR you like, but it should be something that changes
+# frequently and is small enough that you don't get impatient about while
+# it is getting backed up.
+#
+# The filesystem (or the parts inside the specified directory) MUST be
+# idle from when the backup start until it ends. Otherwise the test may
+# fail even though Obnam was working ine: it's just that some file changed
+# between Obnam backing it up and summain including it in the manifest.
+#
+# Copyright 2011  Lars Wirzenius
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+die()
+{
+    echo "$@" 1>&2
+    exit 1
+}
+
+backup()
+{
+    local repo="$1"
+    local dir="$2"
+    
+    ./obnam --no-default-configs -r "$repo" backup "$dir"
+    local gen=$(./obnam --no-default-configs -r "$repo" genids | tail -n1)
+    summain "$dir" -r --output="$repo/summain.$gen"
+}
+
+abspath()
+{
+    case "$1" in
+        /*) echo -n "$1" ;;
+        *) echo -n "$(pwd)/$1" ;;
+    esac
+}
+
+verify()
+{
+    local repo="$1"
+    local dir=$(abspath "$2")
+    local tempdir="$(mktemp -d)"
+
+    ./obnam --no-default-configs -r "$repo" genids |
+    while read gen
+    do
+        ./obnam --no-default-configs -r "$repo" restore --to="$tempdir/$gen"
+        summain "$tempdir/$gen/$dir" -r --output="$tempdir/summain.$gen"
+        if ! diff -u "$repo/summain.$gen" "$tempdir/summain.$gen"
+        then
+            die "generation $gen failed to restore properly, see $tempdir"
+        fi
+        rm -rf "$tempdir/$gen" "$tempdir/summain.$gen"
+    done || exit 1
+    rmdir "$tempdir"
+}
+
+[ "$#" = 3 ] || die "Bad usage, read source!"
+
+case "$1" in
+     backup)
+        backup "$2" "$3"
+        ;;
+     verify)
+        verify "$2" "$3"
+        ;;
+     *)
+        die "Unknown subcommand $1"
+        ;;
+esac
+

@@ -70,7 +70,7 @@ fadvise_dontneed(PyObject *self, PyObject *args)
 
 
 static PyObject *
-lutimes_wrapper(PyObject *self, PyObject *args)
+utimensat_wrapper(PyObject *self, PyObject *args)
 {
     int ret;
     const char *filename;
@@ -84,7 +84,7 @@ lutimes_wrapper(PyObject *self, PyObject *args)
                           &tv[1].tv_usec))
         return NULL;
 
-    ret = lutimes(filename, tv);
+    ret = utimensat(AT_FDCWD, filename, tv, AT_SYMLINK_NOFOLLOW);
     if (ret == -1)
         ret = errno;
     return Py_BuildValue("i", ret);
@@ -204,8 +204,8 @@ lsetxattr_wrapper(PyObject *self, PyObject *args)
 static PyMethodDef methods[] = {
     {"fadvise_dontneed",  fadvise_dontneed, METH_VARARGS, 
      "Call posix_fadvise(2) with POSIX_FADV_DONTNEED argument."},
-    {"lutimes", lutimes_wrapper, METH_VARARGS,
-     "lutimes(2) wrapper; args are filename, atime, and mtime."},
+    {"utimensat", utimensat_wrapper, METH_VARARGS,
+     "utimensat(2) wrapper."},
     {"lstat", lstat_wrapper, METH_VARARGS,
      "lstat(2) wrapper; arg is filename, returns tuple."},
     {"llistxattr", llistxattr_wrapper, METH_VARARGS,

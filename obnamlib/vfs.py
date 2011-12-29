@@ -155,7 +155,12 @@ class VirtualFileSystem(object):
         '''Like os.chmod.'''
 
     def lutimes(self, pathname, atime_sec, atime_nsec, mtime_sec, mtime_nsec):
-        '''Like lutimes(2).'''
+        '''Like lutimes(2).
+        
+        This isn't quite like lutimes, actually. Most importantly, it uses
+        nanosecond timestamps rather than microsecond. This is important.
+        
+        '''
 
     def link(self, existing_path, new_path):
         '''Like os.link.'''

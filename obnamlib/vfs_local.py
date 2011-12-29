@@ -169,9 +169,9 @@ class LocalFS(obnamlib.VirtualFileSystem):
         assert atime_nsec is not None
         assert mtime_sec is not None
         assert mtime_nsec is not None
-        ret = obnamlib._obnam.lutimes(self.join(pathname), 
-                                      atime_sec, int(atime_nsec / 1000), 
-                                      mtime_sec, int(mtime_nsec / 1000))
+        ret = obnamlib._obnam.utimensat(self.join(pathname), 
+                                        atime_sec, atime_nsec, 
+                                        mtime_sec, mtime_nsec)
         if ret != 0:
             raise OSError(ret, os.strerror(ret), pathname)
 
