@@ -382,12 +382,6 @@ class ObnamTestCase(unittest.TestCase):
 
 class VerifyTests(ObnamTestCase):
 
-    def test_verifies_randomly(self):
-        self.create_file(self.data_dir, 'foo', 'foo')
-        self.create_file(self.data_dir, 'bar', 'bar')
-        self.backup()
-        self.verify(randomly=10)
-
     def test_notices_changed_data(self):
         self.create_file(self.data_dir, 'foo', 'foo')
         self.create_file(self.data_dir, 'bar', 'bar')
