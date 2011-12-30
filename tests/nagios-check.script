@@ -17,25 +17,27 @@
 set -e
 
 # Obnam settings.
-opts="--quiet --no-default-config"
+opts="--quiet --no-default-config --warn-age=1h --critical-age=1d"
 
-$SRCDIR/tests/backup
+# Backup, and pretend to do it during a particular time.
+$SRCDIR/tests/backup --pretend-time="1999-01-01 00:00:00"
 
-# Make sure enough time passes.
-# FIXME: This should fake the timestamps rather than slow down the test suite.
-# But there's no easy way to do that right now.
-sleep 2
-
-# Check there's a warning.
-if ! ./obnam $opts -r "$DATADIR/repo" nagios-last-backup-age --warn-age=1s | 
-    sed 's/last backup.*//'
+# Check there's a warning after one
+if ! ./obnam $opts -r "$DATADIR/repo" nagios-last-backup-age \
+        --pretend-time="1999-01-01 01:00:01"
 then
     echo 'correctly returned non-zero exit code'
+else
+    echo 'incorrectly returned zero exit code' 1>&2
+    exit 1
 fi
 
 # Check there's an error.
-if ! ./obnam $opts -r "$DATADIR/repo" nagios-last-backup-age --critical-age=1s | 
-    sed 's/last backup.*//'
+if ! ./obnam $opts -r "$DATADIR/repo" nagios-last-backup-age \
+        --pretend-time="1999-01-02 00:00:01"
 then
     echo 'correctly returned non-zero exit code'
+else
+    echo 'incorrectly returned zero exit code' 1>&2
+    exit 1
 fi
