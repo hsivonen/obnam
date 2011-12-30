@@ -387,11 +387,6 @@ class ForgetTests(ObnamTestCase):
         self.create_file(self.data_dir, 'bar', 'bar')
         self.backup()
         self.backup()
-
-    def test_pretends(self):
-        genids = self.generations()
-        self.forget(keep='1d', pretend=True)
-        self.assertEqual(genids, self.generations())
     
     def disk_usage(self, root):
         usage = 0
