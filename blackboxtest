@@ -387,10 +387,6 @@ class RestoreTests(ObnamTestCase):
         self.create_file(self.data_dir, 'bar', 'bar')
         self.backup()
 
-    def test_restores_identical_data(self):
-        self.restore()
-        self.assert_restored_correctly()
-
     def test_restores_individual_file(self):
         bar_orig = os.path.join(self.data_dir, 'bar')
         self.restore([bar_orig])
