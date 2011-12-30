@@ -25,11 +25,13 @@ echo foo > "$DATADIR/data/root1/foo"
 mkdir "$DATADIR/data/root2"
 echo bar > "$DATADIR/data/root2/bar"
 
+rooturl=$(cat $DATADIR/rooturl)
+
 # Run the first backup with root1.
-$SRCDIR/tests/obnam backup "$DATADIR/data/root1"
+$SRCDIR/tests/obnam backup "$rooturl/root1"
 
 # Run the second backup with root2.
-$SRCDIR/tests/obnam backup "$DATADIR/data/root2"
+$SRCDIR/tests/obnam backup "$rooturl/root2"
 
 # Verify the latest generation has nothing from root1.
 $SRCDIR/tests/obnam ls | grep root1 || true

@@ -21,5 +21,5 @@ echo ccc > "$DATADIR/data/ccc"
 
 $SRCDIR/tests/backup
 
-$SRCDIR/tests/obnam verify --root="$DATADIR/data" --verify-randomly=1
+$SRCDIR/tests/obnam verify --root="$(cat $DATADIR/rooturl)" --verify-randomly=1
 

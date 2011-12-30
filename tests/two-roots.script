@@ -22,7 +22,7 @@ mkdir "$DATADIR/data2"
 echo foo > "$DATADIR/data2/foo"
 
 # The .../data directory is already specified by the backup script.
-$SRCDIR/tests/backup "$DATADIR/data2"
+$SRCDIR/tests/backup "$(cat $DATADIR/rooturl)2"
 
 $SRCDIR/tests/restore
 

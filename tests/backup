@@ -18,5 +18,5 @@
 
 set -e
 
-$SRCDIR/tests/obnam backup "$DATADIR/data" "$@"
+$SRCDIR/tests/obnam backup "$(cat $DATADIR/rooturl)" "$@"
 

@@ -24,3 +24,23 @@ cp -a "$SRCDIR/test-gpghome" "$DATADIR/gpg"
 # Generate some test data.
 genbackupdata --quiet --create=100k "$DATADIR/data"
 
+
+if [ "$OBNAM_TEST_SFTP_REPOSITORY" = yes ]
+then
+    REPO="sftp://localhost$DATADIR/repo"
+else
+    REPO="$DATADIR/repo"
+fi
+echo "$REPO" > "$DATADIR/repourl"
+
+if [ "$OBNAM_TEST_SFTP_ROOT" = yes ]
+then
+    ROOT="sftp://localhost$DATADIR/data"
+    RESTORED="sftp://localhost$DATADIR/restored"
+else
+    ROOT="$DATADIR/data"
+    RESTORED="$DATADIR/restored"
+fi
+echo "$ROOT" > "$DATADIR/rooturl"
+echo "$RESTORED" > "$DATADIR/restoredurl"
+
