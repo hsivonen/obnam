@@ -18,8 +18,8 @@
 set -e
 
 
-python setup.py clean
-python setup.py build_ext -i
+python setup.py --quiet clean
+python setup.py --quiet build_ext -i
 rm -rf build
-python setup.py check "$@"
+python setup.py --quiet check "$@"
 cmdtest -c ./obnam tests
