@@ -23,7 +23,7 @@ $SRCDIR/tests/backup
 $SRCDIR/tests/backup
 
 $SRCDIR/tests/obnam genids > "$DATADIR/genids-1"
-$SRCDIR/tests/forget
+$SRCDIR/tests/obnam forget
 $SRCDIR/tests/obnam genids > "$DATADIR/genids-2"
 diff -u "$DATADIR/genids-1" "$DATADIR/genids-2"
 

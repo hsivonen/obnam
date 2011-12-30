@@ -18,6 +18,5 @@
 
 set -e
 
-./obnam --quiet --no-default-config restore -r "$DATADIR/repo" \
-    --to "$DATADIR/restored" "$@"
+$SRCDIR/tests/obnam restore -r "$DATADIR/repo" --to "$DATADIR/restored" "$@"
 

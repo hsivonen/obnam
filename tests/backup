@@ -18,6 +18,5 @@
 
 set -e
 
-./obnam --quiet --no-default-config backup -r "$DATADIR/repo" "$DATADIR/data" \
-    "$@"
+$SRCDIR/tests/obnam backup "$DATADIR/data" "$@"
 
