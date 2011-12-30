@@ -71,21 +71,27 @@ class Check(Command):
         pass
 
     def run(self):
+        print "run unit tests"
         subprocess.check_call(['python', '-m', 'CoverageTestRunner',
                                '--ignore-missing-from=without-tests'])
         os.remove('.coverage')
         if self.fast:
             return
 
+        print "run black box tests"
         subprocess.check_call(['cmdtest', 'tests'])
 
         if self.network:
+            print "run sftp tests"
             subprocess.check_call(['./test-sftpfs'])
 
+            print "re-run black box tests using localhost networking"
             env = dict(os.environ)
             env['OBNAM_TEST_SFTP_ROOT'] = 'yes'
             env['OBNAM_TEST_SFTP_REPOSITORY'] = 'yes'
             subprocess.check_call(['cmdtest', 'tests'], env=env)
+            
+        print "setup.py check done"
 
 
 setup(name='obnam',
