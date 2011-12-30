@@ -16,6 +16,13 @@
 
 set -e
 
+# This doesn't work for sftp restores. paramiko or sftp can't handle
+# negative timestamps. Meh.
+if [ "$OBNAM_TEST_SFTP_ROOT" = yes ]
+then
+    exit 0
+fi
+
 # It's possible to have timestamps before the epoch, i.e., negative
 # ones. For example, in the UK during DST, "touch -t 197001010000"
 # will create one.
