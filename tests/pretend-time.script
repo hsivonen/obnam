@@ -16,12 +16,7 @@
 
 set -e
 
-# Obnam settings.
-opts="--quiet --no-default-config"
-
-# Backup.
-./obnam $opts backup -r "$DATADIR/repo" "$DATADIR/data" \
-    --pretend-time='2007-08-12 01:02:03'
+$SRCDIR/tests/backup --pretend-time='2007-08-12 01:02:03'
 
 # Print out the generation timestamp.
 ./obnam $opts generations -r "$DATADIR/repo"

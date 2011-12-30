@@ -16,14 +16,8 @@
 
 set -e
 
-# Obnam settings.
-opts="--quiet --no-default-config"
-
-# Backup with one node size.
-./obnam $opts backup -r "$DATADIR/repo" "$DATADIR/data" --node-size=4k
-
-# Backup with another node size setting.
-./obnam $opts backup -r "$DATADIR/repo" "$DATADIR/data" --node-size=16k
+$SRCDIR/tests/backup --node-size=4k
+$SRCDIR/tests/backup --node-size=16k
 
 # Check that there's two generations.
 ./obnam $opts genids -r "$DATADIR/repo" | wc -l

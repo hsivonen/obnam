@@ -14,12 +14,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# This tests for a bug in Obnam as of 0.24.
-# http://liw.fi/obnam/bugs/generation-time-stamps-wrong/
+# Helper script for cmdtest tests: verify restored data.
 
 set -e
 
-$SRCDIR/tests/backup --pretend-time='2007-08-12 01:02:03'
+summain -r "$DATADIR/data" > "$DATADIR/data.summain"
+summain -r "$DATADIR/restored/$DATADIR/data" > "$DATADIR/restored.summain"
+diff -u "$DATADIR/data.summain" "$DATADIR/restored.summain"
 
-# Print out the generation timestamp.
-./obnam $opts ls -r "$DATADIR/repo" | head -n1

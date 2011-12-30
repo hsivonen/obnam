@@ -16,11 +16,7 @@
 
 set -e
 
-# Obnam settings. Use a very small checkpoint size.
-opts="--quiet --no-default-config --checkpoint=1k"
-
-# Backup.
-./obnam $opts backup -r "$DATADIR/repo" "$DATADIR/data"
+$SRCDIR/tests/backup --checkpoint=1k
 
 # Check that there's only one generation.
 ./obnam $opts genids -r "$DATADIR/repo" | wc -l

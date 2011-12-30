@@ -16,20 +16,10 @@
 
 set -e
 
-# Obnam settings.
-opts="--quiet --no-default-config"
-
 # Create a named pipe.
 mknod "$DATADIR/data/pipe" p
 
-# Backup.
-./obnam $opts backup -r "$DATADIR/repo" "$DATADIR/data"
-
-# Restore.
-./obnam $opts restore -r "$DATADIR/repo" --to "$DATADIR/restored"
-
-# Verify.
-summain -r "$DATADIR/data" > "$DATADIR/data.summain"
-summain -r "$DATADIR/restored/$DATADIR/data" > "$DATADIR/restored.summain"
-diff -u "$DATADIR/data.summain" "$DATADIR/restored.summain"
+$SRCDIR/tests/backup
+$SRCDIR/tests/restore
+$SRCDIR/tests/verify
 

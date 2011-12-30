@@ -16,19 +16,11 @@
 
 set -e
 
-# Obnam settings.
-opts="--quiet --no-default-config"
-
 # Create a file in the test data with a name and contents we know.
 echo foobar > "$DATADIR/data/foo"
 
-# Backup with log file.
-./obnam $opts backup -r "$DATADIR/repo" "$DATADIR/data" \
-    --log="$DATADIR/obnam.log"
-
-# Restore the single file.
-./obnam $opts restore -r "$DATADIR/repo" --to "$DATADIR/restored" \
-    "$DATADIR/data/foo"
+$SRCDIR/tests/backup
+$SRCDIR/tests/restore "$DATADIR/data/foo"
 
 # Verify it's OK.
 diff "$DATADIR/data/foo" "$DATADIR/restored/$DATADIR/data/foo"

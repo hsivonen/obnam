@@ -19,8 +19,7 @@ set -e
 # Obnam settings.
 opts="--quiet --no-default-config"
 
-# Backup.
-./obnam $opts backup -r "$DATADIR/repo" "$DATADIR/data"
+$SRCDIR/tests/backup
 
 # Make sure enough time passes.
 # FIXME: This should fake the timestamps rather than slow down the test suite.
