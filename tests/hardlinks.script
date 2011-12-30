@@ -16,6 +16,12 @@
 
 set -e
 
+# Hardlinks do not work with sftp/paramiko. Skip this test?
+if [ "$OBNAM_TEST_SFTP_ROOT" = yes ]
+then
+    exit 0
+fi
+
 echo foobar > "$DATADIR/data/foo"
 ln "$DATADIR/data/foo" "$DATADIR/data/bar"
 

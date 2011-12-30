@@ -16,6 +16,12 @@
 
 set -e
 
+# Named pipes do not work with sftp/paramiko. Skip this test?
+if [ "$OBNAM_TEST_SFTP_ROOT" = yes ]
+then
+    exit 0
+fi
+
 # Create a named pipe.
 mknod "$DATADIR/data/pipe" p
 
