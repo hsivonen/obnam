@@ -380,36 +380,6 @@ class ObnamTestCase(unittest.TestCase):
                 os.remove(pathname)
 
 
-class RestoreTests(ObnamTestCase):
-
-    def setUpHook(self):
-        self.create_file(self.data_dir, 'foo', 'foo')
-        self.create_file(self.data_dir, 'bar', 'bar')
-        self.backup()
-
-    def _mangle_chunks(self):
-        chunkdir = os.path.join(self.repo_dir, 'chunks')
-        for dirname, subdirs, basenames in os.walk(chunkdir):
-            basenames = [x for x in basenames 
-                         if x != 'key' and x != 'userkeys']
-            for chunk in [os.path.join(dirname, x) for x in basenames]:
-                os.remove(chunk)
-                self.runcmd(['gpg', '-e', '-r', self.gpgkey, '-o', chunk],
-                            stdin='meh', stderr_ignore='.*')
-        
-    def test_fails_if_file_checksum_is_incorrect(self):
-        # Remove the chunk checksum list, and then modify the chunks,
-        # so that we can do a restore without triggering "bad chunk checksum"
-        # errors. We only want to trigger the whole-file checksum error.
-        shutil.rmtree(os.path.join(self.repo_dir, 'chunklist', 'nodes'))
-        shutil.rmtree(os.path.join(self.repo_dir, 'chunklist', 'refcounts'))
-        os.remove(os.path.join(self.repo_dir, 'chunklist', 'metadata'))
-        
-        self._mangle_chunks()
-
-        self.assertRaises(subprocess.CalledProcessError, self.restore,
-                          stderr_ignore='^ERROR: There were errors.*')
-
 class BackupTests(ObnamTestCase):
 
     def test_makes_two_generations(self):
