@@ -388,11 +388,6 @@ class ForgetTests(ObnamTestCase):
         self.backup()
         self.backup()
 
-    def test_removes_according_to_policy(self):
-        genids = self.generations()
-        self.forget(keep='1d')
-        self.assertEqual(genids[1:], self.generations())
-
     def test_pretends(self):
         genids = self.generations()
         self.forget(keep='1d', pretend=True)
