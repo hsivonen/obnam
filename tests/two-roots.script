@@ -30,5 +30,15 @@ $SRCDIR/tests/restore
 summain -r "$DATADIR/data" "$DATADIR/data2" > "$DATADIR/data.summain"
 summain -r "$DATADIR/restored/$DATADIR/data" \
            "$DATADIR/restored/$DATADIR/data2" > "$DATADIR/restored.summain"
+
+# Timestamps are whole seconds with sftp, so we need to mangle the 
+# summain output to remove sub-second timestamps.
+if [ "$OBNAM_TEST_SFTP_ROOT" = yes ]
+then
+    sed -i '/^Mtime:/s/\.[[:digit:]]\+ / /' \
+        "$DATADIR/data.summain" \
+        "$DATADIR/restored.summain"
+fi
+
 diff -u "$DATADIR/data.summain" "$DATADIR/restored.summain"
 
