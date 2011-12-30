@@ -19,15 +19,10 @@ set -e
 # Obnam settings.
 opts="--quiet --no-default-config"
 
-# Generate test data.
-data="$DATADIR/logs-for-owner-only-data"
-genbackupdata --quiet --create=1k "$data"
-
 # Backup with log file.
-repo="$DATADIR/logs-for-owner-only-repo"
-log="$DATADIR/logs-for-owner-only.log"
-./obnam $opts backup -r "$repo" "$data" --log="$log"
+./obnam $opts backup -r "$DATADIR/repo" "$DATADIR/data" \
+    --log="$DATADIR/obnam.log"
 
 # Print out the permissions.
-stat --printf '%A\n' "$log"
+stat --printf '%A\n' "$DATADIR/obnam.log"
 

@@ -19,17 +19,12 @@ set -e
 # Obnam settings.
 opts="--quiet --no-default-config"
 
-# Generate test data.
-data="$DATADIR/data"
-genbackupdata --quiet --create=1M "$data"
-
 # Backup with one node size.
-repo="$DATADIR/repo"
-./obnam $opts backup -r "$repo" "$data" --node-size=4k
+./obnam $opts backup -r "$DATADIR/repo" "$DATADIR/data" --node-size=4k
 
 # Backup with another node size setting.
-./obnam $opts backup -r "$repo" "$data" --node-size=16k
+./obnam $opts backup -r "$DATADIR/repo" "$DATADIR/data" --node-size=16k
 
 # Check that there's two generations.
-./obnam $opts genids -r "$repo" | wc -l
+./obnam $opts genids -r "$DATADIR/repo" | wc -l
 

@@ -22,13 +22,9 @@ set -e
 # Obnam settings.
 opts="--quiet --no-default-config"
 
-# Generate test data.
-data="$DATADIR/ls-generation-timestamp-data"
-genbackupdata --quiet --create=1k "$data"
-
 # Backup.
-repo="$DATADIR/ls-generation-timestamp-repo"
-./obnam $opts backup -r "$repo" "$data" --pretend-time='2007-08-12 01:02:03'
+./obnam $opts backup -r "$DATADIR/repo" "$DATADIR/data" \
+    --pretend-time='2007-08-12 01:02:03'
 
 # Print out the generation timestamp.
-./obnam $opts ls -r "$repo" | head -n1
+./obnam $opts ls -r "$DATADIR/repo" | head -n1
