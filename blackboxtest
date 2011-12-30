@@ -380,19 +380,6 @@ class ObnamTestCase(unittest.TestCase):
                 os.remove(pathname)
 
 
-class VerifyTests(ObnamTestCase):
-
-    def test_notices_changed_data(self):
-        self.create_file(self.data_dir, 'foo', 'foo')
-        self.create_file(self.data_dir, 'bar', 'bar')
-        self.backup()
-        self.remove_file(self.data_dir, 'foo')
-        self.remove_file(self.data_dir, 'bar')
-        self.create_file(self.data_dir, 'foo', 'changed data')
-        self.assertRaises(subprocess.CalledProcessError, self.verify,
-                          stderr_ignore=r'^ERROR: .*: metadata change')
-
-
 class ForgetTests(ObnamTestCase):
 
     def setUpHook(self):
