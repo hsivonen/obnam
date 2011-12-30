@@ -382,16 +382,6 @@ class ObnamTestCase(unittest.TestCase):
 
 class BackupTests(ObnamTestCase):
 
-    def test_makes_repository_files_have_correct_perms(self):
-        self.create_file(self.data_dir, 'foo', 'foo')
-        self.backup()
-        for path, st in self.find_everything(self.repo_dir):
-            perms = stat.S_IMODE(st.st_mode)
-            if stat.S_ISREG(st.st_mode):
-                self.assertEqual(perms, stat.S_IRUSR, 
-                                 'file perms must be readonly for %s not %o' % 
-                                    (path, perms))
-
     def test_skips_unreadable_directory_but_backs_up_rest(self):
         self.create_file(self.data_dir, 'aaa', 'aaa')
         bbb = os.path.join(self.data_dir, 'bbb')
