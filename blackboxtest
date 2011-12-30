@@ -381,20 +381,6 @@ class ObnamTestCase(unittest.TestCase):
 
 
 class BackupTests(ObnamTestCase):
-
-    def test_skips_unreadable_directory_but_backs_up_rest(self):
-        self.create_file(self.data_dir, 'aaa', 'aaa')
-        bbb = os.path.join(self.data_dir, 'bbb')
-        os.mkdir(bbb, 0)
-        self.create_file(self.data_dir, 'ccc', 'ccc')
-        self.backup()
-        self.restore()
-        # Remove the problematic directory so that verify works.
-        # Don't do this if running as root, since in that case
-        # obnam _can_ back it up. (Yes, this is convoluted.)
-        if os.getuid() != 0:
-            os.rmdir(bbb)
-        self.assert_restored_correctly()
     
     def test_skips_unreadable_file_but_backs_up_rest(self):
         self.create_file(self.data_dir, 'aaa', 'aaa')
