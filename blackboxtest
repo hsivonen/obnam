@@ -403,10 +403,6 @@ class EncryptionTests(ObnamTestCase):
             keys[key].sort()
         return keys
 
-    def test_has_client_key_after_backup(self):
-        self.assertEqual(self.client_keys(),
-                         [(self.client_name, self.gpgkey)])
-
     def test_removes_client(self):
         self.obnam(['remove-client', '--repository', self.repo, 
                     self.client_name])
