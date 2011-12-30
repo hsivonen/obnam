@@ -382,24 +382,6 @@ class ObnamTestCase(unittest.TestCase):
 
 class BackupTests(ObnamTestCase):
 
-    def test_makes_two_generations(self):
-        self.create_file(self.data_dir, 'foo', 'foo')
-        self.backup()
-        self.create_file(self.data_dir, 'bar', 'bar')
-        self.remove_file(self.data_dir, 'foo')
-        self.backup()
-        self.restore()
-        self.assert_restored_correctly()
-
-    def test_handles_two_roots(self):
-        root1 = self.create_dir(self.data_dir, 'root1')
-        root2 = self.create_dir(self.data_dir, 'root2')
-        self.create_file(root1, 'file1', 'content1')
-        self.create_file(root2, 'file2', 'content2')
-        self.backup([root1, root2])
-        self.restore()
-        self.assert_restored_correctly()
-
     def test_handles_symlink(self):
         self.create_file(self.data_dir, 'target', 'content1')
         os.symlink('target', os.path.join(self.data_dir, 'symlink'))
