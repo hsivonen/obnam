@@ -387,17 +387,6 @@ class RestoreTests(ObnamTestCase):
         self.create_file(self.data_dir, 'bar', 'bar')
         self.backup()
 
-    def test_restores_individual_file(self):
-        bar_orig = os.path.join(self.data_dir, 'bar')
-        self.restore([bar_orig])
-        restored_files = [os.path.join(self.restored_dir, x)
-                          for x, y in self.find_everything(self.restored_dir)
-                          if stat.S_ISREG(y.st_mode)]
-        bar_restored = os.path.join(self.restored_dir, './' + bar_orig)
-        bar_restored = os.path.normpath(bar_restored)
-        self.assertEqual(restored_files, [bar_restored])
-        self.assertFilesEqual(bar_orig, bar_restored)
-
     def test_restores_sparse_file(self):
         pathname = os.path.join(self.data_dir, 'sparse')
         f = open(pathname, 'wb')
