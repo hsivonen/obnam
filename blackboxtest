@@ -387,13 +387,6 @@ class RestoreTests(ObnamTestCase):
         self.create_file(self.data_dir, 'bar', 'bar')
         self.backup()
 
-    def test_restores_pipe(self):
-        pathname = os.path.join(self.data_dir, 'pipe')
-        os.mknod(pathname, 0600 | stat.S_IFIFO)
-        self.backup()
-        self.restore()
-        self.assert_restored_correctly()
-
     def test_restores_socket(self):
         pathname = os.path.join(self.data_dir, 'socket')
         os.mknod(pathname, 0600 | stat.S_IFSOCK)
