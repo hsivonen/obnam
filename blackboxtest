@@ -388,11 +388,6 @@ class ForgetTests(ObnamTestCase):
         self.backup()
         self.backup()
 
-    def test_removes_nothing_when_given_no_args(self):
-        genids = self.generations()
-        self.forget()
-        self.assertEqual(genids, self.generations())
-
     def test_removes_specified_generations(self):
         genids = self.generations()
         self.forget(genids=genids[:1])
