@@ -17,7 +17,13 @@
 set -e
 
 ln -s . "$DATADIR/data/symlink-with-existing-target"
-ln -s this-does-not-exist "$DATADIR/data/symlink-with-missing-target"
+
+# It seems paramiko can't create dangling symlinks. Skip this if
+# restoring over sftp.
+if [ "$OBNAM_TEST_SFTP_ROOT" != yes ]
+then
+    ln -s this-does-not-exist "$DATADIR/data/symlink-with-missing-target"
+fi
 
 $SRCDIR/tests/backup
 $SRCDIR/tests/restore
