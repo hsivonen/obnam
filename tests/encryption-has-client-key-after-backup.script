@@ -14,13 +14,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
 set -e
 
-# Make a copy of the gpg homedir. This is so that we don't get gpg
-# accidentally changing anything, such as the random seed file.
-cp -a "$SRCDIR/test-gpghome" "$DATADIR/gpg"
-
-# Generate some test data.
-genbackupdata --quiet --create=100k "$DATADIR/data"
+gpgkey='3B1802F81B321347'
+$SRCDIR/tests/backup --encrypt-with="$gpgkey"
+$SRCDIR/tests/obnam --encrypt-with="$gpgkey" client-keys
 

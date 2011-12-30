@@ -18,5 +18,7 @@
 
 set -e
 
-$SRCDIR/obnam --quiet --no-default-config -r "$DATADIR/repo" "$@"
+export GNUPGHOME="$DATADIR/gpg"
+$SRCDIR/obnam --client-name=rainyday \
+    --quiet --no-default-config -r "$DATADIR/repo" "$@"
 
