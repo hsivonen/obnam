@@ -16,7 +16,13 @@
 
 set -e
 
-$SRCDIR/tests/backup --pretend-time='2007-08-12 01:02:03'
+cachedir="$DATADIR/data/cache"
+mkdir "$cachedir"
+echo -n 'Signature: 8a477f597d28d172789f06886806bc55' \
+    > "$cachedir/CACHEDIR.TAG"
+echo foo > "$cachedir/foo"
 
-# Print out the generation timestamp.
-$SRCDIR/tests/obnam $opts generations
+$SRCDIR/tests/backup --exclude-caches
+$SRCDIR/tests/restore
+
+find "$DATADIR/restored" -name cachdir

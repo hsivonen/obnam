@@ -16,7 +16,10 @@
 
 set -e
 
-$SRCDIR/tests/backup --pretend-time='2007-08-12 01:02:03'
+echo aaa > "$DATADIR/data/aaa"
+echo ccc > "$DATADIR/data/ccc"
 
-# Print out the generation timestamp.
-$SRCDIR/tests/obnam $opts generations
+$SRCDIR/tests/backup
+
+$SRCDIR/tests/obnam verify --root="$(cat $DATADIR/rooturl)" --verify-randomly=1
+

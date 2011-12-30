@@ -16,7 +16,7 @@
 
 set -e
 
-$SRCDIR/tests/backup --pretend-time='2007-08-12 01:02:03'
+$SRCDIR/tests/backup
+$SRCDIR/tests/restore
+$SRCDIR/tests/verify
 
-# Print out the generation timestamp.
-$SRCDIR/tests/obnam $opts generations

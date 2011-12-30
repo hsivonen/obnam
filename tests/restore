@@ -14,9 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# Helper script for cmdtest tests: restore a backup.
+
 set -e
 
-$SRCDIR/tests/backup --pretend-time='2007-08-12 01:02:03'
+$SRCDIR/tests/obnam restore -r "$(cat $DATADIR/repourl)" \
+    --to "$(cat $DATADIR/restoredurl)" "$@"
 
-# Print out the generation timestamp.
-$SRCDIR/tests/obnam $opts generations

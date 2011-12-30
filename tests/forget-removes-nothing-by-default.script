@@ -16,7 +16,14 @@
 
 set -e
 
-$SRCDIR/tests/backup --pretend-time='2007-08-12 01:02:03'
+echo aaa > "$DATADIR/data/aaa"
+echo ccc > "$DATADIR/data/ccc"
 
-# Print out the generation timestamp.
-$SRCDIR/tests/obnam $opts generations
+$SRCDIR/tests/backup
+$SRCDIR/tests/backup
+
+$SRCDIR/tests/obnam genids > "$DATADIR/genids-1"
+$SRCDIR/tests/obnam forget
+$SRCDIR/tests/obnam genids > "$DATADIR/genids-2"
+diff -u "$DATADIR/genids-1" "$DATADIR/genids-2"
+

@@ -16,7 +16,23 @@
 
 set -e
 
-$SRCDIR/tests/backup --pretend-time='2007-08-12 01:02:03'
+$SRCDIR/tests/backup
 
-# Print out the generation timestamp.
-$SRCDIR/tests/obnam $opts generations
+# Remove the chunk checksum list, and then modify the chunks,
+# so that we can do a restore without triggering "bad chunk checksum"
+# errors. We only want to trigger the whole-file checksum error.
+
+rm -rf "$DATADIR/repo/chunklist/nodes"
+rm -rf "$DATADIR/repo/chunklist/refcounts"
+rm -rf "$DATADIR/repo/chunklist/metadata"
+
+find "$DATADIR/repo/chunks" -type f |
+while read filename
+do
+    tr '\0-\377' '\200-\377\0-\177' < "$filename" > "$filename.new"
+    mv "$filename.new" "$filename"
+done
+
+# Restore.
+$SRCDIR/tests/restore
+

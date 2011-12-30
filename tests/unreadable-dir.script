@@ -16,7 +16,24 @@
 
 set -e
 
-$SRCDIR/tests/backup --pretend-time='2007-08-12 01:02:03'
+echo aaa > "$DATADIR/data/aaa"
+mkdir --mode=0 "$DATADIR/data/bbb"
+echo ccc > "$DATADIR/data/ccc"
 
-# Print out the generation timestamp.
-$SRCDIR/tests/obnam $opts generations
+$SRCDIR/tests/backup
+$SRCDIR/tests/restore
+
+# Remove the problematic directory so that verify works.
+# Don't do this if running as root, since in that case
+# obnam _can_ back it up. (Yes, this is convoluted.)
+# When removing the directory, make sure the mtime doesn't
+# change of the parent.
+if [ "$(whoami)" != root ]
+then
+    touch -r "$DATADIR/data" "$DATADIR/timestamp"
+    rmdir "$DATADIR/data/bbb"
+    touch -r "$DATADIR/timestamp" "$DATADIR/data"
+fi
+
+$SRCDIR/tests/verify
+

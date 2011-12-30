@@ -12,7 +12,9 @@ Build-Depends: debhelper (>= 7.3.8),
     python-tracing (>= 0.2), 
     fakeroot, 
     python-cliapp (>= 0.18),
-    libattr1-dev
+    libattr1-dev,
+    summain,
+    cmdtest
 Homepage: http://braawi.org/obnam/
 X-Python-Version: >= 2.6
 

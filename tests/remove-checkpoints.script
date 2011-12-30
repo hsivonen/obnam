@@ -16,17 +16,8 @@
 
 set -e
 
-# Obnam settings. Use a very small checkpoint size.
-opts="--quiet --no-default-config --checkpoint=1k"
-
-# Generate test data.
-data="$DATADIR/remove-checkpoints-data"
-genbackupdata --quiet --create=100k "$data"
-
-# Backup with one node size.
-repo="$DATADIR/remoe-checkpoints-repo"
-./obnam $opts backup -r "$repo" "$data"
+$SRCDIR/tests/backup --checkpoint=1k
 
 # Check that there's only one generation.
-./obnam $opts genids -r "$repo" | wc -l
+$SRCDIR/tests/obnam genids | wc -l
 

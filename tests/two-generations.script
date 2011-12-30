@@ -14,9 +14,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# Make two backup generations with different contents. Make sure the
+# last generation can be restored correctly.
+
 set -e
 
-$SRCDIR/tests/backup --pretend-time='2007-08-12 01:02:03'
+find "$DATADIR/data" -mindepth 1 -delete
+echo foo > "$DATADIR/data/foo"
 
-# Print out the generation timestamp.
-$SRCDIR/tests/obnam $opts generations
+$SRCDIR/tests/backup
+
+rm "$DATADIR/data/foo"
+echo bar > "$DATADIR/data/bar"
+
+$SRCDIR/tests/backup
+$SRCDIR/tests/restore
+$SRCDIR/tests/verify
+

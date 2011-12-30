@@ -14,9 +14,24 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# Do not include roots from previous generations in a new generation,
+# when the user stops specifying them.
+
 set -e
 
-$SRCDIR/tests/backup --pretend-time='2007-08-12 01:02:03'
+mkdir "$DATADIR/data/root1"
+echo foo > "$DATADIR/data/root1/foo"
 
-# Print out the generation timestamp.
-$SRCDIR/tests/obnam $opts generations
+mkdir "$DATADIR/data/root2"
+echo bar > "$DATADIR/data/root2/bar"
+
+rooturl=$(cat $DATADIR/rooturl)
+
+# Run the first backup with root1.
+$SRCDIR/tests/obnam backup "$rooturl/root1"
+
+# Run the second backup with root2.
+$SRCDIR/tests/obnam backup "$rooturl/root2"
+
+# Verify the latest generation has nothing from root1.
+$SRCDIR/tests/obnam ls | grep root1 || true

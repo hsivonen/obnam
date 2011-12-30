@@ -16,7 +16,7 @@
 
 set -e
 
-$SRCDIR/tests/backup --pretend-time='2007-08-12 01:02:03'
+gpgkey='3B1802F81B321347'
+$SRCDIR/tests/backup --encrypt-with="$gpgkey"
+$SRCDIR/tests/obnam --encrypt-with="$gpgkey" client-keys
 
-# Print out the generation timestamp.
-$SRCDIR/tests/obnam $opts generations

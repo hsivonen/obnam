@@ -16,7 +16,16 @@
 
 set -e
 
-$SRCDIR/tests/backup --pretend-time='2007-08-12 01:02:03'
+# Named pipes do not work with sftp/paramiko. Skip this test?
+if [ "$OBNAM_TEST_SFTP_ROOT" = yes ]
+then
+    exit 0
+fi
 
-# Print out the generation timestamp.
-$SRCDIR/tests/obnam $opts generations
+# Create a named pipe.
+mknod "$DATADIR/data/pipe" p
+
+$SRCDIR/tests/backup
+$SRCDIR/tests/restore
+$SRCDIR/tests/verify
+

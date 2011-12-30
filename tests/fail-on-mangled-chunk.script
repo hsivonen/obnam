@@ -16,7 +16,24 @@
 
 set -e
 
-$SRCDIR/tests/backup --pretend-time='2007-08-12 01:02:03'
+$SRCDIR/tests/backup
 
-# Print out the generation timestamp.
-$SRCDIR/tests/obnam $opts generations
+# Corrupt chunk files.
+find "$DATADIR/repo/chunks" -type f |
+while read filename
+do
+    tr '\0-\377' '\200-\377\0-\177' < "$filename" > "$filename.new"
+    mv "$filename.new" "$filename"
+done
+
+# Restore. This will fail, and output an error, which contains a chunk id.
+# Blot out the id.
+if $SRCDIR/tests/restore 2> "$DATADIR/stderr"
+then
+    cat "$DATADIR/stderr" 1>&2
+    exit 0
+else
+    sed 's/chunk [[:digit:]]* checksum/chunk BLOTTED checksum/' \
+        "$DATADIR/stderr" 1>&2
+    exit 1
+fi

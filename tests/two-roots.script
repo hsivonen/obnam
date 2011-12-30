@@ -1,0 +1,44 @@
+#!/bin/sh
+# Copyright 2011  Lars Wirzenius
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# Backup two directoreis at once.
+
+set -e
+
+mkdir "$DATADIR/data2"
+echo foo > "$DATADIR/data2/foo"
+
+# The .../data directory is already specified by the backup script.
+$SRCDIR/tests/backup "$(cat $DATADIR/rooturl)2"
+
+$SRCDIR/tests/restore
+
+# Need to verify manually, since the verify script assumes data only.
+summain -r "$DATADIR/data" "$DATADIR/data2" > "$DATADIR/data.summain"
+summain -r "$DATADIR/restored/$DATADIR/data" \
+           "$DATADIR/restored/$DATADIR/data2" > "$DATADIR/restored.summain"
+
+# Timestamps are whole seconds with sftp, so we need to mangle the 
+# summain output to remove sub-second timestamps.
+if [ "$OBNAM_TEST_SFTP_ROOT" = yes ]
+then
+    sed -i '/^Mtime:/s/\.[[:digit:]]\+ / /' \
+        "$DATADIR/data.summain" \
+        "$DATADIR/restored.summain"
+fi
+
+diff -u "$DATADIR/data.summain" "$DATADIR/restored.summain"
+
