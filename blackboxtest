@@ -403,9 +403,6 @@ class EncryptionTests(ObnamTestCase):
             keys[key].sort()
         return keys
         
-    def test_only_client_key_listed_initially(self):
-        self.assertEqual(self.list_keys().keys(), [self.gpgkey])
-        
     def test_adds_key(self):
         self.obnam(['add-key', '--keyid', self.gpgkey2, 
                     '--repository', self.repo])
