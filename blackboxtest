@@ -380,20 +380,6 @@ class ObnamTestCase(unittest.TestCase):
                 os.remove(pathname)
 
 
-class BackupTests(ObnamTestCase):
-
-    def test_handles_before_epoch_timestamps(self):
-        # It's possible to have timestamps before the epoch, i.e., negative
-        # ones. For example, in the UK during DST, "touch -t 197001010000"
-        # will create one.
-        self.create_file(self.data_dir, 'foo', '')
-        pathname = os.path.join(self.data_dir, 'foo')
-        os.utime(pathname, (-3600, -3600))
-        self.backup()
-        self.restore()
-        self.assert_restored_correctly()
-
-
 class VerifyTests(ObnamTestCase):
 
     def test_accepts_unchanged_backup(self):
