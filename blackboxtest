@@ -381,20 +381,6 @@ class ObnamTestCase(unittest.TestCase):
 
 
 class BackupTests(ObnamTestCase):
-    
-    def test_skips_unreadable_file_but_backs_up_rest(self):
-        self.create_file(self.data_dir, 'aaa', 'aaa')
-        bbb = self.create_file(self.data_dir, 'bbb', 'bbb')
-        os.chmod(bbb, 0)
-        self.create_file(self.data_dir, 'ccc', 'ccc')
-        self.backup()
-        self.restore()
-        # Remove the problematic directory so that verify works.
-        # Don't do this if running as root, since in that case
-        # obnam _can_ back it up. (Yes, this is convoluted.)
-        if os.getuid() != 0:
-            os.remove(bbb)
-        self.assert_restored_correctly()
 
     def test_handles_before_epoch_timestamps(self):
         # It's possible to have timestamps before the epoch, i.e., negative
