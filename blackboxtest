@@ -397,11 +397,6 @@ class RestoreTests(ObnamTestCase):
                 self.runcmd(['gpg', '-e', '-r', self.gpgkey, '-o', chunk],
                             stdin='meh', stderr_ignore='.*')
         
-    def test_fails_if_chunk_is_corrupted(self):
-        self._mangle_chunks()
-        self.assertRaises(subprocess.CalledProcessError, self.restore,
-                          stderr_ignore='.*')
-
     def test_fails_if_file_checksum_is_incorrect(self):
         # Remove the chunk checksum list, and then modify the chunks,
         # so that we can do a restore without triggering "bad chunk checksum"
