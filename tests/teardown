@@ -17,5 +17,6 @@
 
 set -e
 
-rm -rf "$DATADIR/data" "$DATADIR/repo" "$DATADIR/obnam.log"
+find "$DATADIR" -mindepth 1 -delete
+
 
