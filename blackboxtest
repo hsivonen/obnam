@@ -387,18 +387,6 @@ class RestoreTests(ObnamTestCase):
         self.create_file(self.data_dir, 'bar', 'bar')
         self.backup()
 
-    def test_restores_sparse_file(self):
-        pathname = os.path.join(self.data_dir, 'sparse')
-        f = open(pathname, 'wb')
-        f.seek(1000**2)
-        f.write('x')
-        f.close()
-        
-        self.backup()
-        self.restore()
-        restored2 = os.path.join(self.restored_dir, './' + self.data_dir)
-        self.assert_same_contents('sparse', self.data_dir, restored2)
-
     def test_restores_pipe(self):
         pathname = os.path.join(self.data_dir, 'pipe')
         os.mknod(pathname, 0600 | stat.S_IFIFO)
