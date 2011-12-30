@@ -382,15 +382,6 @@ class ObnamTestCase(unittest.TestCase):
 
 class BackupTests(ObnamTestCase):
 
-    def test_does_not_include_roots_from_old_gens_unless_specified_again(self):
-        foo = self.create_dir(self.data_dir, 'foo')
-        self.backup(roots=[foo])
-        bar = self.create_dir(self.data_dir, 'bar')
-        self.backup(roots=[bar])
-        self.restore()
-        parent = os.path.join(self.restored_dir, './' + self.data_dir)
-        self.assertEqual(os.listdir(parent), ['bar'])
-
     def test_excludes_cache_directory(self):
         cachedir = self.mkdir(os.path.join(self.data_dir, 'cache'))
         self.create_file(cachedir, 'CACHEDIR.TAG', 
