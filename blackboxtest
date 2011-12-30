@@ -402,11 +402,6 @@ class EncryptionTests(ObnamTestCase):
         for key in keys:
             keys[key].sort()
         return keys
-
-    def test_removes_client(self):
-        self.obnam(['remove-client', '--repository', self.repo, 
-                    self.client_name])
-        self.assertEqual(self.client_keys(), [])
         
     def test_only_client_key_listed_initially(self):
         self.assertEqual(self.list_keys().keys(), [self.gpgkey])
