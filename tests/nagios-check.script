@@ -16,14 +16,13 @@
 
 set -e
 
-# Obnam settings.
-opts="--quiet --no-default-config --warn-age=1h --critical-age=1d"
+opts="--warn-age=1h --critical-age=1d"
 
 # Backup, and pretend to do it during a particular time.
 $SRCDIR/tests/backup --pretend-time="1999-01-01 00:00:00"
 
 # Check there's a warning after one
-if ! ./obnam $opts -r "$DATADIR/repo" nagios-last-backup-age \
+if ! $SRCDIR/tests/obnam $opts nagios-last-backup-age \
         --pretend-time="1999-01-01 01:00:01"
 then
     echo 'correctly returned non-zero exit code'
@@ -33,7 +32,7 @@ else
 fi
 
 # Check there's an error.
-if ! ./obnam $opts -r "$DATADIR/repo" nagios-last-backup-age \
+if ! $SRCDIR/tests/obnam $opts nagios-last-backup-age \
         --pretend-time="1999-01-02 00:00:01"
 then
     echo 'correctly returned non-zero exit code'

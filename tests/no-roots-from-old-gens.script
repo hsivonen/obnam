@@ -26,12 +26,10 @@ mkdir "$DATADIR/data/root2"
 echo bar > "$DATADIR/data/root2/bar"
 
 # Run the first backup with root1.
-./obnam --quiet --no-default-config backup -r "$DATADIR/repo" \
-    "$DATADIR/data/root1"
+$SRCDIR/tests/obnam backup "$DATADIR/data/root1"
 
 # Run the second backup with root2.
-./obnam --quiet --no-default-config backup -r "$DATADIR/repo" \
-    "$DATADIR/data/root2"
+$SRCDIR/tests/obnam backup "$DATADIR/data/root2"
 
 # Verify the latest generation has nothing from root1.
-./obnam --quiet --no-default-config -r "$DATADIR/repo" ls | grep root1 || true
+$SRCDIR/tests/obnam ls | grep root1 || true

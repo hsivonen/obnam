@@ -23,8 +23,7 @@ $SRCDIR/tests/backup
 
 touch "$DATADIR/data/aaa"
 
-./obnam --quiet --no-default-config -r "$DATADIR/repo" verify \
-    --root="$DATADIR/data" 2>&1 |
+$SRCDIR/tests/obnam verify --root="$DATADIR/data" 2>&1 |
     sed '/ERROR: .*\/aaa: metadata change/s,/.*/,,' |
     sed '/ERROR: aaa: metadata change:/s/_n\?sec .*//'
 
