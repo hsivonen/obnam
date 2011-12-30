@@ -19,6 +19,14 @@
 set -e
 
 export GNUPGHOME="$DATADIR/gpg"
-$SRCDIR/obnam --client-name=rainyday \
-    --quiet --no-default-config -r "$DATADIR/repo" "$@"
+$SRCDIR/obnam \
+    --client-name=rainyday \
+    --quiet \
+    --no-default-config \
+    -r "$DATADIR/repo" \
+    --weak-random \
+    --log="$DATADIR/obnam.log" \
+    --trace=vfs \
+    --trace=repo \
+    "$@"
 
