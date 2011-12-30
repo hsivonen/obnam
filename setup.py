@@ -40,8 +40,7 @@ class CleanMore(clean):
 
     def run(self):
         clean.run(self)
-        for x in ['blackboxtest.log', 'blackboxtest-obnam.log',
-                  'obnam.1', 'obnam-benchmark.1', '.coverage',
+        for x in ['obnam.1', 'obnam-benchmark.1', '.coverage',
                   'obnamlib/_obnam.so']:
             if os.path.exists(x):
                 os.remove(x)
@@ -78,7 +77,7 @@ class Check(Command):
         if self.fast:
             return
 
-        subprocess.check_call(['python', 'blackboxtest'])
+        subprocess.check_call(['cmdtest', 'tests'])
 
         if self.network:
             subprocess.check_call(['./test-sftpfs'])
@@ -86,7 +85,7 @@ class Check(Command):
             env = dict(os.environ)
             env['OBNAM_TEST_SFTP_ROOT'] = 'yes'
             env['OBNAM_TEST_SFTP_REPOSITORY'] = 'yes'
-            subprocess.check_call(['./blackboxtest'], env=env)
+            subprocess.check_call(['cmdtest', 'tests'], env=env)
 
 
 setup(name='obnam',
