@@ -399,14 +399,6 @@ class ForgetTests(ObnamTestCase):
     def random_string(self, size):
         return ''.join(chr(random.randint(0, 255)) for i in xrange(size))
     
-    def test_removes_unwanted_data(self):
-        self.create_file(self.data_dir, 'big', self.random_string(1024**2))
-        self.backup()
-        self.forget(genids=self.generations())
-        self.remove_encryption_metadata(self.repo_dir, 'chunks')
-        chunks = os.path.join(self.repo_dir, 'chunks')
-        self.assertEqual(self.disk_usage(chunks), 0)
-    
     def test_removes_unwanted_data_with_empty_generation_remaining(self):
         self.create_file(self.data_dir, 'big', self.random_string(1024**2))
         self.backup()
