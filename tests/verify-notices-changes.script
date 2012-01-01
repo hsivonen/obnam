@@ -21,7 +21,7 @@ echo ccc > "$DATADIR/data/ccc"
 
 $SRCDIR/tests/backup
 
-touch "$DATADIR/data/aaa"
+touch --date="1970-01-02 03:04:05" "$DATADIR/data/aaa"
 
 $SRCDIR/tests/obnam verify --root="$(cat $DATADIR/rooturl)" 2>&1 |
     sed '/ERROR: .*\/aaa: metadata change/s,/.*/,,' |
