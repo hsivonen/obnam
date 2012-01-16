@@ -76,7 +76,8 @@ class App(cliapp.Application):
 
         self.settings.boolean(['pretend', 'dry-run', 'no-act'],
                            'do not actually change anything (works with '
-                           'forget and restore only)')
+                           'backup, forget and restore only, and may only '
+                           'simulate approximately real behavior)')
                            
         self.settings.string(['pretend-time'],
                              'pretend it is TIMESTAMP (YYYY-MM-DD HH:MM:SS); '

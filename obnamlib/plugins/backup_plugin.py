@@ -98,6 +98,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         p.set_default_unit('MiB')
         return p.parse(value)
         
+    @property
+    def pretend(self):
+        return self.app.settings['pretend']
+
     def backup(self, args):
         '''Backup data to repository.'''
         logging.info('Backup starts')
@@ -113,20 +117,26 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.compile_exclusion_patterns()
         self.memory_dump_counter = 0
 
-        self.repo = self.app.open_repository(create=True)
         client_name = self.app.settings['client-name']
-        self.add_client(client_name)
+        if self.pretend:
+            self.repo = self.app.open_repository()
+            self.repo.open_client(client_name)
+        else:
+            self.repo = self.app.open_repository(create=True)
+            self.add_client(client_name)
+            self.repo.lock_client(client_name)
 
-        self.repo.lock_client(client_name)
         self.errors = False
         try:
-            self.repo.start_generation()
+            if not self.pretend:
+                self.repo.start_generation()
             self.fs = None
             roots = self.app.settings['root'] + args
             if roots:
                 self.backup_roots(roots)
             self.app.ts['what'] = 'committing changes;'
-            self.repo.commit_client()
+            if not self.pretend:
+                self.repo.commit_client()
             self.repo.fs.close()
             self.app.ts['what'] = ''
             self.app.ts.finish()
@@ -171,8 +181,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         for root in roots:
             self.fs.reinit(root)
             absroots.append(self.fs.abspath('.'))
-            
-        self.remove_old_roots(absroots)
+        
+        if not self.pretend:
+            self.remove_old_roots(absroots)
 
         self.checkpoints = []
         self.last_checkpoint = 0
@@ -203,7 +214,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
             self.backup_parents('.')
 
-        if not self.errors and not self.app.settings['leave-checkpoints']:
+        remove_checkpoints = (not self.errors and
+                              not self.app.settings['leave-checkpoints']
+                              and not self.pretend)
+        if remove_checkpoints:
             for i, gen in enumerate(self.checkpoints):
                 self.app.ts['what'] = ('removing checkpoint %d/%d' %
                                         (i+1, len(self.checkpoints)))
@@ -218,14 +232,15 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
     def make_checkpoint(self):
         logging.info('Making checkpoint')
-        self.app.ts['what'] = 'making checkpoint;'
-        self.checkpoints.append(self.repo.new_generation)
-        self.backup_parents('.')
-        self.repo.commit_client(checkpoint=True)
-        self.repo.lock_client(self.app.settings['client-name'])
-        self.repo.start_generation()
-        self.last_checkpoint = self.repo.fs.bytes_written
-        self.app.dump_memory_profile('at end of checkpoint')
+        self.app.ts['what'] = 'making chckpoint;'
+        if not self.pretend:
+            self.checkpoints.append(self.repo.new_generation)
+            self.backup_parents('.')
+            self.repo.commit_client(checkpoint=True)
+            self.repo.lock_client(self.app.settings['client-name'])
+            self.repo.start_generation()
+            self.last_checkpoint = self.repo.fs.bytes_written
+            self.app.dump_memory_profile('at end of checkpoint')
 
     def find_files(self, root):
         '''Find all files and directories that need to be backed up.
@@ -286,8 +301,15 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         # can remove stuff that no longer exists from them.
         if current.isdir():
             return True
+        if self.pretend:
+            gens = self.repo.list_generations()
+            if not gens:
+                return True
+            gen = gens[-1]
+        else:
+            gen = self.repo.new_generation
         try:
-            old = self.repo.get_metadata(self.repo.new_generation, pathname)
+            old = self.repo.get_metadata(gen, pathname)
         except obnamlib.Error:
             # File does not exist in the previous generation, so it
             # does need to be backed up.
@@ -307,7 +329,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         while True:
             parent = os.path.dirname(root)
             metadata = obnamlib.read_metadata(self.fs, root)
-            self.repo.create(root, metadata)
+            if not self.pretend:
+                self.repo.create(root, metadata)
             if root == parent:
                 break
             root = parent
@@ -316,13 +339,15 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         '''Back up metadata for a filesystem object'''
         
         tracing.trace('backup_metadata: %s', pathname)
-        self.repo.create(pathname, metadata)
+        if not self.pretend:
+            self.repo.create(pathname, metadata)
 
     def backup_file_contents(self, filename):
         '''Back up contents of a regular file.'''
         tracing.trace('backup_file_contents: %s', filename)
         tracing.trace('setting file chunks to empty')
-        self.repo.set_file_chunks(filename, [])
+        if not self.pretend:
+            self.repo.set_file_chunks(filename, [])
         tracing.trace('opening file for reading')
         f = self.fs.open(filename, 'r')
         chunk_size = int(self.app.settings['chunk-size'])
@@ -336,15 +361,17 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 break
             tracing.trace('got %d bytes of data' % len(data))
             summer.update(data)
-            chunkids.append(self.backup_file_chunk(data))
-            if len(chunkids) >= self.app.settings['chunkids-per-group']:
-                tracing.trace('adding %d chunkids to file' % len(chunkids))
-                self.repo.append_file_chunks(filename, chunkids)
-                self.app.dump_memory_profile('after appending some chunkids')
-                chunkids = []
+            if not self.pretend:
+                chunkids.append(self.backup_file_chunk(data))
+                if len(chunkids) >= self.app.settings['chunkids-per-group']:
+                    tracing.trace('adding %d chunkids to file' % len(chunkids))
+                    self.repo.append_file_chunks(filename, chunkids)
+                    self.app.dump_memory_profile('after appending some '
+                                                    'chunkids')
+                    chunkids = []
             self.update_progress_with_upload(len(data))
             
-            if self.time_for_checkpoint():
+            if not self.pretend and self.time_for_checkpoint():
                 logging.debug('making checkpoint in the middle of a file')
                 self.repo.append_file_chunks(filename, chunkids)
                 chunkids = []
@@ -353,6 +380,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         tracing.trace('closing file')
         f.close()
         if chunkids:
+            assert not self.pretend
             tracing.trace('adding final %d chunkids to file' % len(chunkids))
             self.repo.append_file_chunks(filename, chunkids)
         self.app.dump_memory_profile('at end of file content backup for %s' %
@@ -400,6 +428,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         '''Back up the list of files in a directory.'''
 
         tracing.trace('backup_dir: %s', root)
+        if self.pretend:
+            return
 
         new_basenames = self.fs.listdir(root)
         old_basenames = self.repo.listdir(self.repo.new_generation, root)
@@ -441,5 +471,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 elif pathname not in new_roots:
                     self.repo.remove(pathname)
 
+        assert not self.pretend
         helper('/')
 

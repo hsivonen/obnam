@@ -30,4 +30,3 @@ $SRCDIR/obnam \
     --trace=vfs \
     --trace=repo \
     "$@"
-

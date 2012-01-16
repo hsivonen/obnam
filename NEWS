@@ -20,6 +20,7 @@ Version 0.25, released UNRELEASED; a BETA release
   connections) allow better and safer use of ssh.
 * Checkpoints will now happen even in the middle of files (but between
   chunks).
+* The `--pretend` option now works for backups as well.
 
 BUG FIXES:
 
