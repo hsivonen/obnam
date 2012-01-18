@@ -201,7 +201,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                         self.backup_dir_contents(pathname)
                     elif stat.S_ISREG(metadata.st_mode):
                         assert metadata.md5 is None
-                        metadata.md5 = self.backup_file_contents(pathname)
+                        metadata.md5 = self.backup_file_contents(pathname,
+                                                                 metadata)
                     self.backup_metadata(pathname, metadata)
                 except OSError, e:
                     msg = 'Can\'t back up %s: %s' % (pathname, e.strerror)
@@ -342,9 +343,13 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         if not self.pretend:
             self.repo.create(pathname, metadata)
 
-    def backup_file_contents(self, filename):
+    def backup_file_contents(self, filename, metadata):
         '''Back up contents of a regular file.'''
         tracing.trace('backup_file_contents: %s', filename)
+        if self.pretend:
+            tracing.trace('pretending to upload the whole file')
+            self.update_progress_with_upload(metadata.st_size)
+            return
         tracing.trace('setting file chunks to empty')
         if not self.pretend:
             self.repo.set_file_chunks(filename, [])
