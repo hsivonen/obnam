@@ -13,6 +13,7 @@ Build-Depends: debhelper (>= 7.3.8),
     fakeroot, 
     python-cliapp (>= 0.18),
     libattr1-dev,
+    genbackupdata,
     summain,
     cmdtest
 Homepage: http://braawi.org/obnam/

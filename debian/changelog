@@ -2,7 +2,8 @@ obnam (0.25-1) unstable; urgency=low
 
   * New upstream version.
   * Depend on python-larch 0.27, for fsck WorkItem changes
-  * Build-depend on summain and cmdtest, which iare used by tests.
+  * Build-depend on genbackupdata, summain, and cmdtest, which are used 
+    by tests.
 
  -- Lars Wirzenius <liw@liw.fi>  Sat, 18 Feb 2012 11:45:56 +0000
 
