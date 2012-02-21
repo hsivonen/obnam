@@ -19,6 +19,7 @@ import logging
 import os
 import re
 import stat
+import time
 import traceback
 import tracing
 import ttystatus
@@ -64,28 +65,71 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                                   'leave checkpoint generations at the end '
                                     'of a successful backup run')
 
-    def configure_ttystatus(self):
+    def configure_ttystatus_for_backup(self):
         self.app.ts['current-file'] = ''
         self.app.ts['uploaded-bytes'] = 0
-        
-        self.app.ts.add(ttystatus.ElapsedTime())
-        self.app.ts.add(ttystatus.Literal(' '))
-        self.app.ts.add(ttystatus.Counter('current-file'))
-        self.app.ts.add(ttystatus.Literal(' files; '))
-        self.app.ts.add(ttystatus.ByteSize('uploaded-bytes'))
-        self.app.ts.add(ttystatus.Literal(' up ('))
-        self.app.ts.add(ttystatus.ByteSpeed('uploaded-bytes'))
-        self.app.ts.add(ttystatus.Literal(') '))
-        self.app.ts.add(ttystatus.String('what'))
-        self.app.ts.add(ttystatus.Pathname('current-file'))
+        self.file_count = 0
+        self.uploaded_bytes = 0
+
+        self.app.ts.format('%ElapsedTime() '
+                           '%Counter(current-file) '
+                           'files; '
+                           '%ByteSize(uploaded-bytes) '
+                           'up ('
+                           '%ByteSpeed(uploaded-bytes)'
+                           ') '
+                           '%String(what)'
+                           '%Pathname(current-file)')
+
+    def configure_ttystatus_for_checkpoint_removal(self):
+        self.app.ts.clear()
+        self.app.ts['checkpoint'] = ''
+        self.app.ts['checkpoints'] = 0
+        self.app.ts.format('Removing checkpoint generation '
+                           '%Counter(checkpoint) of %Integer(checkpoints)')
+        self.app.ts['checkpoints'] = str(len(self.checkpoints))
 
     def update_progress_with_file(self, filename, metadata):
         self.app.ts['what'] = ''
         self.app.ts['current-file'] = filename
+        self.file_count += 1
 
     def update_progress_with_upload(self, amount):
         self.app.ts['what'] = ''
         self.app.ts['uploaded-bytes'] += amount
+        self.uploaded_bytes += amount
+
+    def report_stats(self):
+        size_table = [
+            (1024**4, 'TiB'),
+            (1024**3, 'GiB'),
+            (1024**2, 'MiB'),
+            (1024**1, 'KiB'),
+            (0, 'B')
+        ]
+        
+        for size_base, size_unit in size_table:
+            if self.uploaded_bytes >= size_base:
+                size_amount = float(self.uploaded_bytes) / float(size_base)
+                break
+
+        speed_table = [
+            (1024**3, 'GiB/s'),
+            (1024**2, 'MiB/s'),
+            (1024**1, 'KiB/s'),
+            (0, 'B/s')
+        ]
+        duration = time.time() - self.started
+        speed = float(self.uploaded_bytes) / duration
+        for speed_base, speed_unit in speed_table:
+            if speed >= speed_base:
+                speed_amount = speed / speed_base
+                break
+
+        self.app.ts.notify('Backup found %d files, uploaded %.1f %s '
+                           'at %.1f %s' %
+                            (self.file_count, size_amount, size_unit,
+                             speed_amount, speed_unit))
 
     def error(self, msg, exc=None):
         self.errors = True
@@ -111,7 +155,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.app.settings.require('repository')
         self.app.settings.require('client-name')
 
-        self.configure_ttystatus()
+        self.configure_ttystatus_for_backup()
         self.app.ts['what'] = 'setting up;'
 
         self.compile_exclusion_patterns()
@@ -126,6 +170,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.add_client(client_name)
             self.repo.lock_client(client_name)
 
+        self.started = time.time()
         self.errors = False
         try:
             if not self.pretend:
@@ -138,8 +183,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             if not self.pretend:
                 self.repo.commit_client()
             self.repo.fs.close()
-            self.app.ts['what'] = ''
-            self.app.ts.finish()
+            self.app.ts.clear()
+            self.report_stats()
 
             logging.info('Backup finished.')
             self.app.dump_memory_profile('at end of backup run')
@@ -148,7 +193,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 logging.info('Unlocking client because of error')
                 self.repo.unlock_client()
             raise
-            
+
     def add_client(self, client_name):
         if client_name not in self.repo.list_clients():
             tracing.trace('adding new client %s' % client_name)
@@ -219,9 +264,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                               not self.app.settings['leave-checkpoints']
                               and not self.pretend)
         if remove_checkpoints:
-            for i, gen in enumerate(self.checkpoints):
-                self.app.ts['what'] = ('removing checkpoint %d/%d' %
-                                        (i+1, len(self.checkpoints)))
+            self.configure_ttystatus_for_checkpoint_removal()
+            for gen in self.checkpoints:
+                self.app.ts['checkpoint'] = gen
                 self.repo.remove_generation(gen)
 
         if self.fs:
