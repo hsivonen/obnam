@@ -475,4 +475,6 @@ To verify that the backup repository is OK:
 .IP
 .nf
 obnam fsck \-\-repository sftp://your.server/~/backups
-
+.SH "SEE ALSO"
+.TP
+.BR cliapp (5)
