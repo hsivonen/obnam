@@ -110,7 +110,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         
         for size_base, size_unit in size_table:
             if self.uploaded_bytes >= size_base:
-                size_amount = float(self.uploaded_bytes) / float(size_base)
+                if size_base > 0:
+                    size_amount = float(self.uploaded_bytes) / float(size_base)
+                else:
+                    size_amount = float(self.uploaded_bytes)
                 break
 
         speed_table = [
@@ -123,7 +126,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         speed = float(self.uploaded_bytes) / duration
         for speed_base, speed_unit in speed_table:
             if speed >= speed_base:
-                speed_amount = speed / speed_base
+                if speed_base > 0:
+                    speed_amount = speed / speed_base
+                else:
+                    speed_amount = speed
                 break
 
         self.app.ts.notify('Backup found %d files, uploaded %.1f %s '
