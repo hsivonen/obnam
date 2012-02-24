@@ -99,9 +99,9 @@ class HookManager(object):
         if name not in self.hooks:
             self.hooks[name] = FilterHook()
 
-    def add_callback(self, name, callback):
+    def add_callback(self, name, callback, reverse=True):
         '''Add a callback to a named hook.'''
-        return self.hooks[name].add_callback(callback)
+        return self.hooks[name].add_callback(callback, reverse=reverse)
         
     def remove_callback(self, name, callback_id):
         '''Remove a specific callback from a named hook.'''
