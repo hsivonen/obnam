@@ -361,7 +361,7 @@ about it using the
 option.
 .SS "Configuration files"
 .B obnam
-will look for configuration files in a number of location.
+will look for configuration files in a number of locations.
 See the FILES section for a list.
 All files are treated as if they are were one with the contents of all
 files catenated.
@@ -400,6 +400,32 @@ exclude: \.wav$
 or
 .I foo: value
 syntax in the files.)
+.PP
+The only unusual thing about the files is the way options that can be
+used many times are expressed.
+All values are put in a single line,
+separated by commas
+(and optionally spaces as well).
+For example:
+.sp 1
+.RS
+.nf
+[config]
+exclude = foo, bar, \.mp3$
+.fi
+.RE
+.sp 1
+The above has three values for the
+.B exclude
+option:
+any files that contain the words
+.I foo
+or
+.I bar
+anywhere in the fully qualified pathname,
+or files with names ending with a period and 
+.I mp3
+(because the exclusions are regular expressions).
 .SS "Repository format and upgrades"
 Different versions of
 .B obnam
