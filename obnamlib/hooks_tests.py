@@ -27,6 +27,10 @@ class HookTests(unittest.TestCase):
     def callback(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
+        
+    def callback2(self, *args, **kwargs):
+        self.args2 = args
+        self.kwargs2 = kwargs
 
     def test_has_no_callbacks_by_default(self):
         self.assertEqual(self.hook.callbacks, [])
@@ -39,6 +43,18 @@ class HookTests(unittest.TestCase):
         self.hook.add_callback(self.callback)
         self.hook.add_callback(self.callback)
         self.assertEqual(self.hook.callbacks, [self.callback])
+        
+    def test_adds_two_callbacks(self):
+        id1 = self.hook.add_callback(self.callback)
+        id2 = self.hook.add_callback(self.callback2)
+        self.assertEqual(self.hook.callbacks, [self.callback, self.callback2])
+        self.assertNotEqual(id1, id2)
+        
+    def test_adds_callbacks_in_reverse_order(self):
+        id1 = self.hook.add_callback(self.callback, reverse=True)
+        id2 = self.hook.add_callback(self.callback2, reverse=True)
+        self.assertEqual(self.hook.callbacks, [self.callback2, self.callback])
+        self.assertNotEqual(id1, id2)
 
     def test_calls_callback(self):
         self.hook.add_callback(self.callback)

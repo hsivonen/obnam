@@ -33,7 +33,7 @@ class Hook(object):
     def __init__(self):
         self.callbacks = []
         
-    def add_callback(self, callback):
+    def add_callback(self, callback, reverse=False):
         '''Add a callback to this hook.
         
         Return an identifier that can be used to remove this callback.
@@ -41,7 +41,10 @@ class Hook(object):
         '''
 
         if callback not in self.callbacks:
-            self.callbacks.append(callback)
+            if reverse:
+                self.callbacks.insert(0, callback)
+            else:
+                self.callbacks.append(callback)
         return callback
         
     def call_callbacks(self, *args, **kwargs):
@@ -96,9 +99,9 @@ class HookManager(object):
         if name not in self.hooks:
             self.hooks[name] = FilterHook()
 
-    def add_callback(self, name, callback):
+    def add_callback(self, name, callback, reverse=True):
         '''Add a callback to a named hook.'''
-        return self.hooks[name].add_callback(callback)
+        return self.hooks[name].add_callback(callback, reverse=reverse)
         
     def remove_callback(self, name, callback_id):
         '''Remove a specific callback from a named hook.'''
