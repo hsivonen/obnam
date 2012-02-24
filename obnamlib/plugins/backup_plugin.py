@@ -284,7 +284,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
     def make_checkpoint(self):
         logging.info('Making checkpoint')
-        self.app.ts['what'] = 'making chckpoint;'
+        self.app.ts['what'] = 'making checkpoint;'
         if not self.pretend:
             self.checkpoints.append(self.repo.new_generation)
             self.backup_parents('.')
