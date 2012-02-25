@@ -19,5 +19,5 @@ set -e
 gpgkey='3B1802F81B321347'
 $SRCDIR/tests/backup --encrypt-with="$gpgkey" --compress-with=gzip
 $SRCDIR/tests/restore --encrypt-with="$gpgkey" --compress-with=gzip
-$SRCDIR/tests/verify --compress-with=gzip
+$SRCDIR/tests/verify
 

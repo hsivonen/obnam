@@ -30,5 +30,15 @@ then
         "$DATADIR/restored.summain"
 fi
 
+# Allow caller to mangle further.
+if [ "x$1" != x ]
+then
+    for x in "$DATADIR/data.summain" "$DATADIR/restored.summain"
+    do
+        awk "$1" "$x" > "$x.new"
+        mv "$x.new" "$x"
+    done
+fi
+
 diff -u "$DATADIR/data.summain" "$DATADIR/restored.summain"
 
