@@ -175,6 +175,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.repo = self.app.open_repository(create=True)
             self.add_client(client_name)
             self.repo.lock_client(client_name)
+            self.repo.lock_shared()
 
         self.started = time.time()
         self.errors = False
@@ -188,6 +189,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.app.ts['what'] = 'committing changes;'
             if not self.pretend:
                 self.repo.commit_client()
+                self.repo.commit_shared()
             self.repo.fs.close()
             self.app.ts.clear()
             self.report_stats()
@@ -198,6 +200,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             if self.repo.got_client_lock:
                 logging.info('Unlocking client because of error')
                 self.repo.unlock_client()
+                self.repo.unlock_shared()
             raise
 
     def add_client(self, client_name):
@@ -289,7 +292,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.checkpoints.append(self.repo.new_generation)
             self.backup_parents('.')
             self.repo.commit_client(checkpoint=True)
+            self.repo.commit_shared()
             self.repo.lock_client(self.app.settings['client-name'])
+            self.repo.lock_shared()
             self.repo.start_generation()
             self.last_checkpoint = self.repo.fs.bytes_written
             self.app.dump_memory_profile('at end of checkpoint')

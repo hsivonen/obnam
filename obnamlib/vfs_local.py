@@ -192,6 +192,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
         tracing.trace('pathname=%s', pathname)
         tracing.trace('mode=%s', mode)
         f = LocalFSFile(self.join(pathname), mode)
+        tracing.trace('opened %s', pathname)
         try:
             flags = fcntl.fcntl(f.fileno(), fcntl.F_GETFL)
             flags |= os.O_NOATIME
@@ -199,6 +200,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
         except IOError, e: # pragma: no cover
             tracing.trace('fcntl F_SETFL failed: %s', repr(e))
             return f # ignore any problems setting flags
+        tracing.trace('returning ok')
         return f
 
     def exists(self, pathname):
@@ -282,6 +284,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
         path = self.join(pathname)
         dirname = os.path.dirname(path)
         if not os.path.exists(dirname):
+            tracing.trace('os.makedirs(%s)' % dirname)
             os.makedirs(dirname)
 
         fd, tempname = tempfile.mkstemp(dir=dirname)

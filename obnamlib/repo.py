@@ -235,6 +235,21 @@ class Repository(object):
         if self.new_generation is None:
             raise obnamlib.Error('new generation has not started')
 
+    def require_no_root_lock(self):
+        '''Ensure we haven't locked root yet.'''
+        if self.got_root_lock:
+            raise obnamlib.Error('We have already locked root, oops')
+
+    def require_no_shared_lock(self):
+        '''Ensure we haven't locked shared B-trees yet.'''
+        if self.got_shared_lock:
+            raise obnamlib.Error('We have already locked shared B-trees, oops')
+
+    def require_no_client_lock(self):
+        '''Ensure we haven't locked the per-client B-tree yet.'''
+        if self.got_client_lock:
+            raise obnamlib.Error('We have already locked the client, oops')
+
     def lock_root(self):
         '''Lock root node.
         
@@ -243,7 +258,11 @@ class Repository(object):
         
         '''
 
-        tracing.trace('locking root')        
+        tracing.trace('locking root')
+        self.require_no_root_lock()
+        self.require_no_client_lock()
+        self.require_no_shared_lock()
+
         self.check_format_version()
         self.lockmgr.lock(['.'])
         self.got_root_lock = True
@@ -357,9 +376,22 @@ class Repository(object):
         '''
 
         tracing.trace('locking shared')
+        self.require_no_shared_lock()
         self.check_format_version()
         self.lockmgr.lock(self.shared_dirs)
         self.got_shared_lock = True
+        tracing.trace('starting changes in chunksums and chunklist')
+        self.chunksums.start_changes()
+        self.chunklist.start_changes()
+
+    def commit_shared(self):
+        '''Commit changes to shared B-trees.'''
+        
+        tracing.trace('committing shared')
+        self.require_shared_lock()
+        self.chunklist.commit()
+        self.chunksums.commit()
+        self.unlock_shared()
 
     def unlock_shared(self):
         '''Unlock currently locked shared B-trees.'''
@@ -377,6 +409,9 @@ class Repository(object):
         '''
 
         tracing.trace('client_name=%s', client_name)
+        self.require_no_client_lock()
+        self.require_no_shared_lock()
+        
         self.check_format_version()
         client_id = self.clientlist.get_client_id(client_name)
         if client_id is None:
@@ -418,14 +453,13 @@ class Repository(object):
         '''Commit changes to and unlock currently locked client.'''
         tracing.trace('committing client (checkpoint=%s)', checkpoint)
         self.require_client_lock()
+        self.require_shared_lock()
         if self.new_generation:
             self.client.set_current_generation_is_checkpoint(checkpoint)
         self.added_generations = []
         for genid in self.removed_generations:
             self._really_remove_generation(genid)
         self.client.commit()
-        self.chunklist.commit()
-        self.chunksums.commit()
         self.unlock_client()
         
     def open_client(self, client_name):
@@ -500,6 +534,7 @@ class Repository(object):
                     self.remove_chunk(chunk_id)
 
         self.require_client_lock()
+        self.require_shared_lock()
         logging.debug('_really_remove_generation: %d' % gen_id)
         chunk_ids = set(self.client.list_chunks_in_generation(gen_id))
         chunk_ids = filter_away_chunks_used_by_other_gens(chunk_ids, gen_id)
@@ -575,6 +610,8 @@ class Repository(object):
         
         tracing.trace('putting chunk (checksum=%s)', repr(checksum))
         self.require_started_generation()
+        self.require_shared_lock()
+
         if self.prev_chunkid is None:
             self.prev_chunkid = random_chunkid()
         while True:
@@ -641,6 +678,7 @@ class Repository(object):
 
         tracing.trace('chunk_id=%s', chunk_id)
         self.require_open_client()
+        self.require_shared_lock()
         self.chunklist.remove(chunk_id)
         filename = self._chunk_filename(chunk_id)
         try:
