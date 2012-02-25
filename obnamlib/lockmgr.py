@@ -53,7 +53,7 @@ class LockManager(object):
                     raise obnamlib.LockFail()
             else:
                 return
-            self._sleep(1)
+            self._sleep()
         
     def _unlock_one(self, dirname):
         self._fs.unlock(self._lockname(dirname))

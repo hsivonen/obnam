@@ -43,7 +43,7 @@ class LockManagerTests(unittest.TestCase):
         self.now = 0
         self.lm = obnamlib.LockManager(self.fs, self.timeout)
         self.lm._time = self.fake_time
-        self.lm._sleep = lambda s: None
+        self.lm._sleep = lambda: None
         
     def tearDown(self):
         shutil.rmtree(self.tempdir)
@@ -68,8 +68,7 @@ class LockManagerTests(unittest.TestCase):
 
     def test_notices_when_preexisting_lock_goes_away(self):
         self.lm.lock([self.dirnames[0]])
-        self.lm._sleep = \
-            lambda s: os.remove(self.lm._lockname(self.dirnames[0]))
+        self.lm._sleep = lambda: os.remove(self.lm._lockname(self.dirnames[0]))
         self.lm.lock([self.dirnames[0]])
         self.assertTrue(True)
 
