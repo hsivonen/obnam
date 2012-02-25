@@ -54,8 +54,15 @@ class LockManager(object):
         
     def lock(self, dirnames):
         '''Lock ALL the directories.'''
+        we_locked = []
         for dirname in dirnames:
-            self._lock_one(dirname)
+            try:
+                self._lock_one(dirname)
+            except obnamlib.LockFail:
+                self.unlock(we_locked)
+                raise
+            else:
+                we_locked.append(dirname)
 
     def unlock(self, dirnames):
         '''Unlock ALL the directories.'''

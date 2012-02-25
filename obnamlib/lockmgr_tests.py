@@ -84,3 +84,10 @@ class LockManagerTests(unittest.TestCase):
         for dirname in self.dirnames:
             self.assertFalse(self.locked(dirname))
 
+    def test_does_not_lock_anything_if_one_lock_fails(self):
+        self.lm.lock([self.dirnames[-1]])
+        self.assertRaises(obnamlib.LockFail, self.lm.lock, self.dirnames)
+        for dirname in self.dirnames[:-1]:
+            self.assertFalse(self.locked(dirname))
+        self.assertTrue(self.locked(self.dirnames[-1]))
+
