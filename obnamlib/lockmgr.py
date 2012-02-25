@@ -14,6 +14,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import os
+
+
 class LockManager(object):
 
     '''Lock and unlock sets of directories at once.'''
@@ -21,4 +24,8 @@ class LockManager(object):
     def __init__(self, fs):
         self._fs = fs
         
-
+    def _lockname(self, dirname):
+        return os.path.join(dirname, 'lock')
+        
+    def lock(self, dirname):
+        self._fs.lock(self._lockname(dirname))

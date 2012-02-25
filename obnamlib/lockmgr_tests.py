@@ -44,3 +44,7 @@ class LockManagerTests(unittest.TestCase):
         for dirname in self.dirnames:
             self.assertFalse(self.locked(dirname))
 
+    def test_locks_single_directory(self):
+        self.lm.lock(self.dirnames[0])
+        self.assertTrue(self.locked(self.dirnames[0]))
+
