@@ -34,8 +34,14 @@ class LockManager(object):
     def _sleep(self): # pragma: no cover
         time.sleep(1)
         
+    def sort(self, dirnames):
+        def bytelist(s):
+            return [ord(s) for s in str(s)]
+        return sorted(dirnames, key=bytelist)
+
     def _lockname(self, dirname):
         return os.path.join(dirname, 'lock')
+
         
     def _lock_one(self, dirname):
         now = self._time()
@@ -55,7 +61,7 @@ class LockManager(object):
     def lock(self, dirnames):
         '''Lock ALL the directories.'''
         we_locked = []
-        for dirname in dirnames:
+        for dirname in self.sort(dirnames):
             try:
                 self._lock_one(dirname)
             except obnamlib.LockFail:
@@ -66,6 +72,6 @@ class LockManager(object):
 
     def unlock(self, dirnames):
         '''Unlock ALL the directories.'''
-        for dirname in dirnames:
+        for dirname in self.sort(dirnames):
             self._unlock_one(dirname)
 

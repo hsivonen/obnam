@@ -91,3 +91,4 @@ class LockManagerTests(unittest.TestCase):
             self.assertFalse(self.locked(dirname))
         self.assertTrue(self.locked(self.dirnames[-1]))
 
+
