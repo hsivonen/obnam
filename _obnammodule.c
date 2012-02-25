@@ -74,16 +74,22 @@ utimensat_wrapper(PyObject *self, PyObject *args)
 {
     int ret;
     const char *filename;
+    long atime_sec, atime_nsec;
+    long mtime_sec, mtime_nsec;
     struct timespec tv[2];
 
     if (!PyArg_ParseTuple(args, "sllll", 
                           &filename, 
-                          &tv[0].tv_sec,
-                          &tv[0].tv_nsec,
-                          &tv[1].tv_sec,
-                          &tv[1].tv_nsec))
+                          &atime_sec,
+                          &atime_nsec,
+                          &mtime_sec,
+                          &mtime_nsec))
         return NULL;
 
+    tv[0].tv_sec = atime_sec;
+    tv[0].tv_nsec = atime_nsec;
+    tv[1].tv_sec = mtime_sec;
+    tv[1].tv_nsec = mtime_nsec;
     ret = utimensat(AT_FDCWD, filename, tv, AT_SYMLINK_NOFOLLOW);
     if (ret == -1)
         ret = errno;
