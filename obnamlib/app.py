@@ -88,7 +88,8 @@ class App(cliapp.Application):
                               'when locking in the backup repository, '
                                 'wait TIMEOUT seconds for an existing lock '
                                 'to go away before giving up',
-                              metavar='TIMEOUT')
+                              metavar='TIMEOUT',
+                              default=60)
 
         # The following needs to be done here, because it needs
         # to be done before option processing. This is a bit ugly,

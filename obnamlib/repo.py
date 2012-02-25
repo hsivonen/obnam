@@ -132,7 +132,8 @@ class Repository(object):
     format_version = 5
 
     def __init__(self, fs, node_size, upload_queue_size, lru_size, hooks,
-                 idpath_depth, idpath_bits, idpath_skip, current_time):
+                 idpath_depth, idpath_bits, idpath_skip, current_time,
+                 lock_timeout):
 
         self.current_time = current_time
         self.setup_hooks(hooks or obnamlib.HookManager())
@@ -140,7 +141,7 @@ class Repository(object):
         self.node_size = node_size
         self.upload_queue_size = upload_queue_size
         self.lru_size = lru_size
-        self.lockmgr = obnamlib.LockManager(self.fs, 0) # FIXME: timeout
+        self.lockmgr = obnamlib.LockManager(self.fs, lock_timeout)
         self.got_root_lock = False
         self.clientlist = obnamlib.ClientList(self.fs, node_size, 
                                               upload_queue_size, 
