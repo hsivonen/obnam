@@ -15,20 +15,35 @@
 
 
 import os
+import time
+
+import obnamlib
 
 
 class LockManager(object):
 
     '''Lock and unlock sets of directories at once.'''
     
-    def __init__(self, fs):
+    def __init__(self, fs, timeout):
         self._fs = fs
+        self.timeout = timeout
+        
+    def _time(self): # pragma: no cover
+        return time.time()
         
     def _lockname(self, dirname):
         return os.path.join(dirname, 'lock')
         
     def lock(self, dirname):
-        self._fs.lock(self._lockname(dirname))
+        now = self._time()
+        while True:
+            try:
+                self._fs.lock(self._lockname(dirname))
+            except obnamlib.LockFail:
+                if self._time() - now >= self.timeout:
+                    raise obnamlib.LockFail()
+            else:
+                return
         
     def unlock(self, dirname):
         self._fs.unlock(self._lockname(dirname))

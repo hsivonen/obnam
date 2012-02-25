@@ -360,7 +360,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
             self.write_file(lockname, '')
         except IOError, e:
             if e.errno == errno.EEXIST:
-                raise obnamlib.Error('Lock %s already exists' % lockname)
+                raise obnamlib.LockFail('Lock %s already exists' % lockname)
             else:
                 raise
 

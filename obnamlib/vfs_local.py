@@ -87,7 +87,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
             self.write_file(lockname, "")
         except OSError, e:
             if e.errno == errno.EEXIST:
-                raise obnamlib.Error("Lock %s already exists" % lockname)
+                raise obnamlib.LockFail("Lock %s already exists" % lockname)
             else:
                 raise
 

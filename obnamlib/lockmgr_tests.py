@@ -27,6 +27,10 @@ class LockManagerTests(unittest.TestCase):
     def locked(self, dirname):
         return os.path.exists(os.path.join(dirname, 'lock'))
 
+    def fake_time(self):
+        self.now += 1
+        return self.now
+
     def setUp(self):
         self.tempdir = tempfile.mkdtemp()
         self.dirnames = []
@@ -35,7 +39,10 @@ class LockManagerTests(unittest.TestCase):
             os.mkdir(dirname)
             self.dirnames.append(dirname)
         self.fs = obnamlib.LocalFS(self.tempdir)
-        self.lm = obnamlib.LockManager(self.fs)
+        self.timeout = 10
+        self.now = 0
+        self.lm = obnamlib.LockManager(self.fs, self.timeout)
+        self.lm._time = self.fake_time
         
     def tearDown(self):
         shutil.rmtree(self.tempdir)
@@ -52,4 +59,9 @@ class LockManagerTests(unittest.TestCase):
         self.lm.lock(self.dirnames[0])
         self.lm.unlock(self.dirnames[0])
         self.assertFalse(self.locked(self.dirnames[0]))
+
+    def test_waits_until_timeout_for_locked_directory(self):
+        self.lm.lock(self.dirnames[0])
+        self.assertRaises(obnamlib.LockFail,
+                          self.lm.lock, self.dirnames[0])
 
