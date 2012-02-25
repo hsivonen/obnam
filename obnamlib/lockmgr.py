@@ -37,7 +37,7 @@ class LockManager(object):
     def _lockname(self, dirname):
         return os.path.join(dirname, 'lock')
         
-    def lock(self, dirname):
+    def _lock_one(self, dirname):
         now = self._time()
         while True:
             try:
@@ -49,5 +49,16 @@ class LockManager(object):
                 return
             self._sleep(1)
         
-    def unlock(self, dirname):
+    def _unlock_one(self, dirname):
         self._fs.unlock(self._lockname(dirname))
+        
+    def lock(self, dirnames):
+        '''Lock ALL the directories.'''
+        for dirname in dirnames:
+            self._lock_one(dirname)
+
+    def unlock(self, dirnames):
+        '''Unlock ALL the directories.'''
+        for dirname in dirnames:
+            self._unlock_one(dirname)
+
