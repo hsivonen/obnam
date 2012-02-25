@@ -31,6 +31,9 @@ class LockManager(object):
     def _time(self): # pragma: no cover
         return time.time()
         
+    def _sleep(self): # pragma: no cover
+        time.sleep(1)
+        
     def _lockname(self, dirname):
         return os.path.join(dirname, 'lock')
         
@@ -44,6 +47,7 @@ class LockManager(object):
                     raise obnamlib.LockFail()
             else:
                 return
+            self._sleep(1)
         
     def unlock(self, dirname):
         self._fs.unlock(self._lockname(dirname))

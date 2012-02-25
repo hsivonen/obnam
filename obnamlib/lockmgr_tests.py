@@ -43,6 +43,7 @@ class LockManagerTests(unittest.TestCase):
         self.now = 0
         self.lm = obnamlib.LockManager(self.fs, self.timeout)
         self.lm._time = self.fake_time
+        self.lm._sleep = lambda s: None
         
     def tearDown(self):
         shutil.rmtree(self.tempdir)
