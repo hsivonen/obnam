@@ -64,7 +64,10 @@ class HookedFS(object):
         toplevel = self._get_toplevel(filename)
         return self.hooks.call('repository-read-data', data,
                                 repo=self.repo, toplevel=toplevel)
-        
+
+    def lock(self, filename):
+        self.fs.lock(filename)
+
     def write_file(self, filename, data):
         tracing.trace('writing hooked %s' % filename)
         toplevel = self._get_toplevel(filename)
@@ -137,12 +140,12 @@ class Repository(object):
         self.node_size = node_size
         self.upload_queue_size = upload_queue_size
         self.lru_size = lru_size
+        self.lockmgr = obnamlib.LockManager(self.fs, 0) # FIXME: timeout
         self.got_root_lock = False
         self.clientlist = obnamlib.ClientList(self.fs, node_size, 
                                               upload_queue_size, 
                                               lru_size, self)
         self.got_client_lock = False
-        self.client_lockfile = None
         self.current_client = None
         self.current_client_id = None
         self.new_generation = None
@@ -214,7 +217,7 @@ class Repository(object):
     def require_client_lock(self):
         '''Ensure we have the lock on the currently open client.'''
         if not self.got_client_lock:
-                raise LockFail('have not got lock on client')
+            raise LockFail('have not got lock on client')
 
     def require_open_client(self):
         '''Ensure we have opened the client (r/w or r/o).'''
@@ -236,11 +239,7 @@ class Repository(object):
 
         tracing.trace('locking root')        
         self.check_format_version()
-        try:
-            self.fs.fs.write_file('root.lock', '')
-        except OSError, e:
-            if e.errno == errno.EEXIST:
-                raise LockFail('Lock file root.lock already exists')
+        self.lockmgr.lock(['.'])
         self.got_root_lock = True
         self.added_clients = []
         self.removed_clients = []
@@ -252,7 +251,7 @@ class Repository(object):
         self.require_root_lock()
         self.added_clients = []
         self.removed_clients = []
-        self.fs.remove('root.lock')
+        self.lockmgr.unlock(['.'])
         self.got_root_lock = False
         
     def commit_root(self):
@@ -357,14 +356,9 @@ class Repository(object):
         if not self.fs.exists(client_dir):
             self.fs.mkdir(client_dir)
             self.hooks.call('repository-toplevel-init', self, client_dir)
-        lockname = os.path.join(client_dir, 'lock')
-        try:
-            self.fs.write_file(lockname, '')
-        except OSError, e:
-            if e.errno == errno.EEXIST:
-                raise LockFail('client %s is already locked' % client_name)
+
+        self.lockmgr.lock([client_dir])
         self.got_client_lock = True
-        self.client_lockfile = lockname
         self.current_client = client_name
         self.current_client_id = client_id
         self.added_generations = []
@@ -382,11 +376,10 @@ class Repository(object):
         self.new_generation = None
         for genid in self.added_generations:
             self._really_remove_generation(genid)
+        self.lockmgr.unlock([self.client.dirname])
         self.client = None # FIXME: This should remove uncommitted data.
         self.added_generations = []
         self.removed_generations = []
-        self.fs.remove(self.client_lockfile)
-        self.client_lockfile = None
         self.got_client_lock = False
         self.current_client = None
         self.current_client_id = None
