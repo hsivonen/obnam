@@ -84,6 +84,12 @@ class App(cliapp.Application):
                                 'this is only useful for testing purposes',
                              metavar='TIMESTAMP')
 
+        self.settings.integer(['lock-timeout'],
+                              'when locking in the backup repository, '
+                                'wait TIMEOUT seconds for an existing lock '
+                                'to go away before giving up',
+                              metavar='TIMEOUT')
+
         # The following needs to be done here, because it needs
         # to be done before option processing. This is a bit ugly,
         # but the best we can do with the current cliapp structure.
