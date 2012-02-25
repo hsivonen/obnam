@@ -66,3 +66,10 @@ class LockManagerTests(unittest.TestCase):
         self.assertRaises(obnamlib.LockFail,
                           self.lm.lock, self.dirnames[0])
 
+    def test_notices_when_preexisting_lock_goes_away(self):
+        self.lm.lock(self.dirnames[0])
+        self.lm._sleep = \
+            lambda s: os.remove(self.lm._lockname(self.dirnames[0]))
+        self.lm.lock(self.dirnames[0])
+        self.assertTrue(True)
+
