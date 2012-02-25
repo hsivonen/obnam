@@ -127,6 +127,19 @@ class RepositoryRootNodeTests(unittest.TestCase):
         self.repo._write_format_version(0)
         self.assertRaises(obnamlib.BadFormat, self.repo.list_clients)
 
+    def test_locks_shared(self):
+        self.repo.lock_shared()
+        self.assertTrue(self.repo.got_shared_lock)
+
+    def test_unlocks_shared(self):
+        self.repo.lock_shared()
+        self.repo.unlock_shared()
+        self.assertFalse(self.repo.got_shared_lock)
+
+    def test_unlock_shared_when_locked_by_other_fails(self):
+        self.other.lock_shared()
+        self.assertRaises(obnamlib.LockFail, self.repo.unlock_shared)
+
     def test_lock_client_fails_if_format_is_incompatible(self):
         self.repo._write_format_version(0)
         self.assertRaises(obnamlib.BadFormat, self.repo.lock_client, 'foo')

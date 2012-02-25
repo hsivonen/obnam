@@ -145,6 +145,7 @@ class Repository(object):
         self.clientlist = obnamlib.ClientList(self.fs, node_size, 
                                               upload_queue_size, 
                                               lru_size, self)
+        self.got_shared_lock = False
         self.got_client_lock = False
         self.current_client = None
         self.current_client_id = None
@@ -213,6 +214,11 @@ class Repository(object):
         '''Ensure we have the lock on the repository's root node.'''
         if not self.got_root_lock:
             raise LockFail('have not got lock on root node')
+
+    def require_shared_lock(self):
+        '''Ensure we have the lock on the shared B-trees except clientlist.'''
+        if not self.got_shared_lock:
+            raise LockFail('have not got lock on shared B-trees')
 
     def require_client_lock(self):
         '''Ensure we have the lock on the currently open client.'''
@@ -337,6 +343,30 @@ class Repository(object):
         if client_name not in self.list_clients():
             raise obnamlib.Error('client %s does not exist' % client_name)
         self.removed_clients.append(client_name)
+
+    @property
+    def shared_dirs(self):
+        return [self.chunklist.dirname, self.chunksums.dirname]
+        
+    def lock_shared(self):
+        '''Lock a client for exclusive write access.
+        
+        Raise obnamlib.LockFail if locking fails. Lock will be released
+        by commit_client() or unlock_client().
+
+        '''
+
+        tracing.trace('locking shared')
+        self.check_format_version()
+        self.lockmgr.lock(self.shared_dirs)
+        self.got_shared_lock = True
+
+    def unlock_shared(self):
+        '''Unlock currently locked shared B-trees.'''
+        tracing.trace('unlocking shared')
+        self.require_shared_lock()
+        self.lockmgr.unlock(self.shared_dirs)
+        self.got_shared_lock = False
         
     def lock_client(self, client_name):
         '''Lock a client for exclusive write access.
