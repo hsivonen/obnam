@@ -29,3 +29,6 @@ class LockManager(object):
         
     def lock(self, dirname):
         self._fs.lock(self._lockname(dirname))
+        
+    def unlock(self, dirname):
+        self._fs.unlock(self._lockname(dirname))
