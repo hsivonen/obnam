@@ -1,0 +1,59 @@
+#!/bin/sh
+#
+# Obnam test: test lock files.
+#
+# Copyright 2012  Lars Wirzenius
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+die()
+{
+    echo "$@" 1>&2
+    exit 1
+}
+
+[ "$#" = 2 ] || die "Bad usage, read source!"
+
+NCLIENTS="$1"
+COUNTER="$2"
+directory="$(mktemp -d)"
+pids="$(mktemp)"
+
+for i in $(seq "$NCLIENTS")
+do
+    ./lock-and-increment "$directory" "$COUNTER" &
+    echo "$!" >> "$pids"
+done
+
+errors=0
+for pid in $(cat "$pids")
+do
+    if ! wait "$pid"
+    then
+        echo "at least one client failed" 1>&2
+        errors=1
+    fi
+done
+
+n=$(cat "$directory/counter")
+wanted=$(expr "$COUNTER" '*' "$NCLIENTS")
+if [ "$n" != "$wanted" ]
+then
+    echo "counted to $n should be $wanted" 1>&2
+    errors=1
+fi
+
+rm -rf "$directory" "$pids"
+exit $errors
+
