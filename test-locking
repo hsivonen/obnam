@@ -31,7 +31,7 @@ pids="$(mktemp)"
 
 for i in $(seq "$NCLIENTS")
 do
-    ./test-many-generations 1 "$repo" "client-$i" &
+    ./test-many-generations 2 "$repo" "client-$i" &
     echo "$!" >> "$pids"
 done
 
