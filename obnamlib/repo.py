@@ -264,8 +264,8 @@ class Repository(object):
         self.require_no_client_lock()
         self.require_no_shared_lock()
 
-        self.check_format_version()
         self.lockmgr.lock(['.'])
+        self.check_format_version()
         self.got_root_lock = True
         self.added_clients = []
         self.removed_clients = []
