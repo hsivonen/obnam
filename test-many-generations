@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Obnam test: backup and verify many generations of data.
 #
@@ -41,8 +41,8 @@ EOF
 seq "$N" |
 while read gen
 do
-    echo "$gen"
-    genbackupdata --quiet --create="$amount" "$root"
+    genbackupdata --quiet --create="$amount" "$root" --seed="$RANDOM"
+    find "$root" -exec touch --date="1970-01-01 00:00:$gen" '{}' ';'
     ./verification-test backup "$repo" "$root" "$conf"
 done
 ./verification-test verify "$repo" "$root" "$conf"
