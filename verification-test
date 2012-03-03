@@ -49,6 +49,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+set -ex
+
 die()
 {
     echo "$@" 1>&2
@@ -87,8 +89,10 @@ verify()
     ./obnam --no-default-configs --config="$conf" -r "$repo" genids |
     while read gen
     do
+        rm -rf "$tempdir/$gen"
         ./obnam --no-default-configs --config="$conf" -r "$repo" \
-            restore --to="$tempdir/$gen" --generation="$gen"
+            restore --to="$tempdir/$gen" --generation="$gen" || \
+            exit 42
         summain "$tempdir/$gen/$dir" -r --output="$tempdir/summain.$gen"
         if ! diff -u "$repo/$client.$gen.summain" "$tempdir/summain.$gen"
         then

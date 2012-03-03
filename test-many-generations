@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+set -ex
+
 die()
 {
     echo "$@" 1>&2
@@ -36,6 +38,7 @@ cat <<EOF > "$conf"
 [config]
 client-name = $client
 quiet = yes
+log = $client.log
 EOF
 
 seq "$N" |
@@ -45,7 +48,20 @@ do
     find "$root" -exec touch --date="1970-01-01 00:00:$gen" '{}' ';'
     ./verification-test backup "$repo" "$root" "$conf"
 done
-./verification-test verify "$repo" "$root" "$conf"
+
+while true
+do
+    ./verification-test verify "$repo" "$root" "$conf"
+    ret="$?"
+    if [ "$ret" = 0 ]
+    then
+        break
+    elif [ "$ret" != 42 ]
+    then
+        echo "$client failed verification" 1>&2
+        exit 1
+    fi
+done
 
 rm -rf "$conf" "$root"
 
