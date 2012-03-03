@@ -67,7 +67,13 @@ class LocalFS(obnamlib.VirtualFileSystem):
         if not self.isdir('.'):
             if create:
                 tracing.trace('creating %s', baseurl)
-                os.mkdir(baseurl)
+                try:
+                    os.mkdir(baseurl)
+                except OSError, e: # pragma: no cover
+                    # The directory might have been created concurrently
+                    # by someone else!
+                    if e.errno != errno.EEXIST:
+                        raise
             else:
                 raise OSError(errno.ENOENT, self.cwd)
 
