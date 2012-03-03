@@ -172,8 +172,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.repo = self.app.open_repository()
             self.repo.open_client(client_name)
         else:
-            self.repo = self.app.open_repository(create=True)
             self.add_client(client_name)
+            self.repo = self.app.open_repository()
             self.repo.lock_client(client_name)
             self.repo.lock_shared()
 
@@ -204,11 +204,16 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             raise
 
     def add_client(self, client_name):
-        if client_name not in self.repo.list_clients():
+        repo = self.app.open_repository(create=True)
+        repo.lock_root()
+        if client_name not in repo.list_clients():
             tracing.trace('adding new client %s' % client_name)
-            self.repo.lock_root()
-            self.repo.add_client(client_name)
-            self.repo.commit_root()
+            tracing.trace('client list before adding: %s' % 
+                            repo.list_clients())
+            repo.add_client(client_name)
+            tracing.trace('client list after adding: %s' % 
+                            repo.list_clients())
+        repo.commit_root()
 
     def compile_exclusion_patterns(self):
         log = self.app.settings['log']
