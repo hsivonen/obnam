@@ -63,10 +63,20 @@ backup()
     local dir="$2"
     local conf="$3"
     local client=$(awk '/client-name/ { print $3 }' "$conf")
+    local genids=$(mktemp)
 
     ./obnam --no-default-configs --config="$conf" -r "$repo" backup "$dir"
-    local gen=$(./obnam --no-default-configs --config="$conf" -r "$repo" \
-                    genids | tail -n1)
+
+    while ! ./obnam --no-default-configs --config="$conf" -r "$repo" genids \
+        > "$genids"
+    do
+        :
+    done
+    local gen=$(tail -n1 "$genids")
+    if [ "x$gen" = "x" ]
+    then
+        die "gen is empty"
+    fi
     summain "$dir" -r --output="$repo/$client.$gen.summain"
 }
 
@@ -86,7 +96,8 @@ verify()
     local tempdir="$(mktemp -d)"
     local client=$(awk '/client-name/ { print $3 }' "$conf")
 
-    ./obnam --no-default-configs --config="$conf" -r "$repo" genids |
+    ./obnam --no-default-configs --config="$conf" -r "$repo" genids \
+        > "$tempdir"/gens || exit 42
     while read gen
     do
         rm -rf "$tempdir/$gen"
@@ -99,8 +110,8 @@ verify()
             die "generation $gen failed to restore properly, see $tempdir"
         fi
         rm -rf "$tempdir/$gen" "$tempdir/summain.$gen"
-    done || exit 1
-    rmdir "$tempdir"
+    done < "$tempdir/gens"
+    rm -rf "$tempdir"
 }
 
 [ "$#" = 3 ] || [ "$#" = 4 ] || die "Bad usage, read source!"
