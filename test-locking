@@ -26,12 +26,14 @@ die()
 [ "$#" = 2 ] || die "Bad usage, read source!"
 
 NCLIENTS="$1"
+NGENERATIONS=2
 repo="$2"
 pids="$(mktemp)"
 
 for i in $(seq "$NCLIENTS")
 do
-    ./test-many-generations 16 "$repo" "client-$i" > "client-$i.output" 2>&1 &
+    ./test-many-generations "$NGENERATIONS" "$repo" "client-$i" \
+        > "client-$i.output" 2>&1 &
     echo "$!" >> "$pids"
 done
 
