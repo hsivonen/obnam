@@ -23,17 +23,18 @@ die()
     exit 1
 }
 
-[ "$#" = 2 ] || die "Bad usage, read source!"
+[ "$#" = 3 ] || die "Bad usage, read source!"
 
 NCLIENTS="$1"
-NGENERATIONS=2
-repo="$2"
+NGENERATIONS=16
+repourl="$2"
+repopath="$3"
 pids="$(mktemp)"
 
 for i in $(seq "$NCLIENTS")
 do
-    ./test-many-generations "$NGENERATIONS" "$repo" "client-$i" \
-        > "client-$i.output" 2>&1 &
+    ./test-many-generations "$NGENERATIONS" "$repourl" "$repopath" \
+        "client-$i" > "client-$i.output" 2>&1 &
     echo "$!" >> "$pids"
 done
 

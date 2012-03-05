@@ -65,10 +65,9 @@ backup()
     local client=$(awk '/client-name/ { print $3 }' "$conf")
     local genids=$(mktemp)
 
-    ./obnam --no-default-configs --config="$conf" -r "$repo" backup "$dir"
+    ./obnam --no-default-configs --config="$conf" backup
 
-    while ! ./obnam --no-default-configs --config="$conf" -r "$repo" genids \
-        > "$genids"
+    while ! ./obnam --no-default-configs --config="$conf" genids > "$genids"
     do
         :
     done
@@ -96,12 +95,12 @@ verify()
     local tempdir="$(mktemp -d)"
     local client=$(awk '/client-name/ { print $3 }' "$conf")
 
-    ./obnam --no-default-configs --config="$conf" -r "$repo" genids \
+    ./obnam --no-default-configs --config="$conf" genids \
         > "$tempdir"/gens || exit 42
     while read gen
     do
         rm -rf "$tempdir/$gen"
-        ./obnam --no-default-configs --config="$conf" -r "$repo" \
+        ./obnam --no-default-configs --config="$conf" \
             restore --to="$tempdir/$gen" --generation="$gen" || \
             exit 42
         summain "$tempdir/$gen/$dir" -r --output="$tempdir/summain.$gen"
@@ -114,12 +113,11 @@ verify()
     rm -rf "$tempdir"
 }
 
-[ "$#" = 3 ] || [ "$#" = 4 ] || die "Bad usage, read source!"
+[ "$#" = 4 ] || die "Bad usage, read source!"
 
-case "$#" in
-    3) repo="$2"; root="$3"; conf="/dev/null" ;;
-    4) repo="$2"; root="$3"; conf="$4" ;;
-esac
+repo="$2"
+root="$3"
+conf="$4"
 
 case "$1" in
      backup)
