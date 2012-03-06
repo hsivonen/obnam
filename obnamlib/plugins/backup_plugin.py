@@ -298,6 +298,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.backup_parents('.')
             self.repo.commit_client(checkpoint=True)
             self.repo.commit_shared()
+            self.repo = self.app.open_repository()
             self.repo.lock_client(self.app.settings['client-name'])
             self.repo.lock_shared()
             self.repo.start_generation()
