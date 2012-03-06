@@ -23,14 +23,15 @@ die()
     exit 1
 }
 
-[ "$#" = 3 ] || die "Bad usage, read source!"
+[ "$#" = 4 ] || die "Bad usage, read source!"
 
 NCLIENTS="$1"
-NGENERATIONS=16
-repourl="$2"
-repopath="$3"
+NGENERATIONS="$2"
+repourl="$3"
+repopath="$4"
 pids="$(mktemp)"
 
+echo "Starting backups: $NCLIENTS clients $NGENERATIONS generations"
 for i in $(seq "$NCLIENTS")
 do
     ./test-many-generations "$NGENERATIONS" "$repourl" "$repopath" \
@@ -38,12 +39,16 @@ do
     echo "$!" >> "$pids"
 done
 
+echo "Waiting for clients to finish... this may take a long time"
 errors=0
 for pid in $(cat "$pids")
 do
     if ! wait "$pid"
     then
-        echo "at least one client failed" 1>&2
+        if [ "$errors" = 0 ]
+        then
+            echo "at least one client failed" 1>&2
+        fi
         errors=1
     fi
 done
