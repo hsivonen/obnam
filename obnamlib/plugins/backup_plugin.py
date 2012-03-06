@@ -172,9 +172,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.repo = self.app.open_repository()
             self.repo.open_client(client_name)
         else:
-            self.repo = self.app.open_repository(create=True)
             self.add_client(client_name)
+            self.repo = self.app.open_repository()
             self.repo.lock_client(client_name)
+            self.repo.lock_shared()
 
         self.started = time.time()
         self.errors = False
@@ -188,6 +189,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.app.ts['what'] = 'committing changes;'
             if not self.pretend:
                 self.repo.commit_client()
+                self.repo.commit_shared()
             self.repo.fs.close()
             self.app.ts.clear()
             self.report_stats()
@@ -198,14 +200,20 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             if self.repo.got_client_lock:
                 logging.info('Unlocking client because of error')
                 self.repo.unlock_client()
+                self.repo.unlock_shared()
             raise
 
     def add_client(self, client_name):
-        if client_name not in self.repo.list_clients():
+        repo = self.app.open_repository(create=True)
+        repo.lock_root()
+        if client_name not in repo.list_clients():
             tracing.trace('adding new client %s' % client_name)
-            self.repo.lock_root()
-            self.repo.add_client(client_name)
-            self.repo.commit_root()
+            tracing.trace('client list before adding: %s' % 
+                            repo.list_clients())
+            repo.add_client(client_name)
+            tracing.trace('client list after adding: %s' % 
+                            repo.list_clients())
+        repo.commit_root()
 
     def compile_exclusion_patterns(self):
         log = self.app.settings['log']
@@ -289,7 +297,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.checkpoints.append(self.repo.new_generation)
             self.backup_parents('.')
             self.repo.commit_client(checkpoint=True)
+            self.repo.commit_shared()
+            self.repo = self.app.open_repository()
             self.repo.lock_client(self.app.settings['client-name'])
+            self.repo.lock_shared()
             self.repo.start_generation()
             self.last_checkpoint = self.repo.fs.bytes_written
             self.app.dump_memory_profile('at end of checkpoint')

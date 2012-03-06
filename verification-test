@@ -49,6 +49,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+set -ex
+
 die()
 {
     echo "$@" 1>&2
@@ -60,11 +62,21 @@ backup()
     local repo="$1"
     local dir="$2"
     local conf="$3"
-    
-    ./obnam --no-default-configs --config="$conf" -r "$repo" backup "$dir"
-    local gen=$(./obnam --no-default-configs --config="$conf" -r "$repo" \
-                    genids | tail -n1)
-    summain "$dir" -r --output="$repo/summain.$gen"
+    local client=$(awk '/client-name/ { print $3 }' "$conf")
+    local genids=$(mktemp)
+
+    ./obnam --no-default-configs --config="$conf" backup
+
+    while ! ./obnam --no-default-configs --config="$conf" genids > "$genids"
+    do
+        :
+    done
+    local gen=$(tail -n1 "$genids")
+    if [ "x$gen" = "x" ]
+    then
+        die "gen is empty"
+    fi
+    summain "$dir" -r --output="$repo/$client.$gen.summain"
 }
 
 abspath()
@@ -81,28 +93,31 @@ verify()
     local dir=$(abspath "$2")
     local conf="$3"
     local tempdir="$(mktemp -d)"
+    local client=$(awk '/client-name/ { print $3 }' "$conf")
 
-    ./obnam --no-default-configs --config="$conf" -r "$repo" genids |
+    ./obnam --no-default-configs --config="$conf" genids \
+        > "$tempdir"/gens || exit 42
     while read gen
     do
-        ./obnam --no-default-configs --config="$conf" -r "$repo" \
-            restore --to="$tempdir/$gen" --generation="$gen"
+        rm -rf "$tempdir/$gen"
+        ./obnam --no-default-configs --config="$conf" \
+            restore --to="$tempdir/$gen" --generation="$gen" || \
+            exit 42
         summain "$tempdir/$gen/$dir" -r --output="$tempdir/summain.$gen"
-        if ! diff -u "$repo/summain.$gen" "$tempdir/summain.$gen"
+        if ! diff -u "$repo/$client.$gen.summain" "$tempdir/summain.$gen"
         then
             die "generation $gen failed to restore properly, see $tempdir"
         fi
         rm -rf "$tempdir/$gen" "$tempdir/summain.$gen"
-    done || exit 1
-    rmdir "$tempdir"
+    done < "$tempdir/gens"
+    rm -rf "$tempdir"
 }
 
-[ "$#" = 3 ] || [ "$#" = 4 ] || die "Bad usage, read source!"
+[ "$#" = 4 ] || die "Bad usage, read source!"
 
-case "$#" in
-    3) repo="$2"; root="$3"; conf="/dev/null" ;;
-    4) repo="$2"; root="$3"; conf="$4" ;;
-esac
+repo="$2"
+root="$3"
+conf="$4"
 
 case "$1" in
      backup)

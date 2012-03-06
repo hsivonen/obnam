@@ -64,7 +64,10 @@ class HookedFS(object):
         toplevel = self._get_toplevel(filename)
         return self.hooks.call('repository-read-data', data,
                                 repo=self.repo, toplevel=toplevel)
-        
+
+    def lock(self, filename):
+        self.fs.lock(filename)
+
     def write_file(self, filename, data):
         tracing.trace('writing hooked %s' % filename)
         toplevel = self._get_toplevel(filename)
@@ -129,7 +132,8 @@ class Repository(object):
     format_version = 5
 
     def __init__(self, fs, node_size, upload_queue_size, lru_size, hooks,
-                 idpath_depth, idpath_bits, idpath_skip, current_time):
+                 idpath_depth, idpath_bits, idpath_skip, current_time,
+                 lock_timeout):
 
         self.current_time = current_time
         self.setup_hooks(hooks or obnamlib.HookManager())
@@ -137,12 +141,13 @@ class Repository(object):
         self.node_size = node_size
         self.upload_queue_size = upload_queue_size
         self.lru_size = lru_size
+        self.lockmgr = obnamlib.LockManager(self.fs, lock_timeout)
         self.got_root_lock = False
         self.clientlist = obnamlib.ClientList(self.fs, node_size, 
                                               upload_queue_size, 
                                               lru_size, self)
+        self.got_shared_lock = False
         self.got_client_lock = False
-        self.client_lockfile = None
         self.current_client = None
         self.current_client_id = None
         self.new_generation = None
@@ -211,10 +216,15 @@ class Repository(object):
         if not self.got_root_lock:
             raise LockFail('have not got lock on root node')
 
+    def require_shared_lock(self):
+        '''Ensure we have the lock on the shared B-trees except clientlist.'''
+        if not self.got_shared_lock:
+            raise LockFail('have not got lock on shared B-trees')
+
     def require_client_lock(self):
         '''Ensure we have the lock on the currently open client.'''
         if not self.got_client_lock:
-                raise LockFail('have not got lock on client')
+            raise LockFail('have not got lock on client')
 
     def require_open_client(self):
         '''Ensure we have opened the client (r/w or r/o).'''
@@ -226,6 +236,21 @@ class Repository(object):
         if self.new_generation is None:
             raise obnamlib.Error('new generation has not started')
 
+    def require_no_root_lock(self):
+        '''Ensure we haven't locked root yet.'''
+        if self.got_root_lock:
+            raise obnamlib.Error('We have already locked root, oops')
+
+    def require_no_shared_lock(self):
+        '''Ensure we haven't locked shared B-trees yet.'''
+        if self.got_shared_lock:
+            raise obnamlib.Error('We have already locked shared B-trees, oops')
+
+    def require_no_client_lock(self):
+        '''Ensure we haven't locked the per-client B-tree yet.'''
+        if self.got_client_lock:
+            raise obnamlib.Error('We have already locked the client, oops')
+
     def lock_root(self):
         '''Lock root node.
         
@@ -234,13 +259,13 @@ class Repository(object):
         
         '''
 
-        tracing.trace('locking root')        
+        tracing.trace('locking root')
+        self.require_no_root_lock()
+        self.require_no_client_lock()
+        self.require_no_shared_lock()
+
+        self.lockmgr.lock(['.'])
         self.check_format_version()
-        try:
-            self.fs.fs.write_file('root.lock', '')
-        except OSError, e:
-            if e.errno == errno.EEXIST:
-                raise LockFail('Lock file root.lock already exists')
         self.got_root_lock = True
         self.added_clients = []
         self.removed_clients = []
@@ -252,7 +277,7 @@ class Repository(object):
         self.require_root_lock()
         self.added_clients = []
         self.removed_clients = []
-        self.fs.remove('root.lock')
+        self.lockmgr.unlock(['.'])
         self.got_root_lock = False
         
     def commit_root(self):
@@ -338,6 +363,43 @@ class Repository(object):
         if client_name not in self.list_clients():
             raise obnamlib.Error('client %s does not exist' % client_name)
         self.removed_clients.append(client_name)
+
+    @property
+    def shared_dirs(self):
+        return [self.chunklist.dirname, self.chunksums.dirname]
+        
+    def lock_shared(self):
+        '''Lock a client for exclusive write access.
+        
+        Raise obnamlib.LockFail if locking fails. Lock will be released
+        by commit_client() or unlock_client().
+
+        '''
+
+        tracing.trace('locking shared')
+        self.require_no_shared_lock()
+        self.check_format_version()
+        self.lockmgr.lock(self.shared_dirs)
+        self.got_shared_lock = True
+        tracing.trace('starting changes in chunksums and chunklist')
+        self.chunksums.start_changes()
+        self.chunklist.start_changes()
+
+    def commit_shared(self):
+        '''Commit changes to shared B-trees.'''
+        
+        tracing.trace('committing shared')
+        self.require_shared_lock()
+        self.chunklist.commit()
+        self.chunksums.commit()
+        self.unlock_shared()
+
+    def unlock_shared(self):
+        '''Unlock currently locked shared B-trees.'''
+        tracing.trace('unlocking shared')
+        self.require_shared_lock()
+        self.lockmgr.unlock(self.shared_dirs)
+        self.got_shared_lock = False
         
     def lock_client(self, client_name):
         '''Lock a client for exclusive write access.
@@ -348,6 +410,9 @@ class Repository(object):
         '''
 
         tracing.trace('client_name=%s', client_name)
+        self.require_no_client_lock()
+        self.require_no_shared_lock()
+        
         self.check_format_version()
         client_id = self.clientlist.get_client_id(client_name)
         if client_id is None:
@@ -357,14 +422,9 @@ class Repository(object):
         if not self.fs.exists(client_dir):
             self.fs.mkdir(client_dir)
             self.hooks.call('repository-toplevel-init', self, client_dir)
-        lockname = os.path.join(client_dir, 'lock')
-        try:
-            self.fs.write_file(lockname, '')
-        except OSError, e:
-            if e.errno == errno.EEXIST:
-                raise LockFail('client %s is already locked' % client_name)
+
+        self.lockmgr.lock([client_dir])
         self.got_client_lock = True
-        self.client_lockfile = lockname
         self.current_client = client_name
         self.current_client_id = client_id
         self.added_generations = []
@@ -382,11 +442,10 @@ class Repository(object):
         self.new_generation = None
         for genid in self.added_generations:
             self._really_remove_generation(genid)
+        self.lockmgr.unlock([self.client.dirname])
         self.client = None # FIXME: This should remove uncommitted data.
         self.added_generations = []
         self.removed_generations = []
-        self.fs.remove(self.client_lockfile)
-        self.client_lockfile = None
         self.got_client_lock = False
         self.current_client = None
         self.current_client_id = None
@@ -395,14 +454,13 @@ class Repository(object):
         '''Commit changes to and unlock currently locked client.'''
         tracing.trace('committing client (checkpoint=%s)', checkpoint)
         self.require_client_lock()
+        self.require_shared_lock()
         if self.new_generation:
             self.client.set_current_generation_is_checkpoint(checkpoint)
         self.added_generations = []
         for genid in self.removed_generations:
             self._really_remove_generation(genid)
         self.client.commit()
-        self.chunklist.commit()
-        self.chunksums.commit()
         self.unlock_client()
         
     def open_client(self, client_name):
@@ -477,6 +535,7 @@ class Repository(object):
                     self.remove_chunk(chunk_id)
 
         self.require_client_lock()
+        self.require_shared_lock()
         logging.debug('_really_remove_generation: %d' % gen_id)
         chunk_ids = set(self.client.list_chunks_in_generation(gen_id))
         chunk_ids = filter_away_chunks_used_by_other_gens(chunk_ids, gen_id)
@@ -552,6 +611,8 @@ class Repository(object):
         
         tracing.trace('putting chunk (checksum=%s)', repr(checksum))
         self.require_started_generation()
+        self.require_shared_lock()
+
         if self.prev_chunkid is None:
             self.prev_chunkid = random_chunkid()
         while True:
@@ -618,6 +679,7 @@ class Repository(object):
 
         tracing.trace('chunk_id=%s', chunk_id)
         self.require_open_client()
+        self.require_shared_lock()
         self.chunklist.remove(chunk_id)
         filename = self._chunk_filename(chunk_id)
         try:

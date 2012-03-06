@@ -41,6 +41,7 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
 
         self.repo = self.app.open_repository()
         self.repo.lock_client(self.app.settings['client-name'])
+        self.repo.lock_shared()
 
         self.app.dump_memory_profile('at beginning')
         if args:
@@ -72,6 +73,7 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
                 self.app.dump_memory_profile('after removing %s' % genid)
 
         self.repo.commit_client()
+        self.repo.commit_shared()
         self.app.dump_memory_profile('after committing')
         self.repo.fs.close()
         self.app.ts.finish()

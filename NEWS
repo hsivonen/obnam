@@ -4,6 +4,13 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
+Version 0.26, released UNRELEASED; a BETA release
+-------------------------------------------------
+
+* Clients now lock the parts of the backup repository they're using,
+  while making any changes, so that multiple clients can work at the
+  same time without corrupting the repository.
+
 Version 0.25, released 2012-02-18; a BETA release
 -------------------------------------------------
 

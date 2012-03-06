@@ -37,7 +37,7 @@ class RepositoryRootNodeTests(unittest.TestCase):
                                         obnamlib.IDPATH_DEPTH,
                                         obnamlib.IDPATH_BITS,
                                         obnamlib.IDPATH_SKIP,
-                                        time.time)
+                                        time.time, 0)
         
         self.otherfs = obnamlib.LocalFS(self.tempdir)
         self.other = obnamlib.Repository(self.fs, obnamlib.DEFAULT_NODE_SIZE,
@@ -46,7 +46,7 @@ class RepositoryRootNodeTests(unittest.TestCase):
                                         obnamlib.IDPATH_DEPTH,
                                         obnamlib.IDPATH_BITS,
                                         obnamlib.IDPATH_SKIP,
-                                        time.time)
+                                        time.time, 0)
 
     def tearDown(self):
         shutil.rmtree(self.tempdir)
@@ -85,7 +85,7 @@ class RepositoryRootNodeTests(unittest.TestCase):
         
     def test_locking_root_node_twice_fails(self):
         self.repo.lock_root()
-        self.assertRaises(obnamlib.LockFail, self.repo.lock_root)
+        self.assertRaises(obnamlib.Error, self.repo.lock_root)
         
     def test_commit_releases_lock(self):
         self.repo.lock_root()
@@ -127,6 +127,23 @@ class RepositoryRootNodeTests(unittest.TestCase):
         self.repo._write_format_version(0)
         self.assertRaises(obnamlib.BadFormat, self.repo.list_clients)
 
+    def test_locks_shared(self):
+        self.repo.lock_shared()
+        self.assertTrue(self.repo.got_shared_lock)
+        
+    def test_locking_shared_twice_fails(self):
+        self.repo.lock_shared()
+        self.assertRaises(obnamlib.Error, self.repo.lock_shared)
+
+    def test_unlocks_shared(self):
+        self.repo.lock_shared()
+        self.repo.unlock_shared()
+        self.assertFalse(self.repo.got_shared_lock)
+
+    def test_unlock_shared_when_locked_by_other_fails(self):
+        self.other.lock_shared()
+        self.assertRaises(obnamlib.LockFail, self.repo.unlock_shared)
+
     def test_lock_client_fails_if_format_is_incompatible(self):
         self.repo._write_format_version(0)
         self.assertRaises(obnamlib.BadFormat, self.repo.lock_client, 'foo')
@@ -162,7 +179,7 @@ class RepositoryRootNodeTests(unittest.TestCase):
                                  obnamlib.IDPATH_DEPTH,
                                  obnamlib.IDPATH_BITS,
                                  obnamlib.IDPATH_SKIP,
-                                 time.time)
+                                 time.time, 0)
         self.assertEqual(s2.list_clients(), ['foo'])
         
     def test_adding_existing_client_fails(self):
@@ -209,13 +226,18 @@ class RepositoryRootNodeTests(unittest.TestCase):
         self.repo.lock_root()
         self.repo.add_client('foo')
         self.repo.commit_root()
+
         self.repo.lock_client('foo')
+        self.repo.lock_shared()
         self.repo.start_generation()
         self.repo.create('/', obnamlib.Metadata())
         self.repo.commit_client()
+        self.repo.commit_shared()
+
         self.repo.lock_root()
         self.repo.remove_client('foo')
         self.repo.commit_root()
+
         self.assertEqual(self.repo.list_clients(), [])
         self.assertFalse(self.fs.exists('foo'))
 
@@ -232,7 +254,7 @@ class RepositoryClientTests(unittest.TestCase):
                                         obnamlib.IDPATH_DEPTH,
                                         obnamlib.IDPATH_BITS,
                                         obnamlib.IDPATH_SKIP,
-                                        time.time)
+                                        time.time, 0)
         self.repo.lock_root()
         self.repo.add_client('client_name')
         self.repo.commit_root()
@@ -245,7 +267,7 @@ class RepositoryClientTests(unittest.TestCase):
                                          obnamlib.IDPATH_DEPTH,
                                          obnamlib.IDPATH_BITS,
                                          obnamlib.IDPATH_SKIP,
-                                         time.time)
+                                         time.time, 0)
         
         self.dir_meta = obnamlib.Metadata()
         self.dir_meta.st_mode = stat.S_IFDIR | 0777
@@ -262,7 +284,7 @@ class RepositoryClientTests(unittest.TestCase):
 
     def test_locking_client_twice_fails(self):
         self.repo.lock_client('client_name')
-        self.assertRaises(obnamlib.LockFail, self.repo.lock_client, 
+        self.assertRaises(obnamlib.Error, self.repo.lock_client, 
                           'client_name')
 
     def test_locking_nonexistent_client_fails(self):
@@ -275,22 +297,29 @@ class RepositoryClientTests(unittest.TestCase):
 
     def test_commit_client_releases_lock(self):
         self.repo.lock_client('client_name')
+        self.repo.lock_shared()
         self.repo.commit_client()
+        self.repo.commit_shared()
         self.assertFalse(self.repo.got_client_lock)
 
     def test_commit_does_not_mark_as_checkpoint_by_default(self):
         self.repo.lock_client('client_name')
+        self.repo.lock_shared()
         self.repo.start_generation()
         genid = self.repo.new_generation
         self.repo.commit_client()
+        self.repo.commit_shared()
         self.repo.open_client('client_name')
         self.assertFalse(self.repo.get_is_checkpoint(genid))
 
     def test_commit_marks_as_checkpoint_when_requested(self):
         self.repo.lock_client('client_name')
+        self.repo.lock_shared()
         self.repo.start_generation()
         genid = self.repo.new_generation
         self.repo.commit_client(checkpoint=True)
+        self.repo.commit_shared()
+
         self.repo.open_client('client_name')
         self.assert_(self.repo.get_is_checkpoint(genid))
 
@@ -347,8 +376,10 @@ class RepositoryClientTests(unittest.TestCase):
 
     def test_second_generation_has_different_id_from_first(self):
         self.repo.lock_client('client_name')
+        self.repo.lock_shared()
         gen = self.repo.start_generation()
         self.repo.commit_client()
+        self.repo.commit_shared()
         self.repo.lock_client('client_name')
         self.assertNotEqual(gen, self.repo.start_generation())
 
@@ -361,8 +392,11 @@ class RepositoryClientTests(unittest.TestCase):
 
     def test_commited_generation_has_start_and_end_times(self):
         self.repo.lock_client('client_name')
+        self.repo.lock_shared()
         gen = self.repo.start_generation()
         self.repo.commit_client()
+        self.repo.commit_shared()
+
         self.repo.open_client('client_name')
         start, end = self.repo.get_generation_times(gen)
         self.assertNotEqual(start, None)
@@ -371,43 +405,55 @@ class RepositoryClientTests(unittest.TestCase):
 
     def test_adding_generation_without_committing_does_not_add_it(self):
         self.repo.lock_client('client_name')
+        self.repo.lock_shared()
         self.repo.start_generation()
         self.repo.unlock_client()
+        self.repo.unlock_shared()
         self.repo.open_client('client_name')
         self.assertEqual(self.repo.list_generations(), [])
 
     def test_removing_generation_works(self):
         self.repo.lock_client('client_name')
+        self.repo.lock_shared()
         gen = self.repo.start_generation()
         self.repo.commit_client()
+        self.repo.commit_shared()
 
         self.repo.open_client('client_name')
         self.assertEqual(len(self.repo.list_generations()), 1)
 
         self.repo.lock_client('client_name')
+        self.repo.lock_shared()
         self.repo.remove_generation(gen)
         self.repo.commit_client()
+        self.repo.commit_shared()
 
         self.repo.open_client('client_name')
         self.assertEqual(self.repo.list_generations(), [])
 
     def test_removing_only_second_generation_works(self):
         self.repo.lock_client('client_name')
+        self.repo.lock_shared()
         gen1 = self.repo.start_generation()
         self.repo.commit_client()
+        self.repo.commit_shared()
 
         self.repo.lock_client('client_name')
+        self.repo.lock_shared()
         gen2 = self.repo.start_generation()
         chunk_id = self.repo.put_chunk('data', self.repo.checksum('data'))
         self.repo.set_file_chunks('/foo', [chunk_id])
         self.repo.commit_client()
+        self.repo.commit_shared()
 
         self.repo.open_client('client_name')
         self.assertEqual(len(self.repo.list_generations()), 2)
 
         self.repo.lock_client('client_name')
+        self.repo.lock_shared()
         self.repo.remove_generation(gen2)
         self.repo.commit_client()
+        self.repo.commit_shared()
 
         self.repo.open_client('client_name')
         self.assertEqual(self.repo.list_generations(), [gen1])
@@ -421,11 +467,17 @@ class RepositoryClientTests(unittest.TestCase):
 
     def test_removing_without_committing_does_not_remove(self):
         self.repo.lock_client('client_name')
+        self.repo.lock_shared()
         gen = self.repo.start_generation()
         self.repo.commit_client()
+        self.repo.commit_shared()
+
         self.repo.lock_client('client_name')
+        self.repo.lock_shared()
         self.repo.remove_generation(gen)
         self.repo.unlock_client()
+        self.repo.unlock_shared()
+
         self.repo.open_client('client_name')
         self.assertEqual(self.repo.list_generations(), [gen])
 
@@ -524,7 +576,7 @@ class RepositoryChunkTests(unittest.TestCase):
                                         obnamlib.IDPATH_DEPTH,
                                         obnamlib.IDPATH_BITS,
                                         obnamlib.IDPATH_SKIP,
-                                        time.time)
+                                        time.time, 0)
         self.repo.lock_root()
         self.repo.add_client('client_name')
         self.repo.commit_root()
@@ -538,9 +590,11 @@ class RepositoryChunkTests(unittest.TestCase):
         self.assertNotEqual(self.repo.checksum('data'), None)
 
     def test_put_chunk_returns_id(self):
+        self.repo.lock_shared()
         self.assertNotEqual(self.repo.put_chunk('data', 'checksum'), None)
         
     def test_get_chunk_retrieves_what_put_chunk_puts(self):
+        self.repo.lock_shared()
         chunkid = self.repo.put_chunk('data', 'checksum')
         self.assertEqual(self.repo.get_chunk(chunkid), 'data')
         
@@ -548,18 +602,22 @@ class RepositoryChunkTests(unittest.TestCase):
         self.assertFalse(self.repo.chunk_exists(1234))
         
     def test_chunk_exists_after_it_is_put(self):
+        self.repo.lock_shared()
         chunkid = self.repo.put_chunk('chunk', 'checksum')
         self.assert_(self.repo.chunk_exists(chunkid))
 
     def test_removes_chunk(self):
+        self.repo.lock_shared()
         chunkid = self.repo.put_chunk('chunk', 'checksum')
         self.repo.remove_chunk(chunkid)
         self.assertFalse(self.repo.chunk_exists(chunkid))
 
     def test_silently_ignores_failure_when_removing_nonexistent_chunk(self):
+        self.repo.lock_shared()
         self.assertEqual(self.repo.remove_chunk(0), None)
         
     def test_find_chunks_finds_what_put_chunk_puts(self):
+        self.repo.lock_shared()
         checksum = self.repo.checksum('data')
         chunkid = self.repo.put_chunk('data', checksum)
         self.assertEqual(self.repo.find_chunks(checksum), [chunkid])
@@ -568,6 +626,7 @@ class RepositoryChunkTests(unittest.TestCase):
         self.assertEqual(self.repo.find_chunks('checksum'), [])
         
     def test_handles_checksum_collision(self):
+        self.repo.lock_shared()
         checksum = self.repo.checksum('data')
         chunkid1 = self.repo.put_chunk('data', checksum)
         chunkid2 = self.repo.put_chunk('data', checksum)
@@ -578,6 +637,7 @@ class RepositoryChunkTests(unittest.TestCase):
         self.assertEqual(self.repo.list_chunks(), [])
         
     def test_returns_chunks_after_they_exist(self):
+        self.repo.lock_shared()
         checksum = self.repo.checksum('data')
         chunkids = []
         for i in range(2):
@@ -597,7 +657,7 @@ class RepositoryGetSetChunksTests(unittest.TestCase):
                                         obnamlib.IDPATH_DEPTH,
                                         obnamlib.IDPATH_BITS,
                                         obnamlib.IDPATH_SKIP,
-                                        time.time)
+                                        time.time, 0)
         self.repo.lock_root()
         self.repo.add_client('client_name')
         self.repo.commit_root()
@@ -642,11 +702,12 @@ class RepositoryGenspecTests(unittest.TestCase):
                                         obnamlib.IDPATH_DEPTH,
                                         obnamlib.IDPATH_BITS,
                                         obnamlib.IDPATH_SKIP,
-                                        time.time)
+                                        time.time, 0)
         self.repo.lock_root()
         self.repo.add_client('client_name')
         self.repo.commit_root()
         self.repo.lock_client('client_name')
+        self.repo.lock_shared()
 
     def tearDown(self):
         shutil.rmtree(self.tempdir)
@@ -654,7 +715,9 @@ class RepositoryGenspecTests(unittest.TestCase):
     def backup(self):
         gen = self.repo.start_generation()
         self.repo.commit_client()
+        self.repo.commit_shared()
         self.repo.lock_client('client_name')
+        self.repo.lock_shared()
         return gen
 
     def test_latest_raises_error_if_there_are_no_generations(self):
@@ -695,7 +758,7 @@ class RepositoryWalkTests(unittest.TestCase):
                                         obnamlib.IDPATH_DEPTH,
                                         obnamlib.IDPATH_BITS,
                                         obnamlib.IDPATH_SKIP,
-                                        time.time)
+                                        time.time, 0)
         self.repo.lock_root()
         self.repo.add_client('client_name')
         self.repo.commit_root()
@@ -707,6 +770,7 @@ class RepositoryWalkTests(unittest.TestCase):
         self.file_meta.st_mode = stat.S_IFREG | 0644
         
         self.repo.lock_client('client_name')
+        self.repo.lock_shared()
         self.gen = self.repo.start_generation()
         
         self.repo.create('/', self.dir_meta)

@@ -67,7 +67,13 @@ class LocalFS(obnamlib.VirtualFileSystem):
         if not self.isdir('.'):
             if create:
                 tracing.trace('creating %s', baseurl)
-                os.mkdir(baseurl)
+                try:
+                    os.mkdir(baseurl)
+                except OSError, e: # pragma: no cover
+                    # The directory might have been created concurrently
+                    # by someone else!
+                    if e.errno != errno.EEXIST:
+                        raise
             else:
                 raise OSError(errno.ENOENT, self.cwd)
 
@@ -87,7 +93,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
             self.write_file(lockname, "")
         except OSError, e:
             if e.errno == errno.EEXIST:
-                raise obnamlib.Error("Lock %s already exists" % lockname)
+                raise obnamlib.LockFail("Lock %s already exists" % lockname)
             else:
                 raise
 
@@ -192,6 +198,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
         tracing.trace('pathname=%s', pathname)
         tracing.trace('mode=%s', mode)
         f = LocalFSFile(self.join(pathname), mode)
+        tracing.trace('opened %s', pathname)
         try:
             flags = fcntl.fcntl(f.fileno(), fcntl.F_GETFL)
             flags |= os.O_NOATIME
@@ -199,6 +206,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
         except IOError, e: # pragma: no cover
             tracing.trace('fcntl F_SETFL failed: %s', repr(e))
             return f # ignore any problems setting flags
+        tracing.trace('returning ok')
         return f
 
     def exists(self, pathname):
@@ -245,14 +253,8 @@ class LocalFS(obnamlib.VirtualFileSystem):
         try:
             os.link(tempname, path)
         except OSError, e: # pragma: no cover
-            # sshfs does not implement link(2), so we fudge it here.
-            # FIXME: This has race conditions and should be made atomic.
-            if e.errno != errno.ENOSYS:
-                os.remove(tempname)
-                raise
-            if os.path.exists(path):
-                raise OSError(errno.EEXIST, os.strerror(errno.EEXIST), path)
-            os.rename(tempname, path)
+            os.remove(tempname)
+            raise
         os.remove(tempname)
 
     def overwrite_file(self, pathname, contents, make_backup=True):
@@ -282,6 +284,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
         path = self.join(pathname)
         dirname = os.path.dirname(path)
         if not os.path.exists(dirname):
+            tracing.trace('os.makedirs(%s)' % dirname)
             os.makedirs(dirname)
 
         fd, tempname = tempfile.mkstemp(dir=dirname)

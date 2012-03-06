@@ -65,9 +65,13 @@ class RepositoryTree(object):
 
     def start_changes(self):
         tracing.trace('start changes for %s', self.dirname)
-        if not self.fs.exists(self.dirname):
-            tracing.trace('create %s', self.dirname)
-            self.fs.mkdir(self.dirname)
+        need_init = (not self.fs.exists(self.dirname) or
+                     self.fs.listdir(self.dirname) == [] or
+                     self.fs.listdir(self.dirname) == ['lock'])
+        if need_init:
+            if not self.fs.exists(self.dirname):
+                tracing.trace('create %s', self.dirname)
+                self.fs.mkdir(self.dirname)
             self.repo.hooks.call('repository-toplevel-init', self.repo, 
                                  self.dirname)
         self.init_forest()

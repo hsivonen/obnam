@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Obnam test: test locking with multiple clients accessing the same repo.
+# Obnam test: test lock files.
 #
 # Copyright 2012  Lars Wirzenius
 # 
@@ -23,36 +23,37 @@ die()
     exit 1
 }
 
-[ "$#" = 4 ] || die "Bad usage, read source!"
+[ "$#" = 2 ] || die "Bad usage, read source!"
 
 NCLIENTS="$1"
-NGENERATIONS="$2"
-repourl="$3"
-repopath="$4"
+COUNTER="$2"
+directory="$(mktemp -d)"
 pids="$(mktemp)"
 
-echo "Starting backups: $NCLIENTS clients $NGENERATIONS generations"
 for i in $(seq "$NCLIENTS")
 do
-    ./test-many-generations "$NGENERATIONS" "$repourl" "$repopath" \
-        "client-$i" > "client-$i.output" 2>&1 &
+    ./lock-and-increment "$directory" "$COUNTER" &
     echo "$!" >> "$pids"
 done
 
-echo "Waiting for clients to finish... this may take a long time"
 errors=0
 for pid in $(cat "$pids")
 do
     if ! wait "$pid"
     then
-        if [ "$errors" = 0 ]
-        then
-            echo "at least one client failed" 1>&2
-        fi
+        echo "at least one client failed" 1>&2
         errors=1
     fi
 done
 
-rm -f "$pids"
+n=$(cat "$directory/counter")
+wanted=$(expr "$COUNTER" '*' "$NCLIENTS")
+if [ "$n" != "$wanted" ]
+then
+    echo "counted to $n should be $wanted" 1>&2
+    errors=1
+fi
+
+rm -rf "$directory" "$pids"
 exit $errors
 
