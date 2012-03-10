@@ -439,6 +439,25 @@ made a successful backup to the new repository.
 .PP
 If you think this is a silly state of affairs, you're entirely correct.
 Please voice your concern about this in the Obnam bug tracker.
+.SS "Multiple clients and locking"
+.B obnam
+supports sharing a repository between multiple clients.
+The clients can share the file contents (chunks),
+so that if client A backs up a large file,
+and client B has the same file,
+then B does not need to upload the large file to the repository a second time.
+For this to work without confusion,
+the clients use a simple locking protocol that allows only one client
+at a time to modify the shared data structures.
+Locks do not prevent read-only access at the same time:
+this allows you to restore while someone else is backing up.
+.PP
+Sometimes a read-only operation happens to access a data structure at the
+same time as it is being modified.
+This can result in a crash.
+It will not result in corrupt data,
+or incorrect restores.
+However, you may need to restart the read-only operation after a crash.
 .\"---------------------------------------------------------------------
 .SH OPTIONS
 .\" ------------------------------------------------------------------
