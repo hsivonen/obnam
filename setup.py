@@ -23,6 +23,8 @@ import glob
 import os
 import shutil
 import subprocess
+import tempfile
+
 
 class GenerateManpage(build):
 
@@ -80,6 +82,13 @@ class Check(Command):
 
         print "run black box tests"
         subprocess.check_call(['cmdtest', 'tests'])
+        
+        print "run locking tests"
+        num_clients = '4'
+        num_generations = '128'
+        test_repo = tempfile.mkdtemp()
+        subprocess.check_call(['./test-locking', num_clients, num_generations,
+                               test_repo, test_repo])
 
         if self.network:
             print "run sftp tests"
@@ -90,6 +99,13 @@ class Check(Command):
             env['OBNAM_TEST_SFTP_ROOT'] = 'yes'
             env['OBNAM_TEST_SFTP_REPOSITORY'] = 'yes'
             subprocess.check_call(['cmdtest', 'tests'], env=env)
+
+            print "re-run locking tests using localhost networking"
+            repo_url = 'sftp://localhost/%s' % test_repo
+            subprocess.check_call(['./test-locking', num_clients, 
+                                   num_generations, repo_url, test_repo])
+
+        shutil.rmtree(test_repo)
             
         print "setup.py check done"
 
