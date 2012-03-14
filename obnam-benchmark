@@ -111,10 +111,6 @@ class ObnamBenchmark(cliapp.Application):
                              'use DIR as the seivot branch '
                                 '(default: installed seivot)',
                              metavar='DIR')
-        self.settings.string(['wiki'],
-                             'use DIR as the wiki branch (default: %default)',
-                             metavar='DIR',
-                             default=os.path.expanduser('~/braawi.org'))
         self.settings.boolean(['with-encryption'],
                               'run benchmark using encryption')
         
