@@ -91,6 +91,14 @@ class App(cliapp.Application):
                               metavar='TIMEOUT',
                               default=60)
 
+        self.settings.integer(['crash-limit'],
+                              'artificially crash the program after COUNTER '
+                                'files written to the repository; this is '
+                                'useful for crash testing the application, '
+                                'and should not be enabled for real use; '
+                                'set to 0 to disable (disabled by default)',
+                              metavar='COUNTER')
+
         # The following needs to be done here, because it needs
         # to be done before option processing. This is a bit ugly,
         # but the best we can do with the current cliapp structure.
@@ -165,6 +173,8 @@ class App(cliapp.Application):
         logging.debug('opening repository (create=%s)' % create)
         repopath = self.settings['repository']
         repofs = self.fsf.new(repopath, create=create)
+        if self.settings['crash-after'] > 0:
+            repofs.crash_limit = self.settings['crash-limit']
         repofs.connect()
         return obnamlib.Repository(repofs, 
                                     self.settings['node-size'],
