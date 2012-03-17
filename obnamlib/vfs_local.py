@@ -57,6 +57,19 @@ class LocalFS(obnamlib.VirtualFileSystem):
         obnamlib.VirtualFileSystem.__init__(self, baseurl)
         self.reinit(baseurl, create=create)
 
+        # For testing purposes, allow setting a limit on write operations
+        # after which an exception gets raised. If set to None, no crash.
+        # The write_file and overwrite_file methods obey this.
+        self.crash_limit = None
+        self.crash_counter = 0
+
+    def maybe_crash(self): # pragma: no cover
+        if self.crash_limit is not None:
+            self.crash_counter += 1
+            if self.crash_counter >= self.crash_limit:
+                raise Exception('Crashing as requested after %d writes' %
+                                    self.crash_counter)
+
     def reinit(self, baseurl, create=False):
         # We fake chdir so that it doesn't mess with the caller's 
         # perception of current working directory. This also benefits
@@ -256,6 +269,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
             os.remove(tempname)
             raise
         os.remove(tempname)
+        self.maybe_crash()
 
     def overwrite_file(self, pathname, contents, make_backup=True):
         tracing.trace('overwrite_file %s', pathname)
@@ -279,6 +293,8 @@ class LocalFS(obnamlib.VirtualFileSystem):
                 os.remove(bak)
             except OSError:
                 pass
+
+        self.maybe_crash()
                 
     def _write_to_tempfile(self, pathname, contents):
         path = self.join(pathname)
