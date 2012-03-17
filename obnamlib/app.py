@@ -173,7 +173,7 @@ class App(cliapp.Application):
         logging.debug('opening repository (create=%s)' % create)
         repopath = self.settings['repository']
         repofs = self.fsf.new(repopath, create=create)
-        if self.settings['crash-after'] > 0:
+        if self.settings['crash-limit'] > 0:
             repofs.crash_limit = self.settings['crash-limit']
         repofs.connect()
         return obnamlib.Repository(repofs, 
