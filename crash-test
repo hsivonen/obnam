@@ -1,0 +1,73 @@
+#!/bin/sh
+# Copyright 2012  Lars Wirzenius
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+set -eu
+
+if [ "$#" != 1 ]
+then
+    echo "usage: see source" 1>&2
+    exit 1
+fi
+
+N="$1"
+
+#tempdir="$(mktemp -d)"
+tempdir=t.tmp
+echo "Temporary directory: $tempdir"
+
+cat <<EOF > "$tempdir/conf"
+[config]
+repository = $tempdir/repo
+root = $tempdir/data
+log = $tempdir/obnam.log
+trace = larch
+crash-limit = $N
+checkpoint = 1m
+lock-timeout = 1
+EOF
+
+# Do a minimal backup to make sure the repository works at least once.
+mkdir "$tempdir/data"
+./obnam backup --no-default-config --config "$tempdir/conf"
+
+genbackupdata --create=100m "$tempdir/data"
+
+while true
+do
+    rm -f "$tempdir/obnam.log"
+
+    echo "Trying backup with at most $N writes to repository"
+    find "$tempdir/repo" -name lock -delete
+    if ./obnam backup --no-default-config --config "$tempdir/conf" 2>/dev/null
+    then
+        echo "Backup finished ok, done"
+        break
+    fi
+
+    if ! grep -q '^Exception: Crashing as requested' "$tempdir/obnam.log"
+    then
+        echo "Backup terminated because of unrequested crash" 1>&2
+        exit 1
+    fi
+
+#    ./obnam fsck --no-default-config --config "$tempdir/conf" || true
+done
+
+rm -rf "$tempdir"
+
+echo "OK"
+
