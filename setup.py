@@ -90,6 +90,9 @@ class Check(Command):
         subprocess.check_call(['./test-locking', num_clients, num_generations,
                                test_repo, test_repo])
 
+        print "run crash test"
+        subprocess.check_call(['./crash-test', '100'])
+
         if self.network:
             print "run sftp tests"
             subprocess.check_call(['./test-sftpfs'])
