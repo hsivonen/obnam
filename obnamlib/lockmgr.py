@@ -50,7 +50,7 @@ class LockManager(object):
                 self._fs.lock(self._lockname(dirname))
             except obnamlib.LockFail:
                 if self._time() - now >= self.timeout:
-                    raise obnamlib.LockFail()
+                    raise obnamlib.LockFail('Lock timeout')
             else:
                 return
             self._sleep()
