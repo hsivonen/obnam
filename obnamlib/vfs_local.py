@@ -57,6 +57,18 @@ class LocalFS(obnamlib.VirtualFileSystem):
         obnamlib.VirtualFileSystem.__init__(self, baseurl)
         self.reinit(baseurl, create=create)
 
+        # For testing purposes, allow setting a limit on write operations
+        # after which an exception gets raised. If set to None, no crash.
+        self.crash_limit = None
+        self.crash_counter = 0
+
+    def maybe_crash(self): # pragma: no cover
+        if self.crash_limit is not None:
+            self.crash_counter += 1
+            if self.crash_counter >= self.crash_limit:
+                raise Exception('Crashing as requested after %d writes' %
+                                    self.crash_counter)
+
     def reinit(self, baseurl, create=False):
         # We fake chdir so that it doesn't mess with the caller's 
         # perception of current working directory. This also benefits
@@ -108,10 +120,12 @@ class LocalFS(obnamlib.VirtualFileSystem):
     def remove(self, pathname):
         tracing.trace('remove %s', pathname)
         os.remove(self.join(pathname))
+        self.maybe_crash()
 
     def rename(self, old, new):
         tracing.trace('rename %s %s', old, new)
         os.rename(self.join(old), self.join(new))
+        self.maybe_crash()
 
     def lstat(self, pathname):
         (ret, dev, ino, mode, nlink, uid, gid, rdev, size, blksize, blocks,
@@ -185,6 +199,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
         tracing.trace('existing=%s', existing)
         tracing.trace('new=%s', new)
         os.link(self.join(existing), self.join(new))
+        self.maybe_crash()
 
     def readlink(self, pathname):
         return os.readlink(self.join(pathname))
@@ -193,6 +208,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
         tracing.trace('existing=%s', existing)
         tracing.trace('new=%s', new)
         os.symlink(existing, self.join(new))
+        self.maybe_crash()
 
     def open(self, pathname, mode):
         tracing.trace('pathname=%s', pathname)
@@ -223,14 +239,17 @@ class LocalFS(obnamlib.VirtualFileSystem):
     def mkdir(self, pathname):
         tracing.trace('mkdir %s', pathname)
         os.mkdir(self.join(pathname))
+        self.maybe_crash()
 
     def makedirs(self, pathname):
         tracing.trace('makedirs %s', pathname)
         os.makedirs(self.join(pathname))
+        self.maybe_crash()
 
     def rmdir(self, pathname):
         tracing.trace('rmdir %s', pathname)
         os.rmdir(self.join(pathname))
+        self.maybe_crash()
 
     def cat(self, pathname):
         pathname = self.join(pathname)
@@ -256,6 +275,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
             os.remove(tempname)
             raise
         os.remove(tempname)
+        self.maybe_crash()
 
     def overwrite_file(self, pathname, contents, make_backup=True):
         tracing.trace('overwrite_file %s', pathname)
@@ -279,6 +299,8 @@ class LocalFS(obnamlib.VirtualFileSystem):
                 os.remove(bak)
             except OSError:
                 pass
+
+        self.maybe_crash()
                 
     def _write_to_tempfile(self, pathname, contents):
         path = self.join(pathname)
