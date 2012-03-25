@@ -17,7 +17,7 @@
 set -e
 
 $SRCDIR/tests/backup
-summain -r "$(cat $DATADIR/repourl)" > "$DATADIR/repo.summain"
+summain -r "$(cat $DATADIR/repourl)"/metadata > "$DATADIR/repo.summain"
 $SRCDIR/tests/backup --pretend
-summain -r "$(cat $DATADIR/repourl)" > "$DATADIR/repo2.summain"
+summain -r "$(cat $DATADIR/repourl)"/metadata > "$DATADIR/repo2.summain"
 diff -u "$DATADIR/repo.summain" "$DATADIR/repo2.summain"
