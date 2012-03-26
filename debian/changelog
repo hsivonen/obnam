@@ -4,6 +4,7 @@ obnam (0.26-1) unstable; urgency=low
   * debian/control: Bump python-larch dependencies to 0.28.
   * debian/rules: Only run the fast tests. The slow ones can take hours,
     and it's not worth doing that for every build.
+  * debian/control: Bump Standards-Version to 3.9.3. No other changes needed.
 
  -- Lars Wirzenius <liw@liw.fi>  Mon, 26 Mar 2012 18:35:18 +0100
 
