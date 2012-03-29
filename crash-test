@@ -25,8 +25,7 @@ fi
 
 N="$1"
 
-#tempdir="$(mktemp -d)"
-tempdir=t.tmp
+tempdir="$(mktemp -d)"
 echo "Temporary directory: $tempdir"
 
 cat <<EOF > "$tempdir/conf"
