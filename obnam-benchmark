@@ -135,6 +135,7 @@ class ObnamBenchmark(cliapp.Application):
                               'add artifical delay to sftp transfers '
                                 '(in milliseconds)')
         self.settings.string(['description'], 'describe benchmark')
+        self.settings.boolean(['drop-caches'], 'drop kernel buffer caches')
         
         self.settings.boolean(['verify'], 'verify restores')
 
@@ -189,7 +190,6 @@ class ObnamBenchmark(cliapp.Application):
                             output)
                 else:
                     argv = [seivot,
-                            '--drop-caches',
                             '--obnam-branch', obnam_branch,
                             '--larch-branch', larch_branch,
                             '--incremental-data', inc,
@@ -199,6 +199,8 @@ class ObnamBenchmark(cliapp.Application):
                             '--profile-name', profile,
                             '--sftp-delay', str(self.settings['sftp-delay']),
                             '--output', output]
+                    if self.settings['drop-caches']:
+                        argv.append('--drop-caches')
                     if self.settings['use-existing']:
                         argv.extend(['--use-existing', 
                                      self.settings['use-existing']])
