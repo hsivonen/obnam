@@ -15,7 +15,7 @@ but it should be ready for feature evaluation use.
 Home page
 ---------
 
-The Obnam home page is at <http://braawi.org/obnam/>, see there
+The Obnam home page is at <http://liw.fi/obnam/>, see there
 for more information.
 
 
@@ -121,7 +121,7 @@ Mark statements that should not be included in coverage test with
 without-tests lists modules that have no test modules.
 
 If you want to make a new release of Obnam, I recommend following
-my release checklist: <http://braawi.org/obnam/release/>.
+my release checklist: <http://liw.fi/obnam/release/>.
 
 Feedback
 --------
