@@ -136,6 +136,7 @@ class ObnamBenchmark(cliapp.Application):
                                 '(in milliseconds)')
         self.settings.string(['description'], 'describe benchmark')
         self.settings.boolean(['drop-caches'], 'drop kernel buffer caches')
+        self.settings.string(['seivot-log'], 'seivot log setting')
         
         self.settings.boolean(['verify'], 'verify restores')
 
@@ -199,6 +200,8 @@ class ObnamBenchmark(cliapp.Application):
                             '--profile-name', profile,
                             '--sftp-delay', str(self.settings['sftp-delay']),
                             '--output', output]
+                    if self.settings['seivot-log']:
+                        argv.extend(['--log', self.settings['seivot-log']])
                     if self.settings['drop-caches']:
                         argv.append('--drop-caches')
                     if self.settings['use-existing']:
@@ -217,7 +220,7 @@ class ObnamBenchmark(cliapp.Application):
                                      self.settings['description']])
                     if self.settings['verify']:
                         argv.append('--verify')
-                    subprocess.check_call(argv, env=env)
+                    self.runcmd(argv, env=env)
 
         shutil.rmtree(tempdir)
         
