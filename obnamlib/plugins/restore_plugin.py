@@ -193,8 +193,15 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         if self.write_ok:
             f = self.fs.open('./' + filename, 'wb')
             summer = self.repo.new_checksummer()
-            chunkids = self.repo.get_file_chunks(gen, filename)
-            self.restore_chunks(f, chunkids, summer)
+
+            contents = self.repo.get_file_data(gen, filename)
+            if contents is None:
+                chunkids = self.repo.get_file_chunks(gen, filename)
+                self.restore_chunks(f, chunkids, summer)
+            else:
+                f.write(contents)
+                summer.update(contents)
+            
             f.close()
 
             correct_checksum = metadata.md5

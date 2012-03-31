@@ -412,14 +412,26 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             tracing.trace('pretending to upload the whole file')
             self.update_progress_with_upload(metadata.st_size)
             return
+
         tracing.trace('setting file chunks to empty')
         if not self.pretend:
             self.repo.set_file_chunks(filename, [])
+
         tracing.trace('opening file for reading')
         f = self.fs.open(filename, 'r')
+
+        summer = self.repo.new_checksummer()
+
+        if metadata.st_size <= 4096: # FIXME: hardcoded limit
+            contents = f.read()
+            assert len(contents) <= 4096 # FIXME: silly error checking
+            f.close()
+            self.repo.set_file_data(filename, contents)
+            summer.update(contents)
+            return summer.digest()
+
         chunk_size = int(self.app.settings['chunk-size'])
         chunkids = []
-        summer = self.repo.new_checksummer()
         while True:
             tracing.trace('reading some data')
             data = f.read(chunk_size)
