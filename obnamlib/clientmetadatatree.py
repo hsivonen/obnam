@@ -42,6 +42,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     FILE_CHUNKS = 1         # subkey type for list of chunks
     FILE_METADATA = 3       # subkey type for inode fields, etc
     DIR_CONTENTS = 4        # subkey type for list of directory contents
+    FILE_DATA = 5           # subkey type for file data (instead of chunk)
     
     FILE_METADATA_ENCODED = 0 # subkey value for encoded obnamlib.Metadata().
     
@@ -432,4 +433,28 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         t = self.find_generation(gen_id)
         return list(set(self.chunk_unkey(key)[0]
                         for key, value in t.lookup_range(minkey, maxkey)))
+
+    def set_file_data(self, filename, contents): # pragma: no cover
+        '''Store contents of file, if small, in B-tree instead of chunk.
+        
+        The length of the contents should be small enough to fit in a
+        B-tree leaf.
+        
+        '''
+        tracing.trace('filename=%s' % filename)
+        tracing.trace('contents=%s' % repr(contents))
+        
+        file_id = self.get_file_id(self.tree, filename)
+        key = self.fskey(file_id, self.FILE_DATA, 0)
+        self.tree.insert(key, contents)
+
+    def get_file_data(self, gen_id, filename): # pragma: no cover
+        '''Return contents of file, if set, or None.'''
+        tree = self.find_generation(gen_id)
+        file_id = self.get_file_id(tree, filename)
+        key = self.fskey(file_id, self.FILE_DATA, 0)
+        try:
+            return tree.lookup(key)
+        except KeyError:
+            return None
 

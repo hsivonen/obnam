@@ -711,6 +711,16 @@ class Repository(object):
         
         self.require_started_generation()
         self.client.append_file_chunks(filename, chunkids)
+
+    def set_file_data(self, filename, contents): # pragma: no cover
+        '''Store contents of file in B-tree instead of chunks dir.'''
+        self.require_started_generation()
+        self.client.set_file_data(filename, contents)
+
+    def get_file_data(self, gen, filename): # pragma: no cover
+        '''Returned contents of file stored in B-tree instead of chunks dir.'''
+        self.require_open_client()
+        return self.client.get_file_data(gen, filename)
         
     def genspec(self, spec):
         '''Interpret a generation specification.'''
