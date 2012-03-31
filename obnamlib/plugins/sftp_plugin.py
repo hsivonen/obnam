@@ -112,13 +112,20 @@ class SftpFS(obnamlib.VirtualFileSystem):
         obnamlib.VirtualFileSystem.__init__(self, baseurl)
         self.sftp = None
         self.settings = settings
+        self._roundtrips = 0
         self.reinit(baseurl, create=create)
 
     def _delay(self):
+        self._roundtrips += 1
         if self.settings:
             ms = self.settings['sftp-delay']
             if ms > 0:
                 time.sleep(ms * 0.001)
+
+    def log_stats(self):
+        obnamlib.VirtualFileSystem.log_stats(self)
+        logging.info('VFS: baseurl=%s roundtrips=%s' %
+                         (self.baseurl, self._roundtrips))
         
     def _to_string(self, str_or_unicode):
         if type(str_or_unicode) is unicode:
