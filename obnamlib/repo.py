@@ -165,6 +165,7 @@ class Repository(object):
         self.prev_chunkid = None
         self.chunk_idpath = larch.IdPath('chunks', idpath_depth, 
                                          idpath_bits, idpath_skip)
+        self._chunks_exists = False
 
     def setup_hooks(self, hooks):
         self.hooks = hooks
@@ -616,13 +617,13 @@ class Repository(object):
         if self.prev_chunkid is None:
             self.prev_chunkid = random_chunkid()
 
-        try:
-            self.fs.mkdir('chunks')
-        except OSError, e:
-            if e.errno != errno.EEXIST:
-                raise # pragma: no cover
-        else:
-            self.hooks.call('repository-toplevel-init', self, 'chunks')
+        if not self._chunks_exists:
+            tracing.trace('maybe create chunks')
+            if not self.fs.exists('chunks'):
+                tracing.trace('do create chunks')
+                self.fs.mkdir('chunks')
+                self.hooks.call('repository-toplevel-init', self, 'chunks')
+            self._chunks_exists = True
 
         while True:
             chunkid = (self.prev_chunkid + 1) % obnamlib.MAX_ID
