@@ -375,7 +375,6 @@ class SftpFS(obnamlib.VirtualFileSystem):
         self._remove_if_exists(lockname)
 
     def exists(self, pathname):
-        self._delay()
         try:
             self.lstat(pathname)
         except OSError:
