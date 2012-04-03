@@ -422,9 +422,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         summer = self.repo.new_checksummer()
 
-        if metadata.st_size <= 4096: # FIXME: hardcoded limit
+        max_intree = self.app.settings['node-size'] / 4
+        if metadata.st_size <= max_intree:
             contents = f.read()
-            assert len(contents) <= 4096 # FIXME: silly error checking
+            assert len(contents) <= max_intree # FIXME: silly error checking
             f.close()
             self.repo.set_file_data(filename, contents)
             summer.update(contents)
