@@ -540,7 +540,6 @@ class SftpFS(obnamlib.VirtualFileSystem):
             self._remove_if_exists(bak)
         
     def _write_helper(self, pathname, mode, contents):
-        self._delay()
         dirname = os.path.dirname(pathname)
         if dirname and not self.exists(dirname):
             self.makedirs(dirname)
