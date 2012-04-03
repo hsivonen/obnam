@@ -65,9 +65,13 @@ class RepositoryTree(object):
 
     def start_changes(self):
         tracing.trace('start changes for %s', self.dirname)
-        need_init = (not self.fs.exists(self.dirname) or
-                     self.fs.listdir(self.dirname) == [] or
-                     self.fs.listdir(self.dirname) == ['lock'])
+        
+        if not self.fs.exists(self.dirname):
+            need_init = True
+        else:
+            filenames = self.fs.listdir(self.dirname)
+            need_init = filenames == [] or filenames == ['lock']
+
         if need_init:
             if not self.fs.exists(self.dirname):
                 tracing.trace('create %s', self.dirname)
