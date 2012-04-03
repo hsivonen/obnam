@@ -617,13 +617,11 @@ class Repository(object):
         if self.prev_chunkid is None:
             self.prev_chunkid = random_chunkid()
 
-        if not self._chunks_exists:
-            tracing.trace('maybe create chunks')
-            if not self.fs.exists('chunks'):
-                tracing.trace('do create chunks')
-                self.fs.mkdir('chunks')
-                self.hooks.call('repository-toplevel-init', self, 'chunks')
-#            self._chunks_exists = True
+        tracing.trace('maybe create chunks')
+        if not self.fs.exists('chunks'):
+            tracing.trace('do create chunks')
+            self.fs.mkdir('chunks')
+            self.hooks.call('repository-toplevel-init', self, 'chunks')
 
         while True:
             chunkid = (self.prev_chunkid + 1) % obnamlib.MAX_ID
