@@ -84,8 +84,8 @@ class Check(Command):
         subprocess.check_call(['cmdtest', 'tests'])
         
         print "run locking tests"
-        num_clients = '4'
-        num_generations = '128'
+        num_clients = '2'
+        num_generations = '16'
         test_repo = tempfile.mkdtemp()
         subprocess.check_call(['./test-locking', num_clients, num_generations,
                                test_repo, test_repo])
