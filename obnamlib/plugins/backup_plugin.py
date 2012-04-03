@@ -64,6 +64,11 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.app.settings.boolean(['leave-checkpoints'],
                                   'leave checkpoint generations at the end '
                                     'of a successful backup run')
+        self.app.settings.boolean(['small-files-in-btree'],
+                                  'put contents of small files directly into '
+                                    'the per-client B-tree, instead of '
+                                    'separate chunk files; this may improve '
+                                    'speed at the cost of de-duplication')
 
     def configure_ttystatus_for_backup(self):
         self.app.ts['current-file'] = ''
@@ -423,7 +428,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         summer = self.repo.new_checksummer()
 
         max_intree = self.app.settings['node-size'] / 4
-        if metadata.st_size <= max_intree:
+        if (metadata.st_size <= max_intree and 
+            self.app.settings['small-files-in-btree']):
             contents = f.read()
             assert len(contents) <= max_intree # FIXME: silly error checking
             f.close()
