@@ -623,7 +623,7 @@ class Repository(object):
                 tracing.trace('do create chunks')
                 self.fs.mkdir('chunks')
                 self.hooks.call('repository-toplevel-init', self, 'chunks')
-            self._chunks_exists = True
+#            self._chunks_exists = True
 
         while True:
             chunkid = (self.prev_chunkid + 1) % obnamlib.MAX_ID
