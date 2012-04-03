@@ -4,6 +4,15 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
+Version 0.27, released UNRELEASED; a BETA release
+-------------------------------------------------
+
+* New option `--small-files-in-btree` enables Obnam to store the contents
+  of small files in the per-client B-tree. This is not the default, at
+  least yet, since it's impact on real life performance is unknown, but
+  it should make things go a bit faster for high latency repository
+  connections.
+
 Version 0.26, released 2012-03-26; a BETA release
 -------------------------------------------------
 

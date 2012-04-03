@@ -64,6 +64,11 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.app.settings.boolean(['leave-checkpoints'],
                                   'leave checkpoint generations at the end '
                                     'of a successful backup run')
+        self.app.settings.boolean(['small-files-in-btree'],
+                                  'put contents of small files directly into '
+                                    'the per-client B-tree, instead of '
+                                    'separate chunk files; this may improve '
+                                    'speed at the cost of de-duplication')
 
     def configure_ttystatus_for_backup(self):
         self.app.ts['current-file'] = ''
@@ -412,14 +417,28 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             tracing.trace('pretending to upload the whole file')
             self.update_progress_with_upload(metadata.st_size)
             return
+
         tracing.trace('setting file chunks to empty')
         if not self.pretend:
             self.repo.set_file_chunks(filename, [])
+
         tracing.trace('opening file for reading')
         f = self.fs.open(filename, 'r')
+
+        summer = self.repo.new_checksummer()
+
+        max_intree = self.app.settings['node-size'] / 4
+        if (metadata.st_size <= max_intree and 
+            self.app.settings['small-files-in-btree']):
+            contents = f.read()
+            assert len(contents) <= max_intree # FIXME: silly error checking
+            f.close()
+            self.repo.set_file_data(filename, contents)
+            summer.update(contents)
+            return summer.digest()
+
         chunk_size = int(self.app.settings['chunk-size'])
         chunkids = []
-        summer = self.repo.new_checksummer()
         while True:
             tracing.trace('reading some data')
             data = f.read(chunk_size)
