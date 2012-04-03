@@ -375,7 +375,6 @@ class SftpFS(obnamlib.VirtualFileSystem):
         self._remove_if_exists(lockname)
 
     def exists(self, pathname):
-        self._delay()
         try:
             self.lstat(pathname)
         except OSError:
@@ -540,10 +539,16 @@ class SftpFS(obnamlib.VirtualFileSystem):
             self._remove_if_exists(bak)
         
     def _write_helper(self, pathname, mode, contents):
-        self._delay()
         dirname = os.path.dirname(pathname)
-        if dirname and not self.exists(dirname):
-            self.makedirs(dirname)
+        if dirname:
+            try:
+                self.makedirs(dirname)
+            except OSError:
+                # We ignore the error, on the assumption that it was due
+                # to the directory already existing. If it didn't exist
+                # and the error was for something else, then we'll catch
+                # that when we open the file for writing.
+                pass
         f = self.open(pathname, mode, bufsize=self.chunk_size)
         for pos in range(0, len(contents), self.chunk_size):
             chunk = contents[pos:pos + self.chunk_size]

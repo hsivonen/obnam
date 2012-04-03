@@ -12,6 +12,7 @@ Version 0.27, released UNRELEASED; a BETA release
   least yet, since it's impact on real life performance is unknown, but
   it should make things go a bit faster for high latency repository
   connections.
+* Some SFTP related speed optimizations.
 
 Version 0.26, released 2012-03-26; a BETA release
 -------------------------------------------------

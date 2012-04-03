@@ -165,6 +165,7 @@ class Repository(object):
         self.prev_chunkid = None
         self.chunk_idpath = larch.IdPath('chunks', idpath_depth, 
                                          idpath_bits, idpath_skip)
+        self._chunks_exists = False
 
     def setup_hooks(self, hooks):
         self.hooks = hooks
@@ -615,21 +616,30 @@ class Repository(object):
 
         if self.prev_chunkid is None:
             self.prev_chunkid = random_chunkid()
+
+        if not self._chunks_exists:
+            tracing.trace('maybe create chunks')
+            if not self.fs.exists('chunks'):
+                tracing.trace('do create chunks')
+                self.fs.mkdir('chunks')
+                self.hooks.call('repository-toplevel-init', self, 'chunks')
+            self._chunks_exists = True
+
         while True:
             chunkid = (self.prev_chunkid + 1) % obnamlib.MAX_ID
             filename = self._chunk_filename(chunkid)
-            if not self.fs.exists(filename):
+            try:
+                self.fs.write_file(filename, data)
+            except OSError, e: # pragma: no cover
+                if e.errno == errno.EEXIST:
+                    self.prev_chunkid = random_chunkid()
+                    continue
+                raise
+            else:
+                tracing.trace('chunkid=%s', chunkid)
                 break
-            self.prev_chunkid = random_chunkid() # pragma: no cover
-        tracing.trace('chunkid=%s', chunkid)
+
         self.prev_chunkid = chunkid
-        if not self.fs.exists('chunks'):
-            self.fs.mkdir('chunks')
-            self.hooks.call('repository-toplevel-init', self, 'chunks')
-        dirname = os.path.dirname(filename)
-        if not self.fs.exists(dirname):
-            self.fs.makedirs(dirname)
-        self.fs.write_file(filename, data)
         checksum = self.checksum(data)
         self.chunklist.add(chunkid, checksum)
         self.chunksums.add(checksum, chunkid, self.current_client_id)
