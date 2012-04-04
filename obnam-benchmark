@@ -229,6 +229,9 @@ class ObnamBenchmark(cliapp.Application):
             raise cliapp.AppException('TMPDIR is not set. '
                                        'You would probably run out of space '
                                        'on /tmp.')
+        if not os.path.exists(os.environ['TMPDIR']):
+            raise cliapp.AppException('TMPDIR points at a non-existent '
+                                        'directory %s' % os.environ['TMPDIR'])
         logging.debug('TMPDIR=%s' % repr(os.environ['TMPDIR']))
 
     @property
