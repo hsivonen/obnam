@@ -244,15 +244,25 @@ class ObnamBenchmark(cliapp.Application):
         return os.path.basename(obnam_branch)
 
     def results_dir(self, obnam_revno, larch_revno):
-        results = os.path.join(self.settings['results'],
-                               '-'.join([self.hostname, self.obnam_branch_name,
-                                         str(obnam_revno), str(larch_revno)]))
-
-        if not os.path.exists(results):
-            os.mkdir(results)
+        parent = self.settings['results']
         
-        return results
-
+        counter = 0
+        while True:
+            counter += 1
+            parts = [
+                self.hostname,
+                self.obnam_branch_name,
+                str(obnam_revno),
+                str(larch_revno),
+                str(counter),
+            ]
+            basename = '-'.join(parts)
+            
+            dirname = os.path.join(parent, basename)
+            if not os.path.exists(dirname):
+                os.mkdir(dirname)
+                return dirname
+        
     def setup_gnupghome(self, tempdir):
         gnupghome = os.path.join(tempdir, 'gnupghome')
         shutil.copytree('test-gpghome', gnupghome)
