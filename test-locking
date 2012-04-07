@@ -29,13 +29,16 @@ NCLIENTS="$1"
 NGENERATIONS="$2"
 repourl="$3"
 repopath="$4"
-pids="$(mktemp)"
+tempdir="$(mktemp -d)"
+pids="$tempdir/pids"
 
 echo "Starting backups: $NCLIENTS clients $NGENERATIONS generations"
+echo "Using temporary directory $tempdir"
+
 for i in $(seq "$NCLIENTS")
 do
     ./test-many-generations "$NGENERATIONS" "$repourl" "$repopath" \
-        "client-$i" > "client-$i.output" 2>&1 &
+        "client-$i" > "$tempdir/client-$i.output" 2>&1 &
     echo "$!" >> "$pids"
 done
 
@@ -53,6 +56,9 @@ do
     fi
 done
 
-rm -f "$pids"
+if [ "$errors" = 0 ]
+then
+    rm -rf "$tempdir"
+fi
 exit $errors
 

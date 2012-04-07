@@ -32,6 +32,7 @@ repourl="$2"
 repopath="$3"
 client="$4"
 root="$(mktemp -d)"
+log="$(mktemp)"
 amount="1k"
 
 conf="$(mktemp)"
@@ -39,11 +40,15 @@ cat <<EOF > "$conf"
 [config]
 client-name = $client
 quiet = yes
-log = $client.log
+log = $log
 trace = obnamlib
 repository = $repourl
 root = $root
 EOF
+
+echo "Configuration:"
+cat "$conf"
+echo
 
 seq "$N" |
 while read gen
@@ -67,5 +72,5 @@ do
     fi
 done
 
-rm -rf "$conf" "$root"
+rm -rf "$conf" "$root" "$log"
 
