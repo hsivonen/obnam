@@ -20,4 +20,4 @@ $SRCDIR/tests/backup --pretend-time='2007-08-12 01:02:03'
 
 # Print out the generation timestamp.
 $SRCDIR/tests/obnam $opts generations |
-    sed 's/([0-9]+ files/(xx files/'
+    sed 's/([0-9]\+ files/(xx files/'
