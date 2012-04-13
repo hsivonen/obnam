@@ -338,7 +338,7 @@ class Repository(object):
         
         on_disk = self.get_format_version()
         if on_disk is not None and not self.acceptable_version(on_disk):
-            raise BadFormat('On-disk format %s is incompatible '
+            raise BadFormat('On-disk repository format %s is incompatible '
                             'with program format %s' %
                                 (on_disk, self.format_version))
         
