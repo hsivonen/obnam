@@ -65,6 +65,7 @@ class LockManagerTests(unittest.TestCase):
         self.lm.lock([self.dirnames[0]])
         self.assertRaises(obnamlib.LockFail,
                           self.lm.lock, [self.dirnames[0]])
+        self.assertTrue(self.now >= self.timeout)
 
     def test_notices_when_preexisting_lock_goes_away(self):
         self.lm.lock([self.dirnames[0]])
