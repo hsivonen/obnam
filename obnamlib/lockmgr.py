@@ -44,12 +44,12 @@ class LockManager(object):
 
         
     def _lock_one(self, dirname):
-        now = self._time()
+        started = self._time()
         while True:
             try:
                 self._fs.lock(self._lockname(dirname))
             except obnamlib.LockFail:
-                if self._time() - now >= self.timeout:
+                if self._time() - started >= self.timeout:
                     raise obnamlib.LockFail('Lock timeout')
             else:
                 return
