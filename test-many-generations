@@ -40,7 +40,7 @@ cat <<EOF > "$conf"
 [config]
 client-name = $client
 quiet = yes
-log = $log
+log = $client.log
 trace = obnamlib
 repository = $repourl
 root = $root
@@ -50,14 +50,17 @@ echo "Configuration:"
 cat "$conf"
 echo
 
+echo "Making backups"
 seq "$N" |
 while read gen
 do
     genbackupdata --quiet --create="$amount" "$root" --seed="$RANDOM"
     find "$root" -exec touch --date="1970-01-01 00:00:$gen" '{}' ';'
-    ./verification-test backup "$repopath" "$root" "$conf"
-done
+    ./verification-test backup "$repopath" "$root" "$conf" \
+        >> "$client-verif.output" 2>&1 || exit 1
+done || exit 1
 
+echo "Verifying results"
 while true
 do
     ./verification-test verify "$repopath" "$root" "$conf"
@@ -70,7 +73,7 @@ do
         echo "$client failed verification" 1>&2
         exit 1
     fi
-done
+done || exit 1
 
 rm -rf "$conf" "$root" "$log"
 
