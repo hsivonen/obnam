@@ -77,21 +77,22 @@ class Check(Command):
         subprocess.check_call(['python', '-m', 'CoverageTestRunner',
                                '--ignore-missing-from=without-tests'])
         os.remove('.coverage')
-        if self.fast:
-            return
 
         print "run black box tests"
         subprocess.check_call(['cmdtest', 'tests'])
-        
-        print "run locking tests"
+
         num_clients = '2'
         num_generations = '16'
         test_repo = tempfile.mkdtemp()
-        subprocess.check_call(['./test-locking', num_clients, num_generations,
-                               test_repo, test_repo])
 
-        print "run crash test"
-        subprocess.check_call(['./crash-test', '100'])
+        if not self.fast:
+            print "run locking tests"
+            subprocess.check_call(['./test-locking', num_clients, 
+                                   num_generations, test_repo, test_repo])
+
+        if not self.fast:
+            print "run crash test"
+            subprocess.check_call(['./crash-test', '100'])
 
         if self.network:
             print "run sftp tests"
@@ -103,10 +104,11 @@ class Check(Command):
             env['OBNAM_TEST_SFTP_REPOSITORY'] = 'yes'
             subprocess.check_call(['cmdtest', 'tests'], env=env)
 
-            print "re-run locking tests using localhost networking"
-            repo_url = 'sftp://localhost/%s' % test_repo
-            subprocess.check_call(['./test-locking', num_clients, 
-                                   num_generations, repo_url, test_repo])
+            if not self.fast:
+                print "re-run locking tests using localhost networking"
+                repo_url = 'sftp://localhost/%s' % test_repo
+                subprocess.check_call(['./test-locking', num_clients, 
+                                       num_generations, repo_url, test_repo])
 
         shutil.rmtree(test_repo)
             
