@@ -55,7 +55,7 @@ def ioerror_to_oserror(method):
         try:
             return method(self, filename, *args, **kwargs)
         except IOError, e:
-            raise OSError(e.errno, e.strerror, filename)
+            raise OSError(e.errno, e.strerror or str(e), filename)
     
     return helper
 
