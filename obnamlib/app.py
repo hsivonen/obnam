@@ -15,6 +15,7 @@
 
 
 import cliapp
+import larch
 import logging
 import os
 import socket
@@ -147,16 +148,21 @@ class App(cliapp.Application):
         cliapp.Application.setup_logging(self)
 
     def process_args(self, args):
-        if self.settings['quiet']:
-            self.ts.disable()
-        self.log_config()
-        for pattern in self.settings['trace']:
-            tracing.trace_add_pattern(pattern)
-        self.hooks.call('config-loaded')
-        logging.info('Obnam %s starts' % obnamlib.__version__)
-        cliapp.Application.process_args(self, args)
-        self.hooks.call('shutdown')
-        logging.info('Obnam ends')
+        try:
+            if self.settings['quiet']:
+                self.ts.disable()
+            self.log_config()
+            for pattern in self.settings['trace']:
+                tracing.trace_add_pattern(pattern)
+            self.hooks.call('config-loaded')
+            logging.info('Obnam %s starts' % obnamlib.__version__)
+            cliapp.Application.process_args(self, args)
+            self.hooks.call('shutdown')
+            logging.info('Obnam ends')
+        except larch.FormatProblem, e:
+            logging.critical(str(e))
+            sys.stderr.write('ERROR: %s' % str(e))
+            sys.exit(1)
 
     def log_config(self):
         '''Log current configuration into the log file.'''
