@@ -498,29 +498,50 @@ class SftpFS(obnamlib.VirtualFileSystem):
     @ioerror_to_oserror
     def write_file(self, pathname, contents):
         self._delay()
-        self._write_helper(pathname, 'wx', contents)
+        dirname = os.path.dirname(pathname)
+        f, tempname = self._tempfile(dirname)
+        self._write_helper(f, contents)
+        f.close()
+        
+        try:
+            f = self.open(pathname, 'wx')
+        except OSError:
+            self.remove(tempfile)
+            raise e
+        else:
+            self.rename(tempname, pathname)
 
     def _tempfile(self, dirname):
-        '''Generate a filename that does not exist.
+        '''Create a new file with a random name, return file handle and name.'''
         
-        This is _not_ as safe as tempfile.mkstemp. Plenty of race
-        conditions. But seems to be as good as SFTP will allow.
-        
-        '''
-        
+        if dirname:
+            try:
+                self.makedirs(dirname)
+            except OSError:
+                # We ignore the error, on the assumption that it was due
+                # to the directory already existing. If it didn't exist
+                # and the error was for something else, then we'll catch
+                # that when we open the file for writing.
+                pass
+
         while True:
             i = random.randint(0, 2**64-1)
             basename = 'tmp.%x' % i
             pathname = os.path.join(dirname, basename)
-            if not self.exists(pathname):
-                return pathname
+            try:
+                f = self.open(pathname, 'wx', bufsize=self.chunk_size)
+            except OSError:
+                pass
+            else:
+                return f, pathname
 
     @ioerror_to_oserror
     def overwrite_file(self, pathname, contents, make_backup=True):
         self._delay()
         dirname = os.path.dirname(pathname)
-        tempname = self._tempfile(dirname)
-        self._write_helper(tempname, 'wx', contents)
+        f, tempname = self._tempfile(dirname)
+        self._write_helper(f, contents)
+        f.close()
 
         # Rename existing to have a .bak suffix. If _that_ file already
         # exists, remove that.
@@ -535,23 +556,11 @@ class SftpFS(obnamlib.VirtualFileSystem):
         if not make_backup:
             self._remove_if_exists(bak)
         
-    def _write_helper(self, pathname, mode, contents):
-        dirname = os.path.dirname(pathname)
-        if dirname:
-            try:
-                self.makedirs(dirname)
-            except OSError:
-                # We ignore the error, on the assumption that it was due
-                # to the directory already existing. If it didn't exist
-                # and the error was for something else, then we'll catch
-                # that when we open the file for writing.
-                pass
-        f = self.open(pathname, mode, bufsize=self.chunk_size)
+    def _write_helper(self, f, contents):
         for pos in range(0, len(contents), self.chunk_size):
             chunk = contents[pos:pos + self.chunk_size]
             f.write(chunk)
             self.bytes_written += len(chunk)
-        f.close()
 
 
 class SftpPlugin(obnamlib.ObnamPlugin):
