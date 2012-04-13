@@ -374,14 +374,6 @@ class VfsTests(object): # pragma: no cover
         self.fs.lock('lock')
         self.assertRaises(Exception, self.fs.lock, 'lock')
 
-    def test_lock_raises_oserror_without_eexist(self):
-        def raise_it(relative_path, contents):
-            e = OSError()
-            e.errno = errno.EAGAIN
-            raise e
-        self.fs.write_file = raise_it
-        self.assertRaises(OSError, self.fs.lock, 'foo')
-
     def test_unlock_removes_lock(self):
         self.fs.lock('lock')
         self.fs.unlock('lock')

@@ -107,7 +107,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
             if e.errno == errno.EEXIST:
                 raise obnamlib.LockFail("Lock %s already exists" % lockname)
             else:
-                raise
+                raise # pragma: no cover
 
     def unlock(self, lockname):
         tracing.trace('lockname=%s', lockname)
