@@ -129,7 +129,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
     def ls(self, args):
         '''List contents of a generation.'''
         self.open_repository()
-        for gen in args or ["latest"]:
+        for gen in args or [self.app.settings['generation']] or ["latest"]:
             gen = self.repo.genspec(gen)
             started, ended = self.repo.client.get_generation_times(gen)
             started = self.format_time(started)
