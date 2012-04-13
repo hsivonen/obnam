@@ -38,7 +38,7 @@ echo "Using temporary directory $tempdir"
 for i in $(seq "$NCLIENTS")
 do
     ./test-many-generations "$NGENERATIONS" "$repourl" "$repopath" \
-        "client-$i" > "$tempdir/client-$i.output" 2>&1 &
+        "client-$i" > "client-$i.output" 2>&1 &
     echo "$!" >> "$pids"
 done
 
