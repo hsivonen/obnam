@@ -87,7 +87,8 @@ class LocalFS(obnamlib.VirtualFileSystem):
                     if e.errno != errno.EEXIST:
                         raise
             else:
-                raise OSError(errno.ENOENT, self.cwd)
+                err = errno.ENOENT
+                raise OSError(err, os.strerror(err), self.cwd)
 
     def getcwd(self):
         return self.cwd
