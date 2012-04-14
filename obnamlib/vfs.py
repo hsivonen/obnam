@@ -89,7 +89,7 @@ class VirtualFileSystem(object):
     def listdir2(self, pathname):
         '''Return list of basenames and stats of entities at pathname.'''
 
-    def lock(self, lockname):
+    def lock(self, lockname, data):
         '''Create a lock file with the given name.'''
 
     def unlock(self, lockname):
@@ -367,15 +367,17 @@ class VfsTests(object): # pragma: no cover
         self.assertEqual(self.fs.getcwd(), self.basepath)
 
     def test_creates_lock_file(self):
-        self.fs.lock('lock')
-        self.assert_(self.fs.exists('lock'))
+        self.fs.lock('lock', 'lock data')
+        self.assertTrue(self.fs.exists('lock'))
+        self.assertEqual(self.fs.cat('lock'), 'lock data')
 
     def test_second_lock_fails(self):
-        self.fs.lock('lock')
-        self.assertRaises(Exception, self.fs.lock, 'lock')
+        self.fs.lock('lock', 'lock data')
+        self.assertRaises(Exception, self.fs.lock, 'lock', 'second lock')
+        self.assertEqual(self.fs.cat('lock'), 'lock data')
 
     def test_unlock_removes_lock(self):
-        self.fs.lock('lock')
+        self.fs.lock('lock', 'lock data')
         self.fs.unlock('lock')
         self.assertFalse(self.fs.exists('lock'))
 

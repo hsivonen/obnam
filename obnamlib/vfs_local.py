@@ -100,10 +100,10 @@ class LocalFS(obnamlib.VirtualFileSystem):
             raise OSError('%s is not a directory' % newcwd)
         self.cwd = newcwd
 
-    def lock(self, lockname):
+    def lock(self, lockname, data):
         tracing.trace('lockname=%s', lockname)
         try:
-            self.write_file(lockname, "")
+            self.write_file(lockname, data)
         except OSError, e:
             if e.errno == errno.EEXIST:
                 raise obnamlib.LockFail("Lock %s already exists" % lockname)

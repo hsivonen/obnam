@@ -65,8 +65,8 @@ class HookedFS(object):
         return self.hooks.call('repository-read-data', data,
                                 repo=self.repo, toplevel=toplevel)
 
-    def lock(self, filename):
-        self.fs.lock(filename)
+    def lock(self, filename, data):
+        self.fs.lock(filename, data)
 
     def write_file(self, filename, data):
         tracing.trace('writing hooked %s' % filename)

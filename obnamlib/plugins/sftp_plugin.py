@@ -362,9 +362,9 @@ class SftpFS(obnamlib.VirtualFileSystem):
         fixed = [(name, self._fix_stat(name, st)) for name, st in pairs]
         return fixed
 
-    def lock(self, lockname):
+    def lock(self, lockname, data):
         try:
-            self.write_file(lockname, '')
+            self.write_file(lockname, data)
         except OSError, e:
             raise obnamlib.LockFail('Failure get lock %s' % lockname)
 
