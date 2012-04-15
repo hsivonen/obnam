@@ -37,7 +37,7 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
         
         self.app.ts['gen'] = None
         self.app.ts['gens'] = []
-        self.app.ts.format('forgetting generation %Index(gen,gens)')
+        self.app.ts.format('forgetting generations: %Index(gen,gens) done')
 
         self.repo = self.app.open_repository()
         self.repo.lock_client(self.app.settings['client-name'])
