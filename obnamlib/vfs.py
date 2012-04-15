@@ -193,14 +193,8 @@ class VirtualFileSystem(object):
 
         '''
 
-    def overwrite_file(self, pathname, contents, make_backup=True):
-        '''Like write_file, but overwrites existing file.
-
-        The old file isn't immediately lost, it gets renamed with
-        a backup suffix. The backup file is removed if make_backup is
-        set to False (default is True).
-
-        '''
+    def overwrite_file(self, pathname, contents):
+        '''Like write_file, but overwrites existing file.'''
 
     def scan_tree(self, dirname, ok=None, dirst=None, log=logging.error):
         '''Scan a tree for files.
@@ -603,26 +597,6 @@ class VfsTests(object): # pragma: no cover
     def test_overwrite_creates_new_file_ok(self):
         self.fs.overwrite_file('foo', 'bar')
         self.assertEqual(self.fs.cat('foo'), 'bar')
-
-    def test_overwrite_renames_existing_file(self):
-        self.fs.write_file('foo', 'bar')
-        self.fs.overwrite_file('foo', 'foobar')
-        self.assert_(self.fs.exists('foo.bak'))
-
-    def test_overwrite_removes_existing_bak_file(self):
-        self.fs.write_file('foo', 'bar')
-        self.fs.write_file('foo.bak', 'baz')
-        self.fs.overwrite_file('foo', 'foobar')
-        self.assertEqual(self.fs.cat('foo.bak'), 'bar')
-
-    def test_overwrite_removes_bak_file(self):
-        self.fs.write_file('foo', 'bar')
-        self.fs.overwrite_file('foo', 'foobar', make_backup=False)
-        self.assertFalse(self.fs.exists('foo.bak'))
-
-    def test_overwrite_is_ok_without_bak(self):
-        self.fs.overwrite_file('foo', 'foobar', make_backup=False)
-        self.assertFalse(self.fs.exists('foo.bak'))
 
     def test_overwrite_replaces_existing_file(self):
         self.fs.write_file('foo', 'bar')

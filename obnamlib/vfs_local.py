@@ -278,29 +278,11 @@ class LocalFS(obnamlib.VirtualFileSystem):
         os.remove(tempname)
         self.maybe_crash()
 
-    def overwrite_file(self, pathname, contents, make_backup=True):
+    def overwrite_file(self, pathname, contents):
         tracing.trace('overwrite_file %s', pathname)
         tempname = self._write_to_tempfile(pathname, contents)
         path = self.join(pathname)
-
-        # Rename existing to have a .bak suffix. If _that_ file already
-        # exists, remove that.
-        bak = path + ".bak"
-        try:
-            os.remove(bak)
-        except OSError:
-            pass
-        try:
-            os.link(path, bak)
-        except OSError:
-            pass
         os.rename(tempname, path)
-        if not make_backup:
-            try:
-                os.remove(bak)
-            except OSError:
-                pass
-
         self.maybe_crash()
                 
     def _write_to_tempfile(self, pathname, contents):

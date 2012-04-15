@@ -536,25 +536,13 @@ class SftpFS(obnamlib.VirtualFileSystem):
                 return f, pathname
 
     @ioerror_to_oserror
-    def overwrite_file(self, pathname, contents, make_backup=True):
+    def overwrite_file(self, pathname, contents):
         self._delay()
         dirname = os.path.dirname(pathname)
         f, tempname = self._tempfile(dirname)
         self._write_helper(f, contents)
         f.close()
-
-        # Rename existing to have a .bak suffix. If _that_ file already
-        # exists, remove that.
-        bak = pathname + ".bak"
-        self._remove_if_exists(bak)
-        try:
-            self.rename(pathname, bak)
-        except OSError, e:
-            if e.errno != errno.ENOENT:
-                raise
         self.rename(tempname, pathname)
-        if not make_backup:
-            self._remove_if_exists(bak)
         
     def _write_helper(self, f, contents):
         for pos in range(0, len(contents), self.chunk_size):
