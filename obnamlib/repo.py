@@ -183,15 +183,11 @@ class Repository(object):
         
         The checksum is (currently) MD5.
         
-        Return a non-binary string (hexdigest) form of the checksum
-        so that it can easily be used for filenames, or printed to
-        log files, or whatever.
-        
         '''
 
         checksummer = self.new_checksummer()
         checksummer.update(data)
-        return checksummer.hexdigest()
+        return checksummer.digest()
 
     def new_checksummer(self):
         '''Return a new checksum algorithm.'''

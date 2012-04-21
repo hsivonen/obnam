@@ -22,6 +22,8 @@ Version 0.27, released UNRELEASED; a BETA release
 * Repository metadata is never filtered, so that we can be sure that
   in future if when we add backwards-compatibility we can detect the format
   without worrying about any other filtering which might occur.
+* File and chunk checksums are now stored in half the size, saving a tiny
+  bit of space in the backup repository.
 
 Version 0.26, released 2012-03-26; a BETA release
 -------------------------------------------------
