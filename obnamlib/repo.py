@@ -311,7 +311,7 @@ class Repository(object):
         '''
         
         if self.fs.exists('metadata/format'):
-            data = self.fs.cat('metadata/format')
+            data = self.fs.cat('metadata/format', runfilters=False)
             lines = data.splitlines()
             line = lines[0]
             try:
@@ -330,7 +330,8 @@ class Repository(object):
         tracing.trace('write format version')
         if not self.fs.exists('metadata'):
             self.fs.mkdir('metadata')
-        self.fs.overwrite_file('metadata/format', '%s\n' % version)
+        self.fs.overwrite_file('metadata/format', '%s\n' % version,
+                               runfilters=False)
 
     def check_format_version(self):
         '''Verify that on-disk format version is compatbile.
