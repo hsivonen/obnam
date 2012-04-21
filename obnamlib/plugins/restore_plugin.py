@@ -194,14 +194,19 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             f = self.fs.open('./' + filename, 'wb')
             summer = self.repo.new_checksummer()
 
-            contents = self.repo.get_file_data(gen, filename)
-            if contents is None:
-                chunkids = self.repo.get_file_chunks(gen, filename)
-                self.restore_chunks(f, chunkids, summer)
-            else:
-                f.write(contents)
-                summer.update(contents)
-            
+            try:
+                contents = self.repo.get_file_data(gen, filename)
+                if contents is None:
+                    chunkids = self.repo.get_file_chunks(gen, filename)
+                    self.restore_chunks(f, chunkids, summer)
+                else:
+                    f.write(contents)
+                    summer.update(contents)
+            except obnamlib.MissingFilterError, e:
+                msg = 'Missing filter error during restore: %s' % filename
+                logging.error(msg)
+                self.app.ts.notify(msg)
+                self.errors = True
             f.close()
 
             correct_checksum = metadata.md5
