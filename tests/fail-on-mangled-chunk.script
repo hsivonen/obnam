@@ -19,10 +19,13 @@ set -e
 $SRCDIR/tests/backup
 
 # Corrupt chunk files.
-find "$DATADIR/repo/chunks" -type f |
+find "$DATADIR/repo/chunks" -type f -size +11c |
 while read filename
 do
-    tr '\0-\377' '\200-\377\0-\177' < "$filename" > "$filename.new"
+
+    dd if="$filename" of="$filename.new" bs=1 count=10 2>/dev/null
+    dd if="$filename" bs=1 skip=10 2>/dev/null | \
+    tr '\0-\377' '\200-\377\0-\177' >> "$filename.new"
     mv "$filename.new" "$filename"
 done
 

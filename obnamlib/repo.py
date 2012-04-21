@@ -59,28 +59,32 @@ class HookedFS(object):
         else: # pragma: no cover
             raise obnamlib.Error('File at repository root: %s' % filename)
         
-    def cat(self, filename):
+    def cat(self, filename, runfilters=True):
         data = self.fs.cat(filename)
         toplevel = self._get_toplevel(filename)
-        return self.hooks.call('repository-read-data', data,
-                                repo=self.repo, toplevel=toplevel)
+        if not runfilters:
+            return data
+        return self.hooks.filter_read('repository-data', data,
+                                      repo=self.repo, toplevel=toplevel)
 
     def lock(self, filename, data):
         self.fs.lock(filename, data)
 
-    def write_file(self, filename, data):
+    def write_file(self, filename, data, runfilters=True):
         tracing.trace('writing hooked %s' % filename)
         toplevel = self._get_toplevel(filename)
-        data = self.hooks.call('repository-write-data', data,
-                                repo=self.repo, toplevel=toplevel)
+        if runfilters:
+            data = self.hooks.filter_write('repository-data', data,
+                                           repo=self.repo, toplevel=toplevel)
         self.fs.write_file(filename, data)
         self.make_readonly(filename)
         
-    def overwrite_file(self, filename, data):
+    def overwrite_file(self, filename, data, runfilters=True):
         tracing.trace('overwriting hooked %s' % filename)
         toplevel = self._get_toplevel(filename)
-        data = self.hooks.call('repository-write-data', data,
-                                repo=self.repo, toplevel=toplevel)
+        if runfilters:
+            data = self.hooks.filter_write('repository-data', data,
+                                           repo=self.repo, toplevel=toplevel)
         self.fs.overwrite_file(filename, data)
         self.make_readonly(filename)
         
@@ -129,7 +133,7 @@ class Repository(object):
 
     '''
     
-    format_version = 5
+    format_version = 6
 
     def __init__(self, fs, node_size, upload_queue_size, lru_size, hooks,
                  idpath_depth, idpath_bits, idpath_skip, current_time,
@@ -171,8 +175,7 @@ class Repository(object):
         self.hooks = hooks
         
         self.hooks.new('repository-toplevel-init')
-        self.hooks.new_filter('repository-read-data')
-        self.hooks.new_filter('repository-write-data')
+        self.hooks.new_filter('repository-data')
         self.hooks.new('repository-add-client')
         
     def checksum(self, data):
@@ -307,7 +310,7 @@ class Repository(object):
         '''
         
         if self.fs.exists('metadata/format'):
-            data = self.fs.cat('metadata/format')
+            data = self.fs.cat('metadata/format', runfilters=False)
             lines = data.splitlines()
             line = lines[0]
             try:
@@ -326,8 +329,8 @@ class Repository(object):
         tracing.trace('write format version')
         if not self.fs.exists('metadata'):
             self.fs.mkdir('metadata')
-            self.hooks.call('repository-toplevel-init', self, 'metadata')
-        self.fs.overwrite_file('metadata/format', '%s\n' % version)
+        self.fs.overwrite_file('metadata/format', '%s\n' % version,
+                               runfilters=False)
 
     def check_format_version(self):
         '''Verify that on-disk format version is compatbile.

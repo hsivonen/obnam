@@ -7,12 +7,21 @@ This file summarizes changes between releases of Obnam.
 Version 0.27, released UNRELEASED; a BETA release
 -------------------------------------------------
 
+* The repository format has again changed in an incompatible manner,
+  so you will need to re-backup everything again. (If this is a problem,
+  tell me, and I'll consider adding backwards compatibility before 1.0
+  is released.)
 * New option `--small-files-in-btree` enables Obnam to store the contents
   of small files in the per-client B-tree. This is not the default, at
   least yet, since it's impact on real life performance is unknown, but
   it should make things go a bit faster for high latency repository
   connections.
 * Some SFTP related speed optimizations.
+* Data filtering is now strictly stable and priority-ordered, ensuring that
+  compression always happens before encryption etc.
+* Repository metadata is never filtered, so that we can be sure that
+  in future if when we add backwards-compatibility we can detect the format
+  without worrying about any other filtering which might occur.
 
 Version 0.26, released 2012-03-26; a BETA release
 -------------------------------------------------

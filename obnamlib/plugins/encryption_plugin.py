@@ -35,11 +35,15 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         self.app.settings.string(['symmetric-key-bits'],
                                    'size of symmetric key, in bits')
         
+        self.tag = "encrypt1"
+
         hooks = [
-            ('repository-toplevel-init', self.toplevel_init, False),
-            ('repository-read-data', self.toplevel_read_data, False),
-            ('repository-write-data', self.toplevel_write_data, True),
-            ('repository-add-client', self.add_client, False),
+            ('repository-toplevel-init', self.toplevel_init,
+             obnamlib.Hook.DEFAULT_PRIORITY),
+            ('repository-data', self,
+             obnamlib.Hook.LATE_PRIORITY),
+            ('repository-add-client', self.add_client,
+             obnamlib.Hook.DEFAULT_PRIORITY),
         ]
         for name, callback, rev in hooks:
             self.app.hooks.add_callback(name, callback, rev)
@@ -107,13 +111,13 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         encrypted = obnamlib.encrypt_symmetric(encoded, symmetric_key)
         self._write_file(repo, os.path.join(toplevel, 'userkeys'), encrypted)
 
-    def toplevel_read_data(self, encrypted, repo, toplevel):
+    def filter_read(self, encrypted, repo, toplevel):
         if not self.keyid:
             return encrypted
         symmetric_key = self.get_symmetric_key(repo, toplevel)
         return obnamlib.decrypt_symmetric(encrypted, symmetric_key)
 
-    def toplevel_write_data(self, cleartext, repo, toplevel):
+    def filter_write(self, cleartext, repo, toplevel):
         if not self.keyid:
             return cleartext
         symmetric_key = self.get_symmetric_key(repo, toplevel)
@@ -129,12 +133,12 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
 
     def read_keyring(self, repo, toplevel):
         encrypted = repo.fs.fs.cat(os.path.join(toplevel, 'userkeys'))
-        encoded = self.toplevel_read_data(encrypted, repo, toplevel)
+        encoded = self.filter_read(encrypted, repo, toplevel)
         return obnamlib.Keyring(encoded=encoded)
 
     def write_keyring(self, repo, toplevel, keyring):
         encoded = str(keyring)
-        encrypted = self.toplevel_write_data(encoded, repo, toplevel)
+        encrypted = self.filter_write(encoded, repo, toplevel)
         pathname = os.path.join(toplevel, 'userkeys')
         self._overwrite_file(repo, pathname, encrypted)
 
@@ -179,7 +183,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         toplevels = repo.fs.listdir('.')
         keys = dict()
         tops = dict()
-        for toplevel in toplevels:
+        for toplevel in [d for d in toplevels if d != 'metadata']:
             userkeys = self.read_keyring(repo, toplevel)
             for keyid in userkeys.keyids():
                 keys[keyid] = keys.get(keyid, []) + [toplevel]
@@ -208,7 +212,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
             for keyid in tops[toplevel]:
                 print '  %s' % keyid
 
-    _shared = ['chunklist', 'chunks', 'chunksums', 'clientlist', 'metadata']
+    _shared = ['chunklist', 'chunks', 'chunksums', 'clientlist']
     
     def _find_clientdirs(self, repo, client_names):
         return [repo.client_dir(repo.clientlist.get_client_id(x))

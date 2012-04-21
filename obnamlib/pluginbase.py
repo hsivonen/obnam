@@ -23,21 +23,4 @@ class ObnamPlugin(obnamlib.pluginmgr.Plugin):
 
     def __init__(self, app):
         self.app = app
-        self.callback_ids = []
-
-    def add_callback(self, name, callback):
-        cb_id = self.app.hooks.add_callback(name, callback)
-        self.callback_ids.append((name, cb_id))
         
-    def disable_wrapper(self):
-        for name, cb_id in self.callback_ids:
-            self.app.hooks.remove_callback(name, cb_id)
-        self.callback_ids = []
-        self.disable()
-        
-    def enable(self):
-        pass
-        
-    def disable(self):
-        pass
-

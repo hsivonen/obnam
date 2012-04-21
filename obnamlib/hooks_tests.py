@@ -18,6 +18,7 @@ import unittest
 
 import obnamlib
 
+import base64
 
 class HookTests(unittest.TestCase):
 
@@ -46,13 +47,15 @@ class HookTests(unittest.TestCase):
         
     def test_adds_two_callbacks(self):
         id1 = self.hook.add_callback(self.callback)
-        id2 = self.hook.add_callback(self.callback2)
+        id2 = self.hook.add_callback(self.callback2, 
+                                     obnamlib.Hook.DEFAULT_PRIORITY + 1)
         self.assertEqual(self.hook.callbacks, [self.callback, self.callback2])
         self.assertNotEqual(id1, id2)
         
     def test_adds_callbacks_in_reverse_order(self):
-        id1 = self.hook.add_callback(self.callback, reverse=True)
-        id2 = self.hook.add_callback(self.callback2, reverse=True)
+        id1 = self.hook.add_callback(self.callback)
+        id2 = self.hook.add_callback(self.callback2, 
+                                     obnamlib.Hook.DEFAULT_PRIORITY - 1)
         self.assertEqual(self.hook.callbacks, [self.callback2, self.callback])
         self.assertNotEqual(id1, id2)
 
@@ -67,32 +70,83 @@ class HookTests(unittest.TestCase):
         self.hook.remove_callback(cb_id)
         self.assertEqual(self.hook.callbacks, [])
 
+class NeverAddsFilter(object):
+
+    def __init__(self):
+        self.tag = "never"
+
+    def filter_read(self, data, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+        self.wasread = True
+        return data
+
+    def filter_write(self, data, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+        self.wasread = False
+        return data
+
+class Base64Filter(object):
+
+    def __init__(self):
+        self.tag = "base64"
+
+    def filter_read(self, data, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+        self.wasread = True
+        return base64.b64decode(data)
+
+    def filter_write(self, data, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+        self.wasread = False
+        return base64.b64encode(data)
 
 class FilterHookTests(unittest.TestCase):
 
     def setUp(self):
         self.hook = obnamlib.FilterHook()
 
-    def callback(self, data, *args, **kwargs):
-        self.args = args
-        self.kwargs = kwargs
-        return data + ['callback']
+    def test_add_filter_ok(self):
+        self.hook.add_callback(NeverAddsFilter())
 
-    def test_returns_argument_if_no_callbacks(self):
-        self.assertEqual(self.hook.call_callbacks(['foo']), ['foo'])
+    def test_never_filter_no_tags(self):
+        self.hook.add_callback(NeverAddsFilter())
+        self.assertEquals(self.hook.run_filter_write("foo"), "\0foo")
         
-    def test_calls_callback_and_returns_modified_data(self):
-        self.hook.add_callback(self.callback)
-        data = self.hook.call_callbacks([])
-        self.assertEqual(data, ['callback'])
+    def test_never_filter_clean_revert(self):
+        self.hook.add_callback(NeverAddsFilter())
+        self.assertEquals(self.hook.run_filter_read("\0foo"), "foo")
 
-    def test_calls_callback_with_extra_args(self):
-        self.hook.add_callback(self.callback)
-        self.hook.call_callbacks(['data'], 'extra', kwextra='kwextra')
-        self.assertEqual(self.args, ('extra',))
-        self.assertEqual(self.kwargs, { 'kwextra': 'kwextra' })
+    def test_base64_filter_encode(self):
+        self.hook.add_callback(Base64Filter())
+        self.assertEquals(self.hook.run_filter_write("OK"), "base64\0AE9L")
 
-        
+    def test_base64_filter_decode(self):
+        self.hook.add_callback(Base64Filter())
+        self.assertEquals(self.hook.run_filter_read("base64\0AE9L"), "OK")
+
+    def test_missing_filter_raises(self):
+        self.assertRaises(obnamlib.MissingFilterError,
+                          self.hook.run_filter_read, "missing\0")
+
+    def test_missing_filter_gives_tag(self):
+        try:
+            self.hook.run_filter_read("missing\0")
+        except obnamlib.MissingFilterError, e:
+            self.assertEquals(e.tagname, "missing")
+
+    def test_can_remove_filters(self):
+        myfilter = NeverAddsFilter()
+        filterid = self.hook.add_callback(myfilter)
+        self.hook.remove_callback(filterid)
+        self.assertEquals(self.hook.callbacks, [])
+
+    def test_call_callbacks_raises(self):
+        self.assertRaises(NotImplementedError, self.hook.call_callbacks, "")
+
 class HookManagerTests(unittest.TestCase):
 
     def setUp(self):
@@ -112,7 +166,7 @@ class HookManagerTests(unittest.TestCase):
         
     def test_adds_new_filter_hook(self):
         self.hooks.new_filter('bar')
-        self.assert_('bar' in self.hooks.hooks)
+        self.assert_('bar' in self.hooks.filters)
         
     def test_adds_callback(self):
         self.hooks.add_callback('foo', self.callback)
@@ -129,8 +183,23 @@ class HookManagerTests(unittest.TestCase):
         self.assertEqual(self.args, ('bar',))
         self.assertEqual(self.kwargs, { 'kwarg': 'foobar' })
 
-    def test_call_returns_value_of_callbacks(self):
+    def test_filter_write_returns_value_of_callbacks(self):
         self.hooks.new_filter('bar')
-        self.hooks.add_callback('bar', lambda data: data + 1)
-        self.assertEqual(self.hooks.call('bar', 1), 2)
+        self.assertEquals(self.hooks.filter_write('bar', "foo"), "\0foo")
 
+    def test_filter_read_returns_value_of_callbacks(self):
+        self.hooks.new_filter('bar')
+        self.assertEquals(self.hooks.filter_read('bar', "\0foo"), "foo")
+
+    def test_add_callbacks_to_filters(self):
+        self.hooks.new_filter('bar')
+        filt = NeverAddsFilter()
+        self.hooks.add_callback('bar', filt)
+        self.assertEquals(self.hooks.filters['bar'].callbacks, [filt])
+
+    def test_remove_callbacks_from_filters(self):
+        self.hooks.new_filter('bar')
+        filt = NeverAddsFilter()
+        self.hooks.add_callback('bar', filt)
+        self.hooks.remove_callback('bar', filt)
+        self.assertEquals(self.hooks.filters['bar'].callbacks, [])
