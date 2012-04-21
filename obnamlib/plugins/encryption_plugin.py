@@ -36,10 +36,14 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
                                    'size of symmetric key, in bits')
         
         hooks = [
-            ('repository-toplevel-init', self.toplevel_init, False),
-            ('repository-read-data', self.toplevel_read_data, False),
-            ('repository-write-data', self.toplevel_write_data, True),
-            ('repository-add-client', self.add_client, False),
+            ('repository-toplevel-init', self.toplevel_init,
+             obnamlib.Hook.DEFAULT_PRIORITY),
+            ('repository-read-data', self.toplevel_read_data,
+             obnamlib.Hook.EARLY_PRIORITY),
+            ('repository-write-data', self.toplevel_write_data,
+             obnamlib.Hook.LATE_PRIORITY),
+            ('repository-add-client', self.add_client,
+             obnamlib.Hook.DEFAULT_PRIORITY),
         ]
         for name, callback, rev in hooks:
             self.app.hooks.add_callback(name, callback, rev)

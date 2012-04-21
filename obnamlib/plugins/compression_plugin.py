@@ -31,11 +31,13 @@ class CompressionPlugin(obnamlib.ObnamPlugin):
                                  metavar='PROGRAM')
         
         hooks = [
-            ('repository-read-data', self.toplevel_read_data, True),
-            ('repository-write-data', self.toplevel_write_data, False),
+            ('repository-read-data', self.toplevel_read_data, 
+             obnamlib.Hook.LATE_PRIORITY),
+            ('repository-write-data', self.toplevel_write_data,
+             obnamlib.Hook.EARLY_PRIORITY),
         ]
-        for name, callback, rev in hooks:
-            self.app.hooks.add_callback(name, callback, reverse=rev)
+        for name, callback, prio in hooks:
+            self.app.hooks.add_callback(name, callback, prio)
 
     def toplevel_read_data(self, data, repo, toplevel):
         how = self.app.settings['compress-with']
