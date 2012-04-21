@@ -64,8 +64,8 @@ class HookedFS(object):
         toplevel = self._get_toplevel(filename)
         if not runfilters:
             return data
-        return self.hooks.call('repository-read-data', data,
-                                repo=self.repo, toplevel=toplevel)
+        return self.hooks.filter_read('repository-data', data,
+                                      repo=self.repo, toplevel=toplevel)
 
     def lock(self, filename, data):
         self.fs.lock(filename, data)
@@ -74,8 +74,8 @@ class HookedFS(object):
         tracing.trace('writing hooked %s' % filename)
         toplevel = self._get_toplevel(filename)
         if runfilters:
-            data = self.hooks.call('repository-write-data', data,
-                                   repo=self.repo, toplevel=toplevel)
+            data = self.hooks.filter_write('repository-data', data,
+                                           repo=self.repo, toplevel=toplevel)
         self.fs.write_file(filename, data)
         self.make_readonly(filename)
         
@@ -83,8 +83,8 @@ class HookedFS(object):
         tracing.trace('overwriting hooked %s' % filename)
         toplevel = self._get_toplevel(filename)
         if runfilters:
-            data = self.hooks.call('repository-write-data', data,
-                                   repo=self.repo, toplevel=toplevel)
+            data = self.hooks.filter_write('repository-data', data,
+                                           repo=self.repo, toplevel=toplevel)
         self.fs.overwrite_file(filename, data)
         self.make_readonly(filename)
         
@@ -175,8 +175,7 @@ class Repository(object):
         self.hooks = hooks
         
         self.hooks.new('repository-toplevel-init')
-        self.hooks.new_filter('repository-read-data')
-        self.hooks.new_filter('repository-write-data')
+        self.hooks.new_filter('repository-data')
         self.hooks.new('repository-add-client')
         
     def checksum(self, data):
