@@ -60,7 +60,8 @@ class RepositoryTree(object):
                                             dirname=self.dirname,
                                             upload_max=self.upload_queue_size,
                                             lru_size=self.lru_size,
-                                            vfs=self.fs)
+                                            vfs=self.fs,
+                                            allow_writes=True)
         return True
 
     def start_changes(self):
