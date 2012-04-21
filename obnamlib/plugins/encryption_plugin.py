@@ -179,7 +179,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         toplevels = repo.fs.listdir('.')
         keys = dict()
         tops = dict()
-        for toplevel in toplevels:
+        for toplevel in [d for d in toplevels if d != 'metadata']:
             userkeys = self.read_keyring(repo, toplevel)
             for keyid in userkeys.keyids():
                 keys[keyid] = keys.get(keyid, []) + [toplevel]
@@ -208,7 +208,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
             for keyid in tops[toplevel]:
                 print '  %s' % keyid
 
-    _shared = ['chunklist', 'chunks', 'chunksums', 'clientlist', 'metadata']
+    _shared = ['chunklist', 'chunks', 'chunksums', 'clientlist']
     
     def _find_clientdirs(self, repo, client_names):
         return [repo.client_dir(repo.clientlist.get_client_id(x))
