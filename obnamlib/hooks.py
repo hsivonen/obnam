@@ -25,6 +25,7 @@ application) will register callbacks.
 
 '''
 
+import obnamlib
 
 class Hook(object):
 
@@ -64,6 +65,12 @@ class Hook(object):
             self.callbacks.remove(callback_id)
             del self.priorities[callback_id]
 
+class MissingFilterError(obnamlib.Error):
+
+    '''Missing tag encountered reading filtered data.'''
+
+    def __init__(self, tagname):
+        self.tagname = tagname
 
 class FilterHook(Hook):
 
@@ -78,11 +85,40 @@ class FilterHook(Hook):
     
     '''
     
-    def call_callbacks(self, data, *args, **kwargs):
-        for callback in self.callbacks:
-            data = callback(data, *args, **kwargs)
-        return data
+    def __init__(self):
+        Hook.__init__(self)
+        self.bytag = {}
 
+    def add_callback(self, callback, priority=Hook.DEFAULT_PRIORITY):
+        assert(hasattr(callback, "tag"))
+        assert(hasattr(callback, "filter_read"))
+        assert(hasattr(callback, "filter_write"))
+        self.bytag[callback.tag] = callback
+        return Hook.add_callback(self, callback, priority)
+
+    def remove_callback(self, callback_id):
+        Hook.remove_callback(self, callback_id)
+        del self.bytag[callback_id.tag]
+
+    def call_callbacks(self, data, *args, **kwargs):
+        raise NotImplementedError()
+        
+    def run_filter_read(self, data, *args, **kwargs):
+        tag, content = data.split("\0", 1)
+        while tag != "":
+            if tag not in self.bytag:
+                raise MissingFilterError(tag)
+            data = self.bytag[tag].filter_read(content, *args, **kwargs)
+            tag, content = data.split("\0", 1)
+        return content
+
+    def run_filter_write(self, data, *args, **kwargs):
+        data = "\0" + data
+        for filt in self.callbacks:
+            new_data = filt.filter_write(data, *args, **kwargs)
+            if data != new_data:
+                data = filt.tag + "\0" + new_data
+        return data
 
 class HookManager(object):
 
@@ -90,6 +126,7 @@ class HookManager(object):
     
     def __init__(self):
         self.hooks = {}
+        self.filters = {}
         
     def new(self, name):
         '''Create a new hook.
@@ -103,18 +140,31 @@ class HookManager(object):
 
     def new_filter(self, name):
         '''Create a new filter hook.'''
-        if name not in self.hooks:
-            self.hooks[name] = FilterHook()
+        if name not in self.filters:
+            self.filters[name] = FilterHook()
 
     def add_callback(self, name, callback, priority=Hook.DEFAULT_PRIORITY):
         '''Add a callback to a named hook.'''
-        return self.hooks[name].add_callback(callback, priority)
+        if name in self.hooks:
+            return self.hooks[name].add_callback(callback, priority)
+        else:
+            return self.filters[name].add_callback(callback, priority)
         
     def remove_callback(self, name, callback_id):
         '''Remove a specific callback from a named hook.'''
-        self.hooks[name].remove_callback(callback_id)
+        if name in self.hooks:
+            self.hooks[name].remove_callback(callback_id)
+        else:
+            self.filters[name].remove_callback(callback_id)
         
     def call(self, name, *args, **kwargs):
         '''Call callbacks for a named hook, using given arguments.'''
-        return self.hooks[name].call_callbacks(*args, **kwargs)
+        self.hooks[name].call_callbacks(*args, **kwargs)
 
+    def filter_read(self, name, *args, **kwargs):
+        '''Run reader filter for named filter, using given arguments.'''
+        return self.filters[name].run_filter_read(*args, **kwargs)
+
+    def filter_write(self, name, *args, **kwargs):
+        '''Run writer filter for named filter, using given arguments.'''
+        return self.filters[name].run_filter_write(*args, **kwargs)
