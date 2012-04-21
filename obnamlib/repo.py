@@ -59,28 +59,32 @@ class HookedFS(object):
         else: # pragma: no cover
             raise obnamlib.Error('File at repository root: %s' % filename)
         
-    def cat(self, filename):
+    def cat(self, filename, runfilters=True):
         data = self.fs.cat(filename)
         toplevel = self._get_toplevel(filename)
+        if not runfilters:
+            return data
         return self.hooks.call('repository-read-data', data,
                                 repo=self.repo, toplevel=toplevel)
 
     def lock(self, filename, data):
         self.fs.lock(filename, data)
 
-    def write_file(self, filename, data):
+    def write_file(self, filename, data, runfilters=True):
         tracing.trace('writing hooked %s' % filename)
         toplevel = self._get_toplevel(filename)
-        data = self.hooks.call('repository-write-data', data,
-                                repo=self.repo, toplevel=toplevel)
+        if runfilters:
+            data = self.hooks.call('repository-write-data', data,
+                                   repo=self.repo, toplevel=toplevel)
         self.fs.write_file(filename, data)
         self.make_readonly(filename)
         
-    def overwrite_file(self, filename, data):
+    def overwrite_file(self, filename, data, runfilters=True):
         tracing.trace('overwriting hooked %s' % filename)
         toplevel = self._get_toplevel(filename)
-        data = self.hooks.call('repository-write-data', data,
-                                repo=self.repo, toplevel=toplevel)
+        if runfilters:
+            data = self.hooks.call('repository-write-data', data,
+                                   repo=self.repo, toplevel=toplevel)
         self.fs.overwrite_file(filename, data)
         self.make_readonly(filename)
         
