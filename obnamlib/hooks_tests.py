@@ -46,13 +46,15 @@ class HookTests(unittest.TestCase):
         
     def test_adds_two_callbacks(self):
         id1 = self.hook.add_callback(self.callback)
-        id2 = self.hook.add_callback(self.callback2)
+        id2 = self.hook.add_callback(self.callback2, 
+                                     obnamlib.Hook.DEFAULT_PRIORITY + 1)
         self.assertEqual(self.hook.callbacks, [self.callback, self.callback2])
         self.assertNotEqual(id1, id2)
         
     def test_adds_callbacks_in_reverse_order(self):
-        id1 = self.hook.add_callback(self.callback, reverse=True)
-        id2 = self.hook.add_callback(self.callback2, reverse=True)
+        id1 = self.hook.add_callback(self.callback)
+        id2 = self.hook.add_callback(self.callback2, 
+                                     obnamlib.Hook.DEFAULT_PRIORITY - 1)
         self.assertEqual(self.hook.callbacks, [self.callback2, self.callback])
         self.assertNotEqual(id1, id2)
 

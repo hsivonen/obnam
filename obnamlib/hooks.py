@@ -30,10 +30,15 @@ class Hook(object):
 
     '''A hook.'''
 
+    EARLY_PRIORITY = 250
+    DEFAULT_PRIORITY = 500
+    LATE_PRIORITY = 750
+
     def __init__(self):
         self.callbacks = []
+        self.priorities = {}
         
-    def add_callback(self, callback, reverse=False):
+    def add_callback(self, callback, priority=DEFAULT_PRIORITY):
         '''Add a callback to this hook.
         
         Return an identifier that can be used to remove this callback.
@@ -41,10 +46,11 @@ class Hook(object):
         '''
 
         if callback not in self.callbacks:
-            if reverse:
-                self.callbacks.insert(0, callback)
-            else:
-                self.callbacks.append(callback)
+            self.priorities[callback] = priority
+            self.callbacks.append(callback)
+            self.callbacks.sort(lambda x,y: cmp(self.priorities[x], 
+                                                self.priorities[y]))
+            
         return callback
         
     def call_callbacks(self, *args, **kwargs):
@@ -56,6 +62,7 @@ class Hook(object):
         '''Remove a specific callback.'''
         if callback_id in self.callbacks:
             self.callbacks.remove(callback_id)
+            del self.priorities[callback_id]
 
 
 class FilterHook(Hook):
@@ -99,9 +106,9 @@ class HookManager(object):
         if name not in self.hooks:
             self.hooks[name] = FilterHook()
 
-    def add_callback(self, name, callback, reverse=True):
+    def add_callback(self, name, callback, priority=Hook.DEFAULT_PRIORITY):
         '''Add a callback to a named hook.'''
-        return self.hooks[name].add_callback(callback, reverse=reverse)
+        return self.hooks[name].add_callback(callback, priority)
         
     def remove_callback(self, name, callback_id):
         '''Remove a specific callback from a named hook.'''
