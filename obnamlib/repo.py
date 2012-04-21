@@ -326,7 +326,6 @@ class Repository(object):
         tracing.trace('write format version')
         if not self.fs.exists('metadata'):
             self.fs.mkdir('metadata')
-            self.hooks.call('repository-toplevel-init', self, 'metadata')
         self.fs.overwrite_file('metadata/format', '%s\n' % version)
 
     def check_format_version(self):
