@@ -116,6 +116,8 @@ class FilterHook(Hook):
         data = "\0" + data
         for filt in self.callbacks:
             new_data = filt.filter_write(data, *args, **kwargs)
+            assert new_data is not None, \
+                   filt.tag + ": Returned None from filter_write()"
             if data != new_data:
                 data = filt.tag + "\0" + new_data
         return data
