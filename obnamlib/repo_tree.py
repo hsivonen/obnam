@@ -45,10 +45,11 @@ class RepositoryTree(object):
         self.lru_size = lru_size
         self.repo = repo
         self.forest = None
+        self.forest_allows_writes = False
         self.tree = None
         self.keep_just_one_tree = False
 
-    def init_forest(self):
+    def init_forest(self, allow_writes=False):
         if self.forest is None:
             tracing.trace('initializing forest dirname=%s', self.dirname)
             assert self.tree is None
@@ -61,13 +62,14 @@ class RepositoryTree(object):
                                             upload_max=self.upload_queue_size,
                                             lru_size=self.lru_size,
                                             vfs=self.fs,
-                                            allow_writes=True)
+                                            allow_writes=allow_writes)
+            self.forest_allows_writes = allow_writes
         return True
 
     def start_changes(self):
         tracing.trace('start changes for %s', self.dirname)
         
-        if self.forest is None:
+        if self.forest is None or not self.forest_allows_writes:
             if not self.fs.exists(self.dirname):
                 need_init = True
             else:
@@ -80,9 +82,12 @@ class RepositoryTree(object):
                     self.fs.mkdir(self.dirname)
                 self.repo.hooks.call('repository-toplevel-init', self.repo, 
                                      self.dirname)
-            self.init_forest()
+            self.forest = None
+            self.init_forest(allow_writes=True)
 
         assert self.forest is not None
+        assert self.forest_allows_writes, \
+            'it is "%s"' % repr(self.forest_allows_writes)
 
         if self.tree is None:
             if self.forest.trees:
