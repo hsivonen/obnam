@@ -24,6 +24,7 @@ where the hook will be invoked, and the plugins (or other parts of the
 application) will register callbacks.
 
 '''
+import logging
 
 import obnamlib
 
@@ -71,6 +72,8 @@ class MissingFilterError(obnamlib.Error):
 
     def __init__(self, tagname):
         self.tagname = tagname
+        logging.warning("Missing tag: " + tagname)
+        obnamlib.Error.__init__(self, "Unknown filter tag encountered")
 
 class FilterHook(Hook):
 
