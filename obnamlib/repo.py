@@ -434,7 +434,7 @@ class Repository(object):
                                                   self.node_size,
                                                   self.upload_queue_size, 
                                                   self.lru_size, self)
-        self.client.start_changes()
+        self.client.init_forest()
 
     def unlock_client(self):
         '''Unlock currently locked client, without committing changes.'''
