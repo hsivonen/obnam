@@ -161,9 +161,13 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         if self.tree:
             now = int(self.current_time())
             self._insert_int(self.tree, self.genkey(self.GEN_ENDED), now)
-            genid = self.get_generation_id(self.tree)
-            self._insert_count(genid, self.GEN_FILE_COUNT, self.file_count)
-            self._insert_count(genid, self.GEN_TOTAL_DATA, self.total_data)
+            try:
+                genid = self.get_generation_id(self.tree)
+            except KeyError:
+                pass
+            else:
+                self._insert_count(genid, self.GEN_FILE_COUNT, self.file_count)
+                self._insert_count(genid, self.GEN_TOTAL_DATA, self.total_data)
         obnamlib.RepositoryTree.commit(self)
 
     def find_generation(self, genid):
