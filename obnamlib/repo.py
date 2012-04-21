@@ -456,12 +456,14 @@ class Repository(object):
         tracing.trace('committing client (checkpoint=%s)', checkpoint)
         self.require_client_lock()
         self.require_shared_lock()
+        commit_client = self.new_generation or self.removed_generations
         if self.new_generation:
             self.client.set_current_generation_is_checkpoint(checkpoint)
         self.added_generations = []
         for genid in self.removed_generations:
             self._really_remove_generation(genid)
-        self.client.commit()
+        if commit_client:
+            self.client.commit()
         self.unlock_client()
         
     def open_client(self, client_name):
