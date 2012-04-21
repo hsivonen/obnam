@@ -36,7 +36,8 @@ class DeflateCompressionFilter(object):
             data = zlib.compress(data)
         elif how == 'gzip':
             if not self.warned:
-                self.app.ts.notify("--compress-with=gzip is deprecated.  Use --compress-with=deflate instead")
+                self.app.ts.notify("--compress-with=gzip is deprecated.  " +
+                                   "Use --compress-with=deflate instead")
                 self.warned = True
             data = zlib.compress(data)
 
