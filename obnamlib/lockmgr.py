@@ -24,10 +24,21 @@ class LockManager(object):
 
     '''Lock and unlock sets of directories at once.'''
     
-    def __init__(self, fs, timeout):
+    def __init__(self, fs, timeout, client):
         self._fs = fs
         self.timeout = timeout
+        data = ["[lockfile]"]
+        data = data + ["client=" + client]
+        data = data + ["pid=%d" % os.getpid()]
+        try:
+            f = open("/proc/sys/kernel/random/boot_id", "r")
+            data = data + ["boot_id=" + f.read()]
+            f.close()
+        except: # pragma: no cover
+            pass
+        self.data = '\r\n'.join(data)
         
+
     def _time(self): # pragma: no cover
         return time.time()
         
@@ -45,10 +56,9 @@ class LockManager(object):
         
     def _lock_one(self, dirname):
         started = self._time()
-        data = 'this is a lock file'
         while True:
             try:
-                self._fs.lock(self._lockname(dirname), data)
+                self._fs.lock(self._lockname(dirname), self.data)
             except obnamlib.LockFail:
                 if self._time() - started >= self.timeout:
                     raise obnamlib.LockFail('Lock timeout')

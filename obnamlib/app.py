@@ -135,7 +135,7 @@ class App(cliapp.Application):
         # we create one instance here, which will immediately be destroyed.
         # FIXME: This is fugly.
         obnamlib.Repository(None, 1000, 1000, 100, self.hooks, 10, 10, 10,
-                            self.time, 0)
+                            self.time, 0, '')
 
     def plugins_dir(self):
         return os.path.join(os.path.dirname(obnamlib.__file__), 'plugins')
@@ -191,7 +191,8 @@ class App(cliapp.Application):
                                     self.settings['idpath-bits'],
                                     self.settings['idpath-skip'],
                                     self.time,
-                                    self.settings['lock-timeout'])
+                                    self.settings['lock-timeout'],
+                                    self.settings['client-name'])
 
     def time(self):
         '''Return current time in seconds since epoch.

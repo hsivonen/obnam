@@ -37,7 +37,7 @@ class RepositoryRootNodeTests(unittest.TestCase):
                                         obnamlib.IDPATH_DEPTH,
                                         obnamlib.IDPATH_BITS,
                                         obnamlib.IDPATH_SKIP,
-                                        time.time, 0)
+                                        time.time, 0, '')
         
         self.otherfs = obnamlib.LocalFS(self.tempdir)
         self.other = obnamlib.Repository(self.fs, obnamlib.DEFAULT_NODE_SIZE,
@@ -46,7 +46,7 @@ class RepositoryRootNodeTests(unittest.TestCase):
                                         obnamlib.IDPATH_DEPTH,
                                         obnamlib.IDPATH_BITS,
                                         obnamlib.IDPATH_SKIP,
-                                        time.time, 0)
+                                        time.time, 0, '')
 
     def tearDown(self):
         shutil.rmtree(self.tempdir)
@@ -179,7 +179,7 @@ class RepositoryRootNodeTests(unittest.TestCase):
                                  obnamlib.IDPATH_DEPTH,
                                  obnamlib.IDPATH_BITS,
                                  obnamlib.IDPATH_SKIP,
-                                 time.time, 0)
+                                 time.time, 0, '')
         self.assertEqual(s2.list_clients(), ['foo'])
         
     def test_adding_existing_client_fails(self):
@@ -254,7 +254,7 @@ class RepositoryClientTests(unittest.TestCase):
                                         obnamlib.IDPATH_DEPTH,
                                         obnamlib.IDPATH_BITS,
                                         obnamlib.IDPATH_SKIP,
-                                        time.time, 0)
+                                        time.time, 0, '')
         self.repo.lock_root()
         self.repo.add_client('client_name')
         self.repo.commit_root()
@@ -267,7 +267,7 @@ class RepositoryClientTests(unittest.TestCase):
                                          obnamlib.IDPATH_DEPTH,
                                          obnamlib.IDPATH_BITS,
                                          obnamlib.IDPATH_SKIP,
-                                         time.time, 0)
+                                         time.time, 0, '')
         
         self.dir_meta = obnamlib.Metadata()
         self.dir_meta.st_mode = stat.S_IFDIR | 0777
@@ -576,7 +576,7 @@ class RepositoryChunkTests(unittest.TestCase):
                                         obnamlib.IDPATH_DEPTH,
                                         obnamlib.IDPATH_BITS,
                                         obnamlib.IDPATH_SKIP,
-                                        time.time, 0)
+                                        time.time, 0, '')
         self.repo.lock_root()
         self.repo.add_client('client_name')
         self.repo.commit_root()
@@ -657,7 +657,7 @@ class RepositoryGetSetChunksTests(unittest.TestCase):
                                         obnamlib.IDPATH_DEPTH,
                                         obnamlib.IDPATH_BITS,
                                         obnamlib.IDPATH_SKIP,
-                                        time.time, 0)
+                                        time.time, 0, '')
         self.repo.lock_root()
         self.repo.add_client('client_name')
         self.repo.commit_root()
@@ -702,7 +702,7 @@ class RepositoryGenspecTests(unittest.TestCase):
                                         obnamlib.IDPATH_DEPTH,
                                         obnamlib.IDPATH_BITS,
                                         obnamlib.IDPATH_SKIP,
-                                        time.time, 0)
+                                        time.time, 0, '')
         self.repo.lock_root()
         self.repo.add_client('client_name')
         self.repo.commit_root()
@@ -758,7 +758,7 @@ class RepositoryWalkTests(unittest.TestCase):
                                         obnamlib.IDPATH_DEPTH,
                                         obnamlib.IDPATH_BITS,
                                         obnamlib.IDPATH_SKIP,
-                                        time.time, 0)
+                                        time.time, 0, '')
         self.repo.lock_root()
         self.repo.add_client('client_name')
         self.repo.commit_root()
