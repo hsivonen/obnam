@@ -35,12 +35,12 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         self.app.settings.string(['symmetric-key-bits'],
                                    'size of symmetric key, in bits')
         
+        self.tag = "encrypt1"
+
         hooks = [
             ('repository-toplevel-init', self.toplevel_init,
              obnamlib.Hook.DEFAULT_PRIORITY),
-            ('repository-read-data', self.toplevel_read_data,
-             obnamlib.Hook.EARLY_PRIORITY),
-            ('repository-write-data', self.toplevel_write_data,
+            ('repository-data', self,
              obnamlib.Hook.LATE_PRIORITY),
             ('repository-add-client', self.add_client,
              obnamlib.Hook.DEFAULT_PRIORITY),
@@ -111,13 +111,13 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         encrypted = obnamlib.encrypt_symmetric(encoded, symmetric_key)
         self._write_file(repo, os.path.join(toplevel, 'userkeys'), encrypted)
 
-    def toplevel_read_data(self, encrypted, repo, toplevel):
+    def filter_read(self, encrypted, repo, toplevel):
         if not self.keyid:
             return encrypted
         symmetric_key = self.get_symmetric_key(repo, toplevel)
         return obnamlib.decrypt_symmetric(encrypted, symmetric_key)
 
-    def toplevel_write_data(self, cleartext, repo, toplevel):
+    def filter_write(self, cleartext, repo, toplevel):
         if not self.keyid:
             return cleartext
         symmetric_key = self.get_symmetric_key(repo, toplevel)
@@ -133,12 +133,12 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
 
     def read_keyring(self, repo, toplevel):
         encrypted = repo.fs.fs.cat(os.path.join(toplevel, 'userkeys'))
-        encoded = self.toplevel_read_data(encrypted, repo, toplevel)
+        encoded = self.filter_read(encrypted, repo, toplevel)
         return obnamlib.Keyring(encoded=encoded)
 
     def write_keyring(self, repo, toplevel, keyring):
         encoded = str(keyring)
-        encrypted = self.toplevel_write_data(encoded, repo, toplevel)
+        encrypted = self.filter_write(encoded, repo, toplevel)
         pathname = os.path.join(toplevel, 'userkeys')
         self._overwrite_file(repo, pathname, encrypted)
 

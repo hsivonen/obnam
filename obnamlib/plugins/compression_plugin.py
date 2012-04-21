@@ -20,38 +20,38 @@ import zlib
 
 import obnamlib
 
+class DeflateCompressionFilter(object):
+
+    def __init__(self, app):
+        self.tag = "deflate"
+        self.app = app
+
+    def filter_read(self, data, repo, toplevel):
+        return zlib.decompress(data)
+        
+    def filter_write(self, data, repo, toplevel):
+        how = self.app.settings['compress-with']
+        if how == 'deflate':
+            data = zlib.compress(data)
+        elif how == 'gzip':
+            self.app.ts.notify("--compress-with=gzip is deprecated.  Use --compress-with=deflate instead")
+            data = zlib.compress(data)
+
+        return data
+    
 
 class CompressionPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
         self.app.settings.choice(['compress-with'],
-                                 ['none', 'gzip'],
+                                 ['none', 'deflate', 'gzip'],
                                  'use PROGRAM to compress repository with '
-                                    '(one of none, gzip)',
+                                    '(one of none, deflate)',
                                  metavar='PROGRAM')
         
         hooks = [
-            ('repository-read-data', self.toplevel_read_data, 
-             obnamlib.Hook.LATE_PRIORITY),
-            ('repository-write-data', self.toplevel_write_data,
+            ('repository-data', DeflateCompressionFilter(self.app),
              obnamlib.Hook.EARLY_PRIORITY),
         ]
         for name, callback, prio in hooks:
             self.app.hooks.add_callback(name, callback, prio)
-
-    def toplevel_read_data(self, data, repo, toplevel):
-        how = self.app.settings['compress-with']
-        if how == 'none':
-            return data
-        elif how == 'gzip':
-            return zlib.decompress(data)
-        assert False
-
-    def toplevel_write_data(self, data, repo, toplevel):
-        how = self.app.settings['compress-with']
-        if how == 'none':
-            return data
-        elif how == 'gzip':
-            return zlib.compress(data)
-        assert False
-
