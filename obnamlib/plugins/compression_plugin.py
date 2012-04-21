@@ -25,6 +25,7 @@ class DeflateCompressionFilter(object):
     def __init__(self, app):
         self.tag = "deflate"
         self.app = app
+        self.warned = False
 
     def filter_read(self, data, repo, toplevel):
         return zlib.decompress(data)
@@ -34,7 +35,9 @@ class DeflateCompressionFilter(object):
         if how == 'deflate':
             data = zlib.compress(data)
         elif how == 'gzip':
-            self.app.ts.notify("--compress-with=gzip is deprecated.  Use --compress-with=deflate instead")
+            if not self.warned:
+                self.app.ts.notify("--compress-with=gzip is deprecated.  Use --compress-with=deflate instead")
+                self.warned = True
             data = zlib.compress(data)
 
         return data
