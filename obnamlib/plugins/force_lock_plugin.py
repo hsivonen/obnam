@@ -43,19 +43,27 @@ class ForceLockPlugin(obnamlib.ObnamPlugin):
                                   'or cannot be accessed.\n' +
                                   str(e))
 
-        if client_name not in repo.list_clients():
+        all_clients = repo.list_clients()
+        if client_name not in all_clients:
             msg = 'Client does not exist in repository.'
             logging.warning(msg)
             self.app.output.write('Warning: %s\n' % msg)
             return
 
-        client_id = repo.clientlist.get_client_id(client_name)
-        client_dir = repo.client_dir(client_id)        
-        lockname = os.path.join(client_dir, 'lock')
-        if repo.fs.exists(lockname):
-            logging.info('Removing lockfile %s' % lockname)
-            repo.fs.remove(lockname)
-        else:
-            logging.info('Client is not locked')
+        all_dirs = ['clientlist', 'chunksums', 'chunklist']
+        for client_name in all_clients:
+            client_id = repo.clientlist.get_client_id(client_name)
+            client_dir = repo.client_dir(client_id)
+            all_dirs.append(client_dir)
+
+        for one_dir in all_dirs:
+            lockname = os.path.join(one_dir, 'lock')
+            if repo.fs.exists(lockname):
+                logging.info('Removing lockfile %s' % lockname)
+                repo.fs.remove(lockname)
+            else:
+                logging.info('%s is not locked' % one_dir)
+
         repo.fs.close()
 
+        return 0

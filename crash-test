@@ -50,7 +50,7 @@ do
     rm -f "$tempdir/obnam.log"
 
     echo "Trying backup with at most $N writes to repository"
-    find "$tempdir/repo" -name lock -delete
+    ./obnam force-lock --no-default-config --config "$tempdir/conf" 2>/dev/null
     if ./obnam backup --no-default-config --config "$tempdir/conf" 2>/dev/null
     then
         echo "Backup finished ok, done"

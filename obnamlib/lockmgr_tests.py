@@ -41,7 +41,7 @@ class LockManagerTests(unittest.TestCase):
         self.fs = obnamlib.LocalFS(self.tempdir)
         self.timeout = 10
         self.now = 0
-        self.lm = obnamlib.LockManager(self.fs, self.timeout)
+        self.lm = obnamlib.LockManager(self.fs, self.timeout, '')
         self.lm._time = self.fake_time
         self.lm._sleep = lambda: None
         

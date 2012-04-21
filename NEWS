@@ -24,6 +24,7 @@ Version 0.27, released UNRELEASED; a BETA release
   without worrying about any other filtering which might occur.
 * File and chunk checksums are now stored in half the size, saving a tiny
   bit of space in the backup repository.
+* Forcing of locks is now unconditional and across the entire repository.
 
 Version 0.26, released 2012-03-26; a BETA release
 -------------------------------------------------
