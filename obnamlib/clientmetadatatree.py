@@ -162,11 +162,14 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
             self._insert_int(self.tree, self.genkey(self.GEN_ENDED), now)
             try:
                 genid = self.get_generation_id(self.tree)
-            except KeyError:
+            except KeyError: # pragma: no cover
                 pass
             else:
-                self._insert_count(genid, self.GEN_FILE_COUNT, self.file_count)
-                self._insert_count(genid, self.GEN_TOTAL_DATA, self.total_data)
+                t = [(self.GEN_FILE_COUNT, 'file_count'),
+                     (self.GEN_TOTAL_DATA, 'total_data')]
+                for subkey, attr in t:
+                    if hasattr(self, attr):
+                        self._insert_count(genid, subkey, getattr(self, attr))
         obnamlib.RepositoryTree.commit(self)
 
     def find_generation(self, genid):
@@ -184,7 +187,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
             for t in self.forest.trees:
                 try:
                     genid = self.get_generation_id(t)
-                except KeyError:
+                except KeyError: # pragma: no cover
                     pass
                 else:
                     genids.append(genid)

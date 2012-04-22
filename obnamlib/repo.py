@@ -543,6 +543,8 @@ class Repository(object):
         chunk_ids = set(self.client.list_chunks_in_generation(gen_id))
         chunk_ids = filter_away_chunks_used_by_other_gens(chunk_ids, gen_id)
         remove_unused_chunks(chunk_ids)
+        if self.new_generation is None:
+            self.client.start_changes(create_tree=False)
         self.client.remove_generation(gen_id)
 
     def remove_generation(self, gen):

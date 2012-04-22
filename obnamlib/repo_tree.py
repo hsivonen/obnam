@@ -66,7 +66,7 @@ class RepositoryTree(object):
             self.forest_allows_writes = allow_writes
         return True
 
-    def start_changes(self):
+    def start_changes(self, create_tree=True):
         tracing.trace('start changes for %s', self.dirname)
         
         if self.forest is None or not self.forest_allows_writes:
@@ -89,7 +89,7 @@ class RepositoryTree(object):
         assert self.forest_allows_writes, \
             'it is "%s"' % repr(self.forest_allows_writes)
 
-        if self.tree is None:
+        if self.tree is None and create_tree:
             if self.forest.trees:
                 self.tree = self.forest.new_tree(self.forest.trees[-1])
                 tracing.trace('use newest tree %s (of %d)', self.tree.root.id,
