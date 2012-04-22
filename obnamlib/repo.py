@@ -153,13 +153,7 @@ class Repository(object):
         self.removed_clients = []
         self.removed_generations = []
         self.client = None
-        self.chunklist = obnamlib.ChunkList(self.fs, node_size, 
-                                            upload_queue_size, 
-                                            lru_size, self)
-        self.chunksums = obnamlib.ChecksumTree(self.fs, 'chunksums', 
-                                               len(self.checksum('')),
-                                               node_size, upload_queue_size, 
-                                               lru_size, self)
+        self._open_shared()
         self.prev_chunkid = None
         self.chunk_idpath = larch.IdPath('chunks', idpath_depth, 
                                          idpath_bits, idpath_skip)
@@ -169,6 +163,16 @@ class Repository(object):
         self.clientlist = obnamlib.ClientList(self.fs, self.node_size, 
                                               self.upload_queue_size, 
                                               self.lru_size, self)
+
+    def _open_shared(self):
+        self.chunklist = obnamlib.ChunkList(self.fs, self.node_size, 
+                                            self.upload_queue_size, 
+                                            self.lru_size, self)
+        self.chunksums = obnamlib.ChecksumTree(self.fs, 'chunksums', 
+                                               len(self.checksum('')),
+                                               self.node_size, 
+                                               self.upload_queue_size, 
+                                               self.lru_size, self)
 
     def setup_hooks(self, hooks):
         self.hooks = hooks
@@ -406,6 +410,7 @@ class Repository(object):
         self.require_shared_lock()
         self.lockmgr.unlock(self.shared_dirs)
         self.got_shared_lock = False
+        self._open_shared()
         
     def lock_client(self, client_name):
         '''Lock a client for exclusive write access.
