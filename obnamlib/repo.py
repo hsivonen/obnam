@@ -143,9 +143,7 @@ class Repository(object):
         self.lru_size = lru_size
         self.lockmgr = obnamlib.LockManager(self.fs, lock_timeout)
         self.got_root_lock = False
-        self.clientlist = obnamlib.ClientList(self.fs, node_size, 
-                                              upload_queue_size, 
-                                              lru_size, self)
+        self._open_client_list()
         self.got_shared_lock = False
         self.got_client_lock = False
         self.current_client = None
@@ -166,6 +164,11 @@ class Repository(object):
         self.chunk_idpath = larch.IdPath('chunks', idpath_depth, 
                                          idpath_bits, idpath_skip)
         self._chunks_exists = False
+
+    def _open_client_list(self):
+        self.clientlist = obnamlib.ClientList(self.fs, self.node_size, 
+                                              self.upload_queue_size, 
+                                              self.lru_size, self)
 
     def setup_hooks(self, hooks):
         self.hooks = hooks
@@ -271,6 +274,7 @@ class Repository(object):
         self.added_clients = []
         self.removed_clients = []
         self._write_format_version(self.format_version)
+        self.clientlist.start_changes()
 
     def unlock_root(self):
         '''Unlock root node without committing changes made.'''
@@ -280,6 +284,7 @@ class Repository(object):
         self.removed_clients = []
         self.lockmgr.unlock(['.'])
         self.got_root_lock = False
+        self._open_client_list()
         
     def commit_root(self):
         '''Commit changes to root node, and unlock it.'''
