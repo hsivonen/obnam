@@ -243,6 +243,9 @@ some things will not work very well for accessing live data over
 .BR sftp .
 Most importantly,
 the handling of of hardlinks is rather suboptimal.
+For live data access, you should not end the URL with
+.B /~/
+and should append a dot at the end in this special case.
 .SS "Generation specifications"
 When not using the latest generation,
 you will need to specify which one you need.
