@@ -13,6 +13,9 @@ Version 0.27, released UNRELEASED; a BETA release
   it should make things go a bit faster for high latency repository
   connections.
 * Some SFTP related speed optimizations.
+* Uses the larch 0.30 read-only mode to fix a bug where opening a B-tree
+  rolls back changes someone else is making, even if we only use the tree
+  to read stuff from.
 
 Version 0.26, released 2012-03-26; a BETA release
 -------------------------------------------------
