@@ -76,7 +76,6 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
                                          node_size, upload_queue_size, 
                                          lru_size, repo)
         self.genhash = self.hash_name('generation')
-        self.known_generations = dict()
         self.chunkids_per_key = max(1,
                                     int(node_size / 4 / struct.calcsize('Q')))
 
@@ -161,28 +160,38 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         if self.tree:
             now = int(self.current_time())
             self._insert_int(self.tree, self.genkey(self.GEN_ENDED), now)
-            genid = self.get_generation_id(self.tree)
-            self._insert_count(genid, self.GEN_FILE_COUNT, self.file_count)
-            self._insert_count(genid, self.GEN_TOTAL_DATA, self.total_data)
+            try:
+                genid = self.get_generation_id(self.tree)
+            except KeyError: # pragma: no cover
+                pass
+            else:
+                t = [(self.GEN_FILE_COUNT, 'file_count'),
+                     (self.GEN_TOTAL_DATA, 'total_data')]
+                for subkey, attr in t:
+                    if hasattr(self, attr):
+                        self._insert_count(genid, subkey, getattr(self, attr))
         obnamlib.RepositoryTree.commit(self)
 
     def find_generation(self, genid):
-        if genid in self.known_generations:
-            return self.known_generations[genid]
-
         if self.forest:
             key = self.genkey(self.GEN_ID)
             for t in self.forest.trees:
                 t_genid = self._lookup_int(t, key)
-                self.known_generations[t_genid] = t
                 if t_genid == genid:
                     return t
         raise KeyError('Unknown generation %s' % genid)
 
     def list_generations(self):
         if self.forest:
-            key = self.genkey(self.GEN_ID)
-            return [self._lookup_int(t, key) for t in self.forest.trees]
+            genids = []
+            for t in self.forest.trees:
+                try:
+                    genid = self.get_generation_id(t)
+                except KeyError: # pragma: no cover
+                    pass
+                else:
+                    genids.append(genid)
+            return genids
         else:
             return []
 

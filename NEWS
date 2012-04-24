@@ -25,6 +25,9 @@ Version 0.27, released UNRELEASED; a BETA release
 * File and chunk checksums are now stored in half the size, saving a tiny
   bit of space in the backup repository.
 * Forcing of locks is now unconditional and across the entire repository.
+* Uses the larch 0.30 read-only mode to fix a bug where opening a B-tree
+  rolls back changes someone else is making, even if we only use the tree
+  to read stuff from.
 
 Version 0.26, released 2012-03-26; a BETA release
 -------------------------------------------------

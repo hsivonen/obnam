@@ -153,9 +153,7 @@ class Repository(object):
                                             hider.hexdigest())
 
         self.got_root_lock = False
-        self.clientlist = obnamlib.ClientList(self.fs, node_size, 
-                                              upload_queue_size, 
-                                              lru_size, self)
+        self._open_client_list()
         self.got_shared_lock = False
         self.got_client_lock = False
         self.current_client = None
@@ -165,17 +163,26 @@ class Repository(object):
         self.removed_clients = []
         self.removed_generations = []
         self.client = None
-        self.chunklist = obnamlib.ChunkList(self.fs, node_size, 
-                                            upload_queue_size, 
-                                            lru_size, self)
-        self.chunksums = obnamlib.ChecksumTree(self.fs, 'chunksums', 
-                                               len(self.checksum('')),
-                                               node_size, upload_queue_size, 
-                                               lru_size, self)
+        self._open_shared()
         self.prev_chunkid = None
         self.chunk_idpath = larch.IdPath('chunks', idpath_depth, 
                                          idpath_bits, idpath_skip)
         self._chunks_exists = False
+
+    def _open_client_list(self):
+        self.clientlist = obnamlib.ClientList(self.fs, self.node_size, 
+                                              self.upload_queue_size, 
+                                              self.lru_size, self)
+
+    def _open_shared(self):
+        self.chunklist = obnamlib.ChunkList(self.fs, self.node_size, 
+                                            self.upload_queue_size, 
+                                            self.lru_size, self)
+        self.chunksums = obnamlib.ChecksumTree(self.fs, 'chunksums', 
+                                               len(self.checksum('')),
+                                               self.node_size, 
+                                               self.upload_queue_size, 
+                                               self.lru_size, self)
 
     def setup_hooks(self, hooks):
         self.hooks = hooks
@@ -276,6 +283,7 @@ class Repository(object):
         self.added_clients = []
         self.removed_clients = []
         self._write_format_version(self.format_version)
+        self.clientlist.start_changes()
 
     def unlock_root(self):
         '''Unlock root node without committing changes made.'''
@@ -285,6 +293,7 @@ class Repository(object):
         self.removed_clients = []
         self.lockmgr.unlock(['.'])
         self.got_root_lock = False
+        self._open_client_list()
         
     def commit_root(self):
         '''Commit changes to root node, and unlock it.'''
@@ -406,6 +415,7 @@ class Repository(object):
         self.require_shared_lock()
         self.lockmgr.unlock(self.shared_dirs)
         self.got_shared_lock = False
+        self._open_shared()
         
     def lock_client(self, client_name):
         '''Lock a client for exclusive write access.
@@ -461,12 +471,14 @@ class Repository(object):
         tracing.trace('committing client (checkpoint=%s)', checkpoint)
         self.require_client_lock()
         self.require_shared_lock()
+        commit_client = self.new_generation or self.removed_generations
         if self.new_generation:
             self.client.set_current_generation_is_checkpoint(checkpoint)
         self.added_generations = []
         for genid in self.removed_generations:
             self._really_remove_generation(genid)
-        self.client.commit()
+        if commit_client:
+            self.client.commit()
         self.unlock_client()
         
     def open_client(self, client_name):
@@ -546,6 +558,8 @@ class Repository(object):
         chunk_ids = set(self.client.list_chunks_in_generation(gen_id))
         chunk_ids = filter_away_chunks_used_by_other_gens(chunk_ids, gen_id)
         remove_unused_chunks(chunk_ids)
+        if self.new_generation is None:
+            self.client.start_changes(create_tree=False)
         self.client.remove_generation(gen_id)
 
     def remove_generation(self, gen):
