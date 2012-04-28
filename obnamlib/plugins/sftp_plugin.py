@@ -132,13 +132,22 @@ class SftpFS(obnamlib.VirtualFileSystem):
             return str_or_unicode.encode('utf-8')
         else:
             return str_or_unicode
+
+    def _create_root_if_missing(self):
+        try:
+            self.mkdir(self.path)
+        except OSError, e:
+            # sftp/paramiko does not give us a useful errno so we hope
+            # for the best
+            pass
+        self.create_path_if_missing = False # only create once
         
     def connect(self):
         try_openssh = not self.settings or not self.settings['pure-paramiko']
         if not try_openssh or not self._connect_openssh():
             self._connect_paramiko()
-        if self.create_path_if_missing and not self.exists(self.path):
-            self.mkdir(self.path)
+        if self.create_path_if_missing:
+            self._create_root_if_missing()
         self.chdir(self.path)
 
     def _connect_openssh(self):
@@ -288,9 +297,8 @@ class SftpFS(obnamlib.VirtualFileSystem):
         self._delay()
         
         if self.sftp:
-            if create and not self.exists(path):
-                self.mkdir(path)
-                self.create_path_if_missing = False # only create first time
+            if create:
+                self._create_root_if_missing()
             self.sftp.chdir(path)
 
     def _get_username(self):
