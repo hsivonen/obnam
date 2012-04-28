@@ -309,6 +309,12 @@ class LocalFS(obnamlib.VirtualFileSystem):
         return os.listdir(self.join(dirname))
 
     def listdir2(self, dirname):
-        return [(name, self.lstat(os.path.join(dirname, name)))
-                 for name in os.listdir(self.join(dirname))]
+        result = []
+        for name in self.listdir(dirname):
+            try:
+                st = self.lstat(os.path.join(dirname, name))
+            except OSError, e: # pragma: no cover
+                st = e
+            result.append((name, st))
+        return result
 
