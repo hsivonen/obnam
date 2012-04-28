@@ -17,6 +17,6 @@
 
 set -e
 
+chmod -R 0755 "$DATADIR"
 find "$DATADIR" -mindepth 1 -delete
-
 

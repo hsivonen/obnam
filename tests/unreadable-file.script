@@ -21,7 +21,12 @@ echo bbb > "$DATADIR/data/bbb"
 chmod 0 "$DATADIR/data/bbb"
 echo ccc > "$DATADIR/data/ccc"
 
-$SRCDIR/tests/backup
+if $SRCDIR/tests/backup
+then
+    exit=0
+else
+    exit=1
+fi
 $SRCDIR/tests/restore
 
 # Remove the problematic directory so that verify works.
@@ -38,3 +43,4 @@ fi
 
 $SRCDIR/tests/verify
 
+exit $exit

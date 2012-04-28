@@ -196,7 +196,8 @@ class VirtualFileSystem(object):
     def overwrite_file(self, pathname, contents):
         '''Like write_file, but overwrites existing file.'''
 
-    def scan_tree(self, dirname, ok=None, dirst=None, log=logging.error):
+    def scan_tree(self, dirname, ok=None, dirst=None, log=logging.error,
+                  error_handler=None):
         '''Scan a tree for files.
         
         Return a generator that returns ``(pathname, stat_result)``
@@ -216,20 +217,27 @@ class VirtualFileSystem(object):
         
         Errors from calling ``listdir`` or ``lstat`` are logged,
         but do not stop the scanning. Such files or directories are
-        not returned, however.
+        not returned, however. If `error_handler` is defined, it is
+        called once for every problem, giving the name and exception
+        as arguments.
         
         '''
+        
+        error_handler = error_handler or (lambda name, e: None)
 
         try:
             pairs = self.listdir2(dirname)
         except OSError, e:
             log('listdir failed: %s: %s' % (e.filename, e.strerror))
+            error_handler(dirname, e)
             pairs = []
             
         queue = []
         for name, st in pairs:
             pathname = os.path.join(dirname, name)
-            if ok is None or ok(pathname, st):
+            if isinstance(st, BaseException):
+                error_handler(pathname, st)
+            elif ok is None or ok(pathname, st):
                 if stat.S_ISDIR(st.st_mode):
                     for t in self.scan_tree(pathname, ok=ok, dirst=st):
                         yield t
