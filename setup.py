@@ -83,12 +83,13 @@ class Check(Command):
 
         num_clients = '2'
         num_generations = '16'
-        test_repo = tempfile.mkdtemp()
 
         if not self.fast:
             print "run locking tests"
+            test_repo = tempfile.mkdtemp()
             subprocess.check_call(['./test-locking', num_clients, 
                                    num_generations, test_repo, test_repo])
+            shutil.rmtree(test_repo)
 
         if not self.fast:
             print "run crash test"
@@ -106,11 +107,11 @@ class Check(Command):
 
             if not self.fast:
                 print "re-run locking tests using localhost networking"
+                test_repo = tempfile.mkdtemp()
                 repo_url = 'sftp://localhost/%s' % test_repo
                 subprocess.check_call(['./test-locking', num_clients, 
                                        num_generations, repo_url, test_repo])
-
-        shutil.rmtree(test_repo)
+                shutil.rmtree(test_repo)
             
         print "setup.py check done"
 
