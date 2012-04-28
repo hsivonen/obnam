@@ -160,11 +160,8 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         if self.tree:
             now = int(self.current_time())
             self._insert_int(self.tree, self.genkey(self.GEN_ENDED), now)
-            try:
-                genid = self.get_generation_id(self.tree)
-            except KeyError: # pragma: no cover
-                pass
-            else:
+            genid = self._get_generation_id_or_None(self.tree)
+            if genid is not None:
                 t = [(self.GEN_FILE_COUNT, 'file_count'),
                      (self.GEN_TOTAL_DATA, 'total_data')]
                 for subkey, attr in t:
@@ -185,11 +182,8 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         if self.forest:
             genids = []
             for t in self.forest.trees:
-                try:
-                    genid = self.get_generation_id(t)
-                except KeyError: # pragma: no cover
-                    pass
-                else:
+                genid = self._get_generation_id_or_None(t)
+                if genid is not None:
                     genids.append(genid)
             return genids
         else:
@@ -228,6 +222,12 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
 
     def get_generation_id(self, tree):
         return self._lookup_int(tree, self.genkey(self.GEN_ID))
+
+    def _get_generation_id_or_None(self, tree):
+        try:
+            return self.get_generation_id(tree)
+        except KeyError: # pragma: no cover
+            return None
 
     def _lookup_time(self, tree, what):
         try:
