@@ -30,14 +30,17 @@ class LockManager(object):
         data = ["[lockfile]"]
         data = data + ["client=" + client]
         data = data + ["pid=%d" % os.getpid()]
-        try:
-            f = open("/proc/sys/kernel/random/boot_id", "r")
-            data = data + ["boot_id=" + f.read()]
-            f.close()
-        except: # pragma: no cover
-            pass
+        data = data + self._read_boot_id()
         self.data = '\r\n'.join(data)
-        
+
+    def _read_boot_id(self):
+        try:
+            with open("/proc/sys/kernel/random/boot_id", "r") as f:
+                boot_id = f.read().strip()
+        except: # pragma: no cover
+            return []
+        else:
+            return ["boot_id=%s" % boot_id]
 
     def _time(self): # pragma: no cover
         return time.time()
