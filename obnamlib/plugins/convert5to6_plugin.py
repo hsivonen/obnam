@@ -36,6 +36,7 @@ class Convert5to6Plugin(obnamlib.ObnamPlugin):
 
         self.convert_chunks()
         self.convert_clients()
+        self.convert_format()
 
         self.repo.fs.close()
 
@@ -43,5 +44,8 @@ class Convert5to6Plugin(obnamlib.ObnamPlugin):
         pass
         
     def convert_clients(self):
+        pass
+
+    def convert_format(self):
         pass
 
