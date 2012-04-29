@@ -278,6 +278,13 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         self.app.settings.require('repository')
         logging.debug('fsck on %s' % self.app.settings['repository'])
         self.repo = self.app.open_repository()
+        
+        self.repo.lock_root()
+        client_names = self.repo.list_clients()
+        client_dirs = [self.repo.client_dir(self.repo.get_client_id(name))
+                       for name in client_names]
+        self.repo.lockmgr.lock(client_dirs)
+        self.repo.lock_shared()
 
         self.errors = 0
         self.chunkids_seen = set()
@@ -298,6 +305,10 @@ class FsckPlugin(obnamlib.ObnamPlugin):
                 for work in final_items:
                     self.add_item(work)
                 final_items = []
+
+        self.repo.unlock_shared()
+        self.repo.lockmgr.unlock(client_dirs)
+        self.repo.unlock_root()
 
         self.repo.fs.close()
         self.app.ts.finish()
