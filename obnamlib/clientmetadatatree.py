@@ -86,7 +86,8 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
             return hashlib.md5(s).digest()[:4]
         dirname = os.path.dirname(filename)
         basename = os.path.basename(filename)
-        return hash(dirname) + hash(basename)
+#        return hash(dirname) + hash(basename)
+        return hash('path') + hash('name')
 
     def hashkey(self, prefix, mainhash, subtype, subkey):
         '''Compute a full key.
