@@ -87,8 +87,11 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
             return hashlib.md5(s).digest()[:4]
         dirname = os.path.dirname(filename)
         basename = os.path.basename(filename)
-#        return hash(dirname) + hash(basename)
-        return hash('path') + hash('name')
+        return hash(dirname) + hash(basename)
+
+    def _bad_default_file_id(self, filename):
+        '''For use by unit tests.'''
+        return struct.pack('!Q', 0)
 
     def hashkey(self, prefix, mainhash, subtype, subkey):
         '''Compute a full key.

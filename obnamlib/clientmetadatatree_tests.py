@@ -280,6 +280,8 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
                                             obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
                                             obnamlib.DEFAULT_LRU_SIZE, 
                                             self)
+        # Force use of filename hash collisions.
+        self.client.default_file_id = self.client._bad_default_file_id
         self.client.start_generation()
         self.clientid = self.client.get_generation_id(self.client.tree)
         self.file_metadata = obnamlib.Metadata(st_mode=stat.S_IFREG | 0666)
