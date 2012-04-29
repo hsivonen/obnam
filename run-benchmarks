@@ -21,5 +21,5 @@ for x in confs/benchmark-std-*.conf
 do
     echo "===== $x"
     ./obnam-benchmark --no-default-config --config=confs/common.conf \
-        --config="$x"
+        --config="$x" "$@"
 done
