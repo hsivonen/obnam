@@ -381,7 +381,8 @@ class Repository(object):
 
     @property
     def shared_dirs(self):
-        return [self.chunklist.dirname, self.chunksums.dirname]
+        return [self.chunklist.dirname, self.chunksums.dirname,
+                self.chunk_idpath.dirname]
         
     def lock_shared(self):
         '''Lock a client for exclusive write access.
@@ -399,6 +400,14 @@ class Repository(object):
         tracing.trace('starting changes in chunksums and chunklist')
         self.chunksums.start_changes()
         self.chunklist.start_changes()
+        
+        # Initialize the chunks directory for encryption, etc, if it just
+        # got created.
+        dirname = self.chunk_idpath.dirname
+        filenames = self.fs.listdir(dirname)
+        if filenames == [] or filenames == ['lock']:
+            self.hooks.call('repository-toplevel-init', self, dirname)
+
 
     def commit_shared(self):
         '''Commit changes to shared B-trees.'''
@@ -643,14 +652,6 @@ class Repository(object):
 
         if self.prev_chunkid is None:
             self.prev_chunkid = random_chunkid()
-
-        if not self._chunks_exists:
-            tracing.trace('maybe create chunks')
-            if not self.fs.exists('chunks'):
-                tracing.trace('do create chunks')
-                self.fs.mkdir('chunks')
-                self.hooks.call('repository-toplevel-init', self, 'chunks')
-            self._chunks_exists = True
 
         while True:
             chunkid = (self.prev_chunkid + 1) % obnamlib.MAX_ID
