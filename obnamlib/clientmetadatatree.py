@@ -17,6 +17,7 @@
 import hashlib
 import logging
 import os
+import random
 import struct
 import tracing
 
@@ -71,15 +72,15 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
                  repo):
         tracing.trace('new ClientMetadataTree, client_dir=%s' % client_dir)
         self.current_time = repo.current_time
-        key_bytes = len(self.hashkey(0, self.hash_name(''), 0, 0))
+        key_bytes = len(self.hashkey(0, self.default_file_id(''), 0, 0))
         obnamlib.RepositoryTree.__init__(self, fs, client_dir, key_bytes, 
                                          node_size, upload_queue_size, 
                                          lru_size, repo)
-        self.genhash = self.hash_name('generation')
+        self.genhash = self.default_file_id('generation')
         self.chunkids_per_key = max(1,
                                     int(node_size / 4 / struct.calcsize('Q')))
 
-    def hash_name(self, filename):
+    def default_file_id(self, filename):
         '''Return hash of filename suitable for use as main key.'''
         tracing.trace(repr(filename))
         def hash(s):
@@ -87,6 +88,10 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         dirname = os.path.dirname(filename)
         basename = os.path.basename(filename)
         return hash(dirname) + hash(basename)
+
+    def _bad_default_file_id(self, filename):
+        '''For use by unit tests.'''
+        return struct.pack('!Q', 0)
 
     def hashkey(self, prefix, mainhash, subtype, subkey):
         '''Compute a full key.
@@ -123,6 +128,11 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     def fskey(self, mainhash, subtype, subkey):
         ''''Generate key for filesystem metadata.'''
         return self.hashkey(self.PREFIX_FS_META, mainhash, subtype, subkey)
+        
+    def fs_unkey(self, key):
+        '''Inverse of fskey.'''
+        parts = struct.unpack('!B8sB8s', key)
+        return parts[1], parts[3]
 
     def genkey(self, subkey):
         '''Generate key for generation metadata.'''
@@ -142,12 +152,46 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         parts = struct.unpack('!BQBQ', key)
         return parts[1], parts[3]
 
-    def get_file_id(self, gen, pathname):
+    def get_file_id(self, tree, pathname):
         '''Return id for file in a given generation.'''
         
-        # FIXME: This should handle hash collisions eventually.
+        default_file_id = self.default_file_id(pathname)
+        minkey = self.fskey(default_file_id, self.FILE_NAME, 0)
+        maxkey = self.fskey(default_file_id, self.FILE_NAME, obnamlib.MAX_ID)
+        file_ids = set()
+        for key, value in tree.lookup_range(minkey, maxkey):
+            def_id, file_id = self.fs_unkey(key)
+            assert def_id == default_file_id, \
+                'def=%s other=%s' % (repr(def_id), repr(default_file_id))
+            if value == pathname:
+                return file_id
+            file_ids.add(file_id)
+
+        raise KeyError('%s does not yet have a file-id' % pathname)
+
+    def set_file_id(self, pathname):
+        '''Set and return the file-id for a file in current generation.'''
+
+        default_file_id = self.default_file_id(pathname)
+        minkey = self.fskey(default_file_id, self.FILE_NAME, 0)
+        maxkey = self.fskey(default_file_id, self.FILE_NAME, obnamlib.MAX_ID)
+        file_ids = set()
+        for key, value in self.tree.lookup_range(minkey, maxkey):
+            def_id, file_id = self.fs_unkey(key)
+            assert def_id == default_file_id
+            if value == pathname:
+                return file_id
+            file_ids.add(file_id)
         
-        return self.hash_name(pathname)
+        while True:
+            n = random.randint(0, obnamlib.MAX_ID)
+            file_id = struct.pack('!Q', n)
+            if file_id not in file_ids:
+                break
+        
+        key = self.fskey(default_file_id, self.FILE_NAME, file_id)
+        self.tree.insert(key, pathname)
+        return file_id
 
     def _lookup_int(self, tree, key):
         return struct.unpack('!Q', tree.lookup(key))[0]
@@ -261,7 +305,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
 
     def create(self, filename, encoded_metadata):
         tracing.trace('filename=%s', filename)
-        file_id = self.get_file_id(self.tree, filename)
+        file_id = self.set_file_id(filename)
         gen_id = self.get_generation_id(self.tree)
         try:
             old_metadata = self.get_metadata(gen_id, filename)
@@ -286,7 +330,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         tracing.trace('parent=%s', parent)
         if parent != filename: # root dir is its own parent
             basename = os.path.basename(filename)
-            parent_id = self.get_file_id(self.tree, parent)
+            parent_id = self.set_file_id(parent)
             key = self.fskey(parent_id, self.DIR_CONTENTS, file_id)
             # We could just insert, but that would cause unnecessary
             # churn in the tree if nothing changes.
@@ -307,7 +351,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     def set_metadata(self, filename, encoded_metadata):
         tracing.trace('filename=%s', filename)
 
-        file_id = self.get_file_id(self.tree, filename)
+        file_id = self.set_file_id(filename)
         key1 = self.fskey(file_id, self.FILE_NAME, file_id)
         self.tree.insert(key1, filename)
         
@@ -346,18 +390,26 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         minkey = self.fskey(file_id, 0, 0)
         maxkey = self.fskey(file_id, self.TYPE_MAX, self.SUBKEY_MAX)
         self.tree.remove_range(minkey, maxkey)
-
+        
+        # Remove filename.
+        default_file_id = self.default_file_id(filename)
+        key = self.fskey(default_file_id, self.FILE_NAME, file_id)
+        self.tree.remove_range(key, key)
+        
         # Also remove from parent's contents.
         parent = os.path.dirname(filename)
         if parent != filename: # root dir is its own parent
-            parent_id = self.get_file_id(self.tree, parent)
+            parent_id = self.set_file_id(parent)
             key = self.fskey(parent_id, self.DIR_CONTENTS, file_id)
             # The range removal will work even if the key does not exist.
             self.tree.remove_range(key, key)
             
     def listdir(self, genid, dirname):
         tree = self.find_generation(genid)
-        dir_id = self.get_file_id(tree, dirname)
+        try:
+            dir_id = self.get_file_id(tree, dirname)
+        except KeyError:
+            return []
         minkey = self.fskey(dir_id, self.DIR_CONTENTS, 0)
         maxkey = self.fskey(dir_id, self.DIR_CONTENTS, self.SUBKEY_MAX)
         basenames = []
@@ -367,7 +419,10 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
 
     def get_file_chunks(self, genid, filename):
         tree = self.find_generation(genid)
-        file_id = self.get_file_id(tree, filename)
+        try:
+            file_id = self.get_file_id(tree, filename)
+        except KeyError:
+            return []
         minkey = self.fskey(file_id, self.FILE_CHUNKS, 0)
         maxkey = self.fskey(file_id, self.FILE_CHUNKS, self.SUBKEY_MAX)
         pairs = tree.lookup_range(minkey, maxkey)
@@ -395,7 +450,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         tracing.trace('filename=%s', filename)
         tracing.trace('chunkids=%s', repr(chunkids))
     
-        file_id = self.get_file_id(self.tree, filename)
+        file_id = self.set_file_id(filename)
         minkey = self.fskey(file_id, self.FILE_CHUNKS, 0)
         maxkey = self.fskey(file_id, self.FILE_CHUNKS, self.SUBKEY_MAX)
 
@@ -412,7 +467,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         tracing.trace('filename=%s', filename)
         tracing.trace('chunkids=%s', repr(chunkids))
 
-        file_id = self.get_file_id(self.tree, filename)
+        file_id = self.set_file_id(filename)
 
         minkey = self.fskey(file_id, self.FILE_CHUNKS, 0)
         maxkey = self.fskey(file_id, self.FILE_CHUNKS, self.SUBKEY_MAX)
@@ -453,7 +508,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         tracing.trace('filename=%s' % filename)
         tracing.trace('contents=%s' % repr(contents))
         
-        file_id = self.get_file_id(self.tree, filename)
+        file_id = self.set_file_id(filename)
         key = self.fskey(file_id, self.FILE_DATA, 0)
         self.tree.insert(key, contents)
 

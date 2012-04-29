@@ -32,6 +32,7 @@ Version 0.27, released UNRELEASED; a BETA release
   any errors during a backup, and the problematic files were skipped.
   Thanks, Peter Palfrader, for reporting the bug.
 * "obnam forget" is now a bit faster.
+* Hash collisions for filenames are now handled.
 
 Version 0.26, released 2012-03-26; a BETA release
 -------------------------------------------------
