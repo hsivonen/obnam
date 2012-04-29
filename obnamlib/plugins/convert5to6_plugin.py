@@ -15,6 +15,8 @@
 
 
 import logging
+import re
+import stat
 import zlib
 
 import obnamlib
@@ -43,18 +45,17 @@ class Convert5to6Plugin(obnamlib.ObnamPlugin):
         if self.app.settings['compress-with'] == 'gzip':
             funcs.append(self.gunzip)
 
-        chunkids = self.find_chunks()
-        for chunkid in chunkids:
-            logging.debug('converting chunk %s' % chunkid)
+        for filename in self.find_chunks():
+            logging.debug('converting chunk %s' % filename)
             data = self.rawfs.cat(filename)
             for func in funcs:
                 data = func(data)
-            self.repo.fs.write_file(filename, data)
+            self.repo.fs.overwrite_file(filename, data)
 
     def find_chunks(self):
         pat = re.compile(r'^.*/.*/[0-9a-fA-F]+$')
         for filename, st in self.rawfs.scan_tree('chunks'):
-            if stat.S_IFREG(st.st_mode) and pat.match(filename):
+            if stat.S_ISREG(st.st_mode) and pat.match(filename):
                 yield filename
 
     def get_symmetric_key(self):
