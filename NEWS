@@ -8,9 +8,8 @@ Version 0.27, released UNRELEASED; a BETA release
 -------------------------------------------------
 
 * The repository format has again changed in an incompatible manner,
-  so you will need to re-backup everything again. (If this is a problem,
-  tell me, and I'll consider adding backwards compatibility before 1.0
-  is released.)
+  so you will need to re-backup everything again. Alternatively, you can
+  try the new `convert5to6` subcommand. See the manual page for details.
 * New option `--small-files-in-btree` enables Obnam to store the contents
   of small files in the per-client B-tree. This is not the default, at
   least yet, since it's impact on real life performance is unknown, but
