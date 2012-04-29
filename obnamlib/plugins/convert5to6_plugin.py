@@ -15,8 +15,10 @@
 
 
 import logging
+import os
 import re
 import stat
+import tracing
 import zlib
 
 import obnamlib
@@ -32,43 +34,54 @@ class Convert5to6Plugin(obnamlib.ObnamPlugin):
     def convert(self, args):
         self.app.settings.require('repository')
 
-        self.repo = self.app.open_repository()
-        self.rawfs = self.repo.fs.fs
-        self.convert_chunks()
+        self.rawfs = self.app.fsf.new(self.app.settings['repository'])
         self.convert_format()
+        self.repo = self.app.open_repository()
+        self.convert_files()
 
-    def convert_chunks(self):
+    def convert_files(self):
         funcs = []
-        if self.app.settings['encrypt-with']:
-            symmetric_key = self.get_symmetric_key()
-            funcs.append(lambda data: self.decrypt(data, symmetric_key))
         if self.app.settings['compress-with'] == 'gzip':
             funcs.append(self.gunzip)
+        if self.app.settings['encrypt-with']:
+            self.symmetric_keys = {}
+            funcs.append(self.decrypt)
+        tracing.trace('funcs=%s' % repr(funcs))
 
-        for filename in self.find_chunks():
-            logging.debug('converting chunk %s' % filename)
+        for filename in self.find_files():
+            logging.debug('converting file %s' % filename)
             data = self.rawfs.cat(filename)
+            tracing.trace('old data is %d bytes' % len(data))
             for func in funcs:
-                data = func(data)
+                data = func(filename, data)
+            tracing.trace('new data is %d bytes' % len(data))
             self.repo.fs.overwrite_file(filename, data)
 
-    def find_chunks(self):
-        pat = re.compile(r'^.*/.*/[0-9a-fA-F]+$')
-        for filename, st in self.rawfs.scan_tree('chunks'):
-            if stat.S_ISREG(st.st_mode) and pat.match(filename):
-                yield filename
+    def find_files(self):
+        ignored_pat = re.compile(r'^(tmp.*|lock|format|userkeys|key)$')
+        for filename, st in self.rawfs.scan_tree('.'):
+            ignored = ignored_pat.match(os.path.basename(filename))
+            if stat.S_ISREG(st.st_mode) and not ignored:
+                assert filename.startswith('./')
+                yield filename[2:]
 
-    def get_symmetric_key(self):
-        encoded = self.rawfs.cat(os.path.join('chunks', 'key'))
-        key = obnamlib.decrypt_with_secret_keys(encoded)
-        return key
+    def get_symmetric_key(self, filename):
+        toplevel = filename.split('/')[0]
+        tracing.trace('toplevel=%s' % toplevel)
 
-    def decrypt(self, data, symmetric_key):
+        if toplevel not in self.symmetric_keys:
+            encoded = self.rawfs.cat(os.path.join(toplevel, 'key'))
+            key = obnamlib.decrypt_with_secret_keys(encoded)
+            self.symmetric_keys[toplevel] = key
+        return self.symmetric_keys[toplevel]
+
+    def decrypt(self, filename, data):
+        symmetric_key = self.get_symmetric_key(filename)
         return obnamlib.decrypt_symmetric(data, symmetric_key)
 
-    def gunzip(self, data):
-        return zlib.decomrpess(data)
+    def gunzip(self, filename, data):
+        return zlib.decompress(data)
         
     def convert_format(self):
-        pass
+        self.rawfs.overwrite_file('metadata/format', '6\n')
 
