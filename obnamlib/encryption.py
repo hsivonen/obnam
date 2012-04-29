@@ -114,6 +114,7 @@ def _gpg(args, stdin='', gpghome=None):
     env.update(os.environ)
     if gpghome is not None:
         env['GNUPGHOME'] = gpghome
+        tracing.trace('gpghome=%s' % gpghome)
     
     argv = ['gpg', '-q', '--batch'] + args
     tracing.trace('argv=%s', repr(argv))
