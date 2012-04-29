@@ -21,8 +21,11 @@ set -eu
 
 cd "$DATADIR"
 tar -xf "$SRCDIR/test-data/repo-format-5-encrypted-gzipped.tar.gz"
-"$SRCDIR/tests/obnam" convert5to6 -r repo
-"$SRCDIR/tests/obnam" restore -r repo --to restored
-summain -r "restored/$DATADIR/data" > restored.summain
+"$SRCDIR/tests/obnam" convert5to6 \
+    -r repo --encrypt-with=1B321347 --compress-with=gzip
+"$SRCDIR/tests/obnam" restore \
+    -r repo --encrypt-with=1B321347 --compress-with=gzip --to=restored
+(cd "restored/home/liw/obnam/convert-5to6/t" && 
+ summain data) > restored.summain
 diff -u data.summain restored.summain
 
