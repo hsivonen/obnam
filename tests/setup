@@ -20,6 +20,7 @@ set -e
 # Make a copy of the gpg homedir. This is so that we don't get gpg
 # accidentally changing anything, such as the random seed file.
 cp -a "$SRCDIR/test-gpghome" "$DATADIR/gpg"
+chmod go= "$DATADIR/gpg"
 
 # Generate some test data.
 genbackupdata --quiet --create=100k "$DATADIR/data"
