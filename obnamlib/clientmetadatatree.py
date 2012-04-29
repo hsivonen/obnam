@@ -71,15 +71,15 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
                  repo):
         tracing.trace('new ClientMetadataTree, client_dir=%s' % client_dir)
         self.current_time = repo.current_time
-        key_bytes = len(self.hashkey(0, self.hash_name(''), 0, 0))
+        key_bytes = len(self.hashkey(0, self.default_file_id(''), 0, 0))
         obnamlib.RepositoryTree.__init__(self, fs, client_dir, key_bytes, 
                                          node_size, upload_queue_size, 
                                          lru_size, repo)
-        self.genhash = self.hash_name('generation')
+        self.genhash = self.default_file_id('generation')
         self.chunkids_per_key = max(1,
                                     int(node_size / 4 / struct.calcsize('Q')))
 
-    def hash_name(self, filename):
+    def default_file_id(self, filename):
         '''Return hash of filename suitable for use as main key.'''
         tracing.trace(repr(filename))
         def hash(s):
@@ -147,8 +147,8 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         '''Return id for file in a given generation.'''
         
         # FIXME: This should handle hash collisions eventually.
-        
-        return self.hash_name(pathname)
+
+        return self.default_file_id(pathname)
 
     def _lookup_int(self, tree, key):
         return struct.unpack('!Q', tree.lookup(key))[0]
