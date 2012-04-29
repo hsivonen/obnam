@@ -24,9 +24,13 @@ where the hook will be invoked, and the plugins (or other parts of the
 application) will register callbacks.
 
 '''
+
+
 import logging
+import tracing
 
 import obnamlib
+
 
 class Hook(object):
 
@@ -66,14 +70,17 @@ class Hook(object):
             self.callbacks.remove(callback_id)
             del self.priorities[callback_id]
 
+
 class MissingFilterError(obnamlib.Error):
 
     '''Missing tag encountered reading filtered data.'''
 
     def __init__(self, tagname):
         self.tagname = tagname
-        logging.warning("Missing tag: " + tagname)
-        obnamlib.Error.__init__(self, "Unknown filter tag encountered")
+        logging.warning("Missing tag: " + repr(tagname))
+        obnamlib.Error.__init__(self, "Unknown filter tag encountered: %s" %
+                                repr(tagname))
+
 
 class FilterHook(Hook):
 
@@ -116,14 +123,19 @@ class FilterHook(Hook):
         return content
 
     def run_filter_write(self, data, *args, **kwargs):
+        tracing.trace('called')
         data = "\0" + data
         for filt in self.callbacks:
+            tracing.trace('calling %s' % filt)
             new_data = filt.filter_write(data, *args, **kwargs)
             assert new_data is not None, \
                    filt.tag + ": Returned None from filter_write()"
             if data != new_data:
+                tracing.trace('filt.tag=%s' % filt.tag)
                 data = filt.tag + "\0" + new_data
+        tracing.trace('done')
         return data
+
 
 class HookManager(object):
 
