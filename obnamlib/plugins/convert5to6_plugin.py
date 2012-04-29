@@ -15,9 +15,7 @@
 
 
 import logging
-import os
-import stat
-import ttystatus
+import zlib
 
 import obnamlib
 
@@ -33,15 +31,43 @@ class Convert5to6Plugin(obnamlib.ObnamPlugin):
         self.app.settings.require('repository')
 
         self.repo = self.app.open_repository()
-
+        self.rawfs = self.repo.fs.fs
         self.convert_chunks()
         self.convert_clients()
         self.convert_format()
 
-        self.repo.fs.close()
-
     def convert_chunks(self):
-        pass
+        funcs = []
+        if self.app.settings['encrypt-with']:
+            symmetric_key = self.get_symmetric_key()
+            funcs.append(lambda data: self.decrypt(data, symmetric_key))
+        if self.app.settings['compress-with'] == 'gzip':
+            funcs.append(self.gunzip)
+
+        chunkids = self.find_chunks()
+        for chunkid in chunkids:
+            logging.debug('converting chunk %s' % chunkid)
+            data = self.rawfs.cat(filename)
+            for func in funcs:
+                data = func(data)
+            self.repo.fs.write_file(filename, data)
+
+    def find_chunks(self):
+        pat = re.compile(r'^.*/.*/[0-9a-fA-F]+$')
+        for filename, st in self.rawfs.scan_tree('chunks'):
+            if stat.S_IFREG(st.st_mode) and pat.match(filename):
+                yield filename
+
+    def get_symmetric_key(self):
+        encoded = self.rawfs.cat(os.path.join('chunks', 'key'))
+        key = obnamlib.decrypt_with_secret_keys(encoded)
+        return key
+
+    def decrypt(self, data, symmetric_key):
+        return obnamlib.decrypt_symmetric(data, symmetric_key)
+
+    def gunzip(self, data):
+        return zlib.decomrpess(data)
         
     def convert_clients(self):
         pass
