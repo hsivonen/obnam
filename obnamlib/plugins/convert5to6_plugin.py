@@ -33,7 +33,6 @@ class Convert5to6Plugin(obnamlib.ObnamPlugin):
         self.repo = self.app.open_repository()
         self.rawfs = self.repo.fs.fs
         self.convert_chunks()
-        self.convert_clients()
         self.convert_format()
 
     def convert_chunks(self):
@@ -69,9 +68,6 @@ class Convert5to6Plugin(obnamlib.ObnamPlugin):
     def gunzip(self, data):
         return zlib.decomrpess(data)
         
-    def convert_clients(self):
-        pass
-
     def convert_format(self):
         pass
 

@@ -200,7 +200,7 @@ class Repository(object):
 
         checksummer = self.new_checksummer()
         checksummer.update(data)
-        return checksummer.digest()
+        return checksummer.hexdigest()
 
     def new_checksummer(self):
         '''Return a new checksum algorithm.'''
