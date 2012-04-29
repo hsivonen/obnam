@@ -456,8 +456,7 @@ class Repository(object):
         tracing.trace('unlocking client')
         self.require_client_lock()
         self.new_generation = None
-        for genid in self.added_generations:
-            self._really_remove_generation(genid)
+        self._really_remove_generations(self.added_generations)
         self.lockmgr.unlock([self.client.dirname])
         self.client = None # FIXME: This should remove uncommitted data.
         self.added_generations = []
@@ -475,8 +474,7 @@ class Repository(object):
         if self.new_generation:
             self.client.set_current_generation_is_checkpoint(checkpoint)
         self.added_generations = []
-        for genid in self.removed_generations:
-            self._really_remove_generation(genid)
+        self._really_remove_generations(self.removed_generations)
         if commit_client:
             self.client.commit()
         self.unlock_client()
@@ -524,8 +522,8 @@ class Repository(object):
         self.added_generations.append(self.new_generation)
         return self.new_generation
 
-    def _really_remove_generation(self, gen_id):
-        '''Really remove a committed generation.
+    def _really_remove_generations(self, genids):
+        '''Really remove a list of generations.
         
         This is not part of the public API.
         
@@ -552,15 +550,16 @@ class Repository(object):
                 if not self.chunksums.chunk_is_used(checksum, chunk_id):
                     self.remove_chunk(chunk_id)
 
-        self.require_client_lock()
-        self.require_shared_lock()
-        logging.debug('_really_remove_generation: %d' % gen_id)
-        chunk_ids = set(self.client.list_chunks_in_generation(gen_id))
-        chunk_ids = filter_away_chunks_used_by_other_gens(chunk_ids, gen_id)
-        remove_unused_chunks(chunk_ids)
-        if self.new_generation is None:
-            self.client.start_changes(create_tree=False)
-        self.client.remove_generation(gen_id)
+        for gen_id in genids:
+            self.require_client_lock()
+            self.require_shared_lock()
+            logging.debug('_really_remove_generation: %d' % gen_id)
+            chunk_ids = set(self.client.list_chunks_in_generation(gen_id))
+            chunk_ids = filter_away_chunks_used_by_other_gens(chunk_ids, gen_id)
+            remove_unused_chunks(chunk_ids)
+            if self.new_generation is None:
+                self.client.start_changes(create_tree=False)
+            self.client.remove_generation(gen_id)
 
     def remove_generation(self, gen):
         '''Remove a committed generation.'''
