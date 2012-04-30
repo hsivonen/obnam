@@ -1,6 +1,9 @@
 obnam (0.27-1) unstable; urgency=low
 
-  * Depend on python-larch 0.29 (for larch.FormatName exception).
+  * New upstream release.
+    - obnam ls should respect --generation (Closes: #655093)
+  * Depend on python-larch 0.30 (for larch.FormatName exception, read-only
+    mode).
 
  -- Lars Wirzenius <liw@liw.fi>  Sun, 15 Apr 2012 20:32:46 +0100
 
