@@ -50,7 +50,7 @@ class ForceLockPlugin(obnamlib.ObnamPlugin):
             self.app.output.write('Warning: %s\n' % msg)
             return
 
-        all_dirs = ['clientlist', 'chunksums', 'chunklist']
+        all_dirs = ['clientlist', 'chunksums', 'chunklist', 'chunks', '.']
         for client_name in all_clients:
             client_id = repo.clientlist.get_client_id(client_name)
             client_dir = repo.client_dir(client_id)

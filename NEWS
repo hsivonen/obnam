@@ -4,6 +4,11 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
+Version 0.28, released UNRELEASED; a BETA release
+-------------------------------------------------
+
+* `force-lock` should now remove all locks.
+
 Version 0.27, released 2012-04-30; a BETA release
 -------------------------------------------------
 
