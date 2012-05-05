@@ -281,7 +281,8 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         
         self.repo.lock_root()
         client_names = self.repo.list_clients()
-        client_dirs = [self.repo.client_dir(self.repo.get_client_id(name))
+        client_dirs = [self.repo.client_dir(
+                            self.repo.clientlist.get_client_id(name))
                        for name in client_names]
         self.repo.lockmgr.lock(client_dirs)
         self.repo.lock_shared()
