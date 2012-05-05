@@ -158,9 +158,9 @@ class App(cliapp.Application):
             cliapp.Application.process_args(self, args)
             self.hooks.call('shutdown')
             logging.info('Obnam ends')
-        except larch.FormatProblem, e:
+        except larch.Error, e:
             logging.critical(str(e))
-            sys.stderr.write('ERROR: %s' % str(e))
+            sys.stderr.write('ERROR: %s\n' % str(e))
             sys.exit(1)
 
     def log_config(self):
