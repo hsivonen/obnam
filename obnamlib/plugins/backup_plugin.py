@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import errno
 import gc
 import logging
 import os
@@ -81,7 +82,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                            'files; '
                            '%ByteSize(uploaded-bytes) '
                            'up ('
-                           '%ByteSpeed(uploaded-bytes)'
+                           '%ByteSpeed(uploaded-bytes,10)'
                            ') '
                            '%String(what)'
                            '%Pathname(current-file)')
@@ -271,12 +272,11 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                         metadata.md5 = self.backup_file_contents(pathname,
                                                                  metadata)
                     self.backup_metadata(pathname, metadata)
-                except OSError, e:
+                except (IOError, OSError), e:
                     msg = 'Can\'t back up %s: %s' % (pathname, e.strerror)
                     self.error(msg, e)
-                except IOError, e:
-                    msg = 'Can\'t back up %s: %s' % (pathname, e.strerror)
-                    self.error(msg, e)
+                    if e.errno == errno.ENOSPC:
+                        raise
                 if self.time_for_checkpoint():
                     self.make_checkpoint()
 

@@ -8,6 +8,10 @@ Version 0.28, released UNRELEASED; a BETA release
 -------------------------------------------------
 
 * `force-lock` should now remove all locks.
+* Out-of-space errors in the repository now terminate the backup process.
+  Previously, Obnam would continue, ignoring the failure to write. If you
+  make space in the repository and restart Obnam, it will continue from
+  the previous checkpoint.
 
 Version 0.27, released 2012-04-30; a BETA release
 -------------------------------------------------
