@@ -129,8 +129,9 @@ Feedback
 I welcome bug fixes, enhancements, bug reports, suggestions, requests,
 and other feedback. I prefer e-mail (<mailto:liw@liw.fi>).
 
-There's a mailing list for Obnam users: send mail to
-<mailto:obnam-help@braawi.org> for instructions.
+There's a mailing list for Obnam users: 
+see <http://vlists.pepperfish.net/cgi-bin/mailman/listinfo/obnam-flarn.net>
+for instructions.
 
 It would be helpful if you can run `make clean check` before submitting
 a patch, but it is not strictly required.
