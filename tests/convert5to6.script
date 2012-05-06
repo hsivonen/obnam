@@ -26,6 +26,7 @@ tar -xf "$SRCDIR/test-data/repo-format-5-encrypted-gzipped.tar.gz"
 "$SRCDIR/tests/obnam" restore \
     -r repo --encrypt-with=1B321347 --compress-with=gzip --to=restored
 (cd "restored/home/liw/obnam/convert-5to6/t" && 
- summain data) > restored.summain
+ summain --exclude=Username --exclude=Uid --exclude=Group --exclude=Gid data) \
+    > restored.summain
 diff -u data.summain restored.summain
 

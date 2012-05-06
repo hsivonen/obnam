@@ -12,6 +12,8 @@ Version 0.28, released UNRELEASED; a BETA release
   Previously, Obnam would continue, ignoring the failure to write. If you
   make space in the repository and restart Obnam, it will continue from
   the previous checkpoint.
+* The convert5to6 black box test now works even if run by other people
+  than liw.
 
 Version 0.27, released 2012-04-30; a BETA release
 -------------------------------------------------
