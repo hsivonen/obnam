@@ -306,11 +306,11 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.backup_parents('.')
             self.repo.commit_client(checkpoint=True)
             self.repo.commit_shared()
-            self.repo = self.app.open_repository()
+            self.last_checkpoint = self.repo.fs.bytes_written
+            self.repo = self.app.open_repository(repofs=self.repo.fs.fs)
             self.repo.lock_client(self.app.settings['client-name'])
             self.repo.lock_shared()
             self.repo.start_generation()
-            self.last_checkpoint = self.repo.fs.bytes_written
             self.app.dump_memory_profile('at end of checkpoint')
 
     def find_files(self, root):

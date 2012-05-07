@@ -174,13 +174,17 @@ class App(cliapp.Application):
         if self.settings['quiet']:
             self.ts.disable()
 
-    def open_repository(self, create=False): # pragma: no cover
+    def open_repository(self, create=False, repofs=None): # pragma: no cover
         logging.debug('opening repository (create=%s)' % create)
+        tracing.trace('repofs=%s' % repr(repofs))
         repopath = self.settings['repository']
-        repofs = self.fsf.new(repopath, create=create)
-        if self.settings['crash-limit'] > 0:
-            repofs.crash_limit = self.settings['crash-limit']
-        repofs.connect()
+        if repofs is None:
+            repofs = self.fsf.new(repopath, create=create)
+            if self.settings['crash-limit'] > 0:
+                repofs.crash_limit = self.settings['crash-limit']
+            repofs.connect()
+        else:
+            repofs.reinit(repopath)
         return obnamlib.Repository(repofs, 
                                     self.settings['node-size'],
                                     self.settings['upload-queue-size'],
