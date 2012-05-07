@@ -33,11 +33,6 @@ class ObnamBenchmark(cliapp.Application):
     keyid = '3B1802F81B321347'
     opers = ('backup', 'restore', 'list_files', 'forget')
     
-    profiles = {
-        'mailspool': 4096,
-        'mediaserver': 100 * 1024**2,
-    }
-
     def add_settings(self):
         self.settings.string(['results'], 'put results under DIR (%default)',
                             metavar='DIR', default='../benchmarks')
@@ -57,17 +52,18 @@ class ObnamBenchmark(cliapp.Application):
         self.settings.boolean(['with-encryption'],
                               'run benchmark using encryption')
         
+        self.settings.string(['profile'], 'short name for benchmark scenario',
+                             default='unknown')
         self.settings.string_list(['size'],
                                   'add PAIR to list of sizes to '
                                     'benchmark (e.g., 10g/1m)',
                                   metavar='PAIR')
+        self.settings.bytesize(['file-size'], 'how big should files be?',
+                               default=0)
         self.settings.integer(['generations'],
                               'benchmark N generations (default: %default)',
                               metavar='N',
                               default=5)
-        self.settings.string(['use-existing'], 
-                             'use existing DIR for initial generation',
-                             metavar='DIR')
         self.settings.boolean(['use-sftp-repository'],
                               'access the repository over SFTP '
                                 '(requires ssh to localhost to work)')
@@ -105,65 +101,57 @@ class ObnamBenchmark(cliapp.Application):
         
         sizes = self.settings['size'] or self.default_sizes
         logging.debug('sizes: %s' % repr(sizes))
+        
+        file_size = self.settings['file-size']
+        profile = self.settings['profile']
 
-        if self.settings['use-existing']:
-            profiles = sorted(('existing+%s' % name, size)
-                              for name, size in self.profiles.iteritems())
-        else:
-            profiles = sorted(self.profiles.iteritems())
+        for pair in sizes:
+            initial, inc = self.parse_size_pair(pair)
 
-        for profile, file_size in profiles:
-            for pair in sizes:
-                initial, inc = self.parse_size_pair(pair)
+            msg = 'Profile %s, size %s inc %s' % (profile, initial, inc)
+            print
+            print msg
+            print '-' * len(msg)
+            print
 
-                msg = 'Profile %s, size %s inc %s' % (profile, initial, inc)
-                print
-                print msg
-                print '-' * len(msg)
-                print
-
-                obnam_profile = os.path.join(results, 
-                                             'obnam-' + initial + 
-                                             '-' + profile +
-                                                '-%(op)s-%(gen)s.prof')
-                output = os.path.join(results, 
-                                      'obnam-%s-%s.seivot' % 
-                                        (initial, profile))
-                if os.path.exists(output):
-                    print ('%s already exists, not re-running benchmark' %
-                            output)
+            obnam_profile = os.path.join(results,
+                                         'obnam--%(op)s-%(gen)s.prof')
+            output = os.path.join(results, 'obnam.seivot')
+            if os.path.exists(output):
+                print ('%s already exists, not re-running benchmark' %
+                        output)
+            else:
+                argv = [seivot,
+                        '--obnam-branch', obnam_branch,
+                        '--larch-branch', larch_branch,
+                        '--incremental-data', inc,
+                        '--file-size', str(file_size),
+                        '--obnam-profile', obnam_profile,
+                        '--generations', str(generations),
+                        '--profile-name', profile,
+                        '--sftp-delay', str(self.settings['sftp-delay']),
+                        '--output', output]
+                if self.settings['seivot-log']:
+                    argv.extend(['--log', self.settings['seivot-log']])
+                if self.settings['drop-caches']:
+                    argv.append('--drop-caches')
+                if self.settings['use-existing']:
+                    argv.extend(['--use-existing', 
+                                 self.settings['use-existing']])
                 else:
-                    argv = [seivot,
-                            '--obnam-branch', obnam_branch,
-                            '--larch-branch', larch_branch,
-                            '--incremental-data', inc,
-                            '--file-size', str(file_size),
-                            '--obnam-profile', obnam_profile,
-                            '--generations', str(generations),
-                            '--profile-name', profile,
-                            '--sftp-delay', str(self.settings['sftp-delay']),
-                            '--output', output]
-                    if self.settings['seivot-log']:
-                        argv.extend(['--log', self.settings['seivot-log']])
-                    if self.settings['drop-caches']:
-                        argv.append('--drop-caches')
-                    if self.settings['use-existing']:
-                        argv.extend(['--use-existing', 
-                                     self.settings['use-existing']])
-                    else:
-                        argv.extend(['--initial-data', initial])
-                    if self.settings['use-sftp-repository']:
-                        argv.append('--use-sftp-repository')
-                    if self.settings['use-sftp-root']:
-                        argv.append('--use-sftp-root')
-                    if self.settings['with-encryption']:
-                        argv.extend(['--encrypt-with', self.keyid])
-                    if self.settings['description']:
-                        argv.extend(['--description', 
-                                     self.settings['description']])
-                    if self.settings['verify']:
-                        argv.append('--verify')
-                    self.runcmd(argv, env=env)
+                    argv.extend(['--initial-data', initial])
+                if self.settings['use-sftp-repository']:
+                    argv.append('--use-sftp-repository')
+                if self.settings['use-sftp-root']:
+                    argv.append('--use-sftp-root')
+                if self.settings['with-encryption']:
+                    argv.extend(['--encrypt-with', self.keyid])
+                if self.settings['description']:
+                    argv.extend(['--description', 
+                                 self.settings['description']])
+                if self.settings['verify']:
+                    argv.append('--verify')
+                self.runcmd(argv, env=env)
 
         shutil.rmtree(tempdir)
         
