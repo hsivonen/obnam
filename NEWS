@@ -14,6 +14,9 @@ Version 0.28, released UNRELEASED; a BETA release
   the previous checkpoint.
 * The convert5to6 black box test now works even if run by other people
   than liw.
+* "obnam backup" now uses a single SFTP connection to the backup repository,
+  rather than opening a new one after each checkpoint generation. Thanks to
+  weinzwang for reporting the problem.
 
 Version 0.27, released 2012-04-30; a BETA release
 -------------------------------------------------

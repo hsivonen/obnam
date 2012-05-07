@@ -178,8 +178,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.repo = self.app.open_repository()
             self.repo.open_client(client_name)
         else:
+            self.repo = self.app.open_repository(create=True)
             self.add_client(client_name)
-            self.repo = self.app.open_repository()
             self.repo.lock_client(client_name)
             self.repo.lock_shared()
 
@@ -213,16 +213,16 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             raise obnamlib.Error('There were errors during the backup')
 
     def add_client(self, client_name):
-        repo = self.app.open_repository(create=True)
-        repo.lock_root()
-        if client_name not in repo.list_clients():
+        self.repo.lock_root()
+        if client_name not in self.repo.list_clients():
             tracing.trace('adding new client %s' % client_name)
             tracing.trace('client list before adding: %s' % 
-                            repo.list_clients())
-            repo.add_client(client_name)
+                            self.repo.list_clients())
+            self.repo.add_client(client_name)
             tracing.trace('client list after adding: %s' % 
-                            repo.list_clients())
-        repo.commit_root()
+                            self.repo.list_clients())
+        self.repo.commit_root()
+        self.repo = self.app.open_repository(repofs=self.repo.fs.fs)
 
     def compile_exclusion_patterns(self):
         log = self.app.settings['log']
@@ -306,11 +306,11 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.backup_parents('.')
             self.repo.commit_client(checkpoint=True)
             self.repo.commit_shared()
-            self.repo = self.app.open_repository()
+            self.last_checkpoint = self.repo.fs.bytes_written
+            self.repo = self.app.open_repository(repofs=self.repo.fs.fs)
             self.repo.lock_client(self.app.settings['client-name'])
             self.repo.lock_shared()
             self.repo.start_generation()
-            self.last_checkpoint = self.repo.fs.bytes_written
             self.app.dump_memory_profile('at end of checkpoint')
 
     def find_files(self, root):
