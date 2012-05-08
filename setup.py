@@ -23,7 +23,16 @@ import glob
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
+
+
+def runcmd(*args, **kwargs):
+    try:
+        subprocess.check_call(*args, **kwargs)
+    except subprocess.CalledProcessError, e:
+        sys.stderr.write('ERROR: %s\n' % str(e))
+        sys.exit(1)
 
 
 class GenerateManpage(build):
@@ -33,9 +42,8 @@ class GenerateManpage(build):
         print 'building manpages'
         for x in ['obnam', 'obnam-benchmark']:
             with open('%s.1' % x, 'w') as f:
-                subprocess.check_call(['python', x,
-                                       '--generate-manpage=%s.1.in' % x,
-                                       '--output=%s.1' % x], stdout=f)
+                runcmd(['python', x, '--generate-manpage=%s.1.in' % x, 
+                        '--output=%s.1' % x], stdout=f)
 
 
 class CleanMore(clean):
@@ -74,12 +82,12 @@ class Check(Command):
 
     def run(self):
         print "run unit tests"
-        subprocess.check_call(['python', '-m', 'CoverageTestRunner',
-                               '--ignore-missing-from=without-tests'])
+        runcmd(['python', '-m', 'CoverageTestRunner',
+                '--ignore-missing-from=without-tests'])
         os.remove('.coverage')
 
         print "run black box tests"
-        subprocess.check_call(['cmdtest', 'tests'])
+        runcmd(['cmdtest', 'tests'])
 
         num_clients = '2'
         num_generations = '16'
@@ -87,30 +95,30 @@ class Check(Command):
         if not self.fast:
             print "run locking tests"
             test_repo = tempfile.mkdtemp()
-            subprocess.check_call(['./test-locking', num_clients, 
-                                   num_generations, test_repo, test_repo])
+            runcmd(['./test-locking', num_clients, 
+                    num_generations, test_repo, test_repo])
             shutil.rmtree(test_repo)
 
         if not self.fast:
             print "run crash test"
-            subprocess.check_call(['./crash-test', '100'])
+            runcmd(['./crash-test', '100'])
 
         if self.network:
             print "run sftp tests"
-            subprocess.check_call(['./test-sftpfs'])
+            runcmd(['./test-sftpfs'])
 
             print "re-run black box tests using localhost networking"
             env = dict(os.environ)
             env['OBNAM_TEST_SFTP_ROOT'] = 'yes'
             env['OBNAM_TEST_SFTP_REPOSITORY'] = 'yes'
-            subprocess.check_call(['cmdtest', 'tests'], env=env)
+            runcmd(['cmdtest', 'tests'], env=env)
 
             if not self.fast:
                 print "re-run locking tests using localhost networking"
                 test_repo = tempfile.mkdtemp()
                 repo_url = 'sftp://localhost/%s' % test_repo
-                subprocess.check_call(['./test-locking', num_clients, 
-                                       num_generations, repo_url, test_repo])
+                runcmd(['./test-locking', num_clients, 
+                        num_generations, repo_url, test_repo])
                 shutil.rmtree(test_repo)
             
         print "setup.py check done"

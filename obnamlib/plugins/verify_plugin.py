@@ -76,9 +76,11 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         self.app.ts['done'] = 0
         self.app.ts['total'] = 0
         self.app.ts['filename'] = ''
-        self.app.ts.format('verifying file %Counter(filename)/%Integer(total) '
-                            '%PercentDone(done,total): '
-                            '%Pathname(filename)')
+        if not self.app.settings['quiet']:
+            self.app.ts.format(
+                'verifying file %Counter(filename)/%Integer(total) '
+                '%PercentDone(done,total): '
+                '%Pathname(filename)')
 
         num_randomly = self.app.settings['verify-randomly']
         if num_randomly == 0:

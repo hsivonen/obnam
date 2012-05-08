@@ -17,6 +17,7 @@ Version 0.28, released UNRELEASED; a BETA release
 * "obnam backup" now uses a single SFTP connection to the backup repository,
   rather than opening a new one after each checkpoint generation. Thanks to
   weinzwang for reporting the problem.
+* "obnam verify" now obeys the `--quiet` option.
 
 Version 0.27, released 2012-04-30; a BETA release
 -------------------------------------------------
