@@ -353,7 +353,8 @@ class Repository(object):
         on_disk = self.get_format_version()
         if on_disk is not None and not self.acceptable_version(on_disk):
             raise BadFormat('On-disk repository format %s is incompatible '
-                            'with program format %s' %
+                            'with program format %s; you need to use a '
+                            'different version of Obnam' %
                                 (on_disk, self.format_version))
         
     def add_client(self, client_name):
