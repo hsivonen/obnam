@@ -1,3 +1,18 @@
+obnam (0.28-1) unstable; urgency=low
+
+  * New upstream version. Closes the following bugs reported to Debian:
+    - "obnam --encrypt-with" fails with "can't query passphrase in batch mode"
+      (Closes: #649769)
+    - FTBFS: test failed (Closes: #671947)
+    - exception instead of error message on repo version (Closes: #655229)
+    - obnam fails to backup with error on-disk format incompatible
+      (Closes: #655728)
+      obnam now has a better error message and the conver5to6 subcommand
+  * Bumped dependency on python-cliapp to be on 0.29-1, since that's needed
+    to execute parts of the test suite correctly.
+
+ -- Lars Wirzenius <liw@liw.fi>  Wed, 09 May 2012 22:10:42 +0100
+
 obnam (0.27-1) unstable; urgency=low
 
   * New upstream release.
