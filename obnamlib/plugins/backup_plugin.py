@@ -467,7 +467,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     self.app.dump_memory_profile('after appending some '
                                                     'chunkids')
                     chunkids = []
-            self.update_progress_with_upload(len(data))
+            else:
+                self.update_progress_with_upload(len(data))
             
             if not self.pretend and self.time_for_checkpoint():
                 logging.debug('making checkpoint in the middle of a file')
@@ -496,6 +497,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             return self.repo.get_chunk(chunkid)
 
         def put():
+            self.update_progress_with_upload(len(data))
             return self.repo.put_chunk(data, checksum)
 
         checksum = self.repo.checksum(data)

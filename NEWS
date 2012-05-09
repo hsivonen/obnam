@@ -18,6 +18,8 @@ Version 0.28, released UNRELEASED; a BETA release
   rather than opening a new one after each checkpoint generation. Thanks to
   weinzwang for reporting the problem.
 * "obnam verify" now obeys the `--quiet` option.
+* "obnam backup" no longer counts chunks already in the repository in the
+  uploaded amount of data.
 
 Version 0.27, released 2012-04-30; a BETA release
 -------------------------------------------------
