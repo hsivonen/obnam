@@ -11,7 +11,7 @@ Build-Depends: debhelper (>= 7.3.8),
     python-paramiko, 
     python-tracing (>= 0.2), 
     fakeroot, 
-    python-cliapp (>= 0.29-1),
+    python-cliapp (>= 0.29),
     libattr1-dev,
     genbackupdata,
     summain,
@@ -24,7 +24,7 @@ Provides: python-obnam
 Architecture: any
 Depends: ${shlibs:Depends}, ${python:Depends}, ${misc:Depends}, 
     python-larch (>= 0.30~), python-ttystatus (>= 0.15),
-    python-paramiko, python-tracing (>= 0.2), python-cliapp (>= 0.29-1)
+    python-paramiko, python-tracing (>= 0.2), python-cliapp (>= 0.29)
 Description: online and disk-based backup application
  Obnam makes backups. Backups can be stored on local hard disks, or online 
  via the SSH SFTP protocol. The backup server, if used, does not require any 

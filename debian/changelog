@@ -8,7 +8,7 @@ obnam (0.28-1) unstable; urgency=low
     - obnam fails to backup with error on-disk format incompatible
       (Closes: #655728)
       obnam now has a better error message and the conver5to6 subcommand
-  * Bumped dependency on python-cliapp to be on 0.29-1, since that's needed
+  * Bumped dependency on python-cliapp to be on 0.29, since that's needed
     to execute parts of the test suite correctly.
 
  -- Lars Wirzenius <liw@liw.fi>  Wed, 09 May 2012 22:10:42 +0100
