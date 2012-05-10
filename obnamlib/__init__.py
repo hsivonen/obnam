@@ -17,7 +17,7 @@
 import cliapp
 
 
-__version__ = '0.27'
+__version__ = '0.28'
 
 
 
