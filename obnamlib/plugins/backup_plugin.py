@@ -138,6 +138,11 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     speed_amount = speed
                 break
 
+        logging.info('Backup performance statistics:')
+        logging.info('* files found: %s' % self.file_count)
+        logging.info('* uploaded data: %s bytes (%s %s)' % 
+                        (self.uploaded_bytes, size_amount, size_unit))
+        logging.info('* average speed: %s %s' % (speed_amount, speed_unit))
         self.app.ts.notify('Backup found %d files, uploaded %.1f %s '
                            'at %.1f %s' %
                             (self.file_count, size_amount, size_unit,
