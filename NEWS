@@ -11,6 +11,8 @@ Version 0.29, released UNRELEASED; a BETA release
   Search the log for "Backup performance statistics" (INFO level).
 * "obnam verify" now continues past the first error. Thanks to Rafał Gwiazda
   for requesting this.
+* Add an `obnam-viewprof` utility to translate Python profiling output
+  into human readable text form.
 
 Version 0.28, released 2012-05-10; a BETA release
 -------------------------------------------------
