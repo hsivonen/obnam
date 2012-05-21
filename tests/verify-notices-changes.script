@@ -23,7 +23,6 @@ $SRCDIR/tests/backup
 
 touch --date="1970-01-02 03:04:05" "$DATADIR/data/aaa"
 
-$SRCDIR/tests/obnam verify --root="$(cat $DATADIR/rooturl)" 2>&1 |
-    sed '/ERROR: .*\/aaa: metadata change/s,/.*/,,' |
-    sed '/ERROR: aaa: metadata change:/s/_n\?sec .*//'
-
+$SRCDIR/tests/obnam verify "$(cat $DATADIR/rooturl)" 2>&1 |
+    sed "s,$DATADIR,TMP,g" |
+    sed '/st_mtime/s/([^)]*)/(...)/'

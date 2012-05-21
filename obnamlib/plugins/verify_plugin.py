@@ -88,9 +88,16 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
                 self.repo.client.get_generation_file_count(gen)
             for filename, metadata in self.walk(gen, args):
                 self.app.ts['filename'] = filename
-                self.verify_metadata(gen, filename, metadata)
-                if metadata.isfile():
-                    self.verify_regular_file(gen, filename, metadata)
+                try:
+                    self.verify_metadata(gen, filename, metadata)
+                except Fail, e:
+                    self.log_fail(e)
+                else:
+                    if metadata.isfile():
+                        try:
+                            self.verify_regular_file(gen, filename, metadata)
+                        except Fail, e:
+                            self.log_fail(e)
                 self.app.ts['done'] += 1
         else:
             logging.debug('verifying %d files randomly' % num_randomly)
@@ -107,8 +114,11 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
             for filename in chosen:
                 self.app.ts['filename'] = filename
                 metadata = self.repo.get_metadata(gen, filename)
-                self.verify_metadata(gen, filename, metadata)
-                self.verify_regular_file(gen, filename, metadata)            
+                try:
+                    self.verify_metadata(gen, filename, metadata)
+                    self.verify_regular_file(gen, filename, metadata)            
+                except Fail, e:
+                    self.log_fail(e)
                 self.app.ts['done'] += 1
 
         self.fs.close()
@@ -120,8 +130,12 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         print "Verify did not find problems."
 
     def log_fail(self, e):
-        logging.error('verify failure for %s: %s' % (e.filename, e.reason))
-        self.app.ts.notify('verify failure: %s: %s' % (e.filename, e.reason))
+        msg = 'verify failure: %s: %s' % (e.filename, e.reason)
+        logging.error(msg)
+        if self.app.settings['quiet']:
+            sys.stderr.write('%s\n' % msg)
+        else:
+            self.app.ts.notify(msg)
         self.failed = True
 
     def verify_metadata(self, gen, filename, backed_up):
