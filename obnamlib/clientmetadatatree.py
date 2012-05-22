@@ -79,6 +79,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         self.genhash = self.default_file_id('generation')
         self.chunkids_per_key = max(1,
                                     int(node_size / 4 / struct.calcsize('Q')))
+        self.known_generations = {}
 
     def default_file_id(self, filename):
         '''Return hash of filename suitable for use as main key.'''
@@ -213,12 +214,23 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
                         self._insert_count(genid, subkey, getattr(self, attr))
         obnamlib.RepositoryTree.commit(self)
 
+    def init_forest(self, *args, **kwargs):
+        self.known_generations = {}
+        return obnamlib.RepositoryTree.init_forest(self, *args, **kwargs)
+
+    def start_changes(self, *args, **kwargs):
+        self.known_generations = {}
+        return obnamlib.RepositoryTree.start_changes(self, *args, **kwargs)
+
     def find_generation(self, genid):
         if self.forest:
+            if genid in self.known_generations:
+                return self.known_generations[genid]
             key = self.genkey(self.GEN_ID)
             for t in self.forest.trees:
                 t_genid = self._lookup_int(t, key)
                 if t_genid == genid:
+                    self.known_generations[genid] = t
                     return t
         raise KeyError('Unknown generation %s' % genid)
 
