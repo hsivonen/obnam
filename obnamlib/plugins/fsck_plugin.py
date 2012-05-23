@@ -303,8 +303,8 @@ class FsckPlugin(obnamlib.ObnamPlugin):
             work = self.work_items.pop()
             logging.debug('doing: %s' % str(work))
             self.app.ts['item'] = work
-            for more in work.do() or []:
-                self.add_item(more)
+            for more in reversed(list(work.do() or [])):
+                self.add_item(more, append=True)
             i += 1
             if not self.work_items:
                 for work in final_items:
@@ -321,13 +321,16 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         if self.errors:
             sys.exit(1)
 
-    def add_item(self, work):
+    def add_item(self, work, append=False):
         work.warning = self.warning
         work.error = self.error
         work.repo = self.repo
         work.settings = self.app.settings
         work.chunkids_seen = self.chunkids_seen
-        self.work_items.insert(0, work)
+        if append:
+            self.work_items.append(work)
+        else:
+            self.work_items.insert(0, work)
         self.app.ts.increase('items', 1)
         self.app.dump_memory_profile('after adding %s' % repr(work))
 
