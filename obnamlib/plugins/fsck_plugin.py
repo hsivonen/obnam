@@ -88,7 +88,8 @@ class CheckFile(WorkItem):
     def do(self):
         logging.debug('Checking client=%s genid=%s filename=%s' %
                         (self.client_name, self.genid, self.filename))
-        self.repo.open_client(self.client_name)
+        if self.repo.current_client != self.client_name:
+            self.repo.open_client(self.client_name)
         metadata = self.repo.get_metadata(self.genid, self.filename)
         if metadata.isfile():
             chunkids = self.repo.get_file_chunks(self.genid, self.filename)
@@ -110,7 +111,8 @@ class CheckDirectory(WorkItem):
     def do(self):
         logging.debug('Checking client=%s genid=%s dirname=%s' %
                         (self.client_name, self.genid, self.dirname))
-        self.repo.open_client(self.client_name)
+        if self.repo.current_client != self.client_name:
+            self.repo.open_client(self.client_name)
         self.repo.get_metadata(self.genid, self.dirname)
         for basename in self.repo.listdir(self.genid, self.dirname):
             pathname = os.path.join(self.dirname, basename)
@@ -191,7 +193,8 @@ class CheckClient(WorkItem):
 
     def do(self):
         logging.debug('Checking client=%s' % self.client_name)
-        self.repo.open_client(self.client_name)
+        if self.repo.current_client != self.client_name:
+            self.repo.open_client(self.client_name)
         yield CheckGenerationIdsAreDifferent(self.client_name,
                                               self.repo.list_generations())
         for genid in self.repo.list_generations():
