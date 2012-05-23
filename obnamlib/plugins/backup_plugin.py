@@ -342,10 +342,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         
         '''
 
-        kwargs = {
-            'ok': self.can_be_backed_up,
-            'error_handler': self.handle_scan_error,
-        }
         for pathname, st in self.fs.scan_tree(root, ok=self.can_be_backed_up):
             tracing.trace('considering %s' % pathname)
             try:
@@ -361,10 +357,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             except BaseException, e:
                 msg = 'Cannot back up %s: %s' % (pathname, str(e))
                 self.error(msg, e)
-
-    def handle_scan_error(self, pathname, exception):
-        self.error('Problem getting metadata for %s: %s' % 
-                        (pathname, str(exception)))
 
     def can_be_backed_up(self, pathname, st):
         if self.app.settings['one-file-system']:
