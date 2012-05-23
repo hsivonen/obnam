@@ -26,6 +26,11 @@ then
 
     $SRCDIR/tests/backup
     $SRCDIR/tests/restore
+
+    # This is a workaround of a bug in summain 0.13. Can be removed when
+    # a later version of summain is published and installed everywhere.
+    mkdir "$DATADIR/restored/$DATADIR/data.real"
+
     $SRCDIR/tests/verify '
         {
             gsub(/^Name: \/.*\//, "Name: ")
