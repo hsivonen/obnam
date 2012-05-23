@@ -88,7 +88,8 @@ class CheckFile(WorkItem):
     def do(self):
         logging.debug('Checking client=%s genid=%s filename=%s' %
                         (self.client_name, self.genid, self.filename))
-        self.repo.open_client(self.client_name)
+        if self.repo.current_client != self.client_name:
+            self.repo.open_client(self.client_name)
         metadata = self.repo.get_metadata(self.genid, self.filename)
         if metadata.isfile():
             chunkids = self.repo.get_file_chunks(self.genid, self.filename)
@@ -110,7 +111,8 @@ class CheckDirectory(WorkItem):
     def do(self):
         logging.debug('Checking client=%s genid=%s dirname=%s' %
                         (self.client_name, self.genid, self.dirname))
-        self.repo.open_client(self.client_name)
+        if self.repo.current_client != self.client_name:
+            self.repo.open_client(self.client_name)
         self.repo.get_metadata(self.genid, self.dirname)
         for basename in self.repo.listdir(self.genid, self.dirname):
             pathname = os.path.join(self.dirname, basename)
@@ -191,7 +193,8 @@ class CheckClient(WorkItem):
 
     def do(self):
         logging.debug('Checking client=%s' % self.client_name)
-        self.repo.open_client(self.client_name)
+        if self.repo.current_client != self.client_name:
+            self.repo.open_client(self.client_name)
         yield CheckGenerationIdsAreDifferent(self.client_name,
                                               self.repo.list_generations())
         for genid in self.repo.list_generations():
@@ -267,11 +270,12 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         self.app.settings.boolean(['fsck-fix'], 
                                   'should fsck try to fix problems?')
 
-    def configure_ttystatus(self, work_items):
+    def configure_ttystatus(self):
         self.app.ts.clear()
         self.app.ts['item'] = None
-        self.app.ts['items'] = work_items
-        self.app.ts.format('Checking %Index(item,items): %String(item)')
+        self.app.ts['items'] = 0
+        self.app.ts.format(
+            'Checking %Counter(item)/%Integer(items): %String(item)')
         
     def fsck(self, args):
         '''Verify internal consistency of backup repository.'''
@@ -293,16 +297,16 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         self.add_item(CheckRepository())
         final_items = [CheckForExtraChunks()]
         
-        self.configure_ttystatus(self.work_items)
+        self.configure_ttystatus()
         i = 0
-        while i < len(self.work_items):
-            work = self.work_items[i]
+        while self.work_items:
+            work = self.work_items.pop()
             logging.debug('doing: %s' % str(work))
             self.app.ts['item'] = work
-            for more in work.do() or []:
-                self.add_item(more)
+            for more in reversed(list(work.do() or [])):
+                self.add_item(more, append=True)
             i += 1
-            if i == len(self.work_items):
+            if not self.work_items:
                 for work in final_items:
                     self.add_item(work)
                 final_items = []
@@ -317,13 +321,17 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         if self.errors:
             sys.exit(1)
 
-    def add_item(self, work):
+    def add_item(self, work, append=False):
         work.warning = self.warning
         work.error = self.error
         work.repo = self.repo
         work.settings = self.app.settings
         work.chunkids_seen = self.chunkids_seen
-        self.work_items.append(work)
+        if append:
+            self.work_items.append(work)
+        else:
+            self.work_items.insert(0, work)
+        self.app.ts.increase('items', 1)
         self.app.dump_memory_profile('after adding %s' % repr(work))
 
     def error(self, msg):

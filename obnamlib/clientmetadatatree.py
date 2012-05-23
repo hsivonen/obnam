@@ -79,7 +79,11 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         self.genhash = self.default_file_id('generation')
         self.chunkids_per_key = max(1,
                                     int(node_size / 4 / struct.calcsize('Q')))
+        self.init_caches()
+
+    def init_caches(self):
         self.known_generations = {}
+        self.file_ids = {}
 
     def default_file_id(self, filename):
         '''Return hash of filename suitable for use as main key.'''
@@ -156,17 +160,22 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     def get_file_id(self, tree, pathname):
         '''Return id for file in a given generation.'''
         
+        if tree in self.file_ids:
+            if pathname in self.file_ids[tree]:
+                return self.file_ids[tree][pathname]
+        else:
+            self.file_ids[tree] = {}
+        
         default_file_id = self.default_file_id(pathname)
         minkey = self.fskey(default_file_id, self.FILE_NAME, 0)
         maxkey = self.fskey(default_file_id, self.FILE_NAME, obnamlib.MAX_ID)
-        file_ids = set()
         for key, value in tree.lookup_range(minkey, maxkey):
             def_id, file_id = self.fs_unkey(key)
             assert def_id == default_file_id, \
                 'def=%s other=%s' % (repr(def_id), repr(default_file_id))
+            self.file_ids[tree][value] = file_id
             if value == pathname:
                 return file_id
-            file_ids.add(file_id)
 
         raise KeyError('%s does not yet have a file-id' % pathname)
 
@@ -215,23 +224,29 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         obnamlib.RepositoryTree.commit(self)
 
     def init_forest(self, *args, **kwargs):
-        self.known_generations = {}
+        self.init_caches()
         return obnamlib.RepositoryTree.init_forest(self, *args, **kwargs)
 
     def start_changes(self, *args, **kwargs):
-        self.known_generations = {}
+        self.init_caches()
         return obnamlib.RepositoryTree.start_changes(self, *args, **kwargs)
 
     def find_generation(self, genid):
-        if self.forest:
-            if genid in self.known_generations:
-                return self.known_generations[genid]
+    
+        def fill_cache():
             key = self.genkey(self.GEN_ID)
             for t in self.forest.trees:
                 t_genid = self._lookup_int(t, key)
                 if t_genid == genid:
                     self.known_generations[genid] = t
                     return t
+    
+        if self.forest:
+            if genid in self.known_generations:
+                return self.known_generations[genid]
+            t = fill_cache()
+            if t is not None:
+                return t
         raise KeyError('Unknown generation %s' % genid)
 
     def list_generations(self):
