@@ -419,7 +419,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 current.st_nlink != old.st_nlink or
                 current.st_size != old.st_size or
                 current.st_uid != old.st_uid or
-                current.st_gid != old.st_gid)
+                current.st_gid != old.st_gid or
+                current.xattr != old.xattr)
 
     def backup_parents(self, root):
         '''Back up parents of root, non-recursively.'''
