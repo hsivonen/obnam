@@ -83,6 +83,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
 
     def init_caches(self):
         self.known_generations = {}
+        self.file_ids = {}
 
     def default_file_id(self, filename):
         '''Return hash of filename suitable for use as main key.'''
@@ -159,6 +160,12 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     def get_file_id(self, tree, pathname):
         '''Return id for file in a given generation.'''
         
+        if tree in self.file_ids:
+            if pathname in self.file_ids[tree]:
+                return self.file_ids[tree][pathname]
+        else:
+            self.file_ids[tree] = {}
+        
         default_file_id = self.default_file_id(pathname)
         minkey = self.fskey(default_file_id, self.FILE_NAME, 0)
         maxkey = self.fskey(default_file_id, self.FILE_NAME, obnamlib.MAX_ID)
@@ -166,6 +173,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
             def_id, file_id = self.fs_unkey(key)
             assert def_id == default_file_id, \
                 'def=%s other=%s' % (repr(def_id), repr(default_file_id))
+            self.file_ids[tree][value] = file_id
             if value == pathname:
                 return file_id
 
