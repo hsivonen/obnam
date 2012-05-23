@@ -13,6 +13,8 @@ Version 0.29, released UNRELEASED; a BETA release
   for requesting this.
 * Add an `obnam-viewprof` utility to translate Python profiling output
   into human readable text form.
+* Bug fix: If a file's extended attributes have changed in any way, the change
+  is now backed up.
 
 Version 0.28, released 2012-05-10; a BETA release
 -------------------------------------------------
