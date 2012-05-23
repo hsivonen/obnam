@@ -15,6 +15,7 @@ Version 0.29, released UNRELEASED; a BETA release
   into human readable text form.
 * Bug fix: If a file's extended attributes have changed in any way, the change
   is now backed up.
+* "obnam fsck" is now a bit faster.
 
 Version 0.28, released 2012-05-10; a BETA release
 -------------------------------------------------
