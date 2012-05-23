@@ -162,14 +162,12 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         default_file_id = self.default_file_id(pathname)
         minkey = self.fskey(default_file_id, self.FILE_NAME, 0)
         maxkey = self.fskey(default_file_id, self.FILE_NAME, obnamlib.MAX_ID)
-        file_ids = set()
         for key, value in tree.lookup_range(minkey, maxkey):
             def_id, file_id = self.fs_unkey(key)
             assert def_id == default_file_id, \
                 'def=%s other=%s' % (repr(def_id), repr(default_file_id))
             if value == pathname:
                 return file_id
-            file_ids.add(file_id)
 
         raise KeyError('%s does not yet have a file-id' % pathname)
 
