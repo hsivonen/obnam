@@ -79,6 +79,9 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         self.genhash = self.default_file_id('generation')
         self.chunkids_per_key = max(1,
                                     int(node_size / 4 / struct.calcsize('Q')))
+        self.init_caches()
+
+    def init_caches(self):
         self.known_generations = {}
 
     def default_file_id(self, filename):
@@ -215,11 +218,11 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         obnamlib.RepositoryTree.commit(self)
 
     def init_forest(self, *args, **kwargs):
-        self.known_generations = {}
+        self.init_caches()
         return obnamlib.RepositoryTree.init_forest(self, *args, **kwargs)
 
     def start_changes(self, *args, **kwargs):
-        self.known_generations = {}
+        self.init_caches()
         return obnamlib.RepositoryTree.start_changes(self, *args, **kwargs)
 
     def find_generation(self, genid):
