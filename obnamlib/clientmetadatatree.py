@@ -223,15 +223,21 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         return obnamlib.RepositoryTree.start_changes(self, *args, **kwargs)
 
     def find_generation(self, genid):
-        if self.forest:
-            if genid in self.known_generations:
-                return self.known_generations[genid]
+    
+        def fill_cache():
             key = self.genkey(self.GEN_ID)
             for t in self.forest.trees:
                 t_genid = self._lookup_int(t, key)
                 if t_genid == genid:
                     self.known_generations[genid] = t
                     return t
+    
+        if self.forest:
+            if genid in self.known_generations:
+                return self.known_generations[genid]
+            t = fill_cache()
+            if t is not None:
+                return t
         raise KeyError('Unknown generation %s' % genid)
 
     def list_generations(self):
