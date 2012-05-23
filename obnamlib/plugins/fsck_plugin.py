@@ -270,11 +270,12 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         self.app.settings.boolean(['fsck-fix'], 
                                   'should fsck try to fix problems?')
 
-    def configure_ttystatus(self, work_items):
+    def configure_ttystatus(self):
         self.app.ts.clear()
         self.app.ts['item'] = None
-        self.app.ts['items'] = work_items
-        self.app.ts.format('Checking %Index(item,items): %String(item)')
+        self.app.ts['items'] = 0
+        self.app.ts.format(
+            'Checking %Counter(item)/%Integer(items): %String(item)')
         
     def fsck(self, args):
         '''Verify internal consistency of backup repository.'''
@@ -296,16 +297,16 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         self.add_item(CheckRepository())
         final_items = [CheckForExtraChunks()]
         
-        self.configure_ttystatus(self.work_items)
+        self.configure_ttystatus()
         i = 0
-        while i < len(self.work_items):
-            work = self.work_items[i]
+        while self.work_items:
+            work = self.work_items.pop()
             logging.debug('doing: %s' % str(work))
             self.app.ts['item'] = work
             for more in work.do() or []:
                 self.add_item(more)
             i += 1
-            if i == len(self.work_items):
+            if not self.work_items:
                 for work in final_items:
                     self.add_item(work)
                 final_items = []
@@ -326,7 +327,8 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         work.repo = self.repo
         work.settings = self.app.settings
         work.chunkids_seen = self.chunkids_seen
-        self.work_items.append(work)
+        self.work_items.insert(0, work)
+        self.app.ts.increase('items', 1)
         self.app.dump_memory_profile('after adding %s' % repr(work))
 
     def error(self, msg):
