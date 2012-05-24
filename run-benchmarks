@@ -17,9 +17,11 @@
 
 set -ue
 
-for x in confs/benchmark-std-*.conf
+for x in confs/*.conf
 do
-    echo "===== $x"
-    ./obnam-benchmark --no-default-config --config=confs/common.conf \
-        --config="$x" "$@"
+    if [ "$x" != confs/common.conf ]
+    then
+        ./obnam-benchmark --no-default-config --config=confs/common.conf \
+            --config="$x" "$@"
+    fi
 done
