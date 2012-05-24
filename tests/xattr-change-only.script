@@ -17,7 +17,7 @@
 # Make two backup generations with different contents. Make sure the
 # last generation can be restored correctly.
 
-set -eu
+set -e
 
 # This only works with local filesystem access, not over sftp.
 if [ "$OBNAM_TEST_SFTP_ROOT" != yes ]
