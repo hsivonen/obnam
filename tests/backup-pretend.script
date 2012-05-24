@@ -14,10 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-set -e
+set -eu
 
 $SRCDIR/tests/backup
-summain -r "$(cat $DATADIR/repourl)"/metadata > "$DATADIR/repo.summain"
+summain -r "$DATADIR/repo/metadata" > "$DATADIR/repo.summain"
 $SRCDIR/tests/backup --pretend
-summain -r "$(cat $DATADIR/repourl)"/metadata > "$DATADIR/repo2.summain"
+summain -r "$DATADIR/repo/metadata" > "$DATADIR/repo2.summain"
 diff -u "$DATADIR/repo.summain" "$DATADIR/repo2.summain"

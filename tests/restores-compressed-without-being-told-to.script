@@ -17,7 +17,7 @@
 set -e
 
 root="$(cat $DATADIR/rooturl)"
-genbackupdata "$root" --create=100k --quiet
+genbackupdata "$DATADIR/data" --create=100k --quiet
 $SRCDIR/tests/backup --compress-with=gzip
 $SRCDIR/tests/restore
 $SRCDIR/tests/verify

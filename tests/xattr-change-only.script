@@ -19,12 +19,15 @@
 
 set -eu
 
-echo foo > "$DATADIR/data/foo"
-$SRCDIR/tests/backup
+# This only works with local filesystem access, not over sftp.
+if [ "$OBNAM_TEST_SFTP_ROOT" != yes ]
+then
+    echo foo > "$DATADIR/data/foo"
+    $SRCDIR/tests/backup
 
-setfattr --name=user.foo --value=bar "$DATADIR/data/foo"
+    setfattr --name=user.foo --value=bar "$DATADIR/data/foo"
 
-$SRCDIR/tests/backup
-$SRCDIR/tests/restore
-$SRCDIR/tests/verify
-
+    $SRCDIR/tests/backup
+    $SRCDIR/tests/restore
+    $SRCDIR/tests/verify
+fi
