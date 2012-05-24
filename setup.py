@@ -71,55 +71,65 @@ class Check(Command):
     user_options = [
         ('fast', 'f', 'run fast tests only?'),
         ('network', 'n', 'run network tests to localhost?'),
+        ('network-only', 'N', 'only run network tests to localhost?'),
     ]
 
     def initialize_options(self):
         self.fast = False
         self.network = False
+        self.network_only = False
 
     def finalize_options(self):
         pass
 
     def run(self):
-        print "run unit tests"
-        runcmd(['python', '-m', 'CoverageTestRunner',
-                '--ignore-missing-from=without-tests'])
-        os.remove('.coverage')
+        local = not self.network_only
+        network = self.network or self.network_only
+        fast = self.fast
+        slow = not self.fast
 
-        print "run black box tests"
-        runcmd(['cmdtest', 'tests'])
+        if local and fast:
+            print "run unit tests"
+            runcmd(['python', '-m', 'CoverageTestRunner',
+                    '--ignore-missing-from=without-tests'])
+            os.remove('.coverage')
+
+        if local and fast:
+            print "run black box tests"
+            runcmd(['cmdtest', 'tests'])
 
         num_clients = '2'
         num_generations = '16'
 
-        if not self.fast:
+        if local and slow:
             print "run locking tests"
             test_repo = tempfile.mkdtemp()
             runcmd(['./test-locking', num_clients, 
                     num_generations, test_repo, test_repo])
             shutil.rmtree(test_repo)
 
-        if not self.fast:
+        if local and slow:
             print "run crash test"
             runcmd(['./crash-test', '100'])
 
-        if self.network:
+        if network and fast:
             print "run sftp tests"
             runcmd(['./test-sftpfs'])
 
+        if network and fast:
             print "re-run black box tests using localhost networking"
             env = dict(os.environ)
             env['OBNAM_TEST_SFTP_ROOT'] = 'yes'
             env['OBNAM_TEST_SFTP_REPOSITORY'] = 'yes'
             runcmd(['cmdtest', 'tests'], env=env)
 
-            if not self.fast:
-                print "re-run locking tests using localhost networking"
-                test_repo = tempfile.mkdtemp()
-                repo_url = 'sftp://localhost/%s' % test_repo
-                runcmd(['./test-locking', num_clients, 
-                        num_generations, repo_url, test_repo])
-                shutil.rmtree(test_repo)
+        if network and slow:
+            print "re-run locking tests using localhost networking"
+            test_repo = tempfile.mkdtemp()
+            repo_url = 'sftp://localhost/%s' % test_repo
+            runcmd(['./test-locking', num_clients, 
+                    num_generations, repo_url, test_repo])
+            shutil.rmtree(test_repo)
             
         print "setup.py check done"
 
