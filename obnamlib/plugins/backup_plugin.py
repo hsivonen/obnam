@@ -226,17 +226,27 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
             logging.info('Backup finished.')
             self.app.dump_memory_profile('at end of backup run')
-        except BaseException:
+        except BaseException, e:
+            logging.debug('Handling exception %s' % str(e))
+            logging.debug(traceback.format_exc())
+            self.unlock_when_error()
+            raise
+
+        if self.errors:
+            raise obnamlib.Error('There were errors during the backup')
+
+    def unlock_when_error(self):
+        try:
             if self.repo.got_client_lock:
                 logging.info('Unlocking client because of error')
                 self.repo.unlock_client()
             if self.repo.got_shared_lock:
                 logging.info('Unlocking shared trees because of error')
                 self.repo.unlock_shared()
-            raise
-
-        if self.errors:
-            raise obnamlib.Error('There were errors during the backup')
+        except BaseException, e2:
+            logging.debug('Got second exception while unlocking: %s' % 
+                            str(e2))
+            logging.debug(traceback.format_exc())
 
     def add_chunks_to_shared(self):
         if self.chunkid_pool:

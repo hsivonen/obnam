@@ -18,6 +18,9 @@ Version 0.29, released UNRELEASED; a BETA release
 * "obnam fsck" is now a bit faster.
 * The shared directories in the repository are now locked only during updates,
   allowing more efficient concurrent backups between several computers.
+* Obnam now gives a better error message when a backup root is not a 
+  directory. Thanks to Edward Allcutt for reporting the error
+  (<http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=654211>).
 
 Version 0.28, released 2012-05-10; a BETA release
 -------------------------------------------------
