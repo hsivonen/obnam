@@ -555,11 +555,17 @@ class Repository(object):
 
         def remove_chunks(chunk_ids):
             for chunk_id in chunk_ids:
-                checksum = self.chunklist.get_checksum(chunk_id)
-                self.chunksums.remove(checksum, chunk_id, 
-                                      self.current_client_id)
-                if not self.chunksums.chunk_is_used(checksum, chunk_id):
+                try:
+                    checksum = self.chunklist.get_checksum(chunk_id)
+                except KeyError:
+                    # No checksum, therefore it can't be shared, therefore
+                    # we can remove it.
                     self.remove_chunk(chunk_id)
+                else:
+                    self.chunksums.remove(checksum, chunk_id, 
+                                          self.current_client_id)
+                    if not self.chunksums.chunk_is_used(checksum, chunk_id):
+                        self.remove_chunk(chunk_id)
 
         def remove_gens(genids):
             if self.new_generation is None:
