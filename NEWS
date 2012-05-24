@@ -16,6 +16,8 @@ Version 0.29, released UNRELEASED; a BETA release
 * Bug fix: If a file's extended attributes have changed in any way, the change
   is now backed up.
 * "obnam fsck" is now a bit faster.
+* The shared directories in the repository are now locked only during updates,
+  allowing more efficient concurrent backups between several computers.
 
 Version 0.28, released 2012-05-10; a BETA release
 -------------------------------------------------

@@ -555,11 +555,17 @@ class Repository(object):
 
         def remove_chunks(chunk_ids):
             for chunk_id in chunk_ids:
-                checksum = self.chunklist.get_checksum(chunk_id)
-                self.chunksums.remove(checksum, chunk_id, 
-                                      self.current_client_id)
-                if not self.chunksums.chunk_is_used(checksum, chunk_id):
+                try:
+                    checksum = self.chunklist.get_checksum(chunk_id)
+                except KeyError:
+                    # No checksum, therefore it can't be shared, therefore
+                    # we can remove it.
                     self.remove_chunk(chunk_id)
+                else:
+                    self.chunksums.remove(checksum, chunk_id, 
+                                          self.current_client_id)
+                    if not self.chunksums.chunk_is_used(checksum, chunk_id):
+                        self.remove_chunk(chunk_id)
 
         def remove_gens(genids):
             if self.new_generation is None:
@@ -626,15 +632,8 @@ class Repository(object):
     def _chunk_filename(self, chunkid):
         return self.chunk_idpath.convert(chunkid)
 
-    def put_chunk(self, data, checksum):
+    def put_chunk_only(self, data):
         '''Put chunk of data into repository.
-        
-        checksum is the checksum of the data, and must be the same
-        value as returned by self.checksum(data). However, since all
-        known use cases require the caller to know the checksum before
-        calling this method, and since computing checksums is
-        expensive, we micro-optimize a little bit by passing it as
-        an argument.
         
         If the same data is already in the repository, it will be put there
         a second time. It is the caller's responsibility to check
@@ -647,9 +646,7 @@ class Repository(object):
         def random_chunkid():
             return random.randint(0, obnamlib.MAX_ID)
         
-        tracing.trace('putting chunk (checksum=%s)', repr(checksum))
         self.require_started_generation()
-        self.require_shared_lock()
 
         if self.prev_chunkid is None:
             self.prev_chunkid = random_chunkid()
@@ -669,10 +666,25 @@ class Repository(object):
                 break
 
         self.prev_chunkid = chunkid
-        checksum = self.checksum(data)
+        return chunkid
+
+    def put_chunk_in_shared_trees(self, chunkid, checksum):
+        '''Put the chunk into the shared trees.
+        
+        The chunk is assumed to already exist in the repository, so we
+        just need to add it to the shared trees that map chunkids to
+        checksums and checksums to chunkids.
+        
+        '''
+
+        tracing.trace('chunkid=%s', chunkid)
+        tracing.trace('checksum=%s', repr(checksum))
+
+        self.require_started_generation()
+        self.require_shared_lock()
+
         self.chunklist.add(chunkid, checksum)
         self.chunksums.add(checksum, chunkid, self.current_client_id)
-        return chunkid
         
     def get_chunk(self, chunkid):
         '''Return data of chunk with given id.'''
