@@ -626,15 +626,8 @@ class Repository(object):
     def _chunk_filename(self, chunkid):
         return self.chunk_idpath.convert(chunkid)
 
-    def put_chunk(self, data, checksum):
+    def put_chunk_only(self, data):
         '''Put chunk of data into repository.
-        
-        checksum is the checksum of the data, and must be the same
-        value as returned by self.checksum(data). However, since all
-        known use cases require the caller to know the checksum before
-        calling this method, and since computing checksums is
-        expensive, we micro-optimize a little bit by passing it as
-        an argument.
         
         If the same data is already in the repository, it will be put there
         a second time. It is the caller's responsibility to check
@@ -647,7 +640,6 @@ class Repository(object):
         def random_chunkid():
             return random.randint(0, obnamlib.MAX_ID)
         
-        tracing.trace('putting chunk (checksum=%s)', repr(checksum))
         self.require_started_generation()
 
         if self.prev_chunkid is None:
