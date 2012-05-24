@@ -21,6 +21,10 @@ Version 0.29, released UNRELEASED; a BETA release
 * Obnam now gives a better error message when a backup root is not a 
   directory. Thanks to Edward Allcutt for reporting the error
   (<http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=654211>).
+* The output format of "obnam ls" has changed. It now has one line per
+  file, and includes the full pathname of the file, rather mimicking the
+  output of "ls -lAR". Thanks to Edward Allcutt for the suggestion
+  (<http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=655095>).
 
 Version 0.28, released 2012-05-10; a BETA release
 -------------------------------------------------

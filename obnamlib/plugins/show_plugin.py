@@ -146,27 +146,40 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         return metadata.isdir()
     
     def show_objects(self, gen, dirname):
-        print
-        print '%s:' % dirname
+        self.show_item(gen, dirname)
         subdirs = []
-        everything = []
-        for basename in self.repo.listdir(gen, dirname):
-            fields = self.fields(gen, dirname, basename)
+        for basename in sorted(self.repo.listdir(gen, dirname)):
             full = os.path.join(dirname, basename)
-            everything.append(fields)
             if self.isdir(gen, full):
                 subdirs.append(full)
-
-        if everything:
-            widths = self.widths(everything)
-            for fields in everything:
-                print self.format(widths, fields)
+            else:
+                self.show_item(gen, full)
 
         for subdir in subdirs:
             self.show_objects(gen, subdir)
 
-    def fields(self, gen, dirname, basename):
-        full = os.path.join(dirname, basename)
+    def show_item(self, gen, filename):
+        fields = self.fields(gen, filename)
+        widths = [
+            1, # mode
+            5, # nlink
+            -8, # owner
+            -8, # group
+            10, # size
+            1, # mtime
+            -1, # name
+        ]
+        
+        result = []
+        for i in range(len(fields)):
+            if widths[i] < 0:
+                fmt = '%-*s'
+            else:
+                fmt = '%*s'
+            result.append(fmt % (abs(widths[i]), fields[i]))
+        print ' '.join(result)
+
+    def fields(self, gen, full):
         metadata = self.repo.get_metadata(gen, full)
 
         perms = ['?'] + ['-'] * 9
@@ -195,9 +208,9 @@ class ShowPlugin(obnamlib.ObnamPlugin):
                                   time.gmtime(metadata.st_mtime_sec))
 
         if metadata.islink():
-            name = '%s -> %s' % (basename, metadata.target)
+            name = '%s -> %s' % (full, metadata.target)
         else:
-            name = basename
+            name = full
 
         return (perms, 
                  str(metadata.st_nlink or 0), 
@@ -207,14 +220,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
                  timestamp, 
                  name)
 
-    def widths(self, everything):
-        w = list(self.min_widths)
-        for fields in everything:
-            for i, field in enumerate(fields):
-                w[i] = max(w[i], len(field))
-        return w
-
-    def format(self, widths, fields):
+    def format(self, fields):
         return ' '. join(self.align(widths[i], fields[i], i)
                           for i in range(len(fields)))
 
