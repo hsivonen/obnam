@@ -510,7 +510,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         def put():
             self.update_progress_with_upload(len(data))
-            return self.repo.put_chunk(data, checksum)
+            chunkid = self.repo.put_chunk_only(data)
+            self.repo.put_chunk_in_shared_trees(chunkid, checksum)
+            return chunkid
 
         checksum = self.repo.checksum(data)
 
