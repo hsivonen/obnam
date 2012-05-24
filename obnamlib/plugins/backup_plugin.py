@@ -510,9 +510,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         def put():
             self.update_progress_with_upload(len(data))
-            chunkid = self.repo.put_chunk_only(data)
+            return self.repo.put_chunk_only(data)
+            
+        def share(chunkid):
             self.repo.put_chunk_in_shared_trees(chunkid, checksum)
-            return chunkid
 
         checksum = self.repo.checksum(data)
 
@@ -525,18 +526,24 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 if data == data2:
                     return chunkid
             else:
-                return put()
+                chunkid = put()
+                share(chunkid)
+                return chunkid
         elif mode == 'fatalist':
             existing = find()
             if existing:
                 return existing[0]
             else:
-                return put()
+                chunkid = put()
+                share(chunkid)
+                return chunkid
         else:
             if not hasattr(self, 'bad_deduplicate_reported'):
                 logging.error('unknown --deduplicate setting value')
                 self.bad_deduplicate_reported = True
-            return put()
+            chunkid = put()
+            share(chunkid)
+            return chunkid
 
     def backup_dir_contents(self, root):
         '''Back up the list of files in a directory.'''
