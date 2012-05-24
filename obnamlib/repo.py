@@ -649,7 +649,6 @@ class Repository(object):
         
         tracing.trace('putting chunk (checksum=%s)', repr(checksum))
         self.require_started_generation()
-        self.require_shared_lock()
 
         if self.prev_chunkid is None:
             self.prev_chunkid = random_chunkid()
@@ -669,10 +668,25 @@ class Repository(object):
                 break
 
         self.prev_chunkid = chunkid
-        checksum = self.checksum(data)
+        return chunkid
+
+    def put_chunk_in_shared_trees(self, chunkid, checksum):
+        '''Put the chunk into the shared trees.
+        
+        The chunk is assumed to already exist in the repository, so we
+        just need to add it to the shared trees that map chunkids to
+        checksums and checksums to chunkids.
+        
+        '''
+
+        tracing.trace('chunkid=%s', chunkid)
+        tracing.trace('checksum=%s', repr(checksum))
+
+        self.require_started_generation()
+        self.require_shared_lock()
+
         self.chunklist.add(chunkid, checksum)
         self.chunksums.add(checksum, chunkid, self.current_client_id)
-        return chunkid
         
     def get_chunk(self, chunkid):
         '''Return data of chunk with given id.'''
