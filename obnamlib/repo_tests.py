@@ -432,32 +432,44 @@ class RepositoryClientTests(unittest.TestCase):
         self.assertEqual(self.repo.list_generations(), [])
 
     def test_removing_only_second_generation_works(self):
+        # Create first generation. It will be empty.
         self.repo.lock_client('client_name')
         self.repo.lock_shared()
         gen1 = self.repo.start_generation()
         self.repo.commit_client()
         self.repo.commit_shared()
 
+        # Create second generation. It will have a file with two chunks.
+        # Only one of the chunks will be put into the shared trees.
         self.repo.lock_client('client_name')
         self.repo.lock_shared()
         gen2 = self.repo.start_generation()
-        chunk_id = self.repo.put_chunk('data', self.repo.checksum('data'))
-        self.repo.set_file_chunks('/foo', [chunk_id])
+        chunk_id1 = self.repo.put_chunk_only('data')
+        self.repo.put_chunk_in_shared_trees(chunk_id1, 'checksum')
+        chunk_id2 = self.repo.put_chunk_only('data2')
+        self.repo.set_file_chunks('/foo', [chunk_id1, chunk_id2])
         self.repo.commit_client()
         self.repo.commit_shared()
 
+        # Do we have the right generations? And the chunk2?
         self.repo.open_client('client_name')
         self.assertEqual(len(self.repo.list_generations()), 2)
+        self.assertTrue(self.repo.chunk_exists(chunk_id1))
+        self.assertTrue(self.repo.chunk_exists(chunk_id2))
 
+        # Remove second generation. This should remove the chunk too.
         self.repo.lock_client('client_name')
         self.repo.lock_shared()
         self.repo.remove_generation(gen2)
         self.repo.commit_client()
         self.repo.commit_shared()
 
+        # Make sure we have only the first generation, and that the
+        # chunks are gone.
         self.repo.open_client('client_name')
         self.assertEqual(self.repo.list_generations(), [gen1])
-        self.assertFalse(self.repo.chunk_exists(chunk_id))
+        self.assertFalse(self.repo.chunk_exists(chunk_id1))
+        self.assertFalse(self.repo.chunk_exists(chunk_id2))
 
     def test_removing_started_generation_fails(self):
         self.repo.lock_client('client_name')
@@ -591,11 +603,11 @@ class RepositoryChunkTests(unittest.TestCase):
 
     def test_put_chunk_returns_id(self):
         self.repo.lock_shared()
-        self.assertNotEqual(self.repo.put_chunk('data', 'checksum'), None)
+        self.assertNotEqual(self.repo.put_chunk_only('data'), None)
         
     def test_get_chunk_retrieves_what_put_chunk_puts(self):
         self.repo.lock_shared()
-        chunkid = self.repo.put_chunk('data', 'checksum')
+        chunkid = self.repo.put_chunk_only('data')
         self.assertEqual(self.repo.get_chunk(chunkid), 'data')
         
     def test_chunk_does_not_exist(self):
@@ -603,12 +615,12 @@ class RepositoryChunkTests(unittest.TestCase):
         
     def test_chunk_exists_after_it_is_put(self):
         self.repo.lock_shared()
-        chunkid = self.repo.put_chunk('chunk', 'checksum')
+        chunkid = self.repo.put_chunk_only('chunk')
         self.assert_(self.repo.chunk_exists(chunkid))
 
     def test_removes_chunk(self):
         self.repo.lock_shared()
-        chunkid = self.repo.put_chunk('chunk', 'checksum')
+        chunkid = self.repo.put_chunk_only('chunk')
         self.repo.remove_chunk(chunkid)
         self.assertFalse(self.repo.chunk_exists(chunkid))
 
@@ -619,7 +631,8 @@ class RepositoryChunkTests(unittest.TestCase):
     def test_find_chunks_finds_what_put_chunk_puts(self):
         self.repo.lock_shared()
         checksum = self.repo.checksum('data')
-        chunkid = self.repo.put_chunk('data', checksum)
+        chunkid = self.repo.put_chunk_only('data')
+        self.repo.put_chunk_in_shared_trees(chunkid, checksum)
         self.assertEqual(self.repo.find_chunks(checksum), [chunkid])
         
     def test_find_chunks_finds_nothing_if_nothing_is_put(self):
@@ -628,8 +641,10 @@ class RepositoryChunkTests(unittest.TestCase):
     def test_handles_checksum_collision(self):
         self.repo.lock_shared()
         checksum = self.repo.checksum('data')
-        chunkid1 = self.repo.put_chunk('data', checksum)
-        chunkid2 = self.repo.put_chunk('data', checksum)
+        chunkid1 = self.repo.put_chunk_only('data')
+        chunkid2 = self.repo.put_chunk_only('data')
+        self.repo.put_chunk_in_shared_trees(chunkid1, checksum)
+        self.repo.put_chunk_in_shared_trees(chunkid2, checksum)
         self.assertEqual(set(self.repo.find_chunks(checksum)),
                          set([chunkid1, chunkid2]))
 
@@ -641,7 +656,7 @@ class RepositoryChunkTests(unittest.TestCase):
         checksum = self.repo.checksum('data')
         chunkids = []
         for i in range(2):
-            chunkids.append(self.repo.put_chunk('data', checksum))
+            chunkids.append(self.repo.put_chunk_only('data'))
         self.assertEqual(sorted(self.repo.list_chunks()), sorted(chunkids))
 
 
