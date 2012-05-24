@@ -2,8 +2,9 @@ obnam (0.29-1) unstable; urgency=low
 
   * New upstream release.
     - Fix "backup of individual file fails with ENOENT" (Closes: #654211)
+    - Fix "alternative format for obnam ls" (Closes: #655095)
 
- -- Lars Wirzenius <liw@liw.fi>  Thu, 24 May 2012 17:05:25 +0200
+ -- Lars Wirzenius <liw@liw.fi>  Thu, 24 May 2012 17:28:37 +0200
 
 obnam (0.28-1) unstable; urgency=low
 
