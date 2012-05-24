@@ -198,9 +198,14 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.repo = self.app.open_repository(create=True)
             self.add_client(client_name)
             self.repo.lock_client(client_name)
+            
+            # Need to lock the shared stuff briefly, so encryption etc
+            # gets initialized.
             self.repo.lock_shared()
+            self.repo.unlock_shared()
 
         self.errors = False
+        self.chunkid_pool = [] # pairs of (chunkid, checksum)
         try:
             if not self.pretend:
                 self.repo.start_generation()
@@ -211,6 +216,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.app.ts['what'] = 'committing changes'
             self.app.ts.flush()
             if not self.pretend:
+                self.repo.lock_shared()
+                self.add_chunks_to_shared()
                 self.repo.commit_client()
                 self.repo.commit_shared()
             self.repo.fs.close()
@@ -223,11 +230,19 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             if self.repo.got_client_lock:
                 logging.info('Unlocking client because of error')
                 self.repo.unlock_client()
+            if self.repo.got_shared_lock:
+                logging.info('Unlocking shared trees because of error')
                 self.repo.unlock_shared()
             raise
 
         if self.errors:
             raise obnamlib.Error('There were errors during the backup')
+
+    def add_chunks_to_shared(self):
+        if self.chunkid_pool:
+            for chunkid, checksum in self.chunkid_pool:
+                self.repo.put_chunk_in_shared_trees(chunkid, checksum)
+            self.chunkid_pool = []
 
     def add_client(self, client_name):
         self.repo.lock_root()
@@ -322,12 +337,13 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         if not self.pretend:
             self.checkpoints.append(self.repo.new_generation)
             self.backup_parents('.')
+            self.repo.lock_shared()
+            self.add_chunks_to_shared()
             self.repo.commit_client(checkpoint=True)
             self.repo.commit_shared()
             self.last_checkpoint = self.repo.fs.bytes_written
             self.repo = self.app.open_repository(repofs=self.repo.fs.fs)
             self.repo.lock_client(self.app.settings['client-name'])
-            self.repo.lock_shared()
             self.repo.start_generation()
             self.app.dump_memory_profile('at end of checkpoint')
         self.app.ts['what'] = self.app.ts['current-file']
@@ -513,7 +529,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             return self.repo.put_chunk_only(data)
             
         def share(chunkid):
-            self.repo.put_chunk_in_shared_trees(chunkid, checksum)
+            self.chunkid_pool.append((chunkid, checksum))
 
         checksum = self.repo.checksum(data)
 
