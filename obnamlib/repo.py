@@ -47,7 +47,6 @@ class HookedFS(object):
         self.repo = repo
         self.fs = fs
         self.hooks = hooks
-        self.do_make_readonly = True
         
     def __getattr__(self, name):
         return getattr(self.fs, name)
@@ -77,7 +76,6 @@ class HookedFS(object):
             data = self.hooks.filter_write('repository-data', data,
                                            repo=self.repo, toplevel=toplevel)
         self.fs.write_file(filename, data)
-        self.make_readonly(filename)
         
     def overwrite_file(self, filename, data, runfilters=True):
         tracing.trace('overwriting hooked %s' % filename)
@@ -86,18 +84,6 @@ class HookedFS(object):
             data = self.hooks.filter_write('repository-data', data,
                                            repo=self.repo, toplevel=toplevel)
         self.fs.overwrite_file(filename, data)
-        self.make_readonly(filename)
-        
-    def make_readonly(self, filename):
-        if self.do_make_readonly:
-            try:
-                self.fs.chmod(filename, stat.S_IRUSR)
-            except OSError, e: # pragma: no cover
-                if e.errno != errno.EPERM:
-                    raise
-                else:
-                    logging.debug('Ignoring chmod error in repository')
-                    self.do_make_readonly = False
         
 
 class Repository(object):
