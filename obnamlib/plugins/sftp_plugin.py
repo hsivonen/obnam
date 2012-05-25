@@ -507,17 +507,13 @@ class SftpFS(obnamlib.VirtualFileSystem):
     def write_file(self, pathname, contents):
         self._delay()
         dirname = os.path.dirname(pathname)
-        f, tempname = self._tempfile(dirname)
+        try:
+            self.makedirs(dirname)
+        except OSError:
+            pass
+        f = self.open(pathname, 'wx')
         self._write_helper(f, contents)
         f.close()
-        
-        try:
-            f = self.open(pathname, 'wx')
-        except OSError:
-            self.remove(tempfile)
-            raise e
-        else:
-            self.rename(tempname, pathname)
 
     def _tempfile(self, dirname):
         '''Create a new file with a random name, return file handle and name.'''
