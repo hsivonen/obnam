@@ -110,7 +110,7 @@ class Check(Command):
 
         if local and slow:
             print "run crash test"
-            runcmd(['./crash-test', '100'])
+            runcmd(['./crash-test', '200'])
 
         if network and fast:
             print "run sftp tests"
