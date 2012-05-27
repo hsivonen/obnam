@@ -409,7 +409,6 @@ class SftpFS(obnamlib.VirtualFileSystem):
         
     @ioerror_to_oserror
     def makedirs(self, pathname):
-        self._delay()
         parent = os.path.dirname(pathname)
         if parent and parent != pathname and not self.exists(parent):
             self.makedirs(parent)
@@ -505,19 +504,17 @@ class SftpFS(obnamlib.VirtualFileSystem):
 
     @ioerror_to_oserror
     def write_file(self, pathname, contents):
-        self._delay()
-        dirname = os.path.dirname(pathname)
-        f, tempname = self._tempfile(dirname)
-        self._write_helper(f, contents)
-        f.close()
-        
         try:
             f = self.open(pathname, 'wx')
-        except OSError:
-            self.remove(tempfile)
-            raise e
-        else:
-            self.rename(tempname, pathname)
+        except (IOError, OSError), e:
+            if e.errno != errno.ENOENT:
+                raise
+            dirname = os.path.dirname(pathname)
+            self.makedirs(dirname)
+            f = self.open(pathname, 'wx')
+
+        self._write_helper(f, contents)
+        f.close()
 
     def _tempfile(self, dirname):
         '''Create a new file with a random name, return file handle and name.'''

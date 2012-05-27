@@ -185,9 +185,10 @@ class VirtualFileSystem(object):
     def write_file(self, pathname, contents):
         '''Write a new file.
 
-        The file must not yet exist. The file is written atomically,
-        so that the given name will only exist when the file is
-        completely written.
+        The file must not yet exist. The file is not necessarily written 
+        atomically, meaning that if the writing fails (connection to
+        server drops, for example), the file might exist in a partial
+        form. The callers need to deal with this.
         
         Any directories in pathname will be created if necessary.
 

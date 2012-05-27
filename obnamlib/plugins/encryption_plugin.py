@@ -86,11 +86,9 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
 
     def _write_file(self, repo, pathname, contents):
         repo.fs.fs.write_file(pathname, contents)
-        repo.fs.make_readonly(pathname)
 
     def _overwrite_file(self, repo, pathname, contents):
         repo.fs.fs.overwrite_file(pathname, contents)
-        repo.fs.make_readonly(pathname)
 
     def toplevel_init(self, repo, toplevel):
         '''Initialize a new toplevel for encryption.'''
