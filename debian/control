@@ -15,7 +15,8 @@ Build-Depends: debhelper (>= 7.3.8),
     libattr1-dev,
     genbackupdata,
     summain,
-    cmdtest
+    cmdtest,
+    attr
 Homepage: http://braawi.org/obnam/
 X-Python-Version: >= 2.6
 
