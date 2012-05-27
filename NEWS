@@ -25,6 +25,7 @@ Version 0.29, released UNRELEASED; a BETA release
   file, and includes the full pathname of the file, rather mimicking the
   output of "ls -lAR". Thanks to Edward Allcutt for the suggestion
   (<http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=655095>).
+* A few optimizations to sftp speed. Small files are still slow.
 
 Version 0.28, released 2012-05-10; a BETA release
 -------------------------------------------------
