@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# Copyright (C) 2008-2011  Lars Wirzenius <liw@liw.fi>
+# Copyright (C) 2008-2012  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -135,7 +135,7 @@ class Check(Command):
 
 
 setup(name='obnam',
-      version='0.28',
+      version='0.29',
       description='Backup software',
       author='Lars Wirzenius',
       author_email='liw@liw.fi',

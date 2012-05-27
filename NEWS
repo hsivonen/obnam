@@ -4,8 +4,8 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
-Version 0.29, released UNRELEASED; a BETA release
--------------------------------------------------
+Version 0.29, released 2012-05-27; a RELEASE CANDIDATE
+------------------------------------------------------
 
 * "obnam backup" now writes performance statistics at the end of a backup run.
   Search the log for "Backup performance statistics" (INFO level).

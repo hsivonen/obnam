@@ -1,8 +1,27 @@
 obnam (0.29-1) unstable; urgency=low
 
   * New upstream release.
-    - Fix "backup of individual file fails with ENOENT" (Closes: #654211)
-    - Fix "alternative format for obnam ls" (Closes: #655095)
+    - "obnam backup" now writes performance statistics at the end of a 
+      backup run. Search the log for "Backup performance statistics" 
+      (INFO level).
+    - "obnam verify" now continues past the first error. Thanks to 
+      Rafał Gwiazda for requesting this.
+    - Add an `obnam-viewprof` utility to translate Python profiling output
+      into human readable text form.
+    - Bug fix: If a file's extended attributes have changed in any way, 
+      the change is now backed up.
+    - "obnam fsck" is now a bit faster.
+    - The shared directories in the repository are now locked only during 
+      updates, allowing more efficient concurrent backups between several 
+      computers.
+    - Obnam now gives a better error message when a backup root is not a 
+      directory. Thanks to Edward Allcutt for reporting the error.
+      (Closes: #654211)
+    - The output format of "obnam ls" has changed. It now has one line per
+      file, and includes the full pathname of the file, rather mimicking the
+      output of "ls -lAR". Thanks to Edward Allcutt for the suggestion.
+      (Closes: #655095)
+    - A few optimizations to sftp speed. Small files are still slow.
 
  -- Lars Wirzenius <liw@liw.fi>  Thu, 24 May 2012 17:28:37 +0200
 
