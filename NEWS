@@ -4,6 +4,12 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
+Version 0.30, released UNRELEASED; a RELEASE CANDIDATE
+------------------------------------------------------
+
+* Fix test case problem when `$TMPDIR` lacks `user_xattr`. The extended
+  attributes test won't succeed in that case, and it's pointless to run it.
+
 Version 0.29, released 2012-05-27; a RELEASE CANDIDATE
 ------------------------------------------------------
 

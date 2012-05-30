@@ -20,9 +20,12 @@
 set -e
 
 # This only works with local filesystem access, not over sftp.
-if [ "$OBNAM_TEST_SFTP_ROOT" != yes ]
+# It also requires user_xattr to be set on the filesystem.
+# If both requirements are not met, skip the test.
+echo foo > "$DATADIR/data/foo"
+if [ "$OBNAM_TEST_SFTP_ROOT" != yes ] &&
+   setfattr --name=user.foo --value=bar "$DATADIR/data/foo" 2>/dev/null
 then
-    echo foo > "$DATADIR/data/foo"
     $SRCDIR/tests/backup
 
     setfattr --name=user.foo --value=bar "$DATADIR/data/foo"
