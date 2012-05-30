@@ -135,7 +135,7 @@ class Check(Command):
 
 
 setup(name='obnam',
-      version='0.29',
+      version='0.30',
       description='Backup software',
       author='Lars Wirzenius',
       author_email='liw@liw.fi',

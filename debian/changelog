@@ -1,4 +1,4 @@
-obnam (UNRELEASED-1) UNRELEASED; urgency=low
+obnam (0.30-1) unstable; urgency=low
 
   * New upstream release.
     - Fix "FTBFS: xattr test fails if /tmp on tmpfs" by disabling test
@@ -6,7 +6,7 @@ obnam (UNRELEASED-1) UNRELEASED; urgency=low
     - Fix "FTBFS: test convert5to6 fails on FS w/o nanosecond resolution"
       by ignoring the sub-second portion of the timestamps (Closes: #674834)
 
- -- Lars Wirzenius <liw@liw.fi>  Wed, 30 May 2012 13:59:08 +0200
+ -- Lars Wirzenius <liw@liw.fi>  Wed, 30 May 2012 16:34:23 +0200
 
 obnam (0.29-1) unstable; urgency=low
 
