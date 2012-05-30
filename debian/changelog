@@ -3,8 +3,10 @@ obnam (UNRELEASED-1) UNRELEASED; urgency=low
   * New upstream release.
     - Fix "FTBFS: xattr test fails if /tmp on tmpfs" by disabling test
       when user_xattr is not enabled on $TMPDIR (Closes: #674832)
+    - Fix "FTBFS: test convert5to6 fails on FS w/o nanosecond resolution"
+      by ignoring the sub-second portion of the timestamps (Closes: #674834)
 
- -- Lars Wirzenius <liw@liw.fi>  Wed, 30 May 2012 13:41:59 +0200
+ -- Lars Wirzenius <liw@liw.fi>  Wed, 30 May 2012 13:59:08 +0200
 
 obnam (0.29-1) unstable; urgency=low
 

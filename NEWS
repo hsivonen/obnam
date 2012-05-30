@@ -9,6 +9,9 @@ Version 0.30, released UNRELEASED; a RELEASE CANDIDATE
 
 * Fix test case problem when `$TMPDIR` lacks `user_xattr`. The extended
   attributes test won't succeed in that case, and it's pointless to run it.
+* Fix test case problem when `$TMPDIR` lacks nanosecond timestamps for
+  files. The test case now ignores such timestamps, making the test pass
+  anyway. The timestamp accuracy is not important for this test.
 
 Version 0.29, released 2012-05-27; a RELEASE CANDIDATE
 ------------------------------------------------------
