@@ -1,3 +1,11 @@
+obnam (1.0-1) unstable; urgency=low
+
+  * New upstream release.
+    - Fixed bug in finding duplicate files during a backup generation.
+      Thanks to Saint Germain for reporting the problem.
+
+ -- Lars Wirzenius <liw@liw.fi>  Fri, 01 Jun 2012 10:28:36 +0200
+
 obnam (0.30-1) unstable; urgency=low
 
   * New upstream release.

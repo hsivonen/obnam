@@ -1,15 +1,7 @@
 Obnam, a backup program
 =======================
 
-Obnam is a backup program. It is currently in BETA quality, meaning that
-all the necessary features should be there, but there are bugs that may
-annoy you a lot, and performance may be entirely inadequate for you.
-Hopefully using Obnam will no longer turn you bitter and hateful, and 
-make you abandon all hope for civilisation, move into the rain forest, 
-and talk to birds for the rest of your life.
-
-It would be inadvisable to rely on Obnam as your only backup solution,
-but it should be ready for feature evaluation use.
+Obnam is a backup program.
 
 
 Home page
@@ -22,7 +14,7 @@ for more information.
 Installation
 ------------
 
-The source tree contains packaging for Debian. Run `debuild -us -uc` to
+The source tree contains packaging for Debian. Run `debuild -us -uc -i.bzr` to
 build an installation package.
 
 On other systems, using the `setup.py` file should work: run

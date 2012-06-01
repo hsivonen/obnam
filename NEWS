@@ -4,6 +4,13 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
+Version 1.0, released 2012-06-01
+--------------------------------
+
+* Fixed bug in finding duplicate files during a backup generation.
+  Thanks to Saint Germain for reporting the problem.
+* Changed version number to 1.0.
+
 Version 0.30, released 2012-05-30; a RELEASE CANDIDATE
 ------------------------------------------------------
 
