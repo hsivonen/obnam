@@ -95,8 +95,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.app.settings.boolean(['small-files-in-btree'],
                                   'put contents of small files directly into '
                                     'the per-client B-tree, instead of '
-                                    'separate chunk files; this may improve '
-                                    'speed at the cost of de-duplication')
+                                    'separate chunk files; do not use this '
+                                    'as it is quite bad for performance')
 
     def configure_ttystatus_for_backup(self):
         self.app.ts['current-file'] = ''
