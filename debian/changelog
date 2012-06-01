@@ -1,5 +1,11 @@
 obnam (1.0-1) unstable; urgency=low
 
+  * Change to build only on linux architectures.
+
+ -- Lars Wirzenius <liw@liw.fi>  Fri, 01 Jun 2012 13:31:59 +0200
+
+obnam (1.0-1) unstable; urgency=low
+
   * New upstream release.
     - Fixed bug in finding duplicate files during a backup generation.
       Thanks to Saint Germain for reporting the problem.
