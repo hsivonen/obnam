@@ -28,6 +28,33 @@ import ttystatus
 import obnamlib
 
 
+class ChunkidPool(object):
+
+    '''Checksum/chunkid mappings that are pending an upload to shared trees.'''
+    
+    def __init__(self):
+        self.clear()
+        
+    def add(self, chunkid, checksum):
+        if checksum not in self._mapping:
+            self._mapping[checksum] = []
+        self._mapping[checksum].append(chunkid)
+
+    def __contains__(self, checksum):
+        return checksum in self._mapping
+
+    def get(self, checksum):
+        return self._mapping.get(checksum, [])
+        
+    def clear(self):
+        self._mapping = {}
+        
+    def __iter__(self):
+        for checksum in self._mapping.keys():
+            for chunkid in self._mapping[checksum]:
+                yield chunkid, checksum
+
+
 class BackupPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
@@ -205,7 +232,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.repo.unlock_shared()
 
         self.errors = False
-        self.chunkid_pool = [] # pairs of (chunkid, checksum)
+        self.chunkid_pool = ChunkidPool()
         try:
             if not self.pretend:
                 self.repo.start_generation()
@@ -249,10 +276,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             logging.debug(traceback.format_exc())
 
     def add_chunks_to_shared(self):
-        if self.chunkid_pool:
-            for chunkid, checksum in self.chunkid_pool:
-                self.repo.put_chunk_in_shared_trees(chunkid, checksum)
-            self.chunkid_pool = []
+        for chunkid, checksum in self.chunkid_pool:
+            self.repo.put_chunk_in_shared_trees(chunkid, checksum)
+        self.chunkid_pool.clear()
 
     def add_client(self, client_name):
         self.repo.lock_root()
@@ -529,7 +555,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         '''Back up a chunk of data by putting it into the repository.'''
 
         def find():
-            return self.repo.find_chunks(checksum)
+            return (self.repo.find_chunks(checksum) + 
+                     self.chunkid_pool.get(checksum))
 
         def get(chunkid):
             return self.repo.get_chunk(chunkid)
@@ -539,7 +566,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             return self.repo.put_chunk_only(data)
             
         def share(chunkid):
-            self.chunkid_pool.append((chunkid, checksum))
+            self.chunkid_pool.add(chunkid, checksum)
 
         checksum = self.repo.checksum(data)
 
