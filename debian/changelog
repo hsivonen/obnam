@@ -1,3 +1,9 @@
+obnam (1.UNRELEASED) unstable; urgency=low
+
+  * debian/control: Bump python-ttystatus dependencies to 0.18.
+
+ -- Lars Wirzenius <liw@liw.fi>  Wed, 06 Jun 2012 21:00:11 +0100
+
 obnam (1.0-1) unstable; urgency=low
 
   * Change to build only on linux architectures.
