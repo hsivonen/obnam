@@ -414,7 +414,7 @@ For example:
 .RS
 .nf
 [config]
-exclude = foo, bar, \.mp3$
+exclude = foo, bar, \\.mp3$
 .fi
 .RE
 .sp 1
