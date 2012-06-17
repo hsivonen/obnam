@@ -60,6 +60,13 @@ IDPATH_SKIP = 13
 # for on-disk data structures.
 MAX_ID = 2**64 - 1
 
+
+option_group = {
+    'perf': 'Performance tweaking',
+    'devel': 'Development of Obnam itself',
+}
+
+
 from sizeparse import SizeSyntaxError, UnitNameError, ByteSizeParser
 
 from encryption import (generate_symmetric_key,

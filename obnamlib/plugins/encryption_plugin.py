@@ -23,17 +23,23 @@ import obnamlib
 class EncryptionPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
+        encryption_group = obnamlib.option_group['encryption'] = 'Encryption'
+
         self.app.settings.string(['encrypt-with'],
                                    'PGP key with which to encrypt data '
-                                        'in the backup repository')
+                                        'in the backup repository',
+                                 group=encryption_group)
         self.app.settings.string(['keyid'],
                                    'PGP key id to add to/remove from '
-                                        'the backup repository')
+                                        'the backup repository',
+                                 group=encryption_group)
         self.app.settings.boolean(['weak-random'],
                                     'use /dev/urandom instead of /dev/random '
-                                        'to generate symmetric keys')
+                                        'to generate symmetric keys',
+                                 group=encryption_group)
         self.app.settings.string(['symmetric-key-bits'],
-                                   'size of symmetric key, in bits')
+                                   'size of symmetric key, in bits',
+                                 group=encryption_group)
         
         self.tag = "encrypt1"
 

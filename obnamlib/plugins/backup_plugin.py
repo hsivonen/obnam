@@ -58,28 +58,36 @@ class ChunkidPool(object):
 class BackupPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
+        backup_group = obnamlib.option_group['backup'] = 'Backing up'
+        perf_group = obnamlib.option_group['perf']
+    
         self.app.add_subcommand('backup', self.backup,
                                 arg_synopsis='[FILE]...')
         self.app.settings.string_list(['root'], 'what to backup')
         self.app.settings.string_list(['exclude'], 
                                  'regular expression for pathnames to '
                                  'exclude from backup (can be used multiple '
-                                 'times)')
+                                 'times)',
+                                 group=backup_group)
         self.app.settings.boolean(['exclude-caches'],
                                     'exclude directories (and their subdirs) '
-                                    'that contain a CACHEDIR.TAG file')
+                                    'that contain a CACHEDIR.TAG file',
+                                 group=backup_group)
         self.app.settings.boolean(['one-file-system'],
                                     'exclude directories (and their subdirs) '
-                                    'that are in a different filesystem')
+                                    'that are in a different filesystem',
+                                 group=backup_group)
         self.app.settings.bytesize(['checkpoint'],
                                       'make a checkpoint after a given SIZE '
                                       '(%default)',
                                     metavar='SIZE',
-                                    default=1024**3)
+                                    default=1024**3,
+                                 group=backup_group)
         self.app.settings.integer(['chunkids-per-group'],
                                   'encode NUM chunk ids per group (%default)',
                                   metavar='NUM',
-                                  default=obnamlib.DEFAULT_CHUNKIDS_PER_GROUP)
+                                  default=obnamlib.DEFAULT_CHUNKIDS_PER_GROUP,
+                                  group=perf_group)
         self.app.settings.choice(['deduplicate'],
                                  ['fatalist', 'never', 'verify'],
                                  'find duplicate data in backed up data '
@@ -88,15 +96,18 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                                     'verify that no hash collisions happen, '
                                     'or (the default) fatalistically accept '
                                     'the risk of collisions',
-                                 metavar='MODE')
+                                 metavar='MODE',
+                                 group=backup_group)
         self.app.settings.boolean(['leave-checkpoints'],
                                   'leave checkpoint generations at the end '
-                                    'of a successful backup run')
+                                    'of a successful backup run',
+                                 group=backup_group)
         self.app.settings.boolean(['small-files-in-btree'],
                                   'put contents of small files directly into '
                                     'the per-client B-tree, instead of '
                                     'separate chunk files; do not use this '
-                                    'as it is quite bad for performance')
+                                    'as it is quite bad for performance',
+                                 group=backup_group)
 
     def configure_ttystatus_for_backup(self):
         self.app.ts['current-file'] = ''

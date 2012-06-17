@@ -559,31 +559,39 @@ class SftpFS(obnamlib.VirtualFileSystem):
 class SftpPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
+        ssh_group = obnamlib.option_group['ssh'] = 'SSH/SFTP'
+        devel_group = obnamlib.option_group['devel']
+
         self.app.settings.integer(['sftp-delay'],
                                   'add an artificial delay (in milliseconds) '
-                                    'to all SFTP transfers')
+                                    'to all SFTP transfers',
+                                  group=devel_group)
 
         self.app.settings.string(['ssh-key'],
                                  'use FILENAME as the ssh RSA private key for '
                                     'sftp access (default is using keys known '
                                     'to ssh-agent)',
-                                 metavar='FILENAME')
+                                 metavar='FILENAME',
+                                 group=ssh_group)
 
         self.app.settings.boolean(['strict-ssh-host-keys'],
                                   'require that the ssh host key must be '
                                     'known and correct to be accepted; '
-                                    'default is to accept unknown keys')
+                                    'default is to accept unknown keys',
+                                  group=ssh_group)
 
         self.app.settings.string(['ssh-known-hosts'],
                                  'filename of the user\'s known hosts file '
                                     '(default: %default)',
                                  metavar='FILENAME',
                                  default=
-                                    os.path.expanduser('~/.ssh/known_hosts'))
+                                    os.path.expanduser('~/.ssh/known_hosts'),
+                                 group=ssh_group)
 
         self.app.settings.boolean(['pure-paramiko'],
                                  'do not use openssh even if available, '
-                                    'use paramiko only instead')
+                                    'use paramiko only instead',
+                                  group=ssh_group)
 
         self.app.fsf.register('sftp', SftpFS, settings=self.app.settings)
 

@@ -33,6 +33,9 @@ class App(cliapp.Application):
     '''Main program for backup program.'''
     
     def add_settings(self):
+        devel_group = obnamlib.option_group['devel']
+        perf_group = obnamlib.option_group['perf']
+    
         self.settings.string(['repository', 'r'], 'name of backup repository')
 
         self.settings.string(['client-name'], 'name of client (%default)',
@@ -41,22 +44,26 @@ class App(cliapp.Application):
         self.settings.bytesize(['node-size'],
                              'size of B-tree nodes on disk '
                                  '(default: %default)',
-                              default=obnamlib.DEFAULT_NODE_SIZE)
+                              default=obnamlib.DEFAULT_NODE_SIZE,
+                              group=perf_group)
 
         self.settings.bytesize(['chunk-size'],
                             'size of chunks of file data backed up '
                                  '(default: %default)',
-                             default=obnamlib.DEFAULT_CHUNK_SIZE)
+                             default=obnamlib.DEFAULT_CHUNK_SIZE,
+                              group=perf_group)
 
         self.settings.bytesize(['upload-queue-size'],
                             'length of upload queue for B-tree nodes '
                                  '(default: %default)',
-                            default=obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE)
+                            default=obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
+                            group=perf_group)
 
         self.settings.bytesize(['lru-size'],
                              'size of LRU cache for B-tree nodes '
                                  '(default: %default)',
-                             default=obnamlib.DEFAULT_LRU_SIZE)
+                             default=obnamlib.DEFAULT_LRU_SIZE,
+                             group=perf_group)
 
         self.settings.string_list(['trace'],
                                 'add to filename patters for which trace '
@@ -65,13 +72,16 @@ class App(cliapp.Application):
         
         self.settings.integer(['idpath-depth'],
                               'depth of chunk id mapping',
-                              default=obnamlib.IDPATH_DEPTH)
+                              default=obnamlib.IDPATH_DEPTH,
+                              group=perf_group)
         self.settings.integer(['idpath-bits'],
                               'chunk id level size',
-                              default=obnamlib.IDPATH_BITS)
+                              default=obnamlib.IDPATH_BITS,
+                              group=perf_group)
         self.settings.integer(['idpath-skip'],
                               'chunk id mapping lowest bits skip',
-                              default=obnamlib.IDPATH_SKIP)
+                              default=obnamlib.IDPATH_SKIP,
+                              group=perf_group)
 
         self.settings.boolean(['quiet'], 'be silent')
 
@@ -83,7 +93,8 @@ class App(cliapp.Application):
         self.settings.string(['pretend-time'],
                              'pretend it is TIMESTAMP (YYYY-MM-DD HH:MM:SS); '
                                 'this is only useful for testing purposes',
-                             metavar='TIMESTAMP')
+                             metavar='TIMESTAMP',
+                             group=devel_group)
 
         self.settings.integer(['lock-timeout'],
                               'when locking in the backup repository, '
@@ -98,7 +109,8 @@ class App(cliapp.Application):
                                 'useful for crash testing the application, '
                                 'and should not be enabled for real use; '
                                 'set to 0 to disable (disabled by default)',
-                              metavar='COUNTER')
+                              metavar='COUNTER',
+                              group=devel_group)
 
         # The following needs to be done here, because it needs
         # to be done before option processing. This is a bit ugly,
