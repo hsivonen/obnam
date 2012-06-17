@@ -1,6 +1,8 @@
 obnam (1.UNRELEASED) unstable; urgency=low
 
   * debian/control: Bump python-ttystatus dependencies to 0.18.
+  * debian/control: Drop build-dependency on libattr1-dev, since we now
+    use the header provided by glibc instead.
 
  -- Lars Wirzenius <liw@liw.fi>  Wed, 06 Jun 2012 21:00:11 +0100
 
