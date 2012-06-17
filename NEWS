@@ -8,6 +8,7 @@ Version 1.1, released UNRELEASED
 --------------------------------
 
 * Mark the `--small-files-in-btree` settings as deprecated.
+* Obnam now correctly checks that `--repository` is set.
 
 Version 1.0, released 2012-06-01
 --------------------------------

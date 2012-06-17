@@ -204,6 +204,11 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.app.settings.require('repository')
         self.app.settings.require('client-name')
         
+        if not self.app.settings['repository']:
+            raise obnamlib.Error('No --repository setting. '
+                                  'You need to specify it on the command '
+                                  'line or a configuration file.')
+        
         # This is ugly, but avoids having to update the dependency on
         # ttystatus yet again.
         if not hasattr(self.app.ts, 'flush'):
