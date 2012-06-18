@@ -200,8 +200,8 @@ parent directories of backup root) may have changed without it
 being a problem.
 Note that you will need to specify the whole path to the files
 or directories to be verified, not relative to the backup root.
-You still need to specify at least one of the backup roots via
-the
+You still need to specify at least one of the backup roots 
+on the command line or via the
 .B \-\-root
 option so that obnam will find the filesystem, in case it is
 a remote one.

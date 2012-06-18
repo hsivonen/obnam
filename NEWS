@@ -11,6 +11,7 @@ Version 1.1, released UNRELEASED
 * Obnam now correctly checks that `--repository` is set.
 * Options in `--help` output are now grouped in random senseless ways
   rather than being in one randomly ordered group.
+* Manual page clarification for `--root` and `verify`. Thanks, Saint Germain.
 
 Version 1.0, released 2012-06-01
 --------------------------------
