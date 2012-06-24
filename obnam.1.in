@@ -212,11 +212,13 @@ or an
 URL.
 An sftp URL has the following form:
 .IP
-.BI sftp:// domain\fR[\fB:\fIport\fR] / path
+.R \fBsftp://\fR[\fIuser\fR@]\fIdomain\fR[:\fIport\fR]\fB/path
 .PP
 where 
 .I domain
-is a normal Internetl domain name,
+is a normal Internetl domain name for a server,
+.I user
+is your username on that server,
 .I port
 is an optional port number,
 and
