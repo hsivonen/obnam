@@ -17,6 +17,8 @@ Version 1.1, released UNRELEASED
 * Added missing information about specifying a user in sftp URLs. Thanks,
   Joey Hess, for pointing it out.
 * Manual page clarification on `--keep` from Damien Couroussé.
+* Make `obnam forget` report which generations it would remove without
+  `--pretend`. Thanks, Neal Becker, for the suggestion.
 
 Version 1.0, released 2012-06-01
 --------------------------------

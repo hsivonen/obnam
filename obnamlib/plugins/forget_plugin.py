@@ -49,6 +49,7 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
             for genspec in args:
                 self.app.ts['gen'] = genspec
                 genid = self.repo.genspec(genspec)
+                self.app.notify('Forgetting generation %s' % genid)
                 self.remove(genid)
                 self.app.dump_memory_profile('after removing %s' % genid)
         elif self.app.settings['keep']:
@@ -79,6 +80,8 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
         self.app.ts.finish()
 
     def remove(self, genid):
-        if not self.app.settings['pretend']:
+        if self.app.settings['pretend']:
+            self.app.ts.notify('Pretending to remove generation %s' % genid)
+        else:
             self.repo.remove_generation(genid)
 
