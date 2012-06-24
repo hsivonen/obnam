@@ -16,6 +16,7 @@ Version 1.1, released UNRELEASED
   format conversion. Thanks, Elrond of Samba-TNG.
 * Added missing information about specifying a user in sftp URLs. Thanks,
   Joey Hess, for pointing it out.
+* Manual page clarification on `--keep` from Damien Couroussé.
 
 Version 1.0, released 2012-06-01
 --------------------------------

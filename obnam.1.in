@@ -338,7 +338,14 @@ will keep everything.
 .PP
 A typical policy might be
 .IR 72h,7d,5w,12m ,
-to keep hourly backups for three days,
+which means: keep
+the last 72 hourly backups,
+the last 7 daily backups,
+the last 5 weekly backups and
+the last 12 monthly backups.
+If the backups are systematically run on an hourly basis,
+this will mean keeping
+hourly backups for three days,
 daily backups for a week,
 weekly backups for a month,
 and monthly backups for a year.
