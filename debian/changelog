@@ -1,10 +1,10 @@
-obnam (1.UNRELEASED) unstable; urgency=low
+obnam (1.1-1) unstable; urgency=low
 
   * New upstream version.
     - man page unclear about scp url format (Closes: #678742)
     - manpage : example for keeping policies (Closes: #678628)
     - manpage unclear about exclude pattern (Closes: #679016)
-  * debian/control: Bump python-ttystatus dependencies to 0.18.
+  * debian/control: Update all build and runtime dependencies.
   * debian/control: Drop build-dependency on libattr1-dev, since we now
     use the header provided by glibc instead.
 

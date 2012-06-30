@@ -4,7 +4,7 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
-Version 1.1, released UNRELEASED
+Version 1.1, released 2012-06-30
 --------------------------------
 
 * Mark the `--small-files-in-btree` settings as deprecated.

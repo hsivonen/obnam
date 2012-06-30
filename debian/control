@@ -5,16 +5,16 @@ Priority: optional
 Standards-Version: 3.9.3
 Build-Depends: debhelper (>= 7.3.8), 
     python-all-dev (>= 2.6.3~3), 
-    python-coverage-test-runner, 
-    python-larch (>= 0.30~), 
-    python-ttystatus (>= 0.18),
+    python-coverage-test-runner (>= 1.8~), 
+    python-larch (>= 1.20120527~),
+    python-ttystatus (>= 0.19~),
     python-paramiko, 
-    python-tracing (>= 0.2), 
+    python-tracing (>= 0.6~), 
     fakeroot, 
-    python-cliapp (>= 0.29),
-    genbackupdata,
-    summain,
-    cmdtest,
+    python-cliapp (>= 1.20120630~),
+    genbackupdata (>= 1.6~),
+    summain (>= 0.14~),
+    cmdtest (>= 0.3~),
     attr
 Homepage: http://braawi.org/obnam/
 X-Python-Version: >= 2.6
@@ -23,8 +23,11 @@ Package: obnam
 Provides: python-obnam
 Architecture: linux-any
 Depends: ${shlibs:Depends}, ${python:Depends}, ${misc:Depends}, 
-    python-larch (>= 0.30~), python-ttystatus (>= 0.18),
-    python-paramiko, python-tracing (>= 0.2), python-cliapp (>= 0.29)
+    python-larch (>= 1.20120527~),
+    python-ttystatus (>= 0.19~),
+    python-paramiko, 
+    python-tracing (>= 0.6~), 
+    python-cliapp (>= 1.20120630~)
 Description: online and disk-based backup application
  Obnam makes backups. Backups can be stored on local hard disks, or online 
  via the SSH SFTP protocol. The backup server, if used, does not require any 
