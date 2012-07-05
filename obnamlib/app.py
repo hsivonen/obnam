@@ -42,7 +42,10 @@ class App(cliapp.Application):
                            default=self.deduce_client_name())
 
         self.settings.bytesize(['node-size'],
-                             'size of B-tree nodes on disk '
+                             'size of B-tree nodes on disk; only affects new '
+                                'B-trees so you may need to delete a client '
+                                'or repository to change this for existing '
+                                'repositories '
                                  '(default: %default)',
                               default=obnamlib.DEFAULT_NODE_SIZE,
                               group=perf_group)
