@@ -16,9 +16,10 @@
 
 # Helper script for cmdtest tests: run a backup.
 
-set -e
-
 export GNUPGHOME="$DATADIR/gpg"
+
+out="$(mktemp)"
+err="$(mktemp)"
 
 $SRCDIR/obnam \
     --client-name=rainyday \
@@ -29,4 +30,11 @@ $SRCDIR/obnam \
     --log="$DATADIR/obnam.log" \
     --trace=vfs \
     --trace=repo \
-    "$@"
+    "$@" > "$out" 2> "$err"
+exit=$?
+
+sed "s#$DATADIR#TMP#g" "$out"
+sed "s#$DATADIR#TMP#g" "$err" 1>&2
+
+rm -f "$out" "$err"
+exit "$exit"
