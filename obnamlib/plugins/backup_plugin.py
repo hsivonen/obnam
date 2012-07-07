@@ -1,4 +1,4 @@
-# Copyright (C) 2009, 2010  Lars Wirzenius
+# Copyright (C) 2009, 2010, 2011, 2012  Lars Wirzenius
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ import logging
 import os
 import re
 import stat
+import sys
 import time
 import traceback
 import tracing
@@ -109,6 +110,12 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                                     'as it is quite bad for performance',
                                  group=backup_group)
 
+        self.app.settings.string_list(
+            ['testing-fail-matching'],
+            'development testing helper: simulate failures during backup '
+                'for files that match the given regular expressions',
+            metavar='REGEXP')
+
     def configure_ttystatus_for_backup(self):
         self.app.ts['current-file'] = ''
         self.app.ts['uploaded-bytes'] = 0
@@ -195,7 +202,11 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.errors = True
         logging.error(msg)
         if exc:
-            logging.debug(repr(exc))
+            logging.error(repr(exc))
+            
+        # FIXME: ttystatus.TerminalStatus.error is quiet if --quiet is used.
+        # That's a bug, so we work around it by writing to stderr directly.
+        sys.stderr.write('ERROR: %s\n' % msg)
 
     def parse_checkpoint_size(self, value):
         p = obnamlib.ByteSizeParser()
@@ -349,6 +360,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             for pathname, metadata in self.find_files(absroot):
                 logging.debug('Backing up %s' % pathname)
                 try:
+                    self.maybe_simulate_error(pathname)
                     if stat.S_ISDIR(metadata.st_mode):
                         self.backup_dir_contents(pathname)
                     elif stat.S_ISREG(metadata.st_mode):
@@ -377,6 +389,14 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         if self.fs:
             self.fs.close()
+
+    def maybe_simulate_error(self, pathname):
+        '''Raise an IOError if specified by --testing-fail-matching.'''
+        
+        for pattern in self.app.settings['testing-fail-matching']:
+            if re.search(pattern, pathname):
+                e = errno.ENOENT
+                raise IOError(e, os.strerror(e), pathname)
 
     def time_for_checkpoint(self):
         bytes_since = (self.repo.fs.bytes_written - self.last_checkpoint)
