@@ -9,6 +9,7 @@ Version 1.UNRLEASED, released UNRELEASED
 
 * Added a note to `--node-size` that it only affects new B-trees.
   Thanks, Michael Brown.
+* Notify user of errors during backups.
 
 Version 1.1, released 2012-06-30
 --------------------------------
