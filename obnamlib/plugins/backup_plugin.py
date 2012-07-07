@@ -355,6 +355,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             for pathname, metadata in self.find_files(absroot):
                 logging.debug('Backing up %s' % pathname)
                 try:
+                    self.maybe_simulate_error(pathname)
                     if stat.S_ISDIR(metadata.st_mode):
                         self.backup_dir_contents(pathname)
                     elif stat.S_ISREG(metadata.st_mode):
@@ -383,6 +384,14 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         if self.fs:
             self.fs.close()
+
+    def maybe_simulate_error(self, pathname):
+        '''Raise an IOError if specified by --testing-fail-matching.'''
+        
+        for pattern in self.app.settings['testing-fail-matching']:
+            if re.search(pattern, pathname):
+                e = errno.ENOENT
+                raise IOError((pathname, e, os.strerror(e)))
 
     def time_for_checkpoint(self):
         bytes_since = (self.repo.fs.bytes_written - self.last_checkpoint)
