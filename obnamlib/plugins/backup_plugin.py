@@ -201,7 +201,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.errors = True
         logging.error(msg)
         if exc:
-            logging.debug(repr(exc))
+            logging.error(repr(exc))
+        self.app.ts.error(msg)
 
     def parse_checkpoint_size(self, value):
         p = obnamlib.ByteSizeParser()
