@@ -20,6 +20,7 @@ import logging
 import os
 import re
 import stat
+import sys
 import time
 import traceback
 import tracing
@@ -202,7 +203,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         logging.error(msg)
         if exc:
             logging.error(repr(exc))
-        self.app.ts.error(msg)
+            
+        # FIXME: ttystatus.TerminalStatus.error is quiet if --quiet is used.
+        # That's a bug, so we work around it by writing to stderr directly.
+        sys.stderr.write('ERROR: %s\n' % msg)
 
     def parse_checkpoint_size(self, value):
         p = obnamlib.ByteSizeParser()
