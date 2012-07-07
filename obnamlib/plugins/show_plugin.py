@@ -41,8 +41,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         self.app.add_subcommand('genids', self.genids)
         self.app.add_subcommand('ls', self.ls, arg_synopsis='[GENERATION]...')
         self.app.add_subcommand('diff', self.diff,
-                                arg_synopsis='[GENERATION1] [GENERATION2]')
-        self.app.add_subcommand('show', self.show, arg_synopsis='[GENERATION]')
+                                arg_synopsis='[GENERATION1] GENERATION2')
         self.app.add_subcommand('nagios-last-backup-age', 
                                 self.nagios_last_backup_age)
 
@@ -238,34 +237,27 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         
     def diff(self, args):
         '''Show difference between two generations.'''
+        
+        if len(args) not in (1, 2):
+            raise obnamlib.Error('Need one or two generations')
+
         self.open_repository()
-        if len(args) < 2:
-            raise obnamlib.Error('Need two generations')
-        gen1 = self.repo.genspec(args[0])
-        gen2 = self.repo.genspec(args[1])
+        if len(args) == 1:
+            gen2 = self.repo.genspec(args[0])
+            # Now we have the dst/second generation for show_diff. Use
+            # genids/list_generations to find the previous generation
+            genids = self.repo.list_generations()
+            index = genids.index(gen2)
+            if index == 0:
+                raise obnamlib.Error(
+                    'Can\'t show first generation. Use \'ls\' instead')
+            gen1 = genids[index - 1]
+        else:
+            gen1 = self.repo.genspec(args[0])
+            gen2 = self.repo.genspec(args[1])
+
         self.show_diff(gen1, gen2, '/')
         self.repo.fs.close()
-
-    def show(self, args):
-        '''Show file details of a generation.
-           obnam show $generation
-           is exactly the same as 
-           obnam show $prevGeneration $generation
-           where $prevGeneration is the generation one before $generation
-        '''
-        if len(args) < 1:
-            raise obnamlib.Error('Need a generation')
-        self.open_repository()
-        gen2 = self.repo.genspec(args[0])
-        # Now we have the dst/second generation for show_diff. Use
-        # genids/list_generations to find the previous generation
-        genids = self.repo.list_generations()
-        index = genids.index(gen2)
-        if index == 0:
-            raise obnamlib.Error(
-                'Can\'t show first generation. Use \'ls\' instead')
-        gen1 = genids[index - 1]
-        self.show_diff(gen1, gen2, '/')
 
     def fields(self, gen, full):
         metadata = self.repo.get_metadata(gen, full)
