@@ -40,6 +40,9 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         self.app.add_subcommand('generations', self.generations)
         self.app.add_subcommand('genids', self.genids)
         self.app.add_subcommand('ls', self.ls, arg_synopsis='[GENERATION]...')
+        self.app.add_subcommand('diff', self.diff,
+                                arg_synopsis='[GENERATION1] [GENERATION2]')
+        self.app.add_subcommand('show', self.show, arg_synopsis='[GENERATION]')
         self.app.add_subcommand('nagios-last-backup-age', 
                                 self.nagios_last_backup_age)
 
@@ -178,6 +181,93 @@ class ShowPlugin(obnamlib.ObnamPlugin):
                 fmt = '%*s'
             result.append(fmt % (abs(widths[i]), fields[i]))
         print ' '.join(result)
+
+    def show_diff_for_file(self, gen, fullname, change_char):
+        '''Show diffs for a single file.
+           change_char is a single char (+,- or *) indicating whether a file
+           got added, removed or altered
+           if --quiet, just show the file's full name, otherwise show the same
+           details for the file you'd get with ls.
+        '''
+        if self.app.settings['quiet']:
+            print '%s %s' % (change_char, fullname)
+        else:
+            sys.stdout.write('%s ' % change_char)
+            self.show_item(gen, fullname)
+
+    def show_diff_for_common_file(self, gen1, gen2, fullname, subdirs):
+        changed = False
+        if self.isdir(gen1, fullname) != self.isdir(gen2, fullname):
+            changed = True
+        elif self.isdir(gen2, fullname):
+            subdirs.append(fullname)
+        else:
+            # Files are both present and neither is a directory
+            # Check md5 sums
+            md5_1 = self.repo.get_metadata(gen1, fullname)
+            md5_2 = self.repo.get_metadata(gen2, fullname)
+            if (md5_1 != md5_2):
+                changed = True
+        if (changed):
+            # print '* %s' % (fullname)
+            self.show_diff_for_file(gen2, fullname, '*')
+
+    def show_diff(self, gen1, gen2, dirname):
+        # This set contains the files from the old/src generation
+        set1 = self.repo.listdir(gen1, dirname)
+        subdirs = []
+        # These are the new/dst generation files
+        for basename in sorted(self.repo.listdir(gen2, dirname)):
+            full = os.path.join(dirname, basename)
+            if basename in set1:
+                # Its in both generations
+                set1.remove(basename)
+                self.show_diff_for_common_file(gen1, gen2, full, subdirs)
+            else:
+                # Its only in set2 - the file/dir got added
+                self.show_diff_for_file(gen2, full, '+')
+        for basename in sorted(set1):
+            # This was only in gen1 - it got removed
+            self.show_diff_for_file(gen1, full, '-')
+            # print '- %s' % (full)
+
+        for subdir in subdirs:
+            self.show_diff(gen1, gen2, subdir)
+        
+    def diff(self, args):
+        '''Show difference between two generations.'''
+        self.open_repository()
+        if len(args) < 2:
+            raise obnamlib.Error('Need two generations')
+        gen1 = args[0]
+        gen1 = self.repo.genspec(gen1)
+        gen2 = args[1]
+        gen2 = self.repo.genspec(gen2)
+        self.show_diff(gen1, gen2, '/')
+        self.repo.fs.close()
+
+    def show(self, args):
+        '''Show file details of a generation.
+           obnam show $generation
+           is exactly the same as 
+           obnam show $prevGeneration $generation
+           where $prevGeneration is the generation one before $generation
+        '''
+        if len(args) < 1:
+            raise obnamlib.Error('Need a generation')
+        self.open_repository()
+        gen2 = args[0]
+        gen2 = self.repo.genspec(gen2)
+        # Now we have the dst/second generation for show_diff. Use
+        # genids/list_generations to find the previous generation
+        genids = self.repo.list_generations()
+        index = genids.index(gen2)
+        if index == 0:
+            raise obnamlib.Error(
+                'Can\'t show first generation. Use \'ls\' instead'
+            )
+        gen1 = genids[index - 1]
+        self.show_diff(gen1, gen2, '/')
 
     def fields(self, gen, full):
         metadata = self.repo.get_metadata(gen, full)
