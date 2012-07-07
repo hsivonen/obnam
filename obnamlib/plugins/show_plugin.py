@@ -187,16 +187,16 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         change_char is a single char (+,- or *) indicating whether a file
         got added, removed or altered.
 
-        If --quiet, just show the file's full name, otherwise show the same
-        details for the file you'd get with ls.
+        If --verbose, just show all the details as ls shows, otherwise
+        show just the file's full name.
 
         '''
 
-        if self.app.settings['quiet']:
-            print '%s %s' % (change_char, fullname)
-        else:
+        if self.app.settings['verbose']:
             sys.stdout.write('%s ' % change_char)
             self.show_item(gen, fullname)
+        else:
+            print '%s %s' % (change_char, fullname)
 
     def show_diff_for_common_file(self, gen1, gen2, fullname, subdirs):
         changed = False
