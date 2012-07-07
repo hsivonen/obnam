@@ -109,6 +109,12 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                                     'as it is quite bad for performance',
                                  group=backup_group)
 
+        self.app.settings.string_list(
+            ['testing-fail-matching'],
+            'development testing helper: simulate failures during backup '
+                'for files that match the given regular expressions',
+            metavar='REGEXP')
+
     def configure_ttystatus_for_backup(self):
         self.app.ts['current-file'] = ''
         self.app.ts['uploaded-bytes'] = 0
