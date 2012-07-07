@@ -358,7 +358,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             absroot = self.fs.abspath('.')
             self.root_metadata = self.fs.lstat(absroot)
             for pathname, metadata in self.find_files(absroot):
-                logging.debug('Backing up %s' % pathname)
+                logging.info('Backing up %s' % pathname)
                 try:
                     self.maybe_simulate_error(pathname)
                     if stat.S_ISDIR(metadata.st_mode):
