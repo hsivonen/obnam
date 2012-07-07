@@ -392,7 +392,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         for pattern in self.app.settings['testing-fail-matching']:
             if re.search(pattern, pathname):
                 e = errno.ENOENT
-                raise IOError((pathname, e, os.strerror(e)))
+                raise IOError(e, os.strerror(e), pathname)
 
     def time_for_checkpoint(self):
         bytes_since = (self.repo.fs.bytes_written - self.last_checkpoint)
