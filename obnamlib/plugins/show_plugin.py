@@ -183,12 +183,16 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         print ' '.join(result)
 
     def show_diff_for_file(self, gen, fullname, change_char):
-        '''Show diffs for a single file.
-           change_char is a single char (+,- or *) indicating whether a file
-           got added, removed or altered
-           if --quiet, just show the file's full name, otherwise show the same
-           details for the file you'd get with ls.
+        '''Show what has changed for a single file.
+
+        change_char is a single char (+,- or *) indicating whether a file
+        got added, removed or altered.
+
+        If --quiet, just show the file's full name, otherwise show the same
+        details for the file you'd get with ls.
+
         '''
+
         if self.app.settings['quiet']:
             print '%s %s' % (change_char, fullname)
         else:
@@ -206,10 +210,9 @@ class ShowPlugin(obnamlib.ObnamPlugin):
             # Check md5 sums
             md5_1 = self.repo.get_metadata(gen1, fullname)
             md5_2 = self.repo.get_metadata(gen2, fullname)
-            if (md5_1 != md5_2):
+            if md5_1 != md5_2:
                 changed = True
-        if (changed):
-            # print '* %s' % (fullname)
+        if changed:
             self.show_diff_for_file(gen2, fullname, '*')
 
     def show_diff(self, gen1, gen2, dirname):
@@ -229,7 +232,6 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         for basename in sorted(set1):
             # This was only in gen1 - it got removed
             self.show_diff_for_file(gen1, full, '-')
-            # print '- %s' % (full)
 
         for subdir in subdirs:
             self.show_diff(gen1, gen2, subdir)
@@ -239,10 +241,8 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         self.open_repository()
         if len(args) < 2:
             raise obnamlib.Error('Need two generations')
-        gen1 = args[0]
-        gen1 = self.repo.genspec(gen1)
-        gen2 = args[1]
-        gen2 = self.repo.genspec(gen2)
+        gen1 = self.repo.genspec(args[0])
+        gen2 = self.repo.genspec(args[1])
         self.show_diff(gen1, gen2, '/')
         self.repo.fs.close()
 
@@ -256,16 +256,14 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         if len(args) < 1:
             raise obnamlib.Error('Need a generation')
         self.open_repository()
-        gen2 = args[0]
-        gen2 = self.repo.genspec(gen2)
+        gen2 = self.repo.genspec(args[0])
         # Now we have the dst/second generation for show_diff. Use
         # genids/list_generations to find the previous generation
         genids = self.repo.list_generations()
         index = genids.index(gen2)
         if index == 0:
             raise obnamlib.Error(
-                'Can\'t show first generation. Use \'ls\' instead'
-            )
+                'Can\'t show first generation. Use \'ls\' instead')
         gen1 = genids[index - 1]
         self.show_diff(gen1, gen2, '/')
 
