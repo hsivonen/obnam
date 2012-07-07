@@ -87,6 +87,7 @@ class App(cliapp.Application):
                               group=perf_group)
 
         self.settings.boolean(['quiet'], 'be silent')
+        self.settings.boolean(['verbose'], 'be verbose')
 
         self.settings.boolean(['pretend', 'dry-run', 'no-act'],
                            'do not actually change anything (works with '
