@@ -62,7 +62,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
         self.app.add_subcommand('restore', self.restore, 
-                                arg_synopsis='[FILE]...')
+                                arg_synopsis='[DIRECTORY]...')
         self.app.settings.string(['to'], 'where to restore')
         self.app.settings.string(['generation'], 
                                 'which generation to restore',

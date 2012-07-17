@@ -63,7 +63,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         perf_group = obnamlib.option_group['perf']
     
         self.app.add_subcommand('backup', self.backup,
-                                arg_synopsis='[FILE]...')
+                                arg_synopsis='[DIRECTORY]...')
         self.app.settings.string_list(['root'], 'what to backup')
         self.app.settings.string_list(['exclude'], 
                                  'regular expression for pathnames to '
