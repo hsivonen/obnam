@@ -74,7 +74,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         '''List clients using the repository.'''
         self.open_repository()
         for client_name in self.repo.list_clients():
-            print client_name
+            self.app.output.write('%s\n' % client_name)
         self.repo.fs.close()
     
     def generations(self, args):
@@ -111,15 +111,18 @@ class ShowPlugin(obnamlib.ObnamPlugin):
 
         now = self.app.time()
         if (now - most_recent > critical_age):
-            print "CRITICAL: backup is old.  last backup was %s."%(
-                self.format_time(most_recent))
+            self.app.output.write(
+                'CRITICAL: backup is old.  last backup was %s.\n' % 
+                    (self.format_time(most_recent)))
             sys.exit(2)
         elif (now - most_recent > warn_age):
-            print "WARNING: backup is old.  last backup was %s."%(
-                self.format_time(most_recent))
+            self.app.output.write(
+                'WARNING: backup is old.  last backup was %s.\n' % 
+                    self.format_time(most_recent))
             sys.exit(2)
-        print "OK: backup is recent.  last backup was %s."%(
-            self.format_time(most_recent))
+        self.app.output.write(
+            'OK: backup is recent.  last backup was %s.\n' % 
+                self.format_time(most_recent))
 
     def genids(self, args):
         '''List generation ids for client.'''
@@ -136,7 +139,8 @@ class ShowPlugin(obnamlib.ObnamPlugin):
             started, ended = self.repo.client.get_generation_times(gen)
             started = self.format_time(started)
             ended = self.format_time(ended)
-            print 'Generation %s (%s - %s)' % (gen, started, ended)
+            self.app.output.write(
+                'Generation %s (%s - %s)\n' % (gen, started, ended))
             self.show_objects(gen, '/')
         self.repo.fs.close()
     
@@ -179,7 +183,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
             else:
                 fmt = '%*s'
             result.append(fmt % (abs(widths[i]), fields[i]))
-        print ' '.join(result)
+        self.app.output.write('%s\n' % ' '.join(result))
 
     def show_diff_for_file(self, gen, fullname, change_char):
         '''Show what has changed for a single file.
@@ -196,7 +200,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
             sys.stdout.write('%s ' % change_char)
             self.show_item(gen, fullname)
         else:
-            print '%s %s' % (change_char, fullname)
+            self.app.output.write('%s %s\n' % (change_char, fullname))
 
     def show_diff_for_common_file(self, gen1, gen2, fullname, subdirs):
         changed = False
