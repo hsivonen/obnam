@@ -9,11 +9,16 @@ Version 1.UNRLEASED, released UNRELEASED
 
 * Added a note to `--node-size` that it only affects new B-trees.
   Thanks, Michael Brown.
-* Notify user of errors during backups.
 * New `obnam diff` subcommand to show differences (added/removed/modified
   files) between two generations, by Peter Valdemar Mørch.
 * `obnam backup` now logs the names of files that are getting backed up
   at the INFO level rather than DEBUG.
+
+Bug fixes:
+
+* Notify user of errors during backups.
+* The SFTP plugin now manages to deal with repository paths starting 
+  with `/~/` which already exist without crashing.
 
 Version 1.1, released 2012-06-30
 --------------------------------

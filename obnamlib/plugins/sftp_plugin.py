@@ -25,6 +25,7 @@ import socket
 import stat
 import subprocess
 import time
+import traceback
 import urlparse
 
 # As of 2010-07-10, Debian's paramiko package triggers
@@ -55,6 +56,7 @@ def ioerror_to_oserror(method):
         try:
             return method(self, filename, *args, **kwargs)
         except IOError, e:
+            logging.error(traceback.format_exc())
             raise OSError(e.errno, e.strerror or str(e), filename)
     
     return helper
@@ -113,6 +115,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
         self.sftp = None
         self.settings = settings
         self._roundtrips = 0
+        self._initial_dir = None
         self.reinit(baseurl, create=create)
 
     def _delay(self):
@@ -148,6 +151,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
             self._connect_paramiko()
         if self.create_path_if_missing:
             self._create_root_if_missing()
+        self._initial_dir = self.getcwd()
         self.chdir(self.path)
 
     def _connect_openssh(self):
@@ -299,6 +303,8 @@ class SftpFS(obnamlib.VirtualFileSystem):
         if self.sftp:
             if create:
                 self._create_root_if_missing()
+            logging.debug('chdir to %s' % path)
+            self.sftp.chdir(self._initial_dir)
             self.sftp.chdir(path)
 
     def _get_username(self):
