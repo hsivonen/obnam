@@ -19,6 +19,8 @@ Bug fixes:
 * Notify user of errors during backups.
 * The SFTP plugin now manages to deal with repository paths starting 
   with `/~/` which already exist without crashing.
+* Character and block device nodes are now restored correctly.
+  Thanks to Martin Dummer for the bug report.
 
 Version 1.1, released 2012-06-30
 --------------------------------
