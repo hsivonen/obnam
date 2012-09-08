@@ -98,6 +98,9 @@ class VirtualFileSystem(object):
     def exists(self, pathname):
         '''Does the file or directory exist?'''
 
+    def mknod(self, pathname, mode):
+        '''Create a filesystem node.'''
+
     def isdir(self, pathname):
         '''Is it a directory?'''
 
