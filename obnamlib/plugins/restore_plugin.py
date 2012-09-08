@@ -182,6 +182,8 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             self.restore_fifo(gen, filename, metadata)
         elif stat.S_ISSOCK(metadata.st_mode):
             self.restore_socket(gen, filename, metadata)
+        elif stat.S_ISBLK(metadata.st_mode) or stat.S_ISCHR(metadata.st_mode):
+            self.restore_device(gen, filename, metadata)
         else:
             msg = ('Unknown file type: %s (%o)' % 
                    (filename, metadata.st_mode))
@@ -256,6 +258,11 @@ class RestorePlugin(obnamlib.ObnamPlugin):
 
     def restore_socket(self, gen, filename, metadata):
         logging.debug('restoring socket %s' % filename)
+        if self.write_ok:
+            self.fs.mknod('./' + filename, metadata.st_mode)
+
+    def restore_device(self, gen, filename, metadata):
+        logging.debug('restoring device %s' % filename)
         if self.write_ok:
             self.fs.mknod('./' + filename, metadata.st_mode)
 
