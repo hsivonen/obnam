@@ -161,6 +161,12 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
             logging.debug('unable to remove key %s from %s (not there)' %
                           (keyid, toplevel))
 
+    def rewrite_symmetric_key(self, repo, toplevel):
+        symmetric_key = self.get_symmetric_key(repo, toplevel)
+        userkeys = self.read_keyring(repo, toplevel)
+        encrypted = obnamlib.encrypt_with_keyring(symmetric_key, userkeys)
+        self._overwrite_file(repo, os.path.join(toplevel, 'key'), encrypted)
+
     def add_client(self, clientlist, client_name):
         clientlist.set_client_keyid(client_name, self.keyid)
 
@@ -233,6 +239,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         clients = self._find_clientdirs(repo, args)
         for toplevel in self._shared + clients:
             self.add_to_userkeys(repo, toplevel, key)
+            self.rewrite_symmetric_key(repo, toplevel)
 
     def remove_key(self, args):
         '''Remove a key from the repository.'''
@@ -244,6 +251,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         clients = self._find_clientdirs(repo, args)
         for toplevel in self._shared + clients:
             self.remove_from_userkeys(repo, toplevel, keyid)
+            self.rewrite_symmetric_key(repo, toplevel)
 
     def remove_client(self, args):
         '''Remove client and its key from repository.'''
