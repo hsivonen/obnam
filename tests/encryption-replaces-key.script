@@ -14,12 +14,28 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-set -e
+set -eu
 
 gpgkey='3B1802F81B321347'
+fingerprint='4E2AF28A3D824CF2B3F1FE733B1802F81B321347'
 gpgkey2='DF3D13AA11E69900'
+
+# Make a backup with the default key ($gpgkey).
 $SRCDIR/tests/backup --encrypt-with="$gpgkey"
-$SRCDIR/tests/obnam --encrypt-with="$gpgkey" add-key --keyid="$gpgkey2"
-$SRCDIR/tests/obnam --encrypt-with="$gpgkey2" remove-key --keyid="$gpgkey"
+
+# Add new key. "rainyday" is the name of the client.
+$SRCDIR/tests/obnam --encrypt-with="$gpgkey" add-key --keyid="$gpgkey2" \
+    rainyday
+
+# Remove the old key.
+$SRCDIR/tests/obnam --encrypt-with="$gpgkey2" remove-key --keyid="$gpgkey" \
+    rainyday
+
+# Remove the old key from the gpg keyring.
+export GNUPGHOME="$DATADIR/gpg"
+gpg --batch --delete-secret-key "$fingerprint"
+
+# Verify that the backup is still readable, now with the new key.
+$SRCDIR/tests/restore --encrypt-with="$gpgkey2"
 $SRCDIR/tests/verify
 
