@@ -232,7 +232,7 @@ unless it starts with
 .B /~/
 in which case it is relative to the user's home directory on the server.
 .PP
-See the EXAMPLES section for examples of URLs.
+See the EXAMPLE section for examples of URLs.
 .PP
 You can use
 .B sftp
