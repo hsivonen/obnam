@@ -1,3 +1,9 @@
+obnam (1.2-1) UNRELEASED; urgency=low
+
+  * debian/control: Fix homepage URL
+
+ -- Lars Wirzenius <liw@liw.fi>  Sat, 29 Sep 2012 14:34:27 +0100
+
 obnam (1.1-1) unstable; urgency=low
 
   * New upstream version.

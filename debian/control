@@ -16,7 +16,7 @@ Build-Depends: debhelper (>= 7.3.8),
     summain (>= 0.14~),
     cmdtest (>= 0.3~),
     attr
-Homepage: http://braawi.org/obnam/
+Homepage: http://liw.fi/obnam/
 X-Python-Version: >= 2.6
 
 Package: obnam
