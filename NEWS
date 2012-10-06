@@ -4,7 +4,7 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
-Version 1.UNRLEASED, released UNRELEASED
+Version 1.2, released 2012-10-06
 --------------------------------
 
 * Added a note to `--node-size` that it only affects new B-trees.
@@ -13,6 +13,12 @@ Version 1.UNRLEASED, released UNRELEASED
   files) between two generations, by Peter Valdemar Mørch.
 * `obnam backup` now logs the names of files that are getting backed up
   at the INFO level rather than DEBUG.
+* The command synopsises for backup, restore, and verify commands now
+  make it clearer that Obnam only accepts directories, not individual
+  files, as arguments. (For now.)
+* The output from the `show` plugin can now be redirected with the
+  `--output=FILE` option. Affected subcommands: `clients`, `generations`,
+  `genids`, `ls`, `diff`, `nagios-last-backup-age`.
 
 Bug fixes:
 
@@ -21,6 +27,10 @@ Bug fixes:
   with `/~/` which already exist without crashing.
 * Character and block device nodes are now restored correctly.
   Thanks to Martin Dummer for the bug report.
+* The symmteric key for a toplevel repository directory is re-encrypted
+  when a public key is added or removed to the toplevel using the
+  `add-key` or `remove-key` subcommands.
+* Manual page typo fix. Thanks, Steve Kemp.
 
 Version 1.1, released 2012-06-30
 --------------------------------

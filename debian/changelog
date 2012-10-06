@@ -1,4 +1,4 @@
-obnam (1.2-1) UNRELEASED; urgency=low
+obnam (1.2-1) unstable; urgency=low
 
   * debian/control: Fix homepage URL
 
