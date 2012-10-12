@@ -276,7 +276,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
             # using os.link doesn't work on VFAT and similar filesystems
             # either. I choose to hope nobody uses NFS as a repository
             # storage, unless they can make it reliable for this.
-            fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, mode=0666)
+            fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0666)
             os.close(fd)
             os.rename(tempname, path)
         except OSError, e: # pragma: no cover
