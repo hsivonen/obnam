@@ -266,22 +266,43 @@ class LocalFS(obnamlib.VirtualFileSystem):
         data = ''.join(chunks)
         return data
 
-    def write_file(self, pathname, contents):
+    def write_file(self, pathname, contents): # pragma: no cover
+        # This is tricky. We need to at least try to support NFS, and
+        # various filesystems that do not support hardlinks. On NFS,
+        # creating a file with O_EXCL is not guaranteed to be atomic,
+        # but adding a link with link(2) is. However, that doesn't work
+        # on VFAT, for example. So we try do both: first create a
+        # temporary file with a name guaranteed to not be a name we
+        # want to use, and then we rename it using link(2) and remove(2).
+        # If that fails, we try to create the target file with O_EXCL
+        # and rename the temporary file to that. This is still not 100%
+        # reliable: someone could be mounting VFAT across NFS, for
+        # example, but it's the best we can do. If this paragraph is
+        # wrong, tell the authors.
+
         tracing.trace('write_file %s', pathname)
         tempname = self._write_to_tempfile(pathname, contents)
         path = self.join(pathname)
+
+        # Try link(2) for creating target file.
         try:
-            # Make sure the target file does not already exist. This has
-            # traditionally not been 100% reliably atomic on NFS, but
-            # using os.link doesn't work on VFAT and similar filesystems
-            # either. I choose to hope nobody uses NFS as a repository
-            # storage, unless they can make it reliable for this.
+            os.link(tempname, path)
+        except OSError, e:
+            pass
+        else:
+            os.remove(tempname)
+            return
+
+        # Nope, didn't work. Now try with O_EXCL instead.
+        try:
             fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0666)
             os.close(fd)
             os.rename(tempname, path)
-        except OSError, e: # pragma: no cover
+        except OSError, e:
+            # Give up.
             os.remove(tempname)
             raise
+
         self.maybe_crash()
 
     def overwrite_file(self, pathname, contents):
