@@ -271,11 +271,17 @@ class LocalFS(obnamlib.VirtualFileSystem):
         tempname = self._write_to_tempfile(pathname, contents)
         path = self.join(pathname)
         try:
-            os.link(tempname, path)
+            # Make sure the target file does not already exist. This has
+            # traditionally not been 100% reliably atomic on NFS, but
+            # using os.link doesn't work on VFAT and similar filesystems
+            # either. I choose to hope nobody uses NFS as a repository
+            # storage, unless they can make it reliable for this.
+            fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, mode=0666)
+            os.close(fd)
+            os.rename(tempname, path)
         except OSError, e: # pragma: no cover
             os.remove(tempname)
             raise
-        os.remove(tempname)
         self.maybe_crash()
 
     def overwrite_file(self, pathname, contents):
