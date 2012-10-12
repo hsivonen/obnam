@@ -4,6 +4,17 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
+Version X.Y, released UNRELEASED
+--------------------------------
+
+* When creating files in the backup repository, Obnam tries to avoid NFS
+  synchronisation problems by first writing a temporary file and then
+  creating a hardlink to the actual filename. This works badly on filesystems
+  that do not allow hard links, such as VFAT. If creating the hardlink
+  fails, Obnam now further tries to use the `open(2)` system call with
+  the `O_EXCL` flag to create the target file. This should allow things
+  to work with both NFS and VFAT.
+
 Version 1.2, released 2012-10-06
 --------------------------------
 
