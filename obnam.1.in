@@ -216,7 +216,7 @@ An sftp URL has the following form:
 .PP
 where 
 .I domain
-is a normal Internetl domain name for a server,
+is a normal Internet domain name for a server,
 .I user
 is your username on that server,
 .I port
@@ -375,7 +375,7 @@ option.
 .B obnam
 will look for configuration files in a number of locations.
 See the FILES section for a list.
-All files are treated as if they are were one with the contents of all
+All files are treated as if they were one with the contents of all
 files catenated.
 .PP
 The files are in INI format,
@@ -394,7 +394,7 @@ section.
 For example, the options in the following command line:
 .sp 1
 .RS
-obnam --repository=/backups --exclude='\.wav$' backup
+obnam --repository=/backup --exclude='\.wav$' backup
 .RE
 .sp 1
 could be replaced with the following configuration file:
