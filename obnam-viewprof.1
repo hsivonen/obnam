@@ -1,0 +1,44 @@
+.\" Copyright 2012 Lars Wirzenius <liw@liw.fi>
+.\" 
+.\" This program is free software: you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation, either version 3 of the License, or
+.\" (at your option) any later version.
+.\" 
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\" 
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program.  If not, see <http://www.gnu.org/licenses/>.
+.\"
+.TH OBNAM-VIEWPROF 1
+.SH NAME
+obnam-viewprof \- show Python profiler output
+.SH SYNOPSIS
+.B obnam-viewprof
+.I profile
+.RI [ sort-order ]
+.SH DESCRIPTION
+.B obnam-viewprof
+shows a plain text version of Python profiler output.
+You can generate such output from Obnam by setting the
+.B OBNAM_PROFILE
+environment variable to a filename.
+The profile will be written to that filename,
+and you should give it to 
+.B obnam-viewprof
+as an argument.
+.PP
+The
+.I sort-order
+argument defaults to
+.B cumulative
+and can be any of the orderings that the Python pstats library supports.
+.PP
+.B obnam-viewprof
+is mainly useful for those developing
+.BR obnam (1).
+.SH "SEE ALSO"
+.BR obnam (1).
