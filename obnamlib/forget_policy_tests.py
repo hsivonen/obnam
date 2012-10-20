@@ -71,6 +71,14 @@ class ForgetPolicyMatchTests(unittest.TestCase):
         self.assertEqual(self.match2('1h', [h0m0, h0m59, h1m0, h1m59]),
                          [h1m59])
 
+    def test_two_hourly_matches(self):
+        h0m0 =  datetime.datetime(2000, 1, 1, 0, 0)
+        h0m59 = datetime.datetime(2000, 1, 1, 0, 59)
+        h1m0 =  datetime.datetime(2000, 1, 1, 1, 0)
+        h1m59 = datetime.datetime(2000, 1, 1, 1, 59)
+        self.assertEqual(self.match2('2h', [h0m0, h0m59, h1m0, h1m59]),
+                         [h0m59, h1m59])
+
     def test_daily_matches(self):
         d1h0 =  datetime.datetime(2000, 1, 1, 0, 0)
         d1h23 = datetime.datetime(2000, 1, 1, 23, 0)
@@ -110,4 +118,11 @@ class ForgetPolicyMatchTests(unittest.TestCase):
         rules = self.fp.parse('1h,2d')
         self.assertEqual([dt for genid, dt in self.fp.match(rules, genlist)],
                          [d2h0m1, d3h0m1])
+
+    def test_hourly_and_daily_together_when_only_daily_backups(self):
+        d1 = datetime.datetime(2000, 1, 1, 0, 0)
+        d2 = datetime.datetime(2000, 1, 2, 0, 0)
+        d3 = datetime.datetime(2000, 1, 3, 0, 0)
+        self.assertEqual(self.match2('10h,1d', [d1, d2, d3]),
+                         [d1, d2, d3])
 

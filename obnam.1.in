@@ -288,7 +288,8 @@ A policy of
 .I 30d
 means to keep the latest backup for each day when a backup was made,
 and keep the last 30 such backups.
-Any backups in between will be removed,
+Any backup matched by any policy rule is kept,
+and any backups in between will be removed,
 as will any backups older than the oldest kept backup.
 .PP
 As an example, assume backups are taken every hour, on the hour:
@@ -331,6 +332,21 @@ before they have a chance to get saved by a weekly rule,
 the effect is that the 23:00 o'clock backup for each day is
 saved for a month,
 and the 23:00 backup on Sundays is saved for a year.
+.PP
+If, instead, you use a policy of
+.IR 72h,30d,52w ,
+.B obnam
+would keep the last 72 hourly backups,
+and the last backup of each calendar day for 30 days,
+and the last backup of each calendar week for 52 weeks.
+If the backup frequency was once per day,
+.B obnam
+would keep the backup of each calendar hour for which a backup was made,
+for 72 such backups.
+In other words, it would effectively keep the the last 72 daily backups.
+.PP
+Sound confusing?
+Just wonder how confused the developer was when writing the code.
 .PP
 If no policy is given,
 .B forget
