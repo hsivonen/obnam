@@ -506,9 +506,19 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         '''Back up parents of root, non-recursively.'''
         root = self.fs.abspath(root)
         tracing.trace('backing up parents of %s', root)
+
+        dummy_metadata = obnamlib.Metadata(st_mode=0777 | stat.S_IFDIR)
+
         while True:
             parent = os.path.dirname(root)
-            metadata = obnamlib.read_metadata(self.fs, root)
+            try:
+                metadata = obnamlib.read_metadata(self.fs, root)
+            except OSError, e:
+                logging.warning(
+                    'Failed to get metadata for %s: %s: %s' %
+                        (root, e.errno or 0, e.strerror))
+                logging.warning('Using fake metadata instead for %s' % root)
+                metadata = dummy_metadata
             if not self.pretend:
                 self.repo.create(root, metadata)
             if root == parent:
