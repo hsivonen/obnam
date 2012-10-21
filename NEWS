@@ -15,6 +15,11 @@ Version X.Y, released UNRELEASED
   the `O_EXCL` flag to create the target file. This should allow things
   to work with both NFS and VFAT.
 
+Bug fixes:
+
+* Empty values for extended attributes are now backed up correctly.
+  Previously they would cause an infinite loop.
+
 Version 1.2, released 2012-10-06
 --------------------------------
 
