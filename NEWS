@@ -19,6 +19,8 @@ Bug fixes:
 
 * Empty values for extended attributes are now backed up correctly.
   Previously they would cause an infinite loop.
+* An empty port number in sftp URLs is now handled correctly. Found based
+  on report by Anton Shevtsov.
 
 Version 1.2, released 2012-10-06
 --------------------------------

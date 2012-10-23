@@ -284,7 +284,16 @@ class SftpFS(obnamlib.VirtualFileSystem):
 
         if ':' in netloc:
             host, port = netloc.split(':', 1)
-            port = int(port)
+            if port == '':
+                port = DEFAULT_SSH_PORT
+            else:
+                try:
+                    port = int(port)
+                except ValueError, e:
+                    msg = ('Invalid port number %s in %s: %s' %
+                            (port, baseurl, str(e)))
+                    logging.error(msg)
+                    raise morphlib.Error(msg)
         else:
             host = netloc
             port = DEFAULT_SSH_PORT
