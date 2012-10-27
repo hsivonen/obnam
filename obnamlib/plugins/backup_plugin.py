@@ -696,5 +696,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     tracing.trace('is in new roots: %s' % pathname)
 
         assert not self.pretend
+        tracing.trace('new_roots: %s' % repr(new_roots))
         helper('/')
 
