@@ -678,18 +678,22 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 if new_root.startswith(x):
                     return True
             return False
-
+            
         def helper(dirname):
             gen_id = self.repo.new_generation
             basenames = self.repo.listdir(gen_id, dirname)
             for basename in basenames:
                 pathname = os.path.join(dirname, basename)
                 if is_parent(pathname):
+                    tracing.trace('is_parent: %s' % pathname)
                     metadata = self.repo.get_metadata(gen_id, pathname)
                     if metadata.isdir():
                         helper(pathname)
                 elif pathname not in new_roots:
+                    tracing.trace('not in new_roots: %s' % pathname)
                     self.repo.remove(pathname)
+                else:
+                    tracing.trace('is in new roots: %s' % pathname)
 
         assert not self.pretend
         helper('/')
