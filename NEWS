@@ -21,6 +21,14 @@ Bug fixes:
   Previously they would cause an infinite loop.
 * An empty port number in sftp URLs is now handled correctly. Found based
   on report by Anton Shevtsov.
+* A bad performance bug when backing up full systems (starting from the
+  filesystem root directory) has been fixed. At the beginning of each
+  generation, Obnam removes any directories that are not part of the
+  current backup roots. This is necessary so that if you change the
+  backup roots, the old stuff doesn't hang around forever. However, when
+  the backup root is the filesystem root, due to the now-fixed bug Obnam
+  would first remove everything, and then back it up all over again. This
+  "worked", but was quite slow. Thanks to Nix for reporting the problem.
 
 Version 1.2, released 2012-10-06
 --------------------------------
