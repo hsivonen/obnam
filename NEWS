@@ -30,6 +30,9 @@ Bug fixes:
   the backup root is the filesystem root, due to the now-fixed bug Obnam
   would first remove everything, and then back it up all over again. This
   "worked", but was quite slow. Thanks to Nix for reporting the problem.
+* Obnam now runs GnuPG explicitly with the "no text mode" setting, to override
+  a "text mode" setting in the user's configuration. The files Obnam encrypts
+  need to be treated as binary, not text files. Reported by Robin Sheat.
 
 Version 1.2, released 2012-10-06
 --------------------------------

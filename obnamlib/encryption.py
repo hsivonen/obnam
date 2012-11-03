@@ -82,7 +82,8 @@ def _gpg_pipe(args, data, passphrase):
     
     # Actually run gpg.
     
-    argv = ['gpg', '--passphrase-fd', str(keypipe[0]), '-q', '--batch'] + args
+    argv = ['gpg', '--passphrase-fd', str(keypipe[0]), '-q', '--batch', 
+            '--no-textmode'] + args
     tracing.trace('argv=%s', repr(argv))
     p = subprocess.Popen(argv, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
@@ -116,7 +117,7 @@ def _gpg(args, stdin='', gpghome=None):
         env['GNUPGHOME'] = gpghome
         tracing.trace('gpghome=%s' % gpghome)
     
-    argv = ['gpg', '-q', '--batch'] + args
+    argv = ['gpg', '-q', '--batch', '--no-textmode'] + args
     tracing.trace('argv=%s', repr(argv))
     p = subprocess.Popen(argv, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE, env=env)
