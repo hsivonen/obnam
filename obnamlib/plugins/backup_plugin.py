@@ -131,8 +131,12 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                            ') '
                            '%String(what)')
 
+    def what(self, what_what):
+        self.app.ts['what'] = what_what
+        self.app.ts.flush()
+
     def configure_ttystatus_for_checkpoint_removal(self):
-        self.app.ts['what'] = 'removing checkpoints'
+        self.what('removing checkpoints')
 
     def update_progress_with_file(self, filename, metadata):
         self.app.ts['what'] = filename
@@ -238,23 +242,26 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         self.started = time.time()
         self.configure_ttystatus_for_backup()
-        self.app.ts['what'] = 'setting up'
-        self.app.ts.flush()
+        self.what('setting up')
 
         self.compile_exclusion_patterns()
         self.memory_dump_counter = 0
 
+        self.what('connecting to repository')
         client_name = self.app.settings['client-name']
         if self.pretend:
             self.repo = self.app.open_repository()
             self.repo.open_client(client_name)
         else:
             self.repo = self.app.open_repository(create=True)
+            self.what('adding client')
             self.add_client(client_name)
+            self.what('locking client')
             self.repo.lock_client(client_name)
             
             # Need to lock the shared stuff briefly, so encryption etc
             # gets initialized.
+            self.what('initialising encryption for shared directories')
             self.repo.lock_shared()
             self.repo.unlock_shared()
 
@@ -262,18 +269,19 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.chunkid_pool = ChunkidPool()
         try:
             if not self.pretend:
+                self.what('starting new generation')
                 self.repo.start_generation()
             self.fs = None
             roots = self.app.settings['root'] + args
             if roots:
                 self.backup_roots(roots)
-            self.app.ts['what'] = 'committing changes'
-            self.app.ts.flush()
+            self.what('committing changes to repository')
             if not self.pretend:
                 self.repo.lock_shared()
                 self.add_chunks_to_shared()
                 self.repo.commit_client()
                 self.repo.commit_shared()
+            self.what('closing connection to repository')
             self.repo.fs.close()
             self.app.ts.clear()
             self.report_stats()
@@ -406,8 +414,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
     def make_checkpoint(self):
         logging.info('Making checkpoint')
-        self.app.ts['what'] = 'making checkpoint'
-        self.app.ts.flush()
+        self.what('making checkpoint')
         if not self.pretend:
             self.checkpoints.append(self.repo.new_generation)
             self.backup_parents('.')
@@ -420,7 +427,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.repo.lock_client(self.app.settings['client-name'])
             self.repo.start_generation()
             self.app.dump_memory_profile('at end of checkpoint')
-        self.app.ts['what'] = self.app.ts['current-file']
+        self.what(self.app.ts['current-file'])
 
     def find_files(self, root):
         '''Find all files and directories that need to be backed up.

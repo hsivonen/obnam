@@ -186,7 +186,7 @@ class App(cliapp.Application):
         logging.debug('Current configuration:\n%s' % f.getvalue())
 
     def setup_ttystatus(self):
-        self.ts = ttystatus.TerminalStatus(period=0.25)
+        self.ts = ttystatus.TerminalStatus(period=0.01)
         if self.settings['quiet']:
             self.ts.disable()
 

@@ -14,6 +14,7 @@ Version X.Y, released UNRELEASED
   fails, Obnam now further tries to use the `open(2)` system call with
   the `O_EXCL` flag to create the target file. This should allow things
   to work with both NFS and VFAT.
+* More detailed progress reporting during the backup setup phase.
 
 Bug fixes:
 
