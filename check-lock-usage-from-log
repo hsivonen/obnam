@@ -1,0 +1,152 @@
+#!/usr/bin/python
+# Copyright 2012  Lars Wirzenius
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+'''Check lock file usage from log files.
+
+This program reads a number of Obnam log files, produced with tracing
+for obnamlib, and analyses them for bugs when using lock files. Each
+log file is assumed to be produced by a separate Obnam instance.
+
+* Have any instances held the same lock during overlapping periods?
+
+'''
+
+
+import cliapp
+import re
+
+lock_pat = re.compile(
+    r'vfs_local.py:[0-9]*:lock: got lockname=(?P<lock>.*)')
+unlock_pat = re.compile(
+    r'vfs_local.py:[0-9]*:unlock: lockname=(?P<lock>.*)')
+
+lock_time_pat = re.compile(
+    r'vfs_local.py:[0-9]*:lock: time=(?P<time>.*)')
+unlock_time_pat = re.compile(
+    r'vfs_local.py:[0-9]*:unlock: time=(?P<time>.*)')
+
+timestamp_pat = re.compile(
+    r'^(?P<timestamp>\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d)')
+    
+class LockDuration(object):
+
+    def __init__(self, logfile, lockname):
+        self.logfile = logfile
+        self.lockname = lockname
+        self.started_timestamp = None
+        self.started_str = None
+        self.started = None
+        self.ended_timestamp = None
+        self.ended_str = None
+        self.ended = None
+
+    def validate(self, lockname):
+        assert self.logfile is not None
+        assert self.lockname == lockname
+        assert self.started is not None
+        if self.ended is not None:
+            # self.ended can be None if Obnam crashed while having the lock.
+            assert self.started <= self.ended
+
+class CheckLocks(cliapp.Application):
+
+    def setup(self):
+        self.filename = None
+        self.locks = {}
+        self.errors = 0
+        
+    def cleanup(self):
+        self.check_for_overlaps(self.locks)
+        if self.errors:
+            raise cliapp.AppException('There were %d errors' % self.errors)
+    
+    @property
+    def latest_lock(self):
+        return self.locks[self.prev_lockname][-1]
+    
+    def process_input_line(self, filename, line):
+        if filename != self.filename:
+            self.current_locks = set()
+            self.prev_lockname = None
+            self.filename = filename
+            self.output.write('Reading %s\n' % self.filename)
+
+        m = lock_pat.search(line)
+        if m:
+            lockname = m.group('lock')
+            if lockname in self.current_locks:
+                self.output.write(
+                    '%s:%d: already locked %s\n' %
+                        (filename, self.lineno, lockname))
+            else:
+                self.current_locks.add(lockname)
+            d = LockDuration(self.filename, lockname)
+            self.locks[lockname] = self.locks.get(lockname, []) + [d]
+            self.prev_lockname = lockname
+            return
+        
+        m = lock_time_pat.search(line)
+        if m:
+            self.latest_lock.started_str = m.group('time')
+            self.latest_lock.started = float(m.group('time'))
+            m2 = timestamp_pat.match(line)
+            if m2:
+                self.latest_lock.started_timestamp = m2.group('timestamp')
+            return
+        
+        m = unlock_pat.search(line)
+        if m:
+            lockname = m.group('lock')
+            if lockname not in self.current_locks:
+                self.output.write(
+                    '%s:%d: not locked %s\n' %
+                        (filename, self.lineno, lockname))
+            else:
+                self.current_locks.remove(lockname)
+            self.prev_lockname = lockname
+            return
+
+        m = unlock_time_pat.search(line)
+        if m:
+            self.latest_lock.ended_str = m.group('time')
+            self.latest_lock.ended = float(m.group('time'))
+            m2 = timestamp_pat.match(line)
+            if m2:
+                self.latest_lock.ended_timestamp = m2.group('timestamp')
+            return
+
+    def check_for_overlaps(self, locks):
+        self.output.write('Checking for overlaps\n')
+        for lockname in sorted(locks.keys()):
+            durations = locks[lockname]
+            durations.sort(key=lambda d: d.started)
+            prev = durations[0]
+            prev.validate(lockname)
+            for d in durations[1:]:
+                d.validate(lockname)
+                if prev.ended is None or d.started < prev.ended:
+                    self.error(
+                        'Lock %s was re-locked at %f' % (lockname, d.started))
+                if prev.ended is not None:
+                    prev = d
+
+    def error(self, msg):
+        sys.stderr.write('%s\n' % msg)
+        self.errors += 1
+
+CheckLocks().run()
+
