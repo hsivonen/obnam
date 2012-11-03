@@ -167,7 +167,6 @@ class App(cliapp.Application):
         try:
             if self.settings['quiet']:
                 self.ts.disable()
-            self.log_config()
             for pattern in self.settings['trace']:
                 tracing.trace_add_pattern(pattern)
             self.hooks.call('config-loaded')
@@ -178,12 +177,6 @@ class App(cliapp.Application):
             logging.critical(str(e))
             sys.stderr.write('ERROR: %s\n' % str(e))
             sys.exit(1)
-
-    def log_config(self):
-        '''Log current configuration into the log file.'''
-        f = StringIO.StringIO()
-        self.settings.dump_config(f)
-        logging.debug('Current configuration:\n%s' % f.getvalue())
 
     def setup_ttystatus(self):
         self.ts = ttystatus.TerminalStatus(period=0.01)
