@@ -27,7 +27,11 @@ log file is assumed to be produced by a separate Obnam instance.
 
 
 import cliapp
+import logging
 import re
+import time
+import ttystatus
+
 
 lock_pat = re.compile(
     r'vfs_local.py:[0-9]*:lock: got lockname=(?P<lock>.*)')
@@ -39,114 +43,186 @@ lock_time_pat = re.compile(
 unlock_time_pat = re.compile(
     r'vfs_local.py:[0-9]*:unlock: time=(?P<time>.*)')
 
+writefile_pat = re.compile(
+    r'vfs_local.py:[0-9]*:write_file: write_file (?P<filename>.*)$')
+overwritefile_pat = re.compile(
+    r'vfs_local.py:[0-9]*:overwrite_file: overwrite_file (?P<filename>.*)$')
+
 timestamp_pat = re.compile(
     r'^(?P<timestamp>\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d)')
-    
-class LockDuration(object):
 
-    def __init__(self, logfile, lockname):
+
+class LogEvent(object):
+
+    def __init__(self, logfile, lineno, line):
         self.logfile = logfile
+        self.lineno = lineno
+        self.timestamp = None
+
+    def sortkey(self):
+        return self.timestamp
+
+
+class LockEvent(LogEvent):
+
+    def __init__(self, logfile, lineno, line, lockname):
+        LogEvent.__init__(self, logfile, lineno, line)
         self.lockname = lockname
-        self.started_timestamp = None
-        self.started_str = None
-        self.started = None
-        self.ended_timestamp = None
-        self.ended_str = None
-        self.ended = None
 
-    def validate(self, lockname):
-        assert self.logfile is not None
-        assert self.lockname == lockname
-        assert self.started is not None
-        if self.ended is not None:
-            # self.ended can be None if Obnam crashed while having the lock.
-            assert self.started <= self.ended
+    def __str__(self):
+        return 'Lock(%s)' % self.lockname
+    
 
+class UnlockEvent(LockEvent):
+
+    def __str__(self):
+        return 'Unlock(%s)' % self.lockname
+
+
+class WriteFileEvent(LogEvent):
+
+    def __init__(self, logfile, lineno, line, filename):
+        LogEvent.__init__(self, logfile, lineno, line)
+        self.filename = filename
+
+    def __str__(self):
+        return 'WriteFile(%s)' % self.filename
+
+
+class OverwriteFileEvent(WriteFileEvent):
+
+    def __str__(self):
+        return 'OverwriteFile(%s)' % self.filename
+    
+   
 class CheckLocks(cliapp.Application):
 
     def setup(self):
-        self.filename = None
-        self.locks = {}
+        self.events = []
         self.errors = 0
+        self.latest_lock_timestamp = 0
+        
+        self.patterns = [
+            (lock_pat, self.lock_event),
+            (unlock_pat, self.unlock_event),
+            (lock_time_pat, self.set_latest_lock_precise_time),
+            (unlock_time_pat, self.set_latest_unlock_precise_time),
+            (writefile_pat, self.writefile_event),
+            (overwritefile_pat, self.overwritefile_event),
+        ]
+        
+        self.ts = ttystatus.TerminalStatus()
+        self.ts.format(
+            'Reading %ElapsedTime() %Integer(lines): %Pathname(filename)')
+        self.ts['lines'] = 0
         
     def cleanup(self):
-        self.check_for_overlaps(self.locks)
+        self.ts.clear()
+
+        self.analyse_phase_1()
+
+        self.ts.finish()
         if self.errors:
             raise cliapp.AppException('There were %d errors' % self.errors)
-    
-    @property
-    def latest_lock(self):
-        return self.locks[self.prev_lockname][-1]
-    
-    def process_input_line(self, filename, line):
-        if filename != self.filename:
-            self.current_locks = set()
-            self.prev_lockname = None
-            self.filename = filename
-            self.output.write('Reading %s\n' % self.filename)
-
-        m = lock_pat.search(line)
-        if m:
-            lockname = m.group('lock')
-            if lockname in self.current_locks:
-                self.output.write(
-                    '%s:%d: already locked %s\n' %
-                        (filename, self.lineno, lockname))
-            else:
-                self.current_locks.add(lockname)
-            d = LockDuration(self.filename, lockname)
-            self.locks[lockname] = self.locks.get(lockname, []) + [d]
-            self.prev_lockname = lockname
-            return
-        
-        m = lock_time_pat.search(line)
-        if m:
-            self.latest_lock.started_str = m.group('time')
-            self.latest_lock.started = float(m.group('time'))
-            m2 = timestamp_pat.match(line)
-            if m2:
-                self.latest_lock.started_timestamp = m2.group('timestamp')
-            return
-        
-        m = unlock_pat.search(line)
-        if m:
-            lockname = m.group('lock')
-            if lockname not in self.current_locks:
-                self.output.write(
-                    '%s:%d: not locked %s\n' %
-                        (filename, self.lineno, lockname))
-            else:
-                self.current_locks.remove(lockname)
-            self.prev_lockname = lockname
-            return
-
-        m = unlock_time_pat.search(line)
-        if m:
-            self.latest_lock.ended_str = m.group('time')
-            self.latest_lock.ended = float(m.group('time'))
-            m2 = timestamp_pat.match(line)
-            if m2:
-                self.latest_lock.ended_timestamp = m2.group('timestamp')
-            return
-
-    def check_for_overlaps(self, locks):
-        self.output.write('Checking for overlaps\n')
-        for lockname in sorted(locks.keys()):
-            durations = locks[lockname]
-            durations.sort(key=lambda d: d.started)
-            prev = durations[0]
-            prev.validate(lockname)
-            for d in durations[1:]:
-                d.validate(lockname)
-                if prev.ended is None or d.started < prev.ended:
-                    self.error(
-                        'Lock %s was re-locked at %f' % (lockname, d.started))
-                if prev.ended is not None:
-                    prev = d
 
     def error(self, msg):
-        sys.stderr.write('%s\n' % msg)
+        logging.error(msg)
+        self.ts.error(msg)
         self.errors += 1
+
+    def analyse_phase_1(self):
+        self.events.sort(key=lambda e: e.sortkey())
+        self.ts.format('Phase 1: %Index(event,events)')
+        self.ts['events'] = self.events
+        self.ts.flush()
+
+        current_locks = set()
+        for e in self.events:
+            self.ts['event'] = e
+            logging.debug(
+                'analysing: %s:%s: %s: %s' % 
+                    (e.logfile, e.lineno, e.sortkey(), str(e)))
+            if type(e) is LockEvent:
+                if e.lockname in current_locks:
+                    self.error(
+                        'Re-locking %s: %s:%s:%s' % 
+                            (e.lockname, e.logfile, e.lineno, 
+                             e.timestamp))
+                else:
+                    current_locks.add(e.lockname)
+            elif type(e) is UnlockEvent:
+                if e.lockname not in current_locks:
+                    self.error(
+                        'Unlocking %s which was not locked: %s:%s:%s' %
+                            (e.lockname, e.logfile, e.lineno,
+                             e.timestamp))
+                else:
+                    current_locks.remove(e.lockname)
+            elif type(e) in (WriteFileEvent, OverwriteFileEvent):
+                lockname = self.determine_lockfile(e.filename)
+                if lockname and lockname not in current_locks:
+                    self.error(
+                        '%s:%s: '
+                        'Write to file %s despite lock %s not existing' %
+                            (e.logfile, e.lineno, e.filename, lockname))
+            else:
+                raise NotImplementedError()
+
+    def determine_lockfile(self, filename):
+        if filename.endswith('/lock'):
+            return None
+        toplevel = filename.split('/')[0]
+        if toplevel == 'chunks':
+            return None
+        if toplevel in ('metadata', 'clientlist'):
+            return './lock'
+        return toplevel + '/lock'
+
+    def process_input(self, name):
+        self.ts['filename'] = name
+        return cliapp.Application.process_input(self, name)
+
+    def process_input_line(self, filename, line):
+        self.ts['lines'] = self.global_lineno
+        for pat, func in self.patterns:
+            m = pat.search(line)
+            if m:
+                event = func(filename, line, m)
+                if event is not None:
+                    self.events.append(event)
+
+    def lock_event(self, filename, line, match):
+        return LockEvent(filename, self.lineno, line, match.group('lock'))
+
+    def unlock_event(self, filename, line, match):
+        return UnlockEvent(filename, self.lineno, line, match.group('lock'))
+
+    def set_latest_lock_precise_time(self, filename, line, match):
+        event = self.events[-1]
+        assert type(event) is LockEvent
+        assert event.timestamp is None
+        event.timestamp = match.group('time')
+        self.latest_lock_timestamp = event.timestamp
+
+    def set_latest_unlock_precise_time(self, filename, line, match):
+        event = self.events[-1]
+        assert type(event) is UnlockEvent
+        assert event.timestamp is None
+        event.timestamp = match.group('time')
+        self.latest_lock_timestamp = event.timestamp
+
+    def writefile_event(self, filename, line, match):
+        e = WriteFileEvent(
+            filename, self.lineno, line, match.group('filename'))
+        e.timestamp = self.latest_lock_timestamp
+        return e
+
+    def overwritefile_event(self, filename, line, match):
+        e = OverwriteFileEvent(
+            filename, self.lineno, line, match.group('filename'))
+        e.timestamp = self.latest_lock_timestamp
+        return e
+
 
 CheckLocks().run()
 
