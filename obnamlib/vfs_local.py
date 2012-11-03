@@ -23,6 +23,7 @@ import math
 import os
 import pwd
 import tempfile
+import time
 import tracing
 
 import obnamlib
@@ -56,6 +57,10 @@ class LocalFS(obnamlib.VirtualFileSystem):
         tracing.trace('create=%s', create)
         obnamlib.VirtualFileSystem.__init__(self, baseurl)
         self.reinit(baseurl, create=create)
+        
+        # For checking that we do not unlock something we didn't lock 
+        # ourselves.
+        self.our_locks = set()
 
         # For testing purposes, allow setting a limit on write operations
         # after which an exception gets raised. If set to None, no crash.
@@ -101,7 +106,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
         self.cwd = newcwd
 
     def lock(self, lockname, data):
-        tracing.trace('lockname=%s', lockname)
+        tracing.trace('attempting lockname=%s', lockname)
         try:
             self.write_file(lockname, data)
         except OSError, e:
@@ -109,11 +114,16 @@ class LocalFS(obnamlib.VirtualFileSystem):
                 raise obnamlib.LockFail("Lock %s already exists" % lockname)
             else:
                 raise # pragma: no cover
+        tracing.trace('got lockname=%s', lockname)
+        tracing.trace('time=%f' % time.time())
+        self.our_locks.add(lockname)
 
     def unlock(self, lockname):
         tracing.trace('lockname=%s', lockname)
-        if self.exists(lockname):
-            self.remove(lockname)
+        assert lockname in self.our_locks
+        self.remove(lockname)
+        self.our_locks.remove(lockname)
+        tracing.trace('time=%f' % time.time())
 
     def join(self, pathname):
         return os.path.join(self.cwd, pathname)
@@ -291,6 +301,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
             pass
         else:
             os.remove(tempname)
+            tracing.trace('link+remove worked')
             return
 
         # Nope, didn't work. Now try with O_EXCL instead.
@@ -302,6 +313,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
             # Give up.
             os.remove(tempname)
             raise
+        tracing.trace('O_EXCL+rename worked')
 
         self.maybe_crash()
 
