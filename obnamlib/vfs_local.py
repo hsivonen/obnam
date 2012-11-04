@@ -263,6 +263,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
         self.maybe_crash()
 
     def cat(self, pathname):
+        tracing.trace('pathname=%s' % pathname)
         pathname = self.join(pathname)
         f = self.open(pathname, 'rb')
         chunks = []
