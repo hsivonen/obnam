@@ -28,36 +28,47 @@ log file is assumed to be produced by a separate Obnam instance.
 
 import cliapp
 import logging
+import os
 import re
 import time
 import ttystatus
 
+timestamp_pat = \
+    r'^\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d (?P<timestamp>\d+\.\d+) .*'
 
 lock_pat = re.compile(
+    timestamp_pat +
     r'vfs_local.py:[0-9]*:lock: got lockname=(?P<lock>.*)')
 unlock_pat = re.compile(
+    timestamp_pat +
     r'vfs_local.py:[0-9]*:unlock: lockname=(?P<lock>.*)')
 
-lock_time_pat = re.compile(
-    r'vfs_local.py:[0-9]*:lock: time=(?P<time>.*)')
-unlock_time_pat = re.compile(
-    r'vfs_local.py:[0-9]*:unlock: time=(?P<time>.*)')
-
 writefile_pat = re.compile(
+    timestamp_pat +
     r'vfs_local.py:[0-9]*:write_file: write_file (?P<filename>.*)$')
 overwritefile_pat = re.compile(
+    timestamp_pat +
     r'vfs_local.py:[0-9]*:overwrite_file: overwrite_file (?P<filename>.*)$')
 
-timestamp_pat = re.compile(
-    r'^(?P<timestamp>\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d)')
+node_open_pat = re.compile(
+    timestamp_pat +
+    r'nodestore_disk.py:\d+:get_node: reading node \d+ from file '
+    r'(?P<nodeid>.*)$')
+node_remove_pat = re.compile(
+    timestamp_pat +
+    r'vfs_local.py:\d+:remove: remove (?P<nodeid>.*/nodes/.*)$')
+
+rename_pat = re.compile(
+    timestamp_pat +
+    r'vfs_local.py:\d+:rename: rename (?P<old>\S+) (?P<new>\S+)$')
 
 
 class LogEvent(object):
 
-    def __init__(self, logfile, lineno, line):
+    def __init__(self, logfile, lineno, timestamp):
         self.logfile = logfile
         self.lineno = lineno
-        self.timestamp = None
+        self.timestamp = timestamp
 
     def sortkey(self):
         return self.timestamp
@@ -65,8 +76,8 @@ class LogEvent(object):
 
 class LockEvent(LogEvent):
 
-    def __init__(self, logfile, lineno, line, lockname):
-        LogEvent.__init__(self, logfile, lineno, line)
+    def __init__(self, logfile, lineno, timestamp, lockname):
+        LogEvent.__init__(self, logfile, lineno, timestamp)
         self.lockname = lockname
 
     def __str__(self):
@@ -81,8 +92,8 @@ class UnlockEvent(LockEvent):
 
 class WriteFileEvent(LogEvent):
 
-    def __init__(self, logfile, lineno, line, filename):
-        LogEvent.__init__(self, logfile, lineno, line)
+    def __init__(self, logfile, lineno, timestamp, filename):
+        LogEvent.__init__(self, logfile, lineno, timestamp)
         self.filename = filename
 
     def __str__(self):
@@ -93,22 +104,56 @@ class OverwriteFileEvent(WriteFileEvent):
 
     def __str__(self):
         return 'OverwriteFile(%s)' % self.filename
-    
-   
+
+
+class NodeCreateEvent(LogEvent):
+
+    def __init__(self, logfile, lineno, timestamp, node_id):
+        LogEvent.__init__(self, logfile, lineno, timestamp)
+        self.node_id = node_id
+
+    def __str__(self):
+        return 'NodeCreate(%s)' % self.node_id
+        
+
+class NodeDestroyEvent(NodeCreateEvent):
+
+    def __str__(self):
+        return 'NodeDestroy(%s)' % self.node_id
+        
+
+class NodeReadEvent(NodeCreateEvent):
+
+    def __str__(self):
+        return 'NodeOpen(%s)' % self.node_id
+
+
+class RenameEvent(LogEvent):
+
+    def __init__(self, logfile, lineno, timestamp, old, new):
+        LogEvent.__init__(self, logfile, lineno, timestamp)
+        self.old = old
+        self.new = new
+
+    def __str__(self):
+        return 'Rename(%s -> %s)' % (self.old, self.new)
+
+
 class CheckLocks(cliapp.Application):
 
     def setup(self):
         self.events = []
         self.errors = 0
-        self.latest_lock_timestamp = 0
+        self.latest_opened_node = None
         
         self.patterns = [
             (lock_pat, self.lock_event),
             (unlock_pat, self.unlock_event),
-            (lock_time_pat, self.set_latest_lock_precise_time),
-            (unlock_time_pat, self.set_latest_unlock_precise_time),
             (writefile_pat, self.writefile_event),
             (overwritefile_pat, self.overwritefile_event),
+            (node_open_pat, self.read_node_event),
+            (node_remove_pat, self.node_remove_event),
+            (rename_pat, self.rename_event),
         ]
         
         self.ts = ttystatus.TerminalStatus()
@@ -132,16 +177,19 @@ class CheckLocks(cliapp.Application):
 
     def analyse_phase_1(self):
         self.events.sort(key=lambda e: e.sortkey())
+        self.events = self.create_node_events(self.events)
         self.ts.format('Phase 1: %Index(event,events)')
         self.ts['events'] = self.events
         self.ts.flush()
 
         current_locks = set()
+        current_nodes = set()
+
         for e in self.events:
             self.ts['event'] = e
             logging.debug(
                 'analysing: %s:%s: %s: %s' % 
-                    (e.logfile, e.lineno, e.sortkey(), str(e)))
+                    (e.logfile, e.lineno, repr(e.sortkey()), str(e)))
             if type(e) is LockEvent:
                 if e.lockname in current_locks:
                     self.error(
@@ -165,8 +213,43 @@ class CheckLocks(cliapp.Application):
                         '%s:%s: '
                         'Write to file %s despite lock %s not existing' %
                             (e.logfile, e.lineno, e.filename, lockname))
+            elif type(e) is NodeCreateEvent:
+                if e.node_id in current_nodes:
+                    self.error(
+                        '%s:%s: Node %s already exists' %
+                            (e.logfile, e.lineno, e.node_id))
+                else:
+                    current_nodes.add(e.node_id)
+            elif type(e) is NodeDestroyEvent:
+                if e.node_id not in current_nodes:
+                    self.error(
+                        '%s:%s: Node %s does not exist' %
+                            (e.logfile, e.lineno, e.node_id))
+                else:
+                    current_nodes.remove(e.node_id)
+            elif type(e) is NodeReadEvent:
+                if e.node_id not in current_nodes:
+                    self.error(
+                        '%s:%s: Node %s does not exist' %
+                            (e.logfile, e.lineno, e.node_id))
+            elif type(e) is RenameEvent:
+                if e.old in current_nodes:
+                    current_nodes.remove(e.old)
+                    current_nodes.add(e.new)
             else:
                 raise NotImplementedError()
+
+    def create_node_events(self, events):
+        new = []
+        for e in events:
+            new.append(e)
+            if type(e) in (WriteFileEvent, OverwriteFileEvent):
+                if '/nodes/' in e.filename:
+                    new_e = NodeCreateEvent(
+                        e.logfile, e.lineno, e.timestamp, e.filename)
+                    new_e.timestamp = e.timestamp
+                    new.append(new_e)
+        return new
 
     def determine_lockfile(self, filename):
         if filename.endswith('/lock'):
@@ -192,36 +275,41 @@ class CheckLocks(cliapp.Application):
                     self.events.append(event)
 
     def lock_event(self, filename, line, match):
-        return LockEvent(filename, self.lineno, line, match.group('lock'))
+        return LockEvent(
+            filename, self.lineno, float(match.group('timestamp')),
+            match.group('lock'))
 
     def unlock_event(self, filename, line, match):
-        return UnlockEvent(filename, self.lineno, line, match.group('lock'))
-
-    def set_latest_lock_precise_time(self, filename, line, match):
-        event = self.events[-1]
-        assert type(event) is LockEvent
-        assert event.timestamp is None
-        event.timestamp = match.group('time')
-        self.latest_lock_timestamp = event.timestamp
-
-    def set_latest_unlock_precise_time(self, filename, line, match):
-        event = self.events[-1]
-        assert type(event) is UnlockEvent
-        assert event.timestamp is None
-        event.timestamp = match.group('time')
-        self.latest_lock_timestamp = event.timestamp
+        return UnlockEvent(
+            filename, self.lineno, float(match.group('timestamp')),
+            match.group('lock'))
 
     def writefile_event(self, filename, line, match):
-        e = WriteFileEvent(
-            filename, self.lineno, line, match.group('filename'))
-        e.timestamp = self.latest_lock_timestamp
-        return e
+        return WriteFileEvent(
+            filename, self.lineno, float(match.group('timestamp')),
+            match.group('filename'))
 
     def overwritefile_event(self, filename, line, match):
-        e = OverwriteFileEvent(
-            filename, self.lineno, line, match.group('filename'))
-        e.timestamp = self.latest_lock_timestamp
-        return e
+        return OverwriteFileEvent(
+            filename, self.lineno, float(match.group('timestamp')),
+            match.group('filename'))
+
+    def read_node_event(self, filename, line, match):
+        node_id = match.group('nodeid')
+        if not os.path.basename(node_id).startswith('tmp'):
+            return NodeReadEvent(
+                filename, self.lineno, float(match.group('timestamp')),
+                node_id)
+        
+    def node_remove_event(self, filename, line, match):
+        return NodeDestroyEvent(
+            filename, self.lineno, float(match.group('timestamp')),
+            match.group('nodeid'))
+
+    def rename_event(self, filename, line, match):
+        return RenameEvent(
+            filename, self.lineno, float(match.group('timestamp')),
+            match.group('old'), match.group('new'))
 
 
 CheckLocks().run()
