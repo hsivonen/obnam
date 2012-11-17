@@ -245,9 +245,8 @@ class CheckBTree(WorkItem):
                                    vfs=self.repo.fs)
         fsck = larch.fsck.Fsck(forest, self.warning, self.error, 
                                self.settings['fsck-fix'])
-        fsck.find_work()
-        for work in fsck.work:
-            work.do()
+        for work in fsck.find_work():
+            yield work
 
 
 class CheckRepository(WorkItem):
@@ -310,8 +309,10 @@ class FsckPlugin(obnamlib.ObnamPlugin):
             work = self.work_items.pop()
             logging.debug('doing: %s' % str(work))
             self.app.ts['item'] = work
-            for more in reversed(list(work.do() or [])):
-                self.add_item(more, append=True)
+            self.app.ts.flush()
+            pos = len(self.work_items)
+            for more in work.do() or []:
+                self.add_item(more, pos=pos)
             i += 1
             if not self.work_items:
                 for work in final_items:
@@ -328,7 +329,7 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         if self.errors:
             sys.exit(1)
 
-    def add_item(self, work, append=False):
+    def add_item(self, work, append=False, pos=0):
         work.warning = self.warning
         work.error = self.error
         work.repo = self.repo
@@ -339,7 +340,7 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         else:
             self.work_items.insert(0, work)
         self.app.ts.increase('items', 1)
-        self.app.dump_memory_profile('after adding %s' % repr(work))
+        self.app.ts.flush()
 
     def error(self, msg):
         self.app.ts.error(msg)
