@@ -208,10 +208,11 @@ class CheckClientlist(WorkItem):
     def do(self):
         logging.debug('Checking clientlist')
         clients = self.repo.clientlist.list_clients()
-        for client_name in clients:
-            client_id = self.repo.clientlist.get_client_id(client_name)
-            client_dir = self.repo.client_dir(client_id)
-            yield CheckBTree(str(client_dir))
+        if not self.settings['fsck-skip-b-trees']:
+            for client_name in clients:
+                client_id = self.repo.clientlist.get_client_id(client_name)
+                client_dir = self.repo.client_dir(client_id)
+                yield CheckBTree(str(client_dir))
         for client_name in clients:
             yield CheckClientExists(client_name)
         for client_name in clients:
@@ -256,9 +257,10 @@ class CheckRepository(WorkItem):
         
     def do(self):
         logging.debug('Checking repository')
-        yield CheckBTree('clientlist')
-        yield CheckBTree('chunklist')
-        yield CheckBTree('chunksums')
+        if not self.settings['fsck-skip-b-trees']:
+            yield CheckBTree('clientlist')
+            yield CheckBTree('chunklist')
+            yield CheckBTree('chunksums')
         yield CheckClientlist()
 
 
@@ -272,6 +274,9 @@ class FsckPlugin(obnamlib.ObnamPlugin):
             ['fsck-ignore-chunks'],
             'ignore chunks when checking repository integrity (assume all '
                 'chunks exist and are correct)')
+        self.app.settings.boolean(
+            ['fsck-skip-b-trees'],
+            'skip B-tree integrity checking')
 
     def configure_ttystatus(self):
         self.app.ts.clear()
