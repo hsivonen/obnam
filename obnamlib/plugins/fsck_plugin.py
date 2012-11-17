@@ -214,9 +214,11 @@ class CheckClientlist(WorkItem):
                 client_dir = self.repo.client_dir(client_id)
                 yield CheckBTree(str(client_dir))
         for client_name in clients:
-            yield CheckClientExists(client_name)
+            if client_name not in self.settings['fsck-ignore-client']:
+                yield CheckClientExists(client_name)
         for client_name in clients:
-            yield CheckClient(client_name)
+            if client_name not in self.settings['fsck-ignore-client']:
+                yield CheckClient(client_name)
 
 
 class CheckForExtraChunks(WorkItem):
@@ -277,6 +279,10 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         self.app.settings.boolean(
             ['fsck-skip-b-trees'],
             'skip B-tree integrity checking')
+        self.app.settings.string_list(
+            ['fsck-ignore-client'],
+            'do not check repository data for cient NAME',
+            metavar='NAME')
 
     def configure_ttystatus(self):
         self.app.ts.clear()
