@@ -603,8 +603,16 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         '''Back up a chunk of data by putting it into the repository.'''
 
         def find():
-            return (self.repo.find_chunks(checksum) + 
-                     self.chunkid_pool.get(checksum))
+            # We ignore lookup errors here intentionally. We're reading
+            # the checksum trees without a lock, so another Obnam may be
+            # modifying them, which can lead to spurious NodeMissing
+            # exceptions, and other errors. We don't care: we'll just
+            # pretend no chunk with the checksum exists yet.
+            try:
+                in_tree = self.repo.find_chunks(checksum)
+            except larch.Error:
+                in_tree = []
+            return in_tree + self.chunkid_pool.get(checksum)
 
         def get(chunkid):
             return self.repo.get_chunk(chunkid)
