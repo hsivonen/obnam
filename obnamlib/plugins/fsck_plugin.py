@@ -128,7 +128,7 @@ class CheckGeneration(WorkItem):
     def __init__(self, client_name, genid):
         self.client_name = client_name
         self.genid = genid
-        self.name = '%s:%s' % (client_name, genid)
+        self.name = 'generation %s:%s' % (client_name, genid)
         
     def do(self):
         logging.debug('Checking client=%s genid=%s' % 
