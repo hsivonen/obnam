@@ -168,7 +168,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
     def lgetxattr(self, filename, attrname): # pragma: no cover
         ret = obnamlib._obnam.lgetxattr(self.join(filename), attrname)
         if type(ret) is int:
-            raise OSError((ret, os.strerror(ret), filename))
+            raise OSError(ret, os.strerror(ret), filename)
         return ret
 
     def lsetxattr(self, filename, attrname, attrvalue): # pragma: no cover
