@@ -20,6 +20,8 @@ Bug fixes:
 
 * Empty values for extended attributes are now backed up correctly.
   Previously they would cause an infinite loop.
+* Extended attributes without values are now ignored. This is different
+  from attributes with empty values. Reported by Vladimir Elisseev.
 * An empty port number in sftp URLs is now handled correctly. Found based
   on report by Anton Shevtsov.
 * A bad performance bug when backing up full systems (starting from the
