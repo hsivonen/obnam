@@ -286,15 +286,18 @@ class FsckPlugin(obnamlib.ObnamPlugin):
 
     def configure_ttystatus(self):
         self.app.ts.clear()
-        self.app.ts['item'] = None
+        self.app.ts['this_item'] = 0
         self.app.ts['items'] = 0
         self.app.ts.format(
-            'Checking %Counter(item)/%Integer(items): %String(item)')
+            'Checking %Integer(this_item)/%Integer(items): %String(item)')
         
     def fsck(self, args):
         '''Verify internal consistency of backup repository.'''
         self.app.settings.require('repository')
         logging.debug('fsck on %s' % self.app.settings['repository'])
+
+        self.configure_ttystatus()
+
         self.repo = self.app.open_repository()
         
         self.repo.lock_root()
@@ -313,18 +316,15 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         final_items = []
         if not self.app.settings['fsck-ignore-chunks']:
             final_items.append(CheckForExtraChunks())
-        
-        self.configure_ttystatus()
-        i = 0
         while self.work_items:
             work = self.work_items.pop()
             logging.debug('doing: %s' % str(work))
             self.app.ts['item'] = work
+            self.app.ts.increase('this_item', 1)
             self.app.ts.flush()
             pos = len(self.work_items)
             for more in work.do() or []:
                 self.add_item(more, pos=pos)
-            i += 1
             if not self.work_items:
                 for work in final_items:
                     self.add_item(work)
@@ -341,6 +341,7 @@ class FsckPlugin(obnamlib.ObnamPlugin):
             sys.exit(1)
 
     def add_item(self, work, append=False, pos=0):
+        logging.debug('adding: %s' % str(work))
         work.warning = self.warning
         work.error = self.error
         work.repo = self.repo
