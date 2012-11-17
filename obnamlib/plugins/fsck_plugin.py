@@ -83,7 +83,7 @@ class CheckFile(WorkItem):
         self.client_name = client_name
         self.genid = genid
         self.filename = filename
-        self.name = '%s:%s:%s' % (client_name, genid, filename)
+        self.name = 'file %s:%s:%s' % (client_name, genid, filename)
 
     def do(self):
         logging.debug('Checking client=%s genid=%s filename=%s' %
@@ -106,7 +106,7 @@ class CheckDirectory(WorkItem):
         self.client_name = client_name
         self.genid = genid
         self.dirname = dirname
-        self.name = '%s:%s:%s' % (client_name, genid, dirname)
+        self.name = 'dir %s:%s:%s' % (client_name, genid, dirname)
         
     def do(self):
         logging.debug('Checking client=%s genid=%s dirname=%s' %
