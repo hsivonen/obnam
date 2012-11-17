@@ -195,9 +195,9 @@ class CheckClient(WorkItem):
         logging.debug('Checking client=%s' % self.client_name)
         if self.repo.current_client != self.client_name:
             self.repo.open_client(self.client_name)
-        yield CheckGenerationIdsAreDifferent(self.client_name,
-                                              self.repo.list_generations())
-        for genid in self.repo.list_generations():
+        genids = self.repo.list_generations()
+        yield CheckGenerationIdsAreDifferent(self.client_name, genids)
+        for genid in genids:
             yield CheckGeneration(self.client_name, genid)
 
 
