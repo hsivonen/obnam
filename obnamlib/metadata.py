@@ -14,11 +14,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import errno
 import grp
+import logging
 import os
 import pwd
 import stat
 import struct
+import tracing
 
 import obnamlib
 
@@ -127,10 +130,35 @@ def _cached_getgrgid(gid): # pragma: no cover
 
 
 def get_xattrs_as_blob(fs, filename): # pragma: no cover
+    tracing.trace('filename=%s' % filename)
     names = fs.llistxattr(filename)
+    tracing.trace('names=%s' % repr(names))
     if not names:
         return None
-    values = [fs.lgetxattr(filename, name) for name in names]
+
+    values = []
+    for name in names[:]:
+        tracing.trace('trying name %s' % repr(name))
+        try:
+            value = fs.lgetxattr(filename, name)
+        except OSError, e:
+            # On btrfs, at least, this can happen: the filesystem returns
+            # a list of attribute names, but then fails when looking up
+            # the value for one or more of the names. We pretend that the
+            # name was never returned in that case.
+            #
+            # Obviously this can happen due to race conditions as well.
+            if e.errno == errno.ENODATA:
+                names.remove(name)
+                logging.warning(
+                    '%s has extended attribute named %s without value, '
+                    'ignoring attribute' % (filename, name))
+            else:
+                raise
+        else:
+            tracing.trace('lgetxattr(%s)=%s' % (name, value))
+            values.append(value)
+    assert len(names) == len(values)
 
     name_blob = ''.join('%s\0' % name for name in names)
 
