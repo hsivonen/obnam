@@ -91,7 +91,7 @@ class CheckFile(WorkItem):
         if self.repo.current_client != self.client_name:
             self.repo.open_client(self.client_name)
         metadata = self.repo.get_metadata(self.genid, self.filename)
-        if metadata.isfile():
+        if metadata.isfile() and not self.settings['fsck-ignore-chunks']:
             chunkids = self.repo.get_file_chunks(self.genid, self.filename)
             checksummer = self.repo.new_checksummer()
             for chunkid in chunkids:
@@ -269,6 +269,10 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         self.app.add_subcommand('fsck', self.fsck)
         self.app.settings.boolean(['fsck-fix'], 
                                   'should fsck try to fix problems?')
+        self.app.settings.boolean(
+            ['fsck-ignore-chunks'],
+            'ignore chunks when checking repository integrity (assume all '
+                'chunks exist and are correct)')
 
     def configure_ttystatus(self):
         self.app.ts.clear()
@@ -295,7 +299,10 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         self.chunkids_seen = set()
         self.work_items = []
         self.add_item(CheckRepository())
-        final_items = [CheckForExtraChunks()]
+
+        final_items = []
+        if not self.app.settings['fsck-ignore-chunks']:
+            final_items.append(CheckForExtraChunks())
         
         self.configure_ttystatus()
         i = 0
