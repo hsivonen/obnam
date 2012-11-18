@@ -197,6 +197,8 @@ class CheckClient(WorkItem):
             self.repo.open_client(self.client_name)
         genids = self.repo.list_generations()
         yield CheckGenerationIdsAreDifferent(self.client_name, genids)
+        if self.settings['fsck-last-generation-only'] and genids:
+            genids = genids[-1:]
         for genid in genids:
             yield CheckGeneration(self.client_name, genid)
 
@@ -283,6 +285,9 @@ class FsckPlugin(obnamlib.ObnamPlugin):
             ['fsck-ignore-client'],
             'do not check repository data for cient NAME',
             metavar='NAME')
+        self.app.settings.boolean(
+            ['fsck-last-generation-only'],
+            'check only the last generation for each client')
 
     def configure_ttystatus(self):
         self.app.ts.clear()
