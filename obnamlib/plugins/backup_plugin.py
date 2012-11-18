@@ -27,6 +27,7 @@ import tracing
 import ttystatus
 
 import obnamlib
+import larch
 
 
 class ChunkidPool(object):
