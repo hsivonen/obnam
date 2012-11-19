@@ -638,7 +638,7 @@ class VfsTests(object): # pragma: no cover
     def test_scan_tree_returns_nothing_if_listdir_fails(self):
         self.set_up_scan_tree()
         def raiser(dirname):
-            raise OSError((123, 'oops', dirname))
+            raise OSError(123, 'oops', dirname)
         def logerror(msg):
             pass
         self.fs.listdir2 = raiser

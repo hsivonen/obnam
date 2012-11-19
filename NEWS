@@ -39,6 +39,8 @@ Bug fixes:
   Obnam was modifying a shared B-tree, Obnam would crash and abort a backup,
   possibly leaving lock files lying around. Now a failure to look up a chunk
   via its checksum is ignored, and the backup continues.
+* Bugs in how Python OSError exceptions were being raises have been fixed.
+  Error messages should now be somewhat clearer.
 
 Version 1.2, released 2012-10-06
 --------------------------------
