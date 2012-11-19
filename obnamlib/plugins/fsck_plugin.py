@@ -79,10 +79,11 @@ class CheckFileChecksum(WorkItem):
 
 class CheckFile(WorkItem):
 
-    def __init__(self, client_name, genid, filename):
+    def __init__(self, client_name, genid, filename, metadata):
         self.client_name = client_name
         self.genid = genid
         self.filename = filename
+        self.metadata = metadata
         self.name = 'file %s:%s:%s' % (client_name, genid, filename)
 
     def do(self):
@@ -90,14 +91,13 @@ class CheckFile(WorkItem):
                         (self.client_name, self.genid, self.filename))
         if self.repo.current_client != self.client_name:
             self.repo.open_client(self.client_name)
-        metadata = self.repo.get_metadata(self.genid, self.filename)
-        if metadata.isfile() and not self.settings['fsck-ignore-chunks']:
+        if self.metadata.isfile() and not self.settings['fsck-ignore-chunks']:
             chunkids = self.repo.get_file_chunks(self.genid, self.filename)
             checksummer = self.repo.new_checksummer()
             for chunkid in chunkids:
                 yield CheckChunk(chunkid, checksummer)
-            yield CheckFileChecksum(self.name, metadata.md5, chunkids,
-                                     checksummer)
+            yield CheckFileChecksum(
+                self.name, self.metadata.md5, chunkids, checksummer)
 
 
 class CheckDirectory(WorkItem):
@@ -120,7 +120,8 @@ class CheckDirectory(WorkItem):
             if metadata.isdir():
                 yield CheckDirectory(self.client_name, self.genid, pathname)
             else:
-                yield CheckFile(self.client_name, self.genid, pathname)
+                yield CheckFile(
+                    self.client_name, self.genid, pathname, metadata)
 
 
 class CheckGeneration(WorkItem):
