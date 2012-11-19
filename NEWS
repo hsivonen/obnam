@@ -35,6 +35,10 @@ Bug fixes:
 * Obnam now runs GnuPG explicitly with the "no text mode" setting, to override
   a "text mode" setting in the user's configuration. The files Obnam encrypts
   need to be treated as binary, not text files. Reported by Robin Sheat.
+* A shared B-tree concurrency bug has been fixed: If another instance of
+  Obnam was modifying a shared B-tree, Obnam would crash and abort a backup,
+  possibly leaving lock files lying around. Now a failure to look up a chunk
+  via its checksum is ignored, and the backup continues.
 
 Version 1.2, released 2012-10-06
 --------------------------------
