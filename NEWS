@@ -29,6 +29,10 @@ Bug fixes:
   the backup root is the filesystem root, due to the now-fixed bug Obnam
   would first remove everything, and then back it up all over again. This
   "worked", but was quite slow. Thanks to Nix for reporting the problem.
+* A shared B-tree concurrency bug has been fixed: If another instance of
+  Obnam was modifying a shared B-tree, Obnam would crash and abort a backup,
+  possibly leaving lock files lying around. Now a failure to look up a chunk
+  via its checksum is ignored, and the backup continues.
 
 Version 1.2, released 2012-10-06
 --------------------------------
