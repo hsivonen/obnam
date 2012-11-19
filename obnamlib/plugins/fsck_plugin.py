@@ -119,7 +119,7 @@ class CheckDirectory(WorkItem):
             metadata = self.repo.get_metadata(self.genid, pathname)
             if metadata.isdir():
                 yield CheckDirectory(self.client_name, self.genid, pathname)
-            else:
+            elif not self.settings['fsck-skip-files']:
                 yield CheckFile(
                     self.client_name, self.genid, pathname, metadata)
 
@@ -289,6 +289,9 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         self.app.settings.boolean(
             ['fsck-last-generation-only'],
             'check only the last generation for each client')
+        self.app.settings.boolean(
+            ['fsck-skip-files'],
+            'do not check anything about files')
 
     def configure_ttystatus(self):
         self.app.ts.clear()
