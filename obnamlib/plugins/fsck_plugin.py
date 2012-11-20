@@ -211,7 +211,9 @@ class CheckClientlist(WorkItem):
     def do(self):
         logging.debug('Checking clientlist')
         clients = self.repo.clientlist.list_clients()
-        if not self.settings['fsck-skip-b-trees']:
+        skip_client_trees = (self.settings['fsck-skip-b-trees'] or
+                             self.settings['fsck-skip-per-client-b-trees'])
+        if not skip_client_trees:
             for client_name in clients:
                 client_id = self.repo.clientlist.get_client_id(client_name)
                 client_dir = self.repo.client_dir(client_id)
@@ -292,6 +294,9 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         self.app.settings.boolean(
             ['fsck-skip-files'],
             'do not check anything about files')
+        self.app.settings.boolean(
+            ['fsck-skip-per-client-b-trees'],
+            'do not check per-client B-trees')
 
     def configure_ttystatus(self):
         self.app.ts.clear()
