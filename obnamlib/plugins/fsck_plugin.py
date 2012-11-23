@@ -341,7 +341,7 @@ class FsckPlugin(obnamlib.ObnamPlugin):
             logging.debug('doing: %s' % str(work))
             self.app.ts['item'] = work
             self.app.ts.increase('this_item', 1)
-            self.app.ts.flush()
+#            self.app.ts.flush()
             pos = len(self.work_items)
             for more in work.do() or []:
                 self.add_item(more, pos=pos)
@@ -372,7 +372,7 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         else:
             self.work_items.insert(0, work)
         self.app.ts.increase('items', 1)
-        self.app.ts.flush()
+#        self.app.ts.flush()
 
     def error(self, msg):
         self.app.ts.error(msg)
