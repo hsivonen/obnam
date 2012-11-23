@@ -151,7 +151,10 @@ class CheckGeneration(WorkItem):
         if n is None:
             self.error('%s:%s: no total data' % (self.client_name, self.genid))
 
-        return [CheckDirectory(self.client_name, self.genid, '/')]
+        if self.settings['fsck-skip-dirs']:
+            return []
+        else:
+            return [CheckDirectory(self.client_name, self.genid, '/')]
 
 
 class CheckGenerationIdsAreDifferent(WorkItem):
@@ -291,6 +294,9 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         self.app.settings.boolean(
             ['fsck-last-generation-only'],
             'check only the last generation for each client')
+        self.app.settings.boolean(
+            ['fsck-skip-dirs'],
+            'do not check anything about directories and their files')
         self.app.settings.boolean(
             ['fsck-skip-files'],
             'do not check anything about files')
