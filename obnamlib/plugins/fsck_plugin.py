@@ -375,9 +375,11 @@ class FsckPlugin(obnamlib.ObnamPlugin):
 #        self.app.ts.flush()
 
     def error(self, msg):
+        logging.error(msg)
         self.app.ts.error(msg)
         self.errors += 1
 
     def warning(self, msg):
+        logging.warning(msg)
         self.app.ts.notify(msg)
 
