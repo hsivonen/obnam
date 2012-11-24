@@ -140,6 +140,14 @@ can be given the
 and
 .B \-\-critical-age
 options.
+.IP \(bu
+.B diff
+compares two generations and lists files differing between them. Every output
+line will be prefixed either by a plus sign (+) for files that were added, a
+minus sign (-) for files that have been removed or an asterisk (*) for files
+that have changed.  If only one generation ID is specified on the command line
+that generation will be compared with its direct predecessor. If two IDs have
+been specified, all changes between those two generations will be listed.
 .SS "Making backups"
 When you run a backup,
 .B obnam

@@ -234,6 +234,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
                 self.show_diff_for_file(gen2, full, '+')
         for basename in sorted(set1):
             # This was only in gen1 - it got removed
+            full = os.path.join(dirname, basename)
             self.show_diff_for_file(gen1, full, '-')
 
         for subdir in subdirs:
