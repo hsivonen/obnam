@@ -214,9 +214,7 @@ class CheckClientlist(WorkItem):
     def do(self):
         logging.debug('Checking clientlist')
         clients = self.repo.clientlist.list_clients()
-        skip_client_trees = (self.settings['fsck-skip-b-trees'] or
-                             self.settings['fsck-skip-per-client-b-trees'])
-        if not skip_client_trees:
+        if not self.settings['fsck-skip-per-client-b-trees']:
             for client_name in clients:
                 if client_name not in self.settings['fsck-ignore-client']:
                     client_id = self.repo.clientlist.get_client_id(client_name)
@@ -268,7 +266,7 @@ class CheckRepository(WorkItem):
         
     def do(self):
         logging.debug('Checking repository')
-        if not self.settings['fsck-skip-b-trees']:
+        if not self.settings['fsck-skip-shared-b-trees']:
             yield CheckBTree('clientlist')
             yield CheckBTree('chunklist')
             yield CheckBTree('chunksums')
@@ -285,9 +283,6 @@ class FsckPlugin(obnamlib.ObnamPlugin):
             ['fsck-ignore-chunks'],
             'ignore chunks when checking repository integrity (assume all '
                 'chunks exist and are correct)')
-        self.app.settings.boolean(
-            ['fsck-skip-b-trees'],
-            'skip B-tree integrity checking')
         self.app.settings.string_list(
             ['fsck-ignore-client'],
             'do not check repository data for cient NAME',
@@ -304,6 +299,9 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         self.app.settings.boolean(
             ['fsck-skip-per-client-b-trees'],
             'do not check per-client B-trees')
+        self.app.settings.boolean(
+            ['fsck-skip-shared-b-trees'],
+            'do not check shared B-trees')
 
     def configure_ttystatus(self):
         self.app.ts.clear()
