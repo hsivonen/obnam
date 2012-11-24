@@ -41,6 +41,8 @@ Bug fixes:
   via its checksum is ignored, and the backup continues.
 * Bugs in how Python OSError exceptions were being raises have been fixed.
   Error messages should now be somewhat clearer.
+* Unset or wrongly set variable "full" fixed in "obnam diff". Reported
+  by ROGERIO DE CARVALHO BASTOS and patched by Peter Valdemar Mørch.
 
 Version 1.2, released 2012-10-06
 --------------------------------
