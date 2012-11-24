@@ -18,6 +18,8 @@ Version X.Y, released UNRELEASED
 * Manual page now covers the diff subcommand. Patch by Peter Valdemar Mørch.
 * Speed optimisation patch for backing up files in inode numbering order,
   from Christophe Vu-Brugier.
+* A setuid or setgid bit is now not restored if Obnam is not used by root
+  or the same user as the owner of the restored file.
 
 Bug fixes:
 

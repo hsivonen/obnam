@@ -240,7 +240,12 @@ def set_metadata(fs, filename, metadata, getuid=None):
     if stat.S_ISLNK(metadata.st_mode):
         fs.symlink(metadata.target, filename)
     else:
-        fs.chmod(filename, metadata.st_mode)
+        # If we are not the owner, and not root, do not restore setuid/setgid.
+        mode = metadata.st_mode
+        if getuid() not in (0, metadata.st_uid):
+            mode = mode & (~stat.S_ISUID)
+            mode = mode & (~stat.S_ISGID)
+        fs.chmod(filename, mode)
 
     if metadata.xattr: # pragma: no cover
         set_xattrs_from_blob(fs, filename, metadata.xattr)
