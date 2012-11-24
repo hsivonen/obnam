@@ -218,9 +218,10 @@ class CheckClientlist(WorkItem):
                              self.settings['fsck-skip-per-client-b-trees'])
         if not skip_client_trees:
             for client_name in clients:
-                client_id = self.repo.clientlist.get_client_id(client_name)
-                client_dir = self.repo.client_dir(client_id)
-                yield CheckBTree(str(client_dir))
+                if client_name not in self.settings['fsck-ignore-client']:
+                    client_id = self.repo.clientlist.get_client_id(client_name)
+                    client_dir = self.repo.client_dir(client_id)
+                    yield CheckBTree(str(client_dir))
         for client_name in clients:
             if client_name not in self.settings['fsck-ignore-client']:
                 yield CheckClientExists(client_name)
