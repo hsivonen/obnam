@@ -232,6 +232,11 @@ def set_metadata(fs, filename, metadata, getuid=None):
     
     '''
 
+    # Set owner before mode, so that a setuid bit does not get reset.
+    getuid = getuid or os.getuid
+    if getuid() == 0:
+        fs.lchown(filename, metadata.st_uid, metadata.st_gid)
+
     if stat.S_ISLNK(metadata.st_mode):
         fs.symlink(metadata.target, filename)
     else:
@@ -242,10 +247,6 @@ def set_metadata(fs, filename, metadata, getuid=None):
 
     fs.lutimes(filename, metadata.st_atime_sec, metadata.st_atime_nsec, 
                metadata.st_mtime_sec, metadata.st_mtime_nsec)
-
-    getuid = getuid or os.getuid
-    if getuid() == 0:
-        fs.lchown(filename, metadata.st_uid, metadata.st_gid)
     
     
 metadata_format = struct.Struct('!Q' +  # flags
