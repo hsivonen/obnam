@@ -356,5 +356,5 @@ class LocalFS(obnamlib.VirtualFileSystem):
             except OSError, e: # pragma: no cover
                 st = e
             result.append((name, st))
-        return result
+        return sorted(result, key=lambda st: st[1].st_ino)
 

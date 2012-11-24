@@ -16,6 +16,8 @@ Version X.Y, released UNRELEASED
   to work with both NFS and VFAT.
 * More detailed progress reporting during the backup setup phase.
 * Manual page now covers the diff subcommand. Patch by Peter Valdemar Mørch.
+* Speed optimisation patch for backing up files in inode numbering order,
+  from Christophe Vu-Brugier.
 
 Bug fixes:
 
