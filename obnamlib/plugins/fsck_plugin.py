@@ -252,10 +252,10 @@ class CheckBTree(WorkItem):
             logging.debug('B-tree %s does not exist, skipping' % self.dirname)
             return
         logging.debug('Checking B-tree %s' % self.dirname)
-        forest = larch.open_forest(allow_writes=False, dirname=self.dirname, 
+        fix = self.settings['fsck-fix']
+        forest = larch.open_forest(allow_writes=fix, dirname=self.dirname, 
                                    vfs=self.repo.fs)
-        fsck = larch.fsck.Fsck(forest, self.warning, self.error, 
-                               self.settings['fsck-fix'])
+        fsck = larch.fsck.Fsck(forest, self.warning, self.error, fix)
         for work in fsck.find_work():
             yield work
 
