@@ -214,15 +214,15 @@ class CheckClientlist(WorkItem):
     def do(self):
         logging.debug('Checking clientlist')
         clients = self.repo.clientlist.list_clients()
+        for client_name in clients:
+            if client_name not in self.settings['fsck-ignore-client']:
+                yield CheckClientExists(client_name)
         if not self.settings['fsck-skip-per-client-b-trees']:
             for client_name in clients:
                 if client_name not in self.settings['fsck-ignore-client']:
                     client_id = self.repo.clientlist.get_client_id(client_name)
                     client_dir = self.repo.client_dir(client_id)
                     yield CheckBTree(str(client_dir))
-        for client_name in clients:
-            if client_name not in self.settings['fsck-ignore-client']:
-                yield CheckClientExists(client_name)
         for client_name in clients:
             if client_name not in self.settings['fsck-ignore-client']:
                 yield CheckClient(client_name)
@@ -330,23 +330,24 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         self.errors = 0
         self.chunkids_seen = set()
         self.work_items = []
-        self.add_item(CheckRepository())
+        self.add_item(CheckRepository(), append=True)
 
         final_items = []
         if not self.app.settings['fsck-ignore-chunks']:
             final_items.append(CheckForExtraChunks())
+
         while self.work_items:
-            work = self.work_items.pop()
+            work = self.work_items.pop(0)
             logging.debug('doing: %s' % str(work))
             self.app.ts['item'] = work
             self.app.ts.increase('this_item', 1)
-#            self.app.ts.flush()
-            pos = len(self.work_items)
+            pos = 0
             for more in work.do() or []:
                 self.add_item(more, pos=pos)
+                pos += 1
             if not self.work_items:
                 for work in final_items:
-                    self.add_item(work)
+                    self.add_item(work, append=True)
                 final_items = []
 
         self.repo.unlock_shared()
@@ -369,9 +370,8 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         if append:
             self.work_items.append(work)
         else:
-            self.work_items.insert(0, work)
+            self.work_items.insert(pos, work)
         self.app.ts.increase('items', 1)
-#        self.app.ts.flush()
 
     def error(self, msg):
         logging.error(msg)
