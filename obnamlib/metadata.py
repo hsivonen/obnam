@@ -242,7 +242,7 @@ def set_metadata(fs, filename, metadata, getuid=None):
     else:
         # If we are not the owner, and not root, do not restore setuid/setgid.
         mode = metadata.st_mode
-        if getuid() not in (0, metadata.st_uid):
+        if getuid() not in (0, metadata.st_uid): # pragma: no cover
             mode = mode & (~stat.S_ISUID)
             mode = mode & (~stat.S_ISGID)
         fs.chmod(filename, mode)
