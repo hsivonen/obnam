@@ -1,0 +1,19 @@
+#!/usr/bin/python
+
+
+from meliae import loader
+from pprint import pprint as pp
+import sys
+
+
+om = loader.load(sys.argv[1])
+om.remove_expensive_references()
+print om.summarize()
+print
+
+for type_name in sys.argv[2:]:
+    objs = om.get_all(type_name)
+    for obj in objs[:5]:
+        pp(obj.p)
+        print om.summarize(obj)
+        print
