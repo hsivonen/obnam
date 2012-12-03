@@ -79,25 +79,25 @@ class CheckFileChecksum(WorkItem):
 
 class CheckFile(WorkItem):
 
-    def __init__(self, client_name, genid, filename):
+    def __init__(self, client_name, genid, filename, metadata):
         self.client_name = client_name
         self.genid = genid
         self.filename = filename
-        self.name = '%s:%s:%s' % (client_name, genid, filename)
+        self.metadata = metadata
+        self.name = 'file %s:%s:%s' % (client_name, genid, filename)
 
     def do(self):
         logging.debug('Checking client=%s genid=%s filename=%s' %
                         (self.client_name, self.genid, self.filename))
         if self.repo.current_client != self.client_name:
             self.repo.open_client(self.client_name)
-        metadata = self.repo.get_metadata(self.genid, self.filename)
-        if metadata.isfile():
+        if self.metadata.isfile() and not self.settings['fsck-ignore-chunks']:
             chunkids = self.repo.get_file_chunks(self.genid, self.filename)
             checksummer = self.repo.new_checksummer()
             for chunkid in chunkids:
                 yield CheckChunk(chunkid, checksummer)
-            yield CheckFileChecksum(self.name, metadata.md5, chunkids,
-                                     checksummer)
+            yield CheckFileChecksum(
+                self.name, self.metadata.md5, chunkids, checksummer)
 
 
 class CheckDirectory(WorkItem):
@@ -106,7 +106,7 @@ class CheckDirectory(WorkItem):
         self.client_name = client_name
         self.genid = genid
         self.dirname = dirname
-        self.name = '%s:%s:%s' % (client_name, genid, dirname)
+        self.name = 'dir %s:%s:%s' % (client_name, genid, dirname)
         
     def do(self):
         logging.debug('Checking client=%s genid=%s dirname=%s' %
@@ -119,8 +119,9 @@ class CheckDirectory(WorkItem):
             metadata = self.repo.get_metadata(self.genid, pathname)
             if metadata.isdir():
                 yield CheckDirectory(self.client_name, self.genid, pathname)
-            else:
-                yield CheckFile(self.client_name, self.genid, pathname)
+            elif not self.settings['fsck-skip-files']:
+                yield CheckFile(
+                    self.client_name, self.genid, pathname, metadata)
 
 
 class CheckGeneration(WorkItem):
@@ -128,7 +129,7 @@ class CheckGeneration(WorkItem):
     def __init__(self, client_name, genid):
         self.client_name = client_name
         self.genid = genid
-        self.name = '%s:%s' % (client_name, genid)
+        self.name = 'generation %s:%s' % (client_name, genid)
         
     def do(self):
         logging.debug('Checking client=%s genid=%s' % 
@@ -150,7 +151,10 @@ class CheckGeneration(WorkItem):
         if n is None:
             self.error('%s:%s: no total data' % (self.client_name, self.genid))
 
-        return [CheckDirectory(self.client_name, self.genid, '/')]
+        if self.settings['fsck-skip-dirs']:
+            return []
+        else:
+            return [CheckDirectory(self.client_name, self.genid, '/')]
 
 
 class CheckGenerationIdsAreDifferent(WorkItem):
@@ -195,9 +199,11 @@ class CheckClient(WorkItem):
         logging.debug('Checking client=%s' % self.client_name)
         if self.repo.current_client != self.client_name:
             self.repo.open_client(self.client_name)
-        yield CheckGenerationIdsAreDifferent(self.client_name,
-                                              self.repo.list_generations())
-        for genid in self.repo.list_generations():
+        genids = self.repo.list_generations()
+        yield CheckGenerationIdsAreDifferent(self.client_name, genids)
+        if self.settings['fsck-last-generation-only'] and genids:
+            genids = genids[-1:]
+        for genid in genids:
             yield CheckGeneration(self.client_name, genid)
 
 
@@ -209,13 +215,17 @@ class CheckClientlist(WorkItem):
         logging.debug('Checking clientlist')
         clients = self.repo.clientlist.list_clients()
         for client_name in clients:
-            client_id = self.repo.clientlist.get_client_id(client_name)
-            client_dir = self.repo.client_dir(client_id)
-            yield CheckBTree(str(client_dir))
+            if client_name not in self.settings['fsck-ignore-client']:
+                yield CheckClientExists(client_name)
+        if not self.settings['fsck-skip-per-client-b-trees']:
+            for client_name in clients:
+                if client_name not in self.settings['fsck-ignore-client']:
+                    client_id = self.repo.clientlist.get_client_id(client_name)
+                    client_dir = self.repo.client_dir(client_id)
+                    yield CheckBTree(str(client_dir))
         for client_name in clients:
-            yield CheckClientExists(client_name)
-        for client_name in clients:
-            yield CheckClient(client_name)
+            if client_name not in self.settings['fsck-ignore-client']:
+                yield CheckClient(client_name)
 
 
 class CheckForExtraChunks(WorkItem):
@@ -241,13 +251,12 @@ class CheckBTree(WorkItem):
             logging.debug('B-tree %s does not exist, skipping' % self.dirname)
             return
         logging.debug('Checking B-tree %s' % self.dirname)
-        forest = larch.open_forest(allow_writes=False, dirname=self.dirname, 
+        fix = self.settings['fsck-fix']
+        forest = larch.open_forest(allow_writes=fix, dirname=self.dirname, 
                                    vfs=self.repo.fs)
-        fsck = larch.fsck.Fsck(forest, self.warning, self.error, 
-                               self.settings['fsck-fix'])
-        fsck.find_work()
-        for work in fsck.work:
-            work.do()
+        fsck = larch.fsck.Fsck(forest, self.warning, self.error, fix)
+        for work in fsck.find_work():
+            yield work
 
 
 class CheckRepository(WorkItem):
@@ -257,9 +266,10 @@ class CheckRepository(WorkItem):
         
     def do(self):
         logging.debug('Checking repository')
-        yield CheckBTree('clientlist')
-        yield CheckBTree('chunklist')
-        yield CheckBTree('chunksums')
+        if not self.settings['fsck-skip-shared-b-trees']:
+            yield CheckBTree('clientlist')
+            yield CheckBTree('chunklist')
+            yield CheckBTree('chunksums')
         yield CheckClientlist()
 
 
@@ -269,18 +279,44 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         self.app.add_subcommand('fsck', self.fsck)
         self.app.settings.boolean(['fsck-fix'], 
                                   'should fsck try to fix problems?')
+        self.app.settings.boolean(
+            ['fsck-ignore-chunks'],
+            'ignore chunks when checking repository integrity (assume all '
+                'chunks exist and are correct)')
+        self.app.settings.string_list(
+            ['fsck-ignore-client'],
+            'do not check repository data for cient NAME',
+            metavar='NAME')
+        self.app.settings.boolean(
+            ['fsck-last-generation-only'],
+            'check only the last generation for each client')
+        self.app.settings.boolean(
+            ['fsck-skip-dirs'],
+            'do not check anything about directories and their files')
+        self.app.settings.boolean(
+            ['fsck-skip-files'],
+            'do not check anything about files')
+        self.app.settings.boolean(
+            ['fsck-skip-per-client-b-trees'],
+            'do not check per-client B-trees')
+        self.app.settings.boolean(
+            ['fsck-skip-shared-b-trees'],
+            'do not check shared B-trees')
 
     def configure_ttystatus(self):
         self.app.ts.clear()
-        self.app.ts['item'] = None
+        self.app.ts['this_item'] = 0
         self.app.ts['items'] = 0
         self.app.ts.format(
-            'Checking %Counter(item)/%Integer(items): %String(item)')
+            'Checking %Integer(this_item)/%Integer(items): %String(item)')
         
     def fsck(self, args):
         '''Verify internal consistency of backup repository.'''
         self.app.settings.require('repository')
         logging.debug('fsck on %s' % self.app.settings['repository'])
+
+        self.configure_ttystatus()
+
         self.repo = self.app.open_repository()
         
         self.repo.lock_root()
@@ -294,21 +330,24 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         self.errors = 0
         self.chunkids_seen = set()
         self.work_items = []
-        self.add_item(CheckRepository())
-        final_items = [CheckForExtraChunks()]
-        
-        self.configure_ttystatus()
-        i = 0
+        self.add_item(CheckRepository(), append=True)
+
+        final_items = []
+        if not self.app.settings['fsck-ignore-chunks']:
+            final_items.append(CheckForExtraChunks())
+
         while self.work_items:
-            work = self.work_items.pop()
+            work = self.work_items.pop(0)
             logging.debug('doing: %s' % str(work))
             self.app.ts['item'] = work
-            for more in reversed(list(work.do() or [])):
-                self.add_item(more, append=True)
-            i += 1
+            self.app.ts.increase('this_item', 1)
+            pos = 0
+            for more in work.do() or []:
+                self.add_item(more, pos=pos)
+                pos += 1
             if not self.work_items:
                 for work in final_items:
-                    self.add_item(work)
+                    self.add_item(work, append=True)
                 final_items = []
 
         self.repo.unlock_shared()
@@ -321,7 +360,8 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         if self.errors:
             sys.exit(1)
 
-    def add_item(self, work, append=False):
+    def add_item(self, work, append=False, pos=0):
+        logging.debug('adding: %s' % str(work))
         work.warning = self.warning
         work.error = self.error
         work.repo = self.repo
@@ -330,14 +370,15 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         if append:
             self.work_items.append(work)
         else:
-            self.work_items.insert(0, work)
+            self.work_items.insert(pos, work)
         self.app.ts.increase('items', 1)
-        self.app.dump_memory_profile('after adding %s' % repr(work))
 
     def error(self, msg):
+        logging.error(msg)
         self.app.ts.error(msg)
         self.errors += 1
 
     def warning(self, msg):
+        logging.warning(msg)
         self.app.ts.notify(msg)
 

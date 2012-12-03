@@ -20,6 +20,9 @@ Version X.Y, released UNRELEASED
   from Christophe Vu-Brugier.
 * A setuid or setgid bit is now not restored if Obnam is not used by root
   or the same user as the owner of the restored file.
+* Many new settings to control "obnam fsck", mainly to reduce the amount
+  of checking being done in order to make it faster.
+* More frequent fsck progress reporting. Some speed optimisations to fsck.
 
 Bug fixes:
 
