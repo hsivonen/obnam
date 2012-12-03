@@ -15,6 +15,9 @@ Version X.Y, released UNRELEASED
   the `O_EXCL` flag to create the target file. This should allow things
   to work with both NFS and VFAT.
 * More detailed progress reporting during the backup setup phase.
+* Many new settings to control "obnam fsck", mainly to reduce the amount
+  of checking being done in order to make it faster.
+* More frequent fsck progress reporting. Some speed optimisations to fsck.
 
 Bug fixes:
 
