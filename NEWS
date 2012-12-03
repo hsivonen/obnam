@@ -50,6 +50,7 @@ Bug fixes:
   by ROGERIO DE CARVALHO BASTOS and patched by Peter Valdemar Mørch.
 * Setuid and setgid bits are now restored correctly, when restore happens
   as root. Reported by Pavel Kokolemin.
+* Obnam now complains if no backup roots have been specfied.
 
 Version 1.2, released 2012-10-06
 --------------------------------

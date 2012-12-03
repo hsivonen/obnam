@@ -274,8 +274,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 self.repo.start_generation()
             self.fs = None
             roots = self.app.settings['root'] + args
-            if roots:
-                self.backup_roots(roots)
+            if not roots:
+                raise obnamlib.Error('No backup roots specified')
+            self.backup_roots(roots)
             self.what('committing changes to repository')
             if not self.pretend:
                 self.repo.lock_shared()
