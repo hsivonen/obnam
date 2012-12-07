@@ -121,6 +121,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.app.ts['current-file'] = ''
         self.app.ts['uploaded-bytes'] = 0
         self.file_count = 0
+        self.backed_up_count = 0
         self.uploaded_bytes = 0
 
         self.app.ts.format('%ElapsedTime() '
@@ -194,14 +195,17 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         logging.info('Backup performance statistics:')
         logging.info('* files found: %s' % self.file_count)
+        logging.info('* files backed up: %s' % self.backed_up_count)
         logging.info('* uploaded data: %s bytes (%s %s)' % 
                         (self.uploaded_bytes, size_amount, size_unit))
         logging.info('* duration: %s s' % duration)
         logging.info('* average speed: %s %s' % (speed_amount, speed_unit))
-        self.app.ts.notify('Backed up %d files, uploaded %.1f %s '
-                           'in %s at %.1f %s average speed' %
-                            (self.file_count, size_amount, size_unit,
-                             duration_string, speed_amount, speed_unit))
+        self.app.ts.notify(
+            'Backed up %d files (of %d found), '
+            'uploaded %.1f %s in %s at %.1f %s average speed' %
+                (self.backed_up_count, self.file_count,
+                 size_amount, size_unit,
+                 duration_string, speed_amount, speed_unit))
 
     def error(self, msg, exc=None):
         self.errors = True
@@ -225,8 +229,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
     def backup(self, args):
         '''Backup data to repository.'''
         logging.info('Backup starts')
-        logging.info('Checkpoints every %s bytes' % 
-                        self.app.settings['checkpoint'])
+        logging.debug(
+            'Checkpoints every %s bytes' % self.app.settings['checkpoint'])
 
         self.app.settings.require('repository')
         self.app.settings.require('client-name')
@@ -473,6 +477,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 metadata = obnamlib.read_metadata(self.fs, pathname, st=st)
                 self.update_progress_with_file(pathname, metadata)
                 if self.needs_backup(pathname, metadata):
+                    self.backed_up_count += 1
                     yield pathname, metadata
             except GeneratorExit:
                 raise
@@ -486,13 +491,12 @@ class BackupPlugin(obnamlib.ObnamPlugin):
     def can_be_backed_up(self, pathname, st):
         if self.app.settings['one-file-system']:
             if st.st_dev != self.root_metadata.st_dev: 
-                logging.info('Excluding (one-file-system): %s' %
-                             pathname)
+                logging.debug('Excluding (one-file-system): %s' % pathname)
                 return False
 
         for pat in self.exclude_pats:
             if pat.search(pathname):
-                logging.info('Excluding (pattern): %s' % pathname)
+                logging.debug('Excluding (pattern): %s' % pathname)
                 return False
 
         if stat.S_ISDIR(st.st_mode) and self.app.settings['exclude-caches']:
@@ -505,7 +509,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 data = f.read(len(tag_contents))
                 f.close()
                 if data == tag_contents:
-                    logging.info('Excluding (cache dir): %s' % pathname)
+                    logging.debug('Excluding (cache dir): %s' % pathname)
                     return False
         
         return True
@@ -516,6 +520,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         # Directories always require backing up so that backup_dir_contents
         # can remove stuff that no longer exists from them.
         if current.isdir():
+            tracing.trace('%s is directory, so needs backup' % pathname)
             return True
         if self.pretend:
             gens = self.repo.list_generations()
@@ -524,20 +529,28 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             gen = gens[-1]
         else:
             gen = self.repo.new_generation
+        tracing.trace('gen=%s' % repr(gen))
         try:
             old = self.repo.get_metadata(gen, pathname)
-        except obnamlib.Error:
+        except obnamlib.Error, e:
             # File does not exist in the previous generation, so it
             # does need to be backed up.
+            tracing.trace('%s not in previous gen, so needs backup' % pathname)
+            tracing.trace('error: %s' % str(e))
+            tracing.trace(traceback.format_exc())
             return True
-        return (current.st_mtime_sec != old.st_mtime_sec or
-                current.st_mtime_nsec != old.st_mtime_nsec or
-                current.st_mode != old.st_mode or
-                current.st_nlink != old.st_nlink or
-                current.st_size != old.st_size or
-                current.st_uid != old.st_uid or
-                current.st_gid != old.st_gid or
-                current.xattr != old.xattr)
+
+        needs = (current.st_mtime_sec != old.st_mtime_sec or
+                 current.st_mtime_nsec != old.st_mtime_nsec or
+                 current.st_mode != old.st_mode or
+                 current.st_nlink != old.st_nlink or
+                 current.st_size != old.st_size or
+                 current.st_uid != old.st_uid or
+                 current.st_gid != old.st_gid or
+                 current.xattr != old.xattr)
+        if needs:
+            tracing.trace('%s has changed metadata, so needs backup' % pathname)
+        return needs
 
     def backup_parents(self, root):
         '''Back up parents of root, non-recursively.'''
@@ -718,9 +731,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         '''
         
         def is_parent(pathname):
-            x = pathname + os.sep
+            if not pathname.endswith(os.sep):
+                pathname += os.sep
             for new_root in new_roots:
-                if new_root.startswith(x):
+                if new_root.startswith(pathname):
                     return True
             return False
             
