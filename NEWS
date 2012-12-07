@@ -14,7 +14,7 @@ Version X.Y, released UNRELEASED
   fails, Obnam now further tries to use the `open(2)` system call with
   the `O_EXCL` flag to create the target file. This should allow things
   to work with both NFS and VFAT.
-* More detailed progress reporting during the backup setup phase.
+* More detailed progress reporting during the backup.
 * Manual page now covers the diff subcommand. Patch by Peter Valdemar Mørch.
 * Speed optimisation patch for backing up files in inode numbering order,
   from Christophe Vu-Brugier.

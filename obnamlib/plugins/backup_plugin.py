@@ -279,9 +279,20 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.backup_roots(roots)
             self.what('committing changes to repository')
             if not self.pretend:
+                self.what(
+                    'committing changes to repository: locking shared B-trees')
                 self.repo.lock_shared()
+                self.what(
+                    'committing changes to repository: '
+                    'adding chunks to shared B-trees')
                 self.add_chunks_to_shared()
+                self.what(
+                    'committing changes to repository: '
+                    'committing client')
                 self.repo.commit_client()
+                self.what(
+                    'committing changes to repository: '
+                    'committing shared B-trees')
                 self.repo.commit_shared()
             self.what('closing connection to repository')
             self.repo.fs.close()
@@ -347,11 +358,13 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 self.app.ts.error(msg)
 
     def backup_roots(self, roots):
+        self.what('connecting to to repository')
         self.fs = self.app.fsf.new(roots[0])
         self.fs.connect()
 
         absroots = []
         for root in roots:
+            self.what('determining absolute path for %s' % root)
             self.fs.reinit(root)
             absroots.append(self.fs.abspath('.'))
         
@@ -366,9 +379,13 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         for root in roots:
             logging.info('Backing up root %s' % root)
+            self.what('connecting to live data %s' % root)
             self.fs.reinit(root)
+            
+            self.what('scanning for files in %s' % root)
             absroot = self.fs.abspath('.')
             self.root_metadata = self.fs.lstat(absroot)
+
             for pathname, metadata in self.find_files(absroot):
                 logging.info('Backing up %s' % pathname)
                 try:
@@ -419,16 +436,25 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.what('making checkpoint')
         if not self.pretend:
             self.checkpoints.append(self.repo.new_generation)
+            self.what('making checkpoint: backing up parents')
             self.backup_parents('.')
+            self.what('making checkpoint: locking shared B-trees')
             self.repo.lock_shared()
+            self.what('making checkpoint: adding chunks to shared B-trees')
             self.add_chunks_to_shared()
+            self.what('making checkpoint: committing per-client B-tree')
             self.repo.commit_client(checkpoint=True)
+            self.what('making checkpoint: committing shared B-trees')
             self.repo.commit_shared()
             self.last_checkpoint = self.repo.fs.bytes_written
+            self.what('making checkpoint: re-opening repository')
             self.repo = self.app.open_repository(repofs=self.repo.fs.fs)
+            self.what('making checkpoint: locking client')
             self.repo.lock_client(self.app.settings['client-name'])
+            self.what('making checkpoint: starting a new generation')
             self.repo.start_generation()
             self.app.dump_memory_profile('at end of checkpoint')
+            self.what('making checkpoint: continuing backup')
         self.what(self.app.ts['current-file'])
 
     def find_files(self, root):
