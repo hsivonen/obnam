@@ -172,7 +172,6 @@ class App(cliapp.Application):
             self.hooks.call('config-loaded')
             cliapp.Application.process_args(self, args)
             self.hooks.call('shutdown')
-            logging.info('Obnam ends')
         except larch.Error, e:
             logging.critical(str(e))
             sys.stderr.write('ERROR: %s\n' % str(e))
