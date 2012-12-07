@@ -51,11 +51,12 @@ class VirtualFileSystem(object):
         self.baseurl = baseurl
         self.bytes_read = 0
         self.bytes_written = 0
-        logging.info('VFS: __init__: baseurl=%s' % self.baseurl)
+        logging.debug('VFS: __init__: baseurl=%s' % self.baseurl)
 
     def log_stats(self):
-        logging.info('VFS: baseurl=%s read=%d written=%d' %
-                     (self.baseurl, self.bytes_read, self.bytes_written))
+        logging.debug(
+            'VFS: baseurl=%s read=%d written=%d' %
+                (self.baseurl, self.bytes_read, self.bytes_written))
 
     def connect(self):
         '''Connect to filesystem.'''
