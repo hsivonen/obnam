@@ -137,6 +137,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.app.ts['what'] = what_what
         self.app.ts.flush()
 
+    def update_progress(self):
+        self.app.ts['not-shown'] = 'not shown'
+
     def configure_ttystatus_for_checkpoint_removal(self):
         self.what('removing checkpoints')
 
@@ -613,6 +616,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         chunkids = []
         while True:
             tracing.trace('reading some data')
+            self.update_progress()
             data = f.read(chunk_size)
             if not data:
                 tracing.trace('end of data')
