@@ -4,7 +4,7 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
-Version X.Y, released UNRELEASED
+Version 1.3, released 2012-12-16
 --------------------------------
 
 * When creating files in the backup repository, Obnam tries to avoid NFS
