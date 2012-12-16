@@ -28,11 +28,20 @@ and tools, which you can get from:
 * <http://liw.fi/ttystatus/>
 * <http://liw.fi/coverage-test-runner/> (for automatic tests)
 * <http://liw.fi/tracing/>
+* <http://liw.fi/cliapp/>
+* <http://liw.fi/genbackupdata/>
+* <http://liw.fi/summain/>
+* <http://liw.fi/cmdtest/>
 * <http://liw.fi/seivot/> (for benchmarks)
 
 You also need third party libraries:
 
 * paramiko: <http://www.lag.net/paramiko/>
+
+See debian/control for the full set of build dependencies and runtime
+dependencies on a Debian system. (That set actually gets tested. The
+above list is maintained manually and may get out of date from time
+to time.)
 
 Use
 ---
