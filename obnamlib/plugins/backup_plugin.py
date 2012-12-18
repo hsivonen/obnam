@@ -376,9 +376,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             absroots.append(self.fs.abspath('.'))
         
         if not self.pretend:
-            # This only makes sense for the first generation.
-            if len(self.repo.list_generations()) > 1:
-                self.remove_old_roots(absroots)
+            self.remove_old_roots(absroots)
 
         self.checkpoints = []
         self.last_checkpoint = 0
@@ -753,9 +751,13 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     helper(pathname)
             else:
                 tracing.trace('is extra and removed: %s' % dirname)
+                self.what('removing %s from new generation' % dirname)
                 self.repo.remove(dirname)
+                self.what(msg)
 
         assert not self.pretend
+        msg = 'removing old backup roots from new generation'
+        self.what(msg)
         tracing.trace('new_roots: %s' % repr(new_roots))
         gen_id = self.repo.new_generation
         helper('/')
