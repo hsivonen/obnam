@@ -131,7 +131,13 @@ def _cached_getgrgid(gid): # pragma: no cover
 
 def get_xattrs_as_blob(fs, filename): # pragma: no cover
     tracing.trace('filename=%s' % filename)
-    names = fs.llistxattr(filename)
+    
+    try:
+        names = fs.llistxattr(filename)
+    except (OSError, IOError), e:
+        if e.errno == errno.EOPNOTSUPP:
+            return None
+        raise
     tracing.trace('names=%s' % repr(names))
     if not names:
         return None

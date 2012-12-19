@@ -18,6 +18,12 @@ Version X.Y, released UNRELEASED
 * The default sizes for the `lru-size` and `upload-queue-size` settings
   have been reduced, to reduce the memory impact of Obnam.
 
+Bug fixes:
+
+* If listing extended attributes for a filesystem that does not support
+  them, Obnam no longer crashes, just silently does not backup extended
+  attributes. Which aren't there anyway.
+
 Version 1.3, released 2012-12-16
 --------------------------------
 
