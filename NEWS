@@ -8,6 +8,8 @@ Version X.Y, released UNRELEASED
 --------------------------------
 
 * Even more detailed progress reporting during a backup.
+* Add --fsck-skip-generations option to tell fsck to not check any
+  generation metadata.
 
 Version 1.3, released 2012-12-16
 --------------------------------
