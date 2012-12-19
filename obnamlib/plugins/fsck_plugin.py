@@ -201,7 +201,9 @@ class CheckClient(WorkItem):
             self.repo.open_client(self.client_name)
         genids = self.repo.list_generations()
         yield CheckGenerationIdsAreDifferent(self.client_name, genids)
-        if self.settings['fsck-last-generation-only'] and genids:
+        if self.settings['fsck-skip-generations']:
+            genids = []
+        elif self.settings['fsck-last-generation-only'] and genids:
             genids = genids[-1:]
         for genid in genids:
             yield CheckGeneration(self.client_name, genid)
@@ -290,6 +292,9 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         self.app.settings.boolean(
             ['fsck-last-generation-only'],
             'check only the last generation for each client')
+        self.app.settings.boolean(
+            ['fsck-skip-generations'],
+            'do not check any generations')
         self.app.settings.boolean(
             ['fsck-skip-dirs'],
             'do not check anything about directories and their files')
