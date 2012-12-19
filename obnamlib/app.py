@@ -135,6 +135,8 @@ class App(cliapp.Application):
         self.pm.load_plugins()
         self.pm.enable_plugins()
         self.hooks.call('plugins-loaded')
+        
+        self.settings['log-level'] = 'info'
 
     def deduce_client_name(self):
         return socket.gethostname()
