@@ -1,12 +1,8 @@
 ./setup.py
 ./obnamlib/__init__.py
 ./obnamlib/app.py
-./obnamlib/status.py
 ./obnamlib/vfs.py
-./obnamlib/objs.py
-./obnamlib/plugins/foo_plugin.py
 ./obnamlib/plugins/backup_plugin.py
-./obnamlib/plugins/terminal_status_plugin.py
 ./obnamlib/plugins/restore_plugin.py
 ./obnamlib/plugins/show_plugin.py
 ./obnamlib/plugins/verify_plugin.py
