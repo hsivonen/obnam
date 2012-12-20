@@ -279,34 +279,55 @@ class FsckPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
         self.app.add_subcommand('fsck', self.fsck)
-        self.app.settings.boolean(['fsck-fix'], 
-                                  'should fsck try to fix problems?')
+        
+        group = 'Integrity checking (fsck)'
+        
+        self.app.settings.boolean(
+            ['fsck-fix'], 
+            'should fsck try to fix problems?',
+            group=group)
+
         self.app.settings.boolean(
             ['fsck-ignore-chunks'],
             'ignore chunks when checking repository integrity (assume all '
-                'chunks exist and are correct)')
+                'chunks exist and are correct)',
+            group=group)
+
         self.app.settings.string_list(
             ['fsck-ignore-client'],
             'do not check repository data for cient NAME',
-            metavar='NAME')
+            metavar='NAME',
+            group=group)
+
         self.app.settings.boolean(
             ['fsck-last-generation-only'],
-            'check only the last generation for each client')
+            'check only the last generation for each client',
+            group=group)
+
         self.app.settings.boolean(
             ['fsck-skip-generations'],
-            'do not check any generations')
+            'do not check any generations',
+            group=group)
+
         self.app.settings.boolean(
             ['fsck-skip-dirs'],
-            'do not check anything about directories and their files')
+            'do not check anything about directories and their files',
+            group=group)
+
         self.app.settings.boolean(
             ['fsck-skip-files'],
-            'do not check anything about files')
+            'do not check anything about files',
+            group=group)
+
         self.app.settings.boolean(
             ['fsck-skip-per-client-b-trees'],
-            'do not check per-client B-trees')
+            'do not check per-client B-trees',
+            group=group)
+
         self.app.settings.boolean(
             ['fsck-skip-shared-b-trees'],
-            'do not check shared B-trees')
+            'do not check shared B-trees',
+            group=group)
 
     def configure_ttystatus(self):
         self.app.ts.clear()
