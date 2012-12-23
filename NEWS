@@ -23,6 +23,9 @@ Bug fixes:
 * If listing extended attributes for a filesystem that does not support
   them, Obnam no longer crashes, just silently does not backup extended
   attributes. Which aren't there anyway.
+* A bug in handling stat lookup errors was fixed. Reported by
+  Peter Palfrader. Symptom: `AttributeError: 'exceptions.OSError'
+  object has no attribute 'st_ino'` in an error message or log file.
 
 Version 1.3, released 2012-12-16
 --------------------------------

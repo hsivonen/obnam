@@ -88,7 +88,12 @@ class VirtualFileSystem(object):
         '''Return list of basenames of entities at pathname.'''
 
     def listdir2(self, pathname):
-        '''Return list of basenames and stats of entities at pathname.'''
+        '''Return list of basenames and stats of entities at pathname.
+        
+        The stat entity may be an exception object instead, to indicate
+        an error.
+        
+        '''
 
     def lock(self, lockname, data):
         '''Create a lock file with the given name.'''

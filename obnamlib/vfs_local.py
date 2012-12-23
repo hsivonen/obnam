@@ -355,6 +355,13 @@ class LocalFS(obnamlib.VirtualFileSystem):
                 st = self.lstat(os.path.join(dirname, name))
             except OSError, e: # pragma: no cover
                 st = e
-            result.append((name, st))
-        return sorted(result, key=lambda st: st[1].st_ino)
+                ino = -1
+            else:
+                ino = st.st_ino
+            result.append((ino, name, st))
+
+        # We sort things in inode order, for speed when doing namei lookups
+        # when backing up.
+        result.sort()
+        return [(name, st) for ino, name, st in result]
 
