@@ -157,7 +157,14 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             else:
                 self.restore_first_link(gen, pathname, metadata)
             if set_metadata and self.write_ok:
-                obnamlib.set_metadata(self.fs, './' + pathname, metadata)
+                try:
+                    obnamlib.set_metadata(self.fs, './' + pathname, metadata)
+                except (IOError, OSError), e:
+                    msg = ('Could not set metadata: %s: %d: %s' %
+                            (pathname, e.errno, e.strerror))
+                    logging.error(msg)
+                    self.app.ts.notify(msg)
+                    self.errors = True
 
     def restore_dir(self, gen, root, metadata):
         logging.debug('restoring dir %s' % root)
