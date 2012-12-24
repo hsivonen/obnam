@@ -17,6 +17,7 @@
 import logging
 import os
 import stat
+import time
 import ttystatus
 
 import obnamlib
@@ -100,6 +101,10 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         if not args:
             logging.debug('no args given, so restoring everything')
             args = ['/']
+
+        self.downloaded_bytes = 0
+        self.file_count = 0
+        self.started = time.time()
     
         self.repo = self.app.open_repository()
         self.repo.open_client(self.app.settings['client-name'])
@@ -129,6 +134,9 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         if self.write_ok:
             self.fs.close()
         
+        self.app.ts.clear()
+        self.report_stats()
+        
         self.app.ts.finish()
                 
         if self.errors:
@@ -136,6 +144,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
 
     def restore_something(self, gen, root):
         for pathname, metadata in self.repo.walk(gen, root, depth_first=True):
+            self.file_count += 1
             self.app.ts['current'] = pathname
             dirname = os.path.dirname(pathname)
             if self.write_ok and not self.fs.exists('./' + dirname):
@@ -211,6 +220,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
                 else:
                     f.write(contents)
                     summer.update(contents)
+                    self.downloaded_bytes += len(contents)
             except obnamlib.MissingFilterError, e:
                 msg = 'Missing filter error during restore: %s' % filename
                 logging.error(msg)
@@ -232,6 +242,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             data = self.repo.get_chunk(chunkid)
             self.verify_chunk_checksum(data, chunkid)
             checksummer.update(data)
+            self.downloaded_bytes += len(data)
             if len(data) != len(zeroes):
                 zeroes = '\0' * len(data)
             if data == zeroes:
@@ -272,4 +283,62 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         logging.debug('restoring device %s' % filename)
         if self.write_ok:
             self.fs.mknod('./' + filename, metadata.st_mode)
+
+    def report_stats(self):
+        size_table = [
+            (1024**4, 'TiB'),
+            (1024**3, 'GiB'),
+            (1024**2, 'MiB'),
+            (1024**1, 'KiB'),
+            (0, 'B')
+        ]
+        
+        for size_base, size_unit in size_table:
+            if self.downloaded_bytes >= size_base:
+                if size_base > 0:
+                    size_amount = (float(self.downloaded_bytes) /
+                                    float(size_base))
+                else:
+                    size_amount = float(self.downloaded_bytes)
+                break
+
+        speed_table = [
+            (1024**3, 'GiB/s'),
+            (1024**2, 'MiB/s'),
+            (1024**1, 'KiB/s'),
+            (0, 'B/s')
+        ]
+        duration = time.time() - self.started
+        speed = float(self.downloaded_bytes) / duration
+        for speed_base, speed_unit in speed_table:
+            if speed >= speed_base:
+                if speed_base > 0:
+                    speed_amount = speed / speed_base
+                else:
+                    speed_amount = speed
+                break
+
+        duration_string = ''
+        seconds = duration
+        if seconds >= 3600:
+            duration_string += '%dh' % int(seconds/3600)
+            seconds %= 3600
+        if seconds >= 60:
+            duration_string += '%dm' % int(seconds/60)
+            seconds %= 60
+        if seconds > 0:
+            duration_string += '%ds' % round(seconds)
+
+        logging.info('Restore performance statistics:')
+        logging.info('* files restored: %s' % self.file_count)
+        logging.info('* downloaded data: %s bytes (%s %s)' % 
+                        (self.downloaded_bytes, size_amount, size_unit))
+        logging.info('* duration: %s s' % duration)
+        logging.info('* average speed: %s %s' % (speed_amount, speed_unit))
+        self.app.ts.notify(
+            'Restored %d files, '
+            'downloaded %.1f %s in %s at %.1f %s average speed' %
+                (self.file_count,
+                 size_amount, size_unit,
+                 duration_string, speed_amount, speed_unit))
 

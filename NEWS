@@ -17,6 +17,8 @@ Version X.Y, released UNRELEASED
   development and don't want to have massive log files.)
 * The default sizes for the `lru-size` and `upload-queue-size` settings
   have been reduced, to reduce the memory impact of Obnam.
+* `obnam restore` now reports transfer statistics at the end, similarly
+  to what `obnam backup` does. Suggested by "S. B.".
 
 Bug fixes:
 
