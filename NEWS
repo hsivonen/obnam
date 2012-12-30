@@ -30,6 +30,9 @@ Bug fixes:
   object has no attribute 'st_ino'` in an error message or log file.
 * A bug in a restore crashing when failing to set extended attributes
   on the restored file was fixed. Reported by "S. B.".
+* Made it clearer what is happening when unlocking the repository due to
+  errors, and fixed it so that a failure to unlock is also an error.
+  Reported by andrewsh.
 
 Version 1.3, released 2012-12-16
 --------------------------------

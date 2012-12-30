@@ -320,15 +320,19 @@ class BackupPlugin(obnamlib.ObnamPlugin):
     def unlock_when_error(self):
         try:
             if self.repo.got_client_lock:
-                logging.info('Unlocking client because of error')
+                logging.info('Attempting to unlock client because of error')
                 self.repo.unlock_client()
             if self.repo.got_shared_lock:
-                logging.info('Unlocking shared trees because of error')
+                logging.info(
+                    'Attempting to unlock shared trees because of error')
                 self.repo.unlock_shared()
         except BaseException, e2:
-            logging.debug('Got second exception while unlocking: %s' % 
-                            str(e2))
+            logging.error(
+                'Error while unlocking due to error: %s' % str(e2))
             logging.debug(traceback.format_exc())
+            raise
+        else:
+            logging.info('Successfully unlocked')
 
     def add_chunks_to_shared(self):
         for chunkid, checksum in self.chunkid_pool:
