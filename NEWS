@@ -33,6 +33,8 @@ Bug fixes:
 * Made it clearer what is happening when unlocking the repository due to
   errors, and fixed it so that a failure to unlock is also an error.
   Reported by andrewsh.
+* The dependency on Larch is now for 1.20121216 or newer, since that is
+  needed for fsck to work.
 
 Version 1.3, released 2012-12-16
 --------------------------------
