@@ -35,14 +35,15 @@ class ChunkList(obnamlib.RepositoryTree):
 
     def __init__(self, fs, node_size, upload_queue_size, lru_size, hooks):
         tracing.trace('new ChunkList')
-        self.key_bytes = len(self.key(0))
+        self.fmt = '!Q'
+        self.key_bytes = struct.calcsize(self.fmt)
         obnamlib.RepositoryTree.__init__(self, fs, 'chunklist', self.key_bytes, 
                                          node_size, upload_queue_size, 
                                          lru_size, hooks)
         self.keep_just_one_tree = True
 
     def key(self, chunk_id):
-        return struct.pack('!Q', chunk_id)
+        return struct.pack(self.fmt, chunk_id)
 
     def add(self, chunk_id, checksum):
         tracing.trace('chunk_id=%s', chunk_id)

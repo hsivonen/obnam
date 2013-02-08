@@ -49,7 +49,7 @@ class ClientList(obnamlib.RepositoryTree):
         tracing.trace('new ClientList')
         self.hash_len = len(self.hashfunc(''))
         self.fmt = '!%dsQB' % self.hash_len
-        self.key_bytes = len(self.key('', 0, 0))
+        self.key_bytes = struct.calcsize(self.fmt)
         self.minkey = self.hashkey('\x00' * self.hash_len, 0, 0)
         self.maxkey = self.hashkey('\xff' * self.hash_len, obnamlib.MAX_ID, 
                                    self.SUBKEY_MAX)

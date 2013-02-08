@@ -33,7 +33,7 @@ class ChecksumTree(obnamlib.RepositoryTree):
                  upload_queue_size, lru_size, hooks):
         tracing.trace('new ChecksumTree name=%s' % name)
         self.fmt = '!%dsQQ' % checksum_length
-        key_bytes = len(self.key('', 0, 0))
+        key_bytes = struct.calcsize(self.fmt)
         obnamlib.RepositoryTree.__init__(self, fs, name, key_bytes, node_size, 
                                          upload_queue_size, lru_size, hooks)
         self.keep_just_one_tree = True
