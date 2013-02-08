@@ -39,7 +39,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         self.app.add_subcommand('clients', self.clients)
         self.app.add_subcommand('generations', self.generations)
         self.app.add_subcommand('genids', self.genids)
-        self.app.add_subcommand('ls', self.ls, arg_synopsis='[GENERATION]...')
+        self.app.add_subcommand('ls', self.ls, arg_synopsis='[FILE]...')
         self.app.add_subcommand('diff', self.diff,
                                 arg_synopsis='[GENERATION1] GENERATION2')
         self.app.add_subcommand('nagios-last-backup-age', 
@@ -134,14 +134,19 @@ class ShowPlugin(obnamlib.ObnamPlugin):
     def ls(self, args):
         '''List contents of a generation.'''
         self.open_repository()
-        for gen in args or [self.app.settings['generation']] or ["latest"]:
+
+        if len(args) is 0:
+            args = ['/']
+
+        for gen in self.app.settings['generation']:
             gen = self.repo.genspec(gen)
             started, ended = self.repo.client.get_generation_times(gen)
             started = self.format_time(started)
             ended = self.format_time(ended)
             self.app.output.write(
                 'Generation %s (%s - %s)\n' % (gen, started, ended))
-            self.show_objects(gen, '/')
+            for ls_file in args:
+                self.show_objects(gen, ls_file)
         self.repo.fs.close()
     
     def format_time(self, timestamp):
