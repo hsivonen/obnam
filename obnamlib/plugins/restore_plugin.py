@@ -65,9 +65,9 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         self.app.add_subcommand('restore', self.restore, 
                                 arg_synopsis='[DIRECTORY]...')
         self.app.settings.string(['to'], 'where to restore')
-        self.app.settings.string(['generation'], 
+        self.app.settings.string_list(['generation'],
                                 'which generation to restore',
-                                 default='latest')
+                                 default=['latest'])
 
     @property
     def write_ok(self):
@@ -118,7 +118,12 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         
         self.errors = False
         
-        gen = self.repo.genspec(self.app.settings['generation'])
+        generations = self.app.settings['generation']
+        if len(generations) != 1:
+            raise obnamlib.Error(
+                'The restore command wants exactly one generation option')
+
+        gen = self.repo.genspec(generations[0])
 
         self.configure_ttystatus()
         self.app.ts['total'] = self.repo.client.get_generation_file_count(gen)

@@ -49,6 +49,9 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         self.app.settings.require('repository')
         self.app.settings.require('client-name')
         self.app.settings.require('generation')
+        if len(self.app.settings['generation']) != 1:
+            raise obnamlib.Error(
+                'verify must be given exactly one generation')
 
         logging.debug('verifying generation %s' % 
                         self.app.settings['generation'])
@@ -71,7 +74,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         self.fs.reinit(root_url)
 
         self.failed = False
-        gen = self.repo.genspec(self.app.settings['generation'])
+        gen = self.repo.genspec(self.app.settings['generation'][0])
 
         self.app.ts['done'] = 0
         self.app.ts['total'] = 0
