@@ -238,14 +238,16 @@ def set_metadata(fs, filename, metadata, getuid=None):
     
     '''
 
+    symlink = stat.S_ISLNK(metadata.st_mode)
+    if symlink:
+        fs.symlink(metadata.target, filename)
+
     # Set owner before mode, so that a setuid bit does not get reset.
     getuid = getuid or os.getuid
     if getuid() == 0:
         fs.lchown(filename, metadata.st_uid, metadata.st_gid)
 
-    if stat.S_ISLNK(metadata.st_mode):
-        fs.symlink(metadata.target, filename)
-    else:
+    if not symlink:
         # If we are not the owner, and not root, do not restore setuid/setgid.
         mode = metadata.st_mode
         if getuid() not in (0, metadata.st_uid): # pragma: no cover
