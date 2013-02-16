@@ -37,6 +37,8 @@ Bug fixes:
   Reported by andrewsh.
 * The dependency on Larch is now for 1.20121216 or newer, since that is
   needed for fsck to work.
+* The manual page did not document the client name arguments to the
+  `add-key` and `remove-key` subcommands. Reported by Lars Kruse.
 
 Version 1.3, released 2012-12-16
 --------------------------------

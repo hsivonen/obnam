@@ -59,8 +59,10 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         self.app.add_subcommand('client-keys', self.client_keys)
         self.app.add_subcommand('list-keys', self.list_keys)
         self.app.add_subcommand('list-toplevels', self.list_toplevels)
-        self.app.add_subcommand('add-key', self.add_key)
-        self.app.add_subcommand('remove-key', self.remove_key)
+        self.app.add_subcommand(
+            'add-key', self.add_key, arg_synopsis='[CLIENT-NAME]...')
+        self.app.add_subcommand(
+            'remove-key', self.remove_key, arg_synopsis='[CLIENT-NAME]...')
         self.app.add_subcommand('remove-client', self.remove_client,
                                 arg_synopsis='[CLIENT-NAME]...')
         
