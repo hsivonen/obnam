@@ -43,6 +43,7 @@ Bug fixes:
   David Fries.
 * Only set ssh user/port if explicitily requested, otherwise let ssh
   select them.  Reported by Michael Goetze, fixed by David Fries.
+* Fix problem with old version of paramiko and chdir. Fixed by Nick Altmann.
 
 Version 1.3, released 2012-12-16
 --------------------------------

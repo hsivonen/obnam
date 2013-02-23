@@ -148,6 +148,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
             self._connect_paramiko()
         if self.create_path_if_missing:
             self._create_root_if_missing()
+        self.chdir(self.path)
         self._initial_dir = self.getcwd()
         self.chdir(self.path)
 
