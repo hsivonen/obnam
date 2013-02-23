@@ -41,6 +41,8 @@ Bug fixes:
   `add-key` and `remove-key` subcommands. Reported by Lars Kruse.
 * Restoring symlinks as root would fail. Reported and fixed by
   David Fries.
+* Only set ssh user/port if explicitily requested, otherwise let ssh
+  select them.  Reported by Michael Goetze, fixed by David Fries.
 
 Version 1.3, released 2012-12-16
 --------------------------------

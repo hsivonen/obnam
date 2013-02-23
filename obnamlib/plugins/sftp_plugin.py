@@ -41,9 +41,6 @@ with warnings.catch_warnings():
 import obnamlib
 
 
-DEFAULT_SSH_PORT = 22
-
-
 def ioerror_to_oserror(method):
     '''Decorator to convert an IOError exception to OSError.
     
@@ -158,9 +155,12 @@ class SftpFS(obnamlib.VirtualFileSystem):
         args = ['ssh',
                 '-oForwardX11=no', '-oForwardAgent=no',
                 '-oClearAllForwardings=yes', '-oProtocol=2',
-                '-p', str(self.port),
-                '-l', self.user,
                 '-s']
+        # default user/port from ssh (could be a per host configuration)
+        if self.port:
+            args += ['-p', str(self.port)]
+        if self.user:
+            args += ['-l', self.user]
         if self.settings and self.settings['ssh-key']:
             args += ['-i', self.settings['ssh-key']]
         if self.settings and self.settings['strict-ssh-host-keys']:
@@ -185,8 +185,13 @@ class SftpFS(obnamlib.VirtualFileSystem):
         return True
 
     def _connect_paramiko(self):
-        logging.debug('connect_paramiko: host=%s port=%s' % (self.host, self.port))
-        self.transport = paramiko.Transport((self.host, self.port))
+        logging.debug(
+            'connect_paramiko: host=%s port=%s' % (self.host, self.port))
+        if self.port:
+            remote = (self.host, self.port)
+        else:
+            remote = (self.host)
+        self.transport = paramiko.Transport(remote)
         self.transport.connect()
         logging.debug('connect_paramiko: connected')
         try:
@@ -233,6 +238,8 @@ class SftpFS(obnamlib.VirtualFileSystem):
         logging.debug('Host key for %s OK' % hostname)        
     
     def _authenticate(self, username):
+        if not username:
+            username = self._get_username()
         for key in self._find_auth_keys():
             try:
                 self.transport.auth_publickey(username, key)
@@ -280,12 +287,12 @@ class SftpFS(obnamlib.VirtualFileSystem):
         if '@' in netloc:
             user, netloc = netloc.split('@', 1)
         else:
-            user = self._get_username()
+            user = None
 
         if ':' in netloc:
             host, port = netloc.split(':', 1)
             if port == '':
-                port = DEFAULT_SSH_PORT
+                port = None
             else:
                 try:
                     port = int(port)
@@ -296,7 +303,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
                     raise morphlib.Error(msg)
         else:
             host = netloc
-            port = DEFAULT_SSH_PORT
+            port = None
 
         if path.startswith('/~/'):
             path = path[3:]
