@@ -110,24 +110,25 @@ lstat_wrapper(PyObject *self, PyObject *args)
     ret = lstat(filename, &st);
     if (ret == -1)
         ret = errno;
-    return Py_BuildValue("iLLLLLLLLLLLLLLLL", 
+
+    return Py_BuildValue("iKKKKKKKLLLLKLKLK", 
                          ret,
-                         (long long) st.st_dev,
-                         (long long) st.st_ino,
-                         (long long) st.st_mode,
-                         (long long) st.st_nlink,
-                         (long long) st.st_uid,
-                         (long long) st.st_gid,
-                         (long long) st.st_rdev,
+                         (unsigned long long) st.st_dev,
+                         (unsigned long long) st.st_ino,
+                         (unsigned long long) st.st_mode,
+                         (unsigned long long) st.st_nlink,
+                         (unsigned long long) st.st_uid,
+                         (unsigned long long) st.st_gid,
+                         (unsigned long long) st.st_rdev,
                          (long long) st.st_size,
                          (long long) st.st_blksize,
                          (long long) st.st_blocks,
                          (long long) st.st_atim.tv_sec,
-                         (long long) st.st_atim.tv_nsec,
+                         (unsigned long long) st.st_atim.tv_nsec,
                          (long long) st.st_mtim.tv_sec,
-                         (long long) st.st_mtim.tv_nsec,
+                         (unsigned long long) st.st_mtim.tv_nsec,
                          (long long) st.st_ctim.tv_sec,
-                         (long long) st.st_ctim.tv_nsec);
+                         (unsigned long long) st.st_ctim.tv_nsec);
 }
 
 
