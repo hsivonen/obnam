@@ -239,6 +239,17 @@ class SetMetadataTests(unittest.TestCase):
 
 class MetadataCodingTests(unittest.TestCase):
 
+    def equal(self, meta1, meta2):
+        for name in dir(meta1):
+            if name in obnamlib.metadata.metadata_fields:
+                value1 = getattr(meta1, name)
+                value2 = getattr(meta2, name)
+                self.assertEqual(
+                    value1,
+                    value2,
+                    'attribute %s must be equal (%s vs %s)' % 
+                        (name, value1, value2))
+
     def test_round_trip(self):
         metadata = obnamlib.metadata.Metadata(st_mode=1, 
                                               st_mtime_sec=2, 
@@ -258,13 +269,7 @@ class MetadataCodingTests(unittest.TestCase):
                                               md5='checksum')
         encoded = obnamlib.encode_metadata(metadata)
         decoded = obnamlib.decode_metadata(encoded)
-        for name in dir(metadata):
-            if name in obnamlib.metadata.metadata_fields:
-                self.assertEqual(getattr(metadata, name), 
-                                 getattr(decoded, name),
-                                 'attribute %s must be equal (%s vs %s)' % 
-                                    (name, getattr(metadata, name),
-                                     getattr(decoded, name)))
+        self.equal(metadata, decoded)
 
     def test_round_trip_for_None_values(self):
         metadata = obnamlib.metadata.Metadata()
@@ -274,4 +279,24 @@ class MetadataCodingTests(unittest.TestCase):
             if name in obnamlib.metadata.metadata_fields:
                 self.assertEqual(getattr(decoded, name), None,
                                  'attribute %s must be None' % name)
+
+    def test_round_trip_for_maximum_values(self):
+        unsigned_max = 2**64 - 1
+        signed_max = 2**63 - 1
+        metadata = obnamlib.metadata.Metadata(
+            st_mode=unsigned_max,
+            st_mtime_sec=signed_max,
+            st_mtime_nsec=unsigned_max,
+            st_nlink=unsigned_max,
+            st_size=signed_max, 
+            st_uid=unsigned_max, 
+            st_blocks=signed_max, 
+            st_dev=unsigned_max,
+            st_gid=unsigned_max, 
+            st_ino=unsigned_max,  
+            st_atime_sec=signed_max, 
+            st_atime_nsec=unsigned_max)
+        encoded = obnamlib.encode_metadata(metadata)
+        decoded = obnamlib.decode_metadata(encoded)
+        self.equal(metadata, decoded)
 
