@@ -286,24 +286,45 @@ def encode_metadata(metadata):
         if getattr(metadata, name) is not None:
             flags |= (1 << i)
 
-    packed = metadata_format.pack(flags,
-                                  metadata.st_mode or 0,
-                                  metadata.st_mtime_sec or 0,
-                                  metadata.st_mtime_nsec or 0,
-                                  metadata.st_atime_sec or 0,
-                                  metadata.st_atime_nsec or 0,
-                                  metadata.st_nlink or 0,
-                                  metadata.st_size or 0,
-                                  metadata.st_uid or 0,
-                                  metadata.st_gid or 0,
-                                  metadata.st_dev or 0,
-                                  metadata.st_ino or 0,
-                                  metadata.st_blocks or 0,
-                                  len(metadata.groupname or ''),
-                                  len(metadata.username or ''),
-                                  len(metadata.target or ''),
-                                  len(metadata.md5 or ''),
-                                  len(metadata.xattr or ''))
+    try:
+        packed = metadata_format.pack(flags,
+                                      metadata.st_mode or 0,
+                                      metadata.st_mtime_sec or 0,
+                                      metadata.st_mtime_nsec or 0,
+                                      metadata.st_atime_sec or 0,
+                                      metadata.st_atime_nsec or 0,
+                                      metadata.st_nlink or 0,
+                                      metadata.st_size or 0,
+                                      metadata.st_uid or 0,
+                                      metadata.st_gid or 0,
+                                      metadata.st_dev or 0,
+                                      metadata.st_ino or 0,
+                                      metadata.st_blocks or 0,
+                                      len(metadata.groupname or ''),
+                                      len(metadata.username or ''),
+                                      len(metadata.target or ''),
+                                      len(metadata.md5 or ''),
+                                      len(metadata.xattr or ''))
+    except TypeError, e: # pragma: no cover
+        logging.error('ERROR: Packing error due to %s' % str(e))
+        logging.error('ERROR: st_mode=%s' % repr(metadata.st_mode))
+        logging.error('ERROR: st_mtime_sec=%s' % repr(metadata.st_mtime_sec))
+        logging.error('ERROR: st_mtime_nsec=%s' % repr(metadata.st_mtime_nsec))
+        logging.error('ERROR: st_atime_sec=%s' % repr(metadata.st_atime_sec))
+        logging.error('ERROR: st_atime_nsec=%s' % repr(metadata.st_atime_nsec))
+        logging.error('ERROR: st_nlink=%s' % repr(metadata.st_nlink))
+        logging.error('ERROR: st_size=%s' % repr(metadata.st_size))
+        logging.error('ERROR: st_uid=%s' % repr(metadata.st_uid))
+        logging.error('ERROR: st_gid=%s' % repr(metadata.st_gid))
+        logging.error('ERROR: st_dev=%s' % repr(metadata.st_dev))
+        logging.error('ERROR: st_ino=%s' % repr(metadata.st_ino))
+        logging.error('ERROR: st_blocks=%s' % repr(metadata.st_blocks))
+        logging.error('ERROR: groupname=%s' % repr(metadata.groupname))
+        logging.error('ERROR: username=%s' % repr(metadata.username))
+        logging.error('ERROR: target=%s' % repr(metadata.target))
+        logging.error('ERROR: md5=%s' % repr(metadata.md5))
+        logging.error('ERROR: xattr=%s' % repr(metadata.xattr))
+        raise
     return (packed + 
              (metadata.groupname or '') +
              (metadata.username or '') +
