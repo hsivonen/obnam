@@ -44,6 +44,8 @@ Bug fixes:
 * Only set ssh user/port if explicitily requested, otherwise let ssh
   select them.  Reported by Michael Goetze, fixed by David Fries.
 * Fix problem with old version of paramiko and chdir. Fixed by Nick Altmann.
+* Fix problems with signed vs unsigned values for struct stat fields.
+  Reported by Henning Verbeek.
 
 Version 1.3, released 2012-12-16
 --------------------------------
