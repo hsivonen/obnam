@@ -327,10 +327,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     'Attempting to unlock shared trees because of error')
                 self.repo.unlock_shared()
         except BaseException, e2:
-            logging.error(
+            logging.warning(
                 'Error while unlocking due to error: %s' % str(e2))
             logging.debug(traceback.format_exc())
-            raise
         else:
             logging.info('Successfully unlocked')
 
