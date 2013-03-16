@@ -1,8 +1,10 @@
-obnam (1.4-1) UNRELEASED; urgency=low
+obnam (1.4-1) unstable; urgency=low
 
-  * Bump python-larch depenency to current version.
+  * New upstream release.
+  * Bump python-larch, python-ttystatus, python-cliapp, summain,
+    and cmdtest depenencies to current versions.
 
- -- Lars Wirzenius <liw@liw.fi>  Tue, 29 Jan 2013 08:42:48 +0000
+ -- Lars Wirzenius <liw@liw.fi>  Sat, 16 Mar 2013 11:29:12 +0000
 
 obnam (1.3-1) unstable; urgency=low
 

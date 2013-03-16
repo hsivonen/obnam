@@ -4,7 +4,7 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
-Version X.Y, released UNRELEASED
+Version 1.4, released 2013-03-16
 --------------------------------
 
 * The``ls` command now takes filenames as (optional) arguments, instead
