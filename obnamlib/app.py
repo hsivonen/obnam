@@ -180,7 +180,7 @@ class App(cliapp.Application):
             sys.exit(1)
 
     def setup_ttystatus(self):
-        self.ts = ttystatus.TerminalStatus(period=0.01)
+        self.ts = ttystatus.TerminalStatus(period=0.1)
         if self.settings['quiet']:
             self.ts.disable()
 

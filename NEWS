@@ -1,8 +1,16 @@
 Obnam NEWS
 ==========
 
-
 This file summarizes changes between releases of Obnam.
+
+Versioe 1.5, released UNRELEASED
+--------------------------------
+
+Bug fixes:
+
+* Terminal progress reporting now updated only every 0.1 seconds,
+  instead of 0.01 seconds, to reduce terminal emulator CPU usage.
+  Reported by Neal Becker.
 
 Version 1.4, released 2013-03-16
 --------------------------------
