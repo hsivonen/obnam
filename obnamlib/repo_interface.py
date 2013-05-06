@@ -81,8 +81,8 @@ class RepositoryInterface(object):
       the per-client data (information about generations), and
       the chunk lookup indexes are all locked up individually.
     * All metadata is stored as key/value pairs, where the key is
-      one of a strictly limited list of strings, and the value is
-      a binary string.
+      one of a strictly limited, version-specific list of strings,
+      and the value is a binary string.
 
     Further, the repository format version implementation is given
     a directory in which it stores the repository, using any number
@@ -120,14 +120,6 @@ class RepositoryInterface(object):
         '''
 
         raise NotImplementedError()
-
-    #def destroy_repo(self):
-    #def get_repo_keys(self):
-    #def get_repo_key_value(self, key):
-    #def set_repo_key_value(self, key, value):
-    #def remove_repo_key(self, key):
-    #def lock_repo(self):
-    #def unlock_repo(self):
 
     ## Client list.
     #def get_client_names(self):
