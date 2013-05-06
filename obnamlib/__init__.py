@@ -89,7 +89,8 @@ from repo_interface import (
     RepositoryInterface,
     RepositoryInterfaceTests,
     RepositoryClientAlreadyExists,
-    RepositoryClientDoesNotExist)
+    RepositoryClientDoesNotExist,
+    RepositoryClientListNotLocked)
 from repo_dummy import RepositoryFormatDummy
 from repo_tree import RepositoryTree
 from chunklist import ChunkList

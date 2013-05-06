@@ -23,6 +23,12 @@ import unittest
 import obnamlib
 
 
+class RepositoryClientListNotLocked(obnamlib.Error):
+
+    def __init__(self):
+        self.msg = 'Repository client list is not locked'
+
+
 class RepositoryClientAlreadyExists(obnamlib.Error):
 
     def __init__(self, client_name):
@@ -233,17 +239,20 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
 
     def test_adds_a_client(self):
         self.repo.init_repo()
+        self.repo.lock_client_list()
         self.repo.add_client('foo')
         self.assertEqual(self.repo.get_client_names(), ['foo'])
 
     def test_removes_a_client(self):
         self.repo.init_repo()
+        self.repo.lock_client_list()
         self.repo.add_client('foo')
         self.repo.remove_client('foo')
         self.assertEqual(self.repo.get_client_names(), [])
 
     def test_fails_adding_existing_client(self):
         self.repo.init_repo()
+        self.repo.lock_client_list()
         self.repo.add_client('foo')
         self.assertRaises(
             obnamlib.RepositoryClientAlreadyExists,
@@ -251,7 +260,20 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
 
     def test_fails_removing_nonexistent_client(self):
         self.repo.init_repo()
+        self.repo.lock_client_list()
         self.assertRaises(
             obnamlib.RepositoryClientDoesNotExist,
+            self.repo.remove_client, 'foo')
+
+    def test_raises_lock_error_if_adding_client_without_locking(self):
+        self.repo.init_repo()
+        self.assertRaises(
+            obnamlib.RepositoryClientListNotLocked,
+            self.repo.add_client, 'foo')
+
+    def test_raises_lock_error_if_removing_client_without_locking(self):
+        self.repo.init_repo()
+        self.assertRaises(
+            obnamlib.RepositoryClientListNotLocked,
             self.repo.remove_client, 'foo')
 
