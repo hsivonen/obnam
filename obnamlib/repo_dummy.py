@@ -25,6 +25,7 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
 
     def __init__(self):
         self._client_names = []
+        self._saved_client_names = None
         self._client_list_is_locked = False
 
     def set_fs(self, fs):
@@ -38,6 +39,16 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
 
     def lock_client_list(self):
         self._client_list_is_locked = True
+        self._saved_client_names = self._client_names[:]
+
+    def unlock_client_list(self):
+        self._client_list_is_locked = False
+        self._client_names = self._saved_client_names
+        self._saved_client_names = None
+
+    def commit_client_list(self):
+        self._client_list_is_locked = False
+        self._saved_client_names = None
 
     def _require_client_list_lock(self):
         if not self._client_list_is_locked:

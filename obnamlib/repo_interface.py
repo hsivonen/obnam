@@ -147,9 +147,18 @@ class RepositoryInterface(object):
         '''Return list of client names currently existing in the repository.'''
         raise NotImplementedError()
 
-    #def lock_client_list(self):
-    #def commit_client_list(self):
-    #def unlock_client_list(self):
+    def lock_client_list(self):
+        '''Lock the client list for changes.'''
+        raise NotImplementedError()
+
+    def commit_client_list(self):
+        '''Commit changes to client list and unlock it.'''
+        raise NotImplementedError()
+
+    def unlock_client_list(self):
+        '''Forget changes to client list and unlock it.'''
+        raise NotImplementedError()
+
     #def force_client_list_lock(self):
 
     def add_client(self, client_name):
@@ -276,4 +285,18 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.assertRaises(
             obnamlib.RepositoryClientListNotLocked,
             self.repo.remove_client, 'foo')
+
+    def test_unlocking_client_list_reverts_changes(self):
+        self.repo.init_repo()
+        self.repo.lock_client_list()
+        self.repo.add_client('foo')
+        self.repo.unlock_client_list()
+        self.assertEqual(self.repo.get_client_names(), [])
+
+    def test_committing_client_list_keeps_changes(self):
+        self.repo.init_repo()
+        self.repo.lock_client_list()
+        self.repo.add_client('foo')
+        self.repo.commit_client_list()
+        self.assertEqual(self.repo.get_client_names(), ['foo'])
 
