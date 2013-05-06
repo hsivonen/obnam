@@ -135,7 +135,7 @@ class RepositoryInterface(object):
 
         raise NotImplementedError()
 
-    ## Client list.
+    # Client list.
 
     def get_client_names(self):
         '''Return list of client names currently existing in the repository.'''
