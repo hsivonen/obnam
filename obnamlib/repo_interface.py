@@ -616,7 +616,7 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.repo.commit_client('fooclient')
         self.assertEqual(value, 'bar')
 
-    def test_unlocking_client_undoes_key_changs(self):
+    def test_unlocking_client_undoes_key_changes(self):
         self.setup_client()
         self.repo.lock_client('fooclient')
         self.repo.set_client_key(
