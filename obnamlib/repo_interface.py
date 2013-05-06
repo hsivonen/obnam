@@ -20,6 +20,14 @@
 
 import unittest
 
+import obnamlib
+
+
+class RepositoryClientAlreadyExists(obnamlib.Error):
+
+    def __init__(self, client_name):
+        self.msg = 'Repository client %s already exists' % client_name
+
 
 class RepositoryInterface(object):
 
@@ -133,7 +141,11 @@ class RepositoryInterface(object):
     #def force_client_list_lock(self):
 
     def add_client(self, client_name):
-        '''Add a client to the client list.'''
+        '''Add a client to the client list.
+
+        Raise RepositoryClientAlreadyExists if the client already exists.
+
+        '''
         raise NotImplementedError()
 
     def remove_client(self, client_name):
@@ -223,4 +235,11 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.repo.add_client('foo')
         self.repo.remove_client('foo')
         self.assertEqual(self.repo.get_client_names(), [])
+
+    def test_fails_adding_existing_client(self):
+        self.repo.init_repo()
+        self.repo.add_client('foo')
+        self.assertRaises(
+            obnamlib.RepositoryClientAlreadyExists,
+            self.repo.add_client, 'foo')
 

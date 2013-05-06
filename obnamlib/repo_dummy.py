@@ -36,6 +36,8 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
         return self._client_names
 
     def add_client(self, client_name):
+        if client_name in self._client_names:
+            raise obnamlib.RepositoryClientAlreadyExists(client_name)
         self._client_names.append(client_name)
 
     def remove_client(self, client_name):
