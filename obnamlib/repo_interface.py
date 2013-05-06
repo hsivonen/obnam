@@ -556,6 +556,18 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
             obnamlib.RepositoryClientNotLocked,
             self.repo.commit_client, 'fooclient')
 
+    def test_unlocking_nonexistent_client_fails(self):
+        self.setup_client()
+        self.assertRaises(
+            obnamlib.RepositoryClientDoesNotExist,
+            self.repo.unlock_client, 'notexist')
+
+    def test_committing_nonexistent_client_fails(self):
+        self.setup_client()
+        self.assertRaises(
+            obnamlib.RepositoryClientDoesNotExist,
+            self.repo.commit_client, 'notexist')
+
     def test_unlocking_client_removes_lock(self):
         self.setup_client()
         self.repo.lock_client('fooclient')
