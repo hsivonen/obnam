@@ -41,5 +41,7 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
         self._client_names.append(client_name)
 
     def remove_client(self, client_name):
+        if client_name not in self._client_names:
+            raise obnamlib.RepositoryClientDoesNotExist(client_name)
         self._client_names.remove(client_name)
 

@@ -29,6 +29,12 @@ class RepositoryClientAlreadyExists(obnamlib.Error):
         self.msg = 'Repository client %s already exists' % client_name
 
 
+class RepositoryClientDoesNotExist(obnamlib.Error):
+
+    def __init__(self, client_name):
+        self.msg = 'Repository client %s does not exist' % client_name
+
+
 class RepositoryInterface(object):
 
     '''Abstract interface to Obnam backup repositories.
@@ -242,4 +248,10 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.assertRaises(
             obnamlib.RepositoryClientAlreadyExists,
             self.repo.add_client, 'foo')
+
+    def test_fails_removing_nonexistent_client(self):
+        self.repo.init_repo()
+        self.assertRaises(
+            obnamlib.RepositoryClientDoesNotExist,
+            self.repo.remove_client, 'foo')
 

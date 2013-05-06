@@ -88,7 +88,8 @@ from metadata import (read_metadata, set_metadata, Metadata, metadata_fields,
 from repo_interface import (
     RepositoryInterface,
     RepositoryInterfaceTests,
-    RepositoryClientAlreadyExists)
+    RepositoryClientAlreadyExists,
+    RepositoryClientDoesNotExist)
 from repo_dummy import RepositoryFormatDummy
 from repo_tree import RepositoryTree
 from chunklist import ChunkList
