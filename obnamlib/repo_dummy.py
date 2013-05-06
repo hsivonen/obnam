@@ -138,6 +138,9 @@ class DummyClient(object):
         self.data.set_value('current-generation', generation_id)
         return generation_id
 
+    def get_generation_key(self, gen_id, key):
+        return self.data.get_value(gen_id + (key,), '')
+
 
 class DummyClientList(object):
 
@@ -202,6 +205,10 @@ class DummyClientList(object):
             raise obnamlib.RepositoryClientAlreadyExists(new_client_name)
         self.data.set_value(old_client_name, None)
         self.data.set_value(new_client_name, client)
+
+    def get_client_by_generation_id(self, gen_id):
+        client_name, generation_number = gen_id
+        return self[client_name]
 
 
 class RepositoryFormatDummy(obnamlib.RepositoryInterface):
@@ -273,3 +280,10 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
 
     def create_generation(self, client_name):
         return self._client_list[client_name].create_generation()
+
+    def get_allowed_generation_keys(self):
+        return [obnamlib.REPO_GENERATION_TEST_KEY]
+
+    def get_generation_key(self, generation_id, key):
+        client = self._client_list.get_client_by_generation_id(generation_id)
+        return client.get_generation_key(generation_id, key)

@@ -29,6 +29,7 @@ import obnamlib
 # the test suite to function.
 
 REPO_CLIENT_TEST_KEY = 0
+REPO_GENERATION_TEST_KEY = 1
 
 # The following is a key that is NOT allowed for any repository format.
 
@@ -301,9 +302,16 @@ class RepositoryInterface(object):
         '''
         raise NotImplementedError()
 
-    ## Generations. The generation id identifies client as well.
-    #def get_generation_keys(self, generation_id):
-    #def get_generation_key_value(self, generation_id, key):
+    # Generations. The generation id identifies client as well.
+
+    def get_allowed_generation_keys(self):
+        '''Return list of all allowed keys for generations.'''
+        raise NotImplementedError()
+
+    def get_generation_key(self, generation_id, key):
+        '''Return current value for a generation key.'''
+        raise NotImplementedError()
+
     #def set_generation_key_value(self, generation_id, key, value):
     #def remove_generation_key(self, generation_id, key):
     #def remove_generation(self, generation_id):
@@ -711,4 +719,20 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.assertEqual(
             self.repo.get_client_generation_ids('fooclient'),
             [new_id])
+
+    # Operations on one generation.
+
+    def create_generation(self):
+        self.setup_client()
+        self.repo.lock_client('fooclient')
+        return self.repo.create_generation('fooclient')
+
+    def test_has_list_of_allowed_generation_keys(self):
+        self.assertEqual(type(self.repo.get_allowed_generation_keys()), list)
+
+    def test_gets_all_allowed_generation_keys(self):
+        gen_id = self.create_generation()
+        for key in self.repo.get_allowed_generation_keys():
+            value = self.repo.get_generation_key(gen_id, key)
+            self.assertEqual(type(value), str)
 
