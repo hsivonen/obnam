@@ -300,3 +300,16 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.repo.commit_client_list()
         self.assertEqual(self.repo.get_client_names(), ['foo'])
 
+    def test_commiting_client_list_removes_client(self):
+        self.repo.init_repo()
+
+        self.repo.lock_client_list()
+        self.repo.add_client('foo')
+        self.repo.commit_client_list()
+
+        self.repo.lock_client_list()
+        self.repo.remove_client('foo')
+        self.repo.commit_client_list()
+
+        self.assertEqual(self.repo.get_client_names(), [])
+
