@@ -32,10 +32,13 @@ class KeyValueStore(object):
     def set_value(self, key, value):
         self._map[key] = value
 
+    def items(self):
+        return self._map.items()
+
     def copy(self):
         other = KeyValueStore()
-        for key in self._map:
-            other.set_value(key, self._map[key])
+        for key, value in self.items():
+            other.set_value(key, value)
         return other
 
 
@@ -68,6 +71,9 @@ class LockableKeyValueStore(object):
 
     def set_value(self, key, value):
         self.data.set_value(key, value)
+
+    def items(self):
+        return self.data.items()
 
 
 class Counter(object):
@@ -137,31 +143,24 @@ class DummyClientList(object):
 
     def __init__(self):
         self.locked = False
-        self.clients = []
-        self.wip_clients = None
+        self.data = LockableKeyValueStore()
 
     def lock(self):
         if self.locked:
             raise obnamlib.RepositoryClientListLockingFailed()
         self.locked = True
-        self.wip_clients = self.clients[:]
+        self.data.lock()
 
     def unlock(self):
         if not self.locked:
             raise obnamlib.RepositoryClientListNotLocked()
-        for client in self.wip_clients:
-            client.new_name = None
-        self.wip_clients = None
+        self.data.unlock()
         self.locked = False
 
     def commit(self):
         if not self.locked:
             raise obnamlib.RepositoryClientListNotLocked()
-        for client in self.wip_clients:
-            if client.new_name is not None:
-                client.name = client.new_name
-        self.clients = self.wip_clients
-        self.wip_clients = None
+        self.data.commit()
         self.locked = False
 
     def force(self):
@@ -174,45 +173,35 @@ class DummyClientList(object):
             raise obnamlib.RepositoryClientListNotLocked()
 
     def names(self):
-        if self.locked:
-            return [c.new_name or c.name for c in self.wip_clients]
-        else:
-            return [c.name for c in self.clients]
+        return [k for k, v in self.data.items() if v is not None]
 
     def __getitem__(self, client_name):
-        for client in self.clients:
-            if client_name == client.name:
-                return client
-        raise obnamlib.RepositoryClientDoesNotExist(client_name)
+        client = self.data.get_value(client_name, None)
+        if client is None:
+            raise obnamlib.RepositoryClientDoesNotExist(client_name)
+        return client
 
     def add(self, client_name):
         self._require_lock()
-        for client in self.wip_clients:
-            if client.name == client_name:
-                raise obnamlib.RepositoryClientAlreadyExists(client_name)
-        self.wip_clients.append(DummyClient(client_name))
+        if self.data.get_value(client_name, None) is not None:
+            raise obnamlib.RepositoryClientAlreadyExists(client_name)
+        self.data.set_value(client_name, DummyClient(client_name))
 
     def remove(self, client_name):
         self._require_lock()
-        for client in self.wip_clients:
-            if client_name in (client.name, client.new_name):
-                self.wip_clients.remove(client)
-                return
-        raise obnamlib.RepositoryClientDoesNotExist(client_name)
+        if self.data.get_value(client_name, None) is None:
+            raise obnamlib.RepositoryClientDoesNotExist(client_name)
+        self.data.set_value(client_name, None)
 
     def rename(self, old_client_name, new_client_name):
         self._require_lock()
-        names = [client.name for client in self.wip_clients]
-        names.extend(c.new_name for c in self.wip_clients if c.new_name)
-        if old_client_name not in names:
+        client = self.data.get_value(old_client_name, None)
+        if client is None:
             raise obnamlib.RepositoryClientDoesNotExist(old_client_name)
-        if new_client_name in names:
-            raise obnamlib.RepositoryClientAlreadyExists(old_client_name)
-
-        for client in self.wip_clients:
-            if old_client_name in (client.name, client.new_name):
-                client.new_name = new_client_name
-                break
+        if self.data.get_value(new_client_name, None) is not None:
+            raise obnamlib.RepositoryClientAlreadyExists(new_client_name)
+        self.data.set_value(old_client_name, None)
+        self.data.set_value(new_client_name, client)
 
 
 class RepositoryFormatDummy(obnamlib.RepositoryInterface):
