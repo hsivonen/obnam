@@ -95,6 +95,10 @@ class RepositoryInterface(object):
     implementation will work with exactly one such format, and have
     a class attribute ``format`` which contains the string.
 
+    There is no method to remove a repository. This is handled
+    externally by removing the repository directory and all its files.
+    Since that code is generic, it is not needed in the interface.
+
     Each RepositoryInterface implementation can have a custom
     initialiser. RepositoryFactory will know how to call it,
     giving it all the information it needs.
