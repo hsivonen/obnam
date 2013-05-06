@@ -485,6 +485,24 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
 
         self.assertEqual(self.repo.get_client_names(), [])
 
+    def test_commiting_client_list_removes_lock(self):
+        self.repo.init_repo()
+
+        self.repo.lock_client_list()
+        self.repo.commit_client_list()
+
+        self.repo.lock_client_list()
+        self.assertEqual(self.repo.get_client_names(), [])
+
+    def test_unlocking_client_list_removes_lock(self):
+        self.repo.init_repo()
+
+        self.repo.lock_client_list()
+        self.repo.unlock_client_list()
+
+        self.repo.lock_client_list()
+        self.assertEqual(self.repo.get_client_names(), [])
+
     def test_locking_client_list_twice_fails(self):
         self.repo.init_repo()
         self.repo.lock_client_list()
@@ -537,6 +555,18 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.assertRaises(
             obnamlib.RepositoryClientNotLocked,
             self.repo.commit_client, 'fooclient')
+
+    def test_unlocking_client_removes_lock(self):
+        self.setup_client()
+        self.repo.lock_client('fooclient')
+        self.repo.unlock_client('fooclient')
+        self.assertEqual(self.repo.lock_client('fooclient'), None)
+
+    def test_committing_client_removes_lock(self):
+        self.setup_client()
+        self.repo.lock_client('fooclient')
+        self.repo.commit_client('fooclient')
+        self.assertEqual(self.repo.lock_client('fooclient'), None)
 
     def test_has_list_of_allowed_client_keys(self):
         self.assertEqual(type(self.repo.get_allowed_client_keys()), list)
