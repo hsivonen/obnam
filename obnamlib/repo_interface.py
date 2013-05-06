@@ -47,6 +47,18 @@ class RepositoryClientDoesNotExist(obnamlib.Error):
         self.msg = 'Repository client %s does not exist' % client_name
 
 
+class RepositoryClientLockingFailed(obnamlib.Error):
+
+    def __init__(self, client_name):
+        self.msg = 'Repository client %s could not be locked' % client_name
+
+
+class RepositoryClientNotLocked(obnamlib.Error):
+
+    def __init__(self, client_name):
+        self.msg = 'Repository client %s is not locked' % client_name
+
+
 class RepositoryInterface(object):
 
     '''Abstract interface to Obnam backup repositories.
@@ -191,15 +203,40 @@ class RepositoryInterface(object):
         '''Rename a client to have a new name.'''
         raise NotImplementedError()
 
-    ## A particular client.
+    # A particular client.
+
+    def lock_client(self, client_name):
+        '''Lock the client for changes.
+
+        This lock must be taken for any changes to the per-client
+        data, including any changes to backup generations for the
+        client.
+
+        '''
+        raise NotImplementedError()
+
+    def commit_client(self, client_name):
+        '''Commit changes to client and unlock it.'''
+        raise NotImplementedError()
+
+    def unlock_client(self, client_name):
+        '''Forget changes to client and unlock it.'''
+        raise NotImplementedError()
+
+    def force_client_lock(self, client_name):
+        '''Force the client lock.
+
+        If the process that locked the client is dead, this method
+        forces the lock open and takes it for the calling process instead.
+        Any uncommitted changes by the original locker will be lost.
+
+        '''
+        raise NotImplementedError()
+
     #def get_client_keys(self, client_name):
     #def get_client_key_value(self, client_name, key):
     #def set_client_key_value(self, client_name, key, value):
     #def remove_client_key(self, clientname, key):
-    #def lock_client(self, client_name):
-    #def commit_client(self, client_name): # commits started generation too
-    #def unlock_client(self, client_name):
-    #def force_client_lock(self, client_name):
     #def get_client_generation_ids(self, client_name):
     #def create_generation(self, client_name): # return generation_id
 
@@ -438,4 +475,30 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.repo.force_client_list_lock()
         self.repo.add_client('foo')
         self.assertEqual(self.repo.get_client_names(), ['foo'])
+
+    # Tests for client specific stuff.
+
+    def setup_client(self):
+        self.repo.lock_client_list()
+        self.repo.add_client('fooclient')
+        self.repo.commit_client_list()
+
+    def test_locking_client_twice_fails(self):
+        self.setup_client()
+        self.repo.lock_client('fooclient')
+        self.assertRaises(
+            obnamlib.RepositoryClientLockingFailed,
+            self.repo.lock_client, 'fooclient')
+
+    def test_unlocking_client_when_unlocked_fails(self):
+        self.setup_client()
+        self.assertRaises(
+            obnamlib.RepositoryClientNotLocked,
+            self.repo.unlock_client, 'fooclient')
+
+    def test_committing_client_when_unlocked_fails(self):
+        self.setup_client()
+        self.assertRaises(
+            obnamlib.RepositoryClientNotLocked,
+            self.repo.commit_client, 'fooclient')
 
