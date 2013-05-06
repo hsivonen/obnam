@@ -95,6 +95,7 @@ from repo_interface import (
     RepositoryClientLockingFailed,
     RepositoryClientNotLocked,
     RepositoryClientKeyNotAllowed,
+    RepositoryClientGenerationUnfinished,
     REPO_CLIENT_TEST_KEY)
 from repo_dummy import RepositoryFormatDummy
 from repo_tree import RepositoryTree

@@ -80,6 +80,15 @@ class RepositoryClientKeyNotAllowed(obnamlib.Error):
             (format, client_name, key))
 
 
+class RepositoryClientGenerationUnfinished(obnamlib.Error):
+
+    def __init__(self, client_name):
+        self.msg = (
+            'Cannot start new generation for %s: '
+            'previous one is not finished yet (programming error)' %
+            client_name)
+
+
 class RepositoryInterface(object):
 
     '''Abstract interface to Obnam backup repositories.
@@ -672,6 +681,14 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.assertEqual(
             self.repo.get_client_generation_ids('fooclient'),
             [new_id])
+
+    def test_creating_generation_fails_current_generation_unfinished(self):
+        self.setup_client()
+        self.repo.lock_client('fooclient')
+        self.repo.create_generation('fooclient')
+        self.assertRaises(
+            obnamlib.RepositoryClientGenerationUnfinished,
+            self.repo.create_generation, 'fooclient')
 
     def test_creating_generation_fails_if_client_is_unlocked(self):
         self.setup_client()

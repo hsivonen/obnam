@@ -106,6 +106,7 @@ class DummyClient(object):
 
     def commit(self):
         self._require_lock()
+        self.data.set_value('current-generation', None)
         self.data.commit()
         self.locked = False
 
@@ -117,16 +118,18 @@ class DummyClient(object):
         self.data.set_value(key, value)
 
     def get_generation_ids(self):
-        key = ('generation-ids',)
+        key = 'generation-ids'
         return self.data.get_value(key, [])
 
     def create_generation(self):
         self._require_lock()
+        if self.data.get_value('current-generation', None) is not None:
+            raise obnamlib.RepositoryClientGenerationUnfinished(self.name)
         generation_id = (self.name, self.generation_counter.next())
-        key = ('generation-ids',)
-        ids = self.data.get_value(key, [])
+        ids = self.data.get_value('generation-ids', [])
         ids.append(generation_id)
-        self.data.set_value(key, ids)
+        self.data.set_value('generation-ids', ids)
+        self.data.set_value('current-generation', generation_id)
         return generation_id
 
 
