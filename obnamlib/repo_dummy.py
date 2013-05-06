@@ -117,7 +117,7 @@ class DummyClientList(object):
             for client in self.clients:
                 if client_name == client.name:
                     return client
-        raise KeyError(client_name)
+        raise obnamlib.RepositoryClientDoesNotExist(client_name)
 
     def add(self, client_name):
         self._require_lock()

@@ -626,3 +626,10 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
             'fooclient', obnamlib.REPO_CLIENT_TEST_KEY)
         self.assertEqual(value, '')
 
+    def test_getting_client_key_for_unknown_client_fails(self):
+        self.setup_client()
+        self.assertRaises(
+            obnamlib.RepositoryClientDoesNotExist,
+            self.repo.get_client_key, 'notexistclient',
+            obnamlib.REPO_CLIENT_TEST_KEY)
+
