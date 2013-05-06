@@ -165,7 +165,15 @@ class RepositoryInterface(object):
         '''Forget changes to client list and unlock it.'''
         raise NotImplementedError()
 
-    #def force_client_list_lock(self):
+    def force_client_list_lock(self):
+        '''Force the client list lock.
+
+        If the process that locked the client list is dead, this method
+        forces the lock open and takes it for the calling process instead.
+        Any uncommitted changes by the original locker will be lost.
+
+        '''
+        raise NotImplementedError()
 
     def add_client(self, client_name):
         '''Add a client to the client list.
@@ -350,4 +358,12 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.assertRaises(
             obnamlib.RepositoryClientListNotLocked,
             self.repo.commit_client_list)
+
+    def test_forces_client_list_lock(self):
+        self.repo.init_repo()
+        self.repo.lock_client_list()
+        self.repo.add_client('bar')
+        self.repo.force_client_list_lock()
+        self.repo.add_client('foo')
+        self.assertEqual(self.repo.get_client_names(), ['foo'])
 

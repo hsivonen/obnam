@@ -62,6 +62,11 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
         self._client_list_is_locked = False
         self._saved_client_names = None
 
+    def force_client_list_lock(self):
+        if self._client_list_is_locked:
+            self.unlock_client_list()
+        self.lock_client_list()
+
     def _require_client_list_lock(self):
         if not self._client_list_is_locked:
             raise obnamlib.RepositoryClientListNotLocked()
