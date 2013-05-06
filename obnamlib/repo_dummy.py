@@ -90,31 +90,26 @@ class DummyClient(object):
 
     def __init__(self, name):
         self.name = name
-        self.new_name = None
-        self.locked = False
         self.generation_counter = Counter()
         self.data = LockableKeyValueStore()
 
     def lock(self):
-        if self.locked:
+        if self.data.locked:
             raise obnamlib.RepositoryClientLockingFailed(self.name)
-        self.locked = True
         self.data.lock()
 
     def _require_lock(self):
-        if not self.locked:
+        if not self.data.locked:
             raise obnamlib.RepositoryClientNotLocked(self.name)
 
     def unlock(self):
         self._require_lock()
         self.data.unlock()
-        self.locked = False
 
     def commit(self):
         self._require_lock()
         self.data.set_value('current-generation', None)
         self.data.commit()
-        self.locked = False
 
     def get_key(self, key):
         return self.data.get_value(key, '')
@@ -149,34 +144,30 @@ class DummyClient(object):
 class DummyClientList(object):
 
     def __init__(self):
-        self.locked = False
         self.data = LockableKeyValueStore()
 
     def lock(self):
-        if self.locked:
+        if self.data.locked:
             raise obnamlib.RepositoryClientListLockingFailed()
-        self.locked = True
         self.data.lock()
 
     def unlock(self):
-        if not self.locked:
+        if not self.data.locked:
             raise obnamlib.RepositoryClientListNotLocked()
         self.data.unlock()
-        self.locked = False
 
     def commit(self):
-        if not self.locked:
+        if not self.data.locked:
             raise obnamlib.RepositoryClientListNotLocked()
         self.data.commit()
-        self.locked = False
 
     def force(self):
-        if self.locked:
+        if self.data.locked:
             self.unlock()
         self.lock()
 
     def _require_lock(self):
-        if not self.locked:
+        if not self.data.locked:
             raise obnamlib.RepositoryClientListNotLocked()
 
     def names(self):
