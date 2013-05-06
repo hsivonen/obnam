@@ -23,9 +23,21 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
 
     format = 'dummy'
 
+    def __init__(self):
+        self._client_names = []
+
     def set_fs(self, fs):
         pass
 
     def init_repo(self):
         pass
+
+    def get_client_names(self):
+        return self._client_names
+
+    def add_client(self, client_name):
+        self._client_names.append(client_name)
+
+    def remove_client(self, client_name):
+        self._client_names.remove(client_name)
 

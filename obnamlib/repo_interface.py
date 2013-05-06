@@ -122,13 +122,24 @@ class RepositoryInterface(object):
         raise NotImplementedError()
 
     ## Client list.
-    #def get_client_names(self):
+
+    def get_client_names(self):
+        '''Return list of client names currently existing in the repository.'''
+        raise NotImplementedError()
+
     #def lock_client_list(self):
     #def commit_client_list(self):
     #def unlock_client_list(self):
     #def force_client_list_lock(self):
-    #def add_client(self, client_name):
-    #def remove_client(self, client_name):
+
+    def add_client(self, client_name):
+        '''Add a client to the client list.'''
+        raise NotImplementedError()
+
+    def remove_client(self, client_name):
+        '''Remove a client from the client list.'''
+        raise NotImplementedError()
+
     #def rename_client(self, old_client_name, new_client_name):
 
     ## A particular client.
@@ -186,7 +197,8 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
 
     Each implementation of RepositoryInterface should have a corresponding
     test class, which inherits this class. The test subclass must set
-    ``self.repo`` to an instance of the class to be tested.
+    ``self.repo`` to an instance of the class to be tested. The repository
+    must be empty and uninitialised.
 
     '''
 
@@ -196,4 +208,19 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
     def test_has_set_fs_method(self):
         # We merely test that set_fs can be called.
         self.assertEqual(self.repo.set_fs(None), None)
+
+    def test_has_no_clients_initially(self):
+        self.repo.init_repo()
+        self.assertEqual(self.repo.get_client_names(), [])
+
+    def test_adds_a_client(self):
+        self.repo.init_repo()
+        self.repo.add_client('foo')
+        self.assertEqual(self.repo.get_client_names(), ['foo'])
+
+    def test_removes_a_client(self):
+        self.repo.init_repo()
+        self.repo.add_client('foo')
+        self.repo.remove_client('foo')
+        self.assertEqual(self.repo.get_client_names(), [])
 
