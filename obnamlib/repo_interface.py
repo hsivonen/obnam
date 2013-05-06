@@ -283,7 +283,14 @@ class RepositoryInterface(object):
         '''
         raise NotImplementedError()
 
-    #def create_generation(self, client_name): # return generation_id
+    def create_generation(self, client_name):
+        '''Start a new generation for a client.
+
+        Return the generation id for the new generation. The id
+        implicitly also identifies the client.
+
+        '''
+        raise NotImplementedError()
 
     ## Generations. The generation id identifies client as well.
     #def get_generation_keys(self, generation_id):
@@ -657,4 +664,34 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
     def test_new_client_has_no_generations(self):
         self.setup_client()
         self.assertEqual(self.repo.get_client_generation_ids('fooclient'), [])
+
+    def test_creates_new_generation(self):
+        self.setup_client()
+        self.repo.lock_client('fooclient')
+        new_id = self.repo.create_generation('fooclient')
+        self.assertEqual(
+            self.repo.get_client_generation_ids('fooclient'),
+            [new_id])
+
+    def test_creating_generation_fails_if_client_is_unlocked(self):
+        self.setup_client()
+        self.assertRaises(
+            obnamlib.RepositoryClientNotLocked,
+            self.repo.create_generation, 'fooclient')
+
+    def test_unlocking_client_removes_created_generation(self):
+        self.setup_client()
+        self.repo.lock_client('fooclient')
+        new_id = self.repo.create_generation('fooclient')
+        self.repo.unlock_client('fooclient')
+        self.assertEqual(self.repo.get_client_generation_ids('fooclient'), [])
+
+    def test_committing_client_keeps_created_generation(self):
+        self.setup_client()
+        self.repo.lock_client('fooclient')
+        new_id = self.repo.create_generation('fooclient')
+        self.repo.commit_client('fooclient')
+        self.assertEqual(
+            self.repo.get_client_generation_ids('fooclient'),
+            [new_id])
 

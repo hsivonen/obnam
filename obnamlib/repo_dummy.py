@@ -19,21 +19,81 @@
 import obnamlib
 
 
+class KeyValueStore(object):
+
+    def __init__(self):
+        self._map = {}
+
+    def get_value(self, key, default):
+        if key in self._map:
+            return self._map[key]
+        return default
+
+    def set_value(self, key, value):
+        self._map[key] = value
+
+    def copy(self):
+        other = KeyValueStore()
+        for key in self._map:
+            other.set_value(key, self._map[key])
+        return other
+
+
+class LockableKeyValueStore(object):
+
+    def __init__(self):
+        self.locked = False
+        self.data = KeyValueStore()
+        self.stashed = None
+
+    def lock(self):
+        assert not self.locked
+        self.stashed = self.data
+        self.data = self.data.copy()
+        self.locked = True
+
+    def unlock(self):
+        assert self.locked
+        self.data = self.stashed
+        self.stashed = None
+        self.locked = False
+
+    def commit(self):
+        assert self.locked
+        self.stashed = None
+        self.locked = False
+
+    def get_value(self, key, default):
+        return self.data.get_value(key, default)
+
+    def set_value(self, key, value):
+        self.data.set_value(key, value)
+
+
+class Counter(object):
+
+    def __init__(self):
+        self._latest = 0
+
+    def next(self):
+        self._latest += 1
+        return self._latest
+
+
 class DummyClient(object):
 
     def __init__(self, name):
         self.name = name
         self.new_name = None
         self.locked = False
-        self.tuples = []
-        self.wip_tuples = []
-        self.generations = []
+        self.generation_counter = Counter()
+        self.data = LockableKeyValueStore()
 
     def lock(self):
         if self.locked:
             raise obnamlib.RepositoryClientLockingFailed(self.name)
         self.locked = True
-        self.wip_tuples = self.tuples[:]
+        self.data.lock()
 
     def _require_lock(self):
         if not self.locked:
@@ -41,29 +101,33 @@ class DummyClient(object):
 
     def unlock(self):
         self._require_lock()
-        self.wip_tuples = []
+        self.data.unlock()
         self.locked = False
 
     def commit(self):
         self._require_lock()
-        self.tuples = self.wip_tuples
-        self.wip_tuples = []
+        self.data.commit()
         self.locked = False
 
     def get_key(self, key):
-        value = ''
-        for k, v in self.tuples + self.wip_tuples:
-            if k == key:
-                value = v
-        return value
+        return self.data.get_value(key, '')
 
     def set_key(self, key, value):
         self._require_lock()
-        self.wip_tuples = [(k,v) for k,v in self.wip_tuples if k != key]
-        self.wip_tuples.append((key, value))
+        self.data.set_value(key, value)
 
     def get_generation_ids(self):
-        return self.generations
+        key = ('generation-ids',)
+        return self.data.get_value(key, [])
+
+    def create_generation(self):
+        self._require_lock()
+        generation_id = (self.name, self.generation_counter.next())
+        key = ('generation-ids',)
+        ids = self.data.get_value(key, [])
+        ids.append(generation_id)
+        self.data.set_value(key, ids)
+        return generation_id
 
 
 class DummyClientList(object):
@@ -215,3 +279,5 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
     def get_client_generation_ids(self, client_name):
         return self._client_list[client_name].get_generation_ids()
 
+    def create_generation(self, client_name):
+        return self._client_list[client_name].create_generation()
