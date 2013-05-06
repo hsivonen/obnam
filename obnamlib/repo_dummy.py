@@ -34,6 +34,8 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
         self._saved_client_names = None
         self._client_list_is_locked = False
         self._locked_clients = []
+        self._client_keys = []
+        self._saved_client_keys = None
 
     def set_fs(self, fs):
         pass
@@ -97,6 +99,7 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
         if client_name in self._locked_clients:
             raise obnamlib.RepositoryClientLockingFailed(client_name)
         self._locked_clients.append(client_name)
+        self._saved_client_keys = self._client_keys[:]
 
     def _require_client_lock(self, client_name):
         if client_name not in self._locked_clients:
@@ -104,10 +107,32 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
 
     def unlock_client(self, client_name):
         self._require_client_lock(client_name)
+        self._client_keys = self._saved_client_keys
+        self._saved_client_keys = None
+        self._locked_clients.remove(client_name)
 
     def commit_client(self, client_name):
         self._require_client_lock(client_name)
+        self._saved_client_keys = None
+        self._locked_clients.remove(client_name)
 
     def get_allowed_client_keys(self):
-        return []
+        return [obnamlib.REPO_CLIENT_TEST_KEY]
+
+    def get_client_key(self, client_name, key):
+        for c, k, v in self._client_keys:
+            if c == client_name and k == key:
+                return v
+        return ''
+
+    def set_client_key(self, client_name, key, value):
+        self._require_client_lock(client_name)
+        if key not in self.get_allowed_client_keys():
+            raise obnamlib.RepositoryClientKeyNotAllowed(
+                self.format, client_name, key)
+
+        self._client_keys = [
+            (c,k,v) for c,k,v in self._client_keys
+            if (c,k) != (client_name, key)]
+        self._client_keys.append((client_name, key, value))
 

@@ -23,6 +23,18 @@ import unittest
 import obnamlib
 
 
+# The following is a canonical list of all keys that can be used with
+# the repository interface for key/value pairs. Not all formats need
+# to support all keys, but they all must support the test keys, for
+# the test suite to function.
+
+REPO_CLIENT_TEST_KEY = 0
+
+# The following is a key that is NOT allowed for any repository format.
+
+WRONG_KEY = -1
+
+
 class RepositoryClientListLockingFailed(obnamlib.Error):
 
     def __init__(self):
@@ -57,6 +69,15 @@ class RepositoryClientNotLocked(obnamlib.Error):
 
     def __init__(self, client_name):
         self.msg = 'Repository client %s is not locked' % client_name
+
+
+class RepositoryClientKeyNotAllowed(obnamlib.Error):
+
+    def __init__(self, format, client_name, key):
+        self.msg = (
+            'Client %s uses repository format %s '
+            'which does not allow the key %s to be use for clients' %
+            (format, client_name, key))
 
 
 class RepositoryInterface(object):
@@ -119,8 +140,9 @@ class RepositoryInterface(object):
       the per-client data (information about generations), and
       the chunk lookup indexes are all locked up individually.
     * All metadata is stored as key/value pairs, where the key is
-      one of a strictly limited, version-specific list of strings,
-      and the value is a binary string.
+      one of a strictly limited, version-specific list of allowed ones,
+      and the value is a binary string. All allowed keys are
+      implicitly set to the empty string if not set otherwise.
 
     Further, the repository format version implementation is given
     a directory in which it stores the repository, using any number
@@ -237,10 +259,20 @@ class RepositoryInterface(object):
         '''Return list of allowed per-client keys for thist format.'''
         raise NotImplementedError()
 
-    #def get_client_keys(self, client_name):
-    #def get_client_key_value(self, client_name, key):
-    #def set_client_key_value(self, client_name, key, value):
-    #def remove_client_key(self, clientname, key):
+    def get_client_key(self, client_name, key):
+        '''Return current value of a key for a given client.
+
+        If not set explicitly, the value is the empty string.
+        If the key is not in the list of allowed keys for this
+        format, raise RepositoryClientKeyNotAllowed.
+
+        '''
+        raise NotImplementedError()
+
+    def set_client_key(self, client_name, key, value):
+        '''Set value for a per-client key.'''
+        raise NotImplementedError()
+
     #def get_client_generation_ids(self, client_name):
     #def create_generation(self, client_name): # return generation_id
 
@@ -508,4 +540,59 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
 
     def test_has_list_of_allowed_client_keys(self):
         self.assertEqual(type(self.repo.get_allowed_client_keys()), list)
+
+    def test_gets_all_allowed_client_keys(self):
+        self.setup_client()
+        for key in self.repo.get_allowed_client_keys():
+            value = self.repo.get_client_key('fooclient', key)
+            self.assertEqual(type(value), str)
+
+    def test_has_empty_string_for_test_key(self):
+        self.setup_client()
+        value = self.repo.get_client_key(
+            'fooclient', obnamlib.REPO_CLIENT_TEST_KEY)
+        self.assertEqual(value, '')
+
+    def test_sets_client_key(self):
+        self.setup_client()
+        self.repo.lock_client('fooclient')
+        self.repo.set_client_key(
+            'fooclient', obnamlib.REPO_CLIENT_TEST_KEY, 'bar')
+        value = self.repo.get_client_key(
+            'fooclient', obnamlib.REPO_CLIENT_TEST_KEY)
+        self.assertEqual(value, 'bar')
+
+    def test_setting_unallowed_key_fails(self):
+        self.setup_client()
+        self.repo.lock_client('fooclient')
+        self.assertRaises(
+            obnamlib.RepositoryClientKeyNotAllowed,
+            self.repo.set_client_key, 'fooclient', WRONG_KEY, '')
+
+    def test_setting_client_key_without_locking_fails(self):
+        self.setup_client()
+        self.assertRaises(
+            obnamlib.RepositoryClientNotLocked,
+            self.repo.set_client_key,
+            'fooclient', obnamlib.REPO_CLIENT_TEST_KEY, 'bar')
+
+    def test_committing_client_preserves_key_changs(self):
+        self.setup_client()
+        self.repo.lock_client('fooclient')
+        self.repo.set_client_key(
+            'fooclient', obnamlib.REPO_CLIENT_TEST_KEY, 'bar')
+        value = self.repo.get_client_key(
+            'fooclient', obnamlib.REPO_CLIENT_TEST_KEY)
+        self.repo.commit_client('fooclient')
+        self.assertEqual(value, 'bar')
+
+    def test_unlocking_client_undoes_key_changs(self):
+        self.setup_client()
+        self.repo.lock_client('fooclient')
+        self.repo.set_client_key(
+            'fooclient', obnamlib.REPO_CLIENT_TEST_KEY, 'bar')
+        self.repo.unlock_client('fooclient')
+        value = self.repo.get_client_key(
+            'fooclient', obnamlib.REPO_CLIENT_TEST_KEY)
+        self.assertEqual(value, '')
 
