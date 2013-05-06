@@ -426,7 +426,7 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.repo.unlock_client_list()
         self.assertEqual(self.repo.get_client_names(), [])
 
-    def test_unlocking_client_does_not_rename_client(self):
+    def test_unlocking_client_list_does_not_rename_client(self):
         self.repo.init_repo()
 
         self.repo.lock_client_list()
