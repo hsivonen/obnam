@@ -128,8 +128,7 @@ class DummyClient(object):
             raise obnamlib.RepositoryClientGenerationUnfinished(self.name)
         generation_id = (self.name, self.generation_counter.next())
         ids = self.data.get_value('generation-ids', [])
-        ids.append(generation_id)
-        self.data.set_value('generation-ids', ids)
+        self.data.set_value('generation-ids', ids + [generation_id])
         self.data.set_value('current-generation', generation_id)
         return generation_id
 
@@ -139,6 +138,13 @@ class DummyClient(object):
     def set_generation_key(self, gen_id, key, value):
         self._require_lock()
         self.data.set_value(gen_id + (key,), value)
+
+    def remove_generation(self, gen_id):
+        self._require_lock()
+        ids = self.data.get_value('generation-ids', [])
+        if gen_id not in ids:
+            raise obnamlib.RepositoryGenerationDoesNotExist(self.name)
+        self.data.set_value('generation-ids', [x for x in ids if x != gen_id])
 
 
 class DummyClientList(object):
@@ -289,4 +295,8 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
             raise obnamlib.RepositoryGenerationKeyNotAllowed(
                 self.format, client.name, key)
         return client.set_generation_key(generation_id, key, value)
+
+    def remove_generation(self, generation_id):
+        client = self._client_list.get_client_by_generation_id(generation_id)
+        client.remove_generation(generation_id)
 

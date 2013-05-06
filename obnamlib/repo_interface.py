@@ -99,6 +99,14 @@ class RepositoryGenerationKeyNotAllowed(obnamlib.Error):
             (format, client_name, key))
 
 
+class RepositoryGenerationDoesNotExist(obnamlib.Error):
+
+    def __init__(self, client_name):
+        self.msg = (
+            'Cannot remove non-existent generation from client %s' %
+            client_name)
+
+
 class RepositoryInterface(object):
 
     '''Abstract interface to Obnam backup repositories.
@@ -325,7 +333,14 @@ class RepositoryInterface(object):
         '''Set a key/value pair for a given generation.'''
         raise NotImplementedError()
 
-    #def remove_generation(self, generation_id):
+    def remove_generation(self, generation_id):
+        '''Remove an existing generation.
+
+        The removed generation may be the currently unfinished one.
+
+        '''
+        raise NotImplementedError()
+
     #def get_chunk_ids_in_generation(self, generation_id):
     #def interpret_generation_spec(self, genspec): # returns generation id
     #def walk_generation(self, generation_id, filename): # generator
@@ -792,4 +807,46 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         value = self.repo.get_generation_key(
             gen_id, obnamlib.REPO_CLIENT_TEST_KEY)
         self.assertEqual(value, '')
+
+    def test_removes_unfinished_generation(self):
+        gen_id = self.create_generation()
+        self.repo.remove_generation(gen_id)
+        self.assertEqual(self.repo.get_client_generation_ids('fooclient'), [])
+
+    def test_removes_finished_generation(self):
+        gen_id = self.create_generation()
+        self.repo.commit_client('fooclient')
+        self.repo.lock_client('fooclient')
+        self.repo.remove_generation(gen_id)
+        self.assertEqual(self.repo.get_client_generation_ids('fooclient'), [])
+
+    def test_removing_removed_generation_fails(self):
+        gen_id = self.create_generation()
+        self.repo.remove_generation(gen_id)
+        self.assertRaises(
+            obnamlib.RepositoryGenerationDoesNotExist,
+            self.repo.remove_generation, gen_id)
+
+    def test_removing_generation_without_client_lock_fails(self):
+        gen_id = self.create_generation()
+        self.repo.commit_client('fooclient')
+        self.assertRaises(
+            obnamlib.RepositoryClientNotLocked,
+            self.repo.remove_generation, gen_id)
+
+    def test_unlocking_client_forgets_generation_removal(self):
+        gen_id = self.create_generation()
+        self.repo.commit_client('fooclient')
+        self.repo.lock_client('fooclient')
+        self.repo.remove_generation(gen_id)
+        self.repo.unlock_client('fooclient')
+        self.assertEqual(
+            self.repo.get_client_generation_ids('fooclient'),
+            [gen_id])
+
+    def test_committing_client_actually_removes_generation(self):
+        gen_id = self.create_generation()
+        self.repo.remove_generation(gen_id)
+        self.repo.commit_client('fooclient')
+        self.assertEqual(self.repo.get_client_generation_ids('fooclient'), [])
 

@@ -97,6 +97,7 @@ from repo_interface import (
     RepositoryClientKeyNotAllowed,
     RepositoryClientGenerationUnfinished,
     RepositoryGenerationKeyNotAllowed,
+    RepositoryGenerationDoesNotExist,
     REPO_CLIENT_TEST_KEY,
     REPO_GENERATION_TEST_KEY)
 from repo_dummy import RepositoryFormatDummy
