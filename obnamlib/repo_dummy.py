@@ -21,6 +21,12 @@ import obnamlib
 
 class RepositoryFormatDummy(obnamlib.RepositoryInterface):
 
+    '''Simplistic repository format for testing.
+
+    This class exists to exercise the RepositoryInterfaceTests class.
+
+    '''
+
     format = 'dummy'
 
     def __init__(self):
