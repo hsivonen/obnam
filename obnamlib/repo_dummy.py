@@ -83,3 +83,12 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
             raise obnamlib.RepositoryClientDoesNotExist(client_name)
         self._client_names.remove(client_name)
 
+    def rename_client(self, old_client_name, new_client_name):
+        self._require_client_list_lock()
+        if old_client_name not in self._client_names:
+            raise obnamlib.RepositoryClientDoesNotExist(old_client_name)
+        if new_client_name in self._client_names:
+            raise obnamlib.RepositoryClientAlreadyExists(old_client_name)
+        self._client_names.remove(old_client_name)
+        self._client_names.append(new_client_name)
+
