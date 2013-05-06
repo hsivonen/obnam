@@ -233,6 +233,10 @@ class RepositoryInterface(object):
         '''
         raise NotImplementedError()
 
+    def get_allowed_client_keys(self):
+        '''Return list of allowed per-client keys for thist format.'''
+        raise NotImplementedError()
+
     #def get_client_keys(self, client_name):
     #def get_client_key_value(self, client_name, key):
     #def set_client_key_value(self, client_name, key, value):
@@ -501,4 +505,7 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.assertRaises(
             obnamlib.RepositoryClientNotLocked,
             self.repo.commit_client, 'fooclient')
+
+    def test_has_list_of_allowed_client_keys(self):
+        self.assertEqual(type(self.repo.get_allowed_client_keys()), list)
 

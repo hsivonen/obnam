@@ -108,3 +108,6 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
     def commit_client(self, client_name):
         self._require_client_lock(client_name)
 
+    def get_allowed_client_keys(self):
+        return []
+
