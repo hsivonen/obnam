@@ -23,6 +23,12 @@ import unittest
 import obnamlib
 
 
+class RepositoryClientListLockingFailed(obnamlib.Error):
+
+    def __init__(self):
+        self.msg = 'Repository client list could not be locked'
+
+
 class RepositoryClientListNotLocked(obnamlib.Error):
 
     def __init__(self):
@@ -325,4 +331,11 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.repo.commit_client_list()
 
         self.assertEqual(self.repo.get_client_names(), [])
+
+    def test_locking_client_list_twice_fails(self):
+        self.repo.init_repo()
+        self.repo.lock_client_list()
+        self.assertRaises(
+            obnamlib.RepositoryClientListLockingFailed,
+            self.repo.lock_client_list)
 
