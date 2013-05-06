@@ -107,7 +107,16 @@ class RepositoryInterface(object):
         '''Set the Obnam VFS instance for accessing the filesystem.'''
         raise NotImplementedError()
 
-    #def init_repo(self):
+    def init_repo(self):
+        '''Initialize a nearly-empty directory for this format version.
+
+        The repository will contain the file ``metadata/format``,
+        with the right contents, but nothing else.
+
+        '''
+
+        raise NotImplementedError()
+
     #def destroy_repo(self):
     #def get_repo_keys(self):
     #def get_repo_key_value(self, key):

@@ -26,3 +26,6 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
     def set_fs(self, fs):
         pass
 
+    def init_repo(self):
+        pass
+
