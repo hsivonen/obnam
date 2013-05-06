@@ -90,6 +90,15 @@ class RepositoryClientGenerationUnfinished(obnamlib.Error):
             client_name)
 
 
+class RepositoryGenerationKeyNotAllowed(obnamlib.Error):
+
+    def __init__(self, format, client_name, key):
+        self.msg = (
+            'Client %s uses repository format %s '
+            'which does not allow the key %s to be use for generations' %
+            (format, client_name, key))
+
+
 class RepositoryInterface(object):
 
     '''Abstract interface to Obnam backup repositories.
@@ -312,8 +321,10 @@ class RepositoryInterface(object):
         '''Return current value for a generation key.'''
         raise NotImplementedError()
 
-    #def set_generation_key_value(self, generation_id, key, value):
-    #def remove_generation_key(self, generation_id, key):
+    def set_generation_key(self, generation_id, key, value):
+        '''Set a key/value pair for a given generation.'''
+        raise NotImplementedError()
+
     #def remove_generation(self, generation_id):
     #def get_chunk_ids_in_generation(self, generation_id):
     #def interpret_generation_spec(self, genspec): # returns generation id
@@ -622,7 +633,7 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
             value = self.repo.get_client_key('fooclient', key)
             self.assertEqual(type(value), str)
 
-    def test_has_empty_string_for_test_key(self):
+    def test_has_empty_string_for_client_test_key(self):
         self.setup_client()
         value = self.repo.get_client_key(
             'fooclient', obnamlib.REPO_CLIENT_TEST_KEY)
@@ -637,7 +648,7 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
             'fooclient', obnamlib.REPO_CLIENT_TEST_KEY)
         self.assertEqual(value, 'bar')
 
-    def test_setting_unallowed_key_fails(self):
+    def test_setting_unallowed_client_key_fails(self):
         self.setup_client()
         self.repo.lock_client('fooclient')
         self.assertRaises(
@@ -735,4 +746,50 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         for key in self.repo.get_allowed_generation_keys():
             value = self.repo.get_generation_key(gen_id, key)
             self.assertEqual(type(value), str)
+
+    def test_has_empty_string_for_generation_test_key(self):
+        gen_id = self.create_generation()
+        value = self.repo.get_generation_key(
+            gen_id, obnamlib.REPO_GENERATION_TEST_KEY)
+        self.assertEqual(value, '')
+
+    def test_sets_generation_key(self):
+        gen_id = self.create_generation()
+        self.repo.set_generation_key(
+            gen_id, obnamlib.REPO_GENERATION_TEST_KEY, 'bar')
+        value = self.repo.get_generation_key(
+            gen_id, obnamlib.REPO_GENERATION_TEST_KEY)
+        self.assertEqual(value, 'bar')
+
+    def test_setting_unallowed_generation_key_fails(self):
+        gen_id = self.create_generation()
+        self.assertRaises(
+            obnamlib.RepositoryGenerationKeyNotAllowed,
+            self.repo.set_generation_key, gen_id, WRONG_KEY, '')
+
+    def test_setting_generation_key_without_locking_fails(self):
+        gen_id = self.create_generation()
+        self.repo.commit_client('fooclient')
+        self.assertRaises(
+            obnamlib.RepositoryClientNotLocked,
+            self.repo.set_generation_key,
+            gen_id, obnamlib.REPO_GENERATION_TEST_KEY, 'bar')
+
+    def test_committing_client_preserves_generation_key_changs(self):
+        gen_id = self.create_generation()
+        self.repo.set_generation_key(
+            gen_id, obnamlib.REPO_GENERATION_TEST_KEY, 'bar')
+        value = self.repo.get_generation_key(
+            gen_id, obnamlib.REPO_GENERATION_TEST_KEY)
+        self.repo.commit_client('fooclient')
+        self.assertEqual(value, 'bar')
+
+    def test_unlocking_client_undoes_generation_key_changes(self):
+        gen_id = self.create_generation()
+        self.repo.set_generation_key(
+            gen_id, obnamlib.REPO_GENERATION_TEST_KEY, 'bar')
+        self.repo.unlock_client('fooclient')
+        value = self.repo.get_generation_key(
+            gen_id, obnamlib.REPO_CLIENT_TEST_KEY)
+        self.assertEqual(value, '')
 

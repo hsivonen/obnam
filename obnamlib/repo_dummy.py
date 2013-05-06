@@ -141,6 +141,10 @@ class DummyClient(object):
     def get_generation_key(self, gen_id, key):
         return self.data.get_value(gen_id + (key,), '')
 
+    def set_generation_key(self, gen_id, key, value):
+        self._require_lock()
+        self.data.set_value(gen_id + (key,), value)
+
 
 class DummyClientList(object):
 
@@ -287,3 +291,11 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
     def get_generation_key(self, generation_id, key):
         client = self._client_list.get_client_by_generation_id(generation_id)
         return client.get_generation_key(generation_id, key)
+
+    def set_generation_key(self, generation_id, key, value):
+        client = self._client_list.get_client_by_generation_id(generation_id)
+        if key not in self.get_allowed_generation_keys():
+            raise obnamlib.RepositoryGenerationKeyNotAllowed(
+                self.format, client.name, key)
+        return client.set_generation_key(generation_id, key, value)
+
