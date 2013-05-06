@@ -69,12 +69,14 @@ class CleanMore(clean):
 class Check(Command):
 
     user_options = [
+        ('unit-only', 'u', 'run unit tests tests only?'),
         ('fast', 'f', 'run fast tests only?'),
         ('network', 'n', 'run network tests to localhost?'),
         ('network-only', 'N', 'only run network tests to localhost?'),
     ]
 
     def initialize_options(self):
+        self.unit_only = False
         self.fast = False
         self.network = False
         self.network_only = False
@@ -86,9 +88,9 @@ class Check(Command):
         local = not self.network_only
         network = self.network or self.network_only
         fast = self.fast
-        slow = not self.fast
+        slow = not self.fast and not self.unit_only
 
-        if local and fast:
+        if local and (self.unit_only or fast):
             print "run unit tests"
             runcmd(['python', '-m', 'CoverageTestRunner',
                     '--ignore-missing-from=without-tests'])
@@ -104,7 +106,7 @@ class Check(Command):
         if local and slow:
             print "run locking tests"
             test_repo = tempfile.mkdtemp()
-            runcmd(['./test-locking', num_clients, 
+            runcmd(['./test-locking', num_clients,
                     num_generations, test_repo, test_repo])
             shutil.rmtree(test_repo)
 
@@ -127,10 +129,10 @@ class Check(Command):
             print "re-run locking tests using localhost networking"
             test_repo = tempfile.mkdtemp()
             repo_url = 'sftp://localhost/%s' % test_repo
-            runcmd(['./test-locking', num_clients, 
+            runcmd(['./test-locking', num_clients,
                     num_generations, repo_url, test_repo])
             shutil.rmtree(test_repo)
-            
+
         print "setup.py check done"
 
 
