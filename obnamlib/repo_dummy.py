@@ -109,14 +109,9 @@ class DummyClientList(object):
             return [c.name for c in self.clients]
 
     def __getitem__(self, client_name):
-        if self.locked:
-            for client in self.wip_clients:
-                if client_name == (client.new_name or client.name):
-                    return client
-        else:
-            for client in self.clients:
-                if client_name == client.name:
-                    return client
+        for client in self.clients:
+            if client_name == client.name:
+                return client
         raise obnamlib.RepositoryClientDoesNotExist(client_name)
 
     def add(self, client_name):
