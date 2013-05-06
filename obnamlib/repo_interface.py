@@ -339,3 +339,15 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
             obnamlib.RepositoryClientListLockingFailed,
             self.repo.lock_client_list)
 
+    def test_unlocking_client_list_when_unlocked_fails(self):
+        self.repo.init_repo()
+        self.assertRaises(
+            obnamlib.RepositoryClientListNotLocked,
+            self.repo.unlock_client_list)
+
+    def test_committing_client_list_when_unlocked_fails(self):
+        self.repo.init_repo()
+        self.assertRaises(
+            obnamlib.RepositoryClientListNotLocked,
+            self.repo.commit_client_list)
+
