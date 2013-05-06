@@ -251,12 +251,16 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
 
     '''
 
+    # Tests for repository level things.
+
     def test_has_format_attribute(self):
         self.assertEqual(type(self.repo.format), str)
 
     def test_has_set_fs_method(self):
         # We merely test that set_fs can be called.
         self.assertEqual(self.repo.set_fs(None), None)
+
+    # Tests for the client list.
 
     def test_has_no_clients_initially(self):
         self.repo.init_repo()
@@ -267,6 +271,17 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.repo.lock_client_list()
         self.repo.add_client('foo')
         self.assertEqual(self.repo.get_client_names(), ['foo'])
+
+    def test_renames_a_client(self):
+        self.repo.init_repo()
+
+        self.repo.lock_client_list()
+        self.repo.add_client('foo')
+        self.repo.commit_client_list()
+
+        self.repo.lock_client_list()
+        self.repo.rename_client('foo', 'bar')
+        self.assertEqual(self.repo.get_client_names(), ['bar'])
 
     def test_removes_a_client(self):
         self.repo.init_repo()
@@ -283,6 +298,26 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
             obnamlib.RepositoryClientAlreadyExists,
             self.repo.add_client, 'foo')
 
+    def test_fails_renaming_nonexistent_client(self):
+        self.repo.init_repo()
+        self.repo.lock_client_list()
+        self.assertRaises(
+            obnamlib.RepositoryClientDoesNotExist,
+            self.repo.rename_client, 'foo', 'bar')
+
+    def test_fails_renaming_to_existing_client(self):
+        self.repo.init_repo()
+
+        self.repo.lock_client_list()
+        self.repo.add_client('foo')
+        self.repo.add_client('bar')
+        self.repo.commit_client_list()
+
+        self.repo.lock_client_list()
+        self.assertRaises(
+            obnamlib.RepositoryClientAlreadyExists,
+            self.repo.rename_client, 'foo', 'bar')
+
     def test_fails_removing_nonexistent_client(self):
         self.repo.init_repo()
         self.repo.lock_client_list()
@@ -296,24 +331,39 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
             obnamlib.RepositoryClientListNotLocked,
             self.repo.add_client, 'foo')
 
+    def test_raises_lock_error_if_renaming_client_without_locking(self):
+        self.repo.init_repo()
+        self.repo.lock_client_list()
+        self.repo.add_client('foo')
+        self.repo.commit_client_list()
+        self.assertRaises(
+            obnamlib.RepositoryClientListNotLocked,
+            self.repo.rename_client, 'foo', 'bar')
+
     def test_raises_lock_error_if_removing_client_without_locking(self):
         self.repo.init_repo()
         self.assertRaises(
             obnamlib.RepositoryClientListNotLocked,
             self.repo.remove_client, 'foo')
 
-    def test_unlocking_client_list_reverts_changes(self):
+    def test_unlocking_client_list_does_not_add_client(self):
         self.repo.init_repo()
         self.repo.lock_client_list()
         self.repo.add_client('foo')
         self.repo.unlock_client_list()
         self.assertEqual(self.repo.get_client_names(), [])
 
-    def test_committing_client_list_keeps_changes(self):
+    def test_unlocking_client_does_not_rename_client(self):
         self.repo.init_repo()
+
         self.repo.lock_client_list()
         self.repo.add_client('foo')
         self.repo.commit_client_list()
+
+        self.repo.lock_client_list()
+        self.repo.rename_client('foo', 'bar')
+        self.repo.unlock_client_list()
+
         self.assertEqual(self.repo.get_client_names(), ['foo'])
 
     def test_unlocking_client_list_does_not_remove_client(self):
@@ -328,6 +378,26 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.repo.unlock_client_list()
 
         self.assertEqual(self.repo.get_client_names(), ['foo'])
+
+    def test_committing_client_list_adds_client(self):
+        self.repo.init_repo()
+        self.repo.lock_client_list()
+        self.repo.add_client('foo')
+        self.repo.commit_client_list()
+        self.assertEqual(self.repo.get_client_names(), ['foo'])
+
+    def test_committing_client_list_renames_client(self):
+        self.repo.init_repo()
+
+        self.repo.lock_client_list()
+        self.repo.add_client('foo')
+        self.repo.commit_client_list()
+
+        self.repo.lock_client_list()
+        self.repo.rename_client('foo', 'bar')
+        self.repo.commit_client_list()
+
+        self.assertEqual(self.repo.get_client_names(), ['bar'])
 
     def test_commiting_client_list_removes_client(self):
         self.repo.init_repo()
@@ -368,70 +438,4 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.repo.force_client_list_lock()
         self.repo.add_client('foo')
         self.assertEqual(self.repo.get_client_names(), ['foo'])
-
-    def test_renames_a_client_within_lock(self):
-        self.repo.init_repo()
-
-        self.repo.lock_client_list()
-        self.repo.add_client('foo')
-        self.repo.commit_client_list()
-
-        self.repo.lock_client_list()
-        self.repo.rename_client('foo', 'bar')
-        self.assertEqual(self.repo.get_client_names(), ['bar'])
-
-    def test_rename_of_client_is_committed(self):
-        self.repo.init_repo()
-
-        self.repo.lock_client_list()
-        self.repo.add_client('foo')
-        self.repo.commit_client_list()
-
-        self.repo.lock_client_list()
-        self.repo.rename_client('foo', 'bar')
-        self.repo.commit_client_list()
-
-        self.assertEqual(self.repo.get_client_names(), ['bar'])
-
-    def test_rename_of_client_is_undone_when_not_committed(self):
-        self.repo.init_repo()
-
-        self.repo.lock_client_list()
-        self.repo.add_client('foo')
-        self.repo.commit_client_list()
-
-        self.repo.lock_client_list()
-        self.repo.rename_client('foo', 'bar')
-        self.repo.unlock_client_list()
-
-        self.assertEqual(self.repo.get_client_names(), ['foo'])
-
-    def test_raises_lock_error_if_renaming_client_without_locking(self):
-        self.repo.init_repo()
-        self.repo.lock_client_list()
-        self.repo.add_client('foo')
-        self.repo.commit_client_list()
-        self.assertRaises(
-            obnamlib.RepositoryClientListNotLocked,
-            self.repo.rename_client, 'foo', 'bar')
-
-    def test_fails_renaming_nonexistent_client(self):
-        self.repo.init_repo()
-        self.repo.lock_client_list()
-        self.assertRaises(
-            obnamlib.RepositoryClientDoesNotExist,
-            self.repo.rename_client, 'foo', 'bar')
-
-    def test_fails_renaming_to_existing_client(self):
-        self.repo.init_repo()
-
-        self.repo.lock_client_list()
-        self.repo.add_client('foo')
-        self.repo.add_client('bar')
-        self.repo.commit_client_list()
-
-        self.repo.lock_client_list()
-        self.assertRaises(
-            obnamlib.RepositoryClientAlreadyExists,
-            self.repo.rename_client, 'foo', 'bar')
 
