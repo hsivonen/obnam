@@ -27,6 +27,7 @@ class DummyClient(object):
         self.locked = False
         self.tuples = []
         self.wip_tuples = []
+        self.generations = []
 
     def lock(self):
         if self.locked:
@@ -60,6 +61,9 @@ class DummyClient(object):
         self._require_lock()
         self.wip_tuples = [(k,v) for k,v in self.wip_tuples if k != key]
         self.wip_tuples.append((key, value))
+
+    def get_generation_ids(self):
+        return self.generations
 
 
 class DummyClientList(object):
@@ -207,4 +211,7 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
             raise obnamlib.RepositoryClientKeyNotAllowed(
                 self.format, client_name, key)
         self._client_list[client_name].set_key(key, value)
+
+    def get_client_generation_ids(self, client_name):
+        return self._client_list[client_name].get_generation_ids()
 

@@ -273,7 +273,16 @@ class RepositoryInterface(object):
         '''Set value for a per-client key.'''
         raise NotImplementedError()
 
-    #def get_client_generation_ids(self, client_name):
+    def get_client_generation_ids(self, client_name):
+        '''Return a list of opague ids for generations in a client.
+
+        The list is ordered: the first id in the list is the oldest
+        generation. The ids needs not be sortable, and they may or
+        may not be simple types.
+
+        '''
+        raise NotImplementedError()
+
     #def create_generation(self, client_name): # return generation_id
 
     ## Generations. The generation id identifies client as well.
@@ -644,4 +653,8 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
             obnamlib.RepositoryClientDoesNotExist,
             self.repo.get_client_key, 'notexistclient',
             obnamlib.REPO_CLIENT_TEST_KEY)
+
+    def test_new_client_has_no_generations(self):
+        self.setup_client()
+        self.assertEqual(self.repo.get_client_generation_ids('fooclient'), [])
 
