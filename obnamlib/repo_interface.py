@@ -190,6 +190,12 @@ class RepositoryInterface(object):
     initialiser. RepositoryFactory will know how to call it,
     giving it all the information it needs.
 
+    Generation and chunk identifiers, as returned by this API, are
+    opaque objects, which may be compared for equality, but not for
+    sorting. A generation id will include information to identify
+    the client it belongs to, in order to make it unnecessary to
+    always specify the client.
+
     '''
 
     # Operations on the repository itself.
