@@ -404,7 +404,15 @@ class RepositoryInterface(object):
         '''
         raise NotImplementedError()
 
-    #def remove_file(self, generation_id, filename):
+    def remove_file(self, generation_id, filename):
+        '''Removes a file from the given generation.
+
+        The generation MUST be the created, but not committed or
+        unlocked generation.
+
+        '''
+        raise NotImplementedError()
+
     #def get_file_keys(self, generation_id, filename):
     #def get_file_key_value(self, generation_id, filename, key):
     #def set_file_key_value(self, generation_id, filename, key, value):
@@ -952,4 +960,57 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         gen_id = self.create_generation()
         self.repo.add_file(gen_id, '/foo/bar')
         self.assertTrue(self.repo.file_exists(gen_id, '/foo/bar'))
+
+    def test_unlocking_forgets_file_add(self):
+        gen_id = self.create_generation()
+        self.repo.add_file(gen_id, '/foo/bar')
+        self.repo.unlock_client('fooclient')
+        self.assertFalse(self.repo.file_exists(gen_id, '/foo/bar'))
+
+    def test_committing_remembers_file_add(self):
+        gen_id = self.create_generation()
+        self.repo.add_file(gen_id, '/foo/bar')
+        self.repo.commit_client('fooclient')
+        self.assertTrue(self.repo.file_exists(gen_id, '/foo/bar'))
+
+    def test_creating_generation_clones_previous_one(self):
+        gen_id = self.create_generation()
+        self.repo.add_file(gen_id, '/foo/bar')
+        self.repo.commit_client('fooclient')
+
+        self.repo.lock_client('fooclient')
+        gen_id_2 = self.repo.create_generation('fooclient')
+        self.assertTrue(self.repo.file_exists(gen_id_2, '/foo/bar'))
+
+    def test_removes_added_file_from_current_generation(self):
+        gen_id = self.create_generation()
+        self.repo.add_file(gen_id, '/foo/bar')
+        self.repo.remove_file(gen_id, '/foo/bar')
+        self.assertFalse(self.repo.file_exists(gen_id, '/foo/bar'))
+
+    def test_unlocking_forgets_file_remova(self):
+        gen_id = self.create_generation()
+        self.repo.add_file(gen_id, '/foo/bar')
+        self.repo.commit_client('fooclient')
+
+        self.repo.lock_client('fooclient')
+        gen_id_2 = self.repo.create_generation('fooclient')
+        self.repo.remove_file(gen_id, '/foo/bar')
+        self.repo.unlock_client('fooclient')
+
+        self.assertTrue(self.repo.file_exists(gen_id, '/foo/bar'))
+
+    def test_committing_remembers_file_removal(self):
+        gen_id = self.create_generation()
+        self.repo.add_file(gen_id, '/foo/bar')
+        self.repo.commit_client('fooclient')
+
+        self.repo.lock_client('fooclient')
+        gen_id_2 = self.repo.create_generation('fooclient')
+        self.assertTrue(self.repo.file_exists(gen_id_2, '/foo/bar'))
+        self.repo.remove_file(gen_id_2, '/foo/bar')
+        self.repo.commit_client('fooclient')
+
+        self.assertTrue(self.repo.file_exists(gen_id, '/foo/bar'))
+        self.assertFalse(self.repo.file_exists(gen_id_2, '/foo/bar'))
 

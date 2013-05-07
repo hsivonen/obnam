@@ -130,6 +130,17 @@ class DummyClient(object):
         ids = self.data.get_value('generation-ids', [])
         self.data.set_value('generation-ids', ids + [generation_id])
         self.data.set_value('current-generation', generation_id)
+
+        if ids:
+            prev_gen_id = ids[-1]
+            for key, value in self.data.items():
+                if self._is_filekey(key):
+                    x, gen_id, filename = key
+                    if gen_id == prev_gen_id:
+                        value = self.data.get_value(key, None)
+                        self.data.set_value(
+                            self._filekey(generation_id, filename), value)
+
         return generation_id
 
     def get_generation_key(self, gen_id, key):
@@ -166,11 +177,20 @@ class DummyClient(object):
         name, gen_number = generation_id
         return str(gen_number)
 
+    def _filekey(self, gen_id, filename):
+        return ('file', gen_id, filename)
+
+    def _is_filekey(self, key):
+        return (type(key) is tuple and len(key) == 3 and key[0] == 'file')
+
     def file_exists(self, gen_id, filename):
-        return self.data.get_value((gen_id, filename), False)
+        return self.data.get_value(self._filekey(gen_id, filename), False)
 
     def add_file(self, gen_id, filename):
-        self.data.set_value((gen_id, filename), True)
+        self.data.set_value(self._filekey(gen_id, filename), True)
+
+    def remove_file(self, gen_id, filename):
+        self.data.set_value(self._filekey(gen_id, filename), False)
 
 
 class DummyClientList(object):
@@ -345,4 +365,8 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
     def add_file(self, generation_id, filename):
         client = self._client_list.get_client_by_generation_id(generation_id)
         return client.add_file(generation_id, filename)
+
+    def remove_file(self, generation_id, filename):
+        client = self._client_list.get_client_by_generation_id(generation_id)
+        return client.remove_file(generation_id, filename)
 
