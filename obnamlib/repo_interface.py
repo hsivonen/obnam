@@ -385,11 +385,25 @@ class RepositoryInterface(object):
         '''
         raise NotImplementedError()
 
-    #def walk_generation(self, generation_id, filename): # generator
+    # Individual files and directories in a generation.
 
-    ## Individual files and directories in a generation.
-    #def file_exists(self, generation_id, filename):
-    #def add_file(self, generation_id, filename):
+    def file_exists(self, generation_id, filename):
+        '''Does a file exist in a generation?
+
+        The filename should be the full path to the file.
+
+        '''
+        raise NotImplementedError()
+
+    def add_file(self, generation_id, filename):
+        '''Adds a file to the generation.
+
+        Any metadata about the file needs to be added with
+        set_file_key.
+
+        '''
+        raise NotImplementedError()
+
     #def remove_file(self, generation_id, filename):
     #def get_file_keys(self, generation_id, filename):
     #def get_file_key_value(self, generation_id, filename, key):
@@ -927,3 +941,15 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.assertRaises(
             obnamlib.RepositoryGenerationDoesNotExist,
             self.repo.interpret_generation_spec, 'fooclient', genspec)
+
+    # Tests for individual files in a generation.
+
+    def test_file_does_not_exist(self):
+        gen_id = self.create_generation()
+        self.assertFalse(self.repo.file_exists(gen_id, '/foo/bar'))
+
+    def test_adds_file(self):
+        gen_id = self.create_generation()
+        self.repo.add_file(gen_id, '/foo/bar')
+        self.assertTrue(self.repo.file_exists(gen_id, '/foo/bar'))
+

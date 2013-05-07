@@ -166,6 +166,12 @@ class DummyClient(object):
         name, gen_number = generation_id
         return str(gen_number)
 
+    def file_exists(self, gen_id, filename):
+        return self.data.get_value((gen_id, filename), False)
+
+    def add_file(self, gen_id, filename):
+        self.data.set_value((gen_id, filename), True)
+
 
 class DummyClientList(object):
 
@@ -331,4 +337,12 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
     def make_generation_spec(self, generation_id):
         client = self._client_list.get_client_by_generation_id(generation_id)
         return client.make_generation_spec(generation_id)
+
+    def file_exists(self, generation_id, filename):
+        client = self._client_list.get_client_by_generation_id(generation_id)
+        return client.file_exists(generation_id, filename)
+
+    def add_file(self, generation_id, filename):
+        client = self._client_list.get_client_by_generation_id(generation_id)
+        return client.add_file(generation_id, filename)
 
