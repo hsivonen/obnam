@@ -341,7 +341,16 @@ class RepositoryInterface(object):
         '''
         raise NotImplementedError()
 
-    #def get_chunk_ids_in_generation(self, generation_id):
+    def get_generation_chunk_ids(self, generation_id):
+        '''Return list of chunk ids used by a generation.
+
+        Each file lists the chunks it uses, but iterating over all
+        files is expensive. This method gives a potentially more
+        efficient way of getting the information.
+
+        '''
+        raise NotImplementedError()
+
     #def interpret_generation_spec(self, genspec): # returns generation id
     #def walk_generation(self, generation_id, filename): # generator
 
@@ -849,4 +858,8 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.repo.remove_generation(gen_id)
         self.repo.commit_client('fooclient')
         self.assertEqual(self.repo.get_client_generation_ids('fooclient'), [])
+
+    def test_empty_generation_uses_no_chunk_ids(self):
+        gen_id = self.create_generation()
+        self.assertEqual(self.repo.get_generation_chunk_ids(gen_id), [])
 

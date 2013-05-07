@@ -146,6 +146,9 @@ class DummyClient(object):
             raise obnamlib.RepositoryGenerationDoesNotExist(self.name)
         self.data.set_value('generation-ids', [x for x in ids if x != gen_id])
 
+    def get_generation_chunk_ids(self, gen_id):
+        return []
+
 
 class DummyClientList(object):
 
@@ -299,4 +302,8 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
     def remove_generation(self, generation_id):
         client = self._client_list.get_client_by_generation_id(generation_id)
         client.remove_generation(generation_id)
+
+    def get_generation_chunk_ids(self, generation_id):
+        client = self._client_list.get_client_by_generation_id(generation_id)
+        return client.get_generation_chunk_ids(generation_id)
 
