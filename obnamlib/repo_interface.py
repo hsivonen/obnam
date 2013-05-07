@@ -103,8 +103,14 @@ class RepositoryGenerationDoesNotExist(obnamlib.Error):
 
     def __init__(self, client_name):
         self.msg = (
-            'Cannot remove non-existent generation from client %s' %
+            'Cannot find requested generation for client %s' %
             client_name)
+
+
+class RepositoryClientHasNoGenerations(obnamlib.Error):
+
+    def __init__(self, client_name):
+        self.msg = 'Client %s has no generations' % client_name
 
 
 class RepositoryInterface(object):
@@ -357,7 +363,28 @@ class RepositoryInterface(object):
         '''
         raise NotImplementedError()
 
-    #def interpret_generation_spec(self, genspec): # returns generation id
+    def interpret_generation_spec(self, client_name, genspec):
+        '''Return the generation id for a user-given specification.
+
+        The specification is a string, and either gives the number
+        of a generation, or is the word 'latest'.
+
+        The return value is a generation id usable with the
+        RepositoryInterface API.
+
+        '''
+        raise NotImplementedError()
+
+    def make_generation_spec(self, gen_id):
+        '''Return a generation spec that matches a given generation id.
+
+        If we tell the user the returned string, and they later give
+        it to interpret_generation_spec, the same generation id is
+        returned.
+
+        '''
+        raise NotImplementedError()
+
     #def walk_generation(self, generation_id, filename): # generator
 
     ## Individual files and directories in a generation.
@@ -869,3 +896,34 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         gen_id = self.create_generation()
         self.assertEqual(self.repo.get_generation_chunk_ids(gen_id), [])
 
+    def test_interprets_latest_as_a_generation_spec(self):
+        gen_id = self.create_generation()
+        self.assertEqual(
+            self.repo.interpret_generation_spec('fooclient', 'latest'),
+            gen_id)
+
+    def test_interpreting_latest_genspec_without_generations_fails(self):
+        self.setup_client()
+        self.assertRaises(
+            obnamlib.RepositoryClientHasNoGenerations,
+            self.repo.interpret_generation_spec, 'fooclient', 'latest')
+
+    def test_interprets_generation_spec(self):
+        gen_id = self.create_generation()
+        genspec = self.repo.make_generation_spec(gen_id)
+        self.assertEqual(
+            self.repo.interpret_generation_spec('fooclient', genspec),
+            gen_id)
+
+    def test_interpreting_generation_spec_for_removed_generation_fails(self):
+        # Note that we must have at least one generation, after removing
+        # one.
+        gen_id = self.create_generation()
+        self.repo.commit_client('fooclient')
+        self.repo.lock_client('fooclient')
+        gen_id_2 = self.repo.create_generation('fooclient')
+        genspec = self.repo.make_generation_spec(gen_id)
+        self.repo.remove_generation(gen_id)
+        self.assertRaises(
+            obnamlib.RepositoryGenerationDoesNotExist,
+            self.repo.interpret_generation_spec, 'fooclient', genspec)

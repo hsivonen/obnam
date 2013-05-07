@@ -149,6 +149,23 @@ class DummyClient(object):
     def get_generation_chunk_ids(self, gen_id):
         return []
 
+    def interpret_generation_spec(self, genspec):
+        ids = self.data.get_value('generation-ids', [])
+        if not ids:
+            raise obnamlib.RepositoryClientHasNoGenerations(self.name)
+        if genspec == 'latest':
+            if ids:
+                return ids[-1]
+        else:
+            gen_number = int(genspec)
+            if (self.name, gen_number) in ids:
+                return (self.name, gen_number)
+        raise obnamlib.RepositoryGenerationDoesNotExist(self.name)
+
+    def make_generation_spec(self, generation_id):
+        name, gen_number = generation_id
+        return str(gen_number)
+
 
 class DummyClientList(object):
 
@@ -306,4 +323,12 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
     def get_generation_chunk_ids(self, generation_id):
         client = self._client_list.get_client_by_generation_id(generation_id)
         return client.get_generation_chunk_ids(generation_id)
+
+    def interpret_generation_spec(self, client_name, genspec):
+        client = self._client_list[client_name]
+        return client.interpret_generation_spec(genspec)
+
+    def make_generation_spec(self, generation_id):
+        client = self._client_list.get_client_by_generation_id(generation_id)
+        return client.make_generation_spec(generation_id)
 
