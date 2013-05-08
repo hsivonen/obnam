@@ -202,6 +202,23 @@ class RepositoryInterface(object):
     the client it belongs to, in order to make it unnecessary to
     always specify the client.
 
+    File metadata (stat fields, etc) are stored using individual
+    file keys:
+
+        repo.set_file_key(gen_id, filename, REPO_FILE_KEY_MTIME, mtime)
+
+    This is to allow maximum flexibility in how data is actually stored
+    in the repository, and to make the least amount of assumptions
+    that will hinder convertability between repository formats.
+    However, storing them independently is likely to be epxensive,
+    and so the implementation may actually pool file key changes to
+    a file and only actually encode all of them, as a blob, when the
+    API user is finished with a file. There is no API call to indicate
+    that explicitly, but the API implementation can deduce it by noticing
+    that another file's file key, or other metadata, gets set. This
+    design aims to make the API as easy to use as possible, by avoiding
+    an extra "I am finished with this file for now" method call.
+
     '''
 
     # Operations on the repository itself.
@@ -410,17 +427,60 @@ class RepositoryInterface(object):
         The generation MUST be the created, but not committed or
         unlocked generation.
 
+        All the file keys associated with the file are also removed.
+
         '''
         raise NotImplementedError()
 
-    #def get_file_keys(self, generation_id, filename):
-    #def get_file_key_value(self, generation_id, filename, key):
-    #def set_file_key_value(self, generation_id, filename, key, value):
-    #def remove_file_key(self, generation_id, filename, key):
-    #def get_file_chunk_ids(self, generation_id, filename):
-    #def clear_file_chunk_ids(self, generation_id, filename):
-    #def append_file_chunk_id(self, generation_id, filename, chunk_id):
-    #def get_file_children(self, generation_id, filename):
+    def get_allowed_file_keys(self, generation_id, filename):
+        '''Return list of allowed file keys for this format.'''
+        raise NotImplementedError()
+
+    def get_file_key_value(self, generation_id, filename, key):
+        '''Return value for a file key, or empty string.
+
+        The empty string is returned if no value has been set for the
+        file key, or the file does not exist.
+
+        '''
+        raise NotImplementedError()
+
+    def set_file_key_value(self, generation_id, filename, key, value):
+        '''Set value for a file key.
+
+        It is an error to set the value for a file key if the file does
+        not exist yet.
+
+        '''
+        raise NotImplementedError()
+
+    def get_file_chunk_ids(self, generation_id, filename):
+        '''Get the list of chunk ids for a file.'''
+        raise NotImplementedError()
+
+    def clear_file_chunk_ids(self, generation_id, filename):
+        '''Clear the list of chunk ids for a file.'''
+        raise NotImplementedError()
+
+    def append_file_chunk_id(self, generation_id, filename, chunk_id):
+        '''Add a chunk id for a file.
+
+        The chunk id is added to the end of the list of chunk ids,
+        so file data ordering is preserved..
+
+        '''
+        raise NotImplementedError()
+
+    def get_file_children(self, generation_id, filename):
+        '''List contents of a directory.
+
+        This returns a list of full pathnames for all the files in
+        the repository that are direct children of the given file.
+        This may fail if the given file is not a directory, but
+        that is not guaranteed.
+
+        '''
+        raise NotImplementedError()
 
     ## Chunks.
     #def put_chunk_content(self, data): # return new chunk_id
