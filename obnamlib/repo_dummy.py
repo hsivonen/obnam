@@ -199,6 +199,11 @@ class DummyClient(object):
     def _filekeykey(self, gen_id, filename, key):
         return ('filekey', gen_id, filename, key)
 
+    def _require_file(self, gen_id, filename):
+        if not self.file_exists(gen_id, filename):
+            raise obnamlib.RepositoryFileDoesNotExistInGeneration(
+                self.name, self.make_generation_spec(gen_id), filename)
+
     def get_file_key(self, gen_id, filename, key):
         self._require_generation(gen_id)
         return self.data.get_value(
@@ -206,6 +211,7 @@ class DummyClient(object):
 
     def set_file_key(self, gen_id, filename, key, value):
         self._require_generation(gen_id)
+        self._require_file(gen_id, filename)
         self.data.set_value(self._filekeykey(gen_id, filename, key), value)
 
 
