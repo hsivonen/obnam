@@ -401,3 +401,6 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
         client = self._client_list.get_client_by_generation_id(generation_id)
         client.set_file_key(generation_id, filename, key, value)
 
+    def get_allowed_file_keys(self):
+        return [obnamlib.REPO_FILE_TEST_KEY]
+
