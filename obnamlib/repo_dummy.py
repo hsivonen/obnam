@@ -140,6 +140,20 @@ class DummyClient(object):
                         value = self.data.get_value(key, None)
                         self.data.set_value(
                             self._filekey(generation_id, filename), value)
+                elif self._is_filekeykey(key):
+                    x, gen_id, filename, k = key
+                    if gen_id == prev_gen_id:
+                        value = self.data.get_value(key, None)
+                        self.data.set_value(
+                            self._filekeykey(generation_id, filename, k),
+                            value)
+                elif self._is_filechunkskey(key):
+                    x, gen_id, filename = key
+                    if gen_id == prev_gen_id:
+                        value = self.data.get_value(key, [])
+                        self.data.set_value(
+                            self._filechunkskey(generation_id, filename),
+                            value)
 
         return generation_id
 
@@ -199,6 +213,9 @@ class DummyClient(object):
     def _filekeykey(self, gen_id, filename, key):
         return ('filekey', gen_id, filename, key)
 
+    def _is_filekeykey(self, key):
+        return (type(key) is tuple and len(key) == 4 and key[0] == 'filekey')
+
     def _require_file(self, gen_id, filename):
         if not self.file_exists(gen_id, filename):
             raise obnamlib.RepositoryFileDoesNotExistInGeneration(
@@ -218,6 +235,10 @@ class DummyClient(object):
     def _filechunkskey(self, gen_id, filename):
         return ('filechunks', gen_id, filename)
 
+    def _is_filechunkskey(self, key):
+        return (
+            type(key) is tuple and len(key) == 3 and key[0] == 'filechunks')
+
     def get_file_chunk_ids(self, gen_id, filename):
         self._require_generation(gen_id)
         self._require_file(gen_id, filename)
@@ -227,7 +248,7 @@ class DummyClient(object):
         self._require_generation(gen_id)
         self._require_file(gen_id, filename)
         chunk_ids = self.get_file_chunk_ids(gen_id, filename)
-        return self.data.get_value(
+        self.data.set_value(
             self._filechunkskey(gen_id, filename),
             chunk_ids + [chunk_id])
 

@@ -1265,9 +1265,9 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
 
         self.repo.lock_client('fooclient')
         gen_id_2 = self.repo.create_generation('fooclient')
-        self.repo.append_file_chunk_id(gen_id, '/foo/bar', 2)
+        self.repo.append_file_chunk_id(gen_id_2, '/foo/bar', 2)
         self.assertEqual(
-            self.repo.get_file_chunk_ids(gen_id, '/foo/bar'),
+            self.repo.get_file_chunk_ids(gen_id_2, '/foo/bar'),
             [1, 2])
 
         self.repo.unlock_client('fooclient')
@@ -1283,9 +1283,9 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
 
         self.repo.lock_client('fooclient')
         gen_id_2 = self.repo.create_generation('fooclient')
-        self.repo.append_file_chunk_id(gen_id, '/foo/bar', 2)
+        self.repo.append_file_chunk_id(gen_id_2, '/foo/bar', 2)
         self.assertEqual(
-            self.repo.get_file_chunk_ids(gen_id, '/foo/bar'),
+            self.repo.get_file_chunk_ids(gen_id_2, '/foo/bar'),
             [1, 2])
 
         self.repo.commit_client('fooclient')
