@@ -1119,7 +1119,7 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
     def test_get_file_key_fails_for_nonexistent_file(self):
         gen_id = self.create_generation()
         self.assertRaises(
-            obnamlib.RepositoryFileDoesNotHaveKey,
+            obnamlib.RepositoryFileDoesExist,
             self.repo.get_file_key,
             gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY)
 
@@ -1143,7 +1143,7 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
     def test_setting_file_key_for_nonexistent_file_fails(self):
         gen_id = self.create_generation()
         self.assertRaises(
-            obnamlib.RepositoryFileDoesNotHaveKey,
+            obnamlib.RepositoryFileDoesNotExist,
             self.repo.set_file_key,
             gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY, 'yoyo')
 

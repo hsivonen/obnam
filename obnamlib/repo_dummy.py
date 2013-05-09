@@ -143,6 +143,11 @@ class DummyClient(object):
 
         return generation_id
 
+    def _require_generation(self, gen_id):
+        ids = self.data.get_value('generation-ids', [])
+        if gen_id not in ids:
+            raise obnamlib.RepositoryGenerationDoesNotExist(self.name)
+
     def get_generation_key(self, gen_id, key):
         return self.data.get_value(gen_id + (key,), '')
 
@@ -152,9 +157,8 @@ class DummyClient(object):
 
     def remove_generation(self, gen_id):
         self._require_lock()
+        self._require_generation(gen_id)
         ids = self.data.get_value('generation-ids', [])
-        if gen_id not in ids:
-            raise obnamlib.RepositoryGenerationDoesNotExist(self.name)
         self.data.set_value('generation-ids', [x for x in ids if x != gen_id])
 
     def get_generation_chunk_ids(self, gen_id):
@@ -191,6 +195,18 @@ class DummyClient(object):
 
     def remove_file(self, gen_id, filename):
         self.data.set_value(self._filekey(gen_id, filename), False)
+
+    def _filekeykey(self, gen_id, filename, key):
+        return ('filekey', gen_id, filename, key)
+
+    def get_file_key(self, gen_id, filename, key):
+        self._require_generation(gen_id)
+        return self.data.get_value(
+            self._filekeykey(gen_id, filename, key), '')
+
+    def set_file_key(self, gen_id, filename, key, value):
+        self._require_generation(gen_id)
+        self.data.set_value(self._filekeykey(gen_id, filename, key), value)
 
 
 class DummyClientList(object):
@@ -369,4 +385,12 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
     def remove_file(self, generation_id, filename):
         client = self._client_list.get_client_by_generation_id(generation_id)
         return client.remove_file(generation_id, filename)
+
+    def get_file_key(self, generation_id, filename, key):
+        client = self._client_list.get_client_by_generation_id(generation_id)
+        return client.get_file_key(generation_id, filename, key)
+
+    def set_file_key(self, generation_id, filename, key, value):
+        client = self._client_list.get_client_by_generation_id(generation_id)
+        client.set_file_key(generation_id, filename, key, value)
 
