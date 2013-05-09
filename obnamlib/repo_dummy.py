@@ -206,6 +206,7 @@ class DummyClient(object):
 
     def get_file_key(self, gen_id, filename, key):
         self._require_generation(gen_id)
+        self._require_file(gen_id, filename)
         return self.data.get_value(
             self._filekeykey(gen_id, filename, key), '')
 
