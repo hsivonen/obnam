@@ -1291,6 +1291,9 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.repo.commit_client('fooclient')
         self.assertEqual(
             self.repo.get_file_chunk_ids(gen_id, '/foo/bar'),
+            [1])
+        self.assertEqual(
+            self.repo.get_file_chunk_ids(gen_id_2, '/foo/bar'),
             [1, 2])
 
     def test_new_file_has_no_children(self):
