@@ -30,6 +30,7 @@ import obnamlib
 
 REPO_CLIENT_TEST_KEY = 0
 REPO_GENERATION_TEST_KEY = 1
+REPO_FILE_TEST_KEY = 2
 
 # The following is a key that is NOT allowed for any repository format.
 
@@ -111,6 +112,14 @@ class RepositoryClientHasNoGenerations(obnamlib.Error):
 
     def __init__(self, client_name):
         self.msg = 'Client %s has no generations' % client_name
+
+
+class RepositoryFileDoesNotHaveKey(obnamlib.Error):
+
+    def __init__(self, client_name, genspec, filename, key):
+        self.msg = (
+            'Client %s, generation %s, file %s does not have key %s' %
+            (client_name, genspec, filename, key))
 
 
 class RepositoryInterface(object):
@@ -432,11 +441,11 @@ class RepositoryInterface(object):
         '''
         raise NotImplementedError()
 
-    def get_allowed_file_keys(self, generation_id, filename):
+    def get_allowed_file_keys(self):
         '''Return list of allowed file keys for this format.'''
         raise NotImplementedError()
 
-    def get_file_key_value(self, generation_id, filename, key):
+    def get_file_key(self, generation_id, filename, key):
         '''Return value for a file key, or empty string.
 
         The empty string is returned if no value has been set for the
@@ -445,7 +454,7 @@ class RepositoryInterface(object):
         '''
         raise NotImplementedError()
 
-    def set_file_key_value(self, generation_id, filename, key, value):
+    def set_file_key(self, generation_id, filename, key, value):
         '''Set value for a file key.
 
         It is an error to set the value for a file key if the file does
@@ -1073,4 +1082,101 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
 
         self.assertTrue(self.repo.file_exists(gen_id, '/foo/bar'))
         self.assertFalse(self.repo.file_exists(gen_id_2, '/foo/bar'))
+
+    def test_has_list_of_allowed_file_keys(self):
+        self.assertEqual(type(self.repo.get_allowed_file_keys()), list)
+
+    def test_gets_all_allowed_file_keys(self):
+        gen_id = self.create_generation()
+        self.repo.add_file(gen_id, '/foo/bar')
+        for key in self.repo.get_allowed_file_keys():
+            value = self.repo.get_file_key(gen_id, key)
+            self.assertEqual(type(value), str)
+
+    def test_has_empty_string_for_file_test_key(self):
+        gen_id = self.create_generation()
+        self.repo.add_file(gen_id, '/foo/bar')
+        value = self.repo.get_file_key(
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY)
+        self.assertEqual(value, '')
+
+    def test_get_file_key_fails_for_nonexistent_generation(self):
+        gen_id = self.create_generation()
+        self.repo.remove_generation(gen_id)
+        self.assertRaises(
+            obnamlib.RepositoryGenerationDoesNotExist,
+            self.repo.get_file_key,
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY)
+
+    def test_get_file_key_fails_for_nonexistent_file(self):
+        gen_id = self.create_generation()
+        self.assertRaises(
+            obnamlib.RepositoryFileDoesNotHaveKey,
+            self.repo.get_file_key,
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY)
+
+    def test_sets_file_key(self):
+        gen_id = self.create_generation()
+        self.repo.add_file(gen_id, '/foo/bar')
+        self.repo.set_file_key(
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY, 'yoyo')
+        value = self.repo.get_file_key(
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY)
+        self.assertEqual(value, 'yoyo')
+
+    def test_set_file_key_fails_for_nonexistent_generation(self):
+        gen_id = self.create_generation()
+        self.repo.remove_generation(gen_id)
+        self.assertRaises(
+            obnamlib.RepositoryGenerationDoesNotExist,
+            self.repo.set_file_key,
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY, 'yoyo')
+
+    def test_setting_file_key_for_nonexistent_file_fails(self):
+        gen_id = self.create_generation()
+        self.assertRaises(
+            obnamlib.RepositoryFileDoesNotHaveKey,
+            self.repo.set_file_key,
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY, 'yoyo')
+
+    def test_unlocking_client_forgets_set_file_keys(self):
+        gen_id = self.create_generation()
+        self.repo.add_file(gen_id, '/foo/bar')
+        self.repo.set_file_key(
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY, 'yoyo')
+        self.repo.unlock_client('fooclient')
+        value = self.repo.get_file_key(
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY)
+        self.assertEqual(value, '')
+
+    def test_committing_client_remembers_set_file_keys(self):
+        gen_id = self.create_generation()
+        self.repo.add_file(gen_id, '/foo/bar')
+        self.repo.set_file_key(
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY, 'yoyo')
+        self.repo.commit_client('fooclient')
+        value = self.repo.get_file_key(
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY)
+        self.assertEqual(value, 'yoyo')
+
+    def test_setting_file_key_does_not_affect_previous_generation(self):
+        gen_id = self.create_generation()
+        self.repo.add_file(gen_id, '/foo/bar')
+        self.repo.set_file_key(
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY, 'yoyo')
+        self.repo.commit_client()
+
+        self.repo.lock_client('fooclient')
+        gen_id_2 = self.repo.create_generation('fooclient')
+        self.repo.set_file_key(
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY, 'yoyo')
+        self.repo.commit_client('fooclient')
+
+        value = self.repo.get_file_key(
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY)
+        self.assertEqual(value, 'yoyo')
+
+        value_2 = self.repo.get_file_key(
+            gen_id_2, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY)
+        self.assertEqual(value_2, 'yoyo')
 

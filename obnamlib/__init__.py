@@ -99,8 +99,10 @@ from repo_interface import (
     RepositoryGenerationKeyNotAllowed,
     RepositoryGenerationDoesNotExist,
     RepositoryClientHasNoGenerations,
+    RepositoryFileDoesNotHaveKey,
     REPO_CLIENT_TEST_KEY,
-    REPO_GENERATION_TEST_KEY)
+    REPO_GENERATION_TEST_KEY,
+    REPO_FILE_TEST_KEY)
 from repo_dummy import RepositoryFormatDummy
 from repo_tree import RepositoryTree
 from chunklist import ChunkList
