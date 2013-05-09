@@ -122,6 +122,14 @@ class RepositoryFileDoesNotHaveKey(obnamlib.Error):
             (client_name, genspec, filename, key))
 
 
+class RepositoryFileDoesNotExistInGeneration(obnamlib.Error):
+
+    def __init__(self, client_name, genspec, filename):
+        self.msg = (
+            'Client %s, generation %s does not have file %s' %
+            (client_name, genspec, filename))
+
+
 class RepositoryInterface(object):
 
     '''Abstract interface to Obnam backup repositories.
@@ -1179,4 +1187,130 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         value_2 = self.repo.get_file_key(
             gen_id_2, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY)
         self.assertEqual(value_2, 'yoyo')
+
+    def test_new_file_has_no_chunk_ids(self):
+        gen_id = self.create_generation()
+        self.repo.add_file(gen_id, '/foo/bar')
+        self.assertEqual(self.repo.get_file_chunk_ids(gen_id, '/foo/bar'), [])
+
+    def test_getting_file_chunk_ids_for_nonexistent_generation_fails(self):
+        gen_id = self.create_generation()
+        self.remove_generation(gen_id)
+        self.assertRaises(
+            obnamlib.RepositoryGenerationDoesNotExist,
+            self.get_file_chunk_ids, gen_id, '/foo/bar')
+
+    def test_getting_file_chunk_ids_for_nonexistent_file_fails(self):
+        gen_id = self.create_generation()
+        self.assertRaises(
+            obnamlib.RepositoryGenerationDoesNotExist,
+            self.get_file_chunk_ids, gen_id, '/foo/bar')
+
+    def test_appends_one_file_chunk_id(self):
+        gen_id = self.create_generation()
+        self.repo.add_file(gen_id, '/foo/bar')
+        self.repo.append_file_chunk_id(gen_id, '/foo/bar', 1)
+        self.assertEqual(
+            self.repo.get_file_chunk_ids(gen_id, '/foo/bar'),
+            [1])
+
+    def test_appends_two_file_chunk_ids(self):
+        gen_id = self.create_generation()
+        self.repo.add_file(gen_id, '/foo/bar')
+        self.repo.append_file_chunk_id(gen_id, '/foo/bar', 1)
+        self.repo.append_file_chunk_id(gen_id, '/foo/bar', 2)
+        self.assertEqual(
+            self.repo.get_file_chunk_ids(gen_id, '/foo/bar'),
+            [1, 2])
+
+    def test_appending_file_chunk_ids_in_nonexistent_generation_fails(self):
+        gen_id = self.create_generation()
+        self.repo.remove_generation(gen_id)
+        self.assertRaises(
+            obnamlib.RepositoryGenerationDoesNotExist,
+            self.repo.append_file_chunk_id, gen_id, '/foo/bar', 1)
+
+    def test_appending_file_chunk_ids_to_nonexistent_file_fails(self):
+        gen_id = self.create_generation()
+        self.assertRaises(
+            obnamlib.RepositoryFileDoesNotExistInGeneration,
+            self.repo.append_file_chunk_id, gen_id, '/foo/bar', 1)
+
+    def test_clears_file_chunk_ids(self):
+        gen_id = self.create_generation()
+        self.repo.add_file(gen_id, '/foo/bar')
+        self.repo.append_file_chunk_id(gen_id, '/foo/bar', 1)
+        self.repo.clear_file_chunk_ids(gen_id, '/foo/bar')
+        self.assertEqual(self.repo.get_file_chunk_ids(gen_id, '/foo/bar'), [])
+
+    def test_clearing_file_chunk_ids_in_nonexistent_generation_fails(self):
+        gen_id = self.create_generation()
+        self.repo.remove_generation(gen_id)
+        self.assertRaises(
+            obnamlib.RepositoryGenerationDoesNotExist,
+            self.repo.clear_file_chunk_ids, gen_id, '/foo/bar')
+
+    def test_clearing_file_chunk_ids_for_nonexistent_file_fails(self):
+        gen_id = self.create_generation()
+        self.assertRaises(
+            obnamlib.RepositoryFileDoesNotExistInGeneration,
+            self.repo.clear_file_chunk_ids, gen_id, '/foo/bar')
+
+    def test_unlocking_child_forgets_modified_file_chunk_ids(self):
+        gen_id = self.create_generation()
+        self.repo.add_file(gen_id, '/foo/bar')
+        self.repo.append_file_chunk_id(gen_id, '/foo/bar', 1)
+        self.repo.commit_client('fooclient')
+
+        self.repo.lock-client('fooclient')
+        gen_id_2 = self.repo.create_generation('fooclient')
+        self.repo.append_file_chunk_id(gen_id, '/foo/bar', 2)
+        self.assertEqual(
+            self.repo.get_file_chunk_ids(gen_id, '/foo/bar'),
+            [1, 2])
+
+        self.repo.unlock_client('fooclient')
+        self.assertEqual(
+            self.repo.get_file_chunk_ids(gen_id, '/foo/bar'),
+            [1])
+
+    def test_committing_child_remembers_modified_file_chunk_ids(self):
+        gen_id = self.create_generation()
+        self.repo.add_file(gen_id, '/foo/bar')
+        self.repo.append_file_chunk_id(gen_id, '/foo/bar', 1)
+        self.repo.commit_client('fooclient')
+
+        self.repo.lock-client('fooclient')
+        gen_id_2 = self.repo.create_generation('fooclient')
+        self.repo.append_file_chunk_id(gen_id, '/foo/bar', 2)
+        self.assertEqual(
+            self.repo.get_file_chunk_ids(gen_id, '/foo/bar'),
+            [1, 2])
+
+        self.repo.commit_client('fooclient')
+        self.assertEqual(
+            self.repo.get_file_chunk_ids(gen_id, '/foo/bar'),
+            [1, 2])
+
+    def test_new_file_has_no_children(self):
+        gen_id = self.create_generation()
+        self.repo.add_file(gen_id, '/foo/bar')
+        self.assertEqual(self.repo.get_file_children(gen_id, '/foo/bar'), [])
+
+    def test_gets_file_child(self):
+        gen_id = self.create_generation()
+        self.repo.add_file(gen_id, '/foo')
+        self.repo.add_file(gen_id, '/foo/bar')
+        self.assertEqual(
+            self.repo.get_file_children(gen_id, '/foo'),
+            ['/foo/bar'])
+
+    def test_gets_only_immediate_child_for_file(self):
+        gen_id = self.create_generation()
+        self.repo.add_file(gen_id, '/')
+        self.repo.add_file(gen_id, '/foo')
+        self.repo.add_file(gen_id, '/foo/bar')
+        self.assertEqual(
+            self.repo.get_file_children(gen_id, '/'),
+            ['/foo'])
 
