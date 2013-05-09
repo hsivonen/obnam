@@ -257,6 +257,24 @@ class DummyClient(object):
         self._require_file(gen_id, filename)
         self.data.set_value(self._filechunkskey(gen_id, filename), [])
 
+    def get_file_children(self, gen_id, filename):
+        children = []
+        if filename.endswith('/'):
+            prefix = filename
+        else:
+            prefix = filename + '/'
+        for key, value in self.data.items():
+            if not self._is_filekey(key):
+                continue
+            x, y, candidate = key
+            if candidate == filename:
+                continue
+            if not candidate.startswith(prefix):
+                continue
+            if '/' in candidate[len(prefix):]:
+                continue
+            children.append(candidate)
+        return children
 
 class DummyClientList(object):
 
@@ -457,4 +475,8 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
     def clear_file_chunk_ids(self, generation_id, filename):
         client = self._client_list.get_client_by_generation_id(generation_id)
         client.clear_file_chunk_ids(generation_id, filename)
+
+    def get_file_children(self, generation_id, filename):
+        client = self._client_list.get_client_by_generation_id(generation_id)
+        return client.get_file_children(generation_id, filename)
 
