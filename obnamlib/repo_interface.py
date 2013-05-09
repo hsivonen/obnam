@@ -1098,7 +1098,7 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         gen_id = self.create_generation()
         self.repo.add_file(gen_id, '/foo/bar')
         for key in self.repo.get_allowed_file_keys():
-            value = self.repo.get_file_key(gen_id, key)
+            value = self.repo.get_file_key(gen_id, '/foo/bar', key)
             self.assertEqual(type(value), str)
 
     def test_has_empty_string_for_file_test_key(self):
