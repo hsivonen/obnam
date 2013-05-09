@@ -1204,7 +1204,7 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
     def test_getting_file_chunk_ids_for_nonexistent_file_fails(self):
         gen_id = self.create_generation()
         self.assertRaises(
-            obnamlib.RepositoryGenerationDoesNotExist,
+            obnamlib.RepositoryFileDoesNotExistInGeneration,
             self.repo.get_file_chunk_ids, gen_id, '/foo/bar')
 
     def test_appends_one_file_chunk_id(self):
@@ -1263,7 +1263,7 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.repo.append_file_chunk_id(gen_id, '/foo/bar', 1)
         self.repo.commit_client('fooclient')
 
-        self.repo.lock-client('fooclient')
+        self.repo.lock_client('fooclient')
         gen_id_2 = self.repo.create_generation('fooclient')
         self.repo.append_file_chunk_id(gen_id, '/foo/bar', 2)
         self.assertEqual(
@@ -1281,7 +1281,7 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.repo.append_file_chunk_id(gen_id, '/foo/bar', 1)
         self.repo.commit_client('fooclient')
 
-        self.repo.lock-client('fooclient')
+        self.repo.lock_client('fooclient')
         gen_id_2 = self.repo.create_generation('fooclient')
         self.repo.append_file_chunk_id(gen_id, '/foo/bar', 2)
         self.assertEqual(
