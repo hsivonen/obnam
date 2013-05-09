@@ -252,6 +252,11 @@ class DummyClient(object):
             self._filechunkskey(gen_id, filename),
             chunk_ids + [chunk_id])
 
+    def clear_file_chunk_ids(self, gen_id, filename):
+        self._require_generation(gen_id)
+        self._require_file(gen_id, filename)
+        self.data.set_value(self._filechunkskey(gen_id, filename), [])
+
 
 class DummyClientList(object):
 
@@ -448,4 +453,8 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
     def append_file_chunk_id(self, generation_id, filename, chunk_id):
         client = self._client_list.get_client_by_generation_id(generation_id)
         return client.append_file_chunk_id(generation_id, filename, chunk_id)
+
+    def clear_file_chunk_ids(self, generation_id, filename):
+        client = self._client_list.get_client_by_generation_id(generation_id)
+        client.clear_file_chunk_ids(generation_id, filename)
 
