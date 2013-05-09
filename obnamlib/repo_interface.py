@@ -1143,7 +1143,7 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
     def test_setting_file_key_for_nonexistent_file_fails(self):
         gen_id = self.create_generation()
         self.assertRaises(
-            obnamlib.RepositoryFileDoesNotExist,
+            obnamlib.RepositoryFileDoesNotExistInGeneration,
             self.repo.set_file_key,
             gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY, 'yoyo')
 
@@ -1153,9 +1153,10 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.repo.set_file_key(
             gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY, 'yoyo')
         self.repo.unlock_client('fooclient')
-        value = self.repo.get_file_key(
+        self.assertRaises(
+            obnamlib.RepositoryGenerationDoesNotExist,
+            self.repo.get_file_key,
             gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY)
-        self.assertEqual(value, '')
 
     def test_committing_client_remembers_set_file_keys(self):
         gen_id = self.create_generation()
@@ -1172,7 +1173,7 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.repo.add_file(gen_id, '/foo/bar')
         self.repo.set_file_key(
             gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY, 'yoyo')
-        self.repo.commit_client()
+        self.repo.commit_client('fooclient')
 
         self.repo.lock_client('fooclient')
         gen_id_2 = self.repo.create_generation('fooclient')
