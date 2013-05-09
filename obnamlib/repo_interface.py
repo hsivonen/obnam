@@ -1172,22 +1172,22 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         gen_id = self.create_generation()
         self.repo.add_file(gen_id, '/foo/bar')
         self.repo.set_file_key(
-            gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY, 'yoyo')
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY, 'first')
         self.repo.commit_client('fooclient')
 
         self.repo.lock_client('fooclient')
         gen_id_2 = self.repo.create_generation('fooclient')
         self.repo.set_file_key(
-            gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY, 'yoyo')
+            gen_id_2, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY, 'second')
         self.repo.commit_client('fooclient')
 
         value = self.repo.get_file_key(
             gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY)
-        self.assertEqual(value, 'yoyo')
+        self.assertEqual(value, 'first')
 
         value_2 = self.repo.get_file_key(
             gen_id_2, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY)
-        self.assertEqual(value_2, 'yoyo')
+        self.assertEqual(value_2, 'second')
 
     def test_new_file_has_no_chunk_ids(self):
         gen_id = self.create_generation()
