@@ -101,6 +101,7 @@ from repo_interface import (
     RepositoryClientHasNoGenerations,
     RepositoryFileDoesNotHaveKey,
     RepositoryFileDoesNotExistInGeneration,
+    RepositoryChunkDoesNotExist,
     REPO_CLIENT_TEST_KEY,
     REPO_GENERATION_TEST_KEY,
     REPO_FILE_TEST_KEY)

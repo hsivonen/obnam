@@ -130,6 +130,12 @@ class RepositoryFileDoesNotExistInGeneration(obnamlib.Error):
             (client_name, genspec, filename))
 
 
+class RepositoryChunkDoesNotExist(obnamlib.Error):
+
+    def __init__(self, chunk_id_as_string):
+        self.msg = "Repository doesn't contain chunk %s" % chunk_id_as_string
+
+
 class RepositoryInterface(object):
 
     '''Abstract interface to Obnam backup repositories.
@@ -517,12 +523,16 @@ class RepositoryInterface(object):
         '''Does a chunk (still) exist in the repository?'''
         raise NotImplementedError()
 
+    def remove_chunk(self, chunk_id):
+        '''Remove chunk from repository, but not chunk indexes.'''
+        raise NotImplementedError()
+
     #def lock_chunk_indexes(self):
     #def unlock_chunk_indexes(self):
     #def force_chunk_index_lock(self):
     #def put_chunk_into_indexes(self, chunk_id, data):
+    #def remove_chunk_from_indexes(self, chunk_id):
     #def find_chunk_id_by_content(self, data):
-    #def remove_chunk(self, chunk_id):
 
     ## Fsck.
     #def get_fsck_work_items(self):
@@ -1339,4 +1349,12 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         chunk_id = self.repo.put_chunk_content('foochunk')
         self.assertTrue(self.repo.has_chunk(chunk_id))
         self.assertEqual(self.repo.get_chunk_content(chunk_id), 'foochunk')
+
+    def test_removes_chunk(self):
+        chunk_id = self.repo.put_chunk_content('foochunk')
+        self.repo.remove_chunk(chunk_id)
+        self.assertFalse(self.repo.has_chunk(chunk_id))
+        self.assertRaises(
+            obnamlib.RepositoryChunkDoesNotExist,
+            self.repo.get_chunk_content, chunk_id)
 

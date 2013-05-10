@@ -353,10 +353,15 @@ class ChunkStore(object):
         return chunk_id
 
     def get_chunk_content(self, chunk_id):
+        if chunk_id not in self.chunks:
+            raise obnamlib.RepositoryChunkDoesNotExist(str(chunk_id))
         return self.chunks[chunk_id]
 
     def has_chunk(self, chunk_id):
         return chunk_id in self.chunks
+
+    def remove_chunk(self, chunk_id):
+        del self.chunks[chunk_id]
 
 
 class RepositoryFormatDummy(obnamlib.RepositoryInterface):
@@ -507,4 +512,7 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
 
     def has_chunk(self, chunk_id):
         return self._chunk_store.has_chunk(chunk_id)
+
+    def remove_chunk(self, chunk_id):
+        self._chunk_store.remove_chunk(chunk_id)
 
