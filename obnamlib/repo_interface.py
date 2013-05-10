@@ -28,11 +28,11 @@ import obnamlib
 # to support all keys, but they all must support the test keys, for
 # the test suite to function.
 
-REPO_CLIENT_TEST_KEY = 0
-REPO_GENERATION_TEST_KEY = 1
+REPO_CLIENT_TEST_KEY            = 0     # string
+REPO_GENERATION_TEST_KEY        = 1     # string
 
-REPO_FILE_TEST_KEY = 2
-REPO_FILE_MTIME = 3
+REPO_FILE_TEST_KEY              = 2     # string
+REPO_FILE_MTIME                 = 3     # integer
 
 # The following is a key that is NOT allowed for any repository format.
 
@@ -1213,6 +1213,13 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
             gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY)
         self.assertEqual(value, 'yoyo')
 
+    def test_file_has_zero_mtime_by_default(self):
+        gen_id = self.create_generation()
+        self.repo.add_file(gen_id, '/foo/bar')
+        value = self.repo.get_file_key(
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_MTIME)
+        self.assertEqual(value, 0)
+
     def test_sets_file_mtime(self):
         gen_id = self.create_generation()
         self.repo.add_file(gen_id, '/foo/bar')
@@ -1236,6 +1243,25 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
             obnamlib.RepositoryFileDoesNotExistInGeneration,
             self.repo.set_file_key,
             gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY, 'yoyo')
+
+    def test_removing_file_removes_all_its_file_keys(self):
+        gen_id = self.create_generation()
+        self.repo.add_file(gen_id, '/foo/bar')
+        self.repo.set_file_key(
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_MTIME, 123)
+
+        # Remove the file. Key should be removed.
+        self.repo.remove_file(gen_id, '/foo/bar')
+        self.assertRaises(
+            obnamlib.RepositoryFileDoesNotExistInGeneration,
+            self.repo.get_file_key,
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_MTIME)
+
+        # Add the file back. Key should still be removed.
+        self.repo.add_file(gen_id, '/foo/bar')
+        value = self.repo.get_file_key(
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_MTIME)
+        self.assertEqual(value, 0)
 
     def test_unlocking_client_forgets_set_file_keys(self):
         gen_id = self.create_generation()

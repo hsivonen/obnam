@@ -32,6 +32,9 @@ class KeyValueStore(object):
     def set_value(self, key, value):
         self._map[key] = value
 
+    def remove_value(self, key):
+        del self._map[key]
+
     def items(self):
         return self._map.items()
 
@@ -71,6 +74,9 @@ class LockableKeyValueStore(object):
 
     def set_value(self, key, value):
         self.data.set_value(key, value)
+
+    def remove_value(self, key):
+        self.data.remove_value(key)
 
     def items(self):
         return self.data.items()
@@ -208,7 +214,18 @@ class DummyClient(object):
         self.data.set_value(self._filekey(gen_id, filename), True)
 
     def remove_file(self, gen_id, filename):
-        self.data.set_value(self._filekey(gen_id, filename), False)
+        keys = []
+        for key, value in self.data.items():
+            right_kind = (
+                self._is_filekey(key) or
+                self._is_filekeykey(key) or
+                self._is_filechunkskey(key))
+            if right_kind:
+                if key[1] == gen_id and key[2] == filename:
+                    keys.append(key)
+
+        for k in keys:
+            self.data.remove_value(k)
 
     def _filekeykey(self, gen_id, filename, key):
         return ('filekey', gen_id, filename, key)
@@ -221,11 +238,19 @@ class DummyClient(object):
             raise obnamlib.RepositoryFileDoesNotExistInGeneration(
                 self.name, self.make_generation_spec(gen_id), filename)
 
+    _integer_keys = (
+        obnamlib.REPO_FILE_MTIME,
+    )
+
     def get_file_key(self, gen_id, filename, key):
         self._require_generation(gen_id)
         self._require_file(gen_id, filename)
+        if key in self._integer_keys:
+            default = 0
+        else:
+            default = ''
         return self.data.get_value(
-            self._filekeykey(gen_id, filename, key), '')
+            self._filekeykey(gen_id, filename, key), default)
 
     def set_file_key(self, gen_id, filename, key, value):
         self._require_generation(gen_id)
