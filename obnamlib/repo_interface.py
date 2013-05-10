@@ -1358,3 +1358,10 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
             obnamlib.RepositoryChunkDoesNotExist,
             self.repo.get_chunk_content, chunk_id)
 
+    def test_removing_nonexistent_chunk_fails(self):
+        chunk_id = self.repo.put_chunk_content('foochunk')
+        self.repo.remove_chunk(chunk_id)
+        self.assertRaises(
+            obnamlib.RepositoryChunkDoesNotExist,
+            self.repo.remove_chunk, chunk_id)
+

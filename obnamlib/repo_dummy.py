@@ -361,6 +361,8 @@ class ChunkStore(object):
         return chunk_id in self.chunks
 
     def remove_chunk(self, chunk_id):
+        if chunk_id not in self.chunks:
+            raise obnamlib.RepositoryChunkDoesNotExist(str(chunk_id))
         del self.chunks[chunk_id]
 
 
