@@ -269,7 +269,7 @@ class DummyClient(object):
             x, y, candidate = key
             if candidate == filename:
                 continue
-            if not candidate.startswith(prefix):
+            if not candidate.startswith(prefix): # pragma: no cover
                 continue
             if '/' in candidate[len(prefix):]:
                 continue
