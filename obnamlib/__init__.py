@@ -107,7 +107,8 @@ from repo_interface import (
     RepositoryChunkIndexesLockingFailed,
     REPO_CLIENT_TEST_KEY,
     REPO_GENERATION_TEST_KEY,
-    REPO_FILE_TEST_KEY)
+    REPO_FILE_TEST_KEY,
+    REPO_FILE_MTIME)
 from repo_dummy import RepositoryFormatDummy
 from repo_tree import RepositoryTree
 from chunklist import ChunkList

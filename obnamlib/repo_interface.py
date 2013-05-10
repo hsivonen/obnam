@@ -30,7 +30,9 @@ import obnamlib
 
 REPO_CLIENT_TEST_KEY = 0
 REPO_GENERATION_TEST_KEY = 1
+
 REPO_FILE_TEST_KEY = 2
+REPO_FILE_MTIME = 3
 
 # The following is a key that is NOT allowed for any repository format.
 
@@ -213,10 +215,11 @@ class RepositoryInterface(object):
     * There are three levels of locking: the list of clients,
       the per-client data (information about generations), and
       the chunk lookup indexes are all locked up individually.
-    * All metadata is stored as key/value pairs, where the key is
-      one of a strictly limited, version-specific list of allowed ones,
-      and the value is a binary string. All allowed keys are
-      implicitly set to the empty string if not set otherwise.
+    * All metadata is stored as key/value pairs, where the key is one
+      of a strictly limited, version-specific list of allowed ones,
+      and the value is a binary string or a 64-bit integer (the type
+      depends on the key). All allowed keys are implicitly set to
+      the empty string or 0 if not set otherwise.
 
     Further, the repository format version implementation is given
     a directory in which it stores the repository, using any number
@@ -1209,6 +1212,15 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         value = self.repo.get_file_key(
             gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY)
         self.assertEqual(value, 'yoyo')
+
+    def test_sets_file_mtime(self):
+        gen_id = self.create_generation()
+        self.repo.add_file(gen_id, '/foo/bar')
+        self.repo.set_file_key(
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_MTIME, 123)
+        value = self.repo.get_file_key(
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_MTIME)
+        self.assertEqual(value, 123)
 
     def test_set_file_key_fails_for_nonexistent_generation(self):
         gen_id = self.create_generation()
