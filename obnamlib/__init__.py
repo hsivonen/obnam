@@ -102,6 +102,9 @@ from repo_interface import (
     RepositoryFileDoesNotHaveKey,
     RepositoryFileDoesNotExistInGeneration,
     RepositoryChunkDoesNotExist,
+    RepositoryChunkContentNotInIndexes,
+    RepositoryChunkIndexesNotLocked,
+    RepositoryChunkIndexesLockingFailed,
     REPO_CLIENT_TEST_KEY,
     REPO_GENERATION_TEST_KEY,
     REPO_FILE_TEST_KEY)

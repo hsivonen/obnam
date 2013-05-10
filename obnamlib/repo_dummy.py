@@ -366,6 +366,48 @@ class ChunkStore(object):
         del self.chunks[chunk_id]
 
 
+class ChunkIndexes(object):
+
+    def __init__(self):
+        self.data = LockableKeyValueStore()
+
+    def lock(self):
+        if self.data.locked:
+            raise obnamlib.RepositoryChunkIndexesLockingFailed()
+        self.data.lock()
+
+    def _require_lock(self):
+        if not self.data.locked:
+            raise obnamlib.RepositoryChunkIndexesNotLocked()
+
+    def unlock(self):
+        self._require_lock()
+        self.data.unlock()
+
+    def commit(self):
+        self._require_lock()
+        self.data.commit()
+
+    def force(self):
+        if self.data.locked:
+            self.unlock()
+        self.lock()
+
+    def put_chunk(self, chunk_id, chunk_content):
+        self._require_lock()
+        self.data.set_value(chunk_id, chunk_content)
+
+    def find_chunk(self, chunk_content):
+        for chunk_id, stored_content in self.data.items():
+            if stored_content == chunk_content:
+                return chunk_id
+        raise obnamlib.RepositoryChunkContentNotInIndexes()
+
+    def remove_chunk(self, chunk_id):
+        self._require_lock()
+        self.data.set_value(chunk_id, None)
+
+
 class RepositoryFormatDummy(obnamlib.RepositoryInterface):
 
     '''Simplistic repository format for testing.
@@ -379,6 +421,7 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
     def __init__(self):
         self._client_list = DummyClientList()
         self._chunk_store = ChunkStore()
+        self._chunk_indexes = ChunkIndexes()
 
     def set_fs(self, fs):
         pass
@@ -517,4 +560,25 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
 
     def remove_chunk(self, chunk_id):
         self._chunk_store.remove_chunk(chunk_id)
+
+    def lock_chunk_indexes(self):
+        self._chunk_indexes.lock()
+
+    def unlock_chunk_indexes(self):
+        self._chunk_indexes.unlock()
+
+    def commit_chunk_indexes(self):
+        self._chunk_indexes.commit()
+
+    def force_chunk_indexes_lock(self):
+        self._chunk_indexes.force()
+
+    def put_chunk_into_indexes(self, chunk_id, chunk_content):
+        self._chunk_indexes.put_chunk(chunk_id, chunk_content)
+
+    def find_chunk_id_by_content(self, chunk_content):
+        return self._chunk_indexes.find_chunk(chunk_content)
+
+    def remove_chunk_from_indexes(self, chunk_id):
+        return self._chunk_indexes.remove_chunk(chunk_id)
 

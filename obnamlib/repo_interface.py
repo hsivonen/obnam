@@ -136,6 +136,24 @@ class RepositoryChunkDoesNotExist(obnamlib.Error):
         self.msg = "Repository doesn't contain chunk %s" % chunk_id_as_string
 
 
+class RepositoryChunkContentNotInIndexes(obnamlib.Error):
+
+    def __init__(self):
+        self.msg = "Repository chunk indexes do not contain content"
+
+
+class RepositoryChunkIndexesNotLocked(obnamlib.Error):
+
+    def __init__(self):
+        self.msg = 'Repository chunk indexes are not locked'
+
+
+class RepositoryChunkIndexesLockingFailed(obnamlib.Error):
+
+    def __init__(self):
+        self.msg = 'Repository chunk indexes are already locked'
+
+
 class RepositoryInterface(object):
 
     '''Abstract interface to Obnam backup repositories.
@@ -527,12 +545,40 @@ class RepositoryInterface(object):
         '''Remove chunk from repository, but not chunk indexes.'''
         raise NotImplementedError()
 
-    #def lock_chunk_indexes(self):
-    #def unlock_chunk_indexes(self):
-    #def force_chunk_index_lock(self):
-    #def put_chunk_into_indexes(self, chunk_id, data):
-    #def remove_chunk_from_indexes(self, chunk_id):
-    #def find_chunk_id_by_content(self, data):
+    def lock_chunk_indexes(self):
+        '''Locks chunk indexes for updates.'''
+        raise NotImplementedError()
+
+    def unlock_chunk_indexes(self):
+        '''Unlocks chunk indexes without committing them.'''
+        raise NotImplementedError()
+
+    def force_chunk_index_lock(self):
+        '''Forces a chunk index lock open and takes it for the caller.'''
+        raise NotImplementedError()
+
+    def put_chunk_into_indexes(self, chunk_id, data):
+        '''Adds a chunk to indexes.
+
+        This does not do any de-duplication.
+
+        '''
+        raise NotImplementedError()
+
+    def remove_chunk_from_indexes(self, chunk_id):
+        '''Removes a chunk from indexes, given its id.'''
+        raise NotImplementedError()
+
+    def find_chunk_id_by_content(self, data):
+        '''Finds a chunk id given its content.
+
+        This will raise RepositoryChunkContentNotInIndexes if the
+        chunk is not in the indexes. Otherwise it will return one
+        chunk id that has exactly the same content. If the indexes
+        contain duplicate chunks, any one of the might be returned.
+
+        '''
+        raise NotImplementedError()
 
     ## Fsck.
     #def get_fsck_work_items(self):
@@ -1364,4 +1410,68 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.assertRaises(
             obnamlib.RepositoryChunkDoesNotExist,
             self.repo.remove_chunk, chunk_id)
+
+    def test_adds_chunk_to_indexes(self):
+        self.repo.lock_chunk_indexes()
+        chunk_id = self.repo.put_chunk_content('foochunk')
+        self.repo.put_chunk_into_indexes(chunk_id, 'foochunk')
+        self.assertEqual(
+            self.repo.find_chunk_id_by_content('foochunk'), chunk_id)
+
+    def test_removes_chunk_from_indexes(self):
+        self.repo.lock_chunk_indexes()
+        chunk_id = self.repo.put_chunk_content('foochunk')
+        self.repo.put_chunk_into_indexes(chunk_id, 'foochunk')
+        self.repo.remove_chunk_from_indexes(chunk_id)
+        self.assertRaises(
+            obnamlib.RepositoryChunkContentNotInIndexes,
+            self.repo.find_chunk_id_by_content, 'foochunk')
+
+    def test_putting_chunk_to_indexes_without_locking_them_fails(self):
+        chunk_id = self.repo.put_chunk_content('foochunk')
+        self.assertRaises(
+            obnamlib.RepositoryChunkIndexesNotLocked,
+            self.repo.put_chunk_into_indexes, chunk_id, 'foochunk')
+
+    def test_removing_chunk_from_indexes_without_locking_them_fails(self):
+        chunk_id = self.repo.put_chunk_content('foochunk')
+        self.repo.lock_chunk_indexes()
+        self.repo.put_chunk_into_indexes(chunk_id, 'foochunk')
+        self.repo.commit_chunk_indexes()
+        self.assertRaises(
+            obnamlib.RepositoryChunkIndexesNotLocked,
+            self.repo.remove_chunk_from_indexes, chunk_id)
+
+    def test_unlocking_chunk_indexes_forgets_changes(self):
+        chunk_id = self.repo.put_chunk_content('foochunk')
+        self.repo.lock_chunk_indexes()
+        self.repo.put_chunk_into_indexes(chunk_id, 'foochunk')
+        self.repo.unlock_chunk_indexes()
+        self.assertRaises(
+            obnamlib.RepositoryChunkContentNotInIndexes,
+            self.repo.find_chunk_id_by_content, 'foochunk')
+
+    def test_committing_chunk_indexes_remembers_changes(self):
+        chunk_id = self.repo.put_chunk_content('foochunk')
+        self.repo.lock_chunk_indexes()
+        self.repo.put_chunk_into_indexes(chunk_id, 'foochunk')
+        self.repo.commit_chunk_indexes()
+        self.assertEqual(
+            self.repo.find_chunk_id_by_content('foochunk'), chunk_id)
+
+    def test_locking_chunk_indexes_twice_fails(self):
+        self.repo.lock_chunk_indexes()
+        self.assertRaises(
+            obnamlib.RepositoryChunkIndexesLockingFailed,
+            self.repo.lock_chunk_indexes)
+
+    def test_unlocking_unlocked_chunk_indexes_fails(self):
+        self.assertRaises(
+            obnamlib.RepositoryChunkIndexesNotLocked,
+            self.repo.unlock_chunk_indexes)
+
+    def test_forces_chunk_index_lock(self):
+        self.repo.lock_chunk_indexes()
+        self.repo.force_chunk_indexes_lock()
+        self.assertEqual(self.repo.unlock_chunk_indexes(), None)
 
