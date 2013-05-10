@@ -582,3 +582,6 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
     def remove_chunk_from_indexes(self, chunk_id):
         return self._chunk_indexes.remove_chunk(chunk_id)
 
+    def get_fsck_work_item(self):
+        return 'this pretends to be a work item'
+

@@ -580,8 +580,15 @@ class RepositoryInterface(object):
         '''
         raise NotImplementedError()
 
-    ## Fsck.
-    #def get_fsck_work_items(self):
+    # Fsck.
+
+    def get_fsck_work_item(self):
+        '''Return an fsck work item for checking this repository.
+
+        The work item may spawn more items.
+
+        '''
+        raise NotImplementedError()
 
 
 class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
@@ -1474,4 +1481,9 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.repo.lock_chunk_indexes()
         self.repo.force_chunk_indexes_lock()
         self.assertEqual(self.repo.unlock_chunk_indexes(), None)
+
+    # Fsck.
+
+    def test_returns_fsck_work_item(self):
+        self.assertNotEqual(self.repo.get_fsck_work_item(), None)
 
