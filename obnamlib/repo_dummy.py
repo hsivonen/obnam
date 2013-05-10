@@ -341,6 +341,24 @@ class DummyClientList(object):
         return self[client_name]
 
 
+class ChunkStore(object):
+
+    def __init__(self):
+        self.next_chunk_id = Counter()
+        self.chunks = {}
+
+    def put_chunk_content(self, content):
+        chunk_id = self.next_chunk_id.next()
+        self.chunks[chunk_id] = content
+        return chunk_id
+
+    def get_chunk_content(self, chunk_id):
+        return self.chunks[chunk_id]
+
+    def has_chunk(self, chunk_id):
+        return chunk_id in self.chunks
+
+
 class RepositoryFormatDummy(obnamlib.RepositoryInterface):
 
     '''Simplistic repository format for testing.
@@ -353,6 +371,7 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
 
     def __init__(self):
         self._client_list = DummyClientList()
+        self._chunk_store = ChunkStore()
 
     def set_fs(self, fs):
         pass
@@ -479,4 +498,13 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
     def get_file_children(self, generation_id, filename):
         client = self._client_list.get_client_by_generation_id(generation_id)
         return client.get_file_children(generation_id, filename)
+
+    def put_chunk_content(self, content):
+        return self._chunk_store.put_chunk_content(content)
+
+    def get_chunk_content(self, chunk_id):
+        return self._chunk_store.get_chunk_content(chunk_id)
+
+    def has_chunk(self, chunk_id):
+        return self._chunk_store.has_chunk(chunk_id)
 

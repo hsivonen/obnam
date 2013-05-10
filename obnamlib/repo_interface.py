@@ -499,9 +499,24 @@ class RepositoryInterface(object):
         '''
         raise NotImplementedError()
 
-    ## Chunks.
-    #def put_chunk_content(self, data): # return new chunk_id
-    #def get_chunk_content(self, chunk_id):
+    # Chunks.
+
+    def put_chunk_content(self, data):
+        '''Add a new chunk into the repository.
+
+        Return the chunk identifier.
+
+        '''
+        raise NotImplementedError()
+
+    def get_chunk_content(self, chunk_id):
+        '''Return the contents of a chunk, given its id.'''
+        raise NotImplementedError()
+
+    def has_chunk(self, chunk_id):
+        '''Does a chunk (still) exist in the repository?'''
+        raise NotImplementedError()
+
     #def lock_chunk_indexes(self):
     #def unlock_chunk_indexes(self):
     #def force_chunk_index_lock(self):
@@ -1317,4 +1332,11 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.assertEqual(
             self.repo.get_file_children(gen_id, '/'),
             ['/foo'])
+
+    # Chunk and chunk indexes.
+
+    def test_puts_chunk_into_repository(self):
+        chunk_id = self.repo.put_chunk_content('foochunk')
+        self.assertTrue(self.repo.has_chunk(chunk_id))
+        self.assertEqual(self.repo.get_chunk_content(chunk_id), 'foochunk')
 
