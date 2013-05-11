@@ -116,14 +116,6 @@ class RepositoryClientHasNoGenerations(obnamlib.Error):
         self.msg = 'Client %s has no generations' % client_name
 
 
-class RepositoryFileDoesNotHaveKey(obnamlib.Error):
-
-    def __init__(self, client_name, genspec, filename, key):
-        self.msg = (
-            'Client %s, generation %s, file %s does not have key %s' %
-            (client_name, genspec, filename, key))
-
-
 class RepositoryFileDoesNotExistInGeneration(obnamlib.Error):
 
     def __init__(self, client_name, genspec, filename):

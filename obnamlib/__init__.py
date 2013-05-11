@@ -99,7 +99,6 @@ from repo_interface import (
     RepositoryGenerationKeyNotAllowed,
     RepositoryGenerationDoesNotExist,
     RepositoryClientHasNoGenerations,
-    RepositoryFileDoesNotHaveKey,
     RepositoryFileDoesNotExistInGeneration,
     RepositoryChunkDoesNotExist,
     RepositoryChunkContentNotInIndexes,
