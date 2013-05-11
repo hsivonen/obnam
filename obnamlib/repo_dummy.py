@@ -557,10 +557,13 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
 
     def set_file_key(self, generation_id, filename, key, value):
         client = self._client_list.get_client_by_generation_id(generation_id)
+        if key not in self.get_allowed_file_keys():
+            raise obnamlib.RepositoryFileKeyNotAllowed(
+                self.format, client.name, key)
         client.set_file_key(generation_id, filename, key, value)
 
     def get_allowed_file_keys(self):
-        return [obnamlib.REPO_FILE_TEST_KEY]
+        return [obnamlib.REPO_FILE_TEST_KEY, obnamlib.REPO_FILE_MTIME]
 
     def get_file_chunk_ids(self, generation_id, filename):
         client = self._client_list.get_client_by_generation_id(generation_id)

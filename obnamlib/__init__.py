@@ -100,6 +100,7 @@ from repo_interface import (
     RepositoryGenerationDoesNotExist,
     RepositoryClientHasNoGenerations,
     RepositoryFileDoesNotExistInGeneration,
+    RepositoryFileKeyNotAllowed,
     RepositoryChunkDoesNotExist,
     RepositoryChunkContentNotInIndexes,
     RepositoryChunkIndexesNotLocked,
@@ -107,7 +108,8 @@ from repo_interface import (
     REPO_CLIENT_TEST_KEY,
     REPO_GENERATION_TEST_KEY,
     REPO_FILE_TEST_KEY,
-    REPO_FILE_MTIME)
+    REPO_FILE_MTIME,
+    REPO_FILE_INTEGER_KEYS)
 from repo_dummy import RepositoryFormatDummy
 from repo_tree import RepositoryTree
 from chunklist import ChunkList

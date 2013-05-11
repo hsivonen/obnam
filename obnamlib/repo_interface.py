@@ -34,6 +34,10 @@ REPO_GENERATION_TEST_KEY        = 1     # string
 REPO_FILE_TEST_KEY              = 2     # string
 REPO_FILE_MTIME                 = 3     # integer
 
+REPO_FILE_INTEGER_KEYS = (
+    REPO_FILE_MTIME,
+)
+
 # The following is a key that is NOT allowed for any repository format.
 
 WRONG_KEY = -1
@@ -122,6 +126,15 @@ class RepositoryFileDoesNotExistInGeneration(obnamlib.Error):
         self.msg = (
             'Client %s, generation %s does not have file %s' %
             (client_name, genspec, filename))
+
+
+class RepositoryFileKeyNotAllowed(obnamlib.Error):
+
+    def __init__(self, format, client_name, key):
+        self.msg = (
+            'Client %s uses repository format %s '
+            'which does not allow the key %s to be use for files' %
+            (client_name, format, key))
 
 
 class RepositoryChunkDoesNotExist(obnamlib.Error):
@@ -1172,7 +1185,10 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.repo.add_file(gen_id, '/foo/bar')
         for key in self.repo.get_allowed_file_keys():
             value = self.repo.get_file_key(gen_id, '/foo/bar', key)
-            self.assertEqual(type(value), str)
+            if key in REPO_FILE_INTEGER_KEYS:
+                self.assertEqual(type(value), int)
+            else:
+                self.assertEqual(type(value), str)
 
     def test_has_empty_string_for_file_test_key(self):
         gen_id = self.create_generation()
@@ -1204,6 +1220,13 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         value = self.repo.get_file_key(
             gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY)
         self.assertEqual(value, 'yoyo')
+
+    def test_setting_unallowed_file_key_fails(self):
+        gen_id = self.create_generation()
+        self.repo.add_file(gen_id, '/foo/bar')
+        self.assertRaises(
+            obnamlib.RepositoryFileKeyNotAllowed,
+            self.repo.set_file_key, gen_id, '/foo/bar', WRONG_KEY, 'yoyo')
 
     def test_file_has_zero_mtime_by_default(self):
         gen_id = self.create_generation()
