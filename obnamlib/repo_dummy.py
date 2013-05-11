@@ -182,7 +182,11 @@ class DummyClient(object):
         self.data.set_value('generation-ids', [x for x in ids if x != gen_id])
 
     def get_generation_chunk_ids(self, gen_id):
-        return []
+        chunk_ids = []
+        for key, value in self.data.items():
+            if self._is_filechunkskey(key) and key[1] == gen_id:
+                chunk_ids.extend(value)
+        return chunk_ids
 
     def interpret_generation_spec(self, genspec):
         ids = self.data.get_value('generation-ids', [])
