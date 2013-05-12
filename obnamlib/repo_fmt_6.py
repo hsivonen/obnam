@@ -820,6 +820,8 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         # There is nothing else to be done.
         pass
 
+    # Client list handling.
+
     def _raw_lock_client_list(self):
         if self._got_client_list_lock:
             raise obnamlib.RepositoryClientListLockingFailed()
