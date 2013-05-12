@@ -807,9 +807,35 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     format = '6'
 
+    def __init__(self, lock_timeout=0):
+        self._lock_timeout = lock_timeout
+
+        self._got_client_list_lock = False
+
     def set_fs(self, fs):
         self._fs = fs
+        self._lockmgr = obnamlib.LockManager(self._fs, self._lock_timeout, '')
 
     def init_repo(self):
         # There is nothing else to be done.
         pass
+
+    def lock_client_list(self):
+        tracing.trace('locking client list')
+        self._lockmgr.lock(['.'])
+        self._got_client_list_lock = True
+
+    def _raw_unlock_client_list(self):
+        if not self._got_client_list_lock:
+            raise obnamlib.RepositoryClientListNotLocked()
+        self._lockmgr.lock(['.'])
+        self._got_client_list_lock = False
+
+    def unlock_client_list(self):
+        tracing.trace('unlocking client list')
+        self._raw_unlock_client_list()
+
+    def commit_client_list(self):
+        tracing.trace('committing client list')
+        self._raw_unlock_client_list()
+
