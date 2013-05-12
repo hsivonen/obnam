@@ -806,3 +806,6 @@ class Repository(object):
 class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     format = '6'
+
+    def set_fs(self, fs):
+        self._fs = fs
