@@ -809,3 +809,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     def set_fs(self, fs):
         self._fs = fs
+
+    def init_repo(self):
+        # There is nothing else to be done.
+        pass
