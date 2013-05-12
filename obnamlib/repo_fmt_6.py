@@ -820,17 +820,20 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         # There is nothing else to be done.
         pass
 
-    def lock_client_list(self):
-        tracing.trace('locking client list')
+    def _raw_lock_client_list(self):
         if self._got_client_list_lock:
             raise obnamlib.RepositoryClientListLockingFailed()
         self._lockmgr.lock(['.'])
         self._got_client_list_lock = True
 
+    def lock_client_list(self):
+        tracing.trace('locking client list')
+        self._raw_lock_client_list()
+
     def _raw_unlock_client_list(self):
         if not self._got_client_list_lock:
             raise obnamlib.RepositoryClientListNotLocked()
-        self._lockmgr.lock(['.'])
+        self._lockmgr.unlock(['.'])
         self._got_client_list_lock = False
 
     def unlock_client_list(self):
@@ -840,4 +843,11 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
     def commit_client_list(self):
         tracing.trace('committing client list')
         self._raw_unlock_client_list()
+
+    def force_client_list_lock(self):
+        tracing.trace('forcing client list lock')
+        if self._got_client_list_lock:
+            self._raw_unlock_client_list()
+        self._lockmgr.unlock(['.'])
+        self._raw_lock_client_list()
 
