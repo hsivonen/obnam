@@ -111,6 +111,7 @@ from repo_interface import (
     REPO_FILE_MTIME,
     REPO_FILE_INTEGER_KEYS)
 from repo_dummy import RepositoryFormatDummy
+from repo_fmt_6 import RepositoryFormat6
 from repo_tree import RepositoryTree
 from chunklist import ChunkList
 from clientlist import ClientList
