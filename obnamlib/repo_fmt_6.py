@@ -848,6 +848,5 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         tracing.trace('forcing client list lock')
         if self._got_client_list_lock:
             self._raw_unlock_client_list()
-        self._lockmgr.unlock(['.'])
         self._raw_lock_client_list()
 
