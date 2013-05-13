@@ -807,14 +807,29 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     format = '6'
 
-    def __init__(self, lock_timeout=0):
+    def __init__(self,
+            lock_timeout=0,
+            node_size=obnamlib.DEFAULT_NODE_SIZE,
+            upload_queue_size=obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
+            lru_size=obnamlib.DEFAULT_LRU_SIZE,
+            hooks=None):
         self._lock_timeout = lock_timeout
+        self._node_size = node_size
+        self._upload_queue_size = upload_queue_size
+        self._lru_size = lru_size
 
-        self._got_client_list_lock = False
+        self._setup_hooks(hooks or obnamlib.HookManager())
+
+    def _setup_hooks(self, hooks):
+        self.hooks = hooks
+        self.hooks.new('repository-toplevel-init')
+        self.hooks.new_filter('repository-data')
+        self.hooks.new('repository-add-client')
 
     def set_fs(self, fs):
-        self._fs = fs
+        self._fs = HookedFS(self, fs, self.hooks)
         self._lockmgr = obnamlib.LockManager(self._fs, self._lock_timeout, '')
+        self._setup_client_list()
 
     def init_repo(self):
         # There is nothing else to be done.
@@ -822,21 +837,31 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     # Client list handling.
 
+    def _setup_client_list(self):
+        self._got_client_list_lock = False
+        self._client_list = obnamlib.ClientList(
+            self._fs, self._node_size, self._upload_queue_size,
+            self._lru_size, self)
+
     def _raw_lock_client_list(self):
         if self._got_client_list_lock:
             raise obnamlib.RepositoryClientListLockingFailed()
         self._lockmgr.lock(['.'])
         self._got_client_list_lock = True
 
-    def lock_client_list(self):
-        tracing.trace('locking client list')
-        self._raw_lock_client_list()
-
     def _raw_unlock_client_list(self):
         if not self._got_client_list_lock:
             raise obnamlib.RepositoryClientListNotLocked()
         self._lockmgr.unlock(['.'])
         self._got_client_list_lock = False
+
+    def _require_client_list_lock(self):
+        if not self._got_client_list_lock:
+            raise obnamlib.RepositoryClientListNotLocked()
+
+    def lock_client_list(self):
+        tracing.trace('locking client list')
+        self._raw_lock_client_list()
 
     def unlock_client_list(self):
         tracing.trace('unlocking client list')
@@ -851,4 +876,19 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         if self._got_client_list_lock:
             self._raw_unlock_client_list()
         self._raw_lock_client_list()
+
+    def get_client_list(self):
+        return self._client_list.list_clients()
+
+    def add_client(self, client_name):
+        self._require_client_list_lock()
+        if self._client_list.get_client_id(client_name):
+            raise obnamlib.RepositoryClientAlreadyExists(client_name)
+        self._client_list.add_client(client_name)
+
+    def remove_client(self, client_name):
+        self._require_client_list_lock()
+        if not self._client_list.get_client_id(client_name):
+            raise obnamlib.RepositoryClientDoesNotExist(client_name)
+        self._client_list.remove_client(client_name)
 
