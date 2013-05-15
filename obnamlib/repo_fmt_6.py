@@ -196,10 +196,6 @@ class Repository(object):
         '''Are we compatible with on-disk format?'''
         return self.format_version == version
 
-    def client_dir(self, client_id):
-        '''Return name of sub-directory for a given client.'''
-        return str(client_id)
-
     def list_clients(self):
         '''Return list of names of clients using this repository.'''
 
@@ -830,6 +826,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._fs = HookedFS(self, fs, self.hooks)
         self._lockmgr = obnamlib.LockManager(self._fs, self._lock_timeout, '')
         self._setup_client_list()
+        self._setup_client()
 
     def init_repo(self):
         # There is nothing else to be done.
@@ -891,4 +888,89 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         if not self._client_list.get_client_id(client_name):
             raise obnamlib.RepositoryClientDoesNotExist(client_name)
         self._client_list.remove_client(client_name)
+
+    def _get_client_id(self, client_name):
+        '''Return a client's unique, filesystem-visible id.
+
+        The id is a random 64-bit integer.
+
+        '''
+
+        return self._client_list.get_client_id(client_name)
+
+    # Handling of individual clients.
+
+    def current_time(self):
+        # ClientMetadataTree wants us to provide this method.
+        # FIXME: A better design would be to for us to provide
+        # the class with a function to call.
+        return time.time()
+
+    def _setup_client(self):
+        # We keep a list of all open clients. An open client may or
+        # may not be locked. Each value in the dict is a tuple of
+        # ClientMetadataTree and is_locked.
+        self._open_clients = {}
+
+    def _get_client_dir(self, client_id):
+        '''Return name of sub-directory for a given client.'''
+        return str(client_id)
+
+    def _client_is_locked(self, client_name):
+        return self._open_clients.get(client_name, (None, False))[1]
+
+    def _require_client_lock(self, client_name):
+        if client_name not in self.get_client_list():
+            raise obnamlib.RepositoryClientDoesNotExist(client_name)
+        if not self._client_is_locked(client_name):
+            raise obnamlib.RepositoryClientNotLocked(client_name)
+
+    def _raw_lock_client(self, client_name):
+        tracing.trace('client_name=%s', client_name)
+
+        if self._client_is_locked(client_name):
+            raise obnamlib.RepositoryClientLockingFailed(client_name)
+
+        client_id = self._get_client_id(client_name)
+        if client_id is None:
+            raise obnamlib.RepositoryClientDoesNotExist(client_name)
+
+        # Create and initialise the client's own directory, if needed.
+        client_dir = self._get_client_dir(client_id)
+        if not self._fs.exists(client_dir):
+            self._fs.mkdir(client_dir)
+            self.hooks.call('repository-toplevel-init', self, client_dir)
+
+        # Actually lock the directory.
+        self._lockmgr.lock([client_dir])
+
+        # Create the per-client B-tree instance.
+        client = obnamlib.ClientMetadataTree(
+            self._fs, client_dir, self._node_size, self._upload_queue_size,
+            self._lru_size, self)
+        client.init_forest()
+
+        # Remember, remember, the 5th of November.
+        self._open_clients[client_name] = (client, True)
+
+    def _raw_unlock_client(self, client_name):
+        tracing.trace('client_name=%s', client_name)
+        self._require_client_lock(client_name)
+
+        client, is_locked = self._open_clients[client_name]
+        self._lockmgr.unlock([client.dirname])
+        del self._open_clients[client_name]
+
+    def lock_client(self, client_name):
+        logging.info('Locking client %s' % client_name)
+        self._raw_lock_client(client_name)
+
+    def unlock_client(self, client_name):
+        logging.info('Unlocking client %s' % client_name)
+        self._raw_unlock_client(client_name)
+
+    def commit_client(self, client_name):
+        raise NotImplementedError()
+    def force_client_lock(self, client_name):
+        raise NotImplementedError()
 
