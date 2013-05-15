@@ -556,6 +556,14 @@ class Repository(object):
             yield arg, metadata
 
 
+
+class _OpenClient(object):
+
+    def __init__(self, client):
+        self.locked = False
+        self.client = client
+
+
 class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     format = '6'
@@ -682,16 +690,19 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
                     self._upload_queue_size, self._lru_size, self)
             client.init_forest()
 
-            self._open_clients[client_name] = (client, False)
+            self._open_clients[client_name] = _OpenClient(client)
 
-        return self._open_clients[client_name][0]
+        return self._open_clients[client_name].client
 
     def _get_client_dir(self, client_id):
         '''Return name of sub-directory for a given client.'''
         return str(client_id)
 
     def _client_is_locked(self, client_name):
-        return self._open_clients.get(client_name, (None, False))[1]
+        if client_name in self._open_clients:
+            open_client = self._open_clients[client_name]
+            return open_client.locked
+        return False
 
     def _require_client_lock(self, client_name):
         if client_name not in self.get_client_list():
@@ -718,18 +729,17 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         # Actually lock the directory.
         self._lockmgr.lock([client_dir])
 
-        # Create the per-client B-tree instance.
-        client = self._open_client(client_name)
-
-        # Mark as locked.
-        self._open_clients[client_name] = (client, True)
+        # Remember that we have the lock.
+        self._open_client(client_name) # Ensure client is open
+        open_client = self._open_clients[client_name]
+        open_client.locked = True
 
     def _raw_unlock_client(self, client_name):
         tracing.trace('client_name=%s', client_name)
         self._require_client_lock(client_name)
 
-        client, is_locked = self._open_clients[client_name]
-        self._lockmgr.unlock([client.dirname])
+        open_client = self._open_clients[client_name]
+        self._lockmgr.unlock([open_client.client.dirname])
         del self._open_clients[client_name]
 
     def lock_client(self, client_name):
