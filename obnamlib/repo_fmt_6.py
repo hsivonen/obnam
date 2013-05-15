@@ -969,4 +969,5 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         logging.info('Unlocking client %s' % client_name)
         self._raw_unlock_client(client_name)
 
-
+    def get_allowed_client_keys(self):
+        return [obnamlib.REPO_CLIENT_TEST_KEY]
