@@ -969,8 +969,4 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         logging.info('Unlocking client %s' % client_name)
         self._raw_unlock_client(client_name)
 
-    def commit_client(self, client_name):
-        raise NotImplementedError()
-    def force_client_lock(self, client_name):
-        raise NotImplementedError()
 
