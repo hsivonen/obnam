@@ -155,11 +155,6 @@ class Repository(object):
                                          idpath_bits, idpath_skip)
         self._chunks_exists = False
 
-    def _open_client_list(self):
-        self.clientlist = obnamlib.ClientList(self.fs, self.node_size,
-                                              self.upload_queue_size,
-                                              self.lru_size, self)
-
     def _open_shared(self):
         self.chunklist = obnamlib.ChunkList(self.fs, self.node_size,
                                             self.upload_queue_size,
@@ -169,13 +164,6 @@ class Repository(object):
                                                self.node_size,
                                                self.upload_queue_size,
                                                self.lru_size, self)
-
-    def setup_hooks(self, hooks):
-        self.hooks = hooks
-
-        self.hooks.new('repository-toplevel-init')
-        self.hooks.new_filter('repository-data')
-        self.hooks.new('repository-add-client')
 
     def checksum(self, data):
         '''Return checksum of data.
@@ -192,10 +180,6 @@ class Repository(object):
         '''Return a new checksum algorithm.'''
         return hashlib.md5()
 
-    def acceptable_version(self, version):
-        '''Are we compatible with on-disk format?'''
-        return self.format_version == version
-
     def list_clients(self):
         '''Return list of names of clients using this repository.'''
 
@@ -205,46 +189,6 @@ class Repository(object):
         removed = set(self.removed_clients)
         clients = listed.union(added).difference(removed)
         return list(clients)
-
-    def require_root_lock(self):
-        '''Ensure we have the lock on the repository's root node.'''
-        if not self.got_root_lock:
-            raise LockFail('have not got lock on root node')
-
-    def require_shared_lock(self):
-        '''Ensure we have the lock on the shared B-trees except clientlist.'''
-        if not self.got_shared_lock:
-            raise LockFail('have not got lock on shared B-trees')
-
-    def require_client_lock(self):
-        '''Ensure we have the lock on the currently open client.'''
-        if not self.got_client_lock:
-            raise LockFail('have not got lock on client')
-
-    def require_open_client(self):
-        '''Ensure we have opened the client (r/w or r/o).'''
-        if self.current_client is None:
-            raise obnamlib.Error('client is not open')
-
-    def require_started_generation(self):
-        '''Ensure we have started a new generation.'''
-        if self.new_generation is None:
-            raise obnamlib.Error('new generation has not started')
-
-    def require_no_root_lock(self):
-        '''Ensure we haven't locked root yet.'''
-        if self.got_root_lock:
-            raise obnamlib.Error('We have already locked root, oops')
-
-    def require_no_shared_lock(self):
-        '''Ensure we haven't locked shared B-trees yet.'''
-        if self.got_shared_lock:
-            raise obnamlib.Error('We have already locked shared B-trees, oops')
-
-    def require_no_client_lock(self):
-        '''Ensure we haven't locked the per-client B-tree yet.'''
-        if self.got_client_lock:
-            raise obnamlib.Error('We have already locked the client, oops')
 
     def lock_root(self):
         '''Lock root node.
@@ -294,73 +238,6 @@ class Repository(object):
             self.clientlist.remove_client(client_name)
         self.clientlist.commit()
         self.unlock_root()
-
-    def get_format_version(self):
-        '''Return (major, minor) of the on-disk format version.
-
-        If on-disk repository does not have a version yet, return None.
-
-        '''
-
-        if self.fs.exists('metadata/format'):
-            data = self.fs.cat('metadata/format', runfilters=False)
-            lines = data.splitlines()
-            line = lines[0]
-            try:
-                version = int(line)
-            except ValueError, e: # pragma: no cover
-                msg = ('Invalid repository format version (%s) -- '
-                            'forgot encryption?' %
-                       repr(line))
-                raise obnamlib.Error(msg)
-            return version
-        else:
-            return None
-
-    def _write_format_version(self, version):
-        '''Write the desired format version to the repository.'''
-        tracing.trace('write format version')
-        if not self.fs.exists('metadata'):
-            self.fs.mkdir('metadata')
-        self.fs.overwrite_file('metadata/format', '%s\n' % version,
-                               runfilters=False)
-
-    def check_format_version(self):
-        '''Verify that on-disk format version is compatbile.
-
-        If not, raise BadFormat.
-
-        '''
-
-        on_disk = self.get_format_version()
-        if on_disk is not None and not self.acceptable_version(on_disk):
-            raise BadFormat('On-disk repository format %s is incompatible '
-                            'with program format %s; you need to use a '
-                            'different version of Obnam' %
-                                (on_disk, self.format_version))
-
-    def add_client(self, client_name):
-        '''Add a new client to the repository.'''
-        tracing.trace('client_name=%s', client_name)
-        self.require_root_lock()
-        if client_name in self.list_clients():
-            raise obnamlib.Error('client %s already exists in repository' %
-                                 client_name)
-        self.added_clients.append(client_name)
-
-    def remove_client(self, client_name):
-        '''Remove a client from the repository.
-
-        This removes all data related to the client, including all
-        actual file data unless other clients also use it.
-
-        '''
-
-        tracing.trace('client_name=%s', client_name)
-        self.require_root_lock()
-        if client_name not in self.list_clients():
-            raise obnamlib.Error('client %s does not exist' % client_name)
-        self.removed_clients.append(client_name)
 
     @property
     def shared_dirs(self):
@@ -470,27 +347,6 @@ class Repository(object):
         if commit_client:
             self.client.commit()
         self.unlock_client()
-
-    def open_client(self, client_name):
-        '''Open a client for read-only operation.'''
-        tracing.trace('open r/o client_name=%s' % client_name)
-        self.check_format_version()
-        client_id = self.clientlist.get_client_id(client_name)
-        if client_id is None:
-            raise obnamlib.Error('%s is not an existing client' % client_name)
-        self.current_client = client_name
-        self.current_client_id = client_id
-        client_dir = self.client_dir(client_id)
-        self.client = obnamlib.ClientMetadataTree(self.fs, client_dir,
-                                                  self.node_size,
-                                                  self.upload_queue_size,
-                                                  self.lru_size, self)
-        self.client.init_forest()
-
-    def list_generations(self):
-        '''List existing generations for currently open client.'''
-        self.require_open_client()
-        return self.client.list_generations()
 
     def get_is_checkpoint(self, genid):
         '''Is a generation a checkpoint one?'''
@@ -912,6 +768,23 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         # ClientMetadataTree and is_locked.
         self._open_clients = {}
 
+    def _open_client(self, client_name):
+        if client_name not in self._open_clients:
+            tracing.trace('client_name=%s', client_name)
+            client_id = self._get_client_id(client_name)
+            if client_id is None:
+                raise obnamlib.RepositoryClientDoesNotExist(client_name)
+
+            client_dir = self._get_client_dir(client_id)
+            client = obnamlib.ClientMetadataTree(
+                self._fs, client_dir, self._node_size,
+                    self._upload_queue_size, self._lru_size, self)
+            client.init_forest()
+
+            self._open_clients[client_name] = (client, False)
+
+        return self._open_clients[client_name][0]
+
     def _get_client_dir(self, client_id):
         '''Return name of sub-directory for a given client.'''
         return str(client_id)
@@ -945,12 +818,9 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._lockmgr.lock([client_dir])
 
         # Create the per-client B-tree instance.
-        client = obnamlib.ClientMetadataTree(
-            self._fs, client_dir, self._node_size, self._upload_queue_size,
-            self._lru_size, self)
-        client.init_forest()
+        client = self._open_client(client_name)
 
-        # Remember, remember, the 5th of November.
+        # Mark as locked.
         self._open_clients[client_name] = (client, True)
 
     def _raw_unlock_client(self, client_name):
@@ -971,3 +841,8 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     def get_allowed_client_keys(self):
         return [obnamlib.REPO_CLIENT_TEST_KEY]
+
+    def get_client_generation_ids(self, client_name):
+        client = self._open_client(client_name)
+        return client.list_generations()
+
