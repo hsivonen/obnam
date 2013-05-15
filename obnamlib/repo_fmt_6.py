@@ -29,16 +29,6 @@ import tracing
 import obnamlib
 
 
-class LockFail(obnamlib.Error):
-
-    pass
-
-
-class BadFormat(obnamlib.Error):
-
-    pass
-
-
 class HookedFS(object):
 
     '''A class to filter read/written data through hooks.'''
@@ -180,47 +170,6 @@ class Repository(object):
         '''Return a new checksum algorithm.'''
         return hashlib.md5()
 
-    def list_clients(self):
-        '''Return list of names of clients using this repository.'''
-
-        self.check_format_version()
-        listed = set(self.clientlist.list_clients())
-        added = set(self.added_clients)
-        removed = set(self.removed_clients)
-        clients = listed.union(added).difference(removed)
-        return list(clients)
-
-    def lock_root(self):
-        '''Lock root node.
-
-        Raise obnamlib.LockFail if locking fails. Lock will be released
-        by commit_root() or unlock_root().
-
-        '''
-
-        tracing.trace('locking root')
-        self.require_no_root_lock()
-        self.require_no_client_lock()
-        self.require_no_shared_lock()
-
-        self.lockmgr.lock(['.'])
-        self.check_format_version()
-        self.got_root_lock = True
-        self.added_clients = []
-        self.removed_clients = []
-        self._write_format_version(self.format_version)
-        self.clientlist.start_changes()
-
-    def unlock_root(self):
-        '''Unlock root node without committing changes made.'''
-        tracing.trace('unlocking root')
-        self.require_root_lock()
-        self.added_clients = []
-        self.removed_clients = []
-        self.lockmgr.unlock(['.'])
-        self.got_root_lock = False
-        self._open_client_list()
-
     def commit_root(self):
         '''Commit changes to root node, and unlock it.'''
         tracing.trace('committing root')
@@ -285,54 +234,6 @@ class Repository(object):
         self.lockmgr.unlock(self.shared_dirs)
         self.got_shared_lock = False
         self._open_shared()
-
-    def lock_client(self, client_name):
-        '''Lock a client for exclusive write access.
-
-        Raise obnamlib.LockFail if locking fails. Lock will be released
-        by commit_client() or unlock_client().
-
-        '''
-
-        tracing.trace('client_name=%s', client_name)
-        self.require_no_client_lock()
-        self.require_no_shared_lock()
-
-        self.check_format_version()
-        client_id = self.clientlist.get_client_id(client_name)
-        if client_id is None:
-            raise LockFail('client %s does not exist' % client_name)
-
-        client_dir = self.client_dir(client_id)
-        if not self.fs.exists(client_dir):
-            self.fs.mkdir(client_dir)
-            self.hooks.call('repository-toplevel-init', self, client_dir)
-
-        self.lockmgr.lock([client_dir])
-        self.got_client_lock = True
-        self.current_client = client_name
-        self.current_client_id = client_id
-        self.added_generations = []
-        self.removed_generations = []
-        self.client = obnamlib.ClientMetadataTree(self.fs, client_dir,
-                                                  self.node_size,
-                                                  self.upload_queue_size,
-                                                  self.lru_size, self)
-        self.client.init_forest()
-
-    def unlock_client(self):
-        '''Unlock currently locked client, without committing changes.'''
-        tracing.trace('unlocking client')
-        self.require_client_lock()
-        self.new_generation = None
-        self._really_remove_generations(self.added_generations)
-        self.lockmgr.unlock([self.client.dirname])
-        self.client = None # FIXME: This should remove uncommitted data.
-        self.added_generations = []
-        self.removed_generations = []
-        self.got_client_lock = False
-        self.current_client = None
-        self.current_client_id = None
 
     def commit_client(self, checkpoint=False):
         '''Commit changes to and unlock currently locked client.'''
