@@ -349,11 +349,6 @@ class Repository(object):
         self.chunklist.add(chunkid, checksum)
         self.chunksums.add(checksum, chunkid, self.current_client_id)
 
-    def chunk_exists(self, chunkid):
-        '''Does a chunk exist in the repository?'''
-        self.require_open_client()
-        return self.fs.exists(self._chunk_filename(chunkid))
-
     def find_chunks(self, checksum):
         '''Return identifiers of chunks with given checksum.
 
@@ -751,3 +746,6 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     def get_chunk_content(self, chunk_id):
         return self._fs.cat(self._chunk_filename(chunk_id))
+
+    def has_chunk(self, chunk_id):
+        return self._fs.exists(self._chunk_filename(chunk_id))
