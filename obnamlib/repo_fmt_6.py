@@ -562,6 +562,7 @@ class _OpenClient(object):
     def __init__(self, client):
         self.locked = False
         self.client = client
+        self.current_generation_id = None
 
 
 class RepositoryFormat6(obnamlib.RepositoryInterface):
@@ -755,5 +756,20 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     def get_client_generation_ids(self, client_name):
         client = self._open_client(client_name)
-        return client.list_generations()
+        return [
+            (client_name, gen_number)
+            for gen_number in client.list_generations()]
 
+    def create_generation(self, client_name):
+        tracing.trace('client_name=%s', client_name)
+        self._require_client_lock(client_name)
+
+        open_client = self._open_clients[client_name]
+        if open_client.current_generation_id is not None:
+            raise obnamlib.RepositoryClientGenerationUnfinished(client_name)
+
+        open_client.client.start_generation()
+        open_client.current_generation_id = \
+            open_client.client.get_generation_id(open_client.client.tree)
+
+        return (client_name, open_client.current_generation_id)
