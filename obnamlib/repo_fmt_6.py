@@ -773,3 +773,8 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             open_client.client.get_generation_id(open_client.client.tree)
 
         return (client_name, open_client.current_generation_id)
+
+    # Generations for a client.
+
+    def get_allowed_generation_keys(self):
+        return [obnamlib.REPO_GENERATION_TEST_KEY]
