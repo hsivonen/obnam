@@ -295,9 +295,6 @@ class Repository(object):
         self.require_started_generation()
         self.client.remove(filename)
 
-    def _chunk_filename(self, chunkid):
-        return self.chunk_idpath.convert(chunkid)
-
     def put_chunk_only(self, data):
         '''Put chunk of data into repository.
 
@@ -351,11 +348,6 @@ class Repository(object):
 
         self.chunklist.add(chunkid, checksum)
         self.chunksums.add(checksum, chunkid, self.current_client_id)
-
-    def get_chunk(self, chunkid):
-        '''Return data of chunk with given id.'''
-        self.require_open_client()
-        return self.fs.cat(self._chunk_filename(chunkid))
 
     def chunk_exists(self, chunkid):
         '''Does a chunk exist in the repository?'''
@@ -483,13 +475,20 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             node_size=obnamlib.DEFAULT_NODE_SIZE,
             upload_queue_size=obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
             lru_size=obnamlib.DEFAULT_LRU_SIZE,
+            idpath_depth=obnamlib.IDPATH_DEPTH,
+            idpath_bits=obnamlib.IDPATH_BITS,
+            idpath_skip=obnamlib.IDPATH_SKIP,
             hooks=None):
         self._lock_timeout = lock_timeout
         self._node_size = node_size
         self._upload_queue_size = upload_queue_size
         self._lru_size = lru_size
+        self._idpath_depth = idpath_depth
+        self._idpath_bits = idpath_bits
+        self._idpath_skip = idpath_skip
 
         self._setup_hooks(hooks or obnamlib.HookManager())
+        self._setup_chunks()
 
     def _setup_hooks(self, hooks):
         self.hooks = hooks
@@ -714,3 +713,41 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             open_client.current_generation = None
         open_client.removed_generation_numbers.append(gen_number)
 
+    # Chunks and chunk indexes.
+
+    def _setup_chunks(self):
+        self._prev_chunk_id = None
+        self._chunk_idpath = larch.IdPath(
+            'chunks', self._idpath_depth, self._idpath_bits,
+            self._idpath_skip)
+
+
+    def _chunk_filename(self, chunk_id):
+        return self._chunk_idpath.convert(chunk_id)
+
+    def _random_chunk_id(self):
+        return random.randint(0, obnamlib.MAX_ID)
+
+    def put_chunk_content(self, data):
+        if self._prev_chunk_id is None:
+            self._prev_chunk_id = self._random_chunk_id()
+
+        while True:
+            chunk_id = (self._prev_chunk_id + 1) % obnamlib.MAX_ID
+            filename = self._chunk_filename(chunk_id)
+            try:
+                self._fs.write_file(filename, data)
+            except OSError, e: # pragma: no cover
+                if e.errno == errno.EEXIST:
+                    self._prev_chunk_id = self._random_chunk_id()
+                    continue
+                raise
+            else:
+                tracing.trace('chunkid=%s', chunk_id)
+                break
+
+        self._prev_chunk_id = chunk_id
+        return chunk_id
+
+    def get_chunk_content(self, chunk_id):
+        return self._fs.cat(self._chunk_filename(chunk_id))
