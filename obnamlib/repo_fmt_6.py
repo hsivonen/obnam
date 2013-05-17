@@ -111,40 +111,6 @@ class Repository(object):
 
     format_version = 6
 
-    def __init__(self, fs, node_size, upload_queue_size, lru_size, hooks,
-                 idpath_depth, idpath_bits, idpath_skip, current_time,
-                 lock_timeout, client_name):
-
-        self.current_time = current_time
-        self.setup_hooks(hooks or obnamlib.HookManager())
-        self.fs = HookedFS(self, fs, self.hooks)
-        self.node_size = node_size
-        self.upload_queue_size = upload_queue_size
-        self.lru_size = lru_size
-
-        hider = hashlib.md5()
-        hider.update(client_name)
-
-        self.lockmgr = obnamlib.LockManager(self.fs, lock_timeout,
-                                            hider.hexdigest())
-
-        self.got_root_lock = False
-        self._open_client_list()
-        self.got_shared_lock = False
-        self.got_client_lock = False
-        self.current_client = None
-        self.current_client_id = None
-        self.new_generation = None
-        self.added_clients = []
-        self.removed_clients = []
-        self.removed_generations = []
-        self.client = None
-        self._open_shared()
-        self.prev_chunkid = None
-        self.chunk_idpath = larch.IdPath('chunks', idpath_depth,
-                                         idpath_bits, idpath_skip)
-        self._chunks_exists = False
-
     def _open_shared(self):
         self.chunklist = obnamlib.ChunkList(self.fs, self.node_size,
                                             self.upload_queue_size,
@@ -154,21 +120,6 @@ class Repository(object):
                                                self.node_size,
                                                self.upload_queue_size,
                                                self.lru_size, self)
-
-    def checksum(self, data):
-        '''Return checksum of data.
-
-        The checksum is (currently) MD5.
-
-        '''
-
-        checksummer = self.new_checksummer()
-        checksummer.update(data)
-        return checksummer.hexdigest()
-
-    def new_checksummer(self):
-        '''Return a new checksum algorithm.'''
-        return hashlib.md5()
 
     def commit_root(self):
         '''Commit changes to root node, and unlock it.'''
@@ -254,23 +205,6 @@ class Repository(object):
         self.require_open_client()
         return self.client.get_is_checkpoint(genid)
 
-    def start_generation(self):
-        '''Start a new generation.
-
-        The new generation is a copy-on-write clone of the previous
-        one (or empty, if first generation).
-
-        '''
-        tracing.trace('start new generation')
-        self.require_client_lock()
-        if self.new_generation is not None:
-            raise obnamlib.Error('Cannot start two new generations')
-        self.client.start_generation()
-        self.new_generation = \
-            self.client.get_generation_id(self.client.tree)
-        self.added_generations.append(self.new_generation)
-        return self.new_generation
-
     def _really_remove_generations(self, remove_genids):
         '''Really remove a list of generations.
 
@@ -324,13 +258,6 @@ class Repository(object):
         remove = maybe_remove.difference(keep)
         remove_chunks(remove)
         remove_gens(remove_genids)
-
-    def remove_generation(self, gen):
-        '''Remove a committed generation.'''
-        self.require_client_lock()
-        if gen == self.new_generation:
-            raise obnamlib.Error('cannot remove started generation')
-        self.removed_generations.append(gen)
 
     def get_generation_times(self, gen):
         '''Return start and end times of a generation.
@@ -511,25 +438,6 @@ class Repository(object):
         '''Returned contents of file stored in B-tree instead of chunks dir.'''
         self.require_open_client()
         return self.client.get_file_data(gen, filename)
-
-    def genspec(self, spec):
-        '''Interpret a generation specification.'''
-
-        self.require_open_client()
-        gens = self.list_generations()
-        if not gens:
-            raise obnamlib.Error('No generations')
-        if spec == 'latest':
-            return gens[-1]
-        else:
-            try:
-                intspec = int(spec)
-            except ValueError:
-                raise obnamlib.Error('Generation %s is not an integer' % spec)
-            if intspec in gens:
-                return intspec
-            else:
-                raise obnamlib.Error('Generation %s not found' % spec)
 
     def walk(self, gen, arg, depth_first=False):
         '''Iterate over each pathname specified by argument.
