@@ -562,7 +562,8 @@ class _OpenClient(object):
     def __init__(self, client):
         self.locked = False
         self.client = client
-        self.current_generation_id = None
+        self.current_generation_number = None
+        self.removed_generation_numbers = []
 
 
 class RepositoryFormat6(obnamlib.RepositoryInterface):
@@ -756,23 +757,25 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     def get_client_generation_ids(self, client_name):
         client = self._open_client(client_name)
+        open_client = self._open_clients[client_name]
         return [
             (client_name, gen_number)
-            for gen_number in client.list_generations()]
+            for gen_number in client.list_generations()
+            if gen_number not in open_client.removed_generation_numbers]
 
     def create_generation(self, client_name):
         tracing.trace('client_name=%s', client_name)
         self._require_client_lock(client_name)
 
         open_client = self._open_clients[client_name]
-        if open_client.current_generation_id is not None:
+        if open_client.current_generation_number is not None:
             raise obnamlib.RepositoryClientGenerationUnfinished(client_name)
 
         open_client.client.start_generation()
-        open_client.current_generation_id = \
+        open_client.current_generation_number = \
             open_client.client.get_generation_id(open_client.client.tree)
 
-        return (client_name, open_client.current_generation_id)
+        return (client_name, open_client.current_generation_number)
 
     # Generations for a client.
 
@@ -791,3 +794,15 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     def make_generation_spec(self, gen_id):
         return str(gen_id[1])
+
+    def remove_generation(self, gen_id):
+        tracing.trace('gen_id=%s' % repr(gen_id))
+        client_name, gen_number = gen_id
+        self._require_client_lock(client_name)
+        if gen_id not in self.get_client_generation_ids(client_name):
+            raise obnamlib.RepositoryGenerationDoesNotExist(client_name)
+        open_client = self._open_clients[client_name]
+        if gen_number == open_client.current_generation_number:
+            open_client.current_generation = None
+        open_client.removed_generation_numbers.append(gen_number)
+
