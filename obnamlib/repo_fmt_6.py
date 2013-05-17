@@ -370,27 +370,6 @@ class Repository(object):
                     result.append(int(basename, 16))
         return result
 
-    def remove_chunk(self, chunk_id):
-        '''Remove a chunk from the repository.
-
-        Note that this does _not_ remove the chunk from the chunk
-        checksum forest. The caller is not supposed to call us until
-        the chunk is not there anymore.
-
-        However, it does remove the chunk from the chunk list forest.
-
-        '''
-
-        tracing.trace('chunk_id=%s', chunk_id)
-        self.require_open_client()
-        self.require_shared_lock()
-        self.chunklist.remove(chunk_id)
-        filename = self._chunk_filename(chunk_id)
-        try:
-            self.fs.remove(filename)
-        except OSError:
-            pass
-
     def get_file_chunks(self, gen, filename):
         '''Return list of ids of chunks belonging to a file.'''
         self.require_open_client()
@@ -749,3 +728,11 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     def has_chunk(self, chunk_id):
         return self._fs.exists(self._chunk_filename(chunk_id))
+
+    def remove_chunk(self, chunk_id):
+        tracing.trace('chunk_id=%s', chunk_id)
+        filename = self._chunk_filename(chunk_id)
+        try:
+            self._fs.remove(filename)
+        except OSError:
+            raise obnamlib.RepositoryChunkDoesNotExist(str(chunk_id))
