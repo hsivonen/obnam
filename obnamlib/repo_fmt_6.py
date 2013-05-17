@@ -778,3 +778,13 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     def get_allowed_generation_keys(self):
         return [obnamlib.REPO_GENERATION_TEST_KEY]
+
+    def interpret_generation_spec(self, client_name, genspec):
+        ids = self.get_client_generation_ids(client_name)
+        if not ids:
+            raise obnamlib.RepositoryClientHasNoGenerations(client_name)
+        if genspec == 'latest':
+            return ids[-1]
+        for gen_id in ids:
+            if str(gen_id[1]) == genspec:
+                return gen_id
