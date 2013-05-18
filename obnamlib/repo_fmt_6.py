@@ -633,6 +633,13 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         client = self._open_client(client_name)
         client.append_file_chunks(filename, [chunk_id]) # FIXME: curgen only
 
+    def get_file_children(self, generation_id, filename):
+        self._require_existing_file(generation_id, filename)
+        client_name, gen_number = generation_id
+        client = self._open_client(client_name)
+        return [os.path.join(filename, basename)
+                for basename in client.listdir(gen_number, filename)]
+
     # Fsck.
 
     def get_fsck_work_item(self):
