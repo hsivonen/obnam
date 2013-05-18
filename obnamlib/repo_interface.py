@@ -1235,6 +1235,14 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
             self.repo.get_file_key,
             gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY)
 
+    def test_get_file_key_fails_for_forbidden_key(self):
+        gen_id = self.create_generation()
+        self.repo.add_file(gen_id, '/foo/bar')
+        self.assertRaises(
+            obnamlib.RepositoryFileKeyNotAllowed,
+            self.repo.get_file_key,
+            gen_id, '/foo/bar', WRONG_KEY)
+
     def test_get_file_key_fails_for_nonexistent_file(self):
         gen_id = self.create_generation()
         self.assertRaises(
