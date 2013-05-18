@@ -498,7 +498,8 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         open_client = self._open_clients[client_name]
         for gen_number in open_client.removed_generation_numbers:
             open_client.client.remove_generation(gen_number)
-        open_client.client.commit()
+        if open_client.current_generation_number:
+            open_client.client.commit()
         self._raw_unlock_client(client_name)
 
     def get_allowed_client_keys(self):
