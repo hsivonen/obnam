@@ -549,7 +549,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         for gen_id in ids:
             if str(gen_id[1]) == genspec:
                 return gen_id
-        raise obnamlib.RepositoryGenerationdoesNotExist(client_name)
+        raise obnamlib.RepositoryGenerationDoesNotExist(client_name)
 
     def make_generation_spec(self, gen_id):
         return str(gen_id[1])
