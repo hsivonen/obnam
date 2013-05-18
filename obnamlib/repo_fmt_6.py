@@ -109,18 +109,6 @@ class Repository(object):
 
     '''
 
-    format_version = 6
-
-    def _open_shared(self):
-        self.chunklist = obnamlib.ChunkList(self.fs, self.node_size,
-                                            self.upload_queue_size,
-                                            self.lru_size, self)
-        self.chunksums = obnamlib.ChecksumTree(self.fs, 'chunksums',
-                                               len(self.checksum('')),
-                                               self.node_size,
-                                               self.upload_queue_size,
-                                               self.lru_size, self)
-
     def commit_root(self):
         '''Commit changes to root node, and unlock it.'''
         tracing.trace('committing root')
@@ -247,16 +235,6 @@ class Repository(object):
         '''Remove file or directory or directory tree from generation.'''
         self.require_started_generation()
         self.client.remove(filename)
-
-    def find_chunks(self, checksum):
-        '''Return identifiers of chunks with given checksum.
-
-        Because of hash collisions, the list may be longer than one.
-
-        '''
-
-        self.require_open_client()
-        return self.chunksums.find(checksum)
 
     def list_chunks(self):
         '''Return list of ids of all chunks in repository.'''
@@ -721,4 +699,10 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._chunklist.remove(chunk_id)
 
     def find_chunk_id_by_content(self, data):
-        pass
+        checksum = self._checksum(data)
+        candidates = self._chunksums.find(checksum)
+        for chunk_id in candidates:
+            chunk_data = self.get_chunk_content(chunk_id)
+            if chunk_data == data:
+                return chunk_id
+        raise obnamlib.RepositoryChunkContentNotInIndexes()
