@@ -185,6 +185,24 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             raise obnamlib.RepositoryClientDoesNotExist(client_name)
         self._client_list.remove_client(client_name)
 
+    def rename_client(self, old_client_name, new_client_name):
+        self._require_client_list_lock()
+
+        client_names = self.get_client_names()
+        if old_client_name not in client_names:
+            raise obnamlib.RepositoryClientDoesNotExist(old_client_name)
+        if new_client_name in client_names:
+            raise obnamlib.RepositoryClientAlreadyExists(new_client_name)
+
+        client_id = self._get_client_id(old_client_name)
+        new_key = self._client_list.key(
+            new_client_name, client_id, self._client_list.CLIENT_NAME)
+        self._client_list.tree.insert(new_key, new_client_name)
+
+        old_key = self._client_list.key(
+            old_client_name, client_id, self._client_list.CLIENT_NAME)
+        self._client_list.tree.remove(old_key)
+
     def _get_client_id(self, client_name):
         '''Return a client's unique, filesystem-visible id.
 
