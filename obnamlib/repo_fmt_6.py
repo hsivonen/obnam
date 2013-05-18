@@ -139,36 +139,6 @@ class Repository(object):
         self.clientlist.commit()
         self.unlock_root()
 
-    @property
-    def shared_dirs(self):
-        return [self.chunklist.dirname, self.chunksums.dirname,
-                self.chunk_idpath.dirname]
-
-    def lock_shared(self):
-        '''Lock a client for exclusive write access.
-
-        Raise obnamlib.LockFail if locking fails. Lock will be released
-        by commit_client() or unlock_client().
-
-        '''
-
-        tracing.trace('locking shared')
-        self.require_no_shared_lock()
-        self.check_format_version()
-        self.lockmgr.lock(self.shared_dirs)
-        self.got_shared_lock = True
-        tracing.trace('starting changes in chunksums and chunklist')
-        self.chunksums.start_changes()
-        self.chunklist.start_changes()
-
-        # Initialize the chunks directory for encryption, etc, if it just
-        # got created.
-        dirname = self.chunk_idpath.dirname
-        filenames = self.fs.listdir(dirname)
-        if filenames == [] or filenames == ['lock']:
-            self.hooks.call('repository-toplevel-init', self, dirname)
-
-
     def commit_shared(self):
         '''Commit changes to shared B-trees.'''
 
@@ -177,14 +147,6 @@ class Repository(object):
         self.chunklist.commit()
         self.chunksums.commit()
         self.unlock_shared()
-
-    def unlock_shared(self):
-        '''Unlock currently locked shared B-trees.'''
-        tracing.trace('unlocking shared')
-        self.require_shared_lock()
-        self.lockmgr.unlock(self.shared_dirs)
-        self.got_shared_lock = False
-        self._open_shared()
 
     def commit_client(self, checkpoint=False):
         '''Commit changes to and unlock currently locked client.'''
@@ -475,6 +437,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._lockmgr = obnamlib.LockManager(self._fs, self._lock_timeout, '')
         self._setup_client_list()
         self._setup_client()
+        self._setup_chunk_indexes()
 
     def init_repo(self):
         # There is nothing else to be done.
@@ -695,7 +658,6 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             'chunks', self._idpath_depth, self._idpath_bits,
             self._idpath_skip)
 
-
     def _chunk_filename(self, chunk_id):
         return self._chunk_idpath.convert(chunk_id)
 
@@ -736,3 +698,73 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             self._fs.remove(filename)
         except OSError:
             raise obnamlib.RepositoryChunkDoesNotExist(str(chunk_id))
+
+    # Chunk indexes.
+
+    def _checksum(self, data):
+        return hashlib.md5(data).hexdigest()
+
+    def _setup_chunk_indexes(self):
+        self._got_chunk_indexes_lock = False
+        self._chunklist = obnamlib.ChunkList(
+            self._fs, self._node_size, self._upload_queue_size,
+            self._lru_size, self)
+        self._chunksums = obnamlib.ChecksumTree(
+            self._fs, 'chunksums',  len(self._checksum('')), self._node_size,
+            self._upload_queue_size, self._lru_size, self)
+
+    def _chunk_index_dirs_to_lock(self):
+        return [
+            self._chunklist.dirname,
+            self._chunksums.dirname,
+            self._chunk_idpath.dirname]
+
+    def _require_chunk_indexes_lock(self):
+        if not self._got_chunk_indexes_lock:
+            raise obnamlib.RepositoryChunkIndexesNotLocked()
+
+    def _raw_lock_chunk_indexes(self):
+        if not self._got_chunk_indexes_lock:
+            raise obnamlib.RepositoryChunkIndexesNotLocked()
+
+        self._lockmgr.lock(self._chunk_index_dirs_to_lock())
+        self._got_chunk_indexes_lock = True
+
+        tracing.trace('starting changes in chunksums and chunklist')
+        self._chunksums.start_changes()
+        self._chunklist.start_changes()
+
+        # Initialize the chunks directory for encryption, etc, if it just
+        # got created.
+        dirname = self._chunk_idpath.dirname
+        filenames = self._fs.listdir(dirname)
+        if filenames == [] or filenames == ['lock']:
+            self.hooks.call('repository-toplevel-init', self, dirname)
+
+    def _raw_unlock_chunk_indexes(self):
+        self._require_chunk_indexes_lock()
+        self._lockmgr.unlock(self.chunk_index_dirs_to_lock())
+        self._setup_chunk_indexes()
+
+    def lock_chunk_indexes(self):
+        tracing.trace('locking chunk indexes')
+        self._raw_lock_chunk_indexes()
+
+    def unlock_chunk_indexes(self):
+        tracing.trace('unlocking chunk indexes')
+        self._raw_unlock_chunk_indexes()
+
+    def force_chunk_index_lock(self):
+        tracing.trace('forcing chunk indexes lock')
+        if self._got_chunk_indexes_lock:
+            self._raw_unlock_chunk_indexes()
+        self._raw_lock_chunk_indexes()
+
+    def put_chunk_into_indexes(self, chunk_id, data):
+        pass
+
+    def remove_chunk_from_indexes(self, chunk_id):
+        pass
+
+    def find_chunk_id_by_content(self, data):
+        pass
