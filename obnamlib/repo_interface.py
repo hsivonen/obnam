@@ -565,6 +565,10 @@ class RepositoryInterface(object):
         '''Forces a chunk index lock open and takes it for the caller.'''
         raise NotImplementedError()
 
+    def commit_chunk_indexes(self):
+        '''Commit changes to chunk indexes.'''
+        raise NotImplementedError()
+
     def put_chunk_into_indexes(self, chunk_id, data):
         '''Adds a chunk to indexes.
 
