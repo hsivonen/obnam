@@ -230,7 +230,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         if client_name not in self._open_clients:
             tracing.trace('client_name=%s', client_name)
             client_id = self._get_client_id(client_name)
-            if client_id is None:
+            if client_id is None: # pragma: no cover
                 raise obnamlib.RepositoryClientDoesNotExist(client_name)
 
             client_dir = self._get_client_dir(client_id)
