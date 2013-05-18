@@ -652,7 +652,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     def _raw_unlock_chunk_indexes(self):
         self._require_chunk_indexes_lock()
-        self._lockmgr.unlock(self.chunk_index_dirs_to_lock())
+        self._lockmgr.unlock(self._chunk_index_dirs_to_lock())
         self._setup_chunk_indexes()
 
     def lock_chunk_indexes(self):
