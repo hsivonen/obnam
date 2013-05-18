@@ -738,7 +738,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         metadata = obnamlib.decode_metadata(encoded_metadata)
 
         if key == obnamlib.REPO_FILE_MTIME:
-            return metadata.st_mtime
+            return metadata.st_mtime_sec
         elif key == obnamlib.REPO_FILE_TEST_KEY:
             return metadata.target or ''
         else:
