@@ -248,42 +248,6 @@ class Repository(object):
         self.require_started_generation()
         self.client.remove(filename)
 
-    def put_chunk_only(self, data):
-        '''Put chunk of data into repository.
-
-        If the same data is already in the repository, it will be put there
-        a second time. It is the caller's responsibility to check
-        that the data is not already in the repository.
-
-        Return the unique identifier of the new chunk.
-
-        '''
-
-        def random_chunkid():
-            return random.randint(0, obnamlib.MAX_ID)
-
-        self.require_started_generation()
-
-        if self.prev_chunkid is None:
-            self.prev_chunkid = random_chunkid()
-
-        while True:
-            chunkid = (self.prev_chunkid + 1) % obnamlib.MAX_ID
-            filename = self._chunk_filename(chunkid)
-            try:
-                self.fs.write_file(filename, data)
-            except OSError, e: # pragma: no cover
-                if e.errno == errno.EEXIST:
-                    self.prev_chunkid = random_chunkid()
-                    continue
-                raise
-            else:
-                tracing.trace('chunkid=%s', chunkid)
-                break
-
-        self.prev_chunkid = chunkid
-        return chunkid
-
     def put_chunk_in_shared_trees(self, chunkid, checksum):
         '''Put the chunk into the shared trees.
 
