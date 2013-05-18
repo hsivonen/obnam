@@ -139,15 +139,6 @@ class Repository(object):
         self.clientlist.commit()
         self.unlock_root()
 
-    def commit_shared(self):
-        '''Commit changes to shared B-trees.'''
-
-        tracing.trace('committing shared')
-        self.require_shared_lock()
-        self.chunklist.commit()
-        self.chunksums.commit()
-        self.unlock_shared()
-
     def commit_client(self, checkpoint=False):
         '''Commit changes to and unlock currently locked client.'''
         tracing.trace('committing client (checkpoint=%s)', checkpoint)
@@ -759,6 +750,13 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         if self._got_chunk_indexes_lock:
             self._raw_unlock_chunk_indexes()
         self._raw_lock_chunk_indexes()
+
+    def commit_chunk_indexes(self):
+        tracing.trace('committing chunk indexes')
+        self.require_chunk_indexes_lock()
+        self._chunklist.commit()
+        self._chunksums.commit()
+        self._raw_unlock_chunk_indexes()
 
     def put_chunk_into_indexes(self, chunk_id, data):
         pass
