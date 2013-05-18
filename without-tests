@@ -28,3 +28,4 @@
 ./.pc/debian-changes-0.22-2/obnamlib/plugins/fsck_plugin.py
 ./.pc/debian-changes-0.22-2/obnamlib/plugins/restore_plugin.py
 obnamlib/plugins/convert5to6_plugin.py
+obnamlib/repo_interface.py

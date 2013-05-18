@@ -85,6 +85,33 @@ from vfs import VirtualFileSystem, VfsFactory, VfsTests
 from vfs_local import LocalFS
 from metadata import (read_metadata, set_metadata, Metadata, metadata_fields,
                       metadata_verify_fields, encode_metadata, decode_metadata)
+from repo_interface import (
+    RepositoryInterface,
+    RepositoryInterfaceTests,
+    RepositoryClientAlreadyExists,
+    RepositoryClientDoesNotExist,
+    RepositoryClientListNotLocked,
+    RepositoryClientListLockingFailed,
+    RepositoryClientLockingFailed,
+    RepositoryClientNotLocked,
+    RepositoryClientKeyNotAllowed,
+    RepositoryClientGenerationUnfinished,
+    RepositoryGenerationKeyNotAllowed,
+    RepositoryGenerationDoesNotExist,
+    RepositoryClientHasNoGenerations,
+    RepositoryFileDoesNotExistInGeneration,
+    RepositoryFileKeyNotAllowed,
+    RepositoryChunkDoesNotExist,
+    RepositoryChunkContentNotInIndexes,
+    RepositoryChunkIndexesNotLocked,
+    RepositoryChunkIndexesLockingFailed,
+    REPO_CLIENT_TEST_KEY,
+    REPO_GENERATION_TEST_KEY,
+    REPO_FILE_TEST_KEY,
+    REPO_FILE_MTIME,
+    REPO_FILE_INTEGER_KEYS)
+from repo_dummy import RepositoryFormatDummy
+from repo_fmt_6 import RepositoryFormat6
 from repo_tree import RepositoryTree
 from chunklist import ChunkList
 from clientlist import ClientList
