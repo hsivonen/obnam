@@ -715,7 +715,10 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._chunksums.add(checksum, chunk_id, client_id)
 
     def remove_chunk_from_indexes(self, chunk_id):
-        pass
+        tracing.trace('chunk_id=%s', chunk_id)
+
+        self._require_chunk_indexes_lock()
+        self._chunklist.remove(chunk_id)
 
     def find_chunk_id_by_content(self, data):
         pass
