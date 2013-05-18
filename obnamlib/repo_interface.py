@@ -1278,6 +1278,10 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
             gen_id, '/foo/bar', obnamlib.REPO_FILE_MTIME)
         self.assertEqual(value, 123)
 
+        # FIXME : The ClientMetadataTree code does not handle, currently,
+        # the same file being added, removed, then added back within
+        # the same generation. This is a workaround, since I'm in the
+        # middle of a refactoring and don't want to touch that class.
         self.repo.commit_client('fooclient')
         self.repo.lock_client('fooclient')
         gen_id = self.repo.create_generation('fooclient')
