@@ -313,7 +313,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
     def get_allowed_client_keys(self):
         return []
 
-    def get_client_key(self, client_name, key):
+    def get_client_key(self, client_name, key): # pragma: no cover
         raise obnamlib.RepositoryClientKeyNotAllowed(
             self.format, client_name, key)
 
@@ -353,12 +353,12 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
     def get_allowed_generation_keys(self):
         return []
 
-    def get_generation_key(self, generation_id, key):
+    def get_generation_key(self, generation_id, key): # pragma: no cover
         client_name, gen_number = generation_key
         raise obnamlib.RepositoryGenerationKeyNotAllowed(
             self.format, client_name, key)
 
-    def set_generation_key(self, generation_id, key, value):
+    def set_generation_key(self, generation_id, key, value): # pragma: no cover
         client_name, gen_number = generation_key
         raise obnamlib.RepositoryGenerationKeyNotAllowed(
             self.format, client_name, key)
