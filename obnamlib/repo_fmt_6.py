@@ -753,6 +753,9 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._require_client_lock(client_name)
         client = self._open_client(client_name)
 
+        if generation_id not in self.get_client_generation_ids(client_name):
+            raise obnamlib.RepositoryGenerationDoesNotExist(client_name)
+
         encoded_metadata = client.get_metadata(gen_number, filename)
         metadata = obnamlib.decode_metadata(encoded_metadata)
 
