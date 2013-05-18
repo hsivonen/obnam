@@ -433,7 +433,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         except IOError, e:
             if e.errno == errno.ENOENT:
                 raise obnamlib.RepositoryChunkDoesNotExist(str(chunk_id))
-            raise
+            raise # pragma: no cover
 
     def has_chunk(self, chunk_id):
         return self._fs.exists(self._chunk_filename(chunk_id))
