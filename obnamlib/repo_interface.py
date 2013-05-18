@@ -1161,7 +1161,7 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.repo.remove_file(gen_id, '/foo/bar')
         self.assertFalse(self.repo.file_exists(gen_id, '/foo/bar'))
 
-    def test_unlocking_forgets_file_remova(self):
+    def test_unlocking_forgets_file_removal(self):
         gen_id = self.create_generation()
         self.repo.add_file(gen_id, '/foo/bar')
         self.repo.commit_client('fooclient')
