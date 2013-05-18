@@ -737,6 +737,11 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         if generation_id not in self.get_client_generation_ids(client_name):
             raise obnamlib.RepositoryGenerationDoesNotExist(client_name)
 
+        if not self.file_exists(generation_id, filename):
+            raise obnamlib.RepositoryFileDoesNotExistInGeneration(
+                client_name, self.make_generation_spec(generation_id),
+                filename)
+
         encoded_metadata = client.get_metadata(gen_number, filename)
         metadata = obnamlib.decode_metadata(encoded_metadata)
 
