@@ -1274,6 +1274,13 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.repo.add_file(gen_id, '/foo/bar')
         self.repo.set_file_key(
             gen_id, '/foo/bar', obnamlib.REPO_FILE_MTIME, 123)
+        value = self.repo.get_file_key(
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_MTIME)
+        self.assertEqual(value, 123)
+
+        self.repo.commit_client('fooclient')
+        self.repo.lock_client('fooclient')
+        gen_id = self.repo.create_generation('fooclient')
 
         # Remove the file. Key should be removed.
         self.repo.remove_file(gen_id, '/foo/bar')
