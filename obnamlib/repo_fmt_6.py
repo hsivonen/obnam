@@ -266,7 +266,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             raise obnamlib.RepositoryClientLockingFailed(client_name)
 
         client_id = self._get_client_id(client_name)
-        if client_id is None:
+        if client_id is None: # pragma: no cover
             raise obnamlib.RepositoryClientDoesNotExist(client_name)
 
         # Create and initialise the client's own directory, if needed.
