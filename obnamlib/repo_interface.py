@@ -583,8 +583,8 @@ class RepositoryInterface(object):
         '''
         raise NotImplementedError()
 
-    def remove_chunk_from_indexes(self, chunk_id):
-        '''Removes a chunk from indexes, given its id.'''
+    def remove_chunk_from_indexes(self, chunk_id, client_id):
+        '''Removes a chunk from indexes, given its id, for a given client.'''
         raise NotImplementedError()
 
     def find_chunk_id_by_content(self, data):
@@ -1498,7 +1498,7 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.repo.lock_chunk_indexes()
         chunk_id = self.repo.put_chunk_content('foochunk')
         self.repo.put_chunk_into_indexes(chunk_id, 'foochunk', 123)
-        self.repo.remove_chunk_from_indexes(chunk_id)
+        self.repo.remove_chunk_from_indexes(chunk_id, 123)
         self.assertRaises(
             obnamlib.RepositoryChunkContentNotInIndexes,
             self.repo.find_chunk_id_by_content, 'foochunk')
@@ -1516,7 +1516,7 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.repo.commit_chunk_indexes()
         self.assertRaises(
             obnamlib.RepositoryChunkIndexesNotLocked,
-            self.repo.remove_chunk_from_indexes, chunk_id)
+            self.repo.remove_chunk_from_indexes, chunk_id, 123)
 
     def test_unlocking_chunk_indexes_forgets_changes(self):
         chunk_id = self.repo.put_chunk_content('foochunk')

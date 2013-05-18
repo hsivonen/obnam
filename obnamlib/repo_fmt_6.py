@@ -633,8 +633,8 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             raise obnamlib.RepositoryChunkIndexesNotLocked()
 
     def _raw_lock_chunk_indexes(self):
-        if not self._got_chunk_indexes_lock:
-            raise obnamlib.RepositoryChunkIndexesNotLocked()
+        if self._got_chunk_indexes_lock:
+            raise obnamlib.RepositoryChunkIndexesLockingFailed()
 
         self._lockmgr.lock(self._chunk_index_dirs_to_lock())
         self._got_chunk_indexes_lock = True
@@ -686,10 +686,12 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._chunklist.add(chunk_id, checksum)
         self._chunksums.add(checksum, chunk_id, client_id)
 
-    def remove_chunk_from_indexes(self, chunk_id):
+    def remove_chunk_from_indexes(self, chunk_id, client_id):
         tracing.trace('chunk_id=%s', chunk_id)
 
         self._require_chunk_indexes_lock()
+        checksum = self._chunklist.get_checksum(chunk_id)
+        self._chunksums.remove(checksum, chunk_id, client_id)
         self._chunklist.remove(chunk_id)
 
     def find_chunk_id_by_content(self, data):

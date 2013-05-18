@@ -432,7 +432,7 @@ class ChunkIndexes(object):
                 return chunk_id
         raise obnamlib.RepositoryChunkContentNotInIndexes()
 
-    def remove_chunk(self, chunk_id):
+    def remove_chunk(self, chunk_id, client_id):
         self._require_lock()
         self.data.set_value(chunk_id, None)
 
@@ -611,8 +611,8 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
     def find_chunk_id_by_content(self, chunk_content):
         return self._chunk_indexes.find_chunk(chunk_content)
 
-    def remove_chunk_from_indexes(self, chunk_id):
-        return self._chunk_indexes.remove_chunk(chunk_id)
+    def remove_chunk_from_indexes(self, chunk_id, client_id):
+        return self._chunk_indexes.remove_chunk(chunk_id, client_id)
 
     def get_fsck_work_item(self):
         return 'this pretends to be a work item'
