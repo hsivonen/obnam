@@ -225,12 +225,6 @@ class Repository(object):
             raise obnamlib.Error('%s does not exist' % filename)
         return obnamlib.decode_metadata(encoded)
 
-    def create(self, filename, metadata):
-        '''Create a new (empty) file in the new generation.'''
-        self.require_started_generation()
-        encoded = obnamlib.encode_metadata(metadata)
-        self.client.create(filename, encoded)
-
     def remove(self, filename):
         '''Remove file or directory or directory tree from generation.'''
         self.require_started_generation()
@@ -706,3 +700,65 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             if chunk_data == data:
                 return chunk_id
         raise obnamlib.RepositoryChunkContentNotInIndexes()
+
+    # Individual files in a generation.
+
+    def file_exists(self, generation_id, filename):
+        client_name, gen_number = generation_id
+        client = self._open_client(client_name)
+        try:
+            client.get_metadata(gen_number, filename)
+            return True
+        except KeyError:
+            return False
+
+    def add_file(self, generation_id, filename):
+        client_name, gen_number = generation_id
+        self._require_client_lock(client_name)
+        client = self._open_client(client_name)
+        encoded_metadata = obnamlib.encode_metadata(obnamlib.Metadata())
+        client.create(filename, encoded_metadata)
+
+    def remove_file(self, generation_id, filename):
+        client_name, gen_number = generation_id
+        self._require_client_lock(client_name)
+        client = self._open_client(client_name)
+        client.remove(filename) # FIXME: Only removes from unfinished gen!
+
+    def get_allowed_file_keys(self):
+        raise [obnamlib.REPO_FILE_TEST_KEY]
+
+    def get_file_key(self, generation_id, filename, key):
+        client_name, gen_number = generation_id
+        client = self._open_client(client_name)
+
+        encoded_metadata = client.get_metadata(gen_number, filename)
+        metadata = obnamlib.decode(encoded_metadata)
+
+        if key == obnamlib.REPO_FILE_MTIME:
+            return metadata.st_mtime
+        elif key == obnamlib.REPO_FILE_TEST_KEY:
+            return metadata.target
+        else:
+            raise obnamlib.RepositoryFileKeyNotAllowed(
+                self.format, client_name, key)
+
+    def set_file_key(self, generation_id, filename, key, value):
+        client_name, gen_number = generation_id
+        self._require_client_lock(client_name)
+        client = self._open_client(client_name)
+
+        encoded_metadata = client.get_metadata(gen_number, filename)
+        metadata = obnamlib.decode(encoded_metadata)
+
+        if key == obnamlib.REPO_FILE_MTIME:
+            metadata.st_mtime = value
+        elif key == obnamlib.REPO_FILE_TEST_KEY:
+            metadata.target = value
+        else:
+            raise obnamlib.RepositoryFileKeyNotAllowed(
+                self.format, client_name, key)
+
+        encoded_metadata = obnamlib.encode_metadata(metadata)
+        # FIXME: Only sets in unfinished generation
+        client.set_metadata(filename, encoded_metadata)
