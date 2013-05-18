@@ -592,7 +592,12 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         return chunk_id
 
     def get_chunk_content(self, chunk_id):
-        return self._fs.cat(self._chunk_filename(chunk_id))
+        try:
+            return self._fs.cat(self._chunk_filename(chunk_id))
+        except IOError, e:
+            if e.errno == errno.ENOENT:
+                raise obnamlib.RepositoryChunkDoesNotExist(str(chunk_id))
+            raise
 
     def has_chunk(self, chunk_id):
         return self._fs.exists(self._chunk_filename(chunk_id))
