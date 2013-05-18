@@ -885,20 +885,26 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
             value = self.repo.get_client_key('fooclient', key)
             self.assertEqual(type(value), str)
 
+    def _client_test_key_is_allowed(self):
+        return (obnamlib.REPO_CLIENT_TEST_KEY in
+                self.repo.get_allowed_client_keys())
+
     def test_has_empty_string_for_client_test_key(self):
-        self.setup_client()
-        value = self.repo.get_client_key(
-            'fooclient', obnamlib.REPO_CLIENT_TEST_KEY)
-        self.assertEqual(value, '')
+        if self._client_test_key_is_allowed():
+            self.setup_client()
+            value = self.repo.get_client_key(
+                'fooclient', obnamlib.REPO_CLIENT_TEST_KEY)
+            self.assertEqual(value, '')
 
     def test_sets_client_key(self):
-        self.setup_client()
-        self.repo.lock_client('fooclient')
-        self.repo.set_client_key(
-            'fooclient', obnamlib.REPO_CLIENT_TEST_KEY, 'bar')
-        value = self.repo.get_client_key(
-            'fooclient', obnamlib.REPO_CLIENT_TEST_KEY)
-        self.assertEqual(value, 'bar')
+        if self._client_test_key_is_allowed():
+            self.setup_client()
+            self.repo.lock_client('fooclient')
+            self.repo.set_client_key(
+                'fooclient', obnamlib.REPO_CLIENT_TEST_KEY, 'bar')
+            value = self.repo.get_client_key(
+                'fooclient', obnamlib.REPO_CLIENT_TEST_KEY)
+            self.assertEqual(value, 'bar')
 
     def test_setting_unallowed_client_key_fails(self):
         self.setup_client()
@@ -908,38 +914,42 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
             self.repo.set_client_key, 'fooclient', WRONG_KEY, '')
 
     def test_setting_client_key_without_locking_fails(self):
-        self.setup_client()
-        self.assertRaises(
-            obnamlib.RepositoryClientNotLocked,
-            self.repo.set_client_key,
-            'fooclient', obnamlib.REPO_CLIENT_TEST_KEY, 'bar')
+        if self._client_test_key_is_allowed():
+            self.setup_client()
+            self.assertRaises(
+                obnamlib.RepositoryClientNotLocked,
+                self.repo.set_client_key,
+                'fooclient', obnamlib.REPO_CLIENT_TEST_KEY, 'bar')
 
     def test_committing_client_preserves_key_changs(self):
-        self.setup_client()
-        self.repo.lock_client('fooclient')
-        self.repo.set_client_key(
-            'fooclient', obnamlib.REPO_CLIENT_TEST_KEY, 'bar')
-        value = self.repo.get_client_key(
-            'fooclient', obnamlib.REPO_CLIENT_TEST_KEY)
-        self.repo.commit_client('fooclient')
-        self.assertEqual(value, 'bar')
+        if self._client_test_key_is_allowed():
+            self.setup_client()
+            self.repo.lock_client('fooclient')
+            self.repo.set_client_key(
+                'fooclient', obnamlib.REPO_CLIENT_TEST_KEY, 'bar')
+            value = self.repo.get_client_key(
+                'fooclient', obnamlib.REPO_CLIENT_TEST_KEY)
+            self.repo.commit_client('fooclient')
+            self.assertEqual(value, 'bar')
 
     def test_unlocking_client_undoes_key_changes(self):
-        self.setup_client()
-        self.repo.lock_client('fooclient')
-        self.repo.set_client_key(
-            'fooclient', obnamlib.REPO_CLIENT_TEST_KEY, 'bar')
-        self.repo.unlock_client('fooclient')
-        value = self.repo.get_client_key(
-            'fooclient', obnamlib.REPO_CLIENT_TEST_KEY)
-        self.assertEqual(value, '')
+        if self._client_test_key_is_allowed():
+            self.setup_client()
+            self.repo.lock_client('fooclient')
+            self.repo.set_client_key(
+                'fooclient', obnamlib.REPO_CLIENT_TEST_KEY, 'bar')
+            self.repo.unlock_client('fooclient')
+            value = self.repo.get_client_key(
+                'fooclient', obnamlib.REPO_CLIENT_TEST_KEY)
+            self.assertEqual(value, '')
 
     def test_getting_client_key_for_unknown_client_fails(self):
-        self.setup_client()
-        self.assertRaises(
-            obnamlib.RepositoryClientDoesNotExist,
-            self.repo.get_client_key, 'notexistclient',
-            obnamlib.REPO_CLIENT_TEST_KEY)
+        if self._client_test_key_is_allowed():
+            self.setup_client()
+            self.assertRaises(
+                obnamlib.RepositoryClientDoesNotExist,
+                self.repo.get_client_key, 'notexistclient',
+                obnamlib.REPO_CLIENT_TEST_KEY)
 
     def test_new_client_has_no_generations(self):
         self.setup_client()

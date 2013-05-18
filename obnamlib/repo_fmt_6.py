@@ -503,7 +503,15 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._raw_unlock_client(client_name)
 
     def get_allowed_client_keys(self):
-        return [obnamlib.REPO_CLIENT_TEST_KEY]
+        return []
+
+    def get_client_key(self, client_name, key):
+        raise obnamlib.RepositoryClientKeyNotAllowed(
+            self.format, client_name, key)
+
+    def set_client_key(self, client_name, key, value):
+        raise obnamlib.RepositoryClientKeyNotAllowed(
+            self.format, client_name, key)
 
     def get_client_generation_ids(self, client_name):
         client = self._open_client(client_name)
