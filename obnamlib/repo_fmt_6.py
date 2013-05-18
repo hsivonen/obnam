@@ -591,3 +591,8 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         encoded_metadata = obnamlib.encode_metadata(metadata)
         # FIXME: Only sets in unfinished generation
         client.set_metadata(filename, encoded_metadata)
+
+    # Fsck.
+
+    def get_fsck_work_item(self):
+        return []
