@@ -1435,7 +1435,7 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
             obnamlib.RepositoryFileDoesNotExistInGeneration,
             self.repo.clear_file_chunk_ids, gen_id, '/foo/bar')
 
-    def test_unlocking_child_forgets_modified_file_chunk_ids(self):
+    def test_unlocking_client_forgets_modified_file_chunk_ids(self):
         gen_id = self.create_generation()
         self.repo.add_file(gen_id, '/foo/bar')
         self.repo.append_file_chunk_id(gen_id, '/foo/bar', 1)
