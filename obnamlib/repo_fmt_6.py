@@ -248,24 +248,6 @@ class Repository(object):
         self.require_started_generation()
         self.client.remove(filename)
 
-    def put_chunk_in_shared_trees(self, chunkid, checksum):
-        '''Put the chunk into the shared trees.
-
-        The chunk is assumed to already exist in the repository, so we
-        just need to add it to the shared trees that map chunkids to
-        checksums and checksums to chunkids.
-
-        '''
-
-        tracing.trace('chunkid=%s', chunkid)
-        tracing.trace('checksum=%s', repr(checksum))
-
-        self.require_started_generation()
-        self.require_shared_lock()
-
-        self.chunklist.add(chunkid, checksum)
-        self.chunksums.add(checksum, chunkid, self.current_client_id)
-
     def find_chunks(self, checksum):
         '''Return identifiers of chunks with given checksum.
 
@@ -722,8 +704,15 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._chunksums.commit()
         self._raw_unlock_chunk_indexes()
 
-    def put_chunk_into_indexes(self, chunk_id, data):
-        pass
+    def put_chunk_into_indexes(self, chunk_id, data, client_id):
+        tracing.trace('chunk_id=%s', chunk_id)
+        checksum = self._checksum(data)
+        tracing.trace('checksum of data: %s', checksum)
+        tracing.trace('client_id=%s', client_id)
+
+        self._require_chunk_indexes_lock()
+        self._chunklist.add(chunk_id, checksum)
+        self._chunksums.add(checksum, chunk_id, client_id)
 
     def remove_chunk_from_indexes(self, chunk_id):
         pass

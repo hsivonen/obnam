@@ -569,10 +569,16 @@ class RepositoryInterface(object):
         '''Commit changes to chunk indexes.'''
         raise NotImplementedError()
 
-    def put_chunk_into_indexes(self, chunk_id, data):
+    def put_chunk_into_indexes(self, chunk_id, data, client_id):
         '''Adds a chunk to indexes.
 
         This does not do any de-duplication.
+
+        The indexes map a chunk id to its checksum, and a checksum
+        to both the chunk ids (possibly several!) and the client ids
+        for the clients that use the chunk. The client ids are used
+        to track when a chunk is no longer used by anyone and can
+        be removed.
 
         '''
         raise NotImplementedError()
@@ -1484,14 +1490,14 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
     def test_adds_chunk_to_indexes(self):
         self.repo.lock_chunk_indexes()
         chunk_id = self.repo.put_chunk_content('foochunk')
-        self.repo.put_chunk_into_indexes(chunk_id, 'foochunk')
+        self.repo.put_chunk_into_indexes(chunk_id, 'foochunk', 123)
         self.assertEqual(
             self.repo.find_chunk_id_by_content('foochunk'), chunk_id)
 
     def test_removes_chunk_from_indexes(self):
         self.repo.lock_chunk_indexes()
         chunk_id = self.repo.put_chunk_content('foochunk')
-        self.repo.put_chunk_into_indexes(chunk_id, 'foochunk')
+        self.repo.put_chunk_into_indexes(chunk_id, 'foochunk', 123)
         self.repo.remove_chunk_from_indexes(chunk_id)
         self.assertRaises(
             obnamlib.RepositoryChunkContentNotInIndexes,
@@ -1501,12 +1507,12 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         chunk_id = self.repo.put_chunk_content('foochunk')
         self.assertRaises(
             obnamlib.RepositoryChunkIndexesNotLocked,
-            self.repo.put_chunk_into_indexes, chunk_id, 'foochunk')
+            self.repo.put_chunk_into_indexes, chunk_id, 'foochunk', 123)
 
     def test_removing_chunk_from_indexes_without_locking_them_fails(self):
         chunk_id = self.repo.put_chunk_content('foochunk')
         self.repo.lock_chunk_indexes()
-        self.repo.put_chunk_into_indexes(chunk_id, 'foochunk')
+        self.repo.put_chunk_into_indexes(chunk_id, 'foochunk', 123)
         self.repo.commit_chunk_indexes()
         self.assertRaises(
             obnamlib.RepositoryChunkIndexesNotLocked,
@@ -1515,7 +1521,7 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
     def test_unlocking_chunk_indexes_forgets_changes(self):
         chunk_id = self.repo.put_chunk_content('foochunk')
         self.repo.lock_chunk_indexes()
-        self.repo.put_chunk_into_indexes(chunk_id, 'foochunk')
+        self.repo.put_chunk_into_indexes(chunk_id, 'foochunk', 123)
         self.repo.unlock_chunk_indexes()
         self.assertRaises(
             obnamlib.RepositoryChunkContentNotInIndexes,
@@ -1524,7 +1530,7 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
     def test_committing_chunk_indexes_remembers_changes(self):
         chunk_id = self.repo.put_chunk_content('foochunk')
         self.repo.lock_chunk_indexes()
-        self.repo.put_chunk_into_indexes(chunk_id, 'foochunk')
+        self.repo.put_chunk_into_indexes(chunk_id, 'foochunk', 123)
         self.repo.commit_chunk_indexes()
         self.assertEqual(
             self.repo.find_chunk_id_by_content('foochunk'), chunk_id)
