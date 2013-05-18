@@ -751,7 +751,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         client = self._open_client(client_name)
 
         encoded_metadata = client.get_metadata(gen_number, filename)
-        metadata = obnamlib.decode(encoded_metadata)
+        metadata = obnamlib.decode_metadata(encoded_metadata)
 
         if key == obnamlib.REPO_FILE_MTIME:
             metadata.st_mtime = value
