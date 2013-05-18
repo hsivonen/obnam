@@ -387,6 +387,11 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             open_client.current_generation = None
         open_client.removed_generation_numbers.append(gen_number)
 
+    def get_generation_chunk_ids(self, generation_id):
+        client_name, gen_number = generation_id
+        client = self._open_client(client_name)
+        return client.list_chunks_in_generation(gen_number)
+
     # Chunks and chunk indexes.
 
     def _setup_chunks(self):
