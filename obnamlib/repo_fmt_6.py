@@ -51,7 +51,7 @@ class HookedFS(object):
     def cat(self, filename, runfilters=True):
         data = self.fs.cat(filename)
         toplevel = self._get_toplevel(filename)
-        if not runfilters:
+        if not runfilters: # pragma: no cover
             return data
         return self.hooks.filter_read('repository-data', data,
                                       repo=self.repo, toplevel=toplevel)
