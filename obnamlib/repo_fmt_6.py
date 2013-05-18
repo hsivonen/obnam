@@ -671,7 +671,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     def commit_chunk_indexes(self):
         tracing.trace('committing chunk indexes')
-        self.require_chunk_indexes_lock()
+        self._require_chunk_indexes_lock()
         self._chunklist.commit()
         self._chunksums.commit()
         self._raw_unlock_chunk_indexes()
