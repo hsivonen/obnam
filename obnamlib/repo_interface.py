@@ -1294,17 +1294,6 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.repo.add_file(gen_id, '/foo/bar')
         self.repo.set_file_key(
             gen_id, '/foo/bar', obnamlib.REPO_FILE_MTIME, 123)
-        value = self.repo.get_file_key(
-            gen_id, '/foo/bar', obnamlib.REPO_FILE_MTIME)
-        self.assertEqual(value, 123)
-
-        # FIXME : The ClientMetadataTree code does not handle, currently,
-        # the same file being added, removed, then added back within
-        # the same generation. This is a workaround, since I'm in the
-        # middle of a refactoring and don't want to touch that class.
-        self.repo.commit_client('fooclient')
-        self.repo.lock_client('fooclient')
-        gen_id = self.repo.create_generation('fooclient')
 
         # Remove the file. Key should be removed.
         self.repo.remove_file(gen_id, '/foo/bar')
@@ -1318,6 +1307,18 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         value = self.repo.get_file_key(
             gen_id, '/foo/bar', obnamlib.REPO_FILE_MTIME)
         self.assertEqual(value, 0)
+
+    def test_can_add_a_file_then_remove_then_add_it_again(self):
+        gen_id = self.create_generation()
+
+        self.repo.add_file(gen_id, '/foo/bar')
+        self.assertTrue(self.repo.file_exists(gen_id, '/foo/bar'))
+
+        self.repo.remove_file(gen_id, '/foo/bar')
+        self.assertFalse(self.repo.file_exists(gen_id, '/foo/bar'))
+
+        self.repo.add_file(gen_id, '/foo/bar')
+        self.assertTrue(self.repo.file_exists(gen_id, '/foo/bar'))
 
     def test_unlocking_client_forgets_set_file_keys(self):
         gen_id = self.create_generation()
