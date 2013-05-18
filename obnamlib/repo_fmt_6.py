@@ -127,20 +127,6 @@ class Repository(object):
         self.clientlist.commit()
         self.unlock_root()
 
-    def commit_client(self, checkpoint=False):
-        '''Commit changes to and unlock currently locked client.'''
-        tracing.trace('committing client (checkpoint=%s)', checkpoint)
-        self.require_client_lock()
-        self.require_shared_lock()
-        commit_client = self.new_generation or self.removed_generations
-        if self.new_generation:
-            self.client.set_current_generation_is_checkpoint(checkpoint)
-        self.added_generations = []
-        self._really_remove_generations(self.removed_generations)
-        if commit_client:
-            self.client.commit()
-        self.unlock_client()
-
     def get_is_checkpoint(self, genid):
         '''Is a generation a checkpoint one?'''
         self.require_open_client()
@@ -505,6 +491,16 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         logging.info('Unlocking client %s' % client_name)
         self._raw_unlock_client(client_name)
 
+    def commit_client(self, client_name):
+        tracing.trace('client_name=%s', client_name)
+        self._require_client_lock(client_name)
+
+        open_client = self._open_clients[client_name]
+        for gen_number in open_client.removed_generation_numbers:
+            open_client.client.remove_generation(gen_number)
+        open_client.client.commit()
+        self._raw_unlock_client(client_name)
+
     def get_allowed_client_keys(self):
         return [obnamlib.REPO_CLIENT_TEST_KEY]
 
@@ -544,6 +540,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         for gen_id in ids:
             if str(gen_id[1]) == genspec:
                 return gen_id
+        raise obnamlib.RepositoryGenerationdoesNotExist(client_name)
 
     def make_generation_spec(self, gen_id):
         return str(gen_id[1])
