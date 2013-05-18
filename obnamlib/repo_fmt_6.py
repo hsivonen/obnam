@@ -728,7 +728,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         client.remove(filename) # FIXME: Only removes from unfinished gen!
 
     def get_allowed_file_keys(self):
-        raise [obnamlib.REPO_FILE_TEST_KEY]
+        return [obnamlib.REPO_FILE_TEST_KEY]
 
     def get_file_key(self, generation_id, filename, key):
         client_name, gen_number = generation_id
