@@ -540,6 +540,16 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
     def get_allowed_generation_keys(self):
         return []
 
+    def get_generation_key(self, generation_id, key):
+        client_name, gen_number = generation_key
+        raise obnamlib.RepositoryGenerationKeyNotAllowed(
+            self.format, client_name, key)
+
+    def set_generation_key(self, generation_id, key, value):
+        client_name, gen_number = generation_key
+        raise obnamlib.RepositoryGenerationKeyNotAllowed(
+            self.format, client_name, key)
+
     def interpret_generation_spec(self, client_name, genspec):
         ids = self.get_client_generation_ids(client_name)
         if not ids:
