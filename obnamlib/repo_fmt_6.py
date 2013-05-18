@@ -663,7 +663,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         tracing.trace('unlocking chunk indexes')
         self._raw_unlock_chunk_indexes()
 
-    def force_chunk_index_lock(self):
+    def force_chunk_indexes_lock(self):
         tracing.trace('forcing chunk indexes lock')
         if self._got_chunk_indexes_lock:
             self._raw_unlock_chunk_indexes()

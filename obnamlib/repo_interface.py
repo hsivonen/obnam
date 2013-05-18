@@ -561,7 +561,7 @@ class RepositoryInterface(object):
         '''Unlocks chunk indexes without committing them.'''
         raise NotImplementedError()
 
-    def force_chunk_index_lock(self):
+    def force_chunk_indexex_lock(self):
         '''Forces a chunk index lock open and takes it for the caller.'''
         raise NotImplementedError()
 
