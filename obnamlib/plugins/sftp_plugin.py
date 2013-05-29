@@ -301,7 +301,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
                     msg = ('Invalid port number %s in %s: %s' %
                             (port, baseurl, str(e)))
                     logging.error(msg)
-                    raise morphlib.Error(msg)
+                    raise obnamlib.Error(msg)
         else:
             host = netloc
             port = None
