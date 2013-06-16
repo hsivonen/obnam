@@ -360,12 +360,14 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         self.exclude_pats = []
         for x in self.app.settings['exclude']:
-            try:
-                self.exclude_pats.append(re.compile(x))
-            except re.error, e:
-                msg = 'error compiling regular expression "%s": %s' % (x, e)
-                logging.error(msg)
-                self.app.ts.error(msg)
+            if x != '':
+                try:
+                    self.exclude_pats.append(re.compile(x))
+                except re.error, e:
+                    msg = (
+                        'error compiling regular expression "%s": %s' % (x, e))
+                    logging.error(msg)
+                    self.app.ts.error(msg)
 
     def backup_roots(self, roots):
         self.what('connecting to to repository')

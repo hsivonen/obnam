@@ -11,6 +11,10 @@ Bug fixes:
 * Terminal progress reporting now updated only every 0.1 seconds,
   instead of 0.01 seconds, to reduce terminal emulator CPU usage.
   Reported by Neal Becker.
+* Empty exclude patterns are ignored. Previously, a configuration file
+  line such as "exclude = foo, bar," (note trailing comma) would result
+  in an empty pattern, which would match everything, and therefore
+  nothing would be backed up. Reported by Sharon Kimble.
 
 Version 1.4, released 2013-03-16
 --------------------------------
