@@ -38,7 +38,7 @@ class RepositoryRootNodeTests(unittest.TestCase):
                                         obnamlib.IDPATH_BITS,
                                         obnamlib.IDPATH_SKIP,
                                         time.time, 0, '')
-        
+
         self.otherfs = obnamlib.LocalFS(self.tempdir)
         self.other = obnamlib.Repository(self.fs, obnamlib.DEFAULT_NODE_SIZE,
                                          obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
@@ -64,13 +64,13 @@ class RepositoryRootNodeTests(unittest.TestCase):
     def test_does_not_accept_newer_version(self):
         newer_version = self.repo.format_version + 1
         self.assertFalse(self.repo.acceptable_version(newer_version))
-        
+
     def test_has_none_version_for_empty_repository(self):
         self.assertEqual(self.repo.get_format_version(), None)
-        
+
     def test_creates_repository_with_format_version(self):
         self.repo.lock_root()
-        self.assertEqual(self.repo.get_format_version(), 
+        self.assertEqual(self.repo.get_format_version(),
                          self.repo.format_version)
 
     def test_lists_no_clients(self):
@@ -82,24 +82,24 @@ class RepositoryRootNodeTests(unittest.TestCase):
     def test_locks_root_node(self):
         self.repo.lock_root()
         self.assert_(self.repo.got_root_lock)
-        
+
     def test_locking_root_node_twice_fails(self):
         self.repo.lock_root()
         self.assertRaises(obnamlib.Error, self.repo.lock_root)
-        
+
     def test_commit_releases_lock(self):
         self.repo.lock_root()
         self.repo.commit_root()
         self.assertFalse(self.repo.got_root_lock)
-        
+
     def test_unlock_releases_lock(self):
         self.repo.lock_root()
         self.repo.unlock_root()
         self.assertFalse(self.repo.got_root_lock)
-        
+
     def test_commit_without_lock_fails(self):
         self.assertRaises(obnamlib.LockFail, self.repo.commit_root)
-        
+
     def test_unlock_root_without_lock_fails(self):
         self.assertRaises(obnamlib.LockFail, self.repo.unlock_root)
 
@@ -130,7 +130,7 @@ class RepositoryRootNodeTests(unittest.TestCase):
     def test_locks_shared(self):
         self.repo.lock_shared()
         self.assertTrue(self.repo.got_shared_lock)
-        
+
     def test_locking_shared_twice_fails(self):
         self.repo.lock_shared()
         self.assertRaises(obnamlib.Error, self.repo.lock_shared)
@@ -151,15 +151,15 @@ class RepositoryRootNodeTests(unittest.TestCase):
     def test_open_client_fails_if_format_is_incompatible(self):
         self.repo._write_format_version(0)
         self.assertRaises(obnamlib.BadFormat, self.repo.open_client, 'foo')
-        
+
     def test_adding_client_without_root_lock_fails(self):
         self.assertRaises(obnamlib.LockFail, self.repo.add_client, 'foo')
-        
+
     def test_adds_client(self):
         self.repo.lock_root()
         self.repo.add_client('foo')
         self.assertEqual(self.repo.list_clients(), ['foo'])
-        
+
     def test_adds_two_clients_across_commits(self):
         self.repo.lock_root()
         self.repo.add_client('foo')
@@ -168,7 +168,7 @@ class RepositoryRootNodeTests(unittest.TestCase):
         self.repo.add_client('bar')
         self.repo.commit_root()
         self.assertEqual(sorted(self.repo.list_clients()), ['bar', 'foo'])
-        
+
     def test_adds_client_that_persists_after_commit(self):
         self.repo.lock_root()
         self.repo.add_client('foo')
@@ -181,25 +181,25 @@ class RepositoryRootNodeTests(unittest.TestCase):
                                  obnamlib.IDPATH_SKIP,
                                  time.time, 0, '')
         self.assertEqual(s2.list_clients(), ['foo'])
-        
+
     def test_adding_existing_client_fails(self):
         self.repo.lock_root()
         self.repo.add_client('foo')
         self.assertRaises(obnamlib.Error, self.repo.add_client, 'foo')
-        
+
     def test_removing_client_without_root_lock_fails(self):
         self.assertRaises(obnamlib.LockFail, self.repo.remove_client, 'foo')
-        
+
     def test_removing_nonexistent_client_fails(self):
         self.repo.lock_root()
         self.assertRaises(obnamlib.Error, self.repo.remove_client, 'foo')
-        
+
     def test_removing_client_works(self):
         self.repo.lock_root()
         self.repo.add_client('foo')
         self.repo.remove_client('foo')
         self.assertEqual(self.repo.list_clients(), [])
-        
+
     def test_removing_client_persists_past_commit(self):
         self.repo.lock_root()
         self.repo.add_client('foo')
@@ -258,9 +258,9 @@ class RepositoryClientTests(unittest.TestCase):
         self.repo.lock_root()
         self.repo.add_client('client_name')
         self.repo.commit_root()
-        
+
         self.otherfs = obnamlib.LocalFS(self.tempdir)
-        self.other = obnamlib.Repository(self.otherfs, 
+        self.other = obnamlib.Repository(self.otherfs,
                                          obnamlib.DEFAULT_NODE_SIZE,
                                          obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
                                          obnamlib.DEFAULT_LRU_SIZE, None,
@@ -268,7 +268,7 @@ class RepositoryClientTests(unittest.TestCase):
                                          obnamlib.IDPATH_BITS,
                                          obnamlib.IDPATH_SKIP,
                                          time.time, 0, '')
-        
+
         self.dir_meta = obnamlib.Metadata()
         self.dir_meta.st_mode = stat.S_IFDIR | 0777
 
@@ -284,7 +284,7 @@ class RepositoryClientTests(unittest.TestCase):
 
     def test_locking_client_twice_fails(self):
         self.repo.lock_client('client_name')
-        self.assertRaises(obnamlib.Error, self.repo.lock_client, 
+        self.assertRaises(obnamlib.Error, self.repo.lock_client,
                           'client_name')
 
     def test_locking_nonexistent_client_fails(self):
@@ -325,7 +325,7 @@ class RepositoryClientTests(unittest.TestCase):
 
     def test_commit_client_without_lock_fails(self):
         self.assertRaises(obnamlib.LockFail, self.repo.commit_client)
-        
+
     def test_unlock_client_without_lock_fails(self):
         self.assertRaises(obnamlib.LockFail, self.repo.unlock_client)
 
@@ -344,15 +344,15 @@ class RepositoryClientTests(unittest.TestCase):
         self.other.lock_client('client_name')
         self.repo.open_client('client_name')
         self.assert_(True)
-        
+
     def test_lists_no_generations_when_readonly(self):
         self.repo.open_client('client_name')
         self.assertEqual(self.repo.list_generations(), [])
-        
+
     def test_lists_no_generations_when_locked(self):
         self.repo.lock_client('client_name')
         self.assertEqual(self.repo.list_generations(), [])
-        
+
     def test_listing_generations_fails_if_client_is_not_open(self):
         self.assertRaises(obnamlib.Error, self.repo.list_generations)
 
@@ -523,7 +523,7 @@ class RepositoryClientTests(unittest.TestCase):
         pathnames = ['/%d' % i for i in range(n)]
         for pathname in pathnames:
             self.repo.create(pathname, obnamlib.Metadata())
-        self.assertEqual(sorted(self.repo.listdir(gen, '/')), 
+        self.assertEqual(sorted(self.repo.listdir(gen, '/')),
                          sorted(os.path.basename(x) for x in pathnames))
 
     def test_create_adds_dir(self):
@@ -543,7 +543,7 @@ class RepositoryClientTests(unittest.TestCase):
         self.repo.lock_client('client_name')
         gen = self.repo.start_generation()
         self.repo.create('/foo', self.dir_meta)
-        self.assertEqual(self.repo.get_metadata(gen, '/foo').st_mode, 
+        self.assertEqual(self.repo.get_metadata(gen, '/foo').st_mode,
                          self.dir_meta.st_mode)
 
     def test_remove_removes_file(self):
@@ -604,15 +604,15 @@ class RepositoryChunkTests(unittest.TestCase):
     def test_put_chunk_returns_id(self):
         self.repo.lock_shared()
         self.assertNotEqual(self.repo.put_chunk_only('data'), None)
-        
+
     def test_get_chunk_retrieves_what_put_chunk_puts(self):
         self.repo.lock_shared()
         chunkid = self.repo.put_chunk_only('data')
         self.assertEqual(self.repo.get_chunk(chunkid), 'data')
-        
+
     def test_chunk_does_not_exist(self):
         self.assertFalse(self.repo.chunk_exists(1234))
-        
+
     def test_chunk_exists_after_it_is_put(self):
         self.repo.lock_shared()
         chunkid = self.repo.put_chunk_only('chunk')
@@ -627,17 +627,17 @@ class RepositoryChunkTests(unittest.TestCase):
     def test_silently_ignores_failure_when_removing_nonexistent_chunk(self):
         self.repo.lock_shared()
         self.assertEqual(self.repo.remove_chunk(0), None)
-        
+
     def test_find_chunks_finds_what_put_chunk_puts(self):
         self.repo.lock_shared()
         checksum = self.repo.checksum('data')
         chunkid = self.repo.put_chunk_only('data')
         self.repo.put_chunk_in_shared_trees(chunkid, checksum)
         self.assertEqual(self.repo.find_chunks(checksum), [chunkid])
-        
+
     def test_find_chunks_finds_nothing_if_nothing_is_put(self):
         self.assertEqual(self.repo.find_chunks('checksum'), [])
-        
+
     def test_handles_checksum_collision(self):
         self.repo.lock_shared()
         checksum = self.repo.checksum('data')
@@ -650,7 +650,7 @@ class RepositoryChunkTests(unittest.TestCase):
 
     def test_returns_no_chunks_initially(self):
         self.assertEqual(self.repo.list_chunks(), [])
-        
+
     def test_returns_chunks_after_they_exist(self):
         self.repo.lock_shared()
         checksum = self.repo.checksum('data')
@@ -780,18 +780,18 @@ class RepositoryWalkTests(unittest.TestCase):
 
         self.dir_meta = obnamlib.Metadata()
         self.dir_meta.st_mode = stat.S_IFDIR | 0777
-        
+
         self.file_meta = obnamlib.Metadata()
         self.file_meta.st_mode = stat.S_IFREG | 0644
-        
+
         self.repo.lock_client('client_name')
         self.repo.lock_shared()
         self.gen = self.repo.start_generation()
-        
+
         self.repo.create('/', self.dir_meta)
         self.repo.create('/foo', self.dir_meta)
         self.repo.create('/foo/bar', self.file_meta)
-        
+
         self.repo.commit_client()
         self.repo.open_client('client_name')
 

@@ -2,7 +2,7 @@
  * _obnammodule.c -- Python extensions for Obna
  *
  * Copyright (C) 2008, 2009  Lars Wirzenius <liw@liw.fi>
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
@@ -21,7 +21,7 @@
 
 /*
  * This is a Python extension module written for Obnam, the backup
- * software. 
+ * software.
  *
  * This module provides a way to call the posix_fadvise function from
  * Python. Obnam uses this to use set the POSIX_FADV_SEQUENTIAL and
@@ -80,8 +80,8 @@ utimensat_wrapper(PyObject *self, PyObject *args)
     long mtime_sec, mtime_nsec;
     struct timespec tv[2];
 
-    if (!PyArg_ParseTuple(args, "sllll", 
-                          &filename, 
+    if (!PyArg_ParseTuple(args, "sllll",
+                          &filename,
                           &atime_sec,
                           &atime_nsec,
                           &mtime_sec,
@@ -113,7 +113,7 @@ lstat_wrapper(PyObject *self, PyObject *args)
     if (ret == -1)
         ret = errno;
 
-    return Py_BuildValue("iKKKKKKKLLLLKLKLK", 
+    return Py_BuildValue("iKKKKKKKLLLLKLKLK",
                          ret,
                          (unsigned long long) st.st_dev,
                          (unsigned long long) st.st_ino,
@@ -157,7 +157,7 @@ llistxattr_wrapper(PyObject *self, PyObject *args)
             o = Py_BuildValue("i", errno);
         free(buf);
     } while (o == NULL);
-    
+
     return o;
 }
 
@@ -186,7 +186,7 @@ lgetxattr_wrapper(PyObject *self, PyObject *args)
             o = Py_BuildValue("i", errno);
         free(buf);
     } while (o == NULL);
-    
+
     return o;
 }
 
@@ -211,7 +211,7 @@ lsetxattr_wrapper(PyObject *self, PyObject *args)
 
 
 static PyMethodDef methods[] = {
-    {"fadvise_dontneed",  fadvise_dontneed, METH_VARARGS, 
+    {"fadvise_dontneed",  fadvise_dontneed, METH_VARARGS,
      "Call posix_fadvise(2) with POSIX_FADV_DONTNEED argument."},
     {"utimensat", utimensat_wrapper, METH_VARARGS,
      "utimensat(2) wrapper."},

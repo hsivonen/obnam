@@ -42,22 +42,22 @@ class BadFormat(obnamlib.Error):
 class HookedFS(object):
 
     '''A class to filter read/written data through hooks.'''
-    
+
     def __init__(self, repo, fs, hooks):
         self.repo = repo
         self.fs = fs
         self.hooks = hooks
-        
+
     def __getattr__(self, name):
         return getattr(self.fs, name)
-        
+
     def _get_toplevel(self, filename):
         parts = filename.split(os.sep)
         if len(parts) > 1:
             return parts[0]
         else: # pragma: no cover
             raise obnamlib.Error('File at repository root: %s' % filename)
-        
+
     def cat(self, filename, runfilters=True):
         data = self.fs.cat(filename)
         toplevel = self._get_toplevel(filename)
@@ -76,7 +76,7 @@ class HookedFS(object):
             data = self.hooks.filter_write('repository-data', data,
                                            repo=self.repo, toplevel=toplevel)
         self.fs.write_file(filename, data)
-        
+
     def overwrite_file(self, filename, data, runfilters=True):
         tracing.trace('overwriting hooked %s' % filename)
         toplevel = self._get_toplevel(filename)
@@ -84,41 +84,41 @@ class HookedFS(object):
             data = self.hooks.filter_write('repository-data', data,
                                            repo=self.repo, toplevel=toplevel)
         self.fs.overwrite_file(filename, data)
-        
+
 
 class Repository(object):
 
     '''Repository for backup data.
-    
+
     Backup data is put on a virtual file system
     (obnamlib.VirtualFileSystem instance), in some form that
     the API of this class does not care about.
-    
-    The repository may contain data for several clients that share 
+
+    The repository may contain data for several clients that share
     encryption keys. Each client is identified by a name.
-    
+
     The repository has a "root" object, which is conceptually a list of
     client names.
-    
+
     Each client in turn is conceptually a list of generations,
     which correspond to snapshots of the user data that existed
     when the generation was created.
-    
+
     Read-only access to the repository does not require locking.
     Write access may affect only the root object, or only a client's
     own data, and thus locking may affect only the root, or only
     the client.
-    
+
     When a new generation is started, it is a copy-on-write clone
     of the previous generation, and the caller needs to modify
     the new generation to match the current state of user data.
-    
+
     The file 'metadata/format' at the root of the repository contains the
     version of the repository format it uses. The version is
     specified using a single integer.
 
     '''
-    
+
     format_version = 6
 
     def __init__(self, fs, node_size, upload_queue_size, lru_size, hooks,
@@ -131,11 +131,11 @@ class Repository(object):
         self.node_size = node_size
         self.upload_queue_size = upload_queue_size
         self.lru_size = lru_size
-        
+
         hider = hashlib.md5()
         hider.update(client_name)
 
-        self.lockmgr = obnamlib.LockManager(self.fs, lock_timeout, 
+        self.lockmgr = obnamlib.LockManager(self.fs, lock_timeout,
                                             hider.hexdigest())
 
         self.got_root_lock = False
@@ -151,37 +151,37 @@ class Repository(object):
         self.client = None
         self._open_shared()
         self.prev_chunkid = None
-        self.chunk_idpath = larch.IdPath('chunks', idpath_depth, 
+        self.chunk_idpath = larch.IdPath('chunks', idpath_depth,
                                          idpath_bits, idpath_skip)
         self._chunks_exists = False
 
     def _open_client_list(self):
-        self.clientlist = obnamlib.ClientList(self.fs, self.node_size, 
-                                              self.upload_queue_size, 
+        self.clientlist = obnamlib.ClientList(self.fs, self.node_size,
+                                              self.upload_queue_size,
                                               self.lru_size, self)
 
     def _open_shared(self):
-        self.chunklist = obnamlib.ChunkList(self.fs, self.node_size, 
-                                            self.upload_queue_size, 
+        self.chunklist = obnamlib.ChunkList(self.fs, self.node_size,
+                                            self.upload_queue_size,
                                             self.lru_size, self)
-        self.chunksums = obnamlib.ChecksumTree(self.fs, 'chunksums', 
+        self.chunksums = obnamlib.ChecksumTree(self.fs, 'chunksums',
                                                len(self.checksum('')),
-                                               self.node_size, 
-                                               self.upload_queue_size, 
+                                               self.node_size,
+                                               self.upload_queue_size,
                                                self.lru_size, self)
 
     def setup_hooks(self, hooks):
         self.hooks = hooks
-        
+
         self.hooks.new('repository-toplevel-init')
         self.hooks.new_filter('repository-data')
         self.hooks.new('repository-add-client')
-        
+
     def checksum(self, data):
         '''Return checksum of data.
-        
+
         The checksum is (currently) MD5.
-        
+
         '''
 
         checksummer = self.new_checksummer()
@@ -252,10 +252,10 @@ class Repository(object):
 
     def lock_root(self):
         '''Lock root node.
-        
+
         Raise obnamlib.LockFail if locking fails. Lock will be released
         by commit_root() or unlock_root().
-        
+
         '''
 
         tracing.trace('locking root')
@@ -280,14 +280,14 @@ class Repository(object):
         self.lockmgr.unlock(['.'])
         self.got_root_lock = False
         self._open_client_list()
-        
+
     def commit_root(self):
         '''Commit changes to root node, and unlock it.'''
         tracing.trace('committing root')
         self.require_root_lock()
         for client_name in self.added_clients:
             self.clientlist.add_client(client_name)
-            self.hooks.call('repository-add-client', 
+            self.hooks.call('repository-add-client',
                             self.clientlist, client_name)
         self.added_clients = []
         for client_name in self.removed_clients:
@@ -298,14 +298,14 @@ class Repository(object):
             self.clientlist.remove_client(client_name)
         self.clientlist.commit()
         self.unlock_root()
-        
+
     def get_format_version(self):
         '''Return (major, minor) of the on-disk format version.
-        
+
         If on-disk repository does not have a version yet, return None.
-        
+
         '''
-        
+
         if self.fs.exists('metadata/format'):
             data = self.fs.cat('metadata/format', runfilters=False)
             lines = data.splitlines()
@@ -320,7 +320,7 @@ class Repository(object):
             return version
         else:
             return None
-        
+
     def _write_format_version(self, version):
         '''Write the desired format version to the repository.'''
         tracing.trace('write format version')
@@ -331,35 +331,35 @@ class Repository(object):
 
     def check_format_version(self):
         '''Verify that on-disk format version is compatbile.
-        
+
         If not, raise BadFormat.
-        
+
         '''
-        
+
         on_disk = self.get_format_version()
         if on_disk is not None and not self.acceptable_version(on_disk):
             raise BadFormat('On-disk repository format %s is incompatible '
                             'with program format %s; you need to use a '
                             'different version of Obnam' %
                                 (on_disk, self.format_version))
-        
+
     def add_client(self, client_name):
         '''Add a new client to the repository.'''
         tracing.trace('client_name=%s', client_name)
         self.require_root_lock()
         if client_name in self.list_clients():
-            raise obnamlib.Error('client %s already exists in repository' % 
+            raise obnamlib.Error('client %s already exists in repository' %
                                  client_name)
         self.added_clients.append(client_name)
-        
+
     def remove_client(self, client_name):
         '''Remove a client from the repository.
-        
+
         This removes all data related to the client, including all
         actual file data unless other clients also use it.
-        
+
         '''
-        
+
         tracing.trace('client_name=%s', client_name)
         self.require_root_lock()
         if client_name not in self.list_clients():
@@ -370,10 +370,10 @@ class Repository(object):
     def shared_dirs(self):
         return [self.chunklist.dirname, self.chunksums.dirname,
                 self.chunk_idpath.dirname]
-        
+
     def lock_shared(self):
         '''Lock a client for exclusive write access.
-        
+
         Raise obnamlib.LockFail if locking fails. Lock will be released
         by commit_client() or unlock_client().
 
@@ -387,7 +387,7 @@ class Repository(object):
         tracing.trace('starting changes in chunksums and chunklist')
         self.chunksums.start_changes()
         self.chunklist.start_changes()
-        
+
         # Initialize the chunks directory for encryption, etc, if it just
         # got created.
         dirname = self.chunk_idpath.dirname
@@ -398,7 +398,7 @@ class Repository(object):
 
     def commit_shared(self):
         '''Commit changes to shared B-trees.'''
-        
+
         tracing.trace('committing shared')
         self.require_shared_lock()
         self.chunklist.commit()
@@ -412,10 +412,10 @@ class Repository(object):
         self.lockmgr.unlock(self.shared_dirs)
         self.got_shared_lock = False
         self._open_shared()
-        
+
     def lock_client(self, client_name):
         '''Lock a client for exclusive write access.
-        
+
         Raise obnamlib.LockFail if locking fails. Lock will be released
         by commit_client() or unlock_client().
 
@@ -424,7 +424,7 @@ class Repository(object):
         tracing.trace('client_name=%s', client_name)
         self.require_no_client_lock()
         self.require_no_shared_lock()
-        
+
         self.check_format_version()
         client_id = self.clientlist.get_client_id(client_name)
         if client_id is None:
@@ -441,9 +441,9 @@ class Repository(object):
         self.current_client_id = client_id
         self.added_generations = []
         self.removed_generations = []
-        self.client = obnamlib.ClientMetadataTree(self.fs, client_dir, 
+        self.client = obnamlib.ClientMetadataTree(self.fs, client_dir,
                                                   self.node_size,
-                                                  self.upload_queue_size, 
+                                                  self.upload_queue_size,
                                                   self.lru_size, self)
         self.client.init_forest()
 
@@ -474,7 +474,7 @@ class Repository(object):
         if commit_client:
             self.client.commit()
         self.unlock_client()
-        
+
     def open_client(self, client_name):
         '''Open a client for read-only operation.'''
         tracing.trace('open r/o client_name=%s' % client_name)
@@ -485,28 +485,28 @@ class Repository(object):
         self.current_client = client_name
         self.current_client_id = client_id
         client_dir = self.client_dir(client_id)
-        self.client = obnamlib.ClientMetadataTree(self.fs, client_dir, 
-                                                  self.node_size, 
-                                                  self.upload_queue_size, 
+        self.client = obnamlib.ClientMetadataTree(self.fs, client_dir,
+                                                  self.node_size,
+                                                  self.upload_queue_size,
                                                   self.lru_size, self)
         self.client.init_forest()
-        
+
     def list_generations(self):
         '''List existing generations for currently open client.'''
         self.require_open_client()
         return self.client.list_generations()
-        
+
     def get_is_checkpoint(self, genid):
         '''Is a generation a checkpoint one?'''
         self.require_open_client()
         return self.client.get_is_checkpoint(genid)
-        
+
     def start_generation(self):
         '''Start a new generation.
-        
+
         The new generation is a copy-on-write clone of the previous
         one (or empty, if first generation).
-        
+
         '''
         tracing.trace('start new generation')
         self.require_client_lock()
@@ -520,11 +520,11 @@ class Repository(object):
 
     def _really_remove_generations(self, remove_genids):
         '''Really remove a list of generations.
-        
+
         This is not part of the public API.
-        
+
         This does not make any safety checks.
-        
+
         '''
 
         def find_chunkids_in_gens(genids):
@@ -548,7 +548,7 @@ class Repository(object):
                     # we can remove it.
                     self.remove_chunk(chunk_id)
                 else:
-                    self.chunksums.remove(checksum, chunk_id, 
+                    self.chunksums.remove(checksum, chunk_id,
                                           self.current_client_id)
                     if not self.chunksums.chunk_is_used(checksum, chunk_id):
                         self.remove_chunk(chunk_id)
@@ -581,9 +581,9 @@ class Repository(object):
 
     def get_generation_times(self, gen):
         '''Return start and end times of a generation.
-        
+
         An unfinished generation has no end time, so None is returned.
-        
+
         '''
 
         self.require_open_client()
@@ -593,7 +593,7 @@ class Repository(object):
         '''Return list of basenames in a directory within generation.'''
         self.require_open_client()
         return self.client.listdir(gen, dirname)
-        
+
     def get_metadata(self, gen, filename):
         '''Return metadata for a file in a generation.'''
 
@@ -620,18 +620,18 @@ class Repository(object):
 
     def put_chunk_only(self, data):
         '''Put chunk of data into repository.
-        
+
         If the same data is already in the repository, it will be put there
         a second time. It is the caller's responsibility to check
         that the data is not already in the repository.
-        
+
         Return the unique identifier of the new chunk.
-        
+
         '''
-        
+
         def random_chunkid():
             return random.randint(0, obnamlib.MAX_ID)
-        
+
         self.require_started_generation()
 
         if self.prev_chunkid is None:
@@ -656,11 +656,11 @@ class Repository(object):
 
     def put_chunk_in_shared_trees(self, chunkid, checksum):
         '''Put the chunk into the shared trees.
-        
+
         The chunk is assumed to already exist in the repository, so we
         just need to add it to the shared trees that map chunkids to
         checksums and checksums to chunkids.
-        
+
         '''
 
         tracing.trace('chunkid=%s', chunkid)
@@ -671,22 +671,22 @@ class Repository(object):
 
         self.chunklist.add(chunkid, checksum)
         self.chunksums.add(checksum, chunkid, self.current_client_id)
-        
+
     def get_chunk(self, chunkid):
         '''Return data of chunk with given id.'''
         self.require_open_client()
         return self.fs.cat(self._chunk_filename(chunkid))
-        
+
     def chunk_exists(self, chunkid):
         '''Does a chunk exist in the repository?'''
         self.require_open_client()
         return self.fs.exists(self._chunk_filename(chunkid))
-        
+
     def find_chunks(self, checksum):
         '''Return identifiers of chunks with given checksum.
-        
+
         Because of hash collisions, the list may be longer than one.
-        
+
         '''
 
         self.require_open_client()
@@ -705,13 +705,13 @@ class Repository(object):
 
     def remove_chunk(self, chunk_id):
         '''Remove a chunk from the repository.
-        
+
         Note that this does _not_ remove the chunk from the chunk
         checksum forest. The caller is not supposed to call us until
         the chunk is not there anymore.
-        
+
         However, it does remove the chunk from the chunk list forest.
-        
+
         '''
 
         tracing.trace('chunk_id=%s', chunk_id)
@@ -731,21 +731,21 @@ class Repository(object):
 
     def set_file_chunks(self, filename, chunkids):
         '''Set ids of chunks belonging to a file.
-        
+
         File must be in the started generation.
-        
+
         '''
-        
+
         self.require_started_generation()
         self.client.set_file_chunks(filename, chunkids)
 
     def append_file_chunks(self, filename, chunkids):
         '''Append to list of ids of chunks belonging to a file.
-        
+
         File must be in the started generation.
-        
+
         '''
-        
+
         self.require_started_generation()
         self.client.append_file_chunks(filename, chunkids)
 
@@ -758,7 +758,7 @@ class Repository(object):
         '''Returned contents of file stored in B-tree instead of chunks dir.'''
         self.require_open_client()
         return self.client.get_file_data(gen, filename)
-        
+
     def genspec(self, spec):
         '''Interpret a generation specification.'''
 
@@ -780,13 +780,13 @@ class Repository(object):
 
     def walk(self, gen, arg, depth_first=False):
         '''Iterate over each pathname specified by argument.
-        
+
         This is a generator. Each return value is a tuple consisting
         of a pathname and its corresponding metadata. Directories are
         recursed into.
-        
+
         '''
-        
+
         arg = os.path.normpath(arg)
         metadata = self.get_metadata(gen, arg)
         if metadata.isdir():

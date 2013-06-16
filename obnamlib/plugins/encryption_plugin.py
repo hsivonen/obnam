@@ -40,7 +40,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         self.app.settings.string(['symmetric-key-bits'],
                                    'size of symmetric key, in bits',
                                  group=encryption_group)
-        
+
         self.tag = "encrypt1"
 
         hooks = [
@@ -53,9 +53,9 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         ]
         for name, callback, rev in hooks:
             self.app.hooks.add_callback(name, callback, rev)
-            
+
         self._pubkey = None
-        
+
         self.app.add_subcommand('client-keys', self.client_keys)
         self.app.add_subcommand('list-keys', self.list_keys)
         self.app.add_subcommand('list-toplevels', self.list_toplevels)
@@ -65,22 +65,22 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
             'remove-key', self.remove_key, arg_synopsis='[CLIENT-NAME]...')
         self.app.add_subcommand('remove-client', self.remove_client,
                                 arg_synopsis='[CLIENT-NAME]...')
-        
+
         self._symkeys = obnamlib.SymmetricKeyCache()
-        
+
     def disable(self):
         self._symkeys.clear()
 
     @property
     def keyid(self):
         return self.app.settings['encrypt-with']
-        
+
     @property
     def pubkey(self):
         if self._pubkey is None:
             self._pubkey = obnamlib.get_public_key(self.keyid)
         return self._pubkey
-        
+
     @property
     def devrandom(self):
         if self.app.settings['weak-random']:
@@ -100,10 +100,10 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
 
     def toplevel_init(self, repo, toplevel):
         '''Initialize a new toplevel for encryption.'''
-        
+
         if not self.keyid:
             return
-        
+
         pubkeys = obnamlib.Keyring()
         pubkeys.add(self.pubkey)
 
@@ -225,7 +225,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
                 print '  %s' % keyid
 
     _shared = ['chunklist', 'chunks', 'chunksums', 'clientlist']
-    
+
     def _find_clientdirs(self, repo, client_names):
         return [repo.client_dir(repo.clientlist.get_client_id(x))
                  for x in client_names]

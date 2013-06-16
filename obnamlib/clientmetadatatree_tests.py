@@ -1,15 +1,15 @@
 # Copyright 2010  Lars Wirzenius
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -42,13 +42,13 @@ class ClientMetadataTreeTests(unittest.TestCase):
         self.file_metadata = obnamlib.Metadata(st_mode=stat.S_IFREG | 0666,
                                                st_size=self.file_size)
         self.file_encoded = obnamlib.encode_metadata(self.file_metadata)
-        
+
     def tearDown(self):
         shutil.rmtree(self.tempdir)
 
     def test_has_not_current_generation_initially(self):
         self.assertEqual(self.client.tree, None)
-    
+
     def test_lists_no_generations_initially(self):
         self.assertEqual(self.client.list_generations(), [])
 
@@ -56,7 +56,7 @@ class ClientMetadataTreeTests(unittest.TestCase):
         self.now = 12765
         self.client.start_generation()
         self.assertNotEqual(self.client.tree, None)
-        
+
         def lookup(x):
             key = self.client.genkey(x)
             return self.client._lookup_int(self.client.tree, key)
@@ -75,7 +75,7 @@ class ClientMetadataTreeTests(unittest.TestCase):
         self.now = 2
         self.client.start_generation()
         self.assertNotEqual(self.client.tree, None)
-        
+
         def lookup(x):
             key = self.client.genkey(x)
             return self.client._lookup_int(self.client.tree, key)
@@ -238,7 +238,7 @@ class ClientMetadataTreeTests(unittest.TestCase):
         self.client.create('/foo', self.file_encoded)
         self.client.commit()
 
-        self.assertEqual(self.client.get_generation_data(genid), 
+        self.assertEqual(self.client.get_generation_data(genid),
                          self.file_size)
 
     def test_finds_generation_the_first_time(self):
@@ -278,7 +278,7 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
         self.client = obnamlib.ClientMetadataTree(fs, 'clientid',
                                             obnamlib.DEFAULT_NODE_SIZE,
                                             obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
-                                            obnamlib.DEFAULT_LRU_SIZE, 
+                                            obnamlib.DEFAULT_LRU_SIZE,
                                             self)
         # Force use of filename hash collisions.
         self.client.default_file_id = self.client._bad_default_file_id
@@ -288,7 +288,7 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
         self.file_encoded = obnamlib.encode_metadata(self.file_metadata)
         self.dir_metadata = obnamlib.Metadata(st_mode=stat.S_IFDIR | 0777)
         self.dir_encoded = obnamlib.encode_metadata(self.dir_metadata)
-        
+
     def tearDown(self):
         shutil.rmtree(self.tempdir)
 
@@ -296,12 +296,12 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
         self.assertEqual(self.client.listdir(self.clientid, '/'), [])
 
     def test_has_no_metadata_initially(self):
-        self.assertRaises(KeyError, self.client.get_metadata, self.clientid, 
+        self.assertRaises(KeyError, self.client.get_metadata, self.clientid,
                           '/foo')
 
     def test_sets_metadata(self):
         self.client.set_metadata('/foo', self.file_encoded)
-        self.assertEqual(self.client.get_metadata(self.clientid, '/foo'), 
+        self.assertEqual(self.client.get_metadata(self.clientid, '/foo'),
                          self.file_encoded)
 
     def test_creates_file_at_root(self):
@@ -314,20 +314,20 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
         self.client.create('/foo', self.file_encoded)
         self.client.remove('/foo')
         self.assertEqual(self.client.listdir(self.clientid, '/'), [])
-        self.assertRaises(KeyError, self.client.get_metadata, 
+        self.assertRaises(KeyError, self.client.get_metadata,
                           self.clientid, '/foo')
 
     def test_creates_directory_at_root(self):
         self.client.create('/foo', self.dir_encoded)
         self.assertEqual(self.client.listdir(self.clientid, '/'), ['foo'])
-        self.assertEqual(self.client.get_metadata(self.clientid, '/foo'), 
+        self.assertEqual(self.client.get_metadata(self.clientid, '/foo'),
                          self.dir_encoded)
 
     def test_removes_directory_at_root(self):
         self.client.create('/foo', self.dir_encoded)
         self.client.remove('/foo')
         self.assertEqual(self.client.listdir(self.clientid, '/'), [])
-        self.assertRaises(KeyError, self.client.get_metadata, 
+        self.assertRaises(KeyError, self.client.get_metadata,
                           self.clientid, '/foo')
 
     def test_creates_directory_and_files_and_subdirs(self):
@@ -336,18 +336,18 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
         self.client.create('/foo/bar', self.dir_encoded)
         self.client.create('/foo/bar/baz', self.file_encoded)
         self.assertEqual(self.client.listdir(self.clientid, '/'), ['foo'])
-        self.assertEqual(sorted(self.client.listdir(self.clientid, '/foo')), 
+        self.assertEqual(sorted(self.client.listdir(self.clientid, '/foo')),
                          ['bar', 'foobar'])
-        self.assertEqual(self.client.listdir(self.clientid, '/foo/bar'), 
+        self.assertEqual(self.client.listdir(self.clientid, '/foo/bar'),
                          ['baz'])
-        self.assertEqual(self.client.get_metadata(self.clientid, '/foo'), 
+        self.assertEqual(self.client.get_metadata(self.clientid, '/foo'),
                          self.dir_encoded)
-        self.assertEqual(self.client.get_metadata(self.clientid, '/foo/bar'), 
+        self.assertEqual(self.client.get_metadata(self.clientid, '/foo/bar'),
                          self.dir_encoded)
-        self.assertEqual(self.client.get_metadata(self.clientid, '/foo/foobar'), 
+        self.assertEqual(self.client.get_metadata(self.clientid, '/foo/foobar'),
                          self.file_encoded)
-        self.assertEqual(self.client.get_metadata(self.clientid, 
-                                                  '/foo/bar/baz'), 
+        self.assertEqual(self.client.get_metadata(self.clientid,
+                                                  '/foo/bar/baz'),
                          self.file_encoded)
 
     def test_removes_directory_and_files_and_subdirs(self):
@@ -357,13 +357,13 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
         self.client.create('/foo/bar/baz', self.file_encoded)
         self.client.remove('/foo')
         self.assertEqual(self.client.listdir(self.clientid, '/'), [])
-        self.assertRaises(KeyError, self.client.get_metadata, 
+        self.assertRaises(KeyError, self.client.get_metadata,
                           self.clientid, '/foo')
-        self.assertRaises(KeyError, self.client.get_metadata, 
+        self.assertRaises(KeyError, self.client.get_metadata,
                           self.clientid, '/foo/foobar')
-        self.assertRaises(KeyError, self.client.get_metadata, 
+        self.assertRaises(KeyError, self.client.get_metadata,
                           self.clientid, '/foo/bar')
-        self.assertRaises(KeyError, self.client.get_metadata, 
+        self.assertRaises(KeyError, self.client.get_metadata,
                           self.clientid, '/foo/bar/baz')
 
     def test_has_no_file_chunks_initially(self):
@@ -371,41 +371,41 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
 
     def test_sets_file_chunks(self):
         self.client.set_file_chunks('/foo', [1, 2, 3])
-        self.assertEqual(self.client.get_file_chunks(self.clientid, '/foo'), 
+        self.assertEqual(self.client.get_file_chunks(self.clientid, '/foo'),
                          [1, 2, 3])
 
     def test_appends_file_chunks_to_empty_list(self):
         self.client.append_file_chunks('/foo', [1, 2, 3])
-        self.assertEqual(self.client.get_file_chunks(self.clientid, '/foo'), 
+        self.assertEqual(self.client.get_file_chunks(self.clientid, '/foo'),
                          [1, 2, 3])
 
     def test_appends_file_chunks_to_nonempty_list(self):
         self.client.set_file_chunks('/foo', [1, 2, 3])
         self.client.append_file_chunks('/foo', [4, 5, 6])
-        self.assertEqual(self.client.get_file_chunks(self.clientid, '/foo'), 
+        self.assertEqual(self.client.get_file_chunks(self.clientid, '/foo'),
                          [1, 2, 3, 4, 5, 6])
-                         
+
     def test_generation_has_no_chunk_refs_initially(self):
         minkey = self.client.chunk_key(0, 0)
         maxkey = self.client.chunk_key(obnamlib.MAX_ID, obnamlib.MAX_ID)
-        self.assertEqual(list(self.client.tree.lookup_range(minkey, maxkey)), 
+        self.assertEqual(list(self.client.tree.lookup_range(minkey, maxkey)),
                          [])
-                         
+
     def test_generation_has_no_chunk_refs_initially(self):
         minkey = self.client.chunk_key(0, 0)
         maxkey = self.client.chunk_key(obnamlib.MAX_ID, obnamlib.MAX_ID)
-        self.assertEqual(list(self.client.tree.lookup_range(minkey, maxkey)), 
+        self.assertEqual(list(self.client.tree.lookup_range(minkey, maxkey)),
                          [])
 
     def test_sets_file_chunks(self):
         self.client.set_file_chunks('/foo', [1, 2, 3])
-        self.assertEqual(self.client.get_file_chunks(self.clientid, '/foo'), 
+        self.assertEqual(self.client.get_file_chunks(self.clientid, '/foo'),
                          [1, 2, 3])
-                         
+
     def test_generation_has_no_chunk_refs_initially(self):
         minkey = self.client.chunk_key(0, 0)
         maxkey = self.client.chunk_key(obnamlib.MAX_ID, obnamlib.MAX_ID)
-        self.assertEqual(list(self.client.tree.lookup_range(minkey, maxkey)), 
+        self.assertEqual(list(self.client.tree.lookup_range(minkey, maxkey)),
                          [])
 
     def test_set_file_chunks_adds_chunk_refs(self):
@@ -413,7 +413,7 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
         file_id = self.client.get_file_id(self.client.tree, '/foo')
         minkey = self.client.chunk_key(0, 0)
         maxkey = self.client.chunk_key(obnamlib.MAX_ID, obnamlib.MAX_ID)
-        self.assertEqual(set(self.client.tree.lookup_range(minkey, maxkey)), 
+        self.assertEqual(set(self.client.tree.lookup_range(minkey, maxkey)),
                          set([(self.client.chunk_key(1, file_id), ''),
                               (self.client.chunk_key(2, file_id), '')]))
 
@@ -423,7 +423,7 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
         file_id = self.client.get_file_id(self.client.tree, '/foo')
         minkey = self.client.chunk_key(0, 0)
         maxkey = self.client.chunk_key(obnamlib.MAX_ID, obnamlib.MAX_ID)
-        self.assertEqual(list(self.client.tree.lookup_range(minkey, maxkey)), 
+        self.assertEqual(list(self.client.tree.lookup_range(minkey, maxkey)),
                          [(self.client.chunk_key(1, file_id), '')])
 
     def test_remove_removes_chunk_refs(self):
@@ -431,13 +431,13 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
         self.client.remove('/foo')
         minkey = self.client.chunk_key(0, 0)
         maxkey = self.client.chunk_key(obnamlib.MAX_ID, obnamlib.MAX_ID)
-        self.assertEqual(list(self.client.tree.lookup_range(minkey, maxkey)), 
+        self.assertEqual(list(self.client.tree.lookup_range(minkey, maxkey)),
                          [])
-        
+
     def test_report_chunk_not_in_use_initially(self):
         gen_id = self.client.get_generation_id(self.client.tree)
         self.assertFalse(self.client.chunk_in_use(gen_id, 0))
-        
+
     def test_report_chunk_in_use_after_it_is(self):
         gen_id = self.client.get_generation_id(self.client.tree)
         self.client.set_file_chunks('/foo', [0])
@@ -451,7 +451,7 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
         gen_id = self.client.get_generation_id(self.client.tree)
         self.client.set_file_chunks('/foo', [0])
         self.client.set_file_chunks('/bar', [1])
-        self.assertEqual(set(self.client.list_chunks_in_generation(gen_id)), 
+        self.assertEqual(set(self.client.list_chunks_in_generation(gen_id)),
                          set([0, 1]))
 
     def test_lists_chunks_in_generation_only_once(self):

@@ -127,7 +127,7 @@ Version 1.2, released 2012-10-06
 Bug fixes:
 
 * Notify user of errors during backups.
-* The SFTP plugin now manages to deal with repository paths starting 
+* The SFTP plugin now manages to deal with repository paths starting
   with `/~/` which already exist without crashing.
 * Character and block device nodes are now restored correctly.
   Thanks to Martin Dummer for the bug report.
@@ -184,7 +184,7 @@ Version 0.29, released 2012-05-27; a RELEASE CANDIDATE
 * "obnam fsck" is now a bit faster.
 * The shared directories in the repository are now locked only during updates,
   allowing more efficient concurrent backups between several computers.
-* Obnam now gives a better error message when a backup root is not a 
+* Obnam now gives a better error message when a backup root is not a
   directory. Thanks to Edward Allcutt for reporting the error
   (<http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=654211>).
 * The output format of "obnam ls" has changed. It now has one line per
@@ -259,9 +259,9 @@ Version 0.25, released 2012-02-18; a BETA release
   Peter Palfrader for the patch.
 * Some clarification on how the forget policy works, prompted by questions
   from Peter Palfrader.
-* New settings `ssh-known-hosts` (for choosing which file to check for 
+* New settings `ssh-known-hosts` (for choosing which file to check for
   known host keys), `strict-ssh-host-keys` (for disallowing unknown host
-  keys), and `ssh-key` (for choosing which key file to use for SSH 
+  keys), and `ssh-key` (for choosing which key file to use for SSH
   connections) allow better and safer use of ssh.
 * Checkpoints will now happen even in the middle of files (but between
   chunks).
@@ -299,8 +299,8 @@ USER VISIBLE CHANGES
 * If the `--exclude` regular expression is wrong, Obnam now gives an
   error message and then ignores the regexp, rather than crashing.
 * There is now a compression plugin, enabled with `--compress-with=gzip`.
-* De-duplication mode can now be chosen by the user: the new 
-  `--deduplicate` setting can be one of `never` (fast, but uses more space); 
+* De-duplication mode can now be chosen by the user: the new
+  `--deduplicate` setting can be one of `never` (fast, but uses more space);
   `verify` (slow, but handles hash collisions gracefully); and
   `fatalist` (fast, but lossy, if there is a hash collision). `fatalist`
   is the default mode.
@@ -344,8 +344,8 @@ USER VISIBLE CHANGES:
 * The `--fsck-fix` option will now instruct `obnam fsck` to try to fix
   problems found. For this release, it only means fixing B-tree missing
   node problems, but more will follow.
-* The default sizes have been changed for B-tree nodes (256 KiB) 
-  and file contents chunks (1 MiB), based on benchmarking. 
+* The default sizes have been changed for B-tree nodes (256 KiB)
+  and file contents chunks (1 MiB), based on benchmarking.
 * SFTP protocol use has been optimized, which should result in some
   more speed. This also highlights the need to change obnam so it can
   do uploads in the background.
@@ -504,7 +504,7 @@ Version 0.18, released 2011-07-20; a BETA release
 * Various other speed improvements.
 * Bugfix: restoring symlinks now works even if the symlink is restored
   before its target. Also, the permissions of the symlink (rather than its
-  target) are now restored correctly. Thanks to Jeff Epler for an 
+  target) are now restored correctly. Thanks to Jeff Epler for an
   exemplary bug report.
 * New option `--one-file-system`, from Jeff Epler.
 * New benchmarking tool `obnam-benchmark`, which is more flexible than
@@ -601,7 +601,7 @@ Improvements and other changes:
 * Manual page now explains making backups a little better.
 * Default value for `--lru-size` reduced to 500, for great improvement
   in memory used, without, it seems, much decrease in speed.
-* `obnam verify` now reports success explicitly. Based on question 
+* `obnam verify` now reports success explicitly. Based on question
   from Joey Hess.
 * `obnam verify` now accepts both non-option arguments and the `--root`
   option. Suggested by Joey Hess.
@@ -626,7 +626,7 @@ Version 0.14, released 2010-12-29; an ALPHA release
 
 This version is capable of backing up my laptop's home directory.
 It is, however, still an ALPHA release, and you should not rely on
-it as your sole form of backup. It is also slow. But if you're 
+it as your sole form of backup. It is also slow. But if you're
 curious, now would be a good time to try it out a bit.
 
 Bug fixes:
@@ -640,10 +640,10 @@ Bug fixes:
   the backup got dropped by the user, they are now also removed from
   the backup generation. Old generations obviously still have them.
 * Only the per-client B-tree forest should have multiple trees. Now this
-  actually happens, whereas previously sometimes a very large number of 
-  new trees would be created in some forests. (What's good for rain 
+  actually happens, whereas previously sometimes a very large number of
+  new trees would be created in some forests. (What's good for rain
   forests is not good for saving disk space.)
-* When recursing through directory trees, obnam no longer follows 
+* When recursing through directory trees, obnam no longer follows
   symlinks to directories.
 * obnam no longer creates a missing backup store when backing up to
   a local disk. It never did this when backing up via sftp. (This
@@ -671,7 +671,7 @@ New features and stuff:
   This should prevent a teeny tiny bit of information leakage. It also
   makes debugging things much harder.
 * Various refactorings and prettifications of the code has happened.
-  For example, several classes have been split off from the `store.py` 
+  For example, several classes have been split off from the `store.py`
   module. This has also resulted in much better test coverage for those
   classes.
 * The per-client trees (formerly GenerationStore, now ClientMetadataTree)
@@ -695,7 +695,7 @@ New features and stuff:
   which means the caller does not need to first gather a list of all ids.
   Such a list gets quite costly when the file is quite big (e.g., in the
   terabyte size).
-* New `--dump-memory-profile` option was added to help do memory profiling 
+* New `--dump-memory-profile` option was added to help do memory profiling
   with meliae or heapy have been added. (Obnam's memory consumption finally
   got annoying enough that I did something about it.)
 

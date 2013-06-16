@@ -23,4 +23,4 @@ class ObnamPlugin(obnamlib.pluginmgr.Plugin):
 
     def __init__(self, app):
         self.app = app
-        
+

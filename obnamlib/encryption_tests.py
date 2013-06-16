@@ -1,15 +1,15 @@
 # Copyright 2011  Lars Wirzenius
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -71,10 +71,10 @@ class SymmetricKeyCacheTests(unittest.TestCase):
         self.toplevel = 'toplevel'
         self.key = 'key'
         self.key2 = 'key2'
-        
+
     def test_does_not_have_key_initially(self):
         self.assertEqual(self.cache.get(self.repo, self.toplevel), None)
-        
+
     def test_remembers_key(self):
         self.cache.put(self.repo, self.toplevel, self.key)
         self.assertEqual(self.cache.get(self.repo, self.toplevel), self.key)
@@ -82,7 +82,7 @@ class SymmetricKeyCacheTests(unittest.TestCase):
     def test_does_not_remember_key_for_different_repo(self):
         self.cache.put(self.repo, self.toplevel, self.key)
         self.assertEqual(self.cache.get(self.repo2, self.toplevel), None)
-        
+
     def test_remembers_keys_for_both_repos(self):
         self.cache.put(self.repo, self.toplevel, self.key)
         self.cache.put(self.repo2, self.toplevel, self.key2)
@@ -102,10 +102,10 @@ class GetPublicKeyTests(unittest.TestCase):
         self.gpghome = os.path.join(self.dirname, 'gpghome')
         shutil.copytree('test-gpghome', self.gpghome)
         self.keyid = '1B321347'
-        
+
     def tearDown(self):
         shutil.rmtree(self.dirname)
-        
+
     def test_exports_key(self):
         key = obnamlib.get_public_key(self.keyid, gpghome=self.gpghome)
         self.assert_('-----BEGIN PGP PUBLIC KEY BLOCK-----' in key)
@@ -145,17 +145,17 @@ uWUO7gMi+AlnxbfXVCTEgw3xhg==
     def test_gets_no_keys_from_empty_encoded(self):
         keyring = obnamlib.Keyring(encoded='')
         self.assertEqual(keyring.keyids(), [])
-        
+
     def test_adds_key(self):
         self.keyring.add(self.key)
         self.assertEqual(self.keyring.keyids(), [self.keyid])
         self.assert_(self.keyid in self.keyring)
-        
+
     def test_removes_key(self):
         self.keyring.add(self.key)
         self.keyring.remove(self.keyid)
         self.assertEqual(self.keyring.keyids(), [])
-        
+
     def test_export_import_roundtrip_works(self):
         self.keyring.add(self.key)
         exported = str(self.keyring)
@@ -179,10 +179,10 @@ class PublicKeyEncryptionTests(unittest.TestCase):
         passphrase = 'password1'
         keyring = obnamlib.Keyring(cat('test-gpghome/pubring.gpg'))
         seckeys = obnamlib.SecretKeyring(cat('test-gpghome/secring.gpg'))
-        
+
         encrypted = obnamlib.encrypt_with_keyring(cleartext, keyring)
         decrypted = obnamlib.decrypt_with_secret_keys(encrypted,
                                                       gpghome='test-gpghome')
-    
+
         self.assertEqual(decrypted, cleartext)
 

@@ -19,7 +19,7 @@ def dat_filename(op, node_size):
 
 
 def plotfile(op, node_size):
-    return ('"%s" with lines title "node size %d KiB"' % 
+    return ('"%s" with lines title "node size %d KiB"' %
                 (dat_filename(op, node_size), node_size))
 
 
@@ -42,7 +42,7 @@ for op in ops:
         with open(name, 'w') as f:
             for chunk_size, secs in points:
                 f.write('%d %f\n' % (chunk_size, secs))
-            
+
     gnuplot = '''\
 set terminal svg dynamic
 set title "%s %s"
@@ -50,7 +50,7 @@ set xlabel "chunk size (KiB)"
 set ylabel "time (s)"
 ''' % (sys.argv[1], op)
 
-    gnuplot += ('plot' + 
+    gnuplot += ('plot' +
                 ', '.join(plotfile(op, x) for x in sorted(data.keys())) +
                 '\n')
 

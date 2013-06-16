@@ -1,15 +1,15 @@
 # Copyright 2010  Lars Wirzenius
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -28,7 +28,7 @@ class ClientListTests(unittest.TestCase):
         fs = obnamlib.LocalFS(self.tempdir)
         self.hooks = obnamlib.HookManager()
         self.hooks.new('repository-toplevel-init')
-        self.list = obnamlib.ClientList(fs, 
+        self.list = obnamlib.ClientList(fs,
                                         obnamlib.DEFAULT_NODE_SIZE,
                                         obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
                                         obnamlib.DEFAULT_LRU_SIZE, self)
@@ -37,7 +37,7 @@ class ClientListTests(unittest.TestCase):
         shutil.rmtree(self.tempdir)
 
     def test_key_bytes_is_correct_length(self):
-        self.assertEqual(self.list.key_bytes, 
+        self.assertEqual(self.list.key_bytes,
                          len(self.list.key('foo', 12765, 0)))
 
     def test_unkey_unpacks_key_correctly(self):
@@ -48,7 +48,7 @@ class ClientListTests(unittest.TestCase):
 
     def test_reports_none_as_id_for_nonexistent_client(self):
         self.assertEqual(self.list.get_client_id('foo'), None)
-        
+
     def test_lists_no_clients_when_tree_does_not_exist(self):
         self.assertEqual(self.list.list_clients(), [])
 
@@ -65,7 +65,7 @@ class ClientListTests(unittest.TestCase):
         self.list.add_client('foo')
         self.list.remove_client('foo')
         self.assertEqual(self.list.get_client_id('foo'), None)
-        
+
     def test_removed_client_has_no_keys(self):
         self.list.add_client('foo')
         client_id = self.list.get_client_id('foo')

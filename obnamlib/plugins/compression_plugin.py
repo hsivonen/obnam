@@ -29,7 +29,7 @@ class DeflateCompressionFilter(object):
 
     def filter_read(self, data, repo, toplevel):
         return zlib.decompress(data)
-        
+
     def filter_write(self, data, repo, toplevel):
         how = self.app.settings['compress-with']
         if how == 'deflate':
@@ -42,7 +42,7 @@ class DeflateCompressionFilter(object):
             data = zlib.compress(data)
 
         return data
-    
+
 
 class CompressionPlugin(obnamlib.ObnamPlugin):
 
@@ -52,7 +52,7 @@ class CompressionPlugin(obnamlib.ObnamPlugin):
                                  'use PROGRAM to compress repository with '
                                     '(one of none, deflate)',
                                  metavar='PROGRAM')
-        
+
         hooks = [
             ('repository-data', DeflateCompressionFilter(self.app),
              obnamlib.Hook.EARLY_PRIORITY),

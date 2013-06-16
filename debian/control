@@ -4,14 +4,14 @@ Uploader: Gaudenz Steinlin <gaudenz@debian.org>
 Section: python
 Priority: optional
 Standards-Version: 3.9.3
-Build-Depends: debhelper (>= 7.3.8), 
-    python-all-dev (>= 2.6.3~3), 
-    python-coverage-test-runner (>= 1.8~), 
+Build-Depends: debhelper (>= 7.3.8),
+    python-all-dev (>= 2.6.3~3),
+    python-coverage-test-runner (>= 1.8~),
     python-larch (>= 1.20130316~),
     python-ttystatus (>= 0.22~),
-    python-paramiko, 
-    python-tracing (>= 0.6~), 
-    fakeroot, 
+    python-paramiko,
+    python-tracing (>= 0.6~),
+    fakeroot,
     python-cliapp (>= 1.20130313~),
     genbackupdata (>= 1.6~),
     summain (>= 0.18),
@@ -23,26 +23,26 @@ X-Python-Version: >= 2.6
 Package: obnam
 Provides: python-obnam
 Architecture: linux-any
-Depends: ${shlibs:Depends}, ${python:Depends}, ${misc:Depends}, 
+Depends: ${shlibs:Depends}, ${python:Depends}, ${misc:Depends},
     python-larch (>= 1.20130316~),
     python-ttystatus (>= 0.22~),
-    python-paramiko, 
-    python-tracing (>= 0.6~), 
+    python-paramiko,
+    python-tracing (>= 0.6~),
     python-cliapp (>= 1.20130313~)
 Description: online and disk-based backup application
- Obnam makes backups. Backups can be stored on local hard disks, or online 
- via the SSH SFTP protocol. The backup server, if used, does not require any 
+ Obnam makes backups. Backups can be stored on local hard disks, or online
+ via the SSH SFTP protocol. The backup server, if used, does not require any
  special software, on top of SSH.
  .
-  * Snapshot backups. Every generation looks like a complete snapshot, so you 
-    don't need to care about full versus incremental backups, or rotate real 
+  * Snapshot backups. Every generation looks like a complete snapshot, so you
+    don't need to care about full versus incremental backups, or rotate real
     or virtual tapes.
-  * Data de-duplication, across files, and backup generations. If the backup 
-    repository already contains a particular chunk of data, it will be re-used, 
-    even if it was in another file in an older backup generation. This way, you 
+  * Data de-duplication, across files, and backup generations. If the backup
+    repository already contains a particular chunk of data, it will be re-used,
+    even if it was in another file in an older backup generation. This way, you
     don't need to worry about moving around large files, or modifying them.
   * Encrypted backups, using GnuPG.
-  * Push or pull operation, depending on what you need. You can run Obnam on 
-    the client, and push backups to the server, or on the server, and pull 
+  * Push or pull operation, depending on what you need. You can run Obnam on
+    the client, and push backups to the server, or on the server, and pull
     from the client over SFTP.
 

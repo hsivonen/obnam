@@ -28,7 +28,7 @@ def find_objids(fs):
 
 
 fs = obnamlib.LocalFS(sys.argv[1])
-repo = obnamlib.Repository(fs, obnamlib.DEFAULT_NODE_SIZE, 
+repo = obnamlib.Repository(fs, obnamlib.DEFAULT_NODE_SIZE,
                        obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE, None,
                        obnamlib.IDPATH_DEPTH,
                        obnamlib.IDPATH_BITS,

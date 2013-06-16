@@ -1,15 +1,15 @@
 # Copyright 2010  Lars Wirzenius
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -29,12 +29,12 @@ class ChecksumTree(obnamlib.RepositoryTree):
 
     '''
 
-    def __init__(self, fs, name, checksum_length, node_size, 
+    def __init__(self, fs, name, checksum_length, node_size,
                  upload_queue_size, lru_size, hooks):
         tracing.trace('new ChecksumTree name=%s' % name)
         self.fmt = '!%dsQQ' % checksum_length
         key_bytes = len(self.key('', 0, 0))
-        obnamlib.RepositoryTree.__init__(self, fs, name, key_bytes, node_size, 
+        obnamlib.RepositoryTree.__init__(self, fs, name, key_bytes, node_size,
                                          upload_queue_size, lru_size, hooks)
         self.keep_just_one_tree = True
 

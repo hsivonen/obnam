@@ -1,16 +1,16 @@
 #!/usr/bin/python
 # Copyright 2010  Lars Wirzenius
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -49,23 +49,23 @@ class SftpTests(unittest.TestCase, obnamlib.VfsTests):
             'strict-ssh-host-keys': False,
             'ssh-known-hosts': os.path.expanduser('~/.ssh/known_hosts'),
         }
-        self.fs = obnamlib.plugins.sftp_plugin.SftpFS(baseurl, 
+        self.fs = obnamlib.plugins.sftp_plugin.SftpFS(baseurl,
                                                       settings=settings)
         self.fs.connect()
-        
+
     def tearDown(self):
         self.fs.close()
         shutil.rmtree(self.basepath)
-        
+
     def test_sets_path_to_absolute_path(self):
         self.assert_(self.fs.path.startswith('/'))
-        
+
     def test_initial_cwd_is_basepath(self):
         self.assertEqual(self.fs.getcwd(), self.fs.path)
 
     def test_link_creates_hard_link(self):
         pass # sftp does not support hardlinking, so not testing it
-        
+
     def test_mknod_creates_fifo(self):
         self.assertRaises(NotImplementedError, self.fs.mknod, 'foo', 0)
 
@@ -78,14 +78,14 @@ class SftpTests(unittest.TestCase, obnamlib.VfsTests):
         self.assertEqual(self.fs.lstat('foo').st_atime_nsec, 0)
         self.assertEqual(self.fs.lstat('foo').st_mtime_sec, 3)
         self.assertEqual(self.fs.lstat('foo').st_mtime_nsec, 0)
-        
+
     def test_get_username_returns_None_for_zero(self):
         self.assertEqual(self.fs.get_username(0), None)
-    
+
     def test_get_groupname_returns_None_for_zero(self):
         self.assertEqual(self.fs.get_groupname(0), None)
-        
-        
+
+
 if __name__ == '__main__':
     logging.basicConfig(filename='/dev/null')
     unittest.main()

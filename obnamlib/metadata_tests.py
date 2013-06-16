@@ -48,15 +48,15 @@ class FakeFS(object):
         return 'target'
 
     def getpwuid(self, uid):
-        return (self.username, None, self.st_uid, self.st_gid, 
+        return (self.username, None, self.st_uid, self.st_gid,
                 None, None, None)
-    
+
     def getgrgid(self, gid):
         return (self.groupname, None, self.st_gid, None)
 
     def fail_getpwuid(self, uid):
         raise KeyError(uid)
-    
+
     def fail_getgrgid(self, gid):
         raise KeyError(gid)
 
@@ -131,11 +131,11 @@ class ReadMetadataTests(unittest.TestCase):
         self.fakefs = FakeFS()
 
     def test_returns_stat_fields_correctly(self):
-        metadata = obnamlib.read_metadata(self.fakefs, 'foo', 
+        metadata = obnamlib.read_metadata(self.fakefs, 'foo',
                                           getpwuid=self.fakefs.getpwuid,
                                           getgrgid=self.fakefs.getgrgid)
-        fields = ['st_atime_sec','st_atime_nsec', 'st_blocks', 'st_dev', 
-                  'st_gid', 'st_ino', 'st_mode', 'st_mtime_sec', 
+        fields = ['st_atime_sec','st_atime_nsec', 'st_blocks', 'st_dev',
+                  'st_gid', 'st_ino', 'st_mode', 'st_mtime_sec',
                   'st_mtime_nsec', 'st_nlink', 'st_size', 'st_uid',
                   'groupname', 'username']
         for field in fields:
@@ -145,7 +145,7 @@ class ReadMetadataTests(unittest.TestCase):
 
     def test_returns_symlink_fields_correctly(self):
         self.fakefs.st_mode |= stat.S_IFLNK;
-        metadata = obnamlib.read_metadata(self.fakefs, 'foo', 
+        metadata = obnamlib.read_metadata(self.fakefs, 'foo',
                                           getpwuid=self.fakefs.getpwuid,
                                           getgrgid=self.fakefs.getgrgid)
         fields = ['st_mode', 'target']
@@ -172,10 +172,10 @@ class SetMetadataTests(unittest.TestCase):
         self.metadata.st_mtime_nsec = 0
         self.metadata.st_uid = 1234
         self.metadata.st_gid = 5678
-        
+
         fd, self.filename = tempfile.mkstemp()
         os.close(fd)
-        
+
         self.fs = obnamlib.LocalFS('/')
         self.fs.connect()
 
@@ -184,9 +184,9 @@ class SetMetadataTests(unittest.TestCase):
         self.fs.lchown = self.fake_lchown
 
         obnamlib.set_metadata(self.fs, self.filename, self.metadata)
-        
+
         self.st = os.stat(self.filename)
-        
+
     def tearDown(self):
         self.fs.close()
         os.remove(self.filename)
@@ -194,7 +194,7 @@ class SetMetadataTests(unittest.TestCase):
     def fake_lchown(self, filename, uid, gid):
         self.uid_set = uid
         self.gid_set = gid
-        
+
     def test_sets_atime(self):
         self.assertEqual(self.st.st_atime, self.metadata.st_atime_sec)
 
@@ -247,22 +247,22 @@ class MetadataCodingTests(unittest.TestCase):
                 self.assertEqual(
                     value1,
                     value2,
-                    'attribute %s must be equal (%s vs %s)' % 
+                    'attribute %s must be equal (%s vs %s)' %
                         (name, value1, value2))
 
     def test_round_trip(self):
-        metadata = obnamlib.metadata.Metadata(st_mode=1, 
-                                              st_mtime_sec=2, 
+        metadata = obnamlib.metadata.Metadata(st_mode=1,
+                                              st_mtime_sec=2,
                                               st_mtime_nsec=12756,
                                               st_nlink=3,
-                                              st_size=4, 
-                                              st_uid=5, 
-                                              st_blocks=6, 
+                                              st_size=4,
+                                              st_uid=5,
+                                              st_blocks=6,
                                               st_dev=7,
-                                              st_gid=8, 
-                                              st_ino=9,  
-                                              st_atime_sec=10, 
-                                              st_atime_nsec=123, 
+                                              st_gid=8,
+                                              st_ino=9,
+                                              st_atime_sec=10,
+                                              st_atime_nsec=123,
                                               groupname='group',
                                               username='user',
                                               target='target',
@@ -288,13 +288,13 @@ class MetadataCodingTests(unittest.TestCase):
             st_mtime_sec=signed_max,
             st_mtime_nsec=unsigned_max,
             st_nlink=unsigned_max,
-            st_size=signed_max, 
-            st_uid=unsigned_max, 
-            st_blocks=signed_max, 
+            st_size=signed_max,
+            st_uid=unsigned_max,
+            st_blocks=signed_max,
             st_dev=unsigned_max,
-            st_gid=unsigned_max, 
-            st_ino=unsigned_max,  
-            st_atime_sec=signed_max, 
+            st_gid=unsigned_max,
+            st_ino=unsigned_max,
+            st_atime_sec=signed_max,
             st_atime_nsec=unsigned_max)
         encoded = obnamlib.encode_metadata(metadata)
         decoded = obnamlib.decode_metadata(encoded)

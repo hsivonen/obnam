@@ -26,12 +26,12 @@ import obnamlib
 class ShowPlugin(obnamlib.ObnamPlugin):
 
     '''Show information about data in the backup repository.
-    
+
     This implements commands for listing contents of root and client
     objects, or the contents of a backup generation.
-    
+
     '''
-    
+
     leftists = (2, 3, 6)
     min_widths = (1, 1, 1, 1, 6, 20, 1)
 
@@ -42,7 +42,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         self.app.add_subcommand('ls', self.ls, arg_synopsis='[FILE]...')
         self.app.add_subcommand('diff', self.diff,
                                 arg_synopsis='[GENERATION1] GENERATION2')
-        self.app.add_subcommand('nagios-last-backup-age', 
+        self.app.add_subcommand('nagios-last-backup-age',
                                 self.nagios_last_backup_age)
 
         self.app.settings.string(['warn-age'],
@@ -51,7 +51,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
                                     'backup before status is warning. '
                                     'Accepts one char unit specifier '
                                     '(s,m,h,d for seconds, minutes, hours, '
-                                    'and days.', 
+                                    'and days.',
                                   metavar='AGE',
                                   default=obnamlib.DEFAULT_NAGIOS_WARN_AGE)
         self.app.settings.string(['critical-age'],
@@ -60,7 +60,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
                                     'recent backup before statis is critical. '
                                     'Accepts one char unit specifier '
                                     '(s,m,h,d for seconds, minutes, hours, '
-                                    'and days.', 
+                                    'and days.',
                                   metavar='AGE',
                                   default=obnamlib.DEFAULT_NAGIOS_WARN_AGE)
 
@@ -76,7 +76,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         for client_name in self.repo.list_clients():
             self.app.output.write('%s\n' % client_name)
         self.repo.fs.close()
-    
+
     def generations(self, args):
         '''List backup generations for client.'''
         self.open_repository()
@@ -88,8 +88,8 @@ class ShowPlugin(obnamlib.ObnamPlugin):
             else:
                 checkpoint = ''
             sys.stdout.write('%s\t%s .. %s (%d files, %d bytes) %s\n' %
-                             (gen, 
-                              self.format_time(start), 
+                             (gen,
+                              self.format_time(start),
                               self.format_time(end),
                               self.repo.client.get_generation_file_count(gen),
                               self.repo.client.get_generation_data(gen),
@@ -112,16 +112,16 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         now = self.app.time()
         if (now - most_recent > critical_age):
             self.app.output.write(
-                'CRITICAL: backup is old.  last backup was %s.\n' % 
+                'CRITICAL: backup is old.  last backup was %s.\n' %
                     (self.format_time(most_recent)))
             sys.exit(2)
         elif (now - most_recent > warn_age):
             self.app.output.write(
-                'WARNING: backup is old.  last backup was %s.\n' % 
+                'WARNING: backup is old.  last backup was %s.\n' %
                     self.format_time(most_recent))
             sys.exit(2)
         self.app.output.write(
-            'OK: backup is recent.  last backup was %s.\n' % 
+            'OK: backup is recent.  last backup was %s.\n' %
                 self.format_time(most_recent))
 
     def genids(self, args):
@@ -148,14 +148,14 @@ class ShowPlugin(obnamlib.ObnamPlugin):
             for ls_file in args:
                 self.show_objects(gen, ls_file)
         self.repo.fs.close()
-    
+
     def format_time(self, timestamp):
         return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp))
-    
+
     def isdir(self, gen, filename):
         metadata = self.repo.get_metadata(gen, filename)
         return metadata.isdir()
-    
+
     def show_objects(self, gen, dirname):
         self.show_item(gen, dirname)
         subdirs = []
@@ -180,7 +180,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
             1, # mtime
             -1, # name
         ]
-        
+
         result = []
         for i in range(len(fields)):
             if widths[i] < 0:
@@ -244,10 +244,10 @@ class ShowPlugin(obnamlib.ObnamPlugin):
 
         for subdir in subdirs:
             self.show_diff(gen1, gen2, subdir)
-        
+
     def diff(self, args):
         '''Show difference between two generations.'''
-        
+
         if len(args) not in (1, 2):
             raise obnamlib.Error('Need one or two generations')
 
@@ -293,8 +293,8 @@ class ShowPlugin(obnamlib.ObnamPlugin):
             if (mode & bitmap) == bitmap:
                 perms[offset] = char
         perms = ''.join(perms)
-        
-        timestamp = time.strftime('%Y-%m-%d %H:%M:%S', 
+
+        timestamp = time.strftime('%Y-%m-%d %H:%M:%S',
                                   time.gmtime(metadata.st_mtime_sec))
 
         if metadata.islink():
@@ -302,12 +302,12 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         else:
             name = full
 
-        return (perms, 
-                 str(metadata.st_nlink or 0), 
-                 metadata.username or '', 
+        return (perms,
+                 str(metadata.st_nlink or 0),
+                 metadata.username or '',
                  metadata.groupname or '',
-                 str(metadata.st_size or 0), 
-                 timestamp, 
+                 str(metadata.st_size or 0),
+                 timestamp,
                  name)
 
     def format(self, fields):

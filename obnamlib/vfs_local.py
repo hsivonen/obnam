@@ -49,16 +49,16 @@ class LocalFSFile(file):
 class LocalFS(obnamlib.VirtualFileSystem):
 
     """A VFS implementation for local filesystems."""
-    
+
     chunk_size = 1024 * 1024
-    
+
     def __init__(self, baseurl, create=False):
         tracing.trace('baseurl=%s', baseurl)
         tracing.trace('create=%s', create)
         obnamlib.VirtualFileSystem.__init__(self, baseurl)
         self.reinit(baseurl, create=create)
-        
-        # For checking that we do not unlock something we didn't lock 
+
+        # For checking that we do not unlock something we didn't lock
         # ourselves.
         self.our_locks = set()
 
@@ -75,7 +75,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
                                     self.crash_counter)
 
     def reinit(self, baseurl, create=False):
-        # We fake chdir so that it doesn't mess with the caller's 
+        # We fake chdir so that it doesn't mess with the caller's
         # perception of current working directory. This also benefits
         # unit tests. To do this, we store the baseurl as the cwd.
         tracing.trace('baseurl=%s', baseurl)
@@ -140,7 +140,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
 
     def lstat(self, pathname):
         (ret, dev, ino, mode, nlink, uid, gid, rdev, size, blksize, blocks,
-         atime_sec, atime_nsec, mtime_sec, mtime_nsec, 
+         atime_sec, atime_nsec, mtime_sec, mtime_nsec,
          ctime_sec, ctime_nsec) = obnamlib._obnam.lstat(self.join(pathname))
         if ret != 0:
             raise OSError(ret, os.strerror(ret), pathname)
@@ -182,7 +182,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
         return ret
 
     def lsetxattr(self, filename, attrname, attrvalue): # pragma: no cover
-        ret = obnamlib._obnam.lsetxattr(self.join(filename), 
+        ret = obnamlib._obnam.lsetxattr(self.join(filename),
                                         attrname, attrvalue)
         if ret != 0:
             raise OSError(ret, os.strerror(ret), filename)
@@ -200,8 +200,8 @@ class LocalFS(obnamlib.VirtualFileSystem):
         assert atime_nsec is not None
         assert mtime_sec is not None
         assert mtime_nsec is not None
-        ret = obnamlib._obnam.utimensat(self.join(pathname), 
-                                        atime_sec, atime_nsec, 
+        ret = obnamlib._obnam.utimensat(self.join(pathname),
+                                        atime_sec, atime_nsec,
                                         mtime_sec, mtime_nsec)
         if ret != 0:
             raise OSError(ret, os.strerror(ret), pathname)
@@ -324,7 +324,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
         path = self.join(pathname)
         os.rename(tempname, path)
         self.maybe_crash()
-                
+
     def _write_to_tempfile(self, pathname, contents):
         path = self.join(pathname)
         dirname = os.path.dirname(path)

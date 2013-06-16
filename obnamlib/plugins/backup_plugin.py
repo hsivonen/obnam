@@ -33,10 +33,10 @@ import larch
 class ChunkidPool(object):
 
     '''Checksum/chunkid mappings that are pending an upload to shared trees.'''
-    
+
     def __init__(self):
         self.clear()
-        
+
     def add(self, chunkid, checksum):
         if checksum not in self._mapping:
             self._mapping[checksum] = []
@@ -47,10 +47,10 @@ class ChunkidPool(object):
 
     def get(self, checksum):
         return self._mapping.get(checksum, [])
-        
+
     def clear(self):
         self._mapping = {}
-        
+
     def __iter__(self):
         for checksum in self._mapping.keys():
             for chunkid in self._mapping[checksum]:
@@ -62,11 +62,11 @@ class BackupPlugin(obnamlib.ObnamPlugin):
     def enable(self):
         backup_group = obnamlib.option_group['backup'] = 'Backing up'
         perf_group = obnamlib.option_group['perf']
-    
+
         self.app.add_subcommand('backup', self.backup,
                                 arg_synopsis='[DIRECTORY]...')
         self.app.settings.string_list(['root'], 'what to backup')
-        self.app.settings.string_list(['exclude'], 
+        self.app.settings.string_list(['exclude'],
                                  'regular expression for pathnames to '
                                  'exclude from backup (can be used multiple '
                                  'times)',
@@ -160,7 +160,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             (1024**1, 'KiB'),
             (0, 'B')
         ]
-        
+
         for size_base, size_unit in size_table:
             if self.uploaded_bytes >= size_base:
                 if size_base > 0:
@@ -199,7 +199,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         logging.info('Backup performance statistics:')
         logging.info('* files found: %s' % self.file_count)
         logging.info('* files backed up: %s' % self.backed_up_count)
-        logging.info('* uploaded data: %s bytes (%s %s)' % 
+        logging.info('* uploaded data: %s bytes (%s %s)' %
                         (self.uploaded_bytes, size_amount, size_unit))
         logging.info('* duration: %s s' % duration)
         logging.info('* average speed: %s %s' % (speed_amount, speed_unit))
@@ -215,7 +215,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         logging.error(msg)
         if exc:
             logging.error(repr(exc))
-            
+
         # FIXME: ttystatus.TerminalStatus.error is quiet if --quiet is used.
         # That's a bug, so we work around it by writing to stderr directly.
         sys.stderr.write('ERROR: %s\n' % msg)
@@ -224,7 +224,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         p = obnamlib.ByteSizeParser()
         p.set_default_unit('MiB')
         return p.parse(value)
-        
+
     @property
     def pretend(self):
         return self.app.settings['pretend']
@@ -237,12 +237,12 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         self.app.settings.require('repository')
         self.app.settings.require('client-name')
-        
+
         if not self.app.settings['repository']:
             raise obnamlib.Error('No --repository setting. '
                                   'You need to specify it on the command '
                                   'line or a configuration file.')
-        
+
         # This is ugly, but avoids having to update the dependency on
         # ttystatus yet again.
         if not hasattr(self.app.ts, 'flush'):
@@ -266,7 +266,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.add_client(client_name)
             self.what('locking client')
             self.repo.lock_client(client_name)
-            
+
             # Need to lock the shared stuff briefly, so encryption etc
             # gets initialized.
             self.what('initialising encryption for shared directories')
@@ -342,10 +342,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.repo.lock_root()
         if client_name not in self.repo.list_clients():
             tracing.trace('adding new client %s' % client_name)
-            tracing.trace('client list before adding: %s' % 
+            tracing.trace('client list before adding: %s' %
                             self.repo.list_clients())
             self.repo.add_client(client_name)
-            tracing.trace('client list after adding: %s' % 
+            tracing.trace('client list after adding: %s' %
                             self.repo.list_clients())
         self.repo.commit_root()
         self.repo = self.app.open_repository(repofs=self.repo.fs.fs)
@@ -377,7 +377,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.what('determining absolute path for %s' % root)
             self.fs.reinit(root)
             absroots.append(self.fs.abspath('.'))
-        
+
         if not self.pretend:
             self.remove_old_roots(absroots)
 
@@ -389,7 +389,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             logging.info('Backing up root %s' % root)
             self.what('connecting to live data %s' % root)
             self.fs.reinit(root)
-            
+
             self.what('scanning for files in %s' % root)
             absroot = self.fs.abspath('.')
             self.root_metadata = self.fs.lstat(absroot)
@@ -429,7 +429,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
     def maybe_simulate_error(self, pathname):
         '''Raise an IOError if specified by --testing-fail-matching.'''
-        
+
         for pattern in self.app.settings['testing-fail-matching']:
             if re.search(pattern, pathname):
                 e = errno.ENOENT
@@ -467,12 +467,12 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
     def find_files(self, root):
         '''Find all files and directories that need to be backed up.
-        
+
         This is a generator. It yields (pathname, metadata) pairs.
-        
+
         The caller should not recurse through directories, just backup
         the directory itself (name, metadata, file list).
-        
+
         '''
 
         for pathname, st in self.fs.scan_tree(root, ok=self.can_be_backed_up):
@@ -494,7 +494,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
     def can_be_backed_up(self, pathname, st):
         if self.app.settings['one-file-system']:
-            if st.st_dev != self.root_metadata.st_dev: 
+            if st.st_dev != self.root_metadata.st_dev:
                 logging.debug('Excluding (one-file-system): %s' % pathname)
                 return False
 
@@ -515,12 +515,12 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 if data == tag_contents:
                     logging.debug('Excluding (cache dir): %s' % pathname)
                     return False
-        
+
         return True
 
     def needs_backup(self, pathname, current):
         '''Does a given file need to be backed up?'''
-        
+
         # Directories always require backing up so that backup_dir_contents
         # can remove stuff that no longer exists from them.
         if current.isdir():
@@ -581,7 +581,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
     def backup_metadata(self, pathname, metadata):
         '''Back up metadata for a filesystem object'''
-        
+
         tracing.trace('backup_metadata: %s', pathname)
         if not self.pretend:
             self.repo.create(pathname, metadata)
@@ -604,7 +604,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         summer = self.repo.new_checksummer()
 
         max_intree = self.app.settings['node-size'] / 4
-        if (metadata.st_size <= max_intree and 
+        if (metadata.st_size <= max_intree and
             self.app.settings['small-files-in-btree']):
             contents = f.read()
             assert len(contents) <= max_intree # FIXME: silly error checking
@@ -634,13 +634,13 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     chunkids = []
             else:
                 self.update_progress_with_upload(len(data))
-            
+
             if not self.pretend and self.time_for_checkpoint():
                 logging.debug('making checkpoint in the middle of a file')
                 self.repo.append_file_chunks(filename, chunkids)
                 chunkids = []
                 self.make_checkpoint()
-            
+
         tracing.trace('closing file')
         f.close()
         if chunkids:
@@ -651,7 +651,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                                      filename)
         tracing.trace('done backing up file contents')
         return summer.digest()
-        
+
     def backup_file_chunk(self, data):
         '''Back up a chunk of data by putting it into the repository.'''
 
@@ -673,7 +673,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         def put():
             self.update_progress_with_upload(len(data))
             return self.repo.put_chunk_only(data)
-            
+
         def share(chunkid):
             self.chunkid_pool.add(chunkid, checksum)
 
@@ -727,14 +727,14 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
     def remove_old_roots(self, new_roots):
         '''Remove from started generation anything that is not a backup root.
-        
-        We recurse from filesystem root directory until getting to one of 
-        the new backup roots, or a directory or file that is not a parent 
+
+        We recurse from filesystem root directory until getting to one of
+        the new backup roots, or a directory or file that is not a parent
         of one of the new backup roots. We remove anything that is not a
         new backup root, or their parent.
-        
+
         '''
-        
+
         def is_parent(pathname):
             if not pathname.endswith(os.sep):
                 pathname += os.sep
@@ -742,7 +742,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 if new_root.startswith(pathname):
                     return True
             return False
-            
+
         def helper(dirname):
             if dirname in new_roots:
                 tracing.trace('is a new root: %s' % dirname)

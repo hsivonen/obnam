@@ -81,7 +81,7 @@ class Convert5to6Plugin(obnamlib.ObnamPlugin):
 
     def gunzip(self, filename, data):
         return zlib.decompress(data)
-        
+
     def convert_format(self):
         self.rawfs.overwrite_file('metadata/format', '6\n')
 

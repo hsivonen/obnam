@@ -39,7 +39,7 @@ class ForceLockPlugin(obnamlib.ObnamPlugin):
         try:
             repo = self.app.open_repository()
         except OSError, e:
-            raise obnamlib.Error('Repository does not exist ' 
+            raise obnamlib.Error('Repository does not exist '
                                   'or cannot be accessed.\n' +
                                   str(e))
 

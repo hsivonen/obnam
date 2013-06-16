@@ -27,12 +27,12 @@ import obnamlib
 
 
 metadata_verify_fields = (
-    'st_mode', 'st_mtime_sec', 'st_mtime_nsec', 
+    'st_mode', 'st_mtime_sec', 'st_mtime_nsec',
     'st_nlink', 'st_size', 'st_uid', 'groupname', 'username', 'target',
     'xattr',
 )
 metadata_fields = metadata_verify_fields + (
-    'st_blocks', 'st_dev', 'st_gid', 'st_ino',  'st_atime_sec', 
+    'st_blocks', 'st_dev', 'st_gid', 'st_ino',  'st_atime_sec',
     'st_atime_nsec', 'md5',
 )
 
@@ -40,16 +40,16 @@ metadata_fields = metadata_verify_fields + (
 class Metadata(object):
 
     '''Represent metadata for a filesystem entry.
-    
+
     The metadata for a filesystem entry (file, directory, device, ...)
     consists of its stat(2) result, plus ACL and xattr.
-    
+
     This class represents them as fields.
-    
+
     We do not store all stat(2) fields. Here's a commentary on all fields:
-    
+
         field?          stored? why
-    
+
         st_atime_sec    yes     mutt compares atime, mtime to see ifmsg is new
         st_atime_nsec   yes     mutt compares atime, mtime to see ifmsg is new
         st_blksize      no      no way to restore, not useful backed up
@@ -67,18 +67,18 @@ class Metadata(object):
         st_uid          yes     used to restored ownership
 
     The field 'target' stores the target of a symlink.
-        
+
     Additionally, the fields 'groupname' and 'username' are stored. They
     contain the textual names that correspond to st_gid and st_uid. When
     restoring, the names will be preferred by default.
-    
+
     The 'md5' field optionally stores the whole-file checksum for the file.
-    
+
     The 'xattr' field optionally stores extended attributes encoded as
     a binary blob.
-    
+
     '''
-    
+
     def __init__(self, **kwargs):
         for field in metadata_fields:
             setattr(self, field, None)
@@ -121,7 +121,7 @@ def _cached_getpwuid(uid): # pragma: no cover
     if uid not in _uid_to_username:
         _uid_to_username[uid] = pwd.getpwuid(uid)
     return _uid_to_username[uid]
-    
+
 _gid_to_groupname = {}
 def _cached_getgrgid(gid): # pragma: no cover
     if gid not in _gid_to_groupname:
@@ -131,7 +131,7 @@ def _cached_getgrgid(gid): # pragma: no cover
 
 def get_xattrs_as_blob(fs, filename): # pragma: no cover
     tracing.trace('filename=%s' % filename)
-    
+
     try:
         names = fs.llistxattr(filename)
     except (OSError, IOError), e:
@@ -172,7 +172,7 @@ def get_xattrs_as_blob(fs, filename): # pragma: no cover
     fmt = '!' + 'Q' * len(values)
     value_blob = struct.pack(fmt, *lengths) + ''.join(values)
 
-    return ('%s%s%s' % 
+    return ('%s%s%s' %
             (struct.pack('!Q', len(name_blob)),
              name_blob,
              value_blob))
@@ -188,7 +188,7 @@ def set_xattrs_from_blob(fs, filename, blob): # pragma: no cover
     fmt = '!' + 'Q' * len(names)
     lengths_size = sizesize * len(names)
     lengths = struct.unpack(fmt, value_blob[:lengths_size])
-    
+
     pos = lengths_size
     for i, name in enumerate(names):
         value = value_blob[pos:pos + lengths[i]]
@@ -235,7 +235,7 @@ def set_metadata(fs, filename, metadata, getuid=None):
     fields: we assume the caller will change st_uid, st_gid accordingly
     if they want to mess with things. This makes the user take care
     of error situations and looking up user preferences.
-    
+
     '''
 
     symlink = stat.S_ISLNK(metadata.st_mode)
@@ -258,10 +258,10 @@ def set_metadata(fs, filename, metadata, getuid=None):
     if metadata.xattr: # pragma: no cover
         set_xattrs_from_blob(fs, filename, metadata.xattr)
 
-    fs.lutimes(filename, metadata.st_atime_sec, metadata.st_atime_nsec, 
+    fs.lutimes(filename, metadata.st_atime_sec, metadata.st_atime_nsec,
                metadata.st_mtime_sec, metadata.st_mtime_nsec)
-    
-    
+
+
 metadata_format = struct.Struct('!Q' +  # flags
                                 'Q' +   # st_mode
                                 'qQ' +  # st_mtime_sec and _nsec
@@ -325,7 +325,7 @@ def encode_metadata(metadata):
         logging.error('ERROR: md5=%s' % repr(metadata.md5))
         logging.error('ERROR: xattr=%s' % repr(metadata.xattr))
         raise
-    return (packed + 
+    return (packed +
              (metadata.groupname or '') +
              (metadata.username or '') +
              (metadata.target or '') +
@@ -339,7 +339,7 @@ def decode_metadata(encoded):
     flags = items[0]
     pos = [1, metadata_format.size]
     metadata = obnamlib.Metadata()
-    
+
     def is_present(field):
         i = obnamlib.metadata_fields.index(field)
         return (flags & (1 << i)) != 0
@@ -357,7 +357,7 @@ def decode_metadata(encoded):
 
     def decode_string(field):
         decode(field, 1, True, lambda i, o: encoded[o:o + items[i]])
-    
+
     decode_integer('st_mode')
     decode_integer('st_mtime_sec')
     decode_integer('st_mtime_nsec')
@@ -375,6 +375,6 @@ def decode_metadata(encoded):
     decode_string('target')
     decode_string('md5')
     decode_string('xattr')
-    
+
     return metadata
 

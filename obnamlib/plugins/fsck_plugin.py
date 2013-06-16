@@ -26,10 +26,10 @@ import obnamlib
 class WorkItem(larch.fsck.WorkItem):
 
     '''A work item for fsck.
-    
-    Whoever creates a WorkItem shall set the ``repo`` to the repository 
+
+    Whoever creates a WorkItem shall set the ``repo`` to the repository
     being used.
-    
+
     '''
 
 
@@ -70,7 +70,7 @@ class CheckFileChecksum(WorkItem):
         self.correct = correct
         self.chunkids = chunkids
         self.checksummer = checksummer
-        
+
     def do(self):
         logging.debug('Checking whole-file checksum for %s' % self.filename)
         if self.correct != self.checksummer.digest():
@@ -107,7 +107,7 @@ class CheckDirectory(WorkItem):
         self.genid = genid
         self.dirname = dirname
         self.name = 'dir %s:%s:%s' % (client_name, genid, dirname)
-        
+
     def do(self):
         logging.debug('Checking client=%s genid=%s dirname=%s' %
                         (self.client_name, self.genid, self.dirname))
@@ -130,9 +130,9 @@ class CheckGeneration(WorkItem):
         self.client_name = client_name
         self.genid = genid
         self.name = 'generation %s:%s' % (client_name, genid)
-        
+
     def do(self):
-        logging.debug('Checking client=%s genid=%s' % 
+        logging.debug('Checking client=%s genid=%s' %
                         (self.client_name, self.genid))
 
         started, ended = self.repo.client.get_generation_times(self.genid)
@@ -162,9 +162,9 @@ class CheckGenerationIdsAreDifferent(WorkItem):
     def __init__(self, client_name, genids):
         self.client_name = client_name
         self.genids = list(genids)
-    
+
     def do(self):
-        logging.debug('Checking genid uniqueness for client=%s' % 
+        logging.debug('Checking genid uniqueness for client=%s' %
                         self.client_name)
         done = set()
         while self.genids:
@@ -234,7 +234,7 @@ class CheckForExtraChunks(WorkItem):
 
     def __init__(self):
         self.name = 'extra chunks'
-        
+
     def do(self):
         logging.debug('Checking for extra chunks')
         for chunkid in self.repo.list_chunks():
@@ -254,7 +254,7 @@ class CheckBTree(WorkItem):
             return
         logging.debug('Checking B-tree %s' % self.dirname)
         fix = self.settings['fsck-fix']
-        forest = larch.open_forest(allow_writes=fix, dirname=self.dirname, 
+        forest = larch.open_forest(allow_writes=fix, dirname=self.dirname,
                                    vfs=self.repo.fs)
         fsck = larch.fsck.Fsck(forest, self.warning, self.error, fix)
         for work in fsck.find_work():
@@ -265,7 +265,7 @@ class CheckRepository(WorkItem):
 
     def __init__(self):
         self.name = 'repository'
-        
+
     def do(self):
         logging.debug('Checking repository')
         if not self.settings['fsck-skip-shared-b-trees']:
@@ -279,11 +279,11 @@ class FsckPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
         self.app.add_subcommand('fsck', self.fsck)
-        
+
         group = 'Integrity checking (fsck)'
-        
+
         self.app.settings.boolean(
-            ['fsck-fix'], 
+            ['fsck-fix'],
             'should fsck try to fix problems?',
             group=group)
 
@@ -335,7 +335,7 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         self.app.ts['items'] = 0
         self.app.ts.format(
             'Checking %Integer(this_item)/%Integer(items): %String(item)')
-        
+
     def fsck(self, args):
         '''Verify internal consistency of backup repository.'''
         self.app.settings.require('repository')
@@ -344,7 +344,7 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         self.configure_ttystatus()
 
         self.repo = self.app.open_repository()
-        
+
         self.repo.lock_root()
         client_names = self.repo.list_clients()
         client_dirs = [self.repo.client_dir(
@@ -382,7 +382,7 @@ class FsckPlugin(obnamlib.ObnamPlugin):
 
         self.repo.fs.close()
         self.app.ts.finish()
-        
+
         if self.errors:
             sys.exit(1)
 

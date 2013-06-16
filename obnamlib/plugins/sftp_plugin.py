@@ -43,26 +43,26 @@ import obnamlib
 
 def ioerror_to_oserror(method):
     '''Decorator to convert an IOError exception to OSError.
-    
+
     Python's os.* raise OSError, mostly, but paramiko's corresponding
     methods raise IOError. This decorator fixes that.
-    
+
     '''
-    
+
     def helper(self, filename, *args, **kwargs):
         try:
             return method(self, filename, *args, **kwargs)
         except IOError, e:
             logging.error(traceback.format_exc())
             raise OSError(e.errno, e.strerror or str(e), filename)
-    
+
     return helper
 
 
 class SSHChannelAdapter(object):
 
     '''Take an ssh subprocess and pretend it is a paramiko Channel.'''
-    
+
     # This is inspired by the ssh.py module in bzrlib.
 
     def __init__(self, proc):
@@ -87,7 +87,7 @@ class SSHChannelAdapter(object):
 
     def close(self):
         logging.debug('SSHChannelAdapter.close called')
-        for func in [self.proc.stdin.close, self.proc.stdout.close, 
+        for func in [self.proc.stdin.close, self.proc.stdout.close,
                      self.proc.wait]:
             try:
                 func()
@@ -98,11 +98,11 @@ class SSHChannelAdapter(object):
 class SftpFS(obnamlib.VirtualFileSystem):
 
     '''A VFS implementation for SFTP.
-    
-    
-    
+
+
+
     '''
-    
+
     # 32 KiB is the chunk size that gives me the fastest speed
     # for sftp transfers. I don't know why the size matters.
     chunk_size = 32 * 1024
@@ -126,7 +126,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
         obnamlib.VirtualFileSystem.log_stats(self)
         logging.info('VFS: baseurl=%s roundtrips=%s' %
                          (self.baseurl, self._roundtrips))
-        
+
     def _to_string(self, str_or_unicode):
         if type(str_or_unicode) is unicode:
             return str_or_unicode.encode('utf-8')
@@ -141,7 +141,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
             # for the best
             pass
         self.create_path_if_missing = False # only create once
-        
+
     def connect(self):
         try_openssh = not self.settings or not self.settings['pure-paramiko']
         if not try_openssh or not self._connect_openssh():
@@ -167,8 +167,8 @@ class SftpFS(obnamlib.VirtualFileSystem):
         if self.settings and self.settings['strict-ssh-host-keys']:
             args += ['-o', 'StrictHostKeyChecking=yes']
         if self.settings and self.settings['ssh-known-hosts']:
-            args += ['-o', 
-                     'UserKnownHostsFile=%s' % 
+            args += ['-o',
+                     'UserKnownHostsFile=%s' %
                         self.settings['ssh-known-hosts']]
         args += [self.host, 'sftp']
 
@@ -226,18 +226,18 @@ class SftpFS(obnamlib.VirtualFileSystem):
         offered_type = offered_key.get_name()
         if not known_keys.has_key(offered_type):
             if self.settings['strict-ssh-host-keys']:
-                raise obnamlib.Error('No known type %s host key for %s' % 
+                raise obnamlib.Error('No known type %s host key for %s' %
                                      (offered_type, hostname))
             logging.warning('No known host key of type %s for %s; accepting '
                             'offered key' % (offered_type, hostname))
-        
+
         known_key = known_keys[offered_type]
         if offered_key != known_key:
             raise obnamlib.Error('SSH server %s offered wrong public key' %
                                  hostname)
-            
-        logging.debug('Host key for %s OK' % hostname)        
-    
+
+        logging.debug('Host key for %s OK' % hostname)
+
     def _authenticate(self, username):
         if not username:
             username = self._get_username()
@@ -316,7 +316,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
         self.create_path_if_missing = create
 
         self._delay()
-        
+
         if self.sftp:
             if create:
                 self._create_root_if_missing()
@@ -373,17 +373,17 @@ class SftpFS(obnamlib.VirtualFileSystem):
         # fixed, this code can be removed.
         st.st_mtime_sec = self._force_32bit_timestamp(st.st_mtime)
         st.st_atime_sec = self._force_32bit_timestamp(st.st_atime)
-        
+
         # Within Obnam, we pretend stat results have st_Xtime_sec and
         # st_Xtime_nsec, but not st_Xtime. Remove those fields.
         del st.st_mtime
         del st.st_atime
-        
+
         # We only get integer timestamps, so set these explicitly to 0.
         st.st_mtime_nsec = 0
         st.st_atime_nsec = 0
 
-        return st        
+        return st
 
     @ioerror_to_oserror
     def listdir2(self, pathname):
@@ -420,7 +420,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
             return stat.S_ISDIR(st.st_mode)
 
     def mknod(self, pathname, mode):
-        # SFTP does not provide an mknod, so we can't do this. We 
+        # SFTP does not provide an mknod, so we can't do this. We
         # raise an exception, so upper layers can handle this (we _could_
         # just fail silently, but that would be silly.)
         raise NotImplementedError('mknod on SFTP: %s' % pathname)
@@ -429,7 +429,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
     def mkdir(self, pathname):
         self._delay()
         self.sftp.mkdir(pathname)
-        
+
     @ioerror_to_oserror
     def makedirs(self, pathname):
         parent = os.path.dirname(pathname)
@@ -441,7 +441,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
     def rmdir(self, pathname):
         self._delay()
         self.sftp.rmdir(pathname)
-        
+
     @ioerror_to_oserror
     def remove(self, pathname):
         self._delay()
@@ -460,7 +460,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
         self._delay()
         self._remove_if_exists(new)
         self.sftp.rename(old, new)
-    
+
     @ioerror_to_oserror
     def lstat(self, pathname):
         self._delay()
@@ -475,12 +475,12 @@ class SftpFS(obnamlib.VirtualFileSystem):
             logging.warning('NOT changing ownership of symlink %s' % pathname)
         else:
             self.sftp.chown(pathname, uid, gid)
-        
+
     @ioerror_to_oserror
     def chmod(self, pathname, mode):
         self._delay()
         self.sftp.chmod(pathname, mode)
-        
+
     @ioerror_to_oserror
     def lutimes(self, pathname, atime_sec, atime_nsec, mtime_sec, mtime_nsec):
         # FIXME: This does not work for symlinks!
@@ -541,7 +541,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
 
     def _tempfile(self, dirname):
         '''Create a new file with a random name, return file handle and name.'''
-        
+
         if dirname:
             try:
                 self.makedirs(dirname)
@@ -571,7 +571,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
         self._write_helper(f, contents)
         f.close()
         self.rename(tempname, pathname)
-        
+
     def _write_helper(self, f, contents):
         for pos in range(0, len(contents), self.chunk_size):
             chunk = contents[pos:pos + self.chunk_size]

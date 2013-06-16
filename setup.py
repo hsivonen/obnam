@@ -42,7 +42,7 @@ class GenerateManpage(build):
         print 'building manpages'
         for x in ['obnam', 'obnam-benchmark']:
             with open('%s.1' % x, 'w') as f:
-                runcmd(['python', x, '--generate-manpage=%s.1.in' % x, 
+                runcmd(['python', x, '--generate-manpage=%s.1.in' % x,
                         '--output=%s.1' % x], stdout=f)
 
 
@@ -58,7 +58,7 @@ class CleanMore(clean):
         self.remove_pyc('test-plugins')
         if os.path.isdir('build'):
             shutil.rmtree('build')
-        
+
     def remove_pyc(self, rootdir):
         for dirname, subdirs, basenames in os.walk(rootdir):
             for x in [os.path.join(dirname, base)

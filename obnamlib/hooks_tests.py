@@ -24,37 +24,37 @@ class HookTests(unittest.TestCase):
 
     def setUp(self):
         self.hook = obnamlib.Hook()
-        
+
     def callback(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
-        
+
     def callback2(self, *args, **kwargs):
         self.args2 = args
         self.kwargs2 = kwargs
 
     def test_has_no_callbacks_by_default(self):
         self.assertEqual(self.hook.callbacks, [])
-        
+
     def test_adds_callback(self):
         self.hook.add_callback(self.callback)
         self.assertEqual(self.hook.callbacks, [self.callback])
-        
+
     def test_adds_callback_only_once(self):
         self.hook.add_callback(self.callback)
         self.hook.add_callback(self.callback)
         self.assertEqual(self.hook.callbacks, [self.callback])
-        
+
     def test_adds_two_callbacks(self):
         id1 = self.hook.add_callback(self.callback)
-        id2 = self.hook.add_callback(self.callback2, 
+        id2 = self.hook.add_callback(self.callback2,
                                      obnamlib.Hook.DEFAULT_PRIORITY + 1)
         self.assertEqual(self.hook.callbacks, [self.callback, self.callback2])
         self.assertNotEqual(id1, id2)
-        
+
     def test_adds_callbacks_in_reverse_order(self):
         id1 = self.hook.add_callback(self.callback)
-        id2 = self.hook.add_callback(self.callback2, 
+        id2 = self.hook.add_callback(self.callback2,
                                      obnamlib.Hook.DEFAULT_PRIORITY - 1)
         self.assertEqual(self.hook.callbacks, [self.callback2, self.callback])
         self.assertNotEqual(id1, id2)
@@ -115,7 +115,7 @@ class FilterHookTests(unittest.TestCase):
     def test_never_filter_no_tags(self):
         self.hook.add_callback(NeverAddsFilter())
         self.assertEquals(self.hook.run_filter_write("foo"), "\0foo")
-        
+
     def test_never_filter_clean_revert(self):
         self.hook.add_callback(NeverAddsFilter())
         self.assertEquals(self.hook.run_filter_read("\0foo"), "foo")
@@ -152,7 +152,7 @@ class HookManagerTests(unittest.TestCase):
     def setUp(self):
         self.hooks = obnamlib.HookManager()
         self.hooks.new('foo')
-        
+
     def callback(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
@@ -160,14 +160,14 @@ class HookManagerTests(unittest.TestCase):
     def test_has_no_tests_initially(self):
         hooks = obnamlib.HookManager()
         self.assertEqual(hooks.hooks, {})
-        
+
     def test_adds_new_hook(self):
         self.assert_(self.hooks.hooks.has_key('foo'))
-        
+
     def test_adds_new_filter_hook(self):
         self.hooks.new_filter('bar')
         self.assert_('bar' in self.hooks.filters)
-        
+
     def test_adds_callback(self):
         self.hooks.add_callback('foo', self.callback)
         self.assertEqual(self.hooks.hooks['foo'].callbacks, [self.callback])

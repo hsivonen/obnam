@@ -1,15 +1,15 @@
 # Copyright 2010  Lars Wirzenius
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -27,16 +27,16 @@ import obnamlib
 class ClientMetadataTree(obnamlib.RepositoryTree):
 
     '''Store per-client metadata about files.
-    
-    Actual file contents is stored elsewhere, this stores just the 
+
+    Actual file contents is stored elsewhere, this stores just the
     metadata about files: names, inode info, and what chunks of
     data they use.
-    
+
     See http://braawi.org/obnam/ondisk/ for a description of how
     this works.
-    
+
     '''
-    
+
     # Filesystem metadata.
     PREFIX_FS_META = 0      # prefix
     FILE_NAME = 0           # subkey type for storing pathnames
@@ -44,14 +44,14 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     FILE_METADATA = 3       # subkey type for inode fields, etc
     DIR_CONTENTS = 4        # subkey type for list of directory contents
     FILE_DATA = 5           # subkey type for file data (instead of chunk)
-    
+
     FILE_METADATA_ENCODED = 0 # subkey value for encoded obnamlib.Metadata().
-    
+
     # References to chunks in this generation.
     # Main key is the chunk id, subkey type is always 0, subkey is file id
     # for file that uses the chunk.
     PREFIX_CHUNK_REF = 1
-    
+
     # Metadata about the generation. The main key is always the hash of
     # 'generation', subkey type field is always 0.
     PREFIX_GEN_META = 2     # prefix
@@ -61,20 +61,20 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     GEN_IS_CHECKPOINT = 3   # subkey type for whether generation is checkpoint
     GEN_FILE_COUNT = 4      # subkey type for count of files+dirs in generation
     GEN_TOTAL_DATA = 5      # subkey type for sum of all file sizes in gen
-    
+
     # Maximum values for the subkey type field, and the subkey field.
     # Both have a minimum value of 0.
 
     TYPE_MAX = 255
     SUBKEY_MAX = struct.pack('!Q', obnamlib.MAX_ID)
-    
+
     def __init__(self, fs, client_dir, node_size, upload_queue_size, lru_size,
                  repo):
         tracing.trace('new ClientMetadataTree, client_dir=%s' % client_dir)
         self.current_time = repo.current_time
         key_bytes = len(self.hashkey(0, self.default_file_id(''), 0, 0))
-        obnamlib.RepositoryTree.__init__(self, fs, client_dir, key_bytes, 
-                                         node_size, upload_queue_size, 
+        obnamlib.RepositoryTree.__init__(self, fs, client_dir, key_bytes,
+                                         node_size, upload_queue_size,
                                          lru_size, repo)
         self.genhash = self.default_file_id('generation')
         self.chunkids_per_key = max(1,
@@ -120,7 +120,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         be converted as a string, and the value must fit into 64 bits.
 
         '''
-        
+
         if type(subkey) == str:
             subkey = (subkey + '\0' * 8)[:8]
             fmt = '!B8sB8s'
@@ -133,7 +133,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     def fskey(self, mainhash, subtype, subkey):
         ''''Generate key for filesystem metadata.'''
         return self.hashkey(self.PREFIX_FS_META, mainhash, subtype, subkey)
-        
+
     def fs_unkey(self, key):
         '''Inverse of fskey.'''
         parts = struct.unpack('!B8sB8s', key)
@@ -159,13 +159,13 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
 
     def get_file_id(self, tree, pathname):
         '''Return id for file in a given generation.'''
-        
+
         if tree in self.file_ids:
             if pathname in self.file_ids[tree]:
                 return self.file_ids[tree][pathname]
         else:
             self.file_ids[tree] = {}
-        
+
         default_file_id = self.default_file_id(pathname)
         minkey = self.fskey(default_file_id, self.FILE_NAME, 0)
         maxkey = self.fskey(default_file_id, self.FILE_NAME, obnamlib.MAX_ID)
@@ -192,13 +192,13 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
             if value == pathname:
                 return file_id
             file_ids.add(file_id)
-        
+
         while True:
             n = random.randint(0, obnamlib.MAX_ID)
             file_id = struct.pack('!Q', n)
             if file_id not in file_ids:
                 break
-        
+
         key = self.fskey(default_file_id, self.FILE_NAME, file_id)
         self.tree.insert(key, pathname)
         return file_id
@@ -232,7 +232,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         return obnamlib.RepositoryTree.start_changes(self, *args, **kwargs)
 
     def find_generation(self, genid):
-    
+
         def fill_cache():
             key = self.genkey(self.GEN_ID)
             for t in self.forest.trees:
@@ -240,7 +240,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
                 if t_genid == genid:
                     self.known_generations[genid] = t
                     return t
-    
+
         if self.forest:
             if genid in self.known_generations:
                 return self.known_generations[genid]
@@ -371,7 +371,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     def get_metadata(self, genid, filename):
         tree = self.find_generation(genid)
         file_id = self.get_file_id(tree, filename)
-        key = self.fskey(file_id, self.FILE_METADATA, 
+        key = self.fskey(file_id, self.FILE_METADATA,
                          self.FILE_METADATA_ENCODED)
         return tree.lookup(key)
 
@@ -381,8 +381,8 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         file_id = self.set_file_id(filename)
         key1 = self.fskey(file_id, self.FILE_NAME, file_id)
         self.tree.insert(key1, filename)
-        
-        key2 = self.fskey(file_id, self.FILE_METADATA, 
+
+        key2 = self.fskey(file_id, self.FILE_METADATA,
                           self.FILE_METADATA_ENCODED)
         self.tree.insert(key2, encoded_metadata)
 
@@ -392,7 +392,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         file_id = self.get_file_id(self.tree, filename)
         genid = self.get_generation_id(self.tree)
         self.file_count -= 1
-        
+
         try:
             encoded_metadata = self.get_metadata(genid, filename)
         except KeyError:
@@ -412,17 +412,17 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         for chunkid in self.get_file_chunks(genid, filename):
             key = self.chunk_key(chunkid, file_id)
             self.tree.remove_range(key, key)
-            
+
         # Remove this file's metadata.
         minkey = self.fskey(file_id, 0, 0)
         maxkey = self.fskey(file_id, self.TYPE_MAX, self.SUBKEY_MAX)
         self.tree.remove_range(minkey, maxkey)
-        
+
         # Remove filename.
         default_file_id = self.default_file_id(filename)
         key = self.fskey(default_file_id, self.FILE_NAME, file_id)
         self.tree.remove_range(key, key)
-        
+
         # Also remove from parent's contents.
         parent = os.path.dirname(filename)
         if parent != filename: # root dir is its own parent
@@ -430,7 +430,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
             key = self.fskey(parent_id, self.DIR_CONTENTS, file_id)
             # The range removal will work even if the key does not exist.
             self.tree.remove_range(key, key)
-            
+
     def listdir(self, genid, dirname):
         tree = self.find_generation(genid)
         try:
@@ -476,7 +476,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     def set_file_chunks(self, filename, chunkids):
         tracing.trace('filename=%s', filename)
         tracing.trace('chunkids=%s', repr(chunkids))
-    
+
         file_id = self.set_file_id(filename)
         minkey = self.fskey(file_id, self.FILE_CHUNKS, 0)
         maxkey = self.fskey(file_id, self.FILE_CHUNKS, self.SUBKEY_MAX)
@@ -510,7 +510,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
 
     def chunk_in_use(self, gen_id, chunk_id):
         '''Is a chunk used by a generation?'''
-        
+
         minkey = self.chunk_key(chunk_id, 0)
         maxkey = self.chunk_key(chunk_id, obnamlib.MAX_ID)
         t = self.find_generation(gen_id)
@@ -518,7 +518,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
 
     def list_chunks_in_generation(self, gen_id):
         '''Return list of chunk ids used in a given generation.'''
-        
+
         minkey = self.chunk_key(0, 0)
         maxkey = self.chunk_key(obnamlib.MAX_ID, obnamlib.MAX_ID)
         t = self.find_generation(gen_id)
@@ -527,14 +527,14 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
 
     def set_file_data(self, filename, contents): # pragma: no cover
         '''Store contents of file, if small, in B-tree instead of chunk.
-        
+
         The length of the contents should be small enough to fit in a
         B-tree leaf.
-        
+
         '''
         tracing.trace('filename=%s' % filename)
         tracing.trace('contents=%s' % repr(contents))
-        
+
         file_id = self.set_file_id(filename)
         key = self.fskey(file_id, self.FILE_DATA, 0)
         self.tree.insert(key, contents)

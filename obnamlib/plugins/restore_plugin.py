@@ -26,23 +26,23 @@ import obnamlib
 class Hardlinks(object):
 
     '''Keep track of inodes with unrestored hardlinks.'''
-    
+
     def __init__(self):
         self.inodes = dict()
-        
+
     def key(self, metadata):
         return '%s:%s' % (metadata.st_dev, metadata.st_ino)
-        
+
     def add(self, filename, metadata):
         self.inodes[self.key(metadata)] = (filename, metadata.st_nlink)
-        
+
     def filename(self, metadata):
         key = self.key(metadata)
         if key in self.inodes:
             return self.inodes[key][0]
         else:
             return None
-        
+
     def forget(self, metadata):
         key = self.key(metadata)
         filename, nlinks = self.inodes[key]
@@ -62,7 +62,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
     # just b if b is an absolute path.
 
     def enable(self):
-        self.app.add_subcommand('restore', self.restore, 
+        self.app.add_subcommand('restore', self.restore,
                                 arg_synopsis='[DIRECTORY]...')
         self.app.settings.string(['to'], 'where to restore')
         self.app.settings.string_list(['generation'],
@@ -78,7 +78,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         self.app.ts['total'] = 0
         self.app.ts['current-bytes'] = 0
         self.app.ts['total-bytes'] = 0
-        
+
         self.app.ts.format('%RemainingTime(current-bytes,total-bytes) '
                            '%Counter(current) files '
                            '%ByteSize(current-bytes) '
@@ -93,10 +93,10 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         self.app.settings.require('generation')
         self.app.settings.require('to')
 
-        logging.debug('restoring generation %s' % 
+        logging.debug('restoring generation %s' %
                         self.app.settings['generation'])
         logging.debug('restoring to %s' % self.app.settings['to'])
-    
+
         logging.debug('restoring what: %s' % repr(args))
         if not args:
             logging.debug('no args given, so restoring everything')
@@ -105,7 +105,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         self.downloaded_bytes = 0
         self.file_count = 0
         self.started = time.time()
-    
+
         self.repo = self.app.open_repository()
         self.repo.open_client(self.app.settings['client-name'])
         if self.write_ok:
@@ -115,9 +115,9 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             self.fs = None # this will trigger error if we try to really write
 
         self.hardlinks = Hardlinks()
-        
+
         self.errors = False
-        
+
         generations = self.app.settings['generation']
         if len(generations) != 1:
             raise obnamlib.Error(
@@ -138,12 +138,12 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         self.repo.fs.close()
         if self.write_ok:
             self.fs.close()
-        
+
         self.app.ts.clear()
         self.report_stats()
-        
+
         self.app.ts.finish()
-                
+
         if self.errors:
             raise obnamlib.Error('There were errors when restoring')
 
@@ -154,7 +154,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             dirname = os.path.dirname(pathname)
             if self.write_ok and not self.fs.exists('./' + dirname):
                 self.fs.makedirs('./' + dirname)
-    
+
             set_metadata = True
             if metadata.isdir():
                 self.restore_dir(gen, pathname, metadata)
@@ -192,7 +192,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         if self.write_ok:
             self.fs.link('./' + link, './' + filename)
             self.hardlinks.forget(metadata)
-        
+
     def restore_symlink(self, gen, filename, metadata):
         logging.debug('restoring symlink %s' % filename)
 
@@ -206,11 +206,11 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         elif stat.S_ISBLK(metadata.st_mode) or stat.S_ISCHR(metadata.st_mode):
             self.restore_device(gen, filename, metadata)
         else:
-            msg = ('Unknown file type: %s (%o)' % 
+            msg = ('Unknown file type: %s (%o)' %
                    (filename, metadata.st_mode))
             logging.error(msg)
             self.app.ts.notify(msg)
-        
+
     def restore_regular_file(self, gen, filename, metadata):
         logging.debug('restoring regular %s' % filename)
         if self.write_ok:
@@ -297,7 +297,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             (1024**1, 'KiB'),
             (0, 'B')
         ]
-        
+
         for size_base, size_unit in size_table:
             if self.downloaded_bytes >= size_base:
                 if size_base > 0:
@@ -336,7 +336,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
 
         logging.info('Restore performance statistics:')
         logging.info('* files restored: %s' % self.file_count)
-        logging.info('* downloaded data: %s bytes (%s %s)' % 
+        logging.info('* downloaded data: %s bytes (%s %s)' %
                         (self.downloaded_bytes, size_amount, size_unit))
         logging.info('* duration: %s s' % duration)
         logging.info('* average speed: %s %s' % (speed_amount, speed_unit))

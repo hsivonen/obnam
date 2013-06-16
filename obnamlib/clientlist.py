@@ -1,15 +1,15 @@
 # Copyright 2010  Lars Wirzenius
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -26,20 +26,20 @@ import obnamlib
 class ClientList(obnamlib.RepositoryTree):
 
     '''Repository's list of clients.
-    
+
     The list maps a client name to an arbitrary (string) identifier,
     which is unique within the repository.
-    
+
     The list is implemented as a B-tree, with a three-part key:
     128-bit MD5 of client name, 64-bit unique identifier, and subkey
     identifier. The value depends on the subkey: it's either the
     client's full name, or the public key identifier the client
     uses to encrypt their backups.
-    
+
     The client's identifier is a random, unique 64-bit integer.
-    
+
     '''
-    
+
     # subkey values
     CLIENT_NAME = 0
     KEYID = 1
@@ -51,10 +51,10 @@ class ClientList(obnamlib.RepositoryTree):
         self.fmt = '!%dsQB' % self.hash_len
         self.key_bytes = len(self.key('', 0, 0))
         self.minkey = self.hashkey('\x00' * self.hash_len, 0, 0)
-        self.maxkey = self.hashkey('\xff' * self.hash_len, obnamlib.MAX_ID, 
+        self.maxkey = self.hashkey('\xff' * self.hash_len, obnamlib.MAX_ID,
                                    self.SUBKEY_MAX)
-        obnamlib.RepositoryTree.__init__(self, fs, 'clientlist', 
-                                         self.key_bytes, node_size, 
+        obnamlib.RepositoryTree.__init__(self, fs, 'clientlist',
+                                         self.key_bytes, node_size,
                                          upload_queue_size, lru_size, hooks)
         self.keep_just_one_tree = True
 
@@ -77,7 +77,7 @@ class ClientList(obnamlib.RepositoryTree):
     def list_clients(self):
         if self.init_forest() and self.forest.trees:
             t = self.forest.trees[-1]
-            return [v 
+            return [v
                      for k, v in t.lookup_range(self.minkey, self.maxkey)
                      if self.unkey(k)[2] == self.CLIENT_NAME]
         else:
@@ -112,7 +112,7 @@ class ClientList(obnamlib.RepositoryTree):
             key = self.key(client_name, candidate_id, self.CLIENT_NAME)
             self.tree.insert(key, client_name)
             logging.debug('Client %s has id %s' % (client_name, candidate_id))
-        
+
     def remove_client(self, client_name):
         logging.info('Removing client %s' % client_name)
         self.start_changes()
@@ -130,7 +130,7 @@ class ClientList(obnamlib.RepositoryTree):
                 for k, v in t.lookup_range(key, key):
                     return v
         return None
-        
+
     def set_client_keyid(self, client_name, keyid):
         logging.info('Setting client %s to use key %s' % (client_name, keyid))
         self.start_changes()

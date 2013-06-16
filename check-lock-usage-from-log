@@ -1,16 +1,16 @@
 #!/usr/bin/python
 # Copyright 2012  Lars Wirzenius
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -82,7 +82,7 @@ class LockEvent(LogEvent):
 
     def __str__(self):
         return 'Lock(%s)' % self.lockname
-    
+
 
 class UnlockEvent(LockEvent):
 
@@ -114,13 +114,13 @@ class NodeCreateEvent(LogEvent):
 
     def __str__(self):
         return 'NodeCreate(%s)' % self.node_id
-        
+
 
 class NodeDestroyEvent(NodeCreateEvent):
 
     def __str__(self):
         return 'NodeDestroy(%s)' % self.node_id
-        
+
 
 class NodeReadEvent(NodeCreateEvent):
 
@@ -145,7 +145,7 @@ class CheckLocks(cliapp.Application):
         self.events = []
         self.errors = 0
         self.latest_opened_node = None
-        
+
         self.patterns = [
             (lock_pat, self.lock_event),
             (unlock_pat, self.unlock_event),
@@ -155,12 +155,12 @@ class CheckLocks(cliapp.Application):
             (node_remove_pat, self.node_remove_event),
             (rename_pat, self.rename_event),
         ]
-        
+
         self.ts = ttystatus.TerminalStatus()
         self.ts.format(
             'Reading %ElapsedTime() %Integer(lines): %Pathname(filename)')
         self.ts['lines'] = 0
-        
+
     def cleanup(self):
         self.ts.clear()
 
@@ -188,13 +188,13 @@ class CheckLocks(cliapp.Application):
         for e in self.events:
             self.ts['event'] = e
             logging.debug(
-                'analysing: %s:%s: %s: %s' % 
+                'analysing: %s:%s: %s: %s' %
                     (e.logfile, e.lineno, repr(e.sortkey()), str(e)))
             if type(e) is LockEvent:
                 if e.lockname in current_locks:
                     self.error(
-                        'Re-locking %s: %s:%s:%s' % 
-                            (e.lockname, e.logfile, e.lineno, 
+                        'Re-locking %s: %s:%s:%s' %
+                            (e.lockname, e.logfile, e.lineno,
                              e.timestamp))
                 else:
                     current_locks.add(e.lockname)
@@ -300,7 +300,7 @@ class CheckLocks(cliapp.Application):
             return NodeReadEvent(
                 filename, self.lineno, float(match.group('timestamp')),
                 node_id)
-        
+
     def node_remove_event(self, filename, line, match):
         return NodeDestroyEvent(
             filename, self.lineno, float(match.group('timestamp')),

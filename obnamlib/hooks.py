@@ -43,10 +43,10 @@ class Hook(object):
     def __init__(self):
         self.callbacks = []
         self.priorities = {}
-        
+
     def add_callback(self, callback, priority=DEFAULT_PRIORITY):
         '''Add a callback to this hook.
-        
+
         Return an identifier that can be used to remove this callback.
 
         '''
@@ -54,16 +54,16 @@ class Hook(object):
         if callback not in self.callbacks:
             self.priorities[callback] = priority
             self.callbacks.append(callback)
-            self.callbacks.sort(lambda x,y: cmp(self.priorities[x], 
+            self.callbacks.sort(lambda x,y: cmp(self.priorities[x],
                                                 self.priorities[y]))
-            
+
         return callback
-        
+
     def call_callbacks(self, *args, **kwargs):
         '''Call all callbacks with the given arguments.'''
         for callback in self.callbacks:
             callback(*args, **kwargs)
-        
+
     def remove_callback(self, callback_id):
         '''Remove a specific callback.'''
         if callback_id in self.callbacks:
@@ -85,16 +85,16 @@ class MissingFilterError(obnamlib.Error):
 class FilterHook(Hook):
 
     '''A hook which filters data through callbacks.
-    
+
     Every hook of this type accepts a piece of data as its first argument
     Each callback gets the return value of the previous one as its
     argument. The caller gets the value of the final callback.
-    
+
     Other arguments (with or without keywords) are passed as-is to
     each callback.
-    
+
     '''
-    
+
     def __init__(self):
         Hook.__init__(self)
         self.bytag = {}
@@ -112,7 +112,7 @@ class FilterHook(Hook):
 
     def call_callbacks(self, data, *args, **kwargs):
         raise NotImplementedError()
-        
+
     def run_filter_read(self, data, *args, **kwargs):
         tag, content = data.split("\0", 1)
         while tag != "":
@@ -140,16 +140,16 @@ class FilterHook(Hook):
 class HookManager(object):
 
     '''Manage the set of hooks the application defines.'''
-    
+
     def __init__(self):
         self.hooks = {}
         self.filters = {}
-        
+
     def new(self, name):
         '''Create a new hook.
-        
+
         If a hook with that name already exists, nothing happens.
-        
+
         '''
 
         if name not in self.hooks:
@@ -166,14 +166,14 @@ class HookManager(object):
             return self.hooks[name].add_callback(callback, priority)
         else:
             return self.filters[name].add_callback(callback, priority)
-        
+
     def remove_callback(self, name, callback_id):
         '''Remove a specific callback from a named hook.'''
         if name in self.hooks:
             self.hooks[name].remove_callback(callback_id)
         else:
             self.filters[name].remove_callback(callback_id)
-        
+
     def call(self, name, *args, **kwargs):
         '''Call callbacks for a named hook, using given arguments.'''
         self.hooks[name].call_callbacks(*args, **kwargs)

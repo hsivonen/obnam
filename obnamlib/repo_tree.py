@@ -1,15 +1,15 @@
 # Copyright 2010  Lars Wirzenius
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -23,16 +23,16 @@ import obnamlib
 class RepositoryTree(object):
 
     '''A B-tree within an obnamlib.Repository.
-    
+
     For read-only operation, call init_forest before doing anything.
-    
+
     For read-write operation, call start_changes before doing anything,
-    and commit afterwards. In between, self.tree is the new tree to be 
+    and commit afterwards. In between, self.tree is the new tree to be
     modified. Note that self.tree is NOT available after init_forest.
-    
+
     After init_forest or start_changes, self.forest is the opened forest.
     Unlike self.tree, it will not go away after commit.
-    
+
     '''
 
     def __init__(self, fs, dirname, key_bytes, node_size, upload_queue_size,
@@ -68,7 +68,7 @@ class RepositoryTree(object):
 
     def start_changes(self, create_tree=True):
         tracing.trace('start changes for %s', self.dirname)
-        
+
         if self.forest is None or not self.forest_allows_writes:
             if not self.fs.exists(self.dirname):
                 need_init = True
@@ -80,7 +80,7 @@ class RepositoryTree(object):
                 if not self.fs.exists(self.dirname):
                     tracing.trace('create %s', self.dirname)
                     self.fs.mkdir(self.dirname)
-                self.repo.hooks.call('repository-toplevel-init', self.repo, 
+                self.repo.hooks.call('repository-toplevel-init', self.repo,
                                      self.dirname)
             self.forest = None
             self.init_forest(allow_writes=True)

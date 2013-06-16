@@ -53,7 +53,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
             raise obnamlib.Error(
                 'verify must be given exactly one generation')
 
-        logging.debug('verifying generation %s' % 
+        logging.debug('verifying generation %s' %
                         self.app.settings['generation'])
         if not args:
             self.app.settings.require('root')
@@ -119,7 +119,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
                 metadata = self.repo.get_metadata(gen, filename)
                 try:
                     self.verify_metadata(gen, filename, metadata)
-                    self.verify_regular_file(gen, filename, metadata)            
+                    self.verify_regular_file(gen, filename, metadata)
                 except Fail, e:
                     self.log_fail(e)
                 self.app.ts['done'] += 1
@@ -150,7 +150,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
             v1 = getattr(backed_up, field)
             v2 = getattr(live_data, field)
             if v1 != v2:
-                raise Fail(filename, 
+                raise Fail(filename,
                             'metadata change: %s (%s vs %s)' % (field, v1, v2))
 
     def verify_regular_file(self, gen, filename, metadata):
@@ -173,11 +173,11 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
 
     def walk(self, gen, args):
         '''Iterate over each pathname specified by arguments.
-        
+
         This is a generator.
-        
+
         '''
-        
+
         for arg in args:
             scheme, netloc, path, query, fragment = urlparse.urlsplit(arg)
             arg = os.path.normpath(path)

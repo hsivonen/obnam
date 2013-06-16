@@ -1,17 +1,17 @@
 #!/usr/bin/python
 #
 # Copyright 2010, 2011  Lars Wirzenius
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -32,7 +32,7 @@ class ObnamBenchmark(cliapp.Application):
     default_sizes = ['1g/100m']
     keyid = '3B1802F81B321347'
     opers = ('backup', 'restore', 'list_files', 'forget')
-    
+
     def add_settings(self):
         self.settings.string(['results'], 'put results under DIR (%default)',
                             metavar='DIR', default='../benchmarks')
@@ -51,8 +51,8 @@ class ObnamBenchmark(cliapp.Application):
                              metavar='DIR')
         self.settings.boolean(['with-encryption'],
                               'run benchmark using encryption')
-        
-        self.settings.string(['profile-name'], 
+
+        self.settings.string(['profile-name'],
                              'short name for benchmark scenario',
                              default='unknown')
         self.settings.string_list(['size'],
@@ -77,7 +77,7 @@ class ObnamBenchmark(cliapp.Application):
         self.settings.string(['description'], 'describe benchmark')
         self.settings.boolean(['drop-caches'], 'drop kernel buffer caches')
         self.settings.string(['seivot-log'], 'seivot log setting')
-        
+
         self.settings.boolean(['verify'], 'verify restores')
 
     def process_args(self, args):
@@ -87,7 +87,7 @@ class ObnamBenchmark(cliapp.Application):
         larch_revno = self.bzr_revno(self.settings['larch-branch'])
 
         results = self.results_dir(obnam_revno, larch_revno)
-        
+
         obnam_branch = self.settings['obnam-branch']
         larch_branch = self.settings['larch-branch']
         if self.settings['seivot-branch']:
@@ -96,13 +96,13 @@ class ObnamBenchmark(cliapp.Application):
             seivot = 'seivot'
 
         generations = self.settings['generations']
-        
+
         tempdir = tempfile.mkdtemp()
         env = self.setup_gnupghome(tempdir)
-        
+
         sizes = self.settings['size'] or self.default_sizes
         logging.debug('sizes: %s' % repr(sizes))
-        
+
         file_size = self.settings['file-size']
         profile_name = self.settings['profile-name']
 
@@ -144,14 +144,14 @@ class ObnamBenchmark(cliapp.Application):
                 if self.settings['with-encryption']:
                     argv.extend(['--encrypt-with', self.keyid])
                 if self.settings['description']:
-                    argv.extend(['--description', 
+                    argv.extend(['--description',
                                  self.settings['description']])
                 if self.settings['verify']:
                     argv.append('--verify')
                 self.runcmd(argv, env=env)
 
         shutil.rmtree(tempdir)
-        
+
     def require_tmpdir(self):
         if 'TMPDIR' not in os.environ:
             raise cliapp.AppException('TMPDIR is not set. '
@@ -165,7 +165,7 @@ class ObnamBenchmark(cliapp.Application):
     @property
     def hostname(self):
         return socket.gethostname()
-        
+
     @property
     def obnam_branch_name(self):
         obnam_branch = os.path.abspath(self.settings['obnam-branch'])
@@ -173,7 +173,7 @@ class ObnamBenchmark(cliapp.Application):
 
     def results_dir(self, obnam_revno, larch_revno):
         parent = self.settings['results']
-        
+
         counter = 0
         while True:
             counter += 1
@@ -185,12 +185,12 @@ class ObnamBenchmark(cliapp.Application):
                 str(counter),
             ]
             basename = '-'.join(parts)
-            
+
             dirname = os.path.join(parent, basename)
             if not os.path.exists(dirname):
                 os.mkdir(dirname)
                 return dirname
-        
+
     def setup_gnupghome(self, tempdir):
         gnupghome = os.path.join(tempdir, 'gnupghome')
         shutil.copytree('test-gpghome', gnupghome)
@@ -208,7 +208,7 @@ class ObnamBenchmark(cliapp.Application):
         revno = out.strip()
         logging.debug('bzr branch %s has revno %s' % (branch, revno))
         return revno
-        
+
     def parse_size_pair(self, pair):
         return pair.split('/', 1)
 

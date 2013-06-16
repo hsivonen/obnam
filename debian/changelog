@@ -60,20 +60,20 @@ obnam (0.30-1) unstable; urgency=low
 obnam (0.29-1) unstable; urgency=low
 
   * New upstream release.
-    - "obnam backup" now writes performance statistics at the end of a 
-      backup run. Search the log for "Backup performance statistics" 
+    - "obnam backup" now writes performance statistics at the end of a
+      backup run. Search the log for "Backup performance statistics"
       (INFO level).
-    - "obnam verify" now continues past the first error. Thanks to 
+    - "obnam verify" now continues past the first error. Thanks to
       Rafał Gwiazda for requesting this.
     - Add an `obnam-viewprof` utility to translate Python profiling output
       into human readable text form.
-    - Bug fix: If a file's extended attributes have changed in any way, 
+    - Bug fix: If a file's extended attributes have changed in any way,
       the change is now backed up.
     - "obnam fsck" is now a bit faster.
-    - The shared directories in the repository are now locked only during 
-      updates, allowing more efficient concurrent backups between several 
+    - The shared directories in the repository are now locked only during
+      updates, allowing more efficient concurrent backups between several
       computers.
-    - Obnam now gives a better error message when a backup root is not a 
+    - Obnam now gives a better error message when a backup root is not a
       directory. Thanks to Edward Allcutt for reporting the error.
       (Closes: #654211)
     - The output format of "obnam ls" has changed. It now has one line per
@@ -124,7 +124,7 @@ obnam (0.25-1) unstable; urgency=low
 
   * New upstream version.
   * Depend on python-larch 0.27, for fsck WorkItem changes
-  * Build-depend on genbackupdata, summain, and cmdtest, which are used 
+  * Build-depend on genbackupdata, summain, and cmdtest, which are used
     by tests.
 
  -- Lars Wirzenius <liw@liw.fi>  Sat, 18 Feb 2012 11:45:56 +0000

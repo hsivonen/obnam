@@ -27,7 +27,7 @@ import obnamlib
 class VirtualFileSystem(object):
 
     '''A virtual filesystem interface.
-    
+
     The backup program needs to access both local and remote files.
     To make it easier to support all kinds of files both locally and
     remotely, we use a custom virtual filesystem interface so that
@@ -44,7 +44,7 @@ class VirtualFileSystem(object):
     for the relative paths: directory components separated by
     slashes, and an initial slash indicating the root of the
     filesystem (in this case, the base URL).
-    
+
     '''
 
     def __init__(self, baseurl):
@@ -60,18 +60,18 @@ class VirtualFileSystem(object):
 
     def connect(self):
         '''Connect to filesystem.'''
-        
+
     def close(self):
         '''Close connection to filesystem.'''
         self.log_stats()
 
     def reinit(self, new_baseurl, create=False):
         '''Go back to the beginning.
-        
+
         This behaves like instantiating a new instance, but possibly
         faster for things like SftpFS. If there is a network
         connection already open, it will be reused.
-        
+
         '''
 
     def abspath(self, pathname):
@@ -80,7 +80,7 @@ class VirtualFileSystem(object):
 
     def getcwd(self):
         '''Return current working directory as absolute pathname.'''
-        
+
     def chdir(self, pathname):
         '''Change current working directory to pathname.'''
 
@@ -89,10 +89,10 @@ class VirtualFileSystem(object):
 
     def listdir2(self, pathname):
         '''Return list of basenames and stats of entities at pathname.
-        
+
         The stat entity may be an exception object instead, to indicate
         an error.
-        
+
         '''
 
     def lock(self, lockname, data):
@@ -112,11 +112,11 @@ class VirtualFileSystem(object):
 
     def mkdir(self, pathname):
         '''Create a directory.
-        
+
         Parent directories must already exist.
-        
+
         '''
-        
+
     def makedirs(self, pathname):
         '''Create a directory, and missing parents.'''
 
@@ -150,10 +150,10 @@ class VirtualFileSystem(object):
     def llistxattr(self, pathname):
         '''Return list of names of extended attributes for file.'''
         return []
-        
+
     def lgetxattr(self, pathname, attrname):
         '''Return value of an extended attribute.'''
-        
+
     def lsetxattr(self, pathname, attrname, attrvalue):
         '''Set value of an extended attribute.'''
 
@@ -165,10 +165,10 @@ class VirtualFileSystem(object):
 
     def lutimes(self, pathname, atime_sec, atime_nsec, mtime_sec, mtime_nsec):
         '''Like lutimes(2).
-        
+
         This isn't quite like lutimes, actually. Most importantly, it uses
         nanosecond timestamps rather than microsecond. This is important.
-        
+
         '''
 
     def link(self, existing_path, new_path):
@@ -194,11 +194,11 @@ class VirtualFileSystem(object):
     def write_file(self, pathname, contents):
         '''Write a new file.
 
-        The file must not yet exist. The file is not necessarily written 
+        The file must not yet exist. The file is not necessarily written
         atomically, meaning that if the writing fails (connection to
         server drops, for example), the file might exist in a partial
         form. The callers need to deal with this.
-        
+
         Any directories in pathname will be created if necessary.
 
         '''
@@ -209,30 +209,30 @@ class VirtualFileSystem(object):
     def scan_tree(self, dirname, ok=None, dirst=None, log=logging.error,
                   error_handler=None):
         '''Scan a tree for files.
-        
+
         Return a generator that returns ``(pathname, stat_result)``
-        pairs for each file and directory in the tree, in 
+        pairs for each file and directory in the tree, in
         depth-first order.
-        
+
         If ``ok`` is not None, it must be a function that determines
         if a particular file or directory should be returned.
         It gets the pathname and stat result as arguments, and
         should return True or False. If it returns False on a
         directory, ``scan_tree`` will not recurse into the
         directory.
-        
+
         ``dirst`` is for internal optimization, and should not
         be used by the caller. ``log`` is used by unit tests and
         should not be used by the caller.
-        
+
         Errors from calling ``listdir`` or ``lstat`` are logged,
         but do not stop the scanning. Such files or directories are
         not returned, however. If `error_handler` is defined, it is
         called once for every problem, giving the name and exception
         as arguments.
-        
+
         '''
-        
+
         error_handler = error_handler or (lambda name, e: None)
 
         try:
@@ -241,7 +241,7 @@ class VirtualFileSystem(object):
             log('listdir failed: %s: %s' % (e.filename, e.strerror))
             error_handler(dirname, e)
             pairs = []
-            
+
         queue = []
         for name, st in pairs:
             pathname = os.path.join(dirname, name)
@@ -266,14 +266,14 @@ class VirtualFileSystem(object):
 
         yield dirname, dirst
 
-        
+
 class VfsFactory:
 
     '''Create new instances of VirtualFileSystem.'''
 
     def __init__(self):
         self.implementations = {}
-        
+
     def register(self, scheme, implementation, **kwargs):
         if scheme in self.implementations:
             raise obnamlib.Error('URL scheme %s already registered' % scheme)
@@ -286,35 +286,35 @@ class VfsFactory:
             klass, kwargs = self.implementations[scheme]
             return klass(url, create=create, **kwargs)
         raise obnamlib.Error('Unknown VFS type %s' % url)
-            
-            
+
+
 class VfsTests(object): # pragma: no cover
 
     '''Re-useable tests for VirtualFileSystem implementations.
-    
+
     The base class can't be usefully instantiated itself.
     Instead you are supposed to sub-class it and implement the API in
     a suitable way for yourself.
-    
+
     This class implements a number of tests that the API implementation
     must pass. The implementation's own test class should inherit from
     this class, and unittest.TestCase.
-    
+
     The test sub-class should define a setUp method that sets the following:
-    
+
     * self.fs to an instance of the API implementation sub-class
     * self.basepath to the path to the base of the filesystem
-    
+
     basepath must be operable as a pathname using os.path tools. If
     the VFS implemenation operates remotely and wants to operate on a
     URL like 'http://domain/path' as the baseurl, then basepath must be
     just the path portion of the URL.
-    
+
     The directory indicated by basepath must exist, but must be empty
     at start.
-    
+
     '''
-    
+
     non_ascii_name = u'm\u00e4kel\u00e4'.encode('utf-8')
 
     def test_abspath_returns_input_for_absolute_path(self):
@@ -452,15 +452,15 @@ class VfsTests(object): # pragma: no cover
 
     def test_mkdir_raises_oserror_if_parent_does_not_exist(self):
         self.assertRaises(OSError, self.fs.mkdir, 'foo/bar')
-    
+
     def test_makedirs_raises_oserror_when_directory_exists(self):
         self.fs.mkdir('foo')
         self.assertRaises(OSError, self.fs.makedirs, 'foo')
-    
+
     def test_makedirs_creates_directory_when_parent_exists(self):
         self.fs.makedirs('foo')
         self.assert_(self.fs.isdir('foo'))
-    
+
     def test_makedirs_creates_directory_when_parent_does_not_exist(self):
         self.fs.makedirs('foo/bar')
         self.assert_(self.fs.isdir('foo/bar'))
@@ -537,7 +537,7 @@ class VfsTests(object): # pragma: no cover
         self.fs.lutimes('foo', 1, 2*1000, 3, 4*1000)
 
         self.assertEqual(self.fs.lstat('foo').st_atime_sec, 1)
-        # not all filesystems support sub-second timestamps; those that 
+        # not all filesystems support sub-second timestamps; those that
         # do not, return 0, so we have to accept either that or the correct
         # value, but no other vlaues
         self.assert_(self.fs.lstat('foo').st_atime_nsec in [0, 2*1000])
@@ -587,10 +587,10 @@ class VfsTests(object): # pragma: no cover
 
     def test_cat_fails_for_nonexistent_file(self):
         self.assertRaises(IOError, self.fs.cat, 'foo')
-    
+
     def test_has_read_nothing_initially(self):
         self.assertEqual(self.fs.bytes_read, 0)
-    
+
     def test_cat_updates_bytes_read(self):
         self.fs.write_file('foo', 'bar')
         self.fs.cat('foo')
@@ -620,14 +620,14 @@ class VfsTests(object): # pragma: no cover
         self.fs.write_file('foo', 'bar')
         self.fs.overwrite_file('foo', 'foobar')
         self.assertEqual(self.fs.cat('foo'), 'foobar')
-    
+
     def test_has_written_nothing_initially(self):
         self.assertEqual(self.fs.bytes_written, 0)
-    
+
     def test_write_updates_written(self):
         self.fs.write_file('foo', 'foo')
         self.assertEqual(self.fs.bytes_written, 3)
-    
+
     def test_overwrite_updates_written(self):
         self.fs.overwrite_file('foo', 'foo')
         self.assertEqual(self.fs.bytes_written, 3)
@@ -658,7 +658,7 @@ class VfsTests(object): # pragma: no cover
         result = list(self.fs.scan_tree(self.basepath))
         pathnames = [pathname for pathname, st in result]
         self.assertEqual(sorted(pathnames), sorted(self.pathnames))
-    
+
     def test_scan_tree_filters_away_unwanted(self):
         def ok(pathname, st):
             return stat.S_ISDIR(st.st_mode)

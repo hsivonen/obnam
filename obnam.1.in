@@ -1,15 +1,15 @@
 .\" Copyright 2010, 2011  Lars Wirzenius
-.\" 
+.\"
 .\" This program is free software: you can redistribute it and/or modify
 .\" it under the terms of the GNU General Public License as published by
 .\" the Free Software Foundation, either version 3 of the License, or
 .\" (at your option) any later version.
-.\" 
+.\"
 .\" This program is distributed in the hope that it will be useful,
 .\" but WITHOUT ANY WARRANTY; without even the implied warranty of
 .\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 .\" GNU General Public License for more details.
-.\" 
+.\"
 .\" You should have received a copy of the GNU General Public License
 .\" along with this program.  If not, see <http://www.gnu.org/licenses/>.
 .TH OBNAM 1
@@ -35,8 +35,8 @@ A single repository may contain backups from several clients.
 Their data will intermingle as if they were using separate repositories,
 but if one client backs up a file, the others may re-use the data.
 .PP
-.B obnam 
-command line syntax consists of a 
+.B obnam
+command line syntax consists of a
 .I command
 possibly followed by arguments.
 The commands are list below.
@@ -56,7 +56,7 @@ or just selected files.
 lists the clients that are backed up to the repository.
 .IP \(bu
 .B generations
-lists every backup generation for a given client, 
+lists every backup generation for a given client,
 plus some metadata about the generation.
 .IP \(bu
 .B genids
@@ -65,7 +65,7 @@ No other information is shown.
 This can be useful for scripting.
 .IP \(bu
 .B ls
-lists the contents of a given generation, similar to 
+lists the contents of a given generation, similar to
 .BR "ls \-lAR" .
 .IP \(bu
 .B verify
@@ -112,7 +112,7 @@ Some of the toplevel directories are shared between clients,
 others are specific to a client.
 .IP \(bu
 .B list\-toplevels
-is like 
+is like
 .BR list\-keys ,
 but lists toplevels and which keys can access them.
 .IP \(bu
@@ -155,7 +155,7 @@ uploads data into the backup repository.
 The data is divided into chunks,
 and if a chunk already exists in the backup repository,
 it is not uploaded again.
-This allows 
+This allows
 .B obnam
 to deal with files that have been changed or renamed since the previous
 backup run.
@@ -163,11 +163,11 @@ It also allows several backup clients to avoid uploading the same data.
 If, for example, everyone in the office has a copy of the same sales brochures,
 only one copy needs to be stored in the backup repository.
 .PP
-Every backup run is a 
+Every backup run is a
 .IR generation .
 In addition,
 .B obnam
-will make 
+will make
 .I checkpoint
 generations every now and then.
 These are exactly like normal generations,
@@ -192,7 +192,7 @@ command checks that data in the backup repository matches actual user data.
 It retrieves one or more files from the repository and compares them to
 the user data.
 This is essentialy the same as doing a restore,
-then comparing restored files with the original files using 
+then comparing restored files with the original files using
 .BR cmp (1),
 but easier to use.
 .PP
@@ -208,21 +208,21 @@ parent directories of backup root) may have changed without it
 being a problem.
 Note that you will need to specify the whole path to the files
 or directories to be verified, not relative to the backup root.
-You still need to specify at least one of the backup roots 
+You still need to specify at least one of the backup roots
 on the command line or via the
 .B \-\-root
 option so that obnam will find the filesystem, in case it is
 a remote one.
 .SS "URL syntax"
 Whenever obnam accepts a URL, it can be either a local pathname,
-or an 
+or an
 .B sftp
 URL.
 An sftp URL has the following form:
 .IP
 .R \fBsftp://\fR[\fIuser\fR@]\fIdomain\fR[:\fIport\fR]\fB/path
 .PP
-where 
+where
 .I domain
 is a normal Internet domain name for a server,
 .I user
@@ -246,7 +246,7 @@ You can use
 .B sftp
 URLs for the repository, or the live data (root),
 but note that due to limitations in the protocol,
-and its implementation in the 
+and its implementation in the
 .B paramiko
 library,
 some things will not work very well for accessing live data over
@@ -283,7 +283,7 @@ option.
 .I POLICY
 is comma-separated list of rules.
 Each rule consists of a count and a time period.
-The time periods are 
+The time periods are
 .BR h ,
 .BR d ,
 .BR w ,
@@ -320,7 +320,7 @@ and does not care what the actual current time is.
 This means that if you stop making new backups,
 the existing ones won't be removed automatically.
 In essence, obnam pretends the current time is just after the
-latest backup when 
+latest backup when
 .B forget
 is run.
 .PP
@@ -384,7 +384,7 @@ option to make sure you're removing the right ones.
 .SS "Using encryption"
 .B obnam
 can encrypt all the data it writes to the backup repository.
-It uses 
+It uses
 .BR gpg (1)
 to do the encryption.
 You need to create a key pair using
@@ -403,7 +403,7 @@ All files are treated as if they were one with the contents of all
 files catenated.
 .PP
 The files are in INI format,
-and only the 
+and only the
 .I [config]
 section is used
 (any other sections are ignored).
@@ -431,7 +431,7 @@ exclude: \.wav$
 .RE
 .fi
 .sp 1
-(You can use either 
+(You can use either
 .I foo=value
 or
 .I foo: value
@@ -459,7 +459,7 @@ any files that contain the words
 or
 .I bar
 anywhere in the fully qualified pathname,
-or files with names ending with a period and 
+or files with names ending with a period and
 .I mp3
 (because the exclusions are regular expressions).
 .SS "Multiple clients and locking"

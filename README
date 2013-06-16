@@ -21,7 +21,7 @@ On other systems, using the `setup.py` file should work: run
 "python setup.py --help" for advice. If not, please report a bug.
 (I've only tested `setup.py` enough for to build the Debian package.)
 
-You need to install my Python B-tree library, and some of my other libraries 
+You need to install my Python B-tree library, and some of my other libraries
 and tools, which you can get from:
 
 * <http://liw.fi/larch/>
@@ -49,14 +49,14 @@ Use
 To get a quick help summary of options:
 
     ./obnam --help
-    
+
 To make a backup:
 
     ./obnam backup --repository /tmp/mybackup $HOME
 
 For more information, see the manual page:
 
-    man -l obnam.1 
+    man -l obnam.1
 
 
 Hacking
@@ -77,7 +77,7 @@ To build and run automatic tests:
 
 `check` is a wrapper around `python setup.py`, but since using that
 takes several steps, the script makes things easier.
-    
+
 You need my CoverageTestRunner to run tests, see above for where to get it.
 A couple of scripts exist to run benchmarks and profiles:
 
@@ -85,13 +85,13 @@ A couple of scripts exist to run benchmarks and profiles:
     ./obnam-benchmark --size=1m/100k --results /tmp/benchmark-results
     viewprof /tmp/benchmark-results/*/*backup-0.prof
     seivots-summary /tmp/benchmark-results/*/*.seivot | less -S
-    
+
 There are two kinds of results: Python profiling output, and `.seivot`
 files.
 
-For the former, `viewprof` is a little helper script I wrote, 
+For the former, `viewprof` is a little helper script I wrote,
 around the Python pstats module.
-You can use your own, or get mine from extrautils 
+You can use your own, or get mine from extrautils
 (<http://liw.fi/extrautils/>). Running the benchmarks under profiling
 makes them a little slower (typically around 10% for me, when I've
 compared), but that's OK: the absolute numbers of the benchmarks are
@@ -155,6 +155,6 @@ This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
- 
+
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.

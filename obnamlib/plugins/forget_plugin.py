@@ -22,7 +22,7 @@ import obnamlib
 class ForgetPlugin(obnamlib.ObnamPlugin):
 
     '''Forget generations.'''
-    
+
     def enable(self):
         self.app.add_subcommand('forget', self.forget,
                                 arg_synopsis='[GENERATION]...')
@@ -34,7 +34,7 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
         '''Forget (remove) specified backup generations.'''
         self.app.settings.require('repository')
         self.app.settings.require('client-name')
-        
+
         self.app.ts['gen'] = None
         self.app.ts['gens'] = []
         self.app.ts.format('forgetting generations: %Index(gen,gens) done')
@@ -63,8 +63,8 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
             rules = fp.parse(self.app.settings['keep'])
             keeplist = fp.match(rules, genlist)
             keepids = set(genid for genid, dt in keeplist)
-            removeids = [genid 
-                         for genid, dt in genlist 
+            removeids = [genid
+                         for genid, dt in genlist
                          if genid not in keepids]
 
             self.app.ts['gens'] = removeids

@@ -26,8 +26,8 @@ def compute_checksums(f, chunk_size, offset, dirname):
                 for checksum in compute(ff, chunk_size, offset):
                     f.write('%s\n' % checksum)
                 ff.close()
-    
-    
+
+
 def sort_checksums(f, checksums_name):
     subprocess.check_call(['sort',
                            '-T', '.',
@@ -36,12 +36,12 @@ def sort_checksums(f, checksums_name):
                           ],
                           stdin=file(checksums_name),
                           stdout=f)
-    
+
 
 def count_duplicates(f, sorted_name):
     subprocess.check_call(['uniq', '-c'], stdin=file(sorted_name), stdout=f)
-    
-    
+
+
 def make_report(f, counts_name, chunk_size, offset):
     num_diff_checksums = 0
     saved = 0
@@ -64,7 +64,7 @@ def make_report(f, counts_name, chunk_size, offset):
             if count <= limit:
                 counts[limit] += count
                 break
-    
+
     f.write('chunk size: %d\n' % chunk_size)
     f.write('offset: %d\n' % offset)
     f.write('#different checksums: %d\n' % num_diff_checksums)
@@ -79,20 +79,20 @@ def main():
     chunk_size = int(sys.argv[1])
     offset = int(sys.argv[2])
     dirname = sys.argv[3]
-    
+
     prefix = 'data-%04d-%04d' % (chunk_size, offset)
     checksums_name = prefix + '.checksums'
     sorted_name = prefix + '.sorted'
     counts_name = prefix + '.counts'
     report_name = prefix + '.report'
-    
+
     steps = (
         (checksums_name, compute_checksums, (chunk_size, offset, dirname)),
         (sorted_name, sort_checksums, (checksums_name,)),
         (counts_name, count_duplicates, (sorted_name,)),
         (report_name, make_report, (counts_name, chunk_size, offset)),
     )
-    
+
     for filename, func, args in steps:
         if not os.path.exists(filename):
             print 'Step:', func.__name__

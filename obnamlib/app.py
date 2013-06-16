@@ -31,11 +31,11 @@ import obnamlib
 class App(cliapp.Application):
 
     '''Main program for backup program.'''
-    
+
     def add_settings(self):
         devel_group = obnamlib.option_group['devel']
         perf_group = obnamlib.option_group['perf']
-    
+
         self.settings.string(['repository', 'r'], 'name of backup repository')
 
         self.settings.string(['client-name'], 'name of client (%default)',
@@ -72,7 +72,7 @@ class App(cliapp.Application):
                                 'add to filename patters for which trace '
                                 'debugging logging happens')
 
-        
+
         self.settings.integer(['idpath-depth'],
                               'depth of chunk id mapping',
                               default=obnamlib.IDPATH_DEPTH,
@@ -93,7 +93,7 @@ class App(cliapp.Application):
                            'do not actually change anything (works with '
                            'backup, forget and restore only, and may only '
                            'simulate approximately real behavior)')
-                           
+
         self.settings.string(['pretend-time'],
                              'pretend it is TIMESTAMP (YYYY-MM-DD HH:MM:SS); '
                                 'this is only useful for testing purposes',
@@ -127,7 +127,7 @@ class App(cliapp.Application):
         self.pm = obnamlib.PluginManager()
         self.pm.locations = [self.plugins_dir()]
         self.pm.plugin_arguments = (self,)
-        
+
         self.setup_hooks()
 
         self.fsf = obnamlib.VfsFactory()
@@ -135,7 +135,7 @@ class App(cliapp.Application):
         self.pm.load_plugins()
         self.pm.enable_plugins()
         self.hooks.call('plugins-loaded')
-        
+
         self.settings['log-level'] = 'info'
 
     def deduce_client_name(self):
@@ -195,7 +195,7 @@ class App(cliapp.Application):
             repofs.connect()
         else:
             repofs.reinit(repopath)
-        return obnamlib.Repository(repofs, 
+        return obnamlib.Repository(repofs,
                                     self.settings['node-size'],
                                     self.settings['upload-queue-size'],
                                     self.settings['lru-size'],
@@ -209,10 +209,10 @@ class App(cliapp.Application):
 
     def time(self):
         '''Return current time in seconds since epoch.
-        
+
         This is a wrapper around time.time() so that it can be overridden
         with the --pretend-time setting.
-        
+
         '''
 
         s = self.settings['pretend-time']
