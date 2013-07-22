@@ -34,20 +34,25 @@ repository = $tempdir/repo
 root = $tempdir/data
 log = $tempdir/obnam.log
 trace = larch
-crash-limit = $N
 checkpoint = 1m
 lock-timeout = 1
+log-keep = 16
+log-level = debug
 EOF
 
-# Do a minimal backup to make sure the repository works at least once.
+# Do a minimal backup to make sure the repository works at least once, without the crash-limit option
 mkdir "$tempdir/data"
 ./obnam backup --no-default-config --config "$tempdir/conf"
 
 genbackupdata --create=100m "$tempdir/data"
 
+echo "crash-limit = $N" >> "$tempdir/conf"
+
 while true
 do
-    rm -f "$tempdir/obnam.log"
+    # There's no need to delete this file because the first Exception message
+    # that appears in the file will terminate the test.
+    # rm -f "$tempdir/obnam.log"
 
     echo "Trying backup with at most $N writes to repository"
     ./obnam force-lock --no-default-config --config "$tempdir/conf" 2>/dev/null
