@@ -99,6 +99,8 @@ class Check(Command):
         if local and fast:
             print "run black box tests"
             runcmd(['cmdtest', 'tests'])
+            runcmd(
+                ['yarn', '-s', 'yarns/obnam.sh'] + glob.glob('yarns/*.yarn'))
 
         num_clients = '2'
         num_generations = '16'
