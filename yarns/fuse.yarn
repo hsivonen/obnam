@@ -1,0 +1,85 @@
+Black box testing for the Obnam FUSE plugin
+===========================================
+
+The FUSE plugin gives read-only access to a backup repository.
+There's a lot of potential corner cases here, but for now, this
+test suite concentrates on verifying that at least the basics work.
+
+    SCENARIO Browsing backups with FUSE plugin
+    ASSUMING user is in group fuse
+    GIVEN a live data directory
+    AND a 0 byte file called empty
+    AND a 1 byte file called one
+    AND a 4096 byte file called 4k
+    AND a 10485760 byte file called 10meg
+    AND a hardlink to 4k called 4k-hardlink
+    AND a symlink to 4k called 4k-symlink
+    AND a directory called some-dir
+    AND a symlink to ../4k called some-dir/other-symlink
+    WHEN live data is backed up
+    AND repository is fuse mounted
+    THEN latest generation can be copied correctly from fuse mount
+    FINALLY unmount repository
+
+The following sections implement the various steps. We use
+`$DATADIR/live` for the live data, `$DATADIR/repo` for the repository,
+and `$DATADIR/mount` as the FUSE mount point.
+
+We can only run this test if the user is in the fuse group. This may
+be a portability concern: this works in Debian GNU/Linux, but might be
+different in other Linux distros, or on non-Linux systems.
+
+    IMPLEMENTS ASSUMING user is in group (\S+)
+    groups | tr ' ' '\n' | grep -Fx "$MATCH_1"
+
+    IMPLEMENTS GIVEN a live data directory
+    mkdir "$DATADIR/live"
+
+    IMPLEMENTS GIVEN a (\d+) byte file called (\S+)
+    dd if=/dev/zero of="$DATADIR/live/$MATCH_2" bs=1 count="$MATCH_1"
+
+    IMPLEMENTS GIVEN a hardlink to (\S+) called (\S+)
+    ln "$DATADIR/live/$MATCH_1" "$DATADIR/live/$MATCH_2"
+
+    IMPLEMENTS GIVEN a symlink to (\S+) called (\S+)
+    ln -s "$DATADIR/live/$MATCH_1" "$DATADIR/live/$MATCH_2"
+
+    IMPLEMENTS GIVEN a directory called (\S+)
+    mkdir "$DATADIR/live/$MATCH_1"
+
+We do the backup, and verify that it can be accessed correctly, by
+doing a "manifest" of the live data before the backup, and then
+against the fuse mount, and comparing the two manifests.
+
+`manifest` (a shell function in `obnam.sh`) runs summain with useful
+parameters. It's used twice, and the parameters need to be the same
+so the results can be compared with diff. summain is a manifest tool.
+`manifest` additionally mangles the mtime output to be full seconds
+only: for whatever reason, the fuse mount only shows full seconds.
+This may be a bug (FIXME: find out if it is).
+
+`run_obnam` is another shell function, which runs Obnam without the
+user's configuration files. We don't want the user's configuration to
+affect the test suite.
+
+    IMPLEMENTS WHEN live data is backed up
+    manifest "$DATADIR/live" > "$DATADIR/live.summain"
+    run_obnam backup -r "$DATADIR/repo" "$DATADIR/live"
+
+    IMPLEMENTS WHEN repository is fuse mounted
+    run_obnam clients -r "$DATADIR/repo"
+    mkdir "$DATADIR/mount"
+    run_obnam mount -r "$DATADIR/repo" --to "$DATADIR/mount" --viewmode multiple
+
+    IMPLEMENTS THEN latest generation can be copied correctly from fuse mount
+    manifest "$DATADIR/mount/latest/$DATADIR/live" > "$DATADIR/latest.summain"
+    diff -u "$DATADIR/live.summain" "$DATADIR/latest.summain"
+
+If we did do the fuse mount, **always** unmount it, even when a step
+failed. We do not want failed test runs to leavo mounts lying around.
+
+    IMPLEMENTS FINALLY unmount repository
+    if [ -e "$DATADIR/mount" ]
+    then
+        fusermount -u "$DATADIR/mount"
+    fi
