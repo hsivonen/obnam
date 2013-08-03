@@ -38,6 +38,7 @@ checkpoint = 1m
 lock-timeout = 1
 log-keep = 16
 log-level = debug
+trace = larch, obnamlib
 EOF
 
 # Do a minimal backup to make sure the repository works at least once, without the crash-limit option
