@@ -15,7 +15,7 @@ Build-Depends: debhelper (>= 7.3.8),
     python-cliapp (>= 1.20130313~),
     genbackupdata (>= 1.6~),
     summain (>= 0.18),
-    cmdtest (>= 0.9.1~),
+    cmdtest (>= 0.9~),
     attr
 Homepage: http://liw.fi/obnam/
 X-Python-Version: >= 2.6
