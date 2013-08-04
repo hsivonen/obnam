@@ -27,6 +27,23 @@ import sys
 import tempfile
 
 
+# We need to know whether we can run yarn. We do this by checking
+# the python-markdown version: if it's new enough, we assume yarn
+# is available, and if it isn't, yarn won't be available since it
+# won't work with old versions (e.g., the one in Debian squeeze.)
+
+try:
+    import markdown
+except ImportError:
+    got_yarn = False
+else:
+    if (hasattr(markdown, 'extensions') and
+        hasattr(markdown.extensions, 'Extension')):
+        got_yarn = True
+    else:
+        got_yarn = False
+
+
 def runcmd(*args, **kwargs):
     try:
         subprocess.check_call(*args, **kwargs)
@@ -99,8 +116,10 @@ class Check(Command):
         if local and fast:
             print "run black box tests"
             runcmd(['cmdtest', 'tests'])
-            runcmd(
-                ['yarn', '-s', 'yarns/obnam.sh'] + glob.glob('yarns/*.yarn'))
+            if got_yarn:
+                runcmd(
+                    ['yarn', '-s', 'yarns/obnam.sh'] +
+                    glob.glob('yarns/*.yarn'))
 
         num_clients = '2'
         num_generations = '16'
