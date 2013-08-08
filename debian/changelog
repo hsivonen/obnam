@@ -1,6 +1,7 @@
 obnam (1.5-1) UNRELEASED; urgency=low
 
   * Update cmdtest build dependency to get yarn.
+  * Update larch dependencies, to get important bug fixes.
 
  -- Lars Wirzenius <liw@liw.fi>  Fri, 02 Aug 2013 08:43:29 +0100
 
