@@ -1,5 +1,14 @@
 obnam (1.5-1) unstable; urgency=low
 
+  * New upstream release. This fixes the following bugs in Debian:
+    - Larch B-tree is in read-only mode, no changes allowed (Closes: #675820)
+    - obnam should not pass excessive options to ssh (Closes: #700097)
+    - DEBUG OSError ((95, 'Operation not supported', '<filename>'), )
+      sshfs problem? (Closes: #701209)
+    - new upstream version (Closes: #719014)
+    - hidden exclude option (Closes: #686191)
+    - manpage nit: says "obnam backup [FILE]" where it expects a directory
+      (Closes: #676490)
   * Update cmdtest build dependency to get yarn.
   * Update larch dependencies, to get important bug fixes.
 
