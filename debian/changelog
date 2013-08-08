@@ -1,9 +1,9 @@
-obnam (1.5-1) UNRELEASED; urgency=low
+obnam (1.5-1) unstable; urgency=low
 
   * Update cmdtest build dependency to get yarn.
   * Update larch dependencies, to get important bug fixes.
 
- -- Lars Wirzenius <liw@liw.fi>  Fri, 02 Aug 2013 08:43:29 +0100
+ -- Lars Wirzenius <liw@liw.fi>  Thu, 08 Aug 2013 22:26:17 +0100
 
 obnam (1.4-1) unstable; urgency=low
 
