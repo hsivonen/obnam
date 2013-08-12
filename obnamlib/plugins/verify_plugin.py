@@ -81,6 +81,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         self.app.ts['filename'] = ''
         if not self.app.settings['quiet']:
             self.app.ts.format(
+                '%ElapsedTime() '
                 'verifying file %Counter(filename)/%Integer(total) '
                 '%PercentDone(done,total): '
                 '%Pathname(filename)')
