@@ -53,7 +53,6 @@ def ioerror_to_oserror(method):
         try:
             return method(self, filename, *args, **kwargs)
         except IOError, e:
-            logging.error(traceback.format_exc())
             raise OSError(e.errno, e.strerror or str(e), filename)
 
     return helper
