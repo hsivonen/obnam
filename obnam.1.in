@@ -220,7 +220,7 @@ or an
 URL.
 An sftp URL has the following form:
 .IP
-.R \fBsftp://\fR[\fIuser\fR@]\fIdomain\fR[:\fIport\fR]\fB/path
+\fBsftp://\fR[\fIuser\fR@]\fIdomain\fR[:\fIport\fR]\fB/path
 .PP
 where
 .I domain
