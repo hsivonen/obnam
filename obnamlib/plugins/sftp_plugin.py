@@ -529,7 +529,13 @@ class SftpFS(obnamlib.VirtualFileSystem):
         try:
             f = self.open(pathname, 'wx')
         except (IOError, OSError), e:
-            if e.errno != errno.ENOENT:
+            # When the path to the file to be written does not
+            # exist, we try to create the directories below. Note that
+            # some SFTP servers return EACCES instead of ENOENT
+            # when the path to the file does not exist, so we
+            # do not raise an exception here for both ENOENT
+            # and EACCES.
+            if e.errno != errno.ENOENT and e.errno != errno.EACCES:
                 raise
             dirname = os.path.dirname(pathname)
             self.makedirs(dirname)

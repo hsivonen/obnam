@@ -26,6 +26,10 @@ Bug fixes:
   extra files, such as "lock" (left there by a previous, crashed Obnam
   run). It no longer does. Fix by Lars Kruse.
 
+* The SFTP plugin now handles another error code (EACCESS) when writing
+  a file and the directory it should go into not existing. Patch by
+  Armin Größlinger.
+
 Version 1.5, released 2013-08-08
 --------------------------------
 
