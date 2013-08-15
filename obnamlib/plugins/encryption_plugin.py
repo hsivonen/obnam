@@ -196,6 +196,9 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         keys = dict()
         tops = dict()
         for toplevel in [d for d in toplevels if d != 'metadata']:
+            # skip files (e.g. 'lock') or empty directories
+            if not repo.fs.exists(os.path.join(toplevel, 'key')):
+                continue
             try:
                 userkeys = self.read_keyring(repo, toplevel)
             except obnamlib.EncryptionError:

@@ -22,6 +22,10 @@ Bug fixes:
   looks for client directories but fails to find them. Fix by
   Lars Kruse.
 
+* "obnam list-toplevels" got confused when the repository contained
+  extra files, such as "lock" (left there by a previous, crashed Obnam
+  run). It no longer does. Fix by Lars Kruse.
+
 Version 1.5, released 2013-08-08
 --------------------------------
 
