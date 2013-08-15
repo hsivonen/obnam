@@ -9,6 +9,9 @@ Version 1.6, released UNRELEASED
 * Stop logging paramiko exceptions that get converted into another
   type of exception by the SFTP plugin in Obnam.
 
+* `obnam-benchmark` can now use an installed version of larch.
+  Patch by Lars Kruse.
+
 Bug fixes:
 
 * Fix "obnam list-toplevels" so it doesn't give an error when it's

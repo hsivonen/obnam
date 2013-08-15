@@ -44,7 +44,7 @@ class ObnamBenchmark(cliapp.Application):
         self.settings.string(['larch-branch'],
                              'use DIR as the larch branch (default: %default)',
                              metavar='DIR',
-                             default=os.path.expanduser('~/larch/trunk'))
+                            )
         self.settings.string(['seivot-branch'],
                              'use DIR as the seivot branch '
                                 '(default: installed seivot)',
@@ -84,12 +84,14 @@ class ObnamBenchmark(cliapp.Application):
         self.require_tmpdir()
 
         obnam_revno = self.bzr_revno(self.settings['obnam-branch'])
-        larch_revno = self.bzr_revno(self.settings['larch-branch'])
+        if self.settings['larch-branch']:
+            larch_revno = self.bzr_revno(self.settings['larch-branch'])
+        else:
+            larch_revno = None
 
         results = self.results_dir(obnam_revno, larch_revno)
 
         obnam_branch = self.settings['obnam-branch']
-        larch_branch = self.settings['larch-branch']
         if self.settings['seivot-branch']:
             seivot = os.path.join(self.settings['seivot-branch'], 'seivot')
         else:
@@ -124,7 +126,6 @@ class ObnamBenchmark(cliapp.Application):
             else:
                 argv = [seivot,
                         '--obnam-branch', obnam_branch,
-                        '--larch-branch', larch_branch,
                         '--incremental-data', inc,
                         '--file-size', str(file_size),
                         '--obnam-profile', obnam_profile,
@@ -133,6 +134,8 @@ class ObnamBenchmark(cliapp.Application):
                         '--sftp-delay', str(self.settings['sftp-delay']),
                         '--initial-data', initial,
                         '--output', output]
+                if self.settings['larch-branch']:
+                    argv.extend(['--larch-branch', self.settings['larch-branch']])
                 if self.settings['seivot-log']:
                     argv.extend(['--log', self.settings['seivot-log']])
                 if self.settings['drop-caches']:
@@ -173,23 +176,20 @@ class ObnamBenchmark(cliapp.Application):
 
     def results_dir(self, obnam_revno, larch_revno):
         parent = self.settings['results']
+        parts = [self.hostname, self.obnam_branch_name, str(obnam_revno)]
+        if larch_revno:
+            parts.append(str(larch_revno))
+        prefix = os.path.join(parent, "-".join(parts))
+
+        get_path = lambda counter: "%s-%d" % (prefix, counter)
 
         counter = 0
-        while True:
+        dirname = get_path(counter)
+        while os.path.exists(dirname):
             counter += 1
-            parts = [
-                self.hostname,
-                self.obnam_branch_name,
-                str(obnam_revno),
-                str(larch_revno),
-                str(counter),
-            ]
-            basename = '-'.join(parts)
-
-            dirname = os.path.join(parent, basename)
-            if not os.path.exists(dirname):
-                os.mkdir(dirname)
-                return dirname
+            dirname = get_path(counter)
+        os.makedirs(dirname)
+        return dirname
 
     def setup_gnupghome(self, tempdir):
         gnupghome = os.path.join(tempdir, 'gnupghome')
