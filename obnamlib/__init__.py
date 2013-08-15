@@ -40,6 +40,10 @@ class Error(cliapp.AppException):
     pass
 
 
+class EncryptionError(Error):
+    pass
+
+
 DEFAULT_NODE_SIZE = 256 * 1024 # benchmarked on 2011-09-01
 DEFAULT_CHUNK_SIZE = 1024 * 1024 # benchmarked on 2011-09-01
 DEFAULT_UPLOAD_QUEUE_SIZE = 128

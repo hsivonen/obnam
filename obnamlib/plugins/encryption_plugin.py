@@ -196,7 +196,12 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         keys = dict()
         tops = dict()
         for toplevel in [d for d in toplevels if d != 'metadata']:
-            userkeys = self.read_keyring(repo, toplevel)
+            try:
+                userkeys = self.read_keyring(repo, toplevel)
+            except obnamlib.EncryptionError:
+                # other client's toplevels are unreadable
+                tops[toplevel] = []
+                continue
             for keyid in userkeys.keyids():
                 keys[keyid] = keys.get(keyid, []) + [toplevel]
                 tops[toplevel] = tops.get(toplevel, []) + [keyid]

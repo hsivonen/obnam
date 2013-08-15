@@ -93,7 +93,7 @@ def _gpg_pipe(args, data, passphrase):
 
     # Return output data, or deal with errors.
     if p.returncode: # pragma: no cover
-        raise obnamlib.Error(err)
+        raise obnamlib.EncryptionError(err)
 
     return out
 
@@ -125,7 +125,7 @@ def _gpg(args, stdin='', gpghome=None):
 
     # Return output data, or deal with errors.
     if p.returncode: # pragma: no cover
-        raise obnamlib.Error(err)
+        raise obnamlib.EncryptionError(err)
 
     return out
 

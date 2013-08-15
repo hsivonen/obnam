@@ -9,6 +9,12 @@ Version 1.6, released UNRELEASED
 * Stop logging paramiko exceptions that get converted into another
   type of exception by the SFTP plugin in Obnam.
 
+Bug fixes:
+
+* Fix "obnam list-toplevels" so it doesn't give an error when it's
+  unable to read the per-client directory of another client, when
+  encryption is used. Fix by Lars Kruse.
+
 Version 1.5, released 2013-08-08
 --------------------------------
 
