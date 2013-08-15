@@ -15,6 +15,10 @@ Bug fixes:
   unable to read the per-client directory of another client, when
   encryption is used. Fix by Lars Kruse.
 
+* Fix the encryption plugin to give a better error message when it
+  looks for client directories but fails to find them. Fix by
+  Lars Kruse.
+
 Version 1.5, released 2013-08-08
 --------------------------------
 
