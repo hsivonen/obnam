@@ -148,6 +148,27 @@ minus sign (-) for files that have been removed or an asterisk (*) for files
 that have changed.  If only one generation ID is specified on the command line
 that generation will be compared with its direct predecessor. If two IDs have
 been specified, all changes between those two generations will be listed.
+.IP \(bu
+.B mount
+makes the backup repository available via a read-only FUSE filesystem.
+This means you can look at backed up data using normal tools,
+such as your GUI file manager,
+or command line tools such as
+.BR ls (1),
+.BR diff (1),
+and
+.BR cp (1).
+You can't make new backups with the mount subcommand,
+but you can restore data easily.
+.IP
+You need to have the FUSE utilities and have permission to use FUSE
+for this to work.
+The details will vary between operating systems;
+in Debian, install the package
+.I fuse
+and add yourself to the
+.I fuse
+group (you may need to log out and back in again).
 .SS "Making backups"
 When you run a backup,
 .B obnam
@@ -539,6 +560,16 @@ To restore just one file or directory:
 .nf
 obnam restore \-\-repository sftp://your.server/~/backups \\
 \-\-to /var/tmp/my.home.dir $HOME/myfile.txt
+.fi
+.PP
+Alternatively, mount the backup repository using the FUSE filesystem:
+.IP
+.nf
+mkdir my-repo
+obnam restore \-\-repository sftp://your.server/~/backups \\
+\-\-to my-repo \-\-viewmode multiple
+cp my-repo/latest/$HOME/myfile.txt
+fusermount -u my-repo
 .PP
 To check that the backup worked:
 .IP
