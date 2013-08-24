@@ -476,7 +476,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
             self.sftp.chown(pathname, uid, gid)
 
     @ioerror_to_oserror
-    def chmod(self, pathname, mode):
+    def lchmod(self, pathname, mode):
         self._delay()
         self.sftp.chmod(pathname, mode)
 
