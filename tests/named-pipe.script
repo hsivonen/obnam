@@ -23,7 +23,7 @@ then
 fi
 
 # Create a named pipe.
-mknod "$DATADIR/data/pipe" p
+mkfifo "$DATADIR/data/pipe"
 
 $SRCDIR/tests/backup
 $SRCDIR/tests/restore

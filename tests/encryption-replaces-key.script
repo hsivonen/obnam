@@ -33,7 +33,7 @@ $SRCDIR/tests/obnam --encrypt-with="$gpgkey2" remove-key --keyid="$gpgkey" \
 
 # Remove the old key from the gpg keyring.
 export GNUPGHOME="$DATADIR/gpg"
-gpg --batch --delete-secret-key "$fingerprint"
+gpg --batch --delete-secret-key "$fingerprint" 2>/dev/null
 
 # Verify that the backup is still readable, now with the new key.
 $SRCDIR/tests/restore --encrypt-with="$gpgkey2"

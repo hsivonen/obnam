@@ -160,8 +160,8 @@ class VirtualFileSystem(object):
     def lchown(self, pathname, uid, gid):
         '''Like os.lchown.'''
 
-    def chmod(self, pathname, mode):
-        '''Like os.chmod.'''
+    def lchmod(self, pathname, mode):
+        '''Like os.lchmod.'''
 
     def lutimes(self, pathname, atime_sec, atime_nsec, mtime_sec, mtime_nsec):
         '''Like lutimes(2).
@@ -523,13 +523,13 @@ class VfsTests(object): # pragma: no cover
     def test_lstat_raises_oserror_for_nonexistent_entry(self):
         self.assertRaises(OSError, self.fs.lstat, 'notexists')
 
-    def test_chmod_sets_permissions_correctly(self):
+    def test_lchmod_sets_permissions_correctly(self):
         self.fs.mkdir('foo')
-        self.fs.chmod('foo', 0777)
+        self.fs.lchmod('foo', 0777)
         self.assertEqual(self.fs.lstat('foo').st_mode & 0777, 0777)
 
-    def test_chmod_raises_oserror_for_nonexistent_entry(self):
-        self.assertRaises(OSError, self.fs.chmod, 'notexists', 0)
+    def test_lchmod_raises_oserror_for_nonexistent_entry(self):
+        self.assertRaises(OSError, self.fs.lchmod, 'notexists', 0)
 
     def test_lutimes_sets_times_correctly(self):
         self.fs.mkdir('foo')

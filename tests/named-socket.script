@@ -24,6 +24,10 @@ fi
 
 # Create a named socket.
 python -c '
+import platform
+if platform.system() == "FreeBSD":
+    # Cannot mknod sockets on FreeBSD.
+    raise SystemExit(0)
 import os, stat
 filename = os.path.join(os.environ["DATADIR"], "data", "socket")
 os.mknod(filename, 0600 | stat.S_IFSOCK)

@@ -29,6 +29,15 @@ import tracing
 import obnamlib
 
 
+# O_NOATIME is Linux specific:
+EXTRA_OPEN_FLAGS = getattr(os, "O_NOATIME", 0)
+
+# On Linux, lchmod() is not available. We make sure not to call it
+# with symlinks (see obnamlib.metadata.set_metadata) so falling back
+# to os.chmod is fine.
+lchmod = getattr(os, "lchmod", os.chmod)
+
+
 class LocalFSFile(file):
 
     def read(self, amount=-1):
@@ -191,9 +200,9 @@ class LocalFS(obnamlib.VirtualFileSystem):
         tracing.trace('lchown %s %d %d', pathname, uid, gid)
         os.lchown(self.join(pathname), uid, gid)
 
-    def chmod(self, pathname, mode):
-        tracing.trace('chmod %s %o', pathname, mode)
-        os.chmod(self.join(pathname), mode)
+    def lchmod(self, pathname, mode):
+        tracing.trace('lchmod %s %o', pathname, mode)
+        lchmod(self.join(pathname), mode)
 
     def lutimes(self, pathname, atime_sec, atime_nsec, mtime_sec, mtime_nsec):
         assert atime_sec is not None
@@ -228,7 +237,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
         tracing.trace('opened %s', pathname)
         try:
             flags = fcntl.fcntl(f.fileno(), fcntl.F_GETFL)
-            flags |= os.O_NOATIME
+            flags |= EXTRA_OPEN_FLAGS
             fcntl.fcntl(f.fileno(), fcntl.F_SETFL, flags)
         except IOError, e: # pragma: no cover
             tracing.trace('fcntl F_SETFL failed: %s', repr(e))

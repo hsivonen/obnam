@@ -16,6 +16,12 @@
 
 set -e
 
+# GNU sed is required:
+if [ -e /usr/local/bin/gsed ]; then
+    SED=/usr/local/bin/gsed; else
+    SED=sed
+fi
+
 echo aaa > "$DATADIR/data/aaa"
 echo ccc > "$DATADIR/data/ccc"
 
@@ -24,7 +30,7 @@ $SRCDIR/tests/backup
 
 $SRCDIR/tests/obnam genids > "$DATADIR/genids-1"
 $SRCDIR/tests/obnam forget $(head -n1 "$DATADIR/genids-1")
-sed -i 1d "$DATADIR/genids-1"
+$SED -i 1d "$DATADIR/genids-1"
 $SRCDIR/tests/obnam genids > "$DATADIR/genids-2"
 diff -u "$DATADIR/genids-1" "$DATADIR/genids-2"
 

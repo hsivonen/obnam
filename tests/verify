@@ -18,6 +18,12 @@
 
 set -e
 
+# GNU sed is required:
+if [ -e /usr/local/bin/gsed ]; then
+    SED=/usr/local/bin/gsed; else
+    SED=sed
+fi
+
 summain -r "$DATADIR/data" > "$DATADIR/data.summain"
 summain -r "$DATADIR/restored/$DATADIR/data" > "$DATADIR/restored.summain"
 
@@ -25,7 +31,7 @@ summain -r "$DATADIR/restored/$DATADIR/data" > "$DATADIR/restored.summain"
 # summain output to remove sub-second timestamps.
 if [ "$OBNAM_TEST_SFTP_ROOT" = yes ]
 then
-    sed -i '/^Mtime:/s/\.[[:digit:]]\+ / /' \
+    $SED -i '/^Mtime:/s/\.[[:digit:]]\+ / /' \
         "$DATADIR/data.summain" \
         "$DATADIR/restored.summain"
 fi
