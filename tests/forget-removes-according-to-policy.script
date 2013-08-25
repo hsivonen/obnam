@@ -19,18 +19,12 @@ set -e
 echo aaa > "$DATADIR/data/aaa"
 echo ccc > "$DATADIR/data/ccc"
 
-# GNU sed is required:
-if [ -e /usr/local/bin/gsed ]; then
-    SED=/usr/local/bin/gsed; else
-    SED=sed
-fi
-
 $SRCDIR/tests/backup
 $SRCDIR/tests/backup
 
 $SRCDIR/tests/obnam genids > "$DATADIR/genids-1"
 $SRCDIR/tests/obnam forget --keep=1d
-$SED -i 1d "$DATADIR/genids-1"
+$SRCDIR/sed-in-place 1d "$DATADIR/genids-1"
 $SRCDIR/tests/obnam genids > "$DATADIR/genids-2"
 diff -u "$DATADIR/genids-1" "$DATADIR/genids-2"
 
