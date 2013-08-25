@@ -24,7 +24,7 @@ $SRCDIR/tests/backup
 
 $SRCDIR/tests/obnam genids > "$DATADIR/genids-1"
 $SRCDIR/tests/obnam forget --keep=1d
-sed -i 1d "$DATADIR/genids-1"
+$SRCDIR/sed-in-place 1d "$DATADIR/genids-1"
 $SRCDIR/tests/obnam genids > "$DATADIR/genids-2"
 diff -u "$DATADIR/genids-1" "$DATADIR/genids-2"
 

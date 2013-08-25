@@ -25,7 +25,7 @@ summain -r "$DATADIR/restored/$DATADIR/data" > "$DATADIR/restored.summain"
 # summain output to remove sub-second timestamps.
 if [ "$OBNAM_TEST_SFTP_ROOT" = yes ]
 then
-    sed -i '/^Mtime:/s/\.[[:digit:]]\+ / /' \
+    "$SRCDIR/sed-in-place" '/^Mtime:/s/\.[[:digit:]]\+ / /' \
         "$DATADIR/data.summain" \
         "$DATADIR/restored.summain"
 fi

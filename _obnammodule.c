@@ -45,9 +45,16 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/xattr.h>
 #include <unistd.h>
 #include <stdlib.h>
+
+#ifdef __FreeBSD__
+    #include <sys/extattr.h>
+    #define NO_NANOSECONDS 1
+#else
+    #include <sys/xattr.h>
+    #define NO_NANOSECONDS 0
+#endif
 
 
 static PyObject *
@@ -78,8 +85,11 @@ utimensat_wrapper(PyObject *self, PyObject *args)
     const char *filename;
     long atime_sec, atime_nsec;
     long mtime_sec, mtime_nsec;
+#if NO_NANOSECONDS
+    struct timeval tv[2];
+#else
     struct timespec tv[2];
-
+#endif
     if (!PyArg_ParseTuple(args, "sllll",
                           &filename,
                           &atime_sec,
@@ -88,14 +98,38 @@ utimensat_wrapper(PyObject *self, PyObject *args)
                           &mtime_nsec))
         return NULL;
 
+#if NO_NANOSECONDS
+    tv[0].tv_sec = atime_sec;
+    tv[0].tv_usec = atime_nsec / 1000;
+    tv[1].tv_sec = mtime_sec;
+    tv[1].tv_usec = mtime_nsec / 1000;
+    ret = lutimes(filename, tv);
+#else
     tv[0].tv_sec = atime_sec;
     tv[0].tv_nsec = atime_nsec;
     tv[1].tv_sec = mtime_sec;
     tv[1].tv_nsec = mtime_nsec;
     ret = utimensat(AT_FDCWD, filename, tv, AT_SYMLINK_NOFOLLOW);
+#endif
     if (ret == -1)
         ret = errno;
     return Py_BuildValue("i", ret);
+}
+
+
+/*
+ * Since we can't set nanosecond mtime and atimes on some platforms, also
+ * don't retrieve that level of precision from lstat(), so comparisons
+ * work.
+ */
+static unsigned long long
+remove_precision(unsigned long long nanoseconds)
+{
+#if NO_NANOSECONDS
+    return nanoseconds - (nanoseconds % 1000);
+#else
+    return nanoseconds;
+#endif
 }
 
 
@@ -126,11 +160,11 @@ lstat_wrapper(PyObject *self, PyObject *args)
                          (long long) st.st_blksize,
                          (long long) st.st_blocks,
                          (long long) st.st_atim.tv_sec,
-                         (unsigned long long) st.st_atim.tv_nsec,
+                         remove_precision(st.st_atim.tv_nsec),
                          (long long) st.st_mtim.tv_sec,
-                         (unsigned long long) st.st_mtim.tv_nsec,
+                         remove_precision(st.st_mtim.tv_nsec),
                          (long long) st.st_ctim.tv_sec,
-                         (unsigned long long) st.st_ctim.tv_nsec);
+                         remove_precision(st.st_ctim.tv_nsec));
 }
 
 
@@ -140,16 +174,38 @@ llistxattr_wrapper(PyObject *self, PyObject *args)
     const char *filename;
     size_t bufsize;
     PyObject *o;
+    char* buf;
+    ssize_t n;
 
     if (!PyArg_ParseTuple(args, "s", &filename))
         return NULL;
 
+#ifdef __FreeBSD__
+    bufsize = extattr_list_link(filename, EXTATTR_NAMESPACE_USER, NULL, 0);
+    buf = malloc(bufsize);
+    n = extattr_list_link(filename, EXTATTR_NAMESPACE_USER, buf, bufsize);
+    if (n >= 0) {
+         /* Convert from length-prefixed BSD style to '\0'-suffixed
+            Linux style. */
+         size_t i = 0;
+         while (i < n) {
+             unsigned char length = (unsigned char) buf[i];
+	     memmove(buf + i, buf + i + 1, length);
+	     buf[i + length] = '\0';
+	     i += length + 1;
+	 }
+	 o = Py_BuildValue("s#", buf, (int) n);
+    } else {
+         o = Py_BuildValue("i", errno);
+    }
+    free(buf);
+#else
     bufsize = 0;
     o = NULL;
     do {
         bufsize += 1024;
-        char *buf = malloc(bufsize);
-        ssize_t n = llistxattr(filename, buf, bufsize);
+        buf = malloc(bufsize);
+        n = llistxattr(filename, buf, bufsize);
 
         if (n >= 0)
             o = Py_BuildValue("s#", buf, (int) n);
@@ -157,7 +213,7 @@ llistxattr_wrapper(PyObject *self, PyObject *args)
             o = Py_BuildValue("i", errno);
         free(buf);
     } while (o == NULL);
-
+#endif
     return o;
 }
 
@@ -178,8 +234,11 @@ lgetxattr_wrapper(PyObject *self, PyObject *args)
     do {
         bufsize += 1024;
         char *buf = malloc(bufsize);
+#ifdef __FreeBSD__
+	int n = extattr_get_link(filename, EXTATTR_NAMESPACE_USER, attrname, buf, bufsize);
+#else
         ssize_t n = lgetxattr(filename, attrname, buf, bufsize);
-
+#endif
         if (n >= 0)
             o = Py_BuildValue("s#", buf, (int) n);
         else if (n == -1 && errno != ERANGE)
@@ -203,7 +262,11 @@ lsetxattr_wrapper(PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "sss#", &filename, &name, &value, &size))
         return NULL;
 
+#ifdef __FreeBSD__
+    ret = extattr_set_link(filename, EXTATTR_NAMESPACE_USER, name, value, size);
+#else
     ret = lsetxattr(filename, name, value, size, 0);
+#endif
     if (ret == -1)
         ret = errno;
     return Py_BuildValue("i", ret);

@@ -19,5 +19,5 @@ set -e
 $SRCDIR/tests/backup --log="$DATADIR/obnam.log"
 
 # Print out the permissions.
-stat --printf '%A\n' "$DATADIR/obnam.log"
+python -c "import sys, os; print os.lstat(sys.argv[1]).st_mode" "$DATADIR/obnam.log"
 

@@ -17,7 +17,7 @@
 set -e
 
 echo aaa > "$DATADIR/data/aaa"
-mkdir --mode=0 "$DATADIR/data/bbb"
+mkdir -m 0 "$DATADIR/data/bbb"
 echo ccc > "$DATADIR/data/ccc"
 
 if $SRCDIR/tests/backup

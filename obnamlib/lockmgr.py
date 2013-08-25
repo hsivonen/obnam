@@ -33,11 +33,11 @@ class LockManager(object):
         data = data + self._read_boot_id()
         self.data = '\r\n'.join(data)
 
-    def _read_boot_id(self):
+    def _read_boot_id(self): # pragma: no cover
         try:
             with open("/proc/sys/kernel/random/boot_id", "r") as f:
                 boot_id = f.read().strip()
-        except: # pragma: no cover
+        except:
             return []
         else:
             return ["boot_id=%s" % boot_id]

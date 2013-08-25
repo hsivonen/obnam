@@ -18,6 +18,7 @@ import os
 import stat
 import tempfile
 import unittest
+import platform
 
 import obnamlib
 
@@ -175,6 +176,9 @@ class SetMetadataTests(unittest.TestCase):
 
         fd, self.filename = tempfile.mkstemp()
         os.close(fd)
+        # On some systems (e.g. FreeBSD) /tmp is apparently setgid and
+        # default gid of files is therefore not the user's gid.
+        os.chown(self.filename, os.getuid(), os.getgid())
 
         self.fs = obnamlib.LocalFS('/')
         self.fs.connect()

@@ -55,7 +55,7 @@ seq "$N" |
 while read gen
 do
     genbackupdata --quiet --create="$amount" "$root" --seed="$RANDOM"
-    find "$root" -exec touch --date="1970-01-01 00:00:$gen" '{}' ';'
+    find "$root" -exec touch -d "1970-01-01 00:00:$gen" '{}' ';'
     ./verification-test backup "$repopath" "$root" "$conf" \
         >> "$client-verif.output" 2>&1 || exit 1
 done || exit 1

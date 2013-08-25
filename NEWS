@@ -12,6 +12,9 @@ Version 1.6, released UNRELEASED
 * `obnam-benchmark` can now use an installed version of larch.
   Patch by Lars Kruse.
 
+* Obnam has been ported to FreeBSD by Itamar Turner-Trauring
+  of HybridCluster.
+
 Bug fixes:
 
 * Fix "obnam list-toplevels" so it doesn't give an error when it's

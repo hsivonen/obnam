@@ -20,5 +20,5 @@ $SRCDIR/tests/backup --node-size=4k
 $SRCDIR/tests/backup --node-size=16k
 
 # Check that there's two generations.
-$SRCDIR/tests/obnam $opts genids | wc -l
+$SRCDIR/tests/obnam $opts genids | wc -l | sed 's/ *//'
 

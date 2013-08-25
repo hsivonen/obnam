@@ -32,7 +32,8 @@ tar -xf "$SRCDIR/test-data/repo-format-5-encrypted-gzipped.tar.gz"
 # Not all filesystems support nanosecond timestamps, but that doesn't
 # matter for us. So we remove the sub-second timestamps from both
 # summain files.
-sed -i '/^Mtime:/s/\.[0-9]* /.IGNORED /' data.summain restored.summain
+"$SRCDIR/sed-in-place" '/^Mtime:/s/\.[0-9]* /.IGNORED /' \
+    data.summain restored.summain
 
 diff -u data.summain restored.summain
 
