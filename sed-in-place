@@ -1,0 +1,16 @@
+#!/bin/sh
+#
+# Do a sed in place for a set of files. This is like GNU sed -i, but
+# we can't assume GNU sed.
+
+set -eu
+
+sedcmd="$1"
+shift
+
+for filename in "$@"
+do
+    temp="$(mktemp)"
+    sed "$sedcmd" "$filename" > "$temp"
+    mv "$temp" "$filename"
+done
