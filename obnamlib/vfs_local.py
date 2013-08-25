@@ -32,11 +32,6 @@ import obnamlib
 # O_NOATIME is Linux specific:
 EXTRA_OPEN_FLAGS = getattr(os, "O_NOATIME", 0)
 
-# On Linux, lchmod() is not available. We make sure not to call it
-# with symlinks (see obnamlib.metadata.set_metadata) so falling back
-# to os.chmod is fine.
-lchmod = getattr(os, "lchmod", os.chmod)
-
 
 class LocalFSFile(file):
 
@@ -75,6 +70,9 @@ class LocalFS(obnamlib.VirtualFileSystem):
         # after which an exception gets raised. If set to None, no crash.
         self.crash_limit = None
         self.crash_counter = 0
+
+        # Do we have lchmod?
+        self.got_lchmod = hasattr(os, 'lchmod')
 
     def maybe_crash(self): # pragma: no cover
         if self.crash_limit is not None:
@@ -200,9 +198,20 @@ class LocalFS(obnamlib.VirtualFileSystem):
         tracing.trace('lchown %s %d %d', pathname, uid, gid)
         os.lchown(self.join(pathname), uid, gid)
 
-    def lchmod(self, pathname, mode):
-        tracing.trace('lchmod %s %o', pathname, mode)
-        lchmod(self.join(pathname), mode)
+    # This method is excluded from test coverage because the platform
+    # either has lchmod or doesn't, and accordingly either branch of
+    # the if statement is taken, and the other branch shows up as not
+    # being tested by the unit tests.
+    def chmod_symlink(self, pathname, mode): # pragma: no cover
+        tracing.trace('chmod_symlink %s %o', pathname, mode)
+        if self.got_lchmod:
+            os.lchmod(self.join(pathname), mode)
+        else:
+            self.lstat(pathname)
+
+    def chmod_not_symlink(self, pathname, mode):
+        tracing.trace('chmod_not_symlink %s %o', pathname, mode)
+        os.chmod(self.join(pathname), mode)
 
     def lutimes(self, pathname, atime_sec, atime_nsec, mtime_sec, mtime_nsec):
         assert atime_sec is not None

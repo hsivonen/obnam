@@ -25,8 +25,6 @@ import tracing
 
 import obnamlib
 
-# lchmod is not available on Linux:
-LCHMOD_AVAILABLE = getattr(os, "lchmod", None) is not None
 
 metadata_verify_fields = (
     'st_mode', 'st_mtime_sec', 'st_mtime_nsec',
@@ -249,13 +247,15 @@ def set_metadata(fs, filename, metadata, getuid=None):
     if getuid() == 0:
         fs.lchown(filename, metadata.st_uid, metadata.st_gid)
 
-    if LCHMOD_AVAILABLE or not symlink:
-        # If we are not the owner, and not root, do not restore setuid/setgid.
-        mode = metadata.st_mode
-        if getuid() not in (0, metadata.st_uid): # pragma: no cover
-            mode = mode & (~stat.S_ISUID)
-            mode = mode & (~stat.S_ISGID)
-        fs.lchmod(filename, mode)
+    # If we are not the owner, and not root, do not restore setuid/setgid.
+    mode = metadata.st_mode
+    if getuid() not in (0, metadata.st_uid): # pragma: no cover
+        mode = mode & (~stat.S_ISUID)
+        mode = mode & (~stat.S_ISGID)
+    if symlink:
+        fs.chmod_symlink(filename, mode)
+    else:
+        fs.chmod_not_symlink(filename, mode)
 
     if metadata.xattr: # pragma: no cover
         set_xattrs_from_blob(fs, filename, metadata.xattr)

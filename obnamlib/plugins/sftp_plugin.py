@@ -476,7 +476,14 @@ class SftpFS(obnamlib.VirtualFileSystem):
             self.sftp.chown(pathname, uid, gid)
 
     @ioerror_to_oserror
-    def lchmod(self, pathname, mode):
+    def chmod_symlink(self, pathname, mode):
+        # SFTP and/or paramiko don't have lchmod at all, so we can't
+        # actually do this. However, we at least check that pathname
+        # exists.
+        self.lstat(pathname)
+
+    @ioerror_to_oserror
+    def chmod_not_symlink(self, pathname, mode):
         self._delay()
         self.sftp.chmod(pathname, mode)
 

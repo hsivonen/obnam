@@ -160,8 +160,23 @@ class VirtualFileSystem(object):
     def lchown(self, pathname, uid, gid):
         '''Like os.lchown.'''
 
-    def lchmod(self, pathname, mode):
-        '''Like os.lchmod.'''
+    def chmod_symlink(self, pathname, mode):
+        '''Like os.lchmod, for symlinks only.
+
+        This may fail if the pathname is not a symlink (but it may
+        not).  If the target is a symlink, but the platform (e.g.,
+        Linux) does not allow setting the permissions of a symlink,
+        the method will silently do nothing.
+
+        '''
+
+    def chmod_not_symlink(self, pathname, mode):
+        '''Like os.chmod, for non-symlinks only.
+
+        This may fail if pathname is a symlink (but it may not). It
+        MUST NOT be called for a symlink; use chmod_symlink instead.
+
+        '''
 
     def lutimes(self, pathname, atime_sec, atime_nsec, mtime_sec, mtime_nsec):
         '''Like lutimes(2).
@@ -523,13 +538,16 @@ class VfsTests(object): # pragma: no cover
     def test_lstat_raises_oserror_for_nonexistent_entry(self):
         self.assertRaises(OSError, self.fs.lstat, 'notexists')
 
-    def test_lchmod_sets_permissions_correctly(self):
+    def test_chmod_not_symlink_sets_permissions_correctly(self):
         self.fs.mkdir('foo')
-        self.fs.lchmod('foo', 0777)
+        self.fs.chmod_not_symlink('foo', 0777)
         self.assertEqual(self.fs.lstat('foo').st_mode & 0777, 0777)
 
-    def test_lchmod_raises_oserror_for_nonexistent_entry(self):
-        self.assertRaises(OSError, self.fs.lchmod, 'notexists', 0)
+    def test_chmod_not_symlink_raises_oserror_for_nonexistent_entry(self):
+        self.assertRaises(OSError, self.fs.chmod_not_symlink, 'notexists', 0)
+
+    def test_chmod_symlink_raises_oserror_for_nonexistent_entry(self):
+        self.assertRaises(OSError, self.fs.chmod_symlink, 'notexists', 0)
 
     def test_lutimes_sets_times_correctly(self):
         self.fs.mkdir('foo')
