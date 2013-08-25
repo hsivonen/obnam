@@ -118,11 +118,11 @@ utimensat_wrapper(PyObject *self, PyObject *args)
 
 
 /*
-Since we can't set nanosecond mtime and atimes on some platforms, also
-don't retrieve that level of precision from lstat(), so comparisons
-work.
-*/
-unsigned long long
+ * Since we can't set nanosecond mtime and atimes on some platforms, also
+ * don't retrieve that level of precision from lstat(), so comparisons
+ * work.
+ */
+static unsigned long long
 remove_precision(unsigned long long nanoseconds)
 {
 #if NO_NANOSECONDS
