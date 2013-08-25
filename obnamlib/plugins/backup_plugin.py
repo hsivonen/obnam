@@ -77,6 +77,12 @@ class BackupProgress(object):
                         ') '
                         '%String(what)')
 
+    def clear(self):
+        self._ts.clear()
+
+    def error(self, msg):
+        self._ts.error(msg)
+
     def what(self, what_what):
         if self.started is None:
             self.started = time.time()
@@ -94,6 +100,9 @@ class BackupProgress(object):
     def update_progress_with_upload(self, amount):
         self._ts['uploaded-bytes'] += amount
         self.uploaded_bytes += amount
+
+    def update_progress_with_removed_checkpoint(self, gen):
+        self._ts['checkpoint'] = gen
 
     def report_stats(self):
         size_table = [
@@ -217,9 +226,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
     def configure_ttystatus_for_backup(self):
         self.progress = BackupProgress(self.app.ts)
 
-    def configure_ttystatus_for_checkpoint_removal(self):
-        self.progress.what('removing checkpoints')
-
     def error(self, msg, exc=None):
         self.errors = True
         logging.error(msg)
@@ -308,7 +314,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 self.repo.commit_shared()
             self.progress.what('closing connection to repository')
             self.repo.fs.close()
-            self.app.ts.clear()
+            self.progress.clear()
             self.progress.report_stats()
 
             logging.info('Backup finished.')
@@ -372,7 +378,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     msg = (
                         'error compiling regular expression "%s": %s' % (x, e))
                     logging.error(msg)
-                    self.app.ts.error(msg)
+                    self.progress.error(msg)
 
     def backup_roots(self, roots):
         self.progress.what('connecting to to repository')
@@ -419,6 +425,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                         raise
                 if self.time_for_checkpoint():
                     self.make_checkpoint()
+                    self.progress.what(pathname)
 
             self.backup_parents('.')
 
@@ -426,9 +433,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                               not self.app.settings['leave-checkpoints']
                               and not self.pretend)
         if remove_checkpoints:
-            self.configure_ttystatus_for_checkpoint_removal()
+            self.progress.what('removing checkpoints')
             for gen in self.checkpoints:
-                self.app.ts['checkpoint'] = gen
+                self.progress.update_progress_with_removed_checkpoint(gen)
                 self.repo.remove_generation(gen)
 
         if self.fs:
@@ -470,7 +477,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.repo.start_generation()
             self.app.dump_memory_profile('at end of checkpoint')
             self.progress.what('making checkpoint: continuing backup')
-        self.progress.what(self.app.ts['current-file'])
 
     def find_files(self, root):
         '''Find all files and directories that need to be backed up.
