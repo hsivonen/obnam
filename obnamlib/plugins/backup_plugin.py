@@ -60,21 +60,20 @@ class ChunkidPool(object):
 class BackupProgress(object):
 
     def __init__(self, ts):
-        self._ts = ts
-        self._ts['current-file'] = ''
-        self._ts['uploaded-bytes'] = 0
         self.file_count = 0
         self.backed_up_count = 0
         self.uploaded_bytes = 0
+        self.scanned_bytes = 0
         self.started = None
 
+        self._ts = ts
+        self._ts['current-file'] = ''
+        self._ts['scanned-bytes'] = 0
+        self._ts['uploaded-bytes'] = 0
         self._ts.format('%ElapsedTime() '
                         '%Counter(current-file) '
-                        'files; '
-                        '%ByteSize(uploaded-bytes) '
-                        '('
-                        '%ByteSpeed(uploaded-bytes,10)'
-                        ') '
+                        'files '
+                        '%ByteSize(scanned-bytes) scanned: '
                         '%String(what)')
 
     def clear(self):
@@ -97,9 +96,13 @@ class BackupProgress(object):
         self._ts['current-file'] = filename
         self.file_count += 1
 
+    def update_progress_with_scanned(self, amount):
+        self.scanned_bytes += amount
+        self._ts['scanned-bytes'] = self.scanned_bytes
+
     def update_progress_with_upload(self, amount):
-        self._ts['uploaded-bytes'] += amount
         self.uploaded_bytes += amount
+        self._ts['uploaded-bytes'] = self.uploaded_bytes
 
     def update_progress_with_removed_checkpoint(self, gen):
         self._ts['checkpoint'] = gen
@@ -496,6 +499,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 if self.needs_backup(pathname, metadata):
                     self.progress.backed_up_count += 1
                     yield pathname, metadata
+                else:
+                    self.progress.update_progress_with_scanned(
+                        metadata.st_size)
             except GeneratorExit:
                 raise
             except KeyboardInterrupt:
@@ -622,6 +628,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             contents = f.read()
             assert len(contents) <= max_intree # FIXME: silly error checking
             f.close()
+            self.progress.update_progress_with_scanned(len(contents))
             self.repo.set_file_data(filename, contents)
             summer.update(contents)
             return summer.digest()
@@ -636,6 +643,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 tracing.trace('end of data')
                 break
             tracing.trace('got %d bytes of data' % len(data))
+            self.progress.update_progress_with_scanned(len(data))
             summer.update(data)
             if not self.pretend:
                 chunkids.append(self.backup_file_chunk(data))
