@@ -57,6 +57,115 @@ class ChunkidPool(object):
                 yield chunkid, checksum
 
 
+class BackupProgress(object):
+
+    def __init__(self, ts):
+        self.file_count = 0
+        self.backed_up_count = 0
+        self.uploaded_bytes = 0
+        self.scanned_bytes = 0
+        self.started = None
+
+        self._ts = ts
+        self._ts['current-file'] = ''
+        self._ts['scanned-bytes'] = 0
+        self._ts['uploaded-bytes'] = 0
+        self._ts.format('%ElapsedTime() '
+                        '%Counter(current-file) '
+                        'files '
+                        '%ByteSize(scanned-bytes) scanned: '
+                        '%String(what)')
+
+    def clear(self):
+        self._ts.clear()
+
+    def error(self, msg):
+        self._ts.error(msg)
+
+    def what(self, what_what):
+        if self.started is None:
+            self.started = time.time()
+        self._ts['what'] = what_what
+        self._ts.flush()
+
+    def update_progress(self):
+        self._ts['not-shown'] = 'not shown'
+
+    def update_progress_with_file(self, filename, metadata):
+        self._ts['what'] = filename
+        self._ts['current-file'] = filename
+        self.file_count += 1
+
+    def update_progress_with_scanned(self, amount):
+        self.scanned_bytes += amount
+        self._ts['scanned-bytes'] = self.scanned_bytes
+
+    def update_progress_with_upload(self, amount):
+        self.uploaded_bytes += amount
+        self._ts['uploaded-bytes'] = self.uploaded_bytes
+
+    def update_progress_with_removed_checkpoint(self, gen):
+        self._ts['checkpoint'] = gen
+
+    def report_stats(self):
+        size_table = [
+            (1024**4, 'TiB'),
+            (1024**3, 'GiB'),
+            (1024**2, 'MiB'),
+            (1024**1, 'KiB'),
+            (0, 'B')
+        ]
+
+        for size_base, size_unit in size_table:
+            if self.uploaded_bytes >= size_base:
+                if size_base > 0:
+                    size_amount = float(self.uploaded_bytes) / float(size_base)
+                else:
+                    size_amount = float(self.uploaded_bytes)
+                break
+
+        speed_table = [
+            (1024**3, 'GiB/s'),
+            (1024**2, 'MiB/s'),
+            (1024**1, 'KiB/s'),
+            (0, 'B/s')
+        ]
+        duration = time.time() - self.started
+        speed = float(self.uploaded_bytes) / duration
+        for speed_base, speed_unit in speed_table:
+            if speed >= speed_base:
+                if speed_base > 0:
+                    speed_amount = speed / speed_base
+                else:
+                    speed_amount = speed
+                break
+
+        duration_string = ''
+        seconds = duration
+        if seconds >= 3600:
+            duration_string += '%dh' % int(seconds/3600)
+            seconds %= 3600
+        if seconds >= 60:
+            duration_string += '%dm' % int(seconds/60)
+            seconds %= 60
+        if seconds > 0:
+            duration_string += '%ds' % round(seconds)
+
+        logging.info('Backup performance statistics:')
+        logging.info('* files found: %s' % self.file_count)
+        logging.info('* files backed up: %s' % self.backed_up_count)
+        logging.info('* uploaded data: %s bytes (%s %s)' %
+                        (self.uploaded_bytes, size_amount, size_unit))
+        logging.info('* duration: %s s' % duration)
+        logging.info('* average speed: %s %s' % (speed_amount, speed_unit))
+        self._ts.notify(
+            'Backed up %d files (of %d found), '
+            'uploaded %.1f %s in %s at %.1f %s average speed' %
+                (self.backed_up_count, self.file_count,
+                 size_amount, size_unit,
+                 duration_string, speed_amount, speed_unit))
+
+
 class BackupPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
@@ -118,97 +227,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             metavar='REGEXP')
 
     def configure_ttystatus_for_backup(self):
-        self.app.ts['current-file'] = ''
-        self.app.ts['uploaded-bytes'] = 0
-        self.file_count = 0
-        self.backed_up_count = 0
-        self.uploaded_bytes = 0
-
-        self.app.ts.format('%ElapsedTime() '
-                           '%Counter(current-file) '
-                           'files; '
-                           '%ByteSize(uploaded-bytes) '
-                           '('
-                           '%ByteSpeed(uploaded-bytes,10)'
-                           ') '
-                           '%String(what)')
-
-    def what(self, what_what):
-        self.app.ts['what'] = what_what
-        self.app.ts.flush()
-
-    def update_progress(self):
-        self.app.ts['not-shown'] = 'not shown'
-
-    def configure_ttystatus_for_checkpoint_removal(self):
-        self.what('removing checkpoints')
-
-    def update_progress_with_file(self, filename, metadata):
-        self.app.ts['what'] = filename
-        self.app.ts['current-file'] = filename
-        self.file_count += 1
-
-    def update_progress_with_upload(self, amount):
-        self.app.ts['uploaded-bytes'] += amount
-        self.uploaded_bytes += amount
-
-    def report_stats(self):
-        size_table = [
-            (1024**4, 'TiB'),
-            (1024**3, 'GiB'),
-            (1024**2, 'MiB'),
-            (1024**1, 'KiB'),
-            (0, 'B')
-        ]
-
-        for size_base, size_unit in size_table:
-            if self.uploaded_bytes >= size_base:
-                if size_base > 0:
-                    size_amount = float(self.uploaded_bytes) / float(size_base)
-                else:
-                    size_amount = float(self.uploaded_bytes)
-                break
-
-        speed_table = [
-            (1024**3, 'GiB/s'),
-            (1024**2, 'MiB/s'),
-            (1024**1, 'KiB/s'),
-            (0, 'B/s')
-        ]
-        duration = time.time() - self.started
-        speed = float(self.uploaded_bytes) / duration
-        for speed_base, speed_unit in speed_table:
-            if speed >= speed_base:
-                if speed_base > 0:
-                    speed_amount = speed / speed_base
-                else:
-                    speed_amount = speed
-                break
-
-        duration_string = ''
-        seconds = duration
-        if seconds >= 3600:
-            duration_string += '%dh' % int(seconds/3600)
-            seconds %= 3600
-        if seconds >= 60:
-            duration_string += '%dm' % int(seconds/60)
-            seconds %= 60
-        if seconds > 0:
-            duration_string += '%ds' % round(seconds)
-
-        logging.info('Backup performance statistics:')
-        logging.info('* files found: %s' % self.file_count)
-        logging.info('* files backed up: %s' % self.backed_up_count)
-        logging.info('* uploaded data: %s bytes (%s %s)' %
-                        (self.uploaded_bytes, size_amount, size_unit))
-        logging.info('* duration: %s s' % duration)
-        logging.info('* average speed: %s %s' % (speed_amount, speed_unit))
-        self.app.ts.notify(
-            'Backed up %d files (of %d found), '
-            'uploaded %.1f %s in %s at %.1f %s average speed' %
-                (self.backed_up_count, self.file_count,
-                 size_amount, size_unit,
-                 duration_string, speed_amount, speed_unit))
+        self.progress = BackupProgress(self.app.ts)
 
     def error(self, msg, exc=None):
         self.errors = True
@@ -243,33 +262,28 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                                   'You need to specify it on the command '
                                   'line or a configuration file.')
 
-        # This is ugly, but avoids having to update the dependency on
-        # ttystatus yet again.
-        if not hasattr(self.app.ts, 'flush'):
-            self.app.ts.flush = lambda: None
-
-        self.started = time.time()
         self.configure_ttystatus_for_backup()
-        self.what('setting up')
+        self.progress.what('setting up')
 
         self.compile_exclusion_patterns()
         self.memory_dump_counter = 0
 
-        self.what('connecting to repository')
+        self.progress.what('connecting to repository')
         client_name = self.app.settings['client-name']
         if self.pretend:
             self.repo = self.app.open_repository()
             self.repo.open_client(client_name)
         else:
             self.repo = self.app.open_repository(create=True)
-            self.what('adding client')
+            self.progress.what('adding client')
             self.add_client(client_name)
-            self.what('locking client')
+            self.progress.what('locking client')
             self.repo.lock_client(client_name)
 
             # Need to lock the shared stuff briefly, so encryption etc
             # gets initialized.
-            self.what('initialising encryption for shared directories')
+            self.progress.what(
+                'initialising encryption for shared directories')
             self.repo.lock_shared()
             self.repo.unlock_shared()
 
@@ -277,34 +291,34 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.chunkid_pool = ChunkidPool()
         try:
             if not self.pretend:
-                self.what('starting new generation')
+                self.progress.what('starting new generation')
                 self.repo.start_generation()
             self.fs = None
             roots = self.app.settings['root'] + args
             if not roots:
                 raise obnamlib.Error('No backup roots specified')
             self.backup_roots(roots)
-            self.what('committing changes to repository')
+            self.progress.what('committing changes to repository')
             if not self.pretend:
-                self.what(
+                self.progress.what(
                     'committing changes to repository: locking shared B-trees')
                 self.repo.lock_shared()
-                self.what(
+                self.progress.what(
                     'committing changes to repository: '
                     'adding chunks to shared B-trees')
                 self.add_chunks_to_shared()
-                self.what(
+                self.progress.what(
                     'committing changes to repository: '
                     'committing client')
                 self.repo.commit_client()
-                self.what(
+                self.progress.what(
                     'committing changes to repository: '
                     'committing shared B-trees')
                 self.repo.commit_shared()
-            self.what('closing connection to repository')
+            self.progress.what('closing connection to repository')
             self.repo.fs.close()
-            self.app.ts.clear()
-            self.report_stats()
+            self.progress.clear()
+            self.progress.report_stats()
 
             logging.info('Backup finished.')
             self.app.dump_memory_profile('at end of backup run')
@@ -367,16 +381,16 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     msg = (
                         'error compiling regular expression "%s": %s' % (x, e))
                     logging.error(msg)
-                    self.app.ts.error(msg)
+                    self.progress.error(msg)
 
     def backup_roots(self, roots):
-        self.what('connecting to to repository')
+        self.progress.what('connecting to to repository')
         self.fs = self.app.fsf.new(roots[0])
         self.fs.connect()
 
         absroots = []
         for root in roots:
-            self.what('determining absolute path for %s' % root)
+            self.progress.what('determining absolute path for %s' % root)
             self.fs.reinit(root)
             absroots.append(self.fs.abspath('.'))
 
@@ -389,10 +403,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         for root in roots:
             logging.info('Backing up root %s' % root)
-            self.what('connecting to live data %s' % root)
+            self.progress.what('connecting to live data %s' % root)
             self.fs.reinit(root)
 
-            self.what('scanning for files in %s' % root)
+            self.progress.what('scanning for files in %s' % root)
             absroot = self.fs.abspath('.')
             self.root_metadata = self.fs.lstat(absroot)
 
@@ -414,6 +428,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                         raise
                 if self.time_for_checkpoint():
                     self.make_checkpoint()
+                    self.progress.what(pathname)
 
             self.backup_parents('.')
 
@@ -421,9 +436,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                               not self.app.settings['leave-checkpoints']
                               and not self.pretend)
         if remove_checkpoints:
-            self.configure_ttystatus_for_checkpoint_removal()
+            self.progress.what('removing checkpoints')
             for gen in self.checkpoints:
-                self.app.ts['checkpoint'] = gen
+                self.progress.update_progress_with_removed_checkpoint(gen)
                 self.repo.remove_generation(gen)
 
         if self.fs:
@@ -443,29 +458,28 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
     def make_checkpoint(self):
         logging.info('Making checkpoint')
-        self.what('making checkpoint')
+        self.progress.what('making checkpoint')
         if not self.pretend:
             self.checkpoints.append(self.repo.new_generation)
-            self.what('making checkpoint: backing up parents')
+            self.progress.what('making checkpoint: backing up parents')
             self.backup_parents('.')
-            self.what('making checkpoint: locking shared B-trees')
+            self.progress.what('making checkpoint: locking shared B-trees')
             self.repo.lock_shared()
-            self.what('making checkpoint: adding chunks to shared B-trees')
+            self.progress.what('making checkpoint: adding chunks to shared B-trees')
             self.add_chunks_to_shared()
-            self.what('making checkpoint: committing per-client B-tree')
+            self.progress.what('making checkpoint: committing per-client B-tree')
             self.repo.commit_client(checkpoint=True)
-            self.what('making checkpoint: committing shared B-trees')
+            self.progress.what('making checkpoint: committing shared B-trees')
             self.repo.commit_shared()
             self.last_checkpoint = self.repo.fs.bytes_written
-            self.what('making checkpoint: re-opening repository')
+            self.progress.what('making checkpoint: re-opening repository')
             self.repo = self.app.open_repository(repofs=self.repo.fs.fs)
-            self.what('making checkpoint: locking client')
+            self.progress.what('making checkpoint: locking client')
             self.repo.lock_client(self.app.settings['client-name'])
-            self.what('making checkpoint: starting a new generation')
+            self.progress.what('making checkpoint: starting a new generation')
             self.repo.start_generation()
             self.app.dump_memory_profile('at end of checkpoint')
-            self.what('making checkpoint: continuing backup')
-        self.what(self.app.ts['current-file'])
+            self.progress.what('making checkpoint: continuing backup')
 
     def find_files(self, root):
         '''Find all files and directories that need to be backed up.
@@ -481,10 +495,13 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             tracing.trace('considering %s' % pathname)
             try:
                 metadata = obnamlib.read_metadata(self.fs, pathname, st=st)
-                self.update_progress_with_file(pathname, metadata)
+                self.progress.update_progress_with_file(pathname, metadata)
                 if self.needs_backup(pathname, metadata):
-                    self.backed_up_count += 1
+                    self.progress.backed_up_count += 1
                     yield pathname, metadata
+                else:
+                    self.progress.update_progress_with_scanned(
+                        metadata.st_size)
             except GeneratorExit:
                 raise
             except KeyboardInterrupt:
@@ -593,7 +610,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         tracing.trace('backup_file_contents: %s', filename)
         if self.pretend:
             tracing.trace('pretending to upload the whole file')
-            self.update_progress_with_upload(metadata.st_size)
+            self.progress.update_progress_with_upload(metadata.st_size)
             return
 
         tracing.trace('setting file chunks to empty')
@@ -611,6 +628,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             contents = f.read()
             assert len(contents) <= max_intree # FIXME: silly error checking
             f.close()
+            self.progress.update_progress_with_scanned(len(contents))
             self.repo.set_file_data(filename, contents)
             summer.update(contents)
             return summer.digest()
@@ -619,12 +637,13 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         chunkids = []
         while True:
             tracing.trace('reading some data')
-            self.update_progress()
+            self.progress.update_progress()
             data = f.read(chunk_size)
             if not data:
                 tracing.trace('end of data')
                 break
             tracing.trace('got %d bytes of data' % len(data))
+            self.progress.update_progress_with_scanned(len(data))
             summer.update(data)
             if not self.pretend:
                 chunkids.append(self.backup_file_chunk(data))
@@ -635,7 +654,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                                                     'chunkids')
                     chunkids = []
             else:
-                self.update_progress_with_upload(len(data))
+                self.self.update_progress_with_upload(len(data))
 
             if not self.pretend and self.time_for_checkpoint():
                 logging.debug('making checkpoint in the middle of a file')
@@ -673,7 +692,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             return self.repo.get_chunk(chunkid)
 
         def put():
-            self.update_progress_with_upload(len(data))
+            self.progress.update_progress_with_upload(len(data))
             return self.repo.put_chunk_only(data)
 
         def share(chunkid):
@@ -756,13 +775,13 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     helper(pathname)
             else:
                 tracing.trace('is extra and removed: %s' % dirname)
-                self.what('removing %s from new generation' % dirname)
+                self.progress.what('removing %s from new generation' % dirname)
                 self.repo.remove(dirname)
-                self.what(msg)
+                self.progress.what(msg)
 
         assert not self.pretend
         msg = 'removing old backup roots from new generation'
-        self.what(msg)
+        self.progress.what(msg)
         tracing.trace('new_roots: %s' % repr(new_roots))
         gen_id = self.repo.new_generation
         helper('/')

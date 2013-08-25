@@ -15,6 +15,9 @@ Version 1.6, released UNRELEASED
 * Obnam has been ported to FreeBSD by Itamar Turner-Trauring
   of HybridCluster.
 
+* Backup progress reporting now reports scanned file data, not just
+  backed up file data. This will hopefully be less confusing to people.
+
 Bug fixes:
 
 * Fix "obnam list-toplevels" so it doesn't give an error when it's
