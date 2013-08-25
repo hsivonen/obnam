@@ -243,11 +243,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                                   'You need to specify it on the command '
                                   'line or a configuration file.')
 
-        # This is ugly, but avoids having to update the dependency on
-        # ttystatus yet again.
-        if not hasattr(self.app.ts, 'flush'):
-            self.app.ts.flush = lambda: None
-
         self.started = time.time()
         self.configure_ttystatus_for_backup()
         self.what('setting up')
