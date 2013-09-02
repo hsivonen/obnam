@@ -460,7 +460,7 @@ syntax in the files.)
 .PP
 The only unusual thing about the files is the way options that can be
 used many times are expressed.
-All values are put in a single line,
+All values are put in a single logical line,
 separated by commas
 (and optionally spaces as well).
 For example:
@@ -483,6 +483,21 @@ anywhere in the fully qualified pathname,
 or files with names ending with a period and
 .I mp3
 (because the exclusions are regular expressions).
+.PP
+A long logical line can be broken into several physical ones,
+by starting a new line at white space,
+and indenting the continuation lines:
+.sp 1
+.RS
+.nf
+[config]
+exclude = foo,
+    bar,
+    \\.mp3$
+.fi
+.RE
+.sp 1
+The above example adds three exclusion patterns.
 .SS "Multiple clients and locking"
 .B obnam
 supports sharing a repository between multiple clients.

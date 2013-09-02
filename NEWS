@@ -36,6 +36,9 @@ Bug fixes:
   a file and the directory it should go into not existing. Patch by
   Armin Größlinger.
 
+* Obnam's manual page now explains about breaking long logical lines
+  into multiple physical ones.
+
 Version 1.5, released 2013-08-08
 --------------------------------
 
