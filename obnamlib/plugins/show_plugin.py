@@ -98,7 +98,12 @@ class ShowPlugin(obnamlib.ObnamPlugin):
 
     def nagios_last_backup_age(self, args):
         '''Check if the most recent generation is recent enough.'''
-        self.open_repository()
+        try:	
+            self.open_repository()
+        except obnamlib.Error, e:
+            self.app.output.write('CRITICAL: %s\n' % e)
+            sys.exit(2)
+
         most_recent = None
 
         warn_age = self._convert_time(self.app.settings['warn-age'])
@@ -119,7 +124,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
             self.app.output.write(
                 'WARNING: backup is old.  last backup was %s.\n' %
                     self.format_time(most_recent))
-            sys.exit(2)
+            sys.exit(1)
         self.app.output.write(
             'OK: backup is recent.  last backup was %s.\n' %
                 self.format_time(most_recent))

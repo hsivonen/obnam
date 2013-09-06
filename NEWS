@@ -18,6 +18,9 @@ Version 1.6, released UNRELEASED
 * Backup progress reporting now reports scanned file data, not just
   backed up file data. This will hopefully be less confusing to people.
 
+* The nagios plugin to report errors in a way Nagios expects.
+  Patch by Martijn Grendelman.
+
 Bug fixes:
 
 * Fix "obnam list-toplevels" so it doesn't give an error when it's
