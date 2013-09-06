@@ -135,6 +135,18 @@ def get_public_key(keyid, gpghome=None):
     return _gpg(['--export', '--armor', keyid], gpghome=gpghome)
 
 
+def get_public_key_user_ids(keyid, gpghome=None): # pragma: no cover
+    '''Return the ASCII armored export form of a given public key.'''
+    user_ids = []
+    output = _gpg(['--with-colons', '--list-keys', keyid], gpghome=gpghome)
+    for line in output.splitlines():
+        token = line.split(":")
+        if len(token) >= 10:
+            user_id = token[9].strip().replace(r'\x3a', ":")
+            if user_id:
+                user_ids.append(user_id)
+    return user_ids
+
 
 class Keyring(object):
 

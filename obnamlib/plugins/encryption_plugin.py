@@ -37,6 +37,9 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
                                     'use /dev/urandom instead of /dev/random '
                                         'to generate symmetric keys',
                                  group=encryption_group)
+        self.app.settings.boolean(['key-details'],
+                                    'show additional user IDs for all keys',
+                                  group=encryption_group)
         self.app.settings.string(['symmetric-key-bits'],
                                    'size of symmetric key, in bits',
                                  group=encryption_group)
@@ -188,8 +191,10 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         for client in clients:
             keyid = repo.clientlist.get_client_keyid(client)
             if keyid is None:
-                keyid = 'no key'
-            print client, keyid
+                key_info = 'no key'
+            else:
+                key_info = self._get_key_string(keyid)
+            print client, key_info
 
     def _find_keys_and_toplevels(self, repo):
         toplevels = repo.fs.listdir('.')
@@ -210,6 +215,14 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
                 tops[toplevel] = tops.get(toplevel, []) + [keyid]
         return keys, tops
 
+    def _get_key_string(self, keyid):
+        verbose = self.app.settings['key-details']
+        if verbose:
+            user_ids = obnamlib.get_public_key_user_ids(keyid)
+            if user_ids:
+                return "%s (%s)" % (keyid, ", ".join(user_ids))
+        return str(keyid)
+
     def list_keys(self, args):
         '''List keys and the repository toplevels they're used in.'''
         if self.quit_if_unencrypted():
@@ -217,7 +230,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         repo = self.app.open_repository()
         keys, tops = self._find_keys_and_toplevels(repo)
         for keyid in keys:
-            print 'key: %s' % keyid
+            print 'key: %s' % self._get_key_string(keyid)
             for toplevel in keys[keyid]:
                 print '  %s' % toplevel
 
@@ -230,7 +243,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         for toplevel in tops:
             print 'toplevel: %s' % toplevel
             for keyid in tops[toplevel]:
-                print '  %s' % keyid
+                print '  %s' % self._get_key_string(keyid)
 
     _shared = ['chunklist', 'chunks', 'chunksums', 'clientlist']
 

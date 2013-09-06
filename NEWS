@@ -21,6 +21,10 @@ Version 1.6, released UNRELEASED
 * The nagios plugin to report errors in a way Nagios expects.
   Patch by Martijn Grendelman.
 
+* The list-keys, client-keys, and list-toplevels commands now
+  obey a new option, `--key-details`, to show the usernames
+  attached to each public key. Patch by Lars Kruse.
+
 Bug fixes:
 
 * Fix "obnam list-toplevels" so it doesn't give an error when it's
