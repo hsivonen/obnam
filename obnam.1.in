@@ -603,6 +603,15 @@ To verify that the backup repository is OK:
 .IP
 .nf
 obnam fsck \-\-repository sftp://your.server/~/backups
+.fi
+.PP
+To view the backed up files in the backup repository using FUSE:
+.IP
+.nf
+obnam mount \-\-to my-fuse \-\-viewmode multiple
+ls -lh my-fuse
+fusermount -u my-fuse
+.fi
 .SH "SEE ALSO"
 .TP
 .BR cliapp (5)

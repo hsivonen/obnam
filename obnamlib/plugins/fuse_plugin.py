@@ -549,7 +549,34 @@ class MountPlugin(obnamlib.ObnamPlugin):
                                       metavar='FUSE', group=mount_group)
 
     def mount(self, args):
-        '''Mount a generation as a FUSE filesystem.'''
+        '''Mount a backup repository as a FUSE filesystem.
+
+        This subcommand allows you to access backups in an Obnam
+        backup repository as normal files and directories. Each
+        backed up file or directory can be viewed directly, using
+        a graphical file manager or command line tools.
+
+        Example: To mount your backup repository:
+
+        mkdir my-fuse
+        obnam mount --viewmode multiple --to my-fuse
+
+        You can then access the backup using commands such as these:
+
+        ls -l my-fuse
+        ls -l my-fuse/latest
+        diff -u my-fuse/latest/home/liw/README ~/README
+        
+        You can also restore files by copying them from the
+        my-fuse directory:
+
+        cp -a my-fuse/12765/Maildir ~/Maildir.restored
+
+        To un-mount:
+
+        fusermount -u my-fuse
+
+        '''
 
         if not hasattr(fuse, 'fuse_python_api'):
             raise obnamlib.Error('Failed to load module "fuse", '
