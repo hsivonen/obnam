@@ -1,3 +1,9 @@
+obnam (1.6-1) UNRELEASED; urgency=low
+
+  * Add Depends and Build-Depends on python-fuse. (Closes: #722553)
+
+ -- Lars Wirzenius <liw@liw.fi>  Sun, 15 Sep 2013 16:04:42 +0100
+
 obnam (1.5-1) unstable; urgency=low
 
   * New upstream release. This fixes the following bugs in Debian:
