@@ -135,7 +135,7 @@ def get_xattrs_as_blob(fs, filename): # pragma: no cover
     try:
         names = fs.llistxattr(filename)
     except (OSError, IOError), e:
-        if e.errno == errno.EOPNOTSUPP:
+        if e.errno in (errno.EOPNOTSUPP, errno.EACCES):
             return None
         raise
     tracing.trace('names=%s' % repr(names))
