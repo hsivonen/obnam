@@ -533,6 +533,14 @@ rather than sftp,
 to avoid abysmal performance.
 .\"---------------------------------------------------------------------
 .SH OPTIONS
+.SS "Option values"
+The
+.I SIZE
+value in options mentioned above specifies a size in bytes,
+with optional suffixes to indicate kilobytes (k), kibibytes (Ki),
+megabytes (M), mebibyts (Mi), gigabytes (G), gibibytes (Gi),
+terabytes (T), tibibytes (Ti).
+The suffixes are case-insensitive.
 .\" ------------------------------------------------------------------
 .SH "EXIT STATUS"
 .B obnam
