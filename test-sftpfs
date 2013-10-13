@@ -28,6 +28,7 @@ ssh connections using the ssh agent.
 
 import logging
 import os
+import pwd
 import shutil
 import tempfile
 import unittest
@@ -59,6 +60,23 @@ class SftpTests(unittest.TestCase, obnamlib.VfsTests):
 
     def test_sets_path_to_absolute_path(self):
         self.assert_(self.fs.path.startswith('/'))
+
+    def test_resolves_magic_homedir_prefix(self):
+        baseurl = 'sftp://localhost/~/'
+        settings = {
+            'pure-paramiko': False,
+            'create': True,
+            'sftp-delay': 0,
+            'ssh-key': '',
+            'strict-ssh-host-keys': False,
+            'ssh-known-hosts': os.path.expanduser('~/.ssh/known_hosts'),
+        }
+        fs = obnamlib.plugins.sftp_plugin.SftpFS(baseurl, settings=settings)
+        fs.connect()
+
+        homedir = pwd.getpwuid(os.getuid()).pw_dir
+        self.assertEqual(fs._initial_dir, homedir)
+        self.assertEqual(fs.getcwd(), homedir)
 
     def test_initial_cwd_is_basepath(self):
         self.assertEqual(self.fs.getcwd(), self.fs.path)

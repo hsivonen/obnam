@@ -46,6 +46,10 @@ Bug fixes:
 * Obnam's manual page now explains about breaking long logical lines
   into multiple physical ones.
 
+* The `/~/` path prefix in SFTP URLs works again, at least with
+  sufficiently new versions of Paramiko (1.7.7.1 in Debian wheezy is
+  OK). Reported by Lars Kruse.
+
 Version 1.5, released 2013-08-08
 --------------------------------
 
