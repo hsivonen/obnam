@@ -64,15 +64,17 @@ class ShowPlugin(obnamlib.ObnamPlugin):
                                   metavar='AGE',
                                   default=obnamlib.DEFAULT_NAGIOS_WARN_AGE)
 
-    def open_repository(self):
+    def open_repository(self, require_client=True):
         self.app.settings.require('repository')
-        self.app.settings.require('client-name')
+        if require_client:
+            self.app.settings.require('client-name')
         self.repo = self.app.open_repository()
-        self.repo.open_client(self.app.settings['client-name'])
+        if require_client:
+            self.repo.open_client(self.app.settings['client-name'])
 
     def clients(self, args):
         '''List clients using the repository.'''
-        self.open_repository()
+        self.open_repository(require_client=False)
         for client_name in self.repo.list_clients():
             self.app.output.write('%s\n' % client_name)
         self.repo.fs.close()

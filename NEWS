@@ -28,6 +28,9 @@ Version 1.6, released UNRELEASED
 * New option `--ssh-command` to set the command Obnam runs
   when invoking ssh. patch by Lars Kruse.
 
+* `obnam clients` can now be used without being an existing client.
+  Patch by Itamar Turner-Trauring.
+
 Bug fixes:
 
 * Fix "obnam list-toplevels" so it doesn't give an error when it's
