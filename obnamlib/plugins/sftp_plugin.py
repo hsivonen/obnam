@@ -152,10 +152,12 @@ class SftpFS(obnamlib.VirtualFileSystem):
         self.chdir(self.path)
 
     def _connect_openssh(self):
-        args = ['ssh',
-                '-oForwardX11=no', '-oForwardAgent=no',
+        executable = 'ssh'
+        args = ['-oForwardX11=no', '-oForwardAgent=no',
                 '-oClearAllForwardings=yes', '-oProtocol=2',
                 '-s']
+        if self.settings and self.settings['ssh-command']:
+            executable = self.settings["ssh-command"]
         # default user/port from ssh (could be a per host configuration)
         if self.port:
             args += ['-p', str(self.port)]
@@ -171,6 +173,8 @@ class SftpFS(obnamlib.VirtualFileSystem):
                         self.settings['ssh-known-hosts']]
         args += [self.host, 'sftp']
 
+        # prepend the executable to the argument list
+        args.insert(0, executable)
         logging.debug('executing openssh: %s' % args)
         try:
             proc = subprocess.Popen(args,
@@ -621,6 +625,13 @@ class SftpPlugin(obnamlib.ObnamPlugin):
                                  metavar='FILENAME',
                                  default=
                                     os.path.expanduser('~/.ssh/known_hosts'),
+                                 group=ssh_group)
+
+        self.app.settings.string(['ssh-command'],
+                                 'alternative executable to be used instead '
+                                    'of "ssh" (full path is allowed, no '
+                                    'arguments may be added)',
+                                 metavar='EXECUTABLE',
                                  group=ssh_group)
 
         self.app.settings.boolean(['pure-paramiko'],

@@ -25,6 +25,9 @@ Version 1.6, released UNRELEASED
   obey a new option, `--key-details`, to show the usernames
   attached to each public key. Patch by Lars Kruse.
 
+* New option `--ssh-command` to set the command Obnam runs
+  when invoking ssh. patch by Lars Kruse.
+
 Bug fixes:
 
 * Fix "obnam list-toplevels" so it doesn't give an error when it's

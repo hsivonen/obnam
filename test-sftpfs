@@ -49,6 +49,7 @@ class SftpTests(unittest.TestCase, obnamlib.VfsTests):
             'ssh-key': '',
             'strict-ssh-host-keys': False,
             'ssh-known-hosts': os.path.expanduser('~/.ssh/known_hosts'),
+            'ssh-command': None,
         }
         self.fs = obnamlib.plugins.sftp_plugin.SftpFS(baseurl,
                                                       settings=settings)
@@ -70,6 +71,7 @@ class SftpTests(unittest.TestCase, obnamlib.VfsTests):
             'ssh-key': '',
             'strict-ssh-host-keys': False,
             'ssh-known-hosts': os.path.expanduser('~/.ssh/known_hosts'),
+            'ssh-command': None,
         }
         fs = obnamlib.plugins.sftp_plugin.SftpFS(baseurl, settings=settings)
         fs.connect()
