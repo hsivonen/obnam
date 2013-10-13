@@ -56,6 +56,10 @@ Bug fixes:
   sufficiently new versions of Paramiko (1.7.7.1 in Debian wheezy is
   OK). Reported by Lars Kruse.
 
+* The nagios plugin for Obnam now correctly handles the case
+  where a backup repository for a client exists, but does not have
+  a backup yet. Patch by Lars Kruse.
+
 Version 1.5, released 2013-08-08
 --------------------------------
 

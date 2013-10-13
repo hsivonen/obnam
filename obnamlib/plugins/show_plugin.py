@@ -117,7 +117,11 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         self.repo.fs.close()
 
         now = self.app.time()
-        if (now - most_recent > critical_age):
+        if most_recent is None:
+            # the repository is empty / the client does not exist
+            self.app.output.write('CRITICAL: no backup found.\n')
+            sys.exit(2)
+        elif (now - most_recent > critical_age):
             self.app.output.write(
                 'CRITICAL: backup is old.  last backup was %s.\n' %
                     (self.format_time(most_recent)))
