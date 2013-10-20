@@ -113,6 +113,9 @@ class SftpFS(obnamlib.VirtualFileSystem):
         self._roundtrips = 0
         self._initial_dir = None
         self.reinit(baseurl, create=create)
+        # Backwards compatibility with old, deprecated option:
+        if settings and settings['strict-ssh-host-keys']:
+            settings["ssh-host-keys-check"] = "yes"
 
     def _delay(self):
         self._roundtrips += 1
@@ -165,8 +168,10 @@ class SftpFS(obnamlib.VirtualFileSystem):
             args += ['-l', self.user]
         if self.settings and self.settings['ssh-key']:
             args += ['-i', self.settings['ssh-key']]
-        if self.settings and self.settings['strict-ssh-host-keys']:
-            args += ['-o', 'StrictHostKeyChecking=yes']
+        if (self.settings and
+            self.settings['ssh-host-keys-check'] != "ssh-config"):
+            value = self.settings['ssh-host-keys-check']
+            args += ['-o', 'StrictHostKeyChecking=%s' % (value,)]
         if self.settings and self.settings['ssh-known-hosts']:
             args += ['-o',
                      'UserKnownHostsFile=%s' %
@@ -220,7 +225,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
 
         known_keys = known_hosts.lookup(hostname)
         if known_keys is None:
-            if self.settings['strict-ssh-host-keys']:
+            if self.settings['ssh-host-keys-check'] == 'yes':
                 raise obnamlib.Error('No known host key for %s' % hostname)
             logging.warning('No known host keys for %s; accepting offered key'
                             % hostname)
@@ -228,7 +233,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
 
         offered_type = offered_key.get_name()
         if not known_keys.has_key(offered_type):
-            if self.settings['strict-ssh-host-keys']:
+            if self.settings['ssh-host-keys-check'] == 'yes':
                 raise obnamlib.Error('No known type %s host key for %s' %
                                      (offered_type, hostname))
             logging.warning('No known host key of type %s for %s; accepting '
@@ -614,10 +619,21 @@ class SftpPlugin(obnamlib.ObnamPlugin):
                                  group=ssh_group)
 
         self.app.settings.boolean(['strict-ssh-host-keys'],
-                                  'require that the ssh host key must be '
-                                    'known and correct to be accepted; '
-                                    'default is to accept unknown keys',
-                                  group=ssh_group)
+                                  'DEPRECATED, use --ssh-host-keys-check '
+                                    'instead',
+                                 group=ssh_group)
+
+        self.app.settings.choice(['ssh-host-keys-check'],
+                                 ['ssh-config', 'yes', 'no', 'ask'],
+                                  'If "yes", require that the ssh host key must '
+                                    'be known and correct to be accepted. If '
+                                    '"no", do not require that. If "ask", the '
+                                    'user is interactively asked to accept new '
+                                    'hosts. The default ("ssh-config") is to '
+                                    'rely on the settings of the underlying '
+                                    'SSH client',
+                                 metavar='VALUE',
+                                 group=ssh_group)
 
         self.app.settings.string(['ssh-known-hosts'],
                                  'filename of the user\'s known hosts file '
