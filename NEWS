@@ -31,6 +31,9 @@ Version 1.6, released UNRELEASED
 * `obnam clients` can now be used without being an existing client.
   Patch by Itamar Turner-Trauring.
 
+* New option `--ssh-host-keys-check` to better specify how SSH
+  host keys should be checked. Patch by Itamar Turner-Trauring.
+
 Bug fixes:
 
 * Fix "obnam list-toplevels" so it doesn't give an error when it's
