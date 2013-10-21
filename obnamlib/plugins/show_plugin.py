@@ -157,8 +157,14 @@ class ShowPlugin(obnamlib.ObnamPlugin):
             self.app.output.write(
                 'Generation %s (%s - %s)\n' % (gen, started, ended))
             for ls_file in args:
+                ls_file = self.remove_trailing_slashes(ls_file)
                 self.show_objects(gen, ls_file)
         self.repo.fs.close()
+
+    def remove_trailing_slashes(self, filename):
+        while filename.endswith('/') and filename != '/':
+            filename = filename[:-1]
+        return filename
 
     def format_time(self, timestamp):
         return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp))
