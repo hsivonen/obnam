@@ -63,6 +63,9 @@ Bug fixes:
   where a backup repository for a client exists, but does not have
   a backup yet. Patch by Lars Kruse.
 
+* `obnam ls` now handles trailing slashes in filename arguments.
+  Reported by Biltong.
+
 Version 1.5, released 2013-08-08
 --------------------------------
 

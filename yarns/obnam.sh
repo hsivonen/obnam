@@ -21,7 +21,7 @@
 
 run_obnam()
 {
-    ./obnam --no-default-config "$@"
+    "$SRCDIR/obnam" --no-default-config "$@"
 }
 
 
