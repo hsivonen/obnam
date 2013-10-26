@@ -14,7 +14,7 @@ for more information.
 Installation
 ------------
 
-The source tree contains packaging for Debian. Run `debuild -us -uc -i.bzr` to
+The source tree contains packaging for Debian. Run `debuild -us -uc -i.git` to
 build an installation package.
 
 On other systems, using the `setup.py` file should work: run
@@ -62,12 +62,14 @@ For more information, see the manual page:
 Hacking
 -------
 
-The canonical version control repository for obnam itself is at:
+Obnam source code is stored in git for version control purposes;
+you can get a copy as follows:
 
-    http://code.liw.fi/obnam/bzr/
+    git clone git://git.liw.fi/obnam
 
-The 'trunk' branch is the main development one. Note that the URL points
-at a bzr repository, it is not useful to browse it by hand.
+The 'master' branch is the main development one. Any bug fixes and
+features should be developed in a dedicated branch, which gets merged
+to master when the changes are done and considered good.
 
 To build and run automatic tests:
 
@@ -104,8 +106,9 @@ made during a benchmark run. `seivot` is the tool that makes the
 measurements. I typically save a number of benchmark results, so that
 I can see how my changes affect performance over time.
 
-If you make any changes, I welcome patches, either as plain diffs, bzr
-bundles, or public repositories I can merge from.
+If you make any changes, I welcome patches, either as plain diffs,
+`git format-patch --cover-letter` mails, or public repositories I can
+merge from.
 
 The code layout is roughly like this:
 
