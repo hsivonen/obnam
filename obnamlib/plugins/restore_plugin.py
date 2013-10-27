@@ -151,6 +151,10 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         for pathname, metadata in self.repo.walk(gen, root, depth_first=True):
             self.file_count += 1
             self.app.ts['current'] = pathname
+            self.restore_safely(gen, pathname, metadata)
+
+    def restore_safely(self, gen, pathname, metadata):
+        try:
             dirname = os.path.dirname(pathname)
             if self.write_ok and not self.fs.exists('./' + dirname):
                 self.fs.makedirs('./' + dirname)
@@ -179,6 +183,12 @@ class RestorePlugin(obnamlib.ObnamPlugin):
                     logging.error(msg)
                     self.app.ts.notify(msg)
                     self.errors = True
+        except Exception, e:
+            # Reaching this code path means we've hit a bug, so we log a full traceback.
+            msg = "Failed to restore %s:" % (pathname,)
+            logging.exception(msg)
+            self.app.ts.notify(msg + " " + str(e))
+            self.errors = True
 
     def restore_dir(self, gen, root, metadata):
         logging.debug('restoring dir %s' % root)

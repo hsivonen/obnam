@@ -66,6 +66,10 @@ Bug fixes:
 * `obnam ls` now handles trailing slashes in filename arguments.
   Reported by Biltong.
 
+* When restoring a backup, Obnam will now continue past errors,
+  instead of aborting with the first one. Patch by Itamar
+  Turner-Trauring.
+
 Version 1.5, released 2013-08-08
 --------------------------------
 
