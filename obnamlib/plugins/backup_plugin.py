@@ -283,7 +283,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             # Need to lock the shared stuff briefly, so encryption etc
             # gets initialized.
             self.progress.what(
-                'initialising encryption for shared directories')
+                'initialising shared directories')
             self.repo.lock_shared()
             self.repo.unlock_shared()
 
