@@ -3,6 +3,11 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
+Version 1.6.1, released 2013-11-30
+----------------------------------
+
+* Fix Debian package dependencies correctly.
+
 Version 1.6, released 2013-11-30
 --------------------------------
 
