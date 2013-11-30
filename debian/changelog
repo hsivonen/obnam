@@ -7,6 +7,7 @@ obnam (1.6-1) unstable; urgency=low
       (Closes: #684349)
     - Missing node problem fixes (Closes: #705554)
   * Add Depends and Build-Depends on python-fuse. (Closes: #722553)
+  * Depend and Build-Depend on python-larch 1.20131130 or later.
 
  -- Lars Wirzenius <liw@liw.fi>  Sat, 30 Nov 2013 11:18:48 +0000
 
