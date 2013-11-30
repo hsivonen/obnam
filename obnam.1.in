@@ -585,7 +585,12 @@ obnam restore \-\-repository sftp://your.server/~/backups \\
 \-\-to /var/tmp/my.home.dir $HOME/myfile.txt
 .fi
 .PP
-Alternatively, mount the backup repository using the FUSE filesystem:
+Alternatively, mount the backup repository using the FUSE filesystem
+(note that the
+.B \-\-to
+option is necessary and that the
+.B \-\-viewmode
+option is usually a good idea):
 .IP
 .nf
 mkdir my-repo
