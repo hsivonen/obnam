@@ -3,7 +3,7 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
-Version 1.6, released UNRELEASED
+Version 1.6, released 2013-11-30
 --------------------------------
 
 * Stop logging paramiko exceptions that get converted into another
@@ -18,12 +18,9 @@ Version 1.6, released UNRELEASED
 * Backup progress reporting now reports scanned file data, not just
   backed up file data. This will hopefully be less confusing to people.
 
-* The nagios plugin to report errors in a way Nagios expects.
-  Patch by Martijn Grendelman.
-
-* The list-keys, client-keys, and list-toplevels commands now
-  obey a new option, `--key-details`, to show the usernames
-  attached to each public key. Patch by Lars Kruse.
+* The `list-keys`, `client-keys`, and `list-toplevels` commands now
+  obey a new option, `--key-details`, to show the usernames attached
+  to each public key. Patch by Lars Kruse.
 
 * New option `--ssh-command` to set the command Obnam runs
   when invoking ssh. patch by Lars Kruse.
@@ -36,7 +33,7 @@ Version 1.6, released UNRELEASED
 
 Bug fixes:
 
-* Fix "obnam list-toplevels" so it doesn't give an error when it's
+* Fix`"obnam list-toplevels` so it doesn't give an error when it's
   unable to read the per-client directory of another client, when
   encryption is used. Fix by Lars Kruse.
 
@@ -44,7 +41,7 @@ Bug fixes:
   looks for client directories but fails to find them. Fix by
   Lars Kruse.
 
-* "obnam list-toplevels" got confused when the repository contained
+* `obnam list-toplevels` got confused when the repository contained
   extra files, such as "lock" (left there by a previous, crashed Obnam
   run). It no longer does. Fix by Lars Kruse.
 
@@ -59,7 +56,10 @@ Bug fixes:
   sufficiently new versions of Paramiko (1.7.7.1 in Debian wheezy is
   OK). Reported by Lars Kruse.
 
-* The nagios plugin for Obnam now correctly handles the case
+* The Nagios plugin to report errors in a way Nagios expects.
+  Patch by Martijn Grendelman.
+
+* The Nagios plugin for Obnam now correctly handles the case
   where a backup repository for a client exists, but does not have
   a backup yet. Patch by Lars Kruse.
 

@@ -74,7 +74,7 @@ to master when the changes are done and considered good.
 To build and run automatic tests:
 
     ./check
-    ./check --fast # unit tests only, no blackboxtests
+    ./check --fast # unit tests only, no black box tests
     ./check --network # requires ssh access to localhost
 
 `check` is a wrapper around `python setup.py`, but since using that

@@ -1,8 +1,14 @@
-obnam (1.6-1) UNRELEASED; urgency=low
+obnam (1.6-1) unstable; urgency=low
 
+  * New upstream version.
+    - Adds a better example for "obnam mount" (Closes: #726808)
+    - Explain --log-max units in manpage (Closes:  #683868)
+    - Fix bug for sftp URL handling of /~/ for home dirs 
+      (Closes: #684349)
+    - Missing node problem fixes (Closes: #705554)
   * Add Depends and Build-Depends on python-fuse. (Closes: #722553)
 
- -- Lars Wirzenius <liw@liw.fi>  Sun, 15 Sep 2013 16:04:42 +0100
+ -- Lars Wirzenius <liw@liw.fi>  Sat, 30 Nov 2013 11:18:48 +0000
 
 obnam (1.5-1) unstable; urgency=low
 
