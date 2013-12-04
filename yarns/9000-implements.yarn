@@ -43,8 +43,8 @@ specify that.
     mkdir -p "$LIVEDATA"
     "$SRCDIR/mksparse" "$LIVEDATA/$MATCH_1" "$MATCH_2"
 
-Backing up and verifying a backup
----------------------------------
+Backing up
+----------
 
 The simplest way to run a backup, for single-client scenarios. In
 addition to backing up, this makes a manifest of the data.
@@ -52,6 +52,9 @@ addition to backing up, this makes a manifest of the data.
     IMPLEMENTS WHEN user backs up live data
     manifest "$LIVEDATA" > "$DATADIR/manifest"
     run_obnam backup -r "$REPO" "$LIVEDATA"
+
+Verifying a backup
+------------------
 
 Verifying a backup requires restoring the data, and checking that the
 restored data matches the backed up data. The check generates a new
@@ -63,8 +66,11 @@ manifest, and compares that with the one from the time of the backup.
     manifest "$LIVEDATA" > "$DATADIR/restored.manifest"
     diff -u "$DATADIR/manifest" "$DATADIR/restored.manifest"
 
-We further verify that the repository itself is OK, by running
-`obnam fsck` on it.
+fsck'ing a repository
+---------------------
+
+Verify that the repository itself is OK, by running `obnam fsck` on
+it.
 
     IMPLEMENTS THEN user can fsck the repository
     run_obnam fsck -r "$REPO"
