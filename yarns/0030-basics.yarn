@@ -22,3 +22,28 @@ program must be able to handle.
     WHEN user backs up live data
     THEN user can restore their data correctly
     AND user can fsck the repository
+
+Backup sparse files
+-------------------
+
+Sparse files present an interesting challenge to backup programs. Most
+people have none, but some people have lots, and theirs can have very
+large holes. For example, at work I often generate disk images as
+raw disk images in sparse files. The image may need to be, say 30
+gigabytes in size, even though it only contains one or two gigabyte of
+data. The rest is a hole.
+
+A backup program should restore a sparse file as a sparse file.
+Otherwise, the 30 gigabyte disk image file will, upon restore, use 30
+gigabytes of disk space, rather than one. That might make restoring
+impossible.
+
+Unfortunately, it is not easy to (portably) check whether a file is
+sparse. We'll settle for making sure the restored file does not use
+more disk space than the one in live data.
+
+    SCENARIO backup a sparse file
+    GIVEN a file S in live data, with a hole, data, a hole
+    WHEN user backs up live data
+    THEN user can restore their data into X
+    AND restored file S in X doesn't use more disk

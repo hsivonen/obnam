@@ -34,6 +34,15 @@ for single-client scenarios.
     IMPLEMENTS GIVEN (\S+) of live data
     genbackupdata --quiet --create "$MATCH_1" "$LIVEDATA"
 
+We also need to generate a sparse file. A sparse file has at least one
+hole in it, and it may matter where the hole is: at the beginning,
+middle, or end of the file. Thus, we provide a way for scenarios to
+specify that.
+
+    IMPLEMENTS GIVEN a file (\S+) in live data, with (.+)
+    mkdir -p "$LIVEDATA"
+    "$SRCDIR/mksparse" "$LIVEDATA/$MATCH_1" "$MATCH_2"
+
 Backing up and verifying a backup
 ---------------------------------
 
@@ -59,3 +68,22 @@ We further verify that the repository itself is OK, by running
 
     IMPLEMENTS THEN user can fsck the repository
     run_obnam fsck -r "$REPO"
+
+Restoring data
+--------------
+
+We need a way to restore data from a test backup repository.
+
+    IMPLEMENTS THEN user can restore their data into (\S+)
+    run_obnam restore -r "$REPO" --to "$DATADIR/$MATCH_1"
+
+Checks on files
+---------------
+
+Check that a restored file uses at most as much disk space as the
+original one in live data.
+
+    IMPLEMENTS THEN restored file (\S+) in (\S+) doesn't use more disk
+    old=$(stat -c %b "$LIVEDATA/$MATCH_1")
+    new=$(stat -c %b "$DATADIR/$MATCH_2/$LIVEDATA/$MATCH_1")
+    test "$old" -lt "$new"
