@@ -46,6 +46,35 @@ specify that.
     mkdir -p "$LIVEDATA"
     "$SRCDIR/mksparse" "$LIVEDATA/$MATCH_1" "$MATCH_2"
 
+Manifest creation and checking
+------------------------------
+
+We make it explicit in the scenario when a manifest is generated, so
+that naming of the manifest is explicit. This reduces the need to
+debug weird test suite bugs, when an automatic or implicit manifest
+naming goes wrong.
+
+    IMPLEMENTS GIVEN a manifest of directory (\S+) in (\S+)
+    manifest "$DATADIR/$MATCH_1" > "$DATADIR/$MATCH_2"
+
+We have not, however, made it explicit where the user's live data is,
+so we have another rule for that.
+
+    IMPLEMENTS GIVEN a manifest of live data in (\S+)
+    manifest "$LIVEDATA" > "$DATADIR/$MATCH_1"
+
+We need to check a directory tree against an existing manifest. We do
+this by generating a temporary manifest and diffing against that. We
+store the temporary manifest in a file so that if things fail, we can
+see what the temporary manifest actually contains. Being able to look
+at the actual file is easier than trying to interpret complicated
+diffs.
+
+    IMPLEMENTS THEN live data, restored to (\S+), matches manifest (\S+)
+    manifest "$DATADIR/$MATCH_1/$LIVEDATA" > "$DATADIR/temp-manifest"
+    diff -u "$DATADIR/$MATCH_2" "$DATADIR/temp-manifest"
+    rm -f "$DATADIR/temp-manifest"
+
 Backing up
 ----------
 
@@ -53,21 +82,7 @@ The simplest way to run a backup, for single-client scenarios. In
 addition to backing up, this makes a manifest of the data.
 
     IMPLEMENTS WHEN user backs up live data
-    manifest "$LIVEDATA" > "$DATADIR/manifest"
     run_obnam backup -r "$REPO" "$LIVEDATA"
-
-Verifying a backup
-------------------
-
-Verifying a backup requires restoring the data, and checking that the
-restored data matches the backed up data. The check generates a new
-manifest, and compares that with the one from the time of the backup.
-
-    IMPLEMENTS THEN user can restore their data correctly
-    rm -rf "$DATADIR/restored"
-    run_obnam restore -r "$REPO" --to "$DATADIR/restored"
-    manifest "$LIVEDATA" > "$DATADIR/restored.manifest"
-    diff -u "$DATADIR/manifest" "$DATADIR/restored.manifest"
 
 fsck'ing a repository
 ---------------------
@@ -83,7 +98,7 @@ Restoring data
 
 We need a way to restore data from a test backup repository.
 
-    IMPLEMENTS THEN user can restore their data into (\S+)
+    IMPLEMENTS WHEN user restores their latest generation into (\S+)
     run_obnam restore -r "$REPO" --to "$DATADIR/$MATCH_1"
 
 Checks on files

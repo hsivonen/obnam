@@ -19,8 +19,10 @@ program must be able to handle.
 
     SCENARIO backup simple data
     GIVEN 100kB of live data
+    AND a manifest of live data in M
     WHEN user backs up live data
-    THEN user can restore their data correctly
+    AND user restores their latest generation into X
+    THEN live data, restored to X, matches manifest M
     AND user can fsck the repository
 
 Backup sparse files
@@ -44,6 +46,8 @@ more disk space than the one in live data.
 
     SCENARIO backup a sparse file
     GIVEN a file S in live data, with a hole, data, a hole
+    AND a manifest of live data in M
     WHEN user backs up live data
-    THEN user can restore their data into X
+    AND user restores their latest generation into X
+    THEN live data, restored to X, matches manifest M
     AND restored file S in X doesn't use more disk
