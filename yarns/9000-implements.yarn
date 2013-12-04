@@ -24,6 +24,9 @@ Functions:
   specified by the test suite itself (`--no-default-config`). Run in
   quiet mode (`--quiet`).
 
+* `manifest`: run summain in a way that produces a useable manifest,
+  which can be compared with diff with a later manifest.
+
 Live data generation
 --------------------
 
