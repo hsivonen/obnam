@@ -1,0 +1,110 @@
+Test environment and setup
+==========================
+
+This chapter describes the environment that is set up for the tests to
+run in: how live data is generated, where it is kept, where the
+repository is kept and accessed, how verification of results happens,
+etc. This chapter is required reading for anyone wanting to understand
+what happens in the test suite.
+
+The DATADIR directory
+---------------------
+
+Yarn provides a directory temporary test data, and sets the
+`DATADIR` environment variable to point at that directory. The Obnam
+test suite uses that completely.
+
+Live data
+---------
+
+Many Obnam tests require generating some data to be backed up, which
+we call _live data_. Some tests will require modifying that data, for
+testing multiple backup generations. We use the [genbackupdata] tool
+to generate bulk data: it supports modifying an existing data tree, as
+well as just generating data.
+
+We care about not just the amount of data, but also how it is
+distributed, all kinds of file metadata, and all types of filesystem
+features that may affect backups. For example, sparse files verse
+dense ones; extended attributes; empty files; and symbolic links. We
+generate these using a small helper utility program that comes with
+Obnam, called `mktestfiles`, which creates a small directory tree with
+all the interesting kind of filesystem objects we know about.
+
+Some filesystem objects require root permission to create: device
+nodes, for example. For these, we assume that the unit tests are
+sufficient: they can inspect the execution of the relevant code paths
+in much more detail than integration tests.
+
+We store the live data we generate in `$DATADIR/live-data`. In a
+scenario that involves multiple clients, each client has its own set
+of live data at `$DATADIR/$CLIENT.live-data`.
+
+[genbackupdata]: http://liw.fi/genbackupdata/
+
+Repositories
+------------
+
+The backup repository is stored at `$DATADIR/repo`. In a scenario that
+involves multiple clients, each client has its own repository at
+`$DATADIR/$CLIENT.repo`.
+
+The repository is accessed either via the local filesystem, using the
+directory name described above, or over the `sftp` protocol over
+`localhost`, using a URL of the form `sftp://localhost$DATADIR/repo`.
+For this to work, the user running the test suite needs to have ssh
+access over localhost, without requiring a password to be entered.
+The user may disable such tests when the test suite is running,
+by asking yarn to set the `OBNAM_TEST_SSH` to `no`.
+
+Obnam configuration
+-------------------
+
+In the tests, Obnam is run without a default configuration
+(`--no-default-config`), to avoid the user's settings affecting the
+test suite, or, indeed, having the test suite accidentally wreck the
+user's backup repository.
+
+The shell library for the Obnam test suite provides a `run_obnam`
+shell function, which runs Obnam in the right way for the tests. All
+tests that run Obnam MUST use `run_obnam`. In addition to adding the
+`--no-default-config` option, it also tells Obnam to use the
+`$DATADIR/obnam.conf` configuration file, for single-client tests, or
+`$DATADIR/$CLIENT.obnam.conf` for multi-client tests.
+
+Encryption keys
+---------------
+
+For tests that use encryption, we use pre-generated keys (see
+`test-gpghome` in the Obnam source tree), because generating keys is a
+heavy, slow operation.
+
+Result verification
+-------------------
+
+We verify backups by multiple methods:
+
+1. Restore the data, and compare the restored data with the original.
+2. Use the `obnam verify` command.
+3. Run `obnam fsck` on the repository after any operation that may
+   have change the repository.
+
+The verification is done by using the [summain] checksum/manifest
+tool, written for this purpose. We run summain against the live data
+before making a backup, and again on the restored data, and then
+compare the two manifests (with diff). If they're identical,
+everything went well, otherwise there's a problem somewhere.
+
+[summain]: http://liw.fi/summain/
+
+IMPLEMENTS sections
+-------------------
+
+The IMPLEMENTS sections are where the nitty-gritty details is
+specified of what happens for each scenario test step. The sections
+fall into two classes: generic ones, and those specific to a scenario
+or small set of scenarios.
+
+The generic ones are discussed and shown in their own chapter. The
+ones specific to some scenarios are kept with the scenarios using
+them.

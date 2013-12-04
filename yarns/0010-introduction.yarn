@@ -43,15 +43,6 @@ FIXME: Outline of test suite
 This chapter will be removed, later, when all the outlined parts have
 been implemented.
 
-* Test environment and setup
-    - where is live data? how is live data generated?
-    - where is repo?
-    - how is repo accessed? local fs vs sftp
-    - how is obnam configured for tests? how can tests change the
-      configuration?
-    - encryption keys
-    - verification
-    - IMPLEMENTS library; scenario specific implments
 * Basic operation: backup, restore, verify
     - all types, sizes of files with all kinds of metadata
     - single generation
