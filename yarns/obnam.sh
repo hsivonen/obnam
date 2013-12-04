@@ -16,12 +16,17 @@
 # =*= License: GPL-3+ =*=
 
 
+# Set variables to help referring to common things in $DATADIR.
+LIVEDATA="$DATADIR/live-data"
+REPO="$DATADIR/repo"
+
+
 # Run Obnam in a safe way that ignore's any configuration files outside
 # the test.
 
 run_obnam()
 {
-    "$SRCDIR/obnam" --no-default-config "$@"
+    "$SRCDIR/obnam" --no-default-config --quiet "$@"
 }
 
 

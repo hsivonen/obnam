@@ -1,0 +1,61 @@
+Test implementation
+===================
+
+This chapter documents the generic, shared IMPLEMENTS sections for
+steps that are used in a variety of scenarios. It also discusses the
+shell library that may be used by all IMPLEMENTS sections.
+
+The shell library
+-----------------
+
+The shell library contains shell functions and sets some shell
+variables that can be used by any IMPLEMENTS sections.
+
+Variables:
+
+* `LIVEDATA`: the pathname of the directory where live data is stored
+  (for single-client scenarios).
+* `REPO`: the pathname of the backup repository.
+
+Functions:
+
+* `run_obnam`: run Obnam from the source tree, ignoring any
+  system-wide or user configuration and using only the configuration
+  specified by the test suite itself (`--no-default-config`). Run in
+  quiet mode (`--quiet`).
+
+Live data generation
+--------------------
+
+The simplest way to generate test live data is to just generate the
+necessary number of bytes, split over some number of files. This works
+for single-client scenarios.
+
+    IMPLEMENTS GIVEN (\S+) of live data
+    genbackupdata --quiet --create "$MATCH_1" "$LIVEDATA"
+
+Backing up and verifying a backup
+---------------------------------
+
+The simplest way to run a backup, for single-client scenarios. In
+addition to backing up, this makes a manifest of the data.
+
+    IMPLEMENTS WHEN user backs up live data
+    manifest "$LIVEDATA" > "$DATADIR/manifest"
+    run_obnam backup -r "$REPO" "$LIVEDATA"
+
+Verifying a backup requires restoring the data, and checking that the
+restored data matches the backed up data. The check generates a new
+manifest, and compares that with the one from the time of the backup.
+
+    IMPLEMENTS THEN user can restore their data correctly
+    rm -rf "$DATADIR/restored"
+    run_obnam restore -r "$REPO" --to "$DATADIR/restored"
+    manifest "$LIVEDATA" > "$DATADIR/restored.manifest"
+    diff -u "$DATADIR/manifest" "$DATADIR/restored.manifest"
+
+We further verify that the repository itself is OK, by running
+`obnam fsck` on it.
+
+    IMPLEMENTS THEN user can fsck the repository
+    run_obnam fsck -r "$REPO"

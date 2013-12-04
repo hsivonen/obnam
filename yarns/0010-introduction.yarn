@@ -43,9 +43,6 @@ FIXME: Outline of test suite
 This chapter will be removed, later, when all the outlined parts have
 been implemented.
 
-* Basic operation: backup, restore, verify
-    - all types, sizes of files with all kinds of metadata
-    - single generation
 * Multiple generations
     - multiple generations
     - forget, individual generations
@@ -78,9 +75,6 @@ been implemented.
     - list clients
 * System administration
     - nagios-last-backup-age
-* Test implementation
-    - shell library
-    - generic implements for all tests
 
 Open questions:
 

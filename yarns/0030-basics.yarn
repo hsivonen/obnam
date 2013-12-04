@@ -1,0 +1,24 @@
+Basic operation: backup and restore
+===================================
+
+This chapter tests the basic operation of Obnam: backing up and
+restoring data. Tests in this chapter only concern themselves with a
+single generation; see later for tests for multiple generations.
+
+The goal of this chapter is to test Obnam with every kind of data,
+every kind of file, and every kind of metadata.
+
+Backup simple data
+------------------
+
+This is the simplest of all simple backup tests: generate a small
+amount of data in regular files, in a single directory, and backup
+that. No symlinks, no empty files, no extended attributes, no nothing.
+Just a few files with a bit of data in each. This is what every backup
+program must be able to handle.
+
+    SCENARIO backup simple data
+    GIVEN 100kB of live data
+    WHEN user backs up live data
+    THEN user can restore their data correctly
+    AND user can fsck the repository
