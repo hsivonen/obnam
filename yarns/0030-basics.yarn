@@ -51,3 +51,30 @@ more disk space than the one in live data.
     AND user restores their latest generation into X
     THEN live data, restored to X, matches manifest M
     AND restored file S in X doesn't use more disk
+
+Backup all interesting file and metadata types
+----------------------------------------------
+
+The Unix filesystem abstraction is surprisingly complicated. Indeed,
+it can come as a surprise to anyone who's not implemented a backup
+program with the intention of being able to restore the live data set
+exactly. To complicate things further, different filesystems have
+different features, and different Unix-like operating systems don't
+all implement all the features, and implement some features
+differently.
+
+We need to ensure Obnam can handle anything it encounters, on any
+supported platform. That is the purpose of the scenarios in this
+section. There are some limitations, though: the test suite is not run
+as the `root` user, and thus we don't deal with filesystem objects
+that require priviledged operations such as device node creation. We
+also don't, in these scenarios, handle multiple filesystem types: the
+test suite should, instead, be run multiple types, with `TMPDIR` set
+to point at a different filesystem type each time: we leave that to
+the user running the test suite.
+
+We rely on a helper tool in the Obnam source tree, `mkfunnyfarm`, to
+create all the interesting filesystem objects, rather than spelling
+them out in the scenarios. This is because that helper tool is used by
+other parts of Obnam's test suite as well, and this reduces code
+duplication.

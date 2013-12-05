@@ -28,7 +28,7 @@ distributed, all kinds of file metadata, and all types of filesystem
 features that may affect backups. For example, sparse files verse
 dense ones; extended attributes; empty files; and symbolic links. We
 generate these using a small helper utility program that comes with
-Obnam, called `mktestfiles`, which creates a small directory tree with
+Obnam, called `mkfunnyfarm`, which creates a small directory tree with
 all the interesting kind of filesystem objects we know about.
 
 Some filesystem objects require root permission to create: device
