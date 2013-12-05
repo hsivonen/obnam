@@ -75,6 +75,11 @@ class MakeFunnyFarm(cliapp.Application):
         with open(self.J('file-four-kibibytes'), 'wb') as f:
             f.write('x' * 4096)
 
+    def farm_hardlink_within_farm(self):
+        with open(self.J('hardlink-1'), 'wb') as f:
+            f.write('x' * 4096)
+        os.link(self.J('hardlink-1'), self.J('hardlink-2'))
+
     def farm_directory_empty(self):
         os.mkdir(self.J('dir-empty'))
 
