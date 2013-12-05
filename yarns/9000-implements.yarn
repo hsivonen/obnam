@@ -46,6 +46,14 @@ specify that.
     mkdir -p "$LIVEDATA"
     "$SRCDIR/mksparse" "$LIVEDATA/$MATCH_1" "$MATCH_2"
 
+Create some _interesting_ data, using the `mkfunnyfarm` utility.
+See the utility for details, but this is about creating files and
+other filesystem objects that are not the most common easy cases for
+backup programs (regular files with data and no holes).
+
+    IMPLEMENTS GIVEN live data with interesting filesystem objects
+    "$SRCDIR/mkfunnyfarm" "$LIVEDATA"
+
 Manifest creation and checking
 ------------------------------
 
@@ -111,3 +119,12 @@ original one in live data.
     old=$(stat -c %b "$LIVEDATA/$MATCH_1")
     new=$(stat -c %b "$DATADIR/$MATCH_2/$LIVEDATA/$MATCH_1")
     test "$old" -lt "$new"
+
+Check on user group membership
+------------------------------
+
+Some tests, such as those for the FUSE plugin, require the user to be
+in a specific group.
+
+    IMPLEMENTS ASSUMING user is in group (\S+)
+    groups | tr ' ' '\n' | grep -Fx "$MATCH_1"

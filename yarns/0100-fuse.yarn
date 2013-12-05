@@ -1,0 +1,37 @@
+FUSE plugin
+===========
+
+The FUSE plugin gives read-only access to a backup repository.
+There's a lot of potential corner cases here, but for now, this
+test suite concentrates on verifying that at least the basics work.
+
+    SCENARIO Browsing backups with FUSE plugin
+    ASSUMING user is in group fuse
+    GIVEN live data with interesting filesystem objects
+    AND a manifest of live data in M
+    WHEN user backs up live data
+    AND user FUSE mounts their repository at F
+    THEN live data, restored to F/latest, matches manifest M
+    FINALLY unmount repository F
+
+We can only run this test if the user is in the `fuse` group. This may
+be a portability concern: this works in Debian GNU/Linux, but might be
+different in other Linux distros, or on non-Linux systems. (If it
+doesn't work for you, please report a bug.)
+
+We do the backup, and verify that it can be accessed correctly, by
+doing a manifest of the live data before the backup, and then
+against the FUSE mount, and comparing the two manifests.
+
+    IMPLEMENTS WHEN user FUSE mounts their repository at (\S+)
+    mkdir "$DATADIR/$MATCH_1"
+    run_obnam mount -r "$REPO" --to "$DATADIR/$MATCH_1" --viewmode multiple
+
+If we did do the fuse mount, **always** unmount it, even when a step
+failed. We do not want failed test runs to leavo mounts lying around.
+
+    IMPLEMENTS FINALLY unmount repository (\S+)
+    if [ -e "$DATADIR/$MATCH_1" ]
+    then
+        fusermount -u "$DATADIR/$MATCH_1"
+    fi
