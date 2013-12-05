@@ -73,7 +73,7 @@ requesting `D/` to be listed, and verifying that we get at least one
 line for that.
 
     WHEN user lists D/ in latest generation into bug.txt
-    THEN some.txt matches /D
+    THEN bug.txt matches /D
 
 Comparing generations (`obnam diff`)
 ------------------------------------
