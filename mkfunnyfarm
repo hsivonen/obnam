@@ -28,6 +28,7 @@ backups. Use the --verbose option to see what is created.
 
 import cliapp
 import os
+import platform
 import stat
 
 
@@ -109,7 +110,8 @@ class MakeFunnyFarm(cliapp.Application):
         os.symlink('.', self.J('symlink-to-subdir'))
 
     def farm_socket(self):
-        os.mknod(self.J('socket'), stat.S_IFSOCK | 0700)
+        if platform.system() != "FreeBSD":
+            os.mknod(self.J('socket'), stat.S_IFSOCK | 0700)
 
     def farm_fifo(self):
         os.mknod(self.J('fifo'), stat.S_IFIFO | 0700)
