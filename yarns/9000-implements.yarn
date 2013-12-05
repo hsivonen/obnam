@@ -37,6 +37,11 @@ for single-client scenarios.
     IMPLEMENTS GIVEN (\S+) of live data
     genbackupdata --quiet --create "$MATCH_1" "$LIVEDATA"
 
+Generate requested amount of data in the named directory.
+
+    IMPLEMENTS GIVEN (\S+) of new data in directory (\S+)
+    genbackupdata --quiet --create "$MATCH_1" "$DATADIR/$MATCH_2"
+
 We also need to generate a sparse file. A sparse file has at least one
 hole in it, and it may matter where the hole is: at the beginning,
 middle, or end of the file. Thus, we provide a way for scenarios to
@@ -92,6 +97,11 @@ addition to backing up, this makes a manifest of the data.
     IMPLEMENTS WHEN user backs up live data
     run_obnam backup -r "$REPO" "$LIVEDATA"
 
+Back up a named directory.
+
+    IMPLEMENTS WHEN user backs up directory (\S+)
+    run_obnam backup -r "$REPO" "$DATADIR/$MATCH_1"
+
 fsck'ing a repository
 ---------------------
 
@@ -116,6 +126,19 @@ that is unpredictable.
     IMPLEMENTS WHEN user restores generation (\d+) to (\S+)
     id=$(run_obnam -r "$REPO" genids | awk -v "n=$MATCH_1" 'NR == n')
     run_obnam restore -r "$REPO" --to "$DATADIR/$MATCH_2" --generation "$id"
+
+List generations
+----------------
+
+List everything in a generation. Capture the listing in a named file.
+
+    IMPLEMENTS WHEN user lists latest generation into (\S+)
+    run_obnam  ls -r "$REPO" > "$DATADIR/$MATCH_1"
+
+List only parts of a generation. Again, capture in a named file.
+
+    IMPLEMENTS WHEN user lists (\S+) in latest generation into (\S+)
+    run_obnam ls -r "$REPO" "$DATADIR/$MATCH_1" > "$DATADIR/$MATCH_2"
 
 Checks on generations
 ---------------------
@@ -144,6 +167,23 @@ original one in live data.
     old=$(stat -c %b "$LIVEDATA/$MATCH_1")
     new=$(stat -c %b "$DATADIR/$MATCH_2/$LIVEDATA/$MATCH_1")
     test "$old" -lt "$new"
+
+Checks on contents of files
+---------------------------
+
+Regular expressions are very powerful, and sometimes that power is
+warranted to use. It isn't always clear enough to the lay reader, so
+be careful. `grep -E` regular expressions are used here.
+
+Does any line match?
+
+    IMPLEMENTS THEN (\S+) matches (\S+)
+    grep -E -e "$MATCH_2" -- "$DATADIR/$MATCH_1"
+
+Do all lines match?
+
+    IMPLEMENTS THEN all lines in (\S+) match (\S+)
+    ! grep -E -v -e "$MATCH_2" -- "$DATADIR/$MATCH_1"
 
 Check on user group membership
 ------------------------------

@@ -50,7 +50,30 @@ commands should show that number of generations.
 Listing contents of a generation (`obnam ls`)
 --------------------------------
 
-FIXME.
+We'll assume the `obnam ls` command shows any generation.
+However, there's a couple of ways of using it: either listing
+everything, or only a specific directory to list.
+
+    SCENARIO list generation content
+    GIVEN 1MB of new data in directory D
+    WHEN user backs up directory D
+    AND user lists latest generation into all.txt
+    THEN all.txt matches /.*/D/.
+    WHEN user lists D in latest generation into some.txt
+    THEN all lines in some.txt match (/D|Generation)
+
+The first line of the generation listing contains the word
+"Generation". Every other line should contain the directory we
+requested as part of the pathname.
+
+There was a bug in Obnam 1.5 (and possibly other versions) that
+listing contents of a directory that ends in a slash (but isn't the
+root directory) fails. The following is a test for that bug by
+requesting `D/` to be listed, and verifying that we get at least one
+line for that.
+
+    WHEN user lists D/ in latest generation into bug.txt
+    THEN some.txt matches /D
 
 Comparing generations (`obnam diff`)
 ------------------------------------
