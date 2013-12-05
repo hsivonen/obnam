@@ -1,0 +1,135 @@
+#!/usr/bin/python
+# Copyright 2013  Lars Wirzenius
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# =*= License: GPL-3+ =*=
+
+
+'''Create all filesystem object types.
+
+This program creates a directory tree (the "farm") with all filesystem
+object types that are interesting from the point of view of testing
+backups. Use the --verbose option to see what is created.
+
+'''
+
+
+import cliapp
+import os
+import stat
+
+
+class MakeFunnyFarm(cliapp.Application):
+
+    def add_settings(self):
+        self.settings.boolean(
+            ['verbose'],
+            'show what is created')
+
+    def process_args(self, args):
+        if len(args) != 1:
+            raise cliapp.AppException(
+                "Must have exactly one argument: the name of a directory "
+                "that is to be created and populated")
+
+        self.dirname = args[0]
+        os.mkdir(self.dirname)
+        
+        # A bit of magic here: all the methods that create filesystem
+        # objects have names starting with farm_ and here we find the
+        # the names and call them. This avoids having to list all the
+        # methods manually, or inlining all their code. A bit of magic
+        # saves toil and boilerplate.
+
+        method_names = [x for x in dir(self) if x.startswith('farm_')]
+        for method_name in sorted(method_names):
+            if self.settings['verbose']:
+                print method_name[len('farm_'):]
+            getattr(self, method_name)()
+
+    def J(self, filename):
+        '''Return filename within the farm directory.'''
+        return os.path.join(self.dirname, filename)
+
+    def farm_regular_file_empty(self):
+        with open(self.J('file-empty'), 'w'):
+            pass
+
+    def farm_regular_file_1_byte(self):
+        with open(self.J('file-one-byte'), 'wb') as f:
+            f.write('x')
+
+    def farm_regular_file_4096_byte(self):
+        with open(self.J('file-four-kibibytes'), 'wb') as f:
+            f.write('x' * 4096)
+
+    def farm_directory_empty(self):
+        os.mkdir(self.J('dir-empty'))
+
+    def farm_symlink_within_farm_target_exists(self):
+        with open(self.J('symlink-target'), 'w'):
+            pass
+        os.symlink('symlink-target', self.J('symlink-local-exists'))
+
+    def farm_symlink_within_farm_target_doesnt_exist(self):
+        os.symlink(
+            self.J('does-not-exist'), 
+            self.J('symlink-local-doesnt_exist'))
+
+    def farm_symlink_outside_farm_target_exists(self):
+        os.symlink('/', self.J('symlink-remote-exists'))
+
+    def farm_symlink_outside_farm_target_doesnt_exist(self):
+        os.symlink(
+            self.J('/does-not-exist'), 
+            self.J('symlink-remote-doesnt_exist'))
+
+    def farm_symlink_to_containing_dir(self):
+        os.symlink('.', self.J('symlink-to-dot'))
+
+    def farm_symlink_to_subdir_of_containing_dir(self):
+        os.mkdir(self.J('symlink-target-dir'))
+        os.symlink('.', self.J('symlink-to-subdir'))
+
+    def farm_socket(self):
+        os.mknod(self.J('socket'), stat.S_IFSOCK | 0700)
+
+    def farm_fifo(self):
+        os.mknod(self.J('fifo'), stat.S_IFIFO | 0700)
+
+    def farm_regular_file_setuid(self):
+        with open(self.J('file-setuid'), 'w'):
+            pass
+        os.chmod(self.J('file-setuid'), stat.S_ISUID | 0777)
+
+    def farm_regular_file_setgid(self):
+        with open(self.J('file-setgid'), 'w'):
+            pass
+        os.chmod(self.J('file-setgid'), stat.S_ISGID | 0777)
+
+    def farm_regular_file_sticky_bit(self):
+        with open(self.J('file-sticky-bit'), 'w'):
+            pass
+        os.chmod(self.J('file-sticky-bit'), stat.S_ISVTX | 0777)
+
+    def farm_regular_file_xattr_user(self):
+        with open(self.J('file-xattr-user'), 'w'):
+            pass
+        cliapp.runcmd(
+            ['setfattr', '-n', 'user.foo', '-v', 'some value', 
+             self.J('file-xattr-user')])
+
+
+MakeFunnyFarm(description=__doc__).run()
