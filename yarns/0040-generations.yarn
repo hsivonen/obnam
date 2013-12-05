@@ -22,16 +22,16 @@ to actually happen, we'll add a regression test when we find the
 problem.)
 
     SCENARIO backup two generations
-    GIVEN 1MB of live data
-    AND a manifest of live data in G1
-    WHEN user backs up live data
-    GIVEN 2MB of live data
-    AND a manifest of live data in G2
-    WHEN user backs up live data
+    GIVEN 1MB of new data in directory L
+    AND a manifest of directory L in G1
+    WHEN user backs up directory L
+    GIVEN 2MB of new data in directory L
+    AND a manifest of directory L in G2
+    WHEN user backs up directory L
     AND user restores generation 1 to R1
     AND user restores generation 2 to R2
-    THEN live data, restored to R1, matches manifest G1
-    AND live data, restored to R2, matches manifest G2
+    THEN L, restored to R1, matches manifest G1
+    AND L, restored to R2, matches manifest G2
 
 Listing generations (`obnam generations`, `obnam genids`)
 -------------------
@@ -40,10 +40,10 @@ When we make some number of generations, the Obnam generation listing
 commands should show that number of generations.
 
     SCENARIO list generations
-    GIVEN 1MB of live data
-    WHEN user backs up live data
-    AND user backs up live data
-    AND user backs up live data
+    GIVEN 1MB of new data in directory L
+    WHEN user backs up directory L
+    AND user backs up directory L
+    AND user backs up directory L
     THEN user sees 3 generations
     AND user sees 3 generation ids
 

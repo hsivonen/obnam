@@ -13,8 +13,6 @@ variables that can be used by any IMPLEMENTS sections.
 
 Variables:
 
-* `LIVEDATA`: the pathname of the directory where live data is stored
-  (for single-client scenarios).
 * `REPO`: the pathname of the backup repository.
 
 Functions:
@@ -31,13 +29,9 @@ Live data generation
 --------------------
 
 The simplest way to generate test live data is to just generate the
-necessary number of bytes, split over some number of files. This works
-for single-client scenarios.
-
-    IMPLEMENTS GIVEN (\S+) of live data
-    genbackupdata --quiet --create "$MATCH_1" "$LIVEDATA"
-
-Generate requested amount of data in the named directory.
+necessary number of bytes, split over some number of files. We have
+the user name the directory explicitly, to avoid hidden dependencies
+between steps.
 
     IMPLEMENTS GIVEN (\S+) of new data in directory (\S+)
     genbackupdata --quiet --create "$MATCH_1" "$DATADIR/$MATCH_2"
@@ -47,17 +41,17 @@ hole in it, and it may matter where the hole is: at the beginning,
 middle, or end of the file. Thus, we provide a way for scenarios to
 specify that.
 
-    IMPLEMENTS GIVEN a file (\S+) in live data, with (.+)
-    mkdir -p "$LIVEDATA"
-    "$SRCDIR/mksparse" "$LIVEDATA/$MATCH_1" "$MATCH_2"
+    IMPLEMENTS GIVEN a file (\S+) in (\S+), with (.+)
+    mkdir -p "$DATADIR/$MATCH_2"
+    "$SRCDIR/mksparse" "$DATADIR/$MATCH_2/$MATCH_1" "$MATCH_3"
 
 Create some _interesting_ data, using the `mkfunnyfarm` utility.
 See the utility for details, but this is about creating files and
 other filesystem objects that are not the most common easy cases for
 backup programs (regular files with data and no holes).
 
-    IMPLEMENTS GIVEN live data with interesting filesystem objects
-    "$SRCDIR/mkfunnyfarm" "$LIVEDATA"
+    IMPLEMENTS GIVEN directory (\S+) with interesting filesystem objects
+    "$SRCDIR/mkfunnyfarm" "$DATADIR/$MATCH_1"
 
 Manifest creation and checking
 ------------------------------
@@ -70,12 +64,6 @@ naming goes wrong.
     IMPLEMENTS GIVEN a manifest of directory (\S+) in (\S+)
     manifest "$DATADIR/$MATCH_1" > "$DATADIR/$MATCH_2"
 
-We have not, however, made it explicit where the user's live data is,
-so we have another rule for that.
-
-    IMPLEMENTS GIVEN a manifest of live data in (\S+)
-    manifest "$LIVEDATA" > "$DATADIR/$MATCH_1"
-
 We need to check a directory tree against an existing manifest. We do
 this by generating a temporary manifest and diffing against that. We
 store the temporary manifest in a file so that if things fail, we can
@@ -83,9 +71,9 @@ see what the temporary manifest actually contains. Being able to look
 at the actual file is easier than trying to interpret complicated
 diffs.
 
-    IMPLEMENTS THEN live data, restored to (\S+), matches manifest (\S+)
-    manifest "$DATADIR/$MATCH_1/$LIVEDATA" > "$DATADIR/temp-manifest"
-    diff -u "$DATADIR/$MATCH_2" "$DATADIR/temp-manifest"
+    IMPLEMENTS THEN (\S+), restored to (\S+), matches manifest (\S+)
+    manifest "$DATADIR/$MATCH_2/$DATADIR/$MATCH_1" > "$DATADIR/temp-manifest"
+    diff -u "$DATADIR/$MATCH_3" "$DATADIR/temp-manifest"
     rm -f "$DATADIR/temp-manifest"
 
 Backing up
@@ -93,11 +81,6 @@ Backing up
 
 The simplest way to run a backup, for single-client scenarios. In
 addition to backing up, this makes a manifest of the data.
-
-    IMPLEMENTS WHEN user backs up live data
-    run_obnam backup -r "$REPO" "$LIVEDATA"
-
-Back up a named directory.
 
     IMPLEMENTS WHEN user backs up directory (\S+)
     run_obnam backup -r "$REPO" "$DATADIR/$MATCH_1"
@@ -163,9 +146,9 @@ Checks on files
 Check that a restored file uses at most as much disk space as the
 original one in live data.
 
-    IMPLEMENTS THEN restored file (\S+) in (\S+) doesn't use more disk
-    old=$(stat -c %b "$LIVEDATA/$MATCH_1")
-    new=$(stat -c %b "$DATADIR/$MATCH_2/$LIVEDATA/$MATCH_1")
+    IMPLEMENTS THEN file (\S+) from (\S+), restored in (\S+) doesn't use more disk
+    old=$(stat -c %b "$DATADIR/$MATCH_2/$MATCH_1")
+    new=$(stat -c %b "$DATADIR/$MATCH_3/$DATADIR/$MATCH_2/$MATCH_1")
     test "$old" -lt "$new"
 
 Checks on contents of files

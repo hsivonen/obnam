@@ -17,7 +17,6 @@
 
 
 # Set variables to help referring to common things in $DATADIR.
-LIVEDATA="$DATADIR/live-data"
 REPO="$DATADIR/repo"
 
 

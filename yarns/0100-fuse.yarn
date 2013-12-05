@@ -7,11 +7,11 @@ test suite concentrates on verifying that at least the basics work.
 
     SCENARIO Browsing backups with FUSE plugin
     ASSUMING user is in group fuse
-    GIVEN live data with interesting filesystem objects
-    AND a manifest of live data in M
-    WHEN user backs up live data
+    GIVEN directory L with interesting filesystem objects
+    AND a manifest of directory L in M
+    WHEN user backs up directory L
     AND user FUSE mounts their repository at F
-    THEN live data, restored to F/latest, matches manifest M
+    THEN L, restored to F/latest, matches manifest M
     FINALLY unmount repository F
 
 We can only run this test if the user is in the `fuse` group. This may

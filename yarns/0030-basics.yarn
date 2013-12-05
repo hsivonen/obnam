@@ -18,11 +18,11 @@ Just a few files with a bit of data in each. This is what every backup
 program must be able to handle.
 
     SCENARIO backup simple data
-    GIVEN 100kB of live data
-    AND a manifest of live data in M
-    WHEN user backs up live data
+    GIVEN 100kB of new data in directory L
+    AND a manifest of directory L in M
+    WHEN user backs up directory L
     AND user restores their latest generation into X
-    THEN live data, restored to X, matches manifest M
+    THEN L, restored to X, matches manifest M
     AND user can fsck the repository
 
 Backup sparse files
@@ -45,12 +45,12 @@ sparse. We'll settle for making sure the restored file does not use
 more disk space than the one in live data.
 
     SCENARIO backup a sparse file
-    GIVEN a file S in live data, with a hole, data, a hole
-    AND a manifest of live data in M
-    WHEN user backs up live data
+    GIVEN a file S in L, with a hole, data, a hole
+    AND a manifest of directory L in M
+    WHEN user backs up directory L
     AND user restores their latest generation into X
-    THEN live data, restored to X, matches manifest M
-    AND restored file S in X doesn't use more disk
+    THEN L, restored to X, matches manifest M
+    AND file S from L, restored in X doesn't use more disk
 
 Backup all interesting file and metadata types
 ----------------------------------------------
@@ -80,8 +80,8 @@ other parts of Obnam's test suite as well, and this reduces code
 duplication.
 
     SCENARIO backup non-basic filesystem objects
-    GIVEN live data with interesting filesystem objects
-    AND a manifest of live data in M
-    WHEN user backs up live data
+    GIVEN directory L with interesting filesystem objects
+    AND a manifest of directory L in M
+    WHEN user backs up directory L
     AND user restores their latest generation into X
-    THEN live data, restored to X, matches manifest M
+    THEN L, restored to X, matches manifest M
