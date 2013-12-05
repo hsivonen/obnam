@@ -1,0 +1,60 @@
+Multiple backup generations
+===========================
+
+This chapter contains tests for Obnam's handling of multiple
+generations: making incremental backups, forgetting generations, and
+so on. We assume that backing up any individual directory tree works
+fine, regardless of whether it is for the initial generation or an
+incremental one. In the previous chapter for basic backups, we've
+already dealt with those. This chapter focuses on generation handling
+only.
+
+Incremental backup generations (`obnam backup`)
+------------------------------
+
+First of all, most importantly, we must be able to make more than one
+backup generation, and restore them. The live data in each generation
+is different, but there are unchanged parts as well. For simplicity,
+we'll assume that if we can do two generations, we can do any number.
+It's possible that the 12765th generation might break, but that's
+unlikely, and it's even less likely we'll guess it. (If it turns out
+to actually happen, we'll add a regression test when we find the
+problem.)
+
+    SCENARIO backup two generations
+    GIVEN 1MB of live data
+    AND a manifest of live data in G1
+    WHEN user backs up live data
+    GIVEN 2MB of live data
+    AND a manifest of live data in G2
+    WHEN user backs up live data
+    AND user restores generation 1 to R1
+    AND user restores generation 2 to R2
+    THEN live data, restored to R1, matches manifest G1
+    AND live data, restored to R2, matches manifest G2
+
+Listing generations (`obnam generations`, `obnam genids`)
+-------------------
+
+FIXME.
+
+Listing contents of a generation (`obnam ls`)
+--------------------------------
+
+FIXME.
+
+Comparing generations (`obnam diff`)
+------------------------------------
+
+FIXME.
+
+Forgetting a specific generation (`obnam forget`)
+--------------------------------
+
+FIXME.
+
+Forgetting generations according to a schedule (`obnam forget --keep`)
+-------------------------------------------------------------
+
+FIXME.
+

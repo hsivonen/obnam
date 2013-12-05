@@ -109,6 +109,14 @@ We need a way to restore data from a test backup repository.
     IMPLEMENTS WHEN user restores their latest generation into (\S+)
     run_obnam restore -r "$REPO" --to "$DATADIR/$MATCH_1"
 
+Restore a specific generation. The generation number is an ordinal in
+the list of generations, not the "generation id" Obnam assigns, as
+that is unpredictable.
+
+    IMPLEMENTS WHEN user restores generation (\d+) to (\S+)
+    id=$(run_obnam -r "$REPO" genids | awk -v "n=$MATCH_1" 'NR == n')
+    run_obnam restore -r "$REPO" --to "$DATADIR/$MATCH_2" --generation "$id"
+
 Checks on files
 ---------------
 
