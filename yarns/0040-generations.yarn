@@ -36,7 +36,16 @@ problem.)
 Listing generations (`obnam generations`, `obnam genids`)
 -------------------
 
-FIXME.
+When we make some number of generations, the Obnam generation listing
+commands should show that number of generations.
+
+    SCENARIO list generations
+    GIVEN 1MB of live data
+    WHEN user backs up live data
+    AND user backs up live data
+    AND user backs up live data
+    THEN user sees 3 generations
+    AND user sees 3 generation ids
 
 Listing contents of a generation (`obnam ls`)
 --------------------------------

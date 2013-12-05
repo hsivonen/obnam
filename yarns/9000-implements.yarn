@@ -117,6 +117,23 @@ that is unpredictable.
     id=$(run_obnam -r "$REPO" genids | awk -v "n=$MATCH_1" 'NR == n')
     run_obnam restore -r "$REPO" --to "$DATADIR/$MATCH_2" --generation "$id"
 
+Checks on generations
+---------------------
+
+Check that number of generations is correct.
+
+    IMPLEMENTS THEN user sees (\d+) generations
+    run_obnam generations -r "$REPO" > "$DATADIR/generation.list"
+    n=$(wc -l < "$DATADIR/generation.list")
+    test "$MATCH_1" = "$n"
+
+Ditto for generation ids.
+
+    IMPLEMENTS THEN user sees (\d+) generation ids
+    run_obnam generations -r "$REPO" > "$DATADIR/generation-id.list"
+    n=$(wc -l < "$DATADIR/generation-id.list")
+    test "$MATCH_1" = "$n"
+
 Checks on files
 ---------------
 
