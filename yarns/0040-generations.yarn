@@ -78,7 +78,27 @@ line for that.
 Comparing generations (`obnam diff`)
 ------------------------------------
 
-FIXME.
+Once we've backed up two generations, we need to be able to see the
+difference. First of all, the diff should be empty when the
+generations are identical:
+
+    SCENARIO diff identical generations
+    GIVEN 1K of new data in directory L
+    WHEN user backs up directory L
+    AND user backs up directory L
+    AND user diffs generations 1 and 2 into D
+    THEN file D is empty
+    
+If we make a change to the data, that should be reflected in the diff.
+We'll assume the diff works, we'll just check whether it's empty.
+
+    SCENARIO diff modified generations
+    GIVEN 1K of new data in directory L
+    WHEN user backs up directory L
+    GIVEN 1K of new data in directory L
+    WHEN user backs up directory L
+    AND user diffs generations 1 and 2 into D
+    THEN file D is not empty
 
 Forgetting a specific generation (`obnam forget`)
 --------------------------------

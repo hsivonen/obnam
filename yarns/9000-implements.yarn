@@ -140,8 +140,30 @@ Ditto for generation ids.
     n=$(wc -l < "$DATADIR/generation-id.list")
     test "$MATCH_1" = "$n"
 
+Diffs between generations
+-------------------------
+
+Compute the difference between two generations. The generations are
+identified by the ordinal, not generation id, since the ids are
+unpredictable.
+
+    IMPLEMENTS WHEN user diffs generations (\d+) and (\d+) into (\S+)
+    id1=$(run_obnam -r "$REPO" genids | awk -v "n=$MATCH_1" 'NR == n')
+    id2=$(run_obnam -r "$REPO" genids | awk -v "n=$MATCH_2" 'NR == n')
+    run_obnam diff -r "$REPO" "$id1" "$id2" > "$DATADIR/$MATCH_3"
+
 Checks on files
 ---------------
+
+Is a file empty?
+
+    IMPLEMENTS THEN file (\S+) is empty
+    diff -u /dev/null "$DATADIR/$MATCH_1"
+
+Is a file not empty?
+
+    IMPLEMENTS THEN file (\S+) is not empty
+    ! diff -u /dev/null "$DATADIR/$MATCH_1"
 
 Check that a restored file uses at most as much disk space as the
 original one in live data.
