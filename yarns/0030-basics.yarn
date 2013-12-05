@@ -78,3 +78,16 @@ create all the interesting filesystem objects, rather than spelling
 them out in the scenarios. This is because that helper tool is used by
 other parts of Obnam's test suite as well, and this reduces code
 duplication.
+
+    SCENARIO backup non-basic filesystem objects
+    GIVEN live data with interesting filesystem objects
+    AND a manifest of live data in M
+    WHEN user backs up live data
+    AND user restores their latest generation into X
+    THEN live data, restored to X, matches manifest M
+
+The interesting live data generation is a step only used in the above
+scenario, so we implement it here.
+
+    IMPLEMENTS GIVEN live data with interesting filesystem objects
+    "$SRCDIR/mkfunnyfarm" "$LIVEDATA"
