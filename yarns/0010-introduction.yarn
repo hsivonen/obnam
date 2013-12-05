@@ -43,14 +43,6 @@ FIXME: Outline of test suite
 This chapter will be removed, later, when all the outlined parts have
 been implemented.
 
-* Multiple generations
-    - multiple generations
-    - forget, individual generations
-    - forget, automatically according to --keep
-    - generations
-    - genids
-    - ls
-    - diff
 * Multiple clients
 * De-duplication
     - single client vs multiple clients
@@ -66,9 +58,6 @@ been implemented.
     - remove-key
 * Lock handling
     - force-lock
-* FUSE
-    - mount
-    - unmount
 * Repository management
     - fsck
     - remove client
