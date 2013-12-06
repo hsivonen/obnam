@@ -103,7 +103,24 @@ We'll assume the diff works, we'll just check whether it's empty.
 Forgetting a specific generation (`obnam forget`)
 --------------------------------
 
-FIXME.
+We need to be able to remove any generation. As a corner case, we
+should be able to remove the only generation. We'll test by making two
+generations, then removing both, and after removing the first one,
+checking that the remaining one is the one we want.
+
+    SCENARIO remove specific generations
+    GIVEN 1kB of new data in directory L
+    AND a manifest of directory L in M1
+    WHEN user backs up directory L
+    GIVEN 1kB of new data in directory L
+    AND a manifest of directory L in M2
+    WHEN user backs up directory L
+    AND user forgets the oldest generation
+    THEN user sees 1 generation
+    WHEN user restores their latest generation into X
+    THEN L, restored to X, matches manifest M2
+    WHEN user forgets the oldest generation
+    THEN user sees 0 generations
 
 Forgetting generations according to a schedule (`obnam forget --keep`)
 -------------------------------------------------------------

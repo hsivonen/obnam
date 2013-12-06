@@ -110,6 +110,17 @@ that is unpredictable.
     id=$(run_obnam -r "$REPO" genids | awk -v "n=$MATCH_1" 'NR == n')
     run_obnam restore -r "$REPO" --to "$DATADIR/$MATCH_2" --generation "$id"
 
+Removing (forgetting) generations
+---------------------------------
+
+Remove the oldest generation.
+
+    IMPLEMENTS WHEN user forgets the oldest generation
+    # The grep below at the end of pipeline is there to make sure
+    # the pipeline fails if there were no generations.
+    id=$(run_obnam -r "$REPO" genids | head -n1 | grep .)
+    run_obnam forget -r "$REPO" "$id"
+
 List generations
 ----------------
 
@@ -128,7 +139,7 @@ Checks on generations
 
 Check that number of generations is correct.
 
-    IMPLEMENTS THEN user sees (\d+) generations
+    IMPLEMENTS THEN user sees (\d+) generation(s?)
     run_obnam generations -r "$REPO" > "$DATADIR/generation.list"
     n=$(wc -l < "$DATADIR/generation.list")
     test "$MATCH_1" = "$n"
