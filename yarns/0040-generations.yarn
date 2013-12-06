@@ -125,5 +125,16 @@ checking that the remaining one is the one we want.
 Forgetting generations according to a schedule (`obnam forget --keep`)
 -------------------------------------------------------------
 
-FIXME.
+The normal way of forgetting generations is with the `obnam forget
+--keep` option.
 
+    SCENARIO remove generations according to schedule
+    GIVEN 1kB of new data in directory L
+    WHEN user backs up directory L
+    GIVEN 1kB of new data in directory L
+    AND a manifest of directory L in M
+    WHEN user backs up directory L
+    AND user forgets according to schedule 1y
+    THEN user sees 1 generation
+    WHEN user restores their latest generation into X
+    THEN L, restored to X, matches manifest M

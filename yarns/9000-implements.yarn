@@ -121,6 +121,11 @@ Remove the oldest generation.
     id=$(run_obnam -r "$REPO" genids | head -n1 | grep .)
     run_obnam forget -r "$REPO" "$id"
 
+Remove according to a `--keep` schedule.
+
+    IMPLEMENTS WHEN user forgets according to schedule (\S+)
+    run_obnam forget -r "$REPO" --keep "$MATCH_1"
+
 List generations
 ----------------
 
