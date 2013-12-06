@@ -1,0 +1,87 @@
+Basic operation: backup and restore
+===================================
+
+This chapter tests the basic operation of Obnam: backing up and
+restoring data. Tests in this chapter only concern themselves with a
+single generation; see later for tests for multiple generations.
+
+The goal of this chapter is to test Obnam with every kind of data,
+every kind of file, and every kind of metadata.
+
+Backup simple data
+------------------
+
+This is the simplest of all simple backup tests: generate a small
+amount of data in regular files, in a single directory, and backup
+that. No symlinks, no empty files, no extended attributes, no nothing.
+Just a few files with a bit of data in each. This is what every backup
+program must be able to handle.
+
+    SCENARIO backup simple data
+    GIVEN 100kB of new data in directory L
+    AND a manifest of directory L in M
+    WHEN user backs up directory L
+    AND user restores their latest generation into X
+    THEN L, restored to X, matches manifest M
+    AND user can fsck the repository
+
+Backup sparse files
+-------------------
+
+Sparse files present an interesting challenge to backup programs. Most
+people have none, but some people have lots, and theirs can have very
+large holes. For example, at work I often generate disk images as
+raw disk images in sparse files. The image may need to be, say 30
+gigabytes in size, even though it only contains one or two gigabyte of
+data. The rest is a hole.
+
+A backup program should restore a sparse file as a sparse file.
+Otherwise, the 30 gigabyte disk image file will, upon restore, use 30
+gigabytes of disk space, rather than one. That might make restoring
+impossible.
+
+Unfortunately, it is not easy to (portably) check whether a file is
+sparse. We'll settle for making sure the restored file does not use
+more disk space than the one in live data.
+
+    SCENARIO backup a sparse file
+    GIVEN a file S in L, with a hole, data, a hole
+    AND a manifest of directory L in M
+    WHEN user backs up directory L
+    AND user restores their latest generation into X
+    THEN L, restored to X, matches manifest M
+    AND file S from L, restored in X doesn't use more disk
+
+Backup all interesting file and metadata types
+----------------------------------------------
+
+The Unix filesystem abstraction is surprisingly complicated. Indeed,
+it can come as a surprise to anyone who's not implemented a backup
+program with the intention of being able to restore the live data set
+exactly. To complicate things further, different filesystems have
+different features, and different Unix-like operating systems don't
+all implement all the features, and implement some features
+differently.
+
+We need to ensure Obnam can handle anything it encounters, on any
+supported platform. That is the purpose of the scenarios in this
+section. There are some limitations, though: the test suite is not run
+as the `root` user, and thus we don't deal with filesystem objects
+that require priviledged operations such as device node creation. We
+also don't, in these scenarios, handle multiple filesystem types: the
+test suite should, instead, be run multiple types, with `TMPDIR` set
+to point at a different filesystem type each time: we leave that to
+the user running the test suite.
+
+We rely on a helper tool in the Obnam source tree, `mkfunnyfarm`, to
+create all the interesting filesystem objects, rather than spelling
+them out in the scenarios. This is because that helper tool is used by
+other parts of Obnam's test suite as well, and this reduces code
+duplication.
+
+    SCENARIO backup non-basic filesystem objects
+    GIVEN directory L with interesting filesystem objects
+    AND a manifest of directory L in M
+    WHEN user backs up directory L
+    AND user restores their latest generation into X
+    THEN L, restored to X, matches manifest M

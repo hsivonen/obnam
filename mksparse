@@ -1,0 +1,78 @@
+#!/usr/bin/python
+# Copyright 2013  Lars Wirzenius
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# =*= License: GPL-3+ =*=
+
+
+description = '''Create a sparse file.
+
+The first command line argument is the name of the output file. The
+second argument is a specification for how the file is to be made
+sparse: a sequence of "data" and "hole" words, which may be
+interspersed with spaces, commas, or the word "a", all of which are
+ignored, except that the "data" and "hole" words must have something
+in between them.
+
+'''
+
+
+import cliapp
+import os
+
+
+class CreateSparseFile(cliapp.Application):
+
+    data_size = 1024
+    hole_size = 1024**2
+
+    def process_args(self, args):
+        if len(args) != 2:
+            raise cliapp.AppException('Usage!')
+
+        output_filename = args[0]
+        spec = self.parse_spec(args[1])
+
+        with open(output_filename, 'w') as f:
+            for word in spec:
+                if word == 'hole':
+                    self.append_hole(f)
+                else:
+                    assert word == 'data'
+                    self.append_data(f)
+
+    def parse_spec(self, arg):
+        # Remove commas.
+        arg = ' '.join(arg.split(','))
+
+        # Split into words.
+        words = arg.split()
+
+        # Remove any words that are not "data" or "hole".
+        spec = [x for x in words if x in ('data', 'hole')]
+
+        return spec
+
+    def append_data(self, f):
+        f.write('x' * self.data_size)
+        f.flush()
+
+    def append_hole(self, f):
+        fd = f.fileno()
+        pos = os.lseek(fd, self.hole_size, os.SEEK_CUR)
+        os.ftruncate(fd, pos)
+
+
+CreateSparseFile(description=description).run()

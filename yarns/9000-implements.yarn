@@ -1,0 +1,216 @@
+Test implementation
+===================
+
+This chapter documents the generic, shared IMPLEMENTS sections for
+steps that are used in a variety of scenarios. It also discusses the
+shell library that may be used by all IMPLEMENTS sections.
+
+The shell library
+-----------------
+
+The shell library contains shell functions and sets some shell
+variables that can be used by any IMPLEMENTS sections.
+
+Variables:
+
+* `REPO`: the pathname of the backup repository.
+
+Functions:
+
+* `run_obnam`: run Obnam from the source tree, ignoring any
+  system-wide or user configuration and using only the configuration
+  specified by the test suite itself (`--no-default-config`). Run in
+  quiet mode (`--quiet`).
+
+* `manifest`: run summain in a way that produces a useable manifest,
+  which can be compared with diff with a later manifest.
+
+Live data generation
+--------------------
+
+The simplest way to generate test live data is to just generate the
+necessary number of bytes, split over some number of files. We have
+the user name the directory explicitly, to avoid hidden dependencies
+between steps.
+
+    IMPLEMENTS GIVEN (\S+) of new data in directory (\S+)
+    genbackupdata --quiet --create "$MATCH_1" "$DATADIR/$MATCH_2"
+
+We also need to generate a sparse file. A sparse file has at least one
+hole in it, and it may matter where the hole is: at the beginning,
+middle, or end of the file. Thus, we provide a way for scenarios to
+specify that.
+
+    IMPLEMENTS GIVEN a file (\S+) in (\S+), with (.+)
+    mkdir -p "$DATADIR/$MATCH_2"
+    "$SRCDIR/mksparse" "$DATADIR/$MATCH_2/$MATCH_1" "$MATCH_3"
+
+Create some _interesting_ data, using the `mkfunnyfarm` utility.
+See the utility for details, but this is about creating files and
+other filesystem objects that are not the most common easy cases for
+backup programs (regular files with data and no holes).
+
+    IMPLEMENTS GIVEN directory (\S+) with interesting filesystem objects
+    "$SRCDIR/mkfunnyfarm" "$DATADIR/$MATCH_1"
+
+Manifest creation and checking
+------------------------------
+
+We make it explicit in the scenario when a manifest is generated, so
+that naming of the manifest is explicit. This reduces the need to
+debug weird test suite bugs, when an automatic or implicit manifest
+naming goes wrong.
+
+    IMPLEMENTS GIVEN a manifest of directory (\S+) in (\S+)
+    manifest "$DATADIR/$MATCH_1" > "$DATADIR/$MATCH_2"
+
+We need to check a directory tree against an existing manifest. We do
+this by generating a temporary manifest and diffing against that. We
+store the temporary manifest in a file so that if things fail, we can
+see what the temporary manifest actually contains. Being able to look
+at the actual file is easier than trying to interpret complicated
+diffs.
+
+    IMPLEMENTS THEN (\S+), restored to (\S+), matches manifest (\S+)
+    manifest "$DATADIR/$MATCH_2/$DATADIR/$MATCH_1" > "$DATADIR/temp-manifest"
+    diff -u "$DATADIR/$MATCH_3" "$DATADIR/temp-manifest"
+    rm -f "$DATADIR/temp-manifest"
+
+Backing up
+----------
+
+The simplest way to run a backup, for single-client scenarios. In
+addition to backing up, this makes a manifest of the data.
+
+    IMPLEMENTS WHEN user backs up directory (\S+)
+    run_obnam backup -r "$REPO" "$DATADIR/$MATCH_1"
+
+fsck'ing a repository
+---------------------
+
+Verify that the repository itself is OK, by running `obnam fsck` on
+it.
+
+    IMPLEMENTS THEN user can fsck the repository
+    run_obnam fsck -r "$REPO"
+
+Restoring data
+--------------
+
+We need a way to restore data from a test backup repository.
+
+    IMPLEMENTS WHEN user restores their latest generation into (\S+)
+    run_obnam restore -r "$REPO" --to "$DATADIR/$MATCH_1"
+
+Restore a specific generation. The generation number is an ordinal in
+the list of generations, not the "generation id" Obnam assigns, as
+that is unpredictable.
+
+    IMPLEMENTS WHEN user restores generation (\d+) to (\S+)
+    id=$(run_obnam -r "$REPO" genids | awk -v "n=$MATCH_1" 'NR == n')
+    run_obnam restore -r "$REPO" --to "$DATADIR/$MATCH_2" --generation "$id"
+
+Removing (forgetting) generations
+---------------------------------
+
+Remove the oldest generation.
+
+    IMPLEMENTS WHEN user forgets the oldest generation
+    # The grep below at the end of pipeline is there to make sure
+    # the pipeline fails if there were no generations.
+    id=$(run_obnam -r "$REPO" genids | head -n1 | grep .)
+    run_obnam forget -r "$REPO" "$id"
+
+Remove according to a `--keep` schedule.
+
+    IMPLEMENTS WHEN user forgets according to schedule (\S+)
+    run_obnam forget -r "$REPO" --keep "$MATCH_1"
+
+List generations
+----------------
+
+List everything in a generation. Capture the listing in a named file.
+
+    IMPLEMENTS WHEN user lists latest generation into (\S+)
+    run_obnam  ls -r "$REPO" > "$DATADIR/$MATCH_1"
+
+List only parts of a generation. Again, capture in a named file.
+
+    IMPLEMENTS WHEN user lists (\S+) in latest generation into (\S+)
+    run_obnam ls -r "$REPO" "$DATADIR/$MATCH_1" > "$DATADIR/$MATCH_2"
+
+Checks on generations
+---------------------
+
+Check that number of generations is correct.
+
+    IMPLEMENTS THEN user sees (\d+) generation(s?)
+    run_obnam generations -r "$REPO" > "$DATADIR/generation.list"
+    n=$(wc -l < "$DATADIR/generation.list")
+    test "$MATCH_1" = "$n"
+
+Ditto for generation ids.
+
+    IMPLEMENTS THEN user sees (\d+) generation ids
+    run_obnam generations -r "$REPO" > "$DATADIR/generation-id.list"
+    n=$(wc -l < "$DATADIR/generation-id.list")
+    test "$MATCH_1" = "$n"
+
+Diffs between generations
+-------------------------
+
+Compute the difference between two generations. The generations are
+identified by the ordinal, not generation id, since the ids are
+unpredictable.
+
+    IMPLEMENTS WHEN user diffs generations (\d+) and (\d+) into (\S+)
+    id1=$(run_obnam -r "$REPO" genids | awk -v "n=$MATCH_1" 'NR == n')
+    id2=$(run_obnam -r "$REPO" genids | awk -v "n=$MATCH_2" 'NR == n')
+    run_obnam diff -r "$REPO" "$id1" "$id2" > "$DATADIR/$MATCH_3"
+
+Checks on files
+---------------
+
+Is a file empty?
+
+    IMPLEMENTS THEN file (\S+) is empty
+    diff -u /dev/null "$DATADIR/$MATCH_1"
+
+Is a file not empty?
+
+    IMPLEMENTS THEN file (\S+) is not empty
+    ! diff -u /dev/null "$DATADIR/$MATCH_1"
+
+Check that a restored file uses at most as much disk space as the
+original one in live data.
+
+    IMPLEMENTS THEN file (\S+) from (\S+), restored in (\S+) doesn't use more disk
+    old=$(stat -c %b "$DATADIR/$MATCH_2/$MATCH_1")
+    new=$(stat -c %b "$DATADIR/$MATCH_3/$DATADIR/$MATCH_2/$MATCH_1")
+    test "$old" -lt "$new"
+
+Checks on contents of files
+---------------------------
+
+Regular expressions are very powerful, and sometimes that power is
+warranted to use. It isn't always clear enough to the lay reader, so
+be careful. `grep -E` regular expressions are used here.
+
+Does any line match?
+
+    IMPLEMENTS THEN (\S+) matches (\S+)
+    grep -E -e "$MATCH_2" -- "$DATADIR/$MATCH_1"
+
+Do all lines match?
+
+    IMPLEMENTS THEN all lines in (\S+) match (\S+)
+    ! grep -E -v -e "$MATCH_2" -- "$DATADIR/$MATCH_1"
+
+Check on user group membership
+------------------------------
+
+Some tests, such as those for the FUSE plugin, require the user to be
+in a specific group.
+
+    IMPLEMENTS ASSUMING user is in group (\S+)
+    groups | tr ' ' '\n' | grep -Fx "$MATCH_1"

@@ -1,0 +1,83 @@
+% Obnam integration test suite
+% http://liw.fi/obnam
+
+Introduction
+============
+
+This is the Obnam integration test suite. Obnam is a backup program.
+The test suite is implemented using yarn, which is a black box testing
+tool for Unix programs, inspired by the BDD tools used by the Ruby
+community (Cucumber, Gherkin).
+
+Obnam has extensive unit tests, which ensure individual functions,
+classes, and method work in isolation. The goal of the integration
+test suite is to make sure all the pieces work together. Thus, a
+typical integration test is to run Obnam in a specific kind of way, or
+against a specific kind of data, and then verify that the data can be
+restored correctly and that the repository is correct.
+
+With yarn, tests are written up as "scenarios", and each scenario may
+consist of several steps. Each scenario, or some group of steps within
+a scenario, may tests one aspect of Obnam, or one way to use Obnam, or
+one error situation.
+
+This test suite is meant to be comprehensible to those who would use
+Obnam, but aren't programmers, and would not understand the quite
+low-level unit tests. Test scenarios written for yarn are written as a
+document (this document), and each scenario consists of two parts: the
+scenario itself, and the nitty-gritty implementation part. The
+scenario is for everyone to understand, while the implementation part
+is meant for programmers, and others who understand shell script. The
+scenario describes, to any Obnam user, what is being tested, and at a
+very high level how, without having to understand the implementation
+part.
+
+For more information:
+
+* Obnam: <http://liw.fi/obnam/>
+* Yarn: <http://liw.fi/cmdtest/>
+
+FIXME: Outline of test suite
+============================
+
+This chapter will be removed, later, when all the outlined parts have
+been implemented.
+
+* Multiple clients
+* De-duplication
+    - single client vs multiple clients
+    - across generations
+    - with encryption
+* Compression
+    - generate interesting set of test data, backup once
+* Encryption
+    - add-key
+    - client-keys
+    - list-keys
+    - list-toplevels
+    - remove-key
+* Lock handling
+    - force-lock
+* Repository management
+    - fsck
+    - remove client
+    - list clients
+* System administration
+    - nagios-last-backup-age
+
+Open questions:
+
+* how to test compression and encryption? should I re-run all tests
+  plain, compressed, encrypted, and compressed+encrypted? also,
+  network tests? do I need some kind of include mechanism for this?
+    - I can probably manage just fine with a simpler set of sets for
+      compression, encryption and networking, no need to go over all
+      the cases that plain backups go through: if things work for
+      plain, they probably work for the other cases, if those other
+      cases work at all
+    - then add regression tests as need be
+* test accessing live data over sftp
+* what errors should I test? can I test?
+* multiple clients?
+* different filesystems? run test suite multiple times, and set TMPDIR
+  to point at a particular filesystem each time
