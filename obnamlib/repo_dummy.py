@@ -243,7 +243,7 @@ class DummyClient(object):
                 self.name, self.make_generation_spec(gen_id), filename)
 
     _integer_keys = (
-        obnamlib.REPO_FILE_MTIME,
+        obnamlib.REPO_FILE_MTIME_SEC,
     )
 
     def get_file_key(self, gen_id, filename, key):
@@ -566,7 +566,7 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
         client.set_file_key(generation_id, filename, key, value)
 
     def get_allowed_file_keys(self):
-        return [obnamlib.REPO_FILE_TEST_KEY, obnamlib.REPO_FILE_MTIME]
+        return [obnamlib.REPO_FILE_TEST_KEY, obnamlib.REPO_FILE_MTIME_SEC]
 
     def get_file_chunk_ids(self, generation_id, filename):
         client = self._client_list.get_client_by_generation_id(generation_id)

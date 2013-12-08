@@ -588,7 +588,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         encoded_metadata = client.get_metadata(gen_number, filename)
         metadata = obnamlib.decode_metadata(encoded_metadata)
 
-        if key == obnamlib.REPO_FILE_MTIME:
+        if key == obnamlib.REPO_FILE_MTIME_SEC:
             return metadata.st_mtime_sec or 0
         elif key == obnamlib.REPO_FILE_TEST_KEY:
             return metadata.target or ''
@@ -606,7 +606,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         encoded_metadata = client.get_metadata(gen_number, filename)
         metadata = obnamlib.decode_metadata(encoded_metadata)
 
-        if key == obnamlib.REPO_FILE_MTIME:
+        if key == obnamlib.REPO_FILE_MTIME_SEC:
             metadata.st_mtime_sec = value
         elif key == obnamlib.REPO_FILE_TEST_KEY:
             metadata.target = value

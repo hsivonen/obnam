@@ -32,10 +32,37 @@ REPO_CLIENT_TEST_KEY            = 0     # string
 REPO_GENERATION_TEST_KEY        = 1     # string
 
 REPO_FILE_TEST_KEY              = 2     # string
-REPO_FILE_MTIME                 = 3     # integer
+REPO_FILE_MODE                  = 3     # integer
+REPO_FILE_MTIME_SEC             = 4     # integer
+REPO_FILE_MTIME_NSEC            = 5     # integer
+REPO_FILE_ATIME_SEC             = 6     # integer
+REPO_FILE_ATIME_NSEC            = 7     # integer
+REPO_FILE_NLINK                 = 8     # integer
+REPO_FILE_SIZE                  = 9     # integer
+REPO_FILE_UID                   = 10    # integer
+REPO_FILE_USERNAME              = 11    # string
+REPO_FILE_GID                   = 12    # integer
+REPO_FILE_GROUPNAME             = 13    # string
+REPO_FILE_SYMLINK_TARGET        = 14    # string
+REPO_FILE_XATTR_BLOB            = 15    # string
+REPO_FILE_BLOCKS                = 16    # integer
+REPO_FILE_DEV                   = 17    # integer
+REPO_FILE_INO                   = 18    # integer
+REPO_FILE_MD5                   = 19    # string
 
 REPO_FILE_INTEGER_KEYS = (
-    REPO_FILE_MTIME,
+    REPO_FILE_MODE,
+    REPO_FILE_MTIME_SEC,
+    REPO_FILE_MTIME_NSEC,
+    REPO_FILE_ATIME_SEC,
+    REPO_FILE_ATIME_NSEC,
+    REPO_FILE_NLINK,
+    REPO_FILE_SIZE,
+    REPO_FILE_UID,
+    REPO_FILE_GID,
+    REPO_FILE_BLOCKS,
+    REPO_FILE_DEV,
+    REPO_FILE_INO,
 )
 
 # The following is a key that is NOT allowed for any repository format.
@@ -1270,16 +1297,16 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         gen_id = self.create_generation()
         self.repo.add_file(gen_id, '/foo/bar')
         value = self.repo.get_file_key(
-            gen_id, '/foo/bar', obnamlib.REPO_FILE_MTIME)
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_MTIME_SEC)
         self.assertEqual(value, 0)
 
     def test_sets_file_mtime(self):
         gen_id = self.create_generation()
         self.repo.add_file(gen_id, '/foo/bar')
         self.repo.set_file_key(
-            gen_id, '/foo/bar', obnamlib.REPO_FILE_MTIME, 123)
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_MTIME_SEC, 123)
         value = self.repo.get_file_key(
-            gen_id, '/foo/bar', obnamlib.REPO_FILE_MTIME)
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_MTIME_SEC)
         self.assertEqual(value, 123)
 
     def test_set_file_key_fails_for_nonexistent_generation(self):
