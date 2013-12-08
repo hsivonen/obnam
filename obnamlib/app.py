@@ -131,6 +131,7 @@ class App(cliapp.Application):
         self.setup_hooks()
 
         self.fsf = obnamlib.VfsFactory()
+        self.repo_factory = obnamlib.RepositoryFactory()
 
         self.pm.load_plugins()
         self.pm.enable_plugins()
@@ -206,6 +207,38 @@ class App(cliapp.Application):
                                     self.time,
                                     self.settings['lock-timeout'],
                                     self.settings['client-name'])
+
+    def get_repository_object(self, create=False, repofs=None):
+        '''Return an implementation of obnamlib.RepositoryInterface.'''
+
+        logging.info('Opening repository: %s', self.settings['repository'])
+        tracing.trace('create=%s', create)
+        tracing.trace('repofs=%s', repofs)
+
+        repopath = self.settings['repository']
+        if repofs is None:
+            repofs = self.fsf.new(repopath, create=create)
+            if self.settings['crash-limit'] > 0:
+                repofs.crash_limit = self.settings['crash-limit']
+            repofs.connect()
+        else:
+            repofs.reinit(repopath)
+
+        kwargs = {
+            'lock_timeout': self.settigs['lock-timeout'],
+            'node_size': self.settings['node-size'],
+            'upload_queue_size': self.settings['upload-queue-size'],
+            'lru_size': self.settings['lru-size'],
+            'idpath_depth': self.settings['idpath-depth'],
+            'idpath_bits': self.settings['idpath-bits'],
+            'idpath_skip': self.settings['idpath-skip'],
+            'hooks': self.hooks,
+            }
+
+        if create:
+            return self.repo_factory.create_repo(repofs, **kwargs)
+        else:
+            return self.repo_factory.open_existing_repo(repofs, **kwargs)
 
     def time(self):
         '''Return current time in seconds since epoch.
