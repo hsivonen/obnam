@@ -577,7 +577,26 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         client.remove(filename) # FIXME: Only removes from unfinished gen!
 
     def get_allowed_file_keys(self):
-        return [obnamlib.REPO_FILE_TEST_KEY]
+        return [
+            obnamlib.REPO_FILE_TEST_KEY,
+            obnamlib.REPO_FILE_MODE,
+            obnamlib.REPO_FILE_MTIME_SEC,
+            obnamlib.REPO_FILE_MTIME_NSEC,
+            obnamlib.REPO_FILE_ATIME_SEC,
+            obnamlib.REPO_FILE_ATIME_NSEC,
+            obnamlib.REPO_FILE_NLINK,
+            obnamlib.REPO_FILE_SIZE,
+            obnamlib.REPO_FILE_UID,
+            obnamlib.REPO_FILE_USERNAME,
+            obnamlib.REPO_FILE_GID,
+            obnamlib.REPO_FILE_GROUPNAME,
+            obnamlib.REPO_FILE_SYMLINK_TARGET,
+            obnamlib.REPO_FILE_XATTR_BLOB,
+            obnamlib.REPO_FILE_BLOCKS,
+            obnamlib.REPO_FILE_DEV,
+            obnamlib.REPO_FILE_INO,
+            obnamlib.REPO_FILE_MD5,
+            ]
 
     def get_file_key(self, generation_id, filename, key):
         self._require_existing_file(generation_id, filename)
@@ -588,10 +607,44 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         encoded_metadata = client.get_metadata(gen_number, filename)
         metadata = obnamlib.decode_metadata(encoded_metadata)
 
-        if key == obnamlib.REPO_FILE_MTIME_SEC:
-            return metadata.st_mtime_sec or 0
-        elif key == obnamlib.REPO_FILE_TEST_KEY:
+        # Not using a lookup table here, to avoid having to evaluate
+        # all the values, even if only one is used.
+        if key == obnamlib.REPO_FILE_TEST_KEY:
             return metadata.target or ''
+        elif key == obnamlib.REPO_FILE_MODE:
+            return metadata.st_mode or 0
+        elif key == obnamlib.REPO_FILE_MTIME_SEC:
+            return metadata.st_mtime_sec or 0
+        elif key == obnamlib.REPO_FILE_MTIME_NSEC:
+            return metadata.st_mtime_nsec or 0
+        elif key == obnamlib.REPO_FILE_ATIME_SEC:
+            return metadata.st_atime_sec or 0
+        elif key == obnamlib.REPO_FILE_ATIME_NSEC:
+            return metadata.st_atime_nsec or 0
+        elif key == obnamlib.REPO_FILE_NLINK:
+            return metadata.st_nlink or 0
+        elif key == obnamlib.REPO_FILE_SIZE:
+            return metadata.st_size or 0
+        elif key == obnamlib.REPO_FILE_UID:
+            return metadata.st_uid or 0
+        elif key == obnamlib.REPO_FILE_USERNAME:
+            return metadata.username or ''
+        elif key == obnamlib.REPO_FILE_GID:
+            return metadata.st_gid or 0
+        elif key == obnamlib.REPO_FILE_GROUPNAME:
+            return metadata.groupname or ''
+        elif key == obnamlib.REPO_FILE_SYMLINK_TARGET:
+            return metadata.target or ''
+        elif key == obnamlib.REPO_FILE_XATTR_BLOB:
+            return metadata.xattr or ''
+        elif key == obnamlib.REPO_FILE_BLOCKS:
+            return metadata.st_blocks or 0
+        elif key == obnamlib.REPO_FILE_DEV:
+            return metadata.st_dev or 0
+        elif key == obnamlib.REPO_FILE_INO:
+            return metadata.st_ino or 0
+        elif key == obnamlib.REPO_FILE_MD5:
+            return metadata.md5 or ''
         else:
             raise obnamlib.RepositoryFileKeyNotAllowed(
                 self.format, client_name, key)
@@ -606,10 +659,44 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         encoded_metadata = client.get_metadata(gen_number, filename)
         metadata = obnamlib.decode_metadata(encoded_metadata)
 
-        if key == obnamlib.REPO_FILE_MTIME_SEC:
-            metadata.st_mtime_sec = value
-        elif key == obnamlib.REPO_FILE_TEST_KEY:
+        # Not using a lookup table here, to avoid having to evaluate
+        # all the values, even if only one is used.
+        if key == obnamlib.REPO_FILE_TEST_KEY:
             metadata.target = value
+        elif key == obnamlib.REPO_FILE_MODE:
+            metadata.st_mode = value
+        elif key == obnamlib.REPO_FILE_MTIME_SEC:
+            metadata.st_mtime_sec = value
+        elif key == obnamlib.REPO_FILE_MTIME_NSEC:
+            metadata.st_mtime_nsec = value
+        elif key == obnamlib.REPO_FILE_ATIME_SEC:
+            metadata.st_atime_sec = value
+        elif key == obnamlib.REPO_FILE_ATIME_NSEC:
+            metadata.st_atime_nsec = value
+        elif key == obnamlib.REPO_FILE_NLINK:
+            metadata.st_nlink = value
+        elif key == obnamlib.REPO_FILE_SIZE:
+             metadata.st_size = value
+        elif key == obnamlib.REPO_FILE_UID:
+             metadata.st_uid = value
+        elif key == obnamlib.REPO_FILE_USERNAME:
+            metadata.username = value
+        elif key == obnamlib.REPO_FILE_GID:
+            metadata.st_gid = value
+        elif key == obnamlib.REPO_FILE_GROUPNAME:
+            metadata.st_groupname = value
+        elif key == obnamlib.REPO_FILE_SYMLINK_TARGET:
+            metadata.target = value
+        elif key == obnamlib.REPO_FILE_XATTR_BLOB:
+            metadata.xattr = value
+        elif key == obnamlib.REPO_FILE_BLOCKS:
+            metadata.blocks = value
+        elif key == obnamlib.REPO_FILE_DEV:
+            metadata.st_dev = value
+        elif key == obnamlib.REPO_FILE_INO:
+            metadata.st_ino = value
+        elif key == obnamlib.REPO_FILE_MD5:
+            metadata.md5 = value
         else:
             raise obnamlib.RepositoryFileKeyNotAllowed(
                 self.format, client_name, key)
