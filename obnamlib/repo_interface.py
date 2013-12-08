@@ -27,43 +27,53 @@ import obnamlib
 # the repository interface for key/value pairs. Not all formats need
 # to support all keys, but they all must support the test keys, for
 # the test suite to function.
+#
+# The symbols are meant to be used as Python symbols, but we do a
+# little magic to get a) automatic enumeration b) mapping between
+# values and names.
 
-REPO_CLIENT_TEST_KEY            = 0     # string
-REPO_GENERATION_TEST_KEY        = 1     # string
+_string_keys = [
+    "REPO_CLIENT_TEST_KEY",
+    "REPO_GENERATION_TEST_KEY",
+    "REPO_FILE_TEST_KEY",
+    "REPO_FILE_USERNAME",
+    "REPO_FILE_GROUPNAME",
+    "REPO_FILE_SYMLINK_TARGET",
+    "REPO_FILE_XATTR_BLOB",
+    "REPO_FILE_MD5",
+]
 
-REPO_FILE_TEST_KEY              = 2     # string
-REPO_FILE_MODE                  = 3     # integer
-REPO_FILE_MTIME_SEC             = 4     # integer
-REPO_FILE_MTIME_NSEC            = 5     # integer
-REPO_FILE_ATIME_SEC             = 6     # integer
-REPO_FILE_ATIME_NSEC            = 7     # integer
-REPO_FILE_NLINK                 = 8     # integer
-REPO_FILE_SIZE                  = 9     # integer
-REPO_FILE_UID                   = 10    # integer
-REPO_FILE_USERNAME              = 11    # string
-REPO_FILE_GID                   = 12    # integer
-REPO_FILE_GROUPNAME             = 13    # string
-REPO_FILE_SYMLINK_TARGET        = 14    # string
-REPO_FILE_XATTR_BLOB            = 15    # string
-REPO_FILE_BLOCKS                = 16    # integer
-REPO_FILE_DEV                   = 17    # integer
-REPO_FILE_INO                   = 18    # integer
-REPO_FILE_MD5                   = 19    # string
+_integer_keys = [
+    "REPO_FILE_MODE",
+    "REPO_FILE_MTIME_SEC",
+    "REPO_FILE_MTIME_NSEC",
+    "REPO_FILE_ATIME_SEC",
+    "REPO_FILE_ATIME_NSEC",
+    "REPO_FILE_NLINK",
+    "REPO_FILE_SIZE",
+    "REPO_FILE_UID",
+    "REPO_FILE_GID",
+    "REPO_FILE_BLOCKS",
+    "REPO_FILE_DEV",
+    "REPO_FILE_INO",
+]
 
-REPO_FILE_INTEGER_KEYS = (
-    REPO_FILE_MODE,
-    REPO_FILE_MTIME_SEC,
-    REPO_FILE_MTIME_NSEC,
-    REPO_FILE_ATIME_SEC,
-    REPO_FILE_ATIME_NSEC,
-    REPO_FILE_NLINK,
-    REPO_FILE_SIZE,
-    REPO_FILE_UID,
-    REPO_FILE_GID,
-    REPO_FILE_BLOCKS,
-    REPO_FILE_DEV,
-    REPO_FILE_INO,
-)
+for i, name in enumerate(_string_keys + _integer_keys):
+    globals()[name] = i
+
+REPO_FILE_INTEGER_KEYS = [
+    globals()[name]
+    for name in _integer_keys
+    if name.startswith('REPO_FILE_')
+    ]
+
+
+def _key_name(key_value):
+    for key_name in _integer_keys + _string_keys:
+        if globals()[key_name] == key_value:
+            return key_name
+    return key_value
+
 
 # The following is a key that is NOT allowed for any repository format.
 
@@ -112,7 +122,7 @@ class RepositoryClientKeyNotAllowed(obnamlib.Error):
         self.msg = (
             'Client %s uses repository format %s '
             'which does not allow the key %s to be use for clients' %
-            (format, client_name, key))
+            (format, client_name, _key_name(key)))
 
 
 class RepositoryClientGenerationUnfinished(obnamlib.Error):
@@ -130,7 +140,7 @@ class RepositoryGenerationKeyNotAllowed(obnamlib.Error):
         self.msg = (
             'Client %s uses repository format %s '
             'which does not allow the key %s to be use for generations' %
-            (format, client_name, key))
+            (format, client_name, _key_name(key)))
 
 
 class RepositoryGenerationDoesNotExist(obnamlib.Error):
@@ -161,7 +171,7 @@ class RepositoryFileKeyNotAllowed(obnamlib.Error):
         self.msg = (
             'Client %s uses repository format %s '
             'which does not allow the key %s to be use for files' %
-            (client_name, format, key))
+            (client_name, format, _key_name(key)))
 
 
 class RepositoryChunkDoesNotExist(obnamlib.Error):
