@@ -192,7 +192,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         return obnamlib.Metadata(
             st_atime_sec=K(obnamlib.REPO_FILE_ATIME_SEC),
             st_atime_nsec=K(obnamlib.REPO_FILE_ATIME_NSEC),
-            st_mtime_sec=K(obnamlib.REPO_FILE_MTIME_NSEC),
+            st_mtime_sec=K(obnamlib.REPO_FILE_MTIME_SEC),
             st_mtime_nsec=K(obnamlib.REPO_FILE_MTIME_NSEC),
             st_blocks=K(obnamlib.REPO_FILE_BLOCKS),
             st_dev=K(obnamlib.REPO_FILE_DEV),
