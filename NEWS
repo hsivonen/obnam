@@ -6,6 +6,10 @@ This file summarizes changes between releases of Obnam.
 Version 1./, released UNRELEASED
 --------------------------------
 
+* The `convert5to6` subcommand has been removed. If you need to
+  convert from a pre-1.0 backup repository, and haven't done so yet,
+  please use Obnam version 1.6.1 or earlier to do so.
+
 Bug fixes:
 
 * Obnam now creates a `trustdb.gpg` in the temporary GNUPGHOME it uses

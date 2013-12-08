@@ -517,20 +517,6 @@ This can result in a crash.
 It will not result in corrupt data,
 or incorrect restores.
 However, you may need to restart the read-only operation after a crash.
-.SS "Repository format conversion"
-The
-.B convert5to6
-subcommand converts a repository of format 5 to format 6.
-It is somewhat dangerous!
-It modifies the repository in place,
-so you should be careful.
-You should do a hardlink copy of the repository before converting:
-.IP
-cp -al repo repo.format5
-.PP
-You should also run this with local filesystem access to the repository,
-rather than sftp,
-to avoid abysmal performance.
 .\"---------------------------------------------------------------------
 .SH OPTIONS
 .SS "Option values"
