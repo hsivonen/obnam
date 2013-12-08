@@ -451,9 +451,13 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
         self._client_list = DummyClientList()
         self._chunk_store = ChunkStore()
         self._chunk_indexes = ChunkIndexes()
+        self._fs = None
+
+    def get_fs(self):
+        return self._fs
 
     def set_fs(self, fs):
-        pass
+        self._fs = fs
 
     def init_repo(self):
         pass

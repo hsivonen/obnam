@@ -98,6 +98,8 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             idpath_bits=obnamlib.IDPATH_BITS,
             idpath_skip=obnamlib.IDPATH_SKIP,
             hooks=None):
+
+        self._real_fs = None
         self._lock_timeout = lock_timeout
         self._node_size = node_size
         self._upload_queue_size = upload_queue_size
@@ -116,7 +118,11 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self.hooks.new_filter('repository-data')
         self.hooks.new('repository-add-client')
 
+    def get_fs(self):
+        return self._real_fs
+
     def set_fs(self, fs):
+        self._real_fs = fs
         self._fs = HookedFS(self, fs, self.hooks)
         self._lockmgr = obnamlib.LockManager(self._fs, self._lock_timeout, '')
         self._setup_client_list()

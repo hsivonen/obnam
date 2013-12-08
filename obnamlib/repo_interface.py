@@ -309,6 +309,15 @@ class RepositoryInterface(object):
 
     # Operations on the repository itself.
 
+    def get_fs(self):
+        '''Get the Obnam VFS instance for accessing the filesystem.
+
+        This is None, unless set by set_fs.
+
+        '''
+
+        raise NotImplementedError()
+
     def set_fs(self, fs):
         '''Set the Obnam VFS instance for accessing the filesystem.'''
         raise NotImplementedError()
@@ -662,9 +671,9 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
     def test_has_format_attribute(self):
         self.assertEqual(type(self.repo.format), str)
 
-    def test_has_set_fs_method(self):
-        # We merely test that set_fs can be called.
-        self.assertEqual(self.repo.set_fs(None), None)
+    def test_set_fs_sets_fs(self):
+        self.repo.set_fs('foo')
+        self.assertEqual(self.repo.get_fs(), 'foo')
 
     # Tests for the client list.
 
