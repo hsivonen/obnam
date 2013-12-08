@@ -225,7 +225,7 @@ class App(cliapp.Application):
             repofs.reinit(repopath)
 
         kwargs = {
-            'lock_timeout': self.settigs['lock-timeout'],
+            'lock_timeout': self.settings['lock-timeout'],
             'node_size': self.settings['node-size'],
             'upload_queue_size': self.settings['upload-queue-size'],
             'lru_size': self.settings['lru-size'],

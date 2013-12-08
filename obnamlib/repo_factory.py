@@ -94,4 +94,6 @@ class RepositoryFactory(object):
             raise UnknownRepositoryFormatWanted(wanted_format)
         
         fs.write_file('metadata/format', '%s\n' % wanted_format.format)
-        return self._open_repo(impl, fs, kwargs)
+        repo = self._open_repo(impl, fs, kwargs)
+        repo.init_repo()
+        return repo

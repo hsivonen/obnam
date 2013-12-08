@@ -106,7 +106,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         self.file_count = 0
         self.started = time.time()
 
-        self.repo = self.app.open_repository()
+        self.repo = self.app.get_repository_object()
         self.repo.open_client(self.app.settings['client-name'])
         if self.write_ok:
             self.fs = self.app.fsf.new(self.app.settings['to'], create=True)
