@@ -189,7 +189,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             else:
                 return None
 
-        return obnamlib.Metdata(
+        return obnamlib.Metadata(
             st_atime_sec=K(obnamlib.REPO_FILE_ATIME_SEC),
             st_atime_nsec=K(obnamlib.REPO_FILE_ATIME_NSEC),
             st_mtime_sec=K(obnamlib.REPO_FILE_MTIME_NSEC),
@@ -205,7 +205,8 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             username=K(obnamlib.REPO_FILE_USERNAME),
             groupname=K(obnamlib.REPO_FILE_GROUPNAME),
             target=K(obnamlib.REPO_FILE_SYMLINK_TARGET),
-            xattr=K(obnamlib.REPO_FILE_XATTR),
+            xattr=K(obnamlib.REPO_FILE_XATTR_BLOB),
+            md5=K(obnamlib.REPO_FILE_MD5),
             )
 
     def restore_safely(self, gen, pathname):
@@ -297,6 +298,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             correct_checksum = metadata.md5
             if summer.digest() != correct_checksum:
                 msg = 'File checksum restore error: %s' % filename
+                msg += '(%s vs %s)' % (summer.digest(), correct_checksum)
                 logging.error(msg)
                 self.app.ts.notify(msg)
                 self.errors = True
