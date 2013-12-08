@@ -179,13 +179,42 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         for pathname in self.repo_walk(gen, root, depth_first=True):
             self.file_count += 1
             self.app.ts['current'] = pathname
-            self.restore_safely(gen, pathname, metadata)
+            self.restore_safely(gen, pathname)
 
-    def restore_safely(self, gen, pathname, metadata):
+    def construct_metadata_object(self, gen, filename):
+        allowed = set(self.repo.get_allowed_file_keys())
+        def K(key):
+            if key in allowed:
+                return self.repo.get_file_key(gen, filename, key)
+            else:
+                return None
+
+        return obnamlib.Metdata(
+            st_atime_sec=K(obnamlib.REPO_FILE_ATIME_SEC),
+            st_atime_nsec=K(obnamlib.REPO_FILE_ATIME_NSEC),
+            st_mtime_sec=K(obnamlib.REPO_FILE_MTIME_NSEC),
+            st_mtime_nsec=K(obnamlib.REPO_FILE_MTIME_NSEC),
+            st_blocks=K(obnamlib.REPO_FILE_BLOCKS),
+            st_dev=K(obnamlib.REPO_FILE_DEV),
+            st_gid=K(obnamlib.REPO_FILE_GID),
+            st_ino=K(obnamlib.REPO_FILE_INO),
+            st_mode=K(obnamlib.REPO_FILE_MODE),
+            st_nlink=K(obnamlib.REPO_FILE_NLINK),
+            st_size=K(obnamlib.REPO_FILE_SIZE),
+            st_uid=K(obnamlib.REPO_FILE_UID),
+            username=K(obnamlib.REPO_FILE_USERNAME),
+            groupname=K(obnamlib.REPO_FILE_GROUPNAME),
+            target=K(obnamlib.REPO_FILE_SYMLINK_TARGET),
+            xattr=K(obnamlib.REPO_FILE_XATTR),
+            )
+
+    def restore_safely(self, gen, pathname):
         try:
             dirname = os.path.dirname(pathname)
             if self.write_ok and not self.fs.exists('./' + dirname):
                 self.fs.makedirs('./' + dirname)
+
+            metadata = self.construct_metadata_object(gen, pathname)
 
             set_metadata = True
             if metadata.isdir():
