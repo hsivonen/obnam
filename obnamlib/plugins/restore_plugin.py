@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import hashlib
 import logging
 import os
 import stat
@@ -107,7 +108,8 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         self.started = time.time()
 
         self.repo = self.app.get_repository_object()
-        self.repo.open_client(self.app.settings['client-name'])
+        client_name = self.app.settings['client-name']
+
         if self.write_ok:
             self.fs = self.app.fsf.new(self.app.settings['to'], create=True)
             self.fs.connect()
@@ -122,12 +124,13 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         if len(generations) != 1:
             raise obnamlib.Error(
                 'The restore command wants exactly one generation option')
-
-        gen = self.repo.genspec(generations[0])
+        gen = self.repo.interpret_generation_spec(client_name, generations[0])
 
         self.configure_ttystatus()
-        self.app.ts['total'] = self.repo.client.get_generation_file_count(gen)
-        self.app.ts['total-bytes'] = self.repo.client.get_generation_data(gen)
+        # FIXME: should initialise  self.app.ts['total'] and
+        # self.app.ts['total-bytes'] from the generation metadata,
+        # but RepositoryInterface does not yet support that. To be
+        # fixed later.
 
         self.app.dump_memory_profile('at beginning after setup')
 
@@ -135,7 +138,8 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             self.restore_something(gen, arg)
             self.app.dump_memory_profile('at restoring %s' % repr(arg))
 
-        self.repo.fs.close()
+        # FIXME: Close the repository here, so that its vfs gets
+        # closed. This is not yet supported by RepositoryInterface.
         if self.write_ok:
             self.fs.close()
 
@@ -147,8 +151,32 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         if self.errors:
             raise obnamlib.Error('There were errors when restoring')
 
+    def repo_walk(self, gen_id, dirname, depth_first=False):
+        '''Like os.walk, but for a generation.
+
+        This is a generator. Each return value is a tuple consisting
+        of a pathname and its corresponding metadata. Directories are
+        recursed into.
+
+        '''
+
+        arg = os.path.normpath(dirname)
+        mode = self.repo.get_file_key(
+            gen_id, dirname, obnamlib.REPO_FILE_MODE)
+        if stat.S_ISDIR(mode):
+            if not depth_first:
+                yield dirname
+            kidpaths = self.repo.get_file_children(gen_id, dirname)
+            for kp in kidpaths:
+                for x in self.repo_walk(gen_id, kp, depth_first=depth_first):
+                    yield x
+            if depth_first:
+                yield arg
+        else:
+            yield arg
+
     def restore_something(self, gen, root):
-        for pathname, metadata in self.repo.walk(gen, root, depth_first=True):
+        for pathname in self.repo_walk(gen, root, depth_first=True):
             self.file_count += 1
             self.app.ts['current'] = pathname
             self.restore_safely(gen, pathname, metadata)
@@ -225,17 +253,11 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         logging.debug('restoring regular %s' % filename)
         if self.write_ok:
             f = self.fs.open('./' + filename, 'wb')
-            summer = self.repo.new_checksummer()
+            summer = hashlib.md5()
 
             try:
-                contents = self.repo.get_file_data(gen, filename)
-                if contents is None:
-                    chunkids = self.repo.get_file_chunks(gen, filename)
-                    self.restore_chunks(f, chunkids, summer)
-                else:
-                    f.write(contents)
-                    summer.update(contents)
-                    self.downloaded_bytes += len(contents)
+                chunkids = self.repo.get_file_chunk_ids(gen, filename)
+                self.restore_chunks(f, chunkids, summer)
             except obnamlib.MissingFilterError, e:
                 msg = 'Missing filter error during restore: %s' % filename
                 logging.error(msg)
@@ -254,7 +276,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         zeroes = ''
         hole_at_end = False
         for chunkid in chunkids:
-            data = self.repo.get_chunk(chunkid)
+            data = self.repo.get_chunk_content(chunkid)
             self.verify_chunk_checksum(data, chunkid)
             checksummer.update(data)
             self.downloaded_bytes += len(data)
@@ -274,15 +296,10 @@ class RestorePlugin(obnamlib.ObnamPlugin):
                 f.write('\0')
 
     def verify_chunk_checksum(self, data, chunkid):
-        checksum = self.repo.checksum(data)
-        try:
-            wanted = self.repo.chunklist.get_checksum(chunkid)
-        except KeyError:
-            # Chunk might not be in the tree, but that does not
-            # mean it is invalid. We'll assume it is valid.
-            return
-        if checksum != wanted:
-            raise obnamlib.Error('chunk %s checksum error' % chunkid)
+        # FIXME: The RepositoryInterface does not currently have
+        # a way to do this, so at this time this is a no-op, to be
+        # fixed later.
+        pass
 
     def restore_fifo(self, gen, filename, metadata):
         logging.debug('restoring fifo %s' % filename)
@@ -356,4 +373,3 @@ class RestorePlugin(obnamlib.ObnamPlugin):
                 (self.file_count,
                  size_amount, size_unit,
                  duration_string, speed_amount, speed_unit))
-
