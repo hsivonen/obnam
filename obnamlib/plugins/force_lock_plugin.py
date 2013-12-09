@@ -37,13 +37,13 @@ class ForceLockPlugin(obnamlib.ObnamPlugin):
         logging.info('Client: %s' % client_name)
 
         try:
-            repo = self.app.open_repository()
+            repo = self.app.get_repository_object()
         except OSError, e:
             raise obnamlib.Error('Repository does not exist '
                                   'or cannot be accessed.\n' +
                                   str(e))
 
-        all_clients = repo.list_clients()
+        all_clients = repo.get_client_names()
         if client_name not in all_clients:
             msg = 'Client does not exist in repository.'
             logging.warning(msg)
@@ -51,19 +51,11 @@ class ForceLockPlugin(obnamlib.ObnamPlugin):
             return
 
         all_dirs = ['clientlist', 'chunksums', 'chunklist', 'chunks', '.']
-        for client_name in all_clients:
-            client_id = repo.clientlist.get_client_id(client_name)
-            client_dir = repo.client_dir(client_id)
-            all_dirs.append(client_dir)
+        repo.force_client_list_lock()
+        for x in all_clients:
+            repo.force_client_lock(x)
+        repo.force_chunk_indexes_lock()
 
-        for one_dir in all_dirs:
-            lockname = os.path.join(one_dir, 'lock')
-            if repo.fs.exists(lockname):
-                logging.info('Removing lockfile %s' % lockname)
-                repo.fs.remove(lockname)
-            else:
-                logging.info('%s is not locked' % one_dir)
-
-        repo.fs.close()
+        repo.close()
 
         return 0
