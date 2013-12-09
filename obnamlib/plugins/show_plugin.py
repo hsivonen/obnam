@@ -93,7 +93,10 @@ class ShowPlugin(obnamlib.ObnamPlugin):
             # generation is a checkpointand the generation file count
             # and data size here using generation keys. This is not
             # yet implemented in the interface.
-            start, end = 0, 0
+            start = self.repo.get_generation_key(
+                gen_id, obnamlib.REPO_GENERATION_STARTED)
+            end = self.repo.get_generation_key(
+                gen_id, obnamlib.REPO_GENERATION_ENDED)
             is_checkpoint = False
             file_count = 0
             data_size = 0
@@ -349,7 +352,8 @@ class ShowPlugin(obnamlib.ObnamPlugin):
                 perms[offset] = char
         perms = ''.join(perms)
 
-        timestamp = time.strftime('%Y-%m-%d %H:%M:%S', mtime_sec)
+        timestamp = time.strftime(
+            '%Y-%m-%d %H:%M:%S', time.gmtime(mtime_sec))
 
         if stat.S_ISLNK(mode):
             name = '%s -> %s' % (filename, target)
