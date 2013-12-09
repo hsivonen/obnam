@@ -517,7 +517,11 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
         return self._client_list[client_name].create_generation()
 
     def get_allowed_generation_keys(self):
-        return [obnamlib.REPO_GENERATION_TEST_KEY]
+        return [
+            obnamlib.REPO_GENERATION_TEST_KEY,
+            obnamlib.REPO_GENERATION_STARTED,
+            obnamlib.REPO_GENERATION_ENDED,
+            ]
 
     def get_generation_key(self, generation_id, key):
         client = self._client_list.get_client_by_generation_id(generation_id)

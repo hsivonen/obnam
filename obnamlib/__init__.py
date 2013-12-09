@@ -116,6 +116,8 @@ from repo_interface import (
     RepositoryChunkIndexesLockingFailed,
     REPO_CLIENT_TEST_KEY,
     REPO_GENERATION_TEST_KEY,
+    REPO_GENERATION_STARTED,
+    REPO_GENERATION_ENDED,
     REPO_FILE_TEST_KEY,
     REPO_FILE_MODE,
     REPO_FILE_MTIME_SEC,

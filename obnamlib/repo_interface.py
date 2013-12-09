@@ -44,6 +44,9 @@ _string_keys = [
 ]
 
 _integer_keys = [
+    "REPO_GENERATION_STARTED",
+    "REPO_GENERATION_ENDED",
+
     "REPO_FILE_MODE",
     "REPO_FILE_MTIME_SEC",
     "REPO_FILE_MTIME_NSEC",
@@ -140,7 +143,7 @@ class RepositoryGenerationKeyNotAllowed(obnamlib.Error):
         self.msg = (
             'Client %s uses repository format %s '
             'which does not allow the key %s to be use for generations' %
-            (format, client_name, _key_name(key)))
+            (client_name, format, _key_name(key)))
 
 
 class RepositoryGenerationDoesNotExist(obnamlib.Error):
@@ -1067,7 +1070,7 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         gen_id = self.create_generation()
         for key in self.repo.get_allowed_generation_keys():
             value = self.repo.get_generation_key(gen_id, key)
-            self.assertEqual(type(value), str)
+            self.assertTrue(type(value) in (str, int))
 
     def test_has_empty_string_for_generation_test_key(self):
         if self.generation_test_key_is_allowed():
@@ -1111,15 +1114,18 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
             self.repo.commit_client('fooclient')
             self.assertEqual(value, 'bar')
 
-    def test_unlocking_client_undoes_generation_key_changes(self):
-        if self.generation_test_key_is_allowed():
-            gen_id = self.create_generation()
-            self.repo.set_generation_key(
-                gen_id, obnamlib.REPO_GENERATION_TEST_KEY, 'bar')
-            self.repo.unlock_client('fooclient')
-            value = self.repo.get_generation_key(
-                gen_id, obnamlib.REPO_CLIENT_TEST_KEY)
-            self.assertEqual(value, '')
+    # FIXME: This test seems to make no sense: we can't create a new
+    # generation, then abort that, and then use the generation id
+    # after that. That generation no longer exists. It's gone.
+    # def test_unlocking_client_undoes_generation_key_changes(self):
+    #     if self.generation_test_key_is_allowed():
+    #         gen_id = self.create_generation()
+    #         self.repo.set_generation_key(
+    #             gen_id, obnamlib.REPO_GENERATION_TEST_KEY, 'bar')
+    #         self.repo.unlock_client('fooclient')
+    #         value = self.repo.get_generation_key(
+    #             gen_id, obnamlib.REPO_GENERATION_TEST_KEY)
+    #         self.assertEqual(value, '')
 
     def test_removes_unfinished_generation(self):
         gen_id = self.create_generation()

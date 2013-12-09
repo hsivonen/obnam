@@ -61,6 +61,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     GEN_IS_CHECKPOINT = 3   # subkey type for whether generation is checkpoint
     GEN_FILE_COUNT = 4      # subkey type for count of files+dirs in generation
     GEN_TOTAL_DATA = 5      # subkey type for sum of all file sizes in gen
+    GEN_TEST_DATA = 6       # subkey type for REPO_GENERATION_TEST_KEY
 
     # Maximum values for the subkey type field, and the subkey field.
     # Both have a minimum value of 0.
@@ -306,10 +307,29 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         except KeyError:
             return None
 
+    def _lookup_string(self, tree, what): # pragma: no cover
+        try:
+            return tree.lookup(self.genkey(what))
+        except KeyError:
+            return None
+
     def get_generation_times(self, genid):
         tree = self.find_generation(genid)
         return (self._lookup_time(tree, self.GEN_STARTED),
                 self._lookup_time(tree, self.GEN_ENDED))
+
+    def set_generation_started(self, timestamp): # pragma: no cover
+        self._insert_int(self.tree, self.genkey(self.GEN_STARTED), timestamp)
+
+    def set_generation_ended(self, timestamp): # pragma: no cover
+        self._insert_int(self.tree, self.genkey(self.GEN_ENDED), timestamp)
+
+    def get_generation_test_data(self): # pragma: no cover
+        return self._lookup_string(self.tree, self.GEN_TEST_DATA)
+
+    def set_generation_test_data(self, value): # pragma: no cover
+        key = self.genkey(self.GEN_TEST_DATA)
+        self.tree.insert(key, value)
 
     def get_generation_data(self, genid):
         return self._lookup_count(genid, self.GEN_TOTAL_DATA)

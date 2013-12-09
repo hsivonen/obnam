@@ -362,17 +362,47 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             raise obnamlib.RepositoryGenerationDoesNotExist(client_name)
 
     def get_allowed_generation_keys(self):
-        return []
+        return [
+            obnamlib.REPO_GENERATION_TEST_KEY,
+            obnamlib.REPO_GENERATION_STARTED,
+            obnamlib.REPO_GENERATION_ENDED,
+            ]
 
     def get_generation_key(self, generation_id, key): # pragma: no cover
-        client_name, gen_number = generation_key
+        client_name, gen_number = generation_id
+        client = self._open_client(client_name)
+
+        if key == obnamlib.REPO_GENERATION_STARTED:
+            started, ended = client.get_generation_times(gen_number)
+            return started or 0
+
+        if key == obnamlib.REPO_GENERATION_ENDED:
+            started, ended = client.get_generation_times(gen_number)
+            return ended or 0
+
+        if key == obnamlib.REPO_GENERATION_TEST_KEY:
+            return client.get_generation_test_data() or ''
+
         raise obnamlib.RepositoryGenerationKeyNotAllowed(
             self.format, client_name, key)
 
     def set_generation_key(self, generation_id, key, value): # pragma: no cover
-        client_name, gen_number = generation_key
-        raise obnamlib.RepositoryGenerationKeyNotAllowed(
-            self.format, client_name, key)
+        # FIXME: This no worky for generations other than the currently
+        # started one.
+
+        client_name, gen_number = generation_id
+        self._require_client_lock(client_name)
+        client = self._open_client(client_name)
+
+        if key == obnamlib.REPO_GENERATION_STARTED:
+            client.set_generation_started(value)
+        elif key == obnamlib.REPO_GENERATION_ENDED:
+            client.set_generation_ended(value)
+        elif key == obnamlib.REPO_GENERATION_TEST_KEY:
+            client.set_generation_test_data(value)
+        else:
+            raise obnamlib.RepositoryGenerationKeyNotAllowed(
+                self.format, client_name, key)
 
     def interpret_generation_spec(self, client_name, genspec):
         ids = self.get_client_generation_ids(client_name)
