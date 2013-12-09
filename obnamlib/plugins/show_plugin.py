@@ -167,8 +167,9 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         if len(args) is 0:
             args = ['/']
 
+        client_name = self.app.settings['client-name']
         for genspec in self.app.settings['generation']:
-            gen_id = self.repo.interpret_generation_spec(gen_spec)
+            gen_id = self.repo.interpret_generation_spec(client_name, genspec)
             # FIXME: Get generation start, end times here.
             started, ended = 0, 0
             started = self.format_time(started)
