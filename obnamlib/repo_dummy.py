@@ -462,6 +462,9 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
     def init_repo(self):
         pass
 
+    def close(self):
+        pass
+
     def get_client_names(self):
         return self._client_list.names()
 

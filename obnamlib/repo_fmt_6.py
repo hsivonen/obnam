@@ -133,6 +133,10 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         # There is nothing else to be done.
         pass
 
+    def close(self):
+        if self._real_fs:
+            self._real_fs.close()
+
     # Client list handling.
 
     def _setup_client_list(self):

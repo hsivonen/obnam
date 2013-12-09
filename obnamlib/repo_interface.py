@@ -332,6 +332,10 @@ class RepositoryInterface(object):
 
         raise NotImplementedError()
 
+    def close(self):
+        '''Close the repository and its filesystem.'''
+        raise NotImplementedError()
+
     # Client list.
 
     def get_client_names(self):
@@ -674,6 +678,12 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
     def test_set_fs_sets_fs(self):
         self.repo.set_fs('foo')
         self.assertEqual(self.repo.get_fs(), 'foo')
+
+    def test_closes_repository(self):
+        # Can't think of a test to verify the closing happened,
+        # so just calling the method will have to do for now.
+        self.repo.close()
+        self.assertTrue(True)
 
     # Tests for the client list.
 
