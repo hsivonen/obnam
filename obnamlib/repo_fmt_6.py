@@ -366,6 +366,9 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             obnamlib.REPO_GENERATION_TEST_KEY,
             obnamlib.REPO_GENERATION_STARTED,
             obnamlib.REPO_GENERATION_ENDED,
+            obnamlib.REPO_GENERATION_IS_CHECKPOINT,
+            obnamlib.REPO_GENERATION_FILE_COUNT,
+            obnamlib.REPO_GENERATION_TOTAL_DATA,
             ]
 
     def get_generation_key(self, generation_id, key): # pragma: no cover
@@ -375,20 +378,24 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         if key == obnamlib.REPO_GENERATION_STARTED:
             started, ended = client.get_generation_times(gen_number)
             return started or 0
-
-        if key == obnamlib.REPO_GENERATION_ENDED:
+        elif key == obnamlib.REPO_GENERATION_ENDED:
             started, ended = client.get_generation_times(gen_number)
             return ended or 0
-
-        if key == obnamlib.REPO_GENERATION_TEST_KEY:
+        elif key == obnamlib.REPO_GENERATION_IS_CHECKPOINT:
+            return client.get_is_checkpoint(gen_number) or 0
+        elif key == obnamlib.REPO_GENERATION_FILE_COUNT:
+            return client.get_generation_file_count(gen_number) or 0
+        elif key == obnamlib.REPO_GENERATION_TOTAL_DATA:
+            return client.get_generation_data(gen_number) or 0
+        elif key == obnamlib.REPO_GENERATION_TEST_KEY:
             return client.get_generation_test_data() or ''
-
-        raise obnamlib.RepositoryGenerationKeyNotAllowed(
-            self.format, client_name, key)
+        else:
+            raise obnamlib.RepositoryGenerationKeyNotAllowed(
+                self.format, client_name, key)
 
     def set_generation_key(self, generation_id, key, value): # pragma: no cover
         # FIXME: This no worky for generations other than the currently
-        # started one.
+        # started one. There should at least be an assert about it.
 
         client_name, gen_number = generation_id
         self._require_client_lock(client_name)
@@ -398,6 +405,12 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             client.set_generation_started(value)
         elif key == obnamlib.REPO_GENERATION_ENDED:
             client.set_generation_ended(value)
+        elif key == obnamlib.REPO_GENERATION_IS_CHECKPOINT:
+            client.set_current_generation_is_checkpoint(value)
+        elif key == obnamlib.REPO_GENERATION_FILE_COUNT:
+            client.set_generation_file_count(gen_number, value)
+        elif key == obnamlib.REPO_GENERATION_TOTAL_DATA:
+            client.set_generation_total_data(gen_number, value)
         elif key == obnamlib.REPO_GENERATION_TEST_KEY:
             client.set_generation_test_data(value)
         else:

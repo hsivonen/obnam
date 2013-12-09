@@ -334,6 +334,9 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     def get_generation_data(self, genid):
         return self._lookup_count(genid, self.GEN_TOTAL_DATA)
 
+    def set_generation_data(self, gen_id, num_bytes): # pragma: no cover
+        self._insert_count(gen_id, self.GEN_TOTAL_DATA, num_bytes)
+
     def _lookup_count(self, genid, count_type):
         tree = self.find_generation(genid)
         key = self.genkey(count_type)
@@ -349,6 +352,9 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
 
     def get_generation_file_count(self, genid):
         return self._lookup_count(genid, self.GEN_FILE_COUNT)
+
+    def set_generation_file_count(self, gen_id, count): # pragma: no cover
+        self._insert_count(gen_id, self.GEN_FILE_COUNT, count)
 
     def create(self, filename, encoded_metadata):
         tracing.trace('filename=%s', filename)

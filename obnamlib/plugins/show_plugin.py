@@ -93,9 +93,12 @@ class ShowPlugin(obnamlib.ObnamPlugin):
                 gen_id, obnamlib.REPO_GENERATION_STARTED)
             end = self.repo.get_generation_key(
                 gen_id, obnamlib.REPO_GENERATION_ENDED)
-            is_checkpoint = False
-            file_count = 0
-            data_size = 0
+            is_checkpoint = self.repo.get_generation_key(
+                gen_id, obnamlib.REPO_GENERATION_IS_CHECKPOINT)
+            file_count = self.repo.get_generation_key(
+                gen_id, obnamlib.REPO_GENERATION_FILE_COUNT)
+            data_size = self.repo.get_generation_key(
+                gen_id, obnamlib.REPO_GENERATION_TOTAL_DATA)
 
             if is_checkpoint:
                 checkpoint = ' (checkpoint)'
@@ -125,8 +128,10 @@ class ShowPlugin(obnamlib.ObnamPlugin):
 
         client_name = self.app.settings['client-name']
         for gen_id in self.repo.get_client_generation_ids(client_name):
-            # FIXME: get generation start, end times here.
-            start, end = 0, 0
+            start = self.repo.get_generation_key(
+                gen_id, obnamlib.REPO_GENERATION_STARTED)
+            end = self.repo.get_generation_key(
+                gen_id, obnamlib.REPO_GENERATION_ENDED)
             if most_recent is None or start > most_recent:
                 most_recent = start
         self.repo.close()
@@ -169,8 +174,10 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         client_name = self.app.settings['client-name']
         for genspec in self.app.settings['generation']:
             gen_id = self.repo.interpret_generation_spec(client_name, genspec)
-            # FIXME: Get generation start, end times here.
-            started, ended = 0, 0
+            started = self.repo.get_generation_key(
+                gen_id, obnamlib.REPO_GENERATION_STARTED)
+            ended = self.repo.get_generation_key(
+                gen_id, obnamlib.REPO_GENERATION_ENDED)
             started = self.format_time(started)
             ended = self.format_time(ended)
             self.app.output.write(
@@ -278,7 +285,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
                     gen_id1, gen_id2, filename, subdirs)
             else:
                 # Its only in set2 - the file/dir got added
-                self.show_diff_for_file(gen_id2, full, '+')
+                self.show_diff_for_file(gen_id2, filename, '+')
         for filename in sorted(set1):
             # This was only in gen1 - it got removed
             self.show_diff_for_file(gen_id1, filename, '-')
@@ -293,11 +300,11 @@ class ShowPlugin(obnamlib.ObnamPlugin):
             raise obnamlib.Error('Need one or two generations')
 
         self.open_repository()
+        client_name = self.app.settings['client-name']
         if len(args) == 1:
             gen_id2 = self.repo.interpret_generation_spec(args[0])
             # Now we have the dst/second generation for show_diff. Use
             # genids/list_generations to find the previous generation
-            client_name = self.app.settings['client-name']
             genids = self.repo.get_client_generation_ids(client_name)
             index = genids.index(gen_id2)
             if index == 0:
@@ -305,8 +312,10 @@ class ShowPlugin(obnamlib.ObnamPlugin):
                     'Can\'t show first generation. Use \'ls\' instead')
             gen_id1 = genids[index - 1]
         else:
-            gen_id1 = self.repo.interpret_generation_spec(args[0])
-            gen_id2 = self.repo.interpret_generation_specb(args[1])
+            gen_id1 = self.repo.interpret_generation_spec(
+                client_name, args[0])
+            gen_id2 = self.repo.interpret_generation_spec(
+                client_name, args[1])
 
         self.show_diff(gen_id1, gen_id2, '/')
         self.repo.close()
