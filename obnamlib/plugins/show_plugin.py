@@ -89,10 +89,6 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         self.open_repository()
         client_name = self.app.settings['client-name']
         for gen_id in self.repo.get_client_generation_ids(client_name):
-            # FIXME: Need to query generation times and whether the
-            # generation is a checkpointand the generation file count
-            # and data size here using generation keys. This is not
-            # yet implemented in the interface.
             start = self.repo.get_generation_key(
                 gen_id, obnamlib.REPO_GENERATION_STARTED)
             end = self.repo.get_generation_key(
