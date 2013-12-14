@@ -39,24 +39,33 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
         self.app.ts['gens'] = []
         self.app.ts.format('forgetting generations: %Index(gen,gens) done')
 
-        self.repo = self.app.open_repository()
+        self.repo = self.app.get_repository_object()
         self.repo.lock_client(self.app.settings['client-name'])
-        self.repo.lock_shared()
+        self.repo.lock_chunk_indexes()
 
         self.app.dump_memory_profile('at beginning')
+        client_name = self.app.settings['client-name']
         if args:
             self.app.ts['gens'] = args
             for genspec in args:
                 self.app.ts['gen'] = genspec
-                genid = self.repo.genspec(genspec)
-                self.app.ts.notify('Forgetting generation %s' % genid)
+                genid = self.repo.interpret_generation_spec(
+                    client_name, genspec)
+                self.app.ts.notify(
+                    'Forgetting generation %s' % 
+                    self.repo.make_generation_spec(genid))
                 self.remove(genid)
-                self.app.dump_memory_profile('after removing %s' % genid)
+                self.app.dump_memory_profile(
+                    'after removing %s' % 
+                    self.repo.make_generation_spec(genid))
         elif self.app.settings['keep']:
             genlist = []
             dt = datetime.datetime(1970, 1, 1, 0, 0, 0)
-            for genid in self.repo.list_generations():
-                start, end = self.repo.get_generation_times(genid)
+            for genid in self.repo.get_client_generation_ids(client_name):
+                start = self.repo.get_generation_key(
+                    genid, obnamlib.REPO_GENERATION_STARTED)
+                end = self.repo.get_generation_key(
+                    genid, obnamlib.REPO_GENERATION_ENDED)
                 genlist.append((genid, dt.fromtimestamp(end)))
 
             fp = obnamlib.ForgetPolicy()
@@ -71,17 +80,21 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
             for genid in removeids:
                 self.app.ts['gen'] = genid
                 self.remove(genid)
-                self.app.dump_memory_profile('after removing %s' % genid)
+                self.app.dump_memory_profile(
+                    'after removing %s' % 
+                    self.repo.make_generation_spec(genid))
 
-        self.repo.commit_client()
-        self.repo.commit_shared()
+        self.repo.commit_client(client_name)
+        self.repo.commit_chunk_indexes()
         self.app.dump_memory_profile('after committing')
-        self.repo.fs.close()
+        self.repo.close()
         self.app.ts.finish()
 
     def remove(self, genid):
         if self.app.settings['pretend']:
-            self.app.ts.notify('Pretending to remove generation %s' % genid)
+            self.app.ts.notify(
+                'Pretending to remove generation %s' % 
+                self.repo.make_generation_spec(genid))
         else:
             self.repo.remove_generation(genid)
 

@@ -315,11 +315,56 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._require_client_lock(client_name)
 
         open_client = self._open_clients[client_name]
-        for gen_number in open_client.removed_generation_numbers:
-            open_client.client.remove_generation(gen_number)
-        if open_client.current_generation_number:
+
+        if open_client.removed_generation_numbers:
+            self._remove_chunks_from_removed_generations(
+                client_name, open_client.client,
+                open_client.removed_generation_numbers)
+            open_client.client.start_changes()
+            for gen_number in open_client.removed_generation_numbers:
+                open_client.client.remove_generation(gen_number)
+
+        if (open_client.current_generation_number or 
+            open_client.removed_generation_numbers):
             open_client.client.commit()
+
         self._raw_unlock_client(client_name)
+
+    def _remove_chunks_from_removed_generations(
+        self, client_name, client, remove_gen_nos):
+
+        def find_chunkids_in_gens(gen_nos):
+            chunkids = set()
+            for gen_number in gen_nos:
+                x = client.list_chunks_in_generation(gen_number)
+                chunkids = chunkids.union(set(x))
+            return chunkids
+
+        def find_gens_to_keep():
+            return [gen_number
+                    for gen_number in client.list_generations()
+                    if gen_number not in remove_gen_nos]
+
+        def remove_chunks(chunk_ids): # pragma: no cover
+            for chunk_id in chunk_ids:
+                try:
+                    checksum = self._chunklist.get_checksum(chunk_id)
+                except KeyError:
+                    # No checksum, therefore it can't be shared, therefore
+                    # we can remove it.
+                    # FIXME: shouldn't this be: no checksum, so we DON'T
+                    # KNOW if it's safe to remove.
+                    self.remove_chunk(chunk_id)
+                else:
+                    self.remove_chunk_from_indexes(chunk_id, client_name)
+                    if not self._chunksums.chunk_is_used(checksum, chunk_id):
+                        self.remove_chunk(chunk_id)
+
+        keep_gen_nos = find_gens_to_keep()
+        keep_chunkids = find_chunkids_in_gens(keep_gen_nos)
+        maybe_remove_chunkids = find_chunkids_in_gens(remove_gen_nos)
+        remove_chunkids = maybe_remove_chunkids.difference(keep_chunkids)
+        remove_chunks(remove_chunkids)
 
     def get_allowed_client_keys(self):
         return []

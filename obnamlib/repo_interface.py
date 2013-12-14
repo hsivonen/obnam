@@ -625,7 +625,7 @@ class RepositoryInterface(object):
         '''Commit changes to chunk indexes.'''
         raise NotImplementedError()
 
-    def put_chunk_into_indexes(self, chunk_id, data, client_id):
+    def put_chunk_into_indexes(self, chunk_id, data, client_name):
         '''Adds a chunk to indexes.
 
         This does not do any de-duplication.
@@ -639,7 +639,7 @@ class RepositoryInterface(object):
         '''
         raise NotImplementedError()
 
-    def remove_chunk_from_indexes(self, chunk_id, client_id):
+    def remove_chunk_from_indexes(self, chunk_id, client_name):
         '''Removes a chunk from indexes, given its id, for a given client.'''
         raise NotImplementedError()
 
