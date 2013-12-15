@@ -186,10 +186,11 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         '''List clients and their keys in the repository.'''
         if self.quit_if_unencrypted():
             return
-        repo = self.app.open_repository()
-        clients = repo.list_clients()
+        repo = self.app.get_repository_object()
+        clients = repo.get_client_names()
         for client in clients:
-            keyid = repo.clientlist.get_client_keyid(client)
+            # FIXME: API needs to get a way to get the key id.
+            keyid = repo._client_list.get_client_keyid(client)
             if keyid is None:
                 key_info = 'no key'
             else:
@@ -197,12 +198,12 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
             print client, key_info
 
     def _find_keys_and_toplevels(self, repo):
-        toplevels = repo.fs.listdir('.')
+        toplevels = repo.get_fs().listdir('.')
         keys = dict()
         tops = dict()
         for toplevel in [d for d in toplevels if d != 'metadata']:
             # skip files (e.g. 'lock') or empty directories
-            if not repo.fs.exists(os.path.join(toplevel, 'key')):
+            if not repo.get_fs().exists(os.path.join(toplevel, 'key')):
                 continue
             try:
                 userkeys = self.read_keyring(repo, toplevel)
@@ -227,7 +228,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         '''List keys and the repository toplevels they're used in.'''
         if self.quit_if_unencrypted():
             return
-        repo = self.app.open_repository()
+        repo = self.app.get_repository_object()
         keys, tops = self._find_keys_and_toplevels(repo)
         for keyid in keys:
             print 'key: %s' % self._get_key_string(keyid)
@@ -238,7 +239,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         '''List repository toplevel directories and their keys.'''
         if self.quit_if_unencrypted():
             return
-        repo = self.app.open_repository()
+        repo = self.app.get_repository_object()
         keys, tops = self._find_keys_and_toplevels(repo)
         for toplevel in tops:
             print 'toplevel: %s' % toplevel
@@ -250,9 +251,9 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
     def _find_clientdirs(self, repo, client_names):
         result = []
         for client_name in client_names:
-            client_id = repo.clientlist.get_client_id(client_name)
+            client_id = repo._client_list.get_client_id(client_name)
             if client_id:
-                result.append(repo.client_dir(client_id))
+                result.append(str(client_id))
             else:
                 logging.warning("client not found: %s" % client_name)
         return result
@@ -262,7 +263,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         if self.quit_if_unencrypted():
             return
         self.app.settings.require('keyid')
-        repo = self.app.open_repository()
+        repo = self.app.get_repository_object()
         keyid = self.app.settings['keyid']
         key = obnamlib.get_public_key(keyid)
         clients = self._find_clientdirs(repo, args)
@@ -275,7 +276,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         if self.quit_if_unencrypted():
             return
         self.app.settings.require('keyid')
-        repo = self.app.open_repository()
+        repo = self.app.get_repository_object()
         keyid = self.app.settings['keyid']
         clients = self._find_clientdirs(repo, args)
         for toplevel in self._shared + clients:
@@ -286,10 +287,10 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         '''Remove client and its key from repository.'''
         if self.quit_if_unencrypted():
             return
-        repo = self.app.open_repository()
-        repo.lock_root()
+        repo = self.app.get_repository_object()
+        repo.lock_client_list()
         for client_name in args:
             logging.info('removing client %s' % client_name)
             repo.remove_client(client_name)
-        repo.commit_root()
+        repo.commit_client_list()
 
