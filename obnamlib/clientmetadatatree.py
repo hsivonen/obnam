@@ -221,7 +221,16 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
                      (self.GEN_TOTAL_DATA, 'total_data')]
                 for subkey, attr in t:
                     if hasattr(self, attr):
-                        self._insert_count(genid, subkey, getattr(self, attr))
+                        value = getattr(self, attr)
+                        tracing.trace('value=%s', repr(value))
+                        # FIXME: The following is a kludge to paper over
+                        # some error in how the total data (and possible
+                        # file count) is maintained right now. These should
+                        # really be set by the caller, not have this
+                        # class track them. I think. Maybe.
+                        if value < 0: # pragma: no cover
+                            value = 0
+                        self._insert_count(genid, subkey, value)
         obnamlib.RepositoryTree.commit(self)
 
     def init_forest(self, *args, **kwargs):

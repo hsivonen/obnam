@@ -96,10 +96,10 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         return int(self.app.settings['symmetric-key-bits'] or '256')
 
     def _write_file(self, repo, pathname, contents):
-        repo.fs.fs.write_file(pathname, contents)
+        repo.get_fs().write_file(pathname, contents)
 
     def _overwrite_file(self, repo, pathname, contents):
-        repo.fs.fs.overwrite_file(pathname, contents)
+        repo.get_fs().overwrite_file(pathname, contents)
 
     def toplevel_init(self, repo, toplevel):
         '''Initialize a new toplevel for encryption.'''
@@ -135,13 +135,13 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
     def get_symmetric_key(self, repo, toplevel):
         key = self._symkeys.get(repo, toplevel)
         if key is None:
-            encoded = repo.fs.fs.cat(os.path.join(toplevel, 'key'))
+            encoded = repo.get_fs().cat(os.path.join(toplevel, 'key'))
             key = obnamlib.decrypt_with_secret_keys(encoded)
             self._symkeys.put(repo, toplevel, key)
         return key
 
     def read_keyring(self, repo, toplevel):
-        encrypted = repo.fs.fs.cat(os.path.join(toplevel, 'userkeys'))
+        encrypted = repo.get_fs().cat(os.path.join(toplevel, 'userkeys'))
         encoded = self.filter_read(encrypted, repo, toplevel)
         return obnamlib.Keyring(encoded=encoded)
 

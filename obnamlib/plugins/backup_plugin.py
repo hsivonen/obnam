@@ -16,6 +16,7 @@
 
 import errno
 import gc
+import hashlib
 import logging
 import os
 import re
@@ -32,29 +33,29 @@ import larch
 
 class ChunkidPool(object):
 
-    '''Checksum/chunkid mappings that are pending an upload to shared trees.'''
+    '''Data/chunkid mappings that are pending an upload to shared trees.'''
 
     def __init__(self):
         self.clear()
 
-    def add(self, chunkid, checksum):
-        if checksum not in self._mapping:
-            self._mapping[checksum] = []
-        self._mapping[checksum].append(chunkid)
+    def add(self, chunkid, data):
+        if data not in self._mapping:
+            self._mapping[data] = []
+        self._mapping[data].append(chunkid)
 
-    def __contains__(self, checksum):
-        return checksum in self._mapping
+    def __contains__(self, data):
+        return data in self._mapping
 
-    def get(self, checksum):
-        return self._mapping.get(checksum, [])
+    def get(self, data):
+        return self._mapping.get(data, [])
 
     def clear(self):
         self._mapping = {}
 
     def __iter__(self):
-        for checksum in self._mapping.keys():
-            for chunkid in self._mapping[checksum]:
-                yield chunkid, checksum
+        for data in self._mapping.keys():
+            for chunkid in self._mapping[data]:
+                yield chunkid, data
 
 
 class BackupProgress(object):
@@ -269,30 +270,35 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.memory_dump_counter = 0
 
         self.progress.what('connecting to repository')
-        client_name = self.app.settings['client-name']
+        self.client_name = self.app.settings['client-name']
+        self.got_client_lock = False
+        self.got_chunk_indexes_lock = False
         if self.pretend:
-            self.repo = self.app.open_repository()
-            self.repo.open_client(client_name)
+            self.repo = self.app.get_repository_object()
         else:
-            self.repo = self.app.open_repository(create=True)
+            self.repo = self.app.get_repository_object(create=True)
             self.progress.what('adding client')
-            self.add_client(client_name)
+            self.add_client(self.client_name)
             self.progress.what('locking client')
-            self.repo.lock_client(client_name)
+            self.repo.lock_client(self.client_name)
+            self.got_client_lock = True
 
             # Need to lock the shared stuff briefly, so encryption etc
             # gets initialized.
             self.progress.what(
                 'initialising shared directories')
-            self.repo.lock_shared()
-            self.repo.unlock_shared()
+            self.repo.lock_chunk_indexes()
+            self.got_chunk_indexes_lock = True
+            self.repo.unlock_chunk_indexes()
+            self.got_chunk_indexes_lock = False
 
         self.errors = False
         self.chunkid_pool = ChunkidPool()
         try:
             if not self.pretend:
                 self.progress.what('starting new generation')
-                self.repo.start_generation()
+                self.new_generation = self.repo.create_generation(
+                    self.client_name)
             self.fs = None
             roots = self.app.settings['root'] + args
             if not roots:
@@ -302,7 +308,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             if not self.pretend:
                 self.progress.what(
                     'committing changes to repository: locking shared B-trees')
-                self.repo.lock_shared()
+                self.repo.lock_chunk_indexes()
                 self.progress.what(
                     'committing changes to repository: '
                     'adding chunks to shared B-trees')
@@ -310,13 +316,13 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 self.progress.what(
                     'committing changes to repository: '
                     'committing client')
-                self.repo.commit_client()
+                self.repo.commit_client(self.client_name)
                 self.progress.what(
                     'committing changes to repository: '
                     'committing shared B-trees')
-                self.repo.commit_shared()
+                self.repo.commit_chunk_indexes()
             self.progress.what('closing connection to repository')
-            self.repo.fs.close()
+            self.repo.close()
             self.progress.clear()
             self.progress.report_stats()
 
@@ -333,13 +339,13 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
     def unlock_when_error(self):
         try:
-            if self.repo.got_client_lock:
+            if self.got_client_lock:
                 logging.info('Attempting to unlock client because of error')
-                self.repo.unlock_client()
-            if self.repo.got_shared_lock:
+                self.repo.unlock_client(self.client_name)
+            if self.got_chunk_indexes_lock:
                 logging.info(
                     'Attempting to unlock shared trees because of error')
-                self.repo.unlock_shared()
+                self.repo.unlock_chunk_indexes()
         except BaseException, e2:
             logging.warning(
                 'Error while unlocking due to error: %s' % str(e2))
@@ -348,21 +354,25 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             logging.info('Successfully unlocked')
 
     def add_chunks_to_shared(self):
-        for chunkid, checksum in self.chunkid_pool:
-            self.repo.put_chunk_in_shared_trees(chunkid, checksum)
+        # FIXME: The RepositoryIndex API is awkward here: it requires us
+        # to have the data, not the checksum, here. On the other hand,
+        # the checksum is meant to be an internal detail of the repository
+        # format.
+        for chunkid, data in self.chunkid_pool:
+            self.repo.put_chunk_into_indexes(chunkid, data, self.client_name)
         self.chunkid_pool.clear()
 
     def add_client(self, client_name):
-        self.repo.lock_root()
-        if client_name not in self.repo.list_clients():
+        self.repo.lock_client_list()
+        if client_name not in self.repo.get_client_names():
             tracing.trace('adding new client %s' % client_name)
             tracing.trace('client list before adding: %s' %
-                            self.repo.list_clients())
+                            self.repo.get_client_names())
             self.repo.add_client(client_name)
             tracing.trace('client list after adding: %s' %
-                            self.repo.list_clients())
-        self.repo.commit_root()
-        self.repo = self.app.open_repository(repofs=self.repo.fs.fs)
+                            self.repo.get_client_names())
+        self.repo.commit_client_list()
+        self.repo = self.app.get_repository_object(repofs=self.repo.get_fs())
 
     def compile_exclusion_patterns(self):
         log = self.app.settings['log']
@@ -453,31 +463,35 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 raise IOError(e, os.strerror(e), pathname)
 
     def time_for_checkpoint(self):
-        bytes_since = (self.repo.fs.bytes_written - self.last_checkpoint)
+        bytes_since = (self.repo.get_fs().bytes_written - 
+                       self.last_checkpoint)
         return bytes_since >= self.interval
 
     def make_checkpoint(self):
         logging.info('Making checkpoint')
         self.progress.what('making checkpoint')
         if not self.pretend:
-            self.checkpoints.append(self.repo.new_generation)
+            self.checkpoints.append(self.new_generation)
             self.progress.what('making checkpoint: backing up parents')
             self.backup_parents('.')
             self.progress.what('making checkpoint: locking shared B-trees')
-            self.repo.lock_shared()
+            self.repo.lock_chunk_indexes()
             self.progress.what('making checkpoint: adding chunks to shared B-trees')
             self.add_chunks_to_shared()
             self.progress.what('making checkpoint: committing per-client B-tree')
-            self.repo.commit_client(checkpoint=True)
+            self.repo.set_generation_key(
+                self.new_generation, obnamlib.REPO_GENERATION_IS_CHECKPOINT, 1)
+            self.repo.commit_client(self.client_name)
             self.progress.what('making checkpoint: committing shared B-trees')
-            self.repo.commit_shared()
-            self.last_checkpoint = self.repo.fs.bytes_written
+            self.repo.commit_chunk_indexes()
+            self.last_checkpoint = self.repo.get_fs().bytes_written
             self.progress.what('making checkpoint: re-opening repository')
-            self.repo = self.app.open_repository(repofs=self.repo.fs.fs)
+            self.repo = self.app.get_repository_object(
+                repofs=self.repo.get_fs())
             self.progress.what('making checkpoint: locking client')
-            self.repo.lock_client(self.app.settings['client-name'])
+            self.repo.lock_client(self.client_name)
             self.progress.what('making checkpoint: starting a new generation')
-            self.repo.start_generation()
+            self.new_generation = self.repo.create_generation(self.client_name)
             self.app.dump_memory_profile('at end of checkpoint')
             self.progress.what('making checkpoint: continuing backup')
 
@@ -546,15 +560,31 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             tracing.trace('%s is directory, so needs backup' % pathname)
             return True
         if self.pretend:
-            gens = self.repo.list_generations()
+            gens = self.repo.get_client_generation_ids(self.client_name)
             if not gens:
                 return True
             gen = gens[-1]
         else:
-            gen = self.repo.new_generation
+            gen = self.new_generation
         tracing.trace('gen=%s' % repr(gen))
         try:
-            old = self.repo.get_metadata(gen, pathname)
+            old = obnamlib.Metadata(
+                mtime_sec=self.repo.get_file_key(
+                    gen, pathname, obnamlib.REPO_FILE_MTIME_SEC),
+                mtime_nsec=self.repo.get_file_key(
+                    gen, pathname, obnamlib.REPO_FILE_MTIME_NSEC),
+                mode=self.repo.get_file_key(
+                    gen, pathname, obnamlib.REPO_FILE_MODE),
+                nlink=self.repo.get_file_key(
+                    gen, pathname, obnamlib.REPO_FILE_NLINK),
+                size=self.repo.get_file_key(
+                    gen, pathname, obnamlib.REPO_FILE_SIZE),
+                uid=self.repo.get_file_key(
+                    gen, pathname, obnamlib.REPO_FILE_UID),
+                gid=self.repo.get_file_key(
+                    gen, pathname, obnamlib.REPO_FILE_GID),
+                xattr=self.repo.get_file_key(
+                    gen, pathname, obnamlib.REPO_FILE_XATTR_BLOB))
         except obnamlib.Error, e:
             # File does not exist in the previous generation, so it
             # does need to be backed up.
@@ -575,6 +605,34 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             tracing.trace('%s has changed metadata, so needs backup' % pathname)
         return needs
 
+    def add_file_to_generation(self, filename, metadata):
+        self.repo.add_file(self.new_generation, filename)
+
+        things = [
+            ('st_mtime_sec', obnamlib.REPO_FILE_MTIME_SEC),
+            ('st_mtime_nsec', obnamlib.REPO_FILE_MTIME_NSEC),
+            ('st_atime_sec', obnamlib.REPO_FILE_ATIME_SEC),
+            ('st_atime_nsec', obnamlib.REPO_FILE_ATIME_NSEC),
+            ('st_mode', obnamlib.REPO_FILE_MODE),
+            ('st_nlink', obnamlib.REPO_FILE_NLINK),
+            ('st_size', obnamlib.REPO_FILE_SIZE),
+            ('st_uid', obnamlib.REPO_FILE_UID),
+            ('st_gid', obnamlib.REPO_FILE_GID),
+            ('st_blocks', obnamlib.REPO_FILE_BLOCKS),
+            ('st_dev', obnamlib.REPO_FILE_DEV),
+            ('st_ino', obnamlib.REPO_FILE_INO),
+            ('username', obnamlib.REPO_FILE_USERNAME),
+            ('groupname', obnamlib.REPO_FILE_GROUPNAME),
+            ('target', obnamlib.REPO_FILE_SYMLINK_TARGET),
+            ('xattr', obnamlib.REPO_FILE_XATTR_BLOB),
+            ('md5', obnamlib.REPO_FILE_MD5),
+            ]
+
+        for field, key in things:
+            self.repo.set_file_key(
+                self.new_generation, filename, key, 
+                getattr(metadata, field))
+
     def backup_parents(self, root):
         '''Back up parents of root, non-recursively.'''
         root = self.fs.abspath(root)
@@ -593,7 +651,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 logging.warning('Using fake metadata instead for %s' % root)
                 metadata = dummy_metadata
             if not self.pretend:
-                self.repo.create(root, metadata)
+                self.add_file_to_generation(root, metadata)
+
             if root == parent:
                 break
             root = parent
@@ -603,10 +662,15 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         tracing.trace('backup_metadata: %s', pathname)
         if not self.pretend:
-            self.repo.create(pathname, metadata)
+            self.add_file_to_generation(pathname, metadata)
 
     def backup_file_contents(self, filename, metadata):
-        '''Back up contents of a regular file.'''
+        '''Back up contents of a regular file.
+
+        Return MD5 checksum of file's complete data.
+
+        '''
+
         tracing.trace('backup_file_contents: %s', filename)
         if self.pretend:
             tracing.trace('pretending to upload the whole file')
@@ -615,26 +679,17 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         tracing.trace('setting file chunks to empty')
         if not self.pretend:
-            self.repo.set_file_chunks(filename, [])
+            if self.repo.file_exists(self.new_generation, filename):
+                self.repo.clear_file_chunk_ids(self.new_generation, filename)
+            else:
+                self.repo.add_file(self.new_generation, filename)
 
         tracing.trace('opening file for reading')
         f = self.fs.open(filename, 'r')
 
-        summer = self.repo.new_checksummer()
-
-        max_intree = self.app.settings['node-size'] / 4
-        if (metadata.st_size <= max_intree and
-            self.app.settings['small-files-in-btree']):
-            contents = f.read()
-            assert len(contents) <= max_intree # FIXME: silly error checking
-            f.close()
-            self.progress.update_progress_with_scanned(len(contents))
-            self.repo.set_file_data(filename, contents)
-            summer.update(contents)
-            return summer.digest()
+        summer = hashlib.md5()
 
         chunk_size = int(self.app.settings['chunk-size'])
-        chunkids = []
         while True:
             tracing.trace('reading some data')
             self.progress.update_progress()
@@ -646,28 +701,18 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.progress.update_progress_with_scanned(len(data))
             summer.update(data)
             if not self.pretend:
-                chunkids.append(self.backup_file_chunk(data))
-                if len(chunkids) >= self.app.settings['chunkids-per-group']:
-                    tracing.trace('adding %d chunkids to file' % len(chunkids))
-                    self.repo.append_file_chunks(filename, chunkids)
-                    self.app.dump_memory_profile('after appending some '
-                                                    'chunkids')
-                    chunkids = []
+                chunk_id = self.backup_file_chunk(data)
+                self.repo.append_file_chunk_id(
+                    self.new_generation, filename, chunk_id)
             else:
                 self.self.update_progress_with_upload(len(data))
 
             if not self.pretend and self.time_for_checkpoint():
                 logging.debug('making checkpoint in the middle of a file')
-                self.repo.append_file_chunks(filename, chunkids)
-                chunkids = []
                 self.make_checkpoint()
 
         tracing.trace('closing file')
         f.close()
-        if chunkids:
-            assert not self.pretend
-            tracing.trace('adding final %d chunkids to file' % len(chunkids))
-            self.repo.append_file_chunks(filename, chunkids)
         self.app.dump_memory_profile('at end of file content backup for %s' %
                                      filename)
         tracing.trace('done backing up file contents')
@@ -683,50 +728,60 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             # exceptions, and other errors. We don't care: we'll just
             # pretend no chunk with the checksum exists yet.
             try:
-                in_tree = self.repo.find_chunks(checksum)
+                in_tree = [self.repo.find_chunk_id_by_content(data)]
             except larch.Error:
                 in_tree = []
-            return in_tree + self.chunkid_pool.get(checksum)
+            except obnamlib.RepositoryChunkContentNotInIndexes:
+                in_tree = []
+            return in_tree + self.chunkid_pool.get(data)
 
-        def get(chunkid):
-            return self.repo.get_chunk(chunkid)
+        # def get(chunkid):
+        #     return self.repo.get_chunk_content(chunkid)
 
         def put():
             self.progress.update_progress_with_upload(len(data))
-            return self.repo.put_chunk_only(data)
+            return self.repo.put_chunk_content(data)
 
         def share(chunkid):
-            self.chunkid_pool.add(chunkid, checksum)
+            self.chunkid_pool.add(chunkid, data)
 
-        checksum = self.repo.checksum(data)
-
-        mode = self.app.settings['deduplicate']
-        if mode == 'never':
-            return put()
-        elif mode == 'verify':
-            for chunkid in find():
-                data2 = get(chunkid)
-                if data == data2:
-                    return chunkid
-            else:
-                chunkid = put()
-                share(chunkid)
-                return chunkid
-        elif mode == 'fatalist':
-            existing = find()
-            if existing:
-                return existing[0]
-            else:
-                chunkid = put()
-                share(chunkid)
-                return chunkid
+        ids = find()
+        if ids:
+            return ids[0]
         else:
-            if not hasattr(self, 'bad_deduplicate_reported'):
-                logging.error('unknown --deduplicate setting value')
-                self.bad_deduplicate_reported = True
-            chunkid = put()
-            share(chunkid)
-            return chunkid
+            chunk_id = put()
+            share(chunk_id)
+            return chunk_id
+
+        # FIXME: This de-duplication policy can't currently be
+        # implemented with the RepositoryInterface API.
+        # mode = self.app.settings['deduplicate']
+        # if mode == 'never':
+        #     return put()
+        # elif mode == 'verify':
+        #     for chunkid in find():
+        #         data2 = get(chunkid)
+        #         if data == data2:
+        #             return chunkid
+        #     else:
+        #         chunkid = put()
+        #         share(chunkid)
+        #         return chunkid
+        # elif mode == 'fatalist':
+        #     existing = find()
+        #     if existing:
+        #         return existing[0]
+        #     else:
+        #         chunkid = put()
+        #         share(chunkid)
+        #         return chunkid
+        # else:
+        #     if not hasattr(self, 'bad_deduplicate_reported'):
+        #         logging.error('unknown --deduplicate setting value')
+        #         self.bad_deduplicate_reported = True
+        #     chunkid = put()
+        #     share(chunkid)
+        #     return chunkid
 
     def backup_dir_contents(self, root):
         '''Back up the list of files in a directory.'''
@@ -736,12 +791,16 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             return
 
         new_basenames = self.fs.listdir(root)
-        old_basenames = self.repo.listdir(self.repo.new_generation, root)
+        new_pathnames = [os.path.join(root, x) for x in new_basenames]
+        if self.repo.file_exists(self.new_generation, root):
+            old_pathnames = self.repo.get_file_children(
+                    self.new_generation, root)
+        else:
+            old_pathnames = []
 
-        for old in old_basenames:
-            pathname = os.path.join(root, old)
-            if old not in new_basenames:
-                self.repo.remove(pathname)
+        for old in old_pathnames:
+            if old not in new_pathnames:
+                self.repo.remove_file(self.new_generation, old)
         # Files that are created after the previous generation will be
         # added to the directory when they are backed up, so we don't
         # need to worry about them here.
@@ -769,20 +828,21 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 tracing.trace('is a new root: %s' % dirname)
             elif is_parent(dirname):
                 tracing.trace('is parent of a new root: %s' % dirname)
-                pathnames = [os.path.join(dirname, x)
-                             for x in self.repo.listdir(gen_id, dirname)]
-                for pathname in pathnames:
-                    helper(pathname)
+                if self.repo.file_exists(gen_id, dirname):
+                    pathnames = [
+                        os.path.join(dirname, x)
+                        for x in self.repo.get_file_children(gen_id, dirname)]
+                    for pathname in pathnames:
+                        helper(pathname)
             else:
                 tracing.trace('is extra and removed: %s' % dirname)
                 self.progress.what('removing %s from new generation' % dirname)
-                self.repo.remove(dirname)
+                self.repo.remove_file(self.new_generation, dirname)
                 self.progress.what(msg)
 
         assert not self.pretend
         msg = 'removing old backup roots from new generation'
         self.progress.what(msg)
         tracing.trace('new_roots: %s' % repr(new_roots))
-        gen_id = self.repo.new_generation
+        gen_id = self.new_generation
         helper('/')
-
