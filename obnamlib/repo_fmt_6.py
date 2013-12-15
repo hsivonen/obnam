@@ -320,7 +320,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             self._remove_chunks_from_removed_generations(
                 client_name, open_client.client,
                 open_client.removed_generation_numbers)
-            open_client.client.start_changes()
+            open_client.client.start_changes(create_tree=False)
             for gen_number in open_client.removed_generation_numbers:
                 open_client.client.remove_generation(gen_number)
 
@@ -613,18 +613,23 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._chunksums.commit()
         self._raw_unlock_chunk_indexes()
 
-    def put_chunk_into_indexes(self, chunk_id, data, client_id):
+    def put_chunk_into_indexes(self, chunk_id, data, client_name):
         tracing.trace('chunk_id=%s', chunk_id)
         checksum = self._checksum(data)
         tracing.trace('checksum of data: %s', checksum)
+        tracing.trace('client_name=%s', client_name)
+        client_id = self._get_client_id(client_name)
         tracing.trace('client_id=%s', client_id)
 
         self._require_chunk_indexes_lock()
         self._chunklist.add(chunk_id, checksum)
         self._chunksums.add(checksum, chunk_id, client_id)
 
-    def remove_chunk_from_indexes(self, chunk_id, client_id):
+    def remove_chunk_from_indexes(self, chunk_id, client_name):
         tracing.trace('chunk_id=%s', chunk_id)
+        tracing.trace('client_name=%s', client_name)
+        client_id = self._get_client_id(client_name)
+        tracing.trace('client_id=%s', client_id)
 
         self._require_chunk_indexes_lock()
         checksum = self._chunklist.get_checksum(chunk_id)
