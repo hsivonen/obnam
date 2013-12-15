@@ -236,7 +236,8 @@ class App(cliapp.Application):
             }
 
         if create:
-            return self.repo_factory.create_repo(repofs, **kwargs)
+            return self.repo_factory.create_repo(
+                repofs, obnamlib.RepositoryFormat6, **kwargs)
         else:
             return self.repo_factory.open_existing_repo(repofs, **kwargs)
 
