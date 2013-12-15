@@ -233,6 +233,7 @@ class App(cliapp.Application):
             'idpath_bits': self.settings['idpath-bits'],
             'idpath_skip': self.settings['idpath-skip'],
             'hooks': self.hooks,
+            'current_time': self.time,
             }
 
         if create:

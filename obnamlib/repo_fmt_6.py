@@ -90,14 +90,15 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
     format = '6'
 
     def __init__(self,
-            lock_timeout=0,
-            node_size=obnamlib.DEFAULT_NODE_SIZE,
-            upload_queue_size=obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
-            lru_size=obnamlib.DEFAULT_LRU_SIZE,
-            idpath_depth=obnamlib.IDPATH_DEPTH,
-            idpath_bits=obnamlib.IDPATH_BITS,
-            idpath_skip=obnamlib.IDPATH_SKIP,
-            hooks=None):
+                 lock_timeout=0,
+                 node_size=obnamlib.DEFAULT_NODE_SIZE,
+                 upload_queue_size=obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
+                 lru_size=obnamlib.DEFAULT_LRU_SIZE,
+                 idpath_depth=obnamlib.IDPATH_DEPTH,
+                 idpath_bits=obnamlib.IDPATH_BITS,
+                 idpath_skip=obnamlib.IDPATH_SKIP,
+                 hooks=None,
+                 current_time=None):
 
         self._real_fs = None
         self._lock_timeout = lock_timeout
@@ -107,6 +108,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._idpath_depth = idpath_depth
         self._idpath_bits = idpath_bits
         self._idpath_skip = idpath_skip
+        self._current_time = current_time or time.time
 
         self._setup_hooks(hooks or obnamlib.HookManager())
         self._setup_chunks()
@@ -229,7 +231,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         # ClientMetadataTree wants us to provide this method.
         # FIXME: A better design would be to for us to provide
         # the class with a function to call.
-        return time.time()
+        return self._current_time()
 
     def _setup_client(self):
         # We keep a list of all open clients. An open client may or
