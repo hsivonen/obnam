@@ -96,6 +96,7 @@ class DummyClient(object):
 
     def __init__(self, name):
         self.name = name
+        self.key_id = None
         self.generation_counter = Counter()
         self.data = LockableKeyValueStore()
 
@@ -305,6 +306,7 @@ class DummyClient(object):
             children.append(candidate)
         return children
 
+
 class DummyClientList(object):
 
     def __init__(self):
@@ -368,6 +370,18 @@ class DummyClientList(object):
     def get_client_by_generation_id(self, gen_id):
         client_name, generation_number = gen_id
         return self[client_name]
+
+    def get_client_encryption_key_id(self, client_name):
+        client = self.data.get_value(client_name, None)
+        if client is None:
+            raise obnamlib.RepositoryClientDoesNotExist(client_name)
+        return client.key_id
+
+    def set_client_encryption_key_id(self, client_name, key_id):
+        client = self.data.get_value(client_name, None)
+        if client is None:
+            raise obnamlib.RepositoryClientDoesNotExist(client_name)
+        client.key_id = key_id
 
 
 class ChunkStore(object):
@@ -488,6 +502,12 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
 
     def rename_client(self, old_client_name, new_client_name):
         self._client_list.rename(old_client_name, new_client_name)
+
+    def get_client_encryption_key_id(self, client_name):
+        return self._client_list.get_client_encryption_key_id(client_name)
+
+    def set_client_encryption_key_id(self, client_name, key_id):
+        self._client_list.set_client_encryption_key_id(client_name, key_id)
 
     def lock_client(self, client_name):
         self._client_list[client_name].lock()

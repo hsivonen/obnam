@@ -386,6 +386,20 @@ class RepositoryInterface(object):
         '''Rename a client to have a new name.'''
         raise NotImplementedError()
 
+    def get_client_encryption_key_id(self, client_name):
+        '''Return key id for the per-client encryption key.
+
+        If client does not exist, raise RepositoryClientDoesNotExist.
+        If client exists, but does not have an encryption key set,
+        return None.
+
+        '''
+        raise NotImplementedError()
+
+    def set_client_encryption_key_id(self, client_name, key_id):
+        '''Set key id for the per-client encryption key.'''
+        raise NotImplementedError()
+
     # A particular client.
 
     def lock_client(self, client_name):
@@ -887,6 +901,36 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.repo.force_client_list_lock()
         self.repo.add_client('foo')
         self.assertEqual(self.repo.get_client_names(), ['foo'])
+
+    def test_raises_error_when_getting_encryption_key_id_for_unknown(self):
+        self.repo.init_repo()
+        self.repo.lock_client_list()
+        self.assertRaises(
+            obnamlib.RepositoryClientDoesNotExist,
+            self.repo.set_client_encryption_key_id, 'foo', 'keyid')
+
+    def test_raises_error_when_setting_encryption_key_id_for_unknown(self):
+        self.repo.init_repo()
+        self.assertRaises(
+            obnamlib.RepositoryClientDoesNotExist,
+            self.repo.get_client_encryption_key_id, 'foo')
+
+    def test_has_no_client_encryption_key_id_initially(self):
+        self.repo.init_repo()
+        self.repo.lock_client_list()
+        self.repo.add_client('foo')
+        self.assertEqual(
+            self.repo.get_client_encryption_key_id('foo'),
+            None)
+
+    def test_sets_client_encryption_key_id(self):
+        self.repo.init_repo()
+        self.repo.lock_client_list()
+        self.repo.add_client('foo')
+        self.repo.set_client_encryption_key_id('foo', 'keyid')
+        self.assertEqual(
+            self.repo.get_client_encryption_key_id('foo'),
+            'keyid')
 
     # Tests for client specific stuff.
 

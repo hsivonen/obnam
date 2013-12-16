@@ -216,6 +216,19 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             old_client_name, client_id, self._client_list.CLIENT_NAME)
         self._client_list.tree.remove(old_key)
 
+    def get_client_encryption_key_id(self, client_name):
+        client_names = self.get_client_names()
+        if client_name not in client_names:
+            raise obnamlib.RepositoryClientDoesNotExist(client_name)
+        return self._client_list.get_client_keyid(client_name)
+
+    def set_client_encryption_key_id(self, client_name, key_id):
+        self._require_client_list_lock()
+        client_names = self.get_client_names()
+        if client_name not in client_names:
+            raise obnamlib.RepositoryClientDoesNotExist(client_name)
+        self._client_list.set_client_keyid(client_name, key_id)
+
     def _get_client_id(self, client_name):
         '''Return a client's unique, filesystem-visible id.
 
