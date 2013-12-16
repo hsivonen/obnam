@@ -189,8 +189,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         repo = self.app.get_repository_object()
         clients = repo.get_client_names()
         for client in clients:
-            # FIXME: API needs to get a way to get the key id.
-            keyid = repo._client_list.get_client_keyid(client)
+            keyid = repo.get_client_encryption_key_id(client)
             if keyid is None:
                 key_info = 'no key'
             else:

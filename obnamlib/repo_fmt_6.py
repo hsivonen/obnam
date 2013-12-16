@@ -143,6 +143,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     def _setup_client_list(self):
         self._got_client_list_lock = False
+        self._added_clients = []
         self._client_list = obnamlib.ClientList(
             self._fs, self._node_size, self._upload_queue_size,
             self._lru_size, self)
@@ -174,6 +175,10 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     def commit_client_list(self):
         tracing.trace('committing client list')
+        for client_name in self._added_clients:
+            self.hooks.call(
+                'repository-add-client', self._client_list, client_name)
+        self._added_clients = []
         self._client_list.commit()
         self._raw_unlock_client_list()
 
@@ -191,6 +196,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         if self._client_list.get_client_id(client_name):
             raise obnamlib.RepositoryClientAlreadyExists(client_name)
         self._client_list.add_client(client_name)
+        self._added_clients.append(client_name)
 
     def remove_client(self, client_name):
         self._require_client_list_lock()
