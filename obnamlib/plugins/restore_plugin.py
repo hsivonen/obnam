@@ -127,10 +127,10 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         gen = self.repo.interpret_generation_spec(client_name, generations[0])
 
         self.configure_ttystatus()
-        # FIXME: should initialise  self.app.ts['total'] and
-        # self.app.ts['total-bytes'] from the generation metadata,
-        # but RepositoryInterface does not yet support that. To be
-        # fixed later.
+        self.app.ts['total'] = self.repo.get_generation_key(
+            gen, obnamlib.REPO_GENERATION_FILE_COUNT)
+        self.app.ts['total-bytes'] = self.repo.get_generation_key(
+            gen, obnamlib.REPO_GENERATION_TOTAL_DATA)
 
         self.app.dump_memory_profile('at beginning after setup')
 
