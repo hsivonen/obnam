@@ -138,10 +138,9 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             self.restore_something(gen, arg)
             self.app.dump_memory_profile('at restoring %s' % repr(arg))
 
-        # FIXME: Close the repository here, so that its vfs gets
-        # closed. This is not yet supported by RepositoryInterface.
         if self.write_ok:
             self.fs.close()
+            self.repo.close()
 
         self.app.ts.clear()
         self.report_stats()
