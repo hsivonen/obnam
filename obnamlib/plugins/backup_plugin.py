@@ -422,6 +422,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
             for pathname, metadata in self.find_files(absroot):
                 logging.info('Backing up %s' % pathname)
+                if not self.pretend:
+                    existed = self.repo.file_exists(
+                        self.new_generation, pathname)
                 try:
                     self.maybe_simulate_error(pathname)
                     if stat.S_ISDIR(metadata.st_mode):
@@ -434,6 +437,25 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 except (IOError, OSError), e:
                     msg = 'Can\'t back up %s: %s' % (pathname, e.strerror)
                     self.error(msg, e)
+                    if not existed and not self.pretend:
+                        try:
+                            self.repo.remove_file(
+                                self.new_generation, pathname)
+                        except KeyError:
+                            # File removal failed, but ignore that.
+                            # FIXME: This is an artifact of implementation
+                            # details of the old repository class. Should
+                            # be cleaned up, someday.
+                            pass
+                        except Exception as ee:
+                            expl = (
+                                ee.strerror 
+                                if hasattr(ee, 'strerror') 
+                                else str(ee))
+                            msg = (
+                                'Error removing partly backed up file %s: %s'
+                                % (pathname, repr(ee)))
+                            self.error(msg, ee)
                     if e.errno == errno.ENOSPC:
                         raise
                 if self.time_for_checkpoint():
