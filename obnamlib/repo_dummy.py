@@ -113,6 +113,10 @@ class DummyClient(object):
         self._require_lock()
         self.data.unlock()
 
+    def force_lock(self):
+        if self.data.locked:
+            self.data.unlock()
+
     def commit(self):
         self._require_lock()
         self.data.set_value('current-generation', None)
@@ -330,7 +334,6 @@ class DummyClientList(object):
     def force(self):
         if self.data.locked:
             self.unlock()
-        self.lock()
 
     def _require_lock(self):
         if not self.data.locked:
@@ -434,7 +437,6 @@ class ChunkIndexes(object):
     def force(self):
         if self.data.locked:
             self.unlock()
-        self.lock()
 
     def put_chunk(self, chunk_id, chunk_content, client_id):
         self._require_lock()
@@ -517,6 +519,9 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
 
     def commit_client(self, client_name):
         self._client_list[client_name].commit()
+
+    def force_client_lock(self, client_name):
+        self._client_list[client_name].force_lock()
 
     def get_allowed_client_keys(self):
         return [obnamlib.REPO_CLIENT_TEST_KEY]

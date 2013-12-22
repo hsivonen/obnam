@@ -363,9 +363,9 @@ class RepositoryInterface(object):
     def force_client_list_lock(self):
         '''Force the client list lock.
 
-        If the process that locked the client list is dead, this method
-        forces the lock open and takes it for the calling process instead.
-        Any uncommitted changes by the original locker will be lost.
+        If the process that locked the client list is dead, this
+        method forces the lock open (removes the lock). Any
+        uncommitted changes by the original locker will be lost.
 
         '''
         raise NotImplementedError()
@@ -424,8 +424,8 @@ class RepositoryInterface(object):
         '''Force the client lock.
 
         If the process that locked the client is dead, this method
-        forces the lock open and takes it for the calling process instead.
-        Any uncommitted changes by the original locker will be lost.
+        forces the lock open (removes the lock). Any uncommitted
+        changes by the original locker will be lost.
 
         '''
         raise NotImplementedError()
@@ -632,7 +632,7 @@ class RepositoryInterface(object):
         raise NotImplementedError()
 
     def force_chunk_indexex_lock(self):
-        '''Forces a chunk index lock open and takes it for the caller.'''
+        '''Forces a chunk index lock open.'''
         raise NotImplementedError()
 
     def commit_chunk_indexes(self):
@@ -899,8 +899,12 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.repo.lock_client_list()
         self.repo.add_client('bar')
         self.repo.force_client_list_lock()
-        self.repo.add_client('foo')
-        self.assertEqual(self.repo.get_client_names(), ['foo'])
+        self.assertRaises(
+            obnamlib.RepositoryClientListNotLocked,
+            self.repo.add_client,
+            'foo')
+        self.repo.lock_client_list()
+        self.assertEqual(self.repo.get_client_names(), [])
 
     def test_raises_error_when_getting_encryption_key_id_for_unknown(self):
         self.repo.init_repo()
@@ -951,6 +955,19 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.assertRaises(
             obnamlib.RepositoryClientNotLocked,
             self.repo.unlock_client, 'fooclient')
+
+    def test_forcing_client_lock_works(self):
+        self.setup_client()
+        # FIXME: Should assert client lock is there/not there at
+        # various steps. But RepositoryInterface is lacking the
+        # necessary methods, for now, we can't do that. Later.
+
+        # Make sure client isn't locked. Then force the lock, lock it,
+        # and force it again.
+        self.repo.force_client_lock('fooclient')
+        self.repo.lock_client('fooclient')
+        self.repo.force_client_lock('fooclient')
+        self.repo.lock_client('fooclient')
 
     def test_committing_client_when_unlocked_fails(self):
         self.setup_client()
@@ -1708,7 +1725,7 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
     def test_forces_chunk_index_lock(self):
         self.repo.lock_chunk_indexes()
         self.repo.force_chunk_indexes_lock()
-        self.assertEqual(self.repo.unlock_chunk_indexes(), None)
+        self.assertEqual(self.repo.lock_chunk_indexes(), None)
 
     # Fsck.
 

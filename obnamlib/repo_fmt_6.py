@@ -184,9 +184,10 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     def force_client_list_lock(self):
         tracing.trace('forcing client list lock')
-        if self._got_client_list_lock:
-            self._raw_unlock_client_list()
-        self._raw_lock_client_list()
+        lock_name = os.path.join('lock')
+        if self._real_fs.exists(lock_name):
+            self._real_fs.remove(lock_name)
+        self._setup_client_list()
 
     def get_client_names(self):
         return self._client_list.list_clients()
@@ -317,8 +318,6 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     def _raw_unlock_client(self, client_name):
         tracing.trace('client_name=%s', client_name)
-        self._require_client_lock(client_name)
-
         open_client = self._open_clients[client_name]
         self._lockmgr.unlock([open_client.client.dirname])
         del self._open_clients[client_name]
@@ -329,7 +328,17 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     def unlock_client(self, client_name):
         logging.info('Unlocking client %s' % client_name)
+        self._require_client_lock(client_name)
         self._raw_unlock_client(client_name)
+
+    def force_client_lock(self, client_name):
+        logging.info('Forcing client lock open for %s', client_name)
+        self._open_client(client_name)
+        open_client = self._open_clients[client_name]
+        lock_name = os.path.join(open_client.client.dirname, 'lock')
+        if self._real_fs.exists(lock_name):
+            self._real_fs.remove(lock_name)
+        del self._open_clients[client_name]
 
     def commit_client(self, client_name):
         tracing.trace('client_name=%s', client_name)
@@ -623,9 +632,12 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     def force_chunk_indexes_lock(self):
         tracing.trace('forcing chunk indexes lock')
-        if self._got_chunk_indexes_lock:
-            self._raw_unlock_chunk_indexes()
-        self._raw_lock_chunk_indexes()
+        lock_name = os.path.join('lock')
+        for dirname in self._chunk_index_dirs_to_lock():
+            lock_name = os.path.join(dirname, 'lock')
+            if self._real_fs.exists(lock_name):
+                self._real_fs.remove(lock_name)
+        self._setup_chunk_indexes()
 
     def commit_chunk_indexes(self):
         tracing.trace('committing chunk indexes')
