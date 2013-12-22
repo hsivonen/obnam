@@ -86,67 +86,84 @@ class CleanMore(clean):
 class Check(Command):
 
     user_options = [
-        ('unit-only', 'u', 'run unit tests tests only?'),
-        ('fast', 'f', 'run fast tests only?'),
-        ('network', 'n', 'run network tests to localhost?'),
-        ('network-only', 'N', 'only run network tests to localhost?'),
+        ('unit-tests', 'u', 'run unit tests?'),
+        ('cmdtests', 'b', 'run cmdtest tests locally?'),
+        ('network-cmdtests', 'B', 'run cmdtest tests against localhost?'),
+        ('yarns', 'y', 'run yarn tests locally?'),
+        ('lock-tests', 'l', 'run lock tests locally?'),
+        ('network-lock-tests', 'L', 'run lock tests against localhost?'),
+        ('crash-tests', 'c', 'run crash tests?'),
+        ('sftp-tests', 's', 'run sftp tests against localhost?'),
     ]
 
+    def set_all_options(self, new_value):
+        self.unit_tests = new_value
+        self.cmdtests = new_value
+        self.network_cmdtests = new_value
+        self.yarns = new_value
+        self.lock_tests = new_value
+        self.network_lock_tests = new_value
+        self.crash_tests = new_value
+        self.sftp_tests = new_value
+
     def initialize_options(self):
-        self.unit_only = False
-        self.fast = False
-        self.network = False
-        self.network_only = False
+        self.set_all_options(False)
 
     def finalize_options(self):
-        pass
+        any_set = (
+            self.unit_tests or
+            self.cmdtests or
+            self.network_cmdtests or
+            self.yarns or
+            self.lock_tests or
+            self.network_lock_tests or
+            self.crash_tests or
+            self.sftp_tests)
+        if not any_set:
+            self.set_all_options(True)
 
     def run(self):
-        local = not self.network_only
-        network = self.network or self.network_only
-        fast = self.fast
-        slow = not self.fast and not self.unit_only
-
-        if local and (self.unit_only or fast):
+        if self.unit_tests:
             print "run unit tests"
             runcmd(['python', '-m', 'CoverageTestRunner',
                     '--ignore-missing-from=without-tests'])
             os.remove('.coverage')
 
-        if local and fast:
-            print "run black box tests"
+        if self.cmdtests:
+            print "run cmdtest tests"
             runcmd(['cmdtest', 'tests'])
-            if got_yarn:
-                runcmd(
-                    ['yarn', '-s', 'yarns/obnam.sh'] +
-                    glob.glob('yarns/*.yarn'))
+
+        if self.yarns and got_yarn:
+            runcmd(
+                ['yarn', '-s', 'yarns/obnam.sh'] +
+                glob.glob('yarns/*.yarn'))
 
         num_clients = '2'
         num_generations = '16'
 
-        if local and slow:
-            print "run locking tests"
+        if self.lock_tests:
+            print "run local locking tests"
             test_repo = tempfile.mkdtemp()
             runcmd(['./test-locking', num_clients,
                     num_generations, test_repo, test_repo])
             shutil.rmtree(test_repo)
 
-        if local and slow:
+        if self.crash_tests:
             print "run crash test"
             runcmd(['./crash-test', '200'])
 
-        if network and fast:
+        if self.sftp_tests:
             print "run sftp tests"
             runcmd(['./test-sftpfs'])
 
-        if network and fast:
-            print "re-run black box tests using localhost networking"
+        if self.network_cmdtests:
+            print "run black box tests using localhost networking"
             env = dict(os.environ)
             env['OBNAM_TEST_SFTP_ROOT'] = 'yes'
             env['OBNAM_TEST_SFTP_REPOSITORY'] = 'yes'
             runcmd(['cmdtest', 'tests'], env=env)
 
-        if network and slow:
+        if self.network_lock_tests:
             print "re-run locking tests using localhost networking"
             test_repo = tempfile.mkdtemp()
             repo_url = 'sftp://localhost/%s' % test_repo
