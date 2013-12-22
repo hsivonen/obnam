@@ -16,6 +16,9 @@
 # =*= License: GPL-3+ =*=
 
 
+import errno
+import logging
+
 import obnamlib
 
 
@@ -84,16 +87,22 @@ class RepositoryFactory(object):
 
         '''
 
-        if fs.exists('metadata/format'):
-            return self.open_existing_repo(fs, **kwargs)
-
-        for impl in self._implementations:
-            if impl == wanted_format:
-                break
-        else:
+        if wanted_format not in self._implementations:
             raise UnknownRepositoryFormatWanted(wanted_format)
-        
-        fs.write_file('metadata/format', '%s\n' % wanted_format.format)
-        repo = self._open_repo(impl, fs, kwargs)
-        repo.init_repo()
-        return repo
+
+        try:
+            fs.write_file('metadata/format', '%s\n' % wanted_format.format)
+        except OSError as e:
+            logging.debug('create_repo: e=%s' % e, exc_info=1)
+            logging.debug('create_repo: e.errno=%s' % e.errno)
+            # SFTP (paramiko) sets errno to None when file creation
+            # fails when the file already exists. Local filesystems
+            # set it to EEXIST. Life is wonderful.
+            if e.errno in (errno.EEXIST, None):
+                return self.open_existing_repo(fs, **kwargs)
+            raise # pragma: no cover
+        else:
+            logging.debug('create_repo: metadata/format created ok')
+            repo = self._open_repo(wanted_format, fs, kwargs)
+            repo.init_repo()
+            return repo
