@@ -1178,19 +1178,6 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
             self.repo.commit_client('fooclient')
             self.assertEqual(value, 'bar')
 
-    # FIXME: This test seems to make no sense: we can't create a new
-    # generation, then abort that, and then use the generation id
-    # after that. That generation no longer exists. It's gone.
-    # def test_unlocking_client_undoes_generation_key_changes(self):
-    #     if self.generation_test_key_is_allowed():
-    #         gen_id = self.create_generation()
-    #         self.repo.set_generation_key(
-    #             gen_id, obnamlib.REPO_GENERATION_TEST_KEY, 'bar')
-    #         self.repo.unlock_client('fooclient')
-    #         value = self.repo.get_generation_key(
-    #             gen_id, obnamlib.REPO_GENERATION_TEST_KEY)
-    #         self.assertEqual(value, '')
-
     def test_removes_unfinished_generation(self):
         gen_id = self.create_generation()
         self.repo.remove_generation(gen_id)
