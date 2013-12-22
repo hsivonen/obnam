@@ -72,3 +72,12 @@ class RepositoryFormatTests(unittest.TestCase):
         factory = obnamlib.RepositoryFactory()
         repo = factory.create_repo(fs, good)
         self.assertTrue(isinstance(repo, good))
+
+    def test_create_repo_twice_is_ok(self):
+        good = obnamlib.RepositoryFormat6
+        fs = obnamlib.LocalFS(self.repodir)
+        factory = obnamlib.RepositoryFactory()
+        repo = factory.create_repo(fs, good)
+        self.assertTrue(isinstance(repo, good))
+        repo2 = factory.create_repo(fs, good)
+        self.assertTrue(isinstance(repo2, good))
