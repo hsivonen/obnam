@@ -18,6 +18,7 @@ import hashlib
 import larch.fsck
 import logging
 import os
+import stat
 import sys
 import ttystatus
 
@@ -119,10 +120,12 @@ class CheckDirectory(WorkItem):
                         (self.client_name, self.genid, self.dirname))
         self.construct_metadata_object(self.genid, self.dirname)
         for pathname in self.repo.get_file_children(self.genid, self.dirname):
-            metadata = self.construct_metadata_object(self.genid, pathname)
-            if metadata.isdir():
+            mode = self.repo.get_file_key(
+                self.genid, pathname, obnamlib.REPO_FILE_MODE)
+            if stat.S_ISDIR(mode):
                 yield CheckDirectory(self.client_name, self.genid, pathname)
             elif not self.settings['fsck-skip-files']:
+                metadata = self.construct_metadata_object(self.genid, pathname)
                 yield CheckFile(
                     self.client_name, self.genid, pathname, metadata)
 
