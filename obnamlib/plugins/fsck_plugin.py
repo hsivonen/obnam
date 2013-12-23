@@ -86,25 +86,28 @@ class CheckFileChecksum(WorkItem):
 
 class CheckFile(WorkItem):
 
-    def __init__(self, client_name, genid, filename, metadata):
+    def __init__(self, client_name, genid, filename):
         self.client_name = client_name
         self.genid = genid
         self.filename = filename
-        self.metadata = metadata
         self.name = 'file %s:%s:%s' % (client_name, genid, filename)
 
     def do(self):
         logging.debug('Checking client=%s genid=%s filename=%s' %
                         (self.client_name, self.genid, self.filename))
-        if self.metadata.isfile() and not self.settings['fsck-ignore-chunks']:
+        mode = self.repo.get_file_key(
+            self.genid, self.filename, obnamlib.REPO_FILE_MODE)
+        if stat.S_ISREG(mode) and not self.settings['fsck-ignore-chunks']:
             chunkids = self.repo.get_file_chunk_ids(self.genid, self.filename)
             # FIXME: This hardcodes knowledge of the checksum, due to
             # RepositoryInterface intentionally hiding it.
             checksummer = hashlib.md5()
             for chunkid in chunkids:
                 yield CheckChunk(chunkid, checksummer)
+            md5 = self.repo.get_file_key(
+                self.genid, self.filename, obnamlib.REPO_FILE_MD5)
             yield CheckFileChecksum(
-                self.name, self.metadata.md5, chunkids, checksummer)
+                self.name, md5, chunkids, checksummer)
 
 
 class CheckDirectory(WorkItem):
@@ -124,9 +127,7 @@ class CheckDirectory(WorkItem):
             if stat.S_ISDIR(mode):
                 yield CheckDirectory(self.client_name, self.genid, pathname)
             elif not self.settings['fsck-skip-files']:
-                metadata = self.construct_metadata_object(self.genid, pathname)
-                yield CheckFile(
-                    self.client_name, self.genid, pathname, metadata)
+                yield CheckFile(self.client_name, self.genid, pathname)
 
     def construct_metadata_object(self, gen, filename):
         # FIXME: this is duplicate code.
