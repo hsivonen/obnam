@@ -129,35 +129,6 @@ class CheckDirectory(WorkItem):
             elif not self.settings['fsck-skip-files']:
                 yield CheckFile(self.client_name, self.genid, pathname)
 
-    def construct_metadata_object(self, gen, filename):
-        # FIXME: this is duplicate code.
-        allowed = set(self.repo.get_allowed_file_keys())
-        def K(key):
-            if key in allowed:
-                return self.repo.get_file_key(gen, filename, key)
-            else:
-                return None
-
-        return obnamlib.Metadata(
-            st_atime_sec=K(obnamlib.REPO_FILE_ATIME_SEC),
-            st_atime_nsec=K(obnamlib.REPO_FILE_ATIME_NSEC),
-            st_mtime_sec=K(obnamlib.REPO_FILE_MTIME_SEC),
-            st_mtime_nsec=K(obnamlib.REPO_FILE_MTIME_NSEC),
-            st_blocks=K(obnamlib.REPO_FILE_BLOCKS),
-            st_dev=K(obnamlib.REPO_FILE_DEV),
-            st_gid=K(obnamlib.REPO_FILE_GID),
-            st_ino=K(obnamlib.REPO_FILE_INO),
-            st_mode=K(obnamlib.REPO_FILE_MODE),
-            st_nlink=K(obnamlib.REPO_FILE_NLINK),
-            st_size=K(obnamlib.REPO_FILE_SIZE),
-            st_uid=K(obnamlib.REPO_FILE_UID),
-            username=K(obnamlib.REPO_FILE_USERNAME),
-            groupname=K(obnamlib.REPO_FILE_GROUPNAME),
-            target=K(obnamlib.REPO_FILE_SYMLINK_TARGET),
-            xattr=K(obnamlib.REPO_FILE_XATTR_BLOB) or None,
-            md5=K(obnamlib.REPO_FILE_MD5),
-            )
-
 
 class CheckGeneration(WorkItem):
 
