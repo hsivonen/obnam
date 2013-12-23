@@ -402,6 +402,10 @@ class RepositoryInterface(object):
 
     # A particular client.
 
+    def client_is_locked(self, client_name):
+        '''Is this client locked, possibly by someone else?'''
+        raise NotImplementedError()
+
     def lock_client(self, client_name):
         '''Lock the client for changes.
 
@@ -958,16 +962,18 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
 
     def test_forcing_client_lock_works(self):
         self.setup_client()
-        # FIXME: Should assert client lock is there/not there at
-        # various steps. But RepositoryInterface is lacking the
-        # necessary methods, for now, we can't do that. Later.
 
         # Make sure client isn't locked. Then force the lock, lock it,
         # and force it again.
+        self.assertFalse(self.repo.client_is_locked('fooclient'))
         self.repo.force_client_lock('fooclient')
+        self.assertFalse(self.repo.client_is_locked('fooclient'))
         self.repo.lock_client('fooclient')
+        self.assertTrue(self.repo.client_is_locked('fooclient'))
         self.repo.force_client_lock('fooclient')
+        self.assertFalse(self.repo.client_is_locked('fooclient'))
         self.repo.lock_client('fooclient')
+        self.assertTrue(self.repo.client_is_locked('fooclient'))
 
     def test_committing_client_when_unlocked_fails(self):
         self.setup_client()

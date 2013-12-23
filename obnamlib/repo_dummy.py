@@ -100,6 +100,9 @@ class DummyClient(object):
         self.generation_counter = Counter()
         self.data = LockableKeyValueStore()
 
+    def is_locked(self):
+        return self.data.locked
+
     def lock(self):
         if self.data.locked:
             raise obnamlib.RepositoryClientLockingFailed(self.name)
@@ -510,6 +513,9 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
 
     def set_client_encryption_key_id(self, client_name, key_id):
         self._client_list.set_client_encryption_key_id(client_name, key_id)
+
+    def client_is_locked(self, client_name):
+        return self._client_list[client_name].is_locked()
 
     def lock_client(self, client_name):
         self._client_list[client_name].lock()

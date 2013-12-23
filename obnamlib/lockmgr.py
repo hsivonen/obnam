@@ -73,6 +73,15 @@ class LockManager(object):
     def _unlock_one(self, dirname):
         self._fs.unlock(self._lockname(dirname))
 
+    def is_locked(self, dirname):
+        '''Is the given directory locked?
+
+        Note the usual race conditions between testing and locking.
+
+        '''
+
+        return self._fs.exists(self._lockname(dirname))
+
     def lock(self, dirnames):
         '''Lock ALL the directories.'''
         we_locked = []

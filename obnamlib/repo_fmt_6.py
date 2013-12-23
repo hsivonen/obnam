@@ -280,7 +280,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         '''Return name of sub-directory for a given client.'''
         return str(client_id)
 
-    def _client_is_locked(self, client_name):
+    def _client_is_locked_by_us(self, client_name):
         if client_name in self._open_clients:
             open_client = self._open_clients[client_name]
             return open_client.locked
@@ -289,13 +289,13 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
     def _require_client_lock(self, client_name):
         if client_name not in self.get_client_names():
             raise obnamlib.RepositoryClientDoesNotExist(client_name)
-        if not self._client_is_locked(client_name):
+        if not self._client_is_locked_by_us(client_name):
             raise obnamlib.RepositoryClientNotLocked(client_name)
 
     def _raw_lock_client(self, client_name):
         tracing.trace('client_name=%s', client_name)
 
-        if self._client_is_locked(client_name):
+        if self._client_is_locked_by_us(client_name):
             raise obnamlib.RepositoryClientLockingFailed(client_name)
 
         client_id = self._get_client_id(client_name)
@@ -321,6 +321,11 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         open_client = self._open_clients[client_name]
         self._lockmgr.unlock([open_client.client.dirname])
         del self._open_clients[client_name]
+
+    def client_is_locked(self, client_name):
+        logging.info('Checking if %s is locked' % client_name)
+        client = self._open_client(client_name)
+        return self._lockmgr.is_locked(client.dirname)
 
     def lock_client(self, client_name):
         logging.info('Locking client %s' % client_name)
