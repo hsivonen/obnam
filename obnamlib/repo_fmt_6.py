@@ -383,7 +383,9 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
                     # No checksum, therefore it can't be shared, therefore
                     # we can remove it.
                     # FIXME: shouldn't this be: no checksum, so we DON'T
-                    # KNOW if it's safe to remove.
+                    # KNOW if it's safe to remove. Actually, there's
+                    # no guarantee a chunk can be removed, if we ever
+                    # allow a chunk to not be in the checksum trees. Hmm.
                     self.remove_chunk(chunk_id)
                 else:
                     self.remove_chunk_from_indexes(chunk_id, client_name)
