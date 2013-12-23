@@ -118,7 +118,6 @@ class CheckDirectory(WorkItem):
     def do(self):
         logging.debug('Checking client=%s genid=%s dirname=%s' %
                         (self.client_name, self.genid, self.dirname))
-        self.construct_metadata_object(self.genid, self.dirname)
         for pathname in self.repo.get_file_children(self.genid, self.dirname):
             mode = self.repo.get_file_key(
                 self.genid, pathname, obnamlib.REPO_FILE_MODE)
