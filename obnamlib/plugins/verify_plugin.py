@@ -102,8 +102,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
                 else:
                     if metadata.isfile():
                         try:
-                            self.verify_regular_file(
-                                gen_id, filename, metadata)
+                            self.verify_regular_file(gen_id, filename)
                         except Fail, e:
                             self.log_fail(e)
                 self.app.ts['done'] += 1
@@ -124,7 +123,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
                 metadata = self.construct_metadata_object(gen_id, filename)
                 try:
                     self.verify_metadata(gen_id, filename, metadata)
-                    self.verify_regular_file(gen_id, filename, metadata)
+                    self.verify_regular_file(gen_id, filename)
                 except Fail, e:
                     self.log_fail(e)
                 self.app.ts['done'] += 1
@@ -158,7 +157,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
                 raise Fail(filename,
                            'metadata change: %s (%s vs %s)' % (field, v1, v2))
 
-    def verify_regular_file(self, gen_id, filename, metadata):
+    def verify_regular_file(self, gen_id, filename):
         logging.debug('verifying regular %s' % filename)
         f = self.fs.open(filename, 'r')
 
