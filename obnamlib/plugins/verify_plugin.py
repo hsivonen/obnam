@@ -150,12 +150,31 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
             live_data = obnamlib.read_metadata(self.fs, filename)
         except OSError, e:
             raise Fail(filename, 'missing or inaccessible: %s' % e.strerror)
-        for field in obnamlib.metadata_verify_fields:
-            v1 = getattr(backed_up, field)
-            v2 = getattr(live_data, field)
+
+        def X(key, field_name):
+            v1 = self.repo.get_file_key(gen_id, filename, key)
+            v2 = getattr(live_data, field_name)
+            # obnamlib.Metadata stores some fields as None, but
+            # RepositoryInterface returns 0 or '' instead. Convert
+            # the value from obnamlib.Metadata accordingly, for comparison.
+            if key in obnamlib.REPO_FILE_INTEGER_KEYS:
+                v2 = v2 or 0
+            else:
+                v2 = v2 or ''
             if v1 != v2:
-                raise Fail(filename,
-                           'metadata change: %s (%s vs %s)' % (field, v1, v2))
+                raise Fail(
+                    filename,
+                    'metadata change: %s (%s vs %s)' % 
+                    (field_name, repr(v1), repr(v2)))
+
+        X(obnamlib.REPO_FILE_MODE, 'st_mode')
+        X(obnamlib.REPO_FILE_MTIME_SEC, 'st_mtime_sec')
+        X(obnamlib.REPO_FILE_MTIME_NSEC, 'st_mtime_nsec')
+        X(obnamlib.REPO_FILE_NLINK, 'st_nlink')
+        X(obnamlib.REPO_FILE_GROUPNAME, 'groupname')
+        X(obnamlib.REPO_FILE_USERNAME, 'username')
+        X(obnamlib.REPO_FILE_SYMLINK_TARGET, 'target')
+        X(obnamlib.REPO_FILE_XATTR_BLOB, 'xattr')
 
     def verify_regular_file(self, gen_id, filename):
         logging.debug('verifying regular %s' % filename)
