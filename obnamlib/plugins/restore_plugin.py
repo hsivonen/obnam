@@ -150,32 +150,8 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         if self.errors:
             raise obnamlib.Error('There were errors when restoring')
 
-    def repo_walk(self, gen_id, dirname, depth_first=False):
-        '''Like os.walk, but for a generation.
-
-        This is a generator. Each return value is a tuple consisting
-        of a pathname and its corresponding metadata. Directories are
-        recursed into.
-
-        '''
-
-        arg = os.path.normpath(dirname)
-        mode = self.repo.get_file_key(
-            gen_id, dirname, obnamlib.REPO_FILE_MODE)
-        if stat.S_ISDIR(mode):
-            if not depth_first:
-                yield dirname
-            kidpaths = self.repo.get_file_children(gen_id, dirname)
-            for kp in kidpaths:
-                for x in self.repo_walk(gen_id, kp, depth_first=depth_first):
-                    yield x
-            if depth_first:
-                yield arg
-        else:
-            yield arg
-
     def restore_something(self, gen, root):
-        for pathname in self.repo_walk(gen, root, depth_first=True):
+        for pathname in self.repo.walk_generation(gen, root):
             self.file_count += 1
             self.app.ts['current'] = pathname
             self.restore_safely(gen, pathname)

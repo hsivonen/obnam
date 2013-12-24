@@ -18,6 +18,8 @@
 # =*= License: GPL-3+ =*=
 
 
+import os
+import stat
 import unittest
 
 import obnamlib
@@ -604,6 +606,28 @@ class RepositoryInterface(object):
 
         '''
         raise NotImplementedError()
+
+    def walk_generation(self, gen_id, dirname): # pragma: no cover
+        '''Like os.walk, but for a generation.
+
+        This is a generator. Each return value is a pathname.
+        Directories are recursed into. If depth_first is set to
+        Children of a directory are returned before the directory
+        itself.
+
+        Sub-classes do not need to define this method; the base
+        class provides a generic implementation.
+
+        '''
+
+        arg = os.path.normpath(dirname)
+        mode = self.get_file_key(gen_id, dirname, obnamlib.REPO_FILE_MODE)
+        if stat.S_ISDIR(mode):
+            kidpaths = self.get_file_children(gen_id, dirname)
+            for kp in kidpaths:
+                for x in self.walk_generation(gen_id, kp):
+                    yield x
+        yield arg
 
     # Chunks.
 
