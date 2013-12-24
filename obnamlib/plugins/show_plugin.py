@@ -261,7 +261,6 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         else:
             # Files are both present and neither is a directory.
             # Compare md5
-            # FIXME: not sure this logic is correct --liw
             def get_md5(gen_id):
                 return self.repo.get_file_key(
                     gen_id, fullname, obnamlib.REPO_FILE_MD5)
