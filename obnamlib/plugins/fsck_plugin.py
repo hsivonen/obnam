@@ -87,8 +87,6 @@ class CheckFile(WorkItem):
             self.genid, self.filename, obnamlib.REPO_FILE_MODE)
         if stat.S_ISREG(mode) and not self.settings['fsck-ignore-chunks']:
             chunkids = self.repo.get_file_chunk_ids(self.genid, self.filename)
-            # FIXME: This hardcodes knowledge of the checksum, due to
-            # RepositoryInterface intentionally hiding it.
             checksummer = hashlib.md5()
             for chunkid in chunkids:
                 yield CheckChunk(chunkid, checksummer)
