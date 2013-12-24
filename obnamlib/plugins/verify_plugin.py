@@ -120,7 +120,6 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
                 chosen.append(filename)
             for filename in chosen:
                 self.app.ts['filename'] = filename
-                metadata = self.construct_metadata_object(gen_id, filename)
                 try:
                     self.verify_metadata(gen_id, filename)
                     self.verify_regular_file(gen_id, filename)
