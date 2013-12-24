@@ -48,24 +48,12 @@ class CheckChunk(WorkItem):
             self.error('chunk %s does not exist' % self.chunkid)
         else:
             data = self.repo.get_chunk_content(self.chunkid)
-
-            # FIXME: We should be checking the the chunk's checksum here,
-            # but this is not possible using the new RepositoryInterface 
-            # API, which intentionally hides implementation details that
-            # may be different in different implementations.
-            # checksum = hashlib.md5(data).hexdigest()
-            # try:
-            #     correct = self.repo.chunklist.get_checksum(self.chunkid)
-            # except KeyError:
-            #     self.error('chunk %s not in chunklist' % self.chunkid)
-            # else:
-            #     if checksum != correct:
-            #         self.error('chunk %s has wrong checksum' % self.chunkid)
-
-            # if self.chunkid not in self.repo.chunksums.find(checksum):
-            #     self.error('chunk %s not in chunksums' % self.chunkid)
-
             self.checksummer.update(data)
+
+            valid = self.repo.validate_chunk_content(self.chunkid)
+            if valid is False:
+                self.error('chunk %s is corrupted' % self.chunkid)
+
         self.chunkids_seen.add(self.chunkid)
 
 
