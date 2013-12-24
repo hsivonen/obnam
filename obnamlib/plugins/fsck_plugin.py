@@ -351,12 +351,8 @@ class FsckPlugin(obnamlib.ObnamPlugin):
 
         self.repo.lock_client_list()
         client_names = self.repo.get_client_names()
-        # FIXME: RepositoryInterface does not have a way to lock everything,
-        # or an API to allow us to do this. So we use hidden APIs, for now.
-        client_dirs = [self.repo._get_client_dir(
-                            self.repo._get_client_id(name))
-                       for name in client_names]
-        self.repo._lockmgr.lock(client_dirs)
+        for client_name in client_names:
+            self.repo.lock_client(client_name)
         self.repo.lock_chunk_indexes()
 
         self.errors = 0
@@ -383,7 +379,8 @@ class FsckPlugin(obnamlib.ObnamPlugin):
                 final_items = []
 
         self.repo.unlock_chunk_indexes()
-        self.repo._lockmgr.unlock(client_dirs)
+        for client_name in client_names:
+            self.repo.unlock_client(client_name)
         self.repo.unlock_client_list()
 
         self.repo.close()
