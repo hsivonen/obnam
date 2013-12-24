@@ -25,7 +25,8 @@ REPO="$DATADIR/repo"
 
 run_obnam()
 {
-    "$SRCDIR/obnam" --no-default-config --quiet "$@"
+    "$SRCDIR/obnam" --no-default-config --quiet \
+        --log-level debug --log "$DATADIR/obnam.log" "$@"
 }
 
 
