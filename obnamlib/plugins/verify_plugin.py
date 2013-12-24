@@ -96,7 +96,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
             for filename, metadata in self.walk(gen_id, args):
                 self.app.ts['filename'] = filename
                 try:
-                    self.verify_metadata(gen_id, filename, metadata)
+                    self.verify_metadata(gen_id, filename)
                 except Fail, e:
                     self.log_fail(e)
                 else:
@@ -122,7 +122,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
                 self.app.ts['filename'] = filename
                 metadata = self.construct_metadata_object(gen_id, filename)
                 try:
-                    self.verify_metadata(gen_id, filename, metadata)
+                    self.verify_metadata(gen_id, filename)
                     self.verify_regular_file(gen_id, filename)
                 except Fail, e:
                     self.log_fail(e)
@@ -145,7 +145,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
             self.app.ts.notify(msg)
         self.failed = True
 
-    def verify_metadata(self, gen_id, filename, backed_up):
+    def verify_metadata(self, gen_id, filename):
         try:
             live_data = obnamlib.read_metadata(self.fs, filename)
         except OSError, e:
