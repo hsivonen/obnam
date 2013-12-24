@@ -685,6 +685,15 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
                 return chunk_id
         raise obnamlib.RepositoryChunkContentNotInIndexes()
 
+    def validate_chunk_content(self, chunk_id):
+        try:
+            content = self.get_chunk_content(chunk_id)
+        except obnamlib.RepositoryChunkDoesNotExist:
+            return False
+        actual_checksum = self._checksum(content)
+        expected_checksum = self._chunklist.get_checksum(chunk_id)
+        return actual_checksum == expected_checksum
+
     # Individual files in a generation.
 
     def _setup_file_keys(self):

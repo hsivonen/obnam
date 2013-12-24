@@ -709,6 +709,26 @@ class RepositoryInterface(object):
         '''
         raise NotImplementedError()
 
+    def validate_chunk_content(self, chunk_id):
+        '''Make sure the content of a chunk is valid.
+
+        This is (presumably) done by storing a checksum of the chunk
+        data in the chunk indexes, and then verifying that. However,
+        it could be done by error checking codes. It could also not be
+        done at all: if a repository format does not have chunk
+        indexes in any form, it can just return None for all
+        validation.
+
+        If a chunk is missing, it should be treated as an invalid
+        chunk (return False or None, depending).
+
+        Return True if content is valid, False if it is invalid, and
+        None if it is not known either way.
+
+        '''
+
+        raise NotImplementedError()
+
     # Fsck.
 
     def get_fsck_work_item(self):
@@ -1757,8 +1777,26 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.repo.force_chunk_indexes_lock()
         self.assertEqual(self.repo.lock_chunk_indexes(), None)
 
+    def test_validate_chunk_content_returns_True_or_None(self):
+        self.setup_client()
+        chunk_id = self.repo.put_chunk_content('foochunk')
+        self.repo.lock_chunk_indexes()
+        self.repo.put_chunk_into_indexes(chunk_id, 'foochunk', 'fooclient')
+        self.repo.commit_chunk_indexes()
+        ret = self.repo.validate_chunk_content(chunk_id)
+        self.assertTrue(ret is True or ret is None)
+
+    def test_validate_chunk_content_returns_False_or_None_if_corrupted(self):
+        self.setup_client()
+        chunk_id = self.repo.put_chunk_content('foochunk')
+        self.repo.lock_chunk_indexes()
+        self.repo.put_chunk_into_indexes(chunk_id, 'foochunk', 'fooclient')
+        self.repo.commit_chunk_indexes()
+        self.repo.remove_chunk(chunk_id)
+        ret = self.repo.validate_chunk_content(chunk_id)
+        self.assertTrue(ret is False or ret is None)
+
     # Fsck.
 
     def test_returns_fsck_work_item(self):
         self.assertNotEqual(self.repo.get_fsck_work_item(), None)
-

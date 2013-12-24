@@ -302,10 +302,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
                 f.write('\0')
 
     def verify_chunk_checksum(self, data, chunkid):
-        # FIXME: The RepositoryInterface does not currently have
-        # a way to do this, so at this time this is a no-op, to be
-        # fixed later.
-        pass
+        self.repo.validate_chunk_content(chunkid)
 
     def restore_fifo(self, gen, filename, metadata):
         logging.debug('restoring fifo %s' % filename)
