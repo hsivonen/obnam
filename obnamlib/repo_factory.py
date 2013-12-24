@@ -48,6 +48,17 @@ class RepositoryFactory(object):
             obnamlib.RepositoryFormat6,
             ]
 
+    def setup_hooks(self, hooks): # pragma: no cover
+        '''Create all repository related hooks.
+
+        The factory instantiates all supported repository format classes.
+        This causes the hooks to be created.
+
+        '''
+
+        for impl in self._implementations:
+            impl.setup_hooks(hooks)
+
     def open_existing_repo(self, fs, **kwargs):
         '''Open an existing repository.
 

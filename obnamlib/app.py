@@ -128,10 +128,10 @@ class App(cliapp.Application):
         self.pm.locations = [self.plugins_dir()]
         self.pm.plugin_arguments = (self,)
 
-        self.setup_hooks()
-
         self.fsf = obnamlib.VfsFactory()
         self.repo_factory = obnamlib.RepositoryFactory()
+
+        self.setup_hooks()
 
         self.pm.load_plugins()
         self.pm.enable_plugins()
@@ -155,6 +155,9 @@ class App(cliapp.Application):
         # FIXME: This is fugly.
         obnamlib.Repository(None, 1000, 1000, 100, self.hooks, 10, 10, 10,
                             self.time, 0, '')
+
+        # The repository factory creates all repository related hooks.
+        self.repo_factory.setup_hooks(self.hooks)
 
     def plugins_dir(self):
         return os.path.join(os.path.dirname(obnamlib.__file__), 'plugins')

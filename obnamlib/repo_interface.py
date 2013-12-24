@@ -317,6 +317,19 @@ class RepositoryInterface(object):
 
     # Operations on the repository itself.
 
+    @classmethod
+    def setup_hooks(self, hooks): # pragma: no cover
+        '''Create any hooks for this repository format.
+
+        Note that this is a class method.
+
+        Subclasses do not need to override this method, unless they
+        need to add hooks.
+
+        '''
+
+        pass
+
     def get_fs(self):
         '''Get the Obnam VFS instance for accessing the filesystem.
 
