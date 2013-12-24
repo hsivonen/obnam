@@ -172,20 +172,6 @@ class CheckGenerationIdsAreDifferent(WorkItem):
                 done.add(genid)
 
 
-class CheckClientExists(WorkItem):
-
-    def __init__(self, client_name):
-        self.client_name = client_name
-        self.name = 'does client %s exist?' % client_name
-
-    def do(self):
-        logging.debug('Checking client=%s exists' % self.client_name)
-        client_names = self.repo.get_client_names()
-        if self.client_name not in client_names:
-            self.error('Client %s is in client list, but has no id' %
-                          self.client_name)
-
-
 class CheckClient(WorkItem):
 
     def __init__(self, client_name):
@@ -211,9 +197,6 @@ class CheckClientlist(WorkItem):
     def do(self):
         logging.debug('Checking clientlist')
         clients = self.repo.get_client_names()
-        for client_name in clients:
-            if client_name not in self.settings['fsck-ignore-client']:
-                yield CheckClientExists(client_name)
         if not self.settings['fsck-skip-per-client-b-trees']:
             for client_name in clients:
                 if client_name not in self.settings['fsck-ignore-client']:
