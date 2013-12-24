@@ -93,14 +93,16 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
             self.app.ts['total'] = \
                 self.repo.get_generation_key(
                 gen_id, obnamlib.REPO_GENERATION_FILE_COUNT)
-            for filename, metadata in self.walk(gen_id, args):
+            for filename in self.walk(gen_id, args):
                 self.app.ts['filename'] = filename
                 try:
                     self.verify_metadata(gen_id, filename)
                 except Fail, e:
                     self.log_fail(e)
                 else:
-                    if metadata.isfile():
+                    mode = self.repo.get_file_key(
+                        gen_id, filename, obnamlib.REPO_FILE_MODE)
+                    if stat.S_ISREG(mode):
                         try:
                             self.verify_regular_file(gen_id, filename)
                         except Fail, e:
@@ -110,9 +112,14 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
             logging.debug('verifying %d files randomly' % num_randomly)
             self.app.ts['total'] = num_randomly
             self.app.ts.notify('finding all files to choose randomly')
-            filenames = [filename
-                         for filename, metadata in self.walk(gen_id, args)
-                         if metadata.isfile()]
+
+            filenames = []
+            for filename in self.walk(gen_id, args):
+                mode = self.repo.get_file_key(
+                    gen_id, filename, obnamlib.REPO_FILE_MODE)
+                if stat.S_ISREG(mode):
+                    filenames.append(filename)
+
             chosen = []
             for i in range(min(num_randomly, len(filenames))):
                 filename = random.choice(filenames)
@@ -204,7 +211,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
             scheme, netloc, path, query, fragment = urlparse.urlsplit(arg)
             arg = os.path.normpath(path)
             for x in self.repo_walk(gen_id, arg):
-                yield x, self.construct_metadata_object(gen_id, x)
+                yield x
 
     def repo_walk(self, gen_id, dirname, depth_first=False):
         # FIXME: this is duplicate code.
