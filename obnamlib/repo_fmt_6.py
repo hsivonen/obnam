@@ -653,17 +653,19 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._chunksums.commit()
         self._raw_unlock_chunk_indexes()
 
-    def put_chunk_into_indexes(self, chunk_id, data, client_name):
+    def prepare_chunk_for_indexes(self, data):
+        return self._checksum(data)
+
+    def put_chunk_into_indexes(self, chunk_id, token, client_name):
         tracing.trace('chunk_id=%s', chunk_id)
-        checksum = self._checksum(data)
-        tracing.trace('checksum of data: %s', checksum)
+        tracing.trace('token=%s', token)
         tracing.trace('client_name=%s', client_name)
         client_id = self._get_client_id(client_name)
         tracing.trace('client_id=%s', client_id)
 
         self._require_chunk_indexes_lock()
-        self._chunklist.add(chunk_id, checksum)
-        self._chunksums.add(checksum, chunk_id, client_id)
+        self._chunklist.add(chunk_id, token)
+        self._chunksums.add(token, chunk_id, client_id)
 
     def remove_chunk_from_indexes(self, chunk_id, client_name):
         tracing.trace('chunk_id=%s', chunk_id)

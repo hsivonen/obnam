@@ -441,9 +441,12 @@ class ChunkIndexes(object):
         if self.data.locked:
             self.unlock()
 
-    def put_chunk(self, chunk_id, chunk_content, client_id):
+    def prepare(self, chunk_content):
+        return chunk_content
+
+    def put_chunk(self, chunk_id, token_is_chunk_content, client_id):
         self._require_lock()
-        self.data.set_value(chunk_id, chunk_content)
+        self.data.set_value(chunk_id, token_is_chunk_content)
 
     def find_chunk(self, chunk_content):
         for chunk_id, stored_content in self.data.items():
@@ -650,8 +653,11 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
     def force_chunk_indexes_lock(self):
         self._chunk_indexes.force()
 
-    def put_chunk_into_indexes(self, chunk_id, chunk_content, client_id):
-        self._chunk_indexes.put_chunk(chunk_id, chunk_content, client_id)
+    def prepare_chunk_for_indexes(self, chunk_content):
+        return self._chunk_indexes.prepare(chunk_content)
+
+    def put_chunk_into_indexes(self, chunk_id, token, client_id):
+        self._chunk_indexes.put_chunk(chunk_id, token, client_id)
 
     def find_chunk_id_by_content(self, chunk_content):
         return self._chunk_indexes.find_chunk(chunk_content)
