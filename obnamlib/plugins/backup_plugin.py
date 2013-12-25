@@ -761,7 +761,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             # exceptions, and other errors. We don't care: we'll just
             # pretend no chunk with the checksum exists yet.
             try:
-                in_tree = [self.repo.find_chunk_id_by_content(data)]
+                in_tree = self.repo.find_chunk_ids_by_content(data)
             except larch.Error:
                 in_tree = []
             except obnamlib.RepositoryChunkContentNotInIndexes:

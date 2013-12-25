@@ -449,10 +449,13 @@ class ChunkIndexes(object):
         self.data.set_value(chunk_id, token_is_chunk_content)
 
     def find_chunk(self, chunk_content):
+        chunk_ids = []
         for chunk_id, stored_content in self.data.items():
             if stored_content == chunk_content:
-                return chunk_id
-        raise obnamlib.RepositoryChunkContentNotInIndexes()
+                chunk_ids.append(chunk_id)
+        if not chunk_ids:
+            raise obnamlib.RepositoryChunkContentNotInIndexes()
+        return chunk_ids
 
     def remove_chunk(self, chunk_id, client_id):
         self._require_lock()
@@ -659,7 +662,7 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
     def put_chunk_into_indexes(self, chunk_id, token, client_id):
         self._chunk_indexes.put_chunk(chunk_id, token, client_id)
 
-    def find_chunk_id_by_content(self, chunk_content):
+    def find_chunk_ids_by_content(self, chunk_content):
         return self._chunk_indexes.find_chunk(chunk_content)
 
     def remove_chunk_from_indexes(self, chunk_id, client_id):

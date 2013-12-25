@@ -674,13 +674,11 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._chunksums.remove(checksum, chunk_id, client_id)
         self._chunklist.remove(chunk_id)
 
-    def find_chunk_id_by_content(self, data):
+    def find_chunk_ids_by_content(self, data):
         checksum = self._checksum(data)
         candidates = self._chunksums.find(checksum)
-        for chunk_id in candidates:
-            chunk_data = self.get_chunk_content(chunk_id)
-            if chunk_data == data:
-                return chunk_id
+        if candidates:
+            return candidates
         raise obnamlib.RepositoryChunkContentNotInIndexes()
 
     def validate_chunk_content(self, chunk_id):
