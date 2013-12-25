@@ -38,24 +38,24 @@ class ChunkidPool(object):
     def __init__(self):
         self.clear()
 
-    def add(self, chunkid, data):
-        if data not in self._mapping:
-            self._mapping[data] = []
-        self._mapping[data].append(chunkid)
+    def add(self, chunkid, token):
+        if token not in self._mapping:
+            self._mapping[token] = []
+        self._mapping[token].append(chunkid)
 
-    def __contains__(self, data):
-        return data in self._mapping
+    def __contains__(self, token):
+        return token in self._mapping
 
-    def get(self, data):
-        return self._mapping.get(data, [])
+    def get(self, token):
+        return self._mapping.get(token, [])
 
     def clear(self):
         self._mapping = {}
 
     def __iter__(self):
-        for data in self._mapping.keys():
-            for chunkid in self._mapping[data]:
-                yield chunkid, data
+        for token in self._mapping.keys():
+            for chunkid in self._mapping[token]:
+                yield chunkid, token
 
 
 class BackupProgress(object):
@@ -358,8 +358,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         # to have the data, not the checksum, here. On the other hand,
         # the checksum is meant to be an internal detail of the repository
         # format.
-        for chunkid, data in self.chunkid_pool:
-            self.repo.put_chunk_into_indexes(chunkid, data, self.client_name)
+        for chunkid, token in self.chunkid_pool:
+            self.repo.put_chunk_into_indexes(chunkid, token, self.client_name)
         self.chunkid_pool.clear()
 
     def add_client(self, client_name):
@@ -755,7 +755,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 in_tree = []
             except obnamlib.RepositoryChunkContentNotInIndexes:
                 in_tree = []
-            return in_tree + self.chunkid_pool.get(data)
+            return in_tree + self.chunkid_pool.get(token)
 
         # def get(chunkid):
         #     return self.repo.get_chunk_content(chunkid)
@@ -765,8 +765,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             return self.repo.put_chunk_content(data)
 
         def share(chunkid):
-            self.chunkid_pool.add(chunkid, data)
+            self.chunkid_pool.add(chunkid, token)
 
+        token = self.repo.prepare_chunk_for_indexes(data)
         ids = find()
         if ids:
             return ids[0]
