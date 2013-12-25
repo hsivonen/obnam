@@ -671,5 +671,5 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
     def validate_chunk_content(self, chunk_id):
         return None
 
-    def get_fsck_work_item(self):
-        return 'this pretends to be a work item'
+    def get_fsck_work_items(self):
+        return []

@@ -757,10 +757,17 @@ class RepositoryInterface(object):
 
     # Fsck.
 
-    def get_fsck_work_item(self):
-        '''Return an fsck work item for checking this repository.
+    def get_fsck_work_items(self, settings):
+        '''Returns fsck work items for checking this repository.
 
-        The work item may spawn more items.
+        This may be a generator or may return an iterable data
+        structure.
+
+        The returned work items are of type obnamlib.WorkItem. It may
+        return further work items.
+
+        The settings argument is of type cliapp.Settings, and lets
+        the user affect what work gets done.
 
         '''
         raise NotImplementedError()
@@ -1848,4 +1855,5 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
     # Fsck.
 
     def test_returns_fsck_work_item(self):
-        self.assertNotEqual(self.repo.get_fsck_work_item(), None)
+        for work in self.repo.get_fsck_work_items():
+            self.assertNotEqual(work, None)

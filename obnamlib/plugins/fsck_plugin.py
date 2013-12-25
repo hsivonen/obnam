@@ -23,16 +23,7 @@ import sys
 import ttystatus
 
 import obnamlib
-
-
-class WorkItem(larch.fsck.WorkItem):
-
-    '''A work item for fsck.
-
-    Whoever creates a WorkItem shall set the ``repo`` to the repository
-    being used.
-
-    '''
+from obnamlib import WorkItem
 
 
 class CheckChunk(WorkItem):
@@ -197,15 +188,6 @@ class CheckClientlist(WorkItem):
     def do(self):
         logging.debug('Checking clientlist')
         clients = self.repo.get_client_names()
-        if not self.settings['fsck-skip-per-client-b-trees']:
-            for client_name in clients:
-                if client_name not in self.settings['fsck-ignore-client']:
-                    # FIXME: This can't be done using the public API of
-                    # RepositoryInterface. The API needs improvement.
-                    client_id = self.repo._client_list.get_client_id(
-                        client_name)
-                    client_dir = self.repo._get_client_dir(client_id)
-                    yield CheckBTree(str(client_dir))
         for client_name in clients:
             if client_name not in self.settings['fsck-ignore-client']:
                 yield CheckClient(client_name)
@@ -225,29 +207,6 @@ class CheckForExtraChunks(WorkItem):
         #         self.error('chunk %s not used by anyone' % chunkid)
 
 
-class CheckBTree(WorkItem):
-
-    def __init__(self, dirname):
-        self.dirname = dirname
-        self.name = 'B-tree %s' % dirname
-
-    def do(self):
-        if not self.repo.get_fs().exists(self.dirname):
-            logging.debug('B-tree %s does not exist, skipping' % self.dirname)
-            return
-        logging.debug('Checking B-tree %s' % self.dirname)
-        fix = self.settings['fsck-fix']
-        # FIXME: The RepositoryInterface API does not have a way to expose
-        # the "hooked" filesystem, which is necessary for accessing
-        # the repository using encryption or compression or such. We
-        # kluge this for now.
-        forest = larch.open_forest(allow_writes=fix, dirname=self.dirname,
-                                   vfs=self.repo._fs)
-        fsck = larch.fsck.Fsck(forest, self.warning, self.error, fix)
-        for work in fsck.find_work():
-            yield work
-
-
 class CheckRepository(WorkItem):
 
     def __init__(self):
@@ -255,13 +214,9 @@ class CheckRepository(WorkItem):
 
     def do(self):
         logging.debug('Checking repository')
-        if not self.settings['fsck-skip-shared-b-trees']:
-            yield CheckBTree('clientlist')
-            yield CheckBTree('chunklist')
-            yield CheckBTree('chunksums')
-        yield CheckClientlist()
-        for work in self.repo.get_fsck_work_item():
+        for work in self.repo.get_fsck_work_items():
             yield work
+        yield CheckClientlist()
 
 
 class FsckPlugin(obnamlib.ObnamPlugin):

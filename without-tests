@@ -2,6 +2,7 @@
 ./obnamlib/__init__.py
 ./obnamlib/app.py
 ./obnamlib/vfs.py
+./obnamlib/fsck_work_item.py
 ./obnamlib/plugins/backup_plugin.py
 ./obnamlib/plugins/restore_plugin.py
 ./obnamlib/plugins/show_plugin.py
