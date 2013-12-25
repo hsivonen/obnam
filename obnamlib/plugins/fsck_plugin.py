@@ -260,6 +260,8 @@ class CheckRepository(WorkItem):
             yield CheckBTree('chunklist')
             yield CheckBTree('chunksums')
         yield CheckClientlist()
+        for work in self.repo.get_fsck_work_item():
+            yield work
 
 
 class FsckPlugin(obnamlib.ObnamPlugin):
