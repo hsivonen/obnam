@@ -152,7 +152,7 @@ class App(cliapp.Application):
         # won't be instantiated until much after plugins are enabled,
         # and since all hooks must be defined when plugins are enabled,
         # we create one instance here, which will immediately be destroyed.
-        # FIXME: This is fugly.
+        # FIXME: This will be removed when obnamlib.Repository gets removed.
         obnamlib.Repository(None, 1000, 1000, 100, self.hooks, 10, 10, 10,
                             self.time, 0, '')
 
