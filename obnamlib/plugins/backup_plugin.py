@@ -767,7 +767,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         mode = self.app.settings['deduplicate']
         if mode == 'never':
-            # FIXME: We should still insert into indexes?
             return put()
         elif mode == 'verify':
             for chunkid in find():
