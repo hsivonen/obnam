@@ -309,14 +309,29 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 self.progress.what(
                     'committing changes to repository: locking shared B-trees')
                 self.repo.lock_chunk_indexes()
+
                 self.progress.what(
                     'committing changes to repository: '
                     'adding chunks to shared B-trees')
                 self.add_chunks_to_shared()
+
+                self.progress.what(
+                    'committing changes to repository: '
+                    'updating generation metadata')
+                self.repo.set_generation_key(
+                    self.new_generation,
+                    obnamlib.REPO_GENERATION_FILE_COUNT,
+                    self.progress.file_count)
+                self.repo.set_generation_key(
+                    self.new_generation,
+                    obnamlib.REPO_GENERATION_TOTAL_DATA,
+                    self.progress.scanned_bytes)
+                
                 self.progress.what(
                     'committing changes to repository: '
                     'committing client')
                 self.repo.commit_client(self.client_name)
+
                 self.progress.what(
                     'committing changes to repository: '
                     'committing shared B-trees')
