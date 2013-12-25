@@ -247,12 +247,6 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     # Handling of individual clients.
 
-    def current_time(self):
-        # ClientMetadataTree wants us to provide this method.
-        # FIXME: A better design would be to for us to provide
-        # the class with a function to call.
-        return self._current_time()
-
     def _setup_client(self):
         # We keep a list of all open clients. An open client may or
         # may not be locked. Each value in the dict is a tuple of
@@ -359,6 +353,11 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             for gen_number in open_client.removed_generation_numbers:
                 open_client.client.remove_generation(gen_number)
 
+        if (open_client.current_generation_number and
+            open_client.current_generation_number not in 
+            open_client.removed_generation_numbers):
+            open_client.client.set_generation_ended(self._current_time())
+
         if (open_client.current_generation_number or 
             open_client.removed_generation_numbers):
             open_client.client.commit()
@@ -427,6 +426,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             raise obnamlib.RepositoryClientGenerationUnfinished(client_name)
 
         open_client.client.start_generation()
+        open_client.client.set_generation_started(self._current_time())
         open_client.current_generation_number = \
             open_client.client.get_generation_id(open_client.client.tree)
 

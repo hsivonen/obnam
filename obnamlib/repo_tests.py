@@ -383,26 +383,6 @@ class RepositoryClientTests(unittest.TestCase):
         self.repo.lock_client('client_name')
         self.assertNotEqual(gen, self.repo.start_generation())
 
-    def test_new_generation_has_start_time_only(self):
-        self.repo.lock_client('client_name')
-        gen = self.repo.start_generation()
-        start, end = self.repo.get_generation_times(gen)
-        self.assertNotEqual(start, None)
-        self.assertEqual(end, None)
-
-    def test_commited_generation_has_start_and_end_times(self):
-        self.repo.lock_client('client_name')
-        self.repo.lock_shared()
-        gen = self.repo.start_generation()
-        self.repo.commit_client()
-        self.repo.commit_shared()
-
-        self.repo.open_client('client_name')
-        start, end = self.repo.get_generation_times(gen)
-        self.assertNotEqual(start, None)
-        self.assertNotEqual(end, None)
-        self.assert_(start <= end)
-
     def test_adding_generation_without_committing_does_not_add_it(self):
         self.repo.lock_client('client_name')
         self.repo.lock_shared()

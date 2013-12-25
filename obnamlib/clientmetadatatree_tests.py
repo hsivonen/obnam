@@ -63,7 +63,6 @@ class ClientMetadataTreeTests(unittest.TestCase):
 
         genid = self.client.get_generation_id(self.client.tree)
         self.assertEqual(lookup(self.client.GEN_ID), genid)
-        self.assertEqual(lookup(self.client.GEN_STARTED), 12765)
         self.assertFalse(self.client.get_is_checkpoint(genid))
 
     def test_starts_second_generation(self):
@@ -83,7 +82,6 @@ class ClientMetadataTreeTests(unittest.TestCase):
         genid2 = self.client.get_generation_id(self.client.tree)
         self.assertEqual(lookup(self.client.GEN_ID), genid2)
         self.assertNotEqual(genid1, genid2)
-        self.assertEqual(lookup(self.client.GEN_STARTED), 2)
         self.assertFalse(self.client.get_is_checkpoint(genid2))
         self.assertEqual(self.client.list_generations(), [genid1, genid2])
 
@@ -112,20 +110,6 @@ class ClientMetadataTreeTests(unittest.TestCase):
         self.client.remove_generation(self.client.list_generations()[0])
         self.assertEqual(self.client.list_generations(), [])
         self.assertEqual(self.client.tree, None)
-
-    def test_started_generation_has_start_time(self):
-        self.now = 1
-        self.client.start_generation()
-        genid = self.client.get_generation_id(self.client.tree)
-        self.assertEqual(self.client.get_generation_times(genid), (1, None))
-
-    def test_committed_generation_has_times(self):
-        self.now = 1
-        self.client.start_generation()
-        genid = self.client.get_generation_id(self.client.tree)
-        self.now = 2
-        self.client.commit()
-        self.assertEqual(self.client.get_generation_times(genid), (1, 2))
 
     def test_finds_generation_the_first_time(self):
         self.client.start_generation()

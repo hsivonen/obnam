@@ -579,7 +579,7 @@ class Repository(object):
             raise obnamlib.Error('cannot remove started generation')
         self.removed_generations.append(gen)
 
-    def get_generation_times(self, gen):
+    def get_generation_times(self, gen): # pragma: no cover
         '''Return start and end times of a generation.
 
         An unfinished generation has no end time, so None is returned.

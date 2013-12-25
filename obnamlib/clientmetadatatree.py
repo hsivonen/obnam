@@ -72,7 +72,6 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     def __init__(self, fs, client_dir, node_size, upload_queue_size, lru_size,
                  repo):
         tracing.trace('new ClientMetadataTree, client_dir=%s' % client_dir)
-        self.current_time = repo.current_time
         key_bytes = len(self.hashkey(0, self.default_file_id(''), 0, 0))
         obnamlib.RepositoryTree.__init__(self, fs, client_dir, key_bytes,
                                          node_size, upload_queue_size,
@@ -212,9 +211,6 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
 
     def commit(self):
         tracing.trace('committing ClientMetadataTree')
-        if self.tree:
-            now = int(self.current_time())
-            self._insert_int(self.tree, self.genkey(self.GEN_ENDED), now)
         obnamlib.RepositoryTree.commit(self)
 
     def init_forest(self, *args, **kwargs):
@@ -258,9 +254,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         tracing.trace('start new generation')
         self.start_changes()
         gen_id = self.forest.new_id()
-        now = int(self.current_time())
         self._insert_int(self.tree, self.genkey(self.GEN_ID), gen_id)
-        self._insert_int(self.tree, self.genkey(self.GEN_STARTED), now)
 
     def set_current_generation_is_checkpoint(self, is_checkpoint):
         tracing.trace('is_checkpoint=%s', is_checkpoint)
@@ -292,7 +286,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         except KeyError: # pragma: no cover
             return None
 
-    def _lookup_time(self, tree, what):
+    def _lookup_time(self, tree, what): # pragma: no cover
         try:
             return self._lookup_int(tree, self.genkey(what))
         except KeyError:
@@ -304,7 +298,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         except KeyError:
             return None
 
-    def get_generation_times(self, genid):
+    def get_generation_times(self, genid): # pragma: no cover
         tree = self.find_generation(genid)
         return (self._lookup_time(tree, self.GEN_STARTED),
                 self._lookup_time(tree, self.GEN_ENDED))
