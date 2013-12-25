@@ -757,8 +757,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 in_tree = []
             return in_tree + self.chunkid_pool.get(token)
 
-        # def get(chunkid):
-        #     return self.repo.get_chunk_content(chunkid)
+        def get(chunkid):
+            return self.repo.get_chunk_content(chunkid)
 
         def put():
             self.progress.update_progress_with_upload(len(data))
@@ -768,43 +768,35 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.chunkid_pool.add(chunkid, token)
 
         token = self.repo.prepare_chunk_for_indexes(data)
-        ids = find()
-        if ids:
-            return ids[0]
-        else:
-            chunk_id = put()
-            share(chunk_id)
-            return chunk_id
 
-        # FIXME: This de-duplication policy can't currently be
-        # implemented with the RepositoryInterface API.
-        # mode = self.app.settings['deduplicate']
-        # if mode == 'never':
-        #     return put()
-        # elif mode == 'verify':
-        #     for chunkid in find():
-        #         data2 = get(chunkid)
-        #         if data == data2:
-        #             return chunkid
-        #     else:
-        #         chunkid = put()
-        #         share(chunkid)
-        #         return chunkid
-        # elif mode == 'fatalist':
-        #     existing = find()
-        #     if existing:
-        #         return existing[0]
-        #     else:
-        #         chunkid = put()
-        #         share(chunkid)
-        #         return chunkid
-        # else:
-        #     if not hasattr(self, 'bad_deduplicate_reported'):
-        #         logging.error('unknown --deduplicate setting value')
-        #         self.bad_deduplicate_reported = True
-        #     chunkid = put()
-        #     share(chunkid)
-        #     return chunkid
+        mode = self.app.settings['deduplicate']
+        if mode == 'never':
+            # FIXME: We should still insert into indexes?
+            return put()
+        elif mode == 'verify':
+            for chunkid in find():
+                data2 = get(chunkid)
+                if data == data2:
+                    return chunkid
+            else:
+                chunkid = put()
+                share(chunkid)
+                return chunkid
+        elif mode == 'fatalist':
+            existing = find()
+            if existing:
+                return existing[0]
+            else:
+                chunkid = put()
+                share(chunkid)
+                return chunkid
+        else:
+            if not hasattr(self, 'bad_deduplicate_reported'):
+                logging.error('unknown --deduplicate setting value')
+                self.bad_deduplicate_reported = True
+            chunkid = put()
+            share(chunkid)
+            return chunkid
 
     def backup_dir_contents(self, root):
         '''Back up the list of files in a directory.'''
