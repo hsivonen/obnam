@@ -354,10 +354,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             logging.info('Successfully unlocked')
 
     def add_chunks_to_shared(self):
-        # FIXME: The RepositoryIndex API is awkward here: it requires us
-        # to have the data, not the checksum, here. On the other hand,
-        # the checksum is meant to be an internal detail of the repository
-        # format.
         for chunkid, token in self.chunkid_pool:
             self.repo.put_chunk_into_indexes(chunkid, token, self.client_name)
         self.chunkid_pool.clear()
