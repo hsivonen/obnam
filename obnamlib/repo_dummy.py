@@ -414,6 +414,9 @@ class ChunkStore(object):
             raise obnamlib.RepositoryChunkDoesNotExist(str(chunk_id))
         del self.chunks[chunk_id]
 
+    def get_chunk_ids(self):
+        return self.chunks.keys()
+
 
 class ChunkIndexes(object):
 
@@ -643,6 +646,9 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
 
     def remove_chunk(self, chunk_id):
         self._chunk_store.remove_chunk(chunk_id)
+
+    def get_chunk_ids(self):
+        return self._chunk_store.get_chunk_ids()
 
     def lock_chunk_indexes(self):
         self._chunk_indexes.lock()

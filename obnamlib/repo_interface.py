@@ -664,6 +664,10 @@ class RepositoryInterface(object):
         '''Remove chunk from repository, but not chunk indexes.'''
         raise NotImplementedError()
 
+    def get_chunk_ids(self):
+        '''Generate all chunk ids in repository.'''
+        raise NotImplementedError()
+
     def lock_chunk_indexes(self):
         '''Locks chunk indexes for updates.'''
         raise NotImplementedError()
@@ -1739,6 +1743,20 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.assertRaises(
             obnamlib.RepositoryChunkDoesNotExist,
             self.repo.remove_chunk, chunk_id)
+
+    def test_get_chunk_ids_returns_nothing_initially(self):
+        self.assertEqual(list(self.repo.get_chunk_ids()), [])
+
+    def test_get_chunk_ids_returns_single_chunk(self):
+        chunk_id = self.repo.put_chunk_content('foochunk')
+        self.assertEqual(list(self.repo.get_chunk_ids()), [chunk_id])
+
+    def test_get_chunk_ids_returns_both_chunks(self):
+        chunk_id_1 = self.repo.put_chunk_content('foochunk')
+        chunk_id_2 = self.repo.put_chunk_content('otherchunk')
+        self.assertEqual(
+            set(self.repo.get_chunk_ids()),
+            set([chunk_id_1, chunk_id_2]))
 
     def test_adds_chunk_to_indexes(self):
         self.setup_client()

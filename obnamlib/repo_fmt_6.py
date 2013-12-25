@@ -578,6 +578,14 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         except OSError:
             raise obnamlib.RepositoryChunkDoesNotExist(str(chunk_id))
 
+    def get_chunk_ids(self):
+        pat = re.compile(r'^.*/.*/[0-9a-fA-F]+$')
+        if self._fs.exists('chunks'):
+            for pathname, st in self._fs.scan_tree('chunks'):
+                if stat.S_ISREG(st.st_mode) and pat.match(pathname):
+                    basename = os.path.basename(pathname)
+                    yield int(basename, 16)
+
     # Chunk indexes.
 
     def _checksum(self, data):

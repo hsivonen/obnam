@@ -200,11 +200,9 @@ class CheckForExtraChunks(WorkItem):
 
     def do(self):
         logging.debug('Checking for extra chunks')
-        # FIXME: This can't be done using the RepositoryInterface API.
-        # It is disabled, for now.
-        # for chunkid in self.repo.list_chunks():
-        #     if chunkid not in self.chunkids_seen:
-        #         self.error('chunk %s not used by anyone' % chunkid)
+        for chunkid in self.repo.get_chunk_ids():
+            if chunkid not in self.chunkids_seen:
+                self.error('chunk %s not used by anyone' % chunkid)
 
 
 class CheckRepository(WorkItem):
