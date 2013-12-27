@@ -325,6 +325,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     def lock_client(self, client_name):
         logging.info('Locking client %s' % client_name)
+        self._setup_file_key_cache()
         self._raw_lock_client(client_name)
 
     def unlock_client(self, client_name):
@@ -332,6 +333,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._require_existing_client(client_name)
         self._require_client_lock(client_name)
         self._raw_unlock_client(client_name)
+        self._setup_file_key_cache()
 
     def force_client_lock(self, client_name):
         logging.info('Forcing client lock open for %s', client_name)
@@ -341,6 +343,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         if self._real_fs.exists(lock_name):
             self._real_fs.remove(lock_name)
         del self._open_clients[client_name]
+        self._setup_file_key_cache()
 
     def commit_client(self, client_name):
         tracing.trace('client_name=%s', client_name)
@@ -811,11 +814,10 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._file_key_cache[cache_key] = (False, metadata)
 
     def get_file_key(self, generation_id, filename, key):
-        self._require_existing_file(generation_id, filename)
-
         cache_key = self._get_file_key_cache_key(generation_id, filename)
         if cache_key not in self._file_key_cache:
             self._flush_file_key_cache()
+            self._require_existing_file(generation_id, filename)
             self._cache_file_keys_from_storage(generation_id, filename)
         dirty, metadata = self._file_key_cache[cache_key]
 
@@ -833,11 +835,11 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
     def set_file_key(self, generation_id, filename, key, value):
         client_name, gen_number = generation_id
         self._require_client_lock(client_name)
-        self._require_existing_file(generation_id, filename)
 
         cache_key = self._get_file_key_cache_key(generation_id, filename)
         if cache_key not in self._file_key_cache:
             self._flush_file_key_cache()
+            self._require_existing_file(generation_id, filename)
             self._cache_file_keys_from_storage(generation_id, filename)
         dirty, metadata = self._file_key_cache[cache_key]
 
