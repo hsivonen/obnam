@@ -280,9 +280,11 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             return open_client.locked
         return False
 
-    def _require_client_lock(self, client_name):
+    def _require_existing_client(self, client_name):
         if client_name not in self.get_client_names():
             raise obnamlib.RepositoryClientDoesNotExist(client_name)
+
+    def _require_client_lock(self, client_name):
         if not self._client_is_locked_by_us(client_name):
             raise obnamlib.RepositoryClientNotLocked(client_name)
 
@@ -327,6 +329,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     def unlock_client(self, client_name):
         logging.info('Unlocking client %s' % client_name)
+        self._require_existing_client(client_name)
         self._require_client_lock(client_name)
         self._raw_unlock_client(client_name)
 
@@ -341,6 +344,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     def commit_client(self, client_name):
         tracing.trace('client_name=%s', client_name)
+        self._require_existing_client(client_name)
         self._require_client_lock(client_name)
 
         self._flush_file_key_cache()
@@ -421,6 +425,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     def create_generation(self, client_name):
         tracing.trace('client_name=%s', client_name)
+        self._require_existing_client(client_name)
         self._require_client_lock(client_name)
 
         open_client = self._open_clients[client_name]
