@@ -343,6 +343,8 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         tracing.trace('client_name=%s', client_name)
         self._require_client_lock(client_name)
 
+        self._flush_file_key_cache()
+
         open_client = self._open_clients[client_name]
 
         if open_client.removed_generation_numbers:
@@ -726,13 +728,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             
             }
 
-        # A cache for file key lookups. Without this, we always need to
-        # fetch and decode a full, encoded obnamlib.Metadata object.
-        # The dict is indexed by (generation_number, pathname) tuples,
-        # and is invalidated when any change is made to any file key.
-        # FIXME: This only helps with lookups, not with setting keys.
-
-        self._file_key_cache = {}
+        self._setup_file_key_cache()
 
     def _require_existing_file(self, generation_id, filename):
         client_name, gen_number = generation_id
@@ -764,25 +760,59 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
     def remove_file(self, generation_id, filename):
         client_name, gen_number = generation_id
         self._require_client_lock(client_name)
+        self._flush_file_key_cache()
         client = self._open_client(client_name)
         client.remove(filename) # FIXME: Only removes from unfinished gen!
 
     def get_allowed_file_keys(self):
         return self._file_keys.keys()
 
+    def _setup_file_key_cache(self):
+        # A cache for file key lookups and changes. We operate on a
+        # very simple heuristic: the caller will be getting or setting
+        # file keys on one file at a time, so we cache until the
+        # filename (or generation) changes. We also flush the cache
+        # when any other changes to the repository are made, such as
+        # removing generations.
+        #
+        # The dict is indexed by a (generation_id, filename) tuple,
+        # and should contain only one item. The value is a tuple of
+        # (dirty_flag, obnamlib.Metadata object).
+
+        self._file_key_cache = {}
+
+    def _get_file_key_cache_key(self, generation_id, filename):
+        return (generation_id, filename)
+
+    def _flush_file_key_cache(self):
+        for cache_key, value in self._file_key_cache.items():
+            generation_id, filename = cache_key
+            client_name, generation_number = generation_id
+            dirty, metadata = value
+            if dirty:
+                encoded_metadata = obnamlib.encode_metadata(metadata)
+                client = self._open_client(client_name)
+                # FIXME: Only sets in unfinished generation
+                client.set_metadata(filename, encoded_metadata)
+        self._setup_file_key_cache()
+
+    def _cache_file_keys_from_storage(self, generation_id, filename):
+        # FIXME: The genid should be parsed by a dedicated method
+        client_name, gen_number = generation_id
+        client = self._open_client(client_name)
+        encoded_metadata = client.get_metadata(gen_number, filename)
+        metadata = obnamlib.decode_metadata(encoded_metadata)
+        cache_key = self._get_file_key_cache_key(generation_id, filename)
+        self._file_key_cache[cache_key] = (False, metadata)
+
     def get_file_key(self, generation_id, filename, key):
         self._require_existing_file(generation_id, filename)
 
-        client_name, gen_number = generation_id
-        
-        cache_key = (gen_number, filename)
-        if cache_key in self._file_key_cache:
-            metadata = self._file_key_cache[cache_key]
-        else:
-            client = self._open_client(client_name)
-            encoded_metadata = client.get_metadata(gen_number, filename)
-            metadata = obnamlib.decode_metadata(encoded_metadata)
-            self._file_key_cache[cache_key] = metadata
+        cache_key = self._get_file_key_cache_key(generation_id, filename)
+        if cache_key not in self._file_key_cache:
+            self._flush_file_key_cache()
+            self._cache_file_keys_from_storage(generation_id, filename)
+        dirty, metadata = self._file_key_cache[cache_key]
 
         if key in self._file_keys:
             value = getattr(metadata, self._file_keys[key])
@@ -791,6 +821,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             else:
                 return value or ''
         else:
+            client_name, gen_number = generation_id
             raise obnamlib.RepositoryFileKeyNotAllowed(
                 self.format, client_name, key)
 
@@ -799,23 +830,18 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._require_client_lock(client_name)
         self._require_existing_file(generation_id, filename)
 
-        # Invalidate the file key cache.
-        self._file_key_cache = {}
-
-        client = self._open_client(client_name)
-
-        encoded_metadata = client.get_metadata(gen_number, filename)
-        metadata = obnamlib.decode_metadata(encoded_metadata)
+        cache_key = self._get_file_key_cache_key(generation_id, filename)
+        if cache_key not in self._file_key_cache:
+            self._flush_file_key_cache()
+            self._cache_file_keys_from_storage(generation_id, filename)
+        dirty, metadata = self._file_key_cache[cache_key]
 
         if key in self._file_keys:
             setattr(metadata, self._file_keys[key], value)
+            self._file_key_cache[cache_key] = (True, metadata)
         else:
             raise obnamlib.RepositoryFileKeyNotAllowed(
                 self.format, client_name, key)
-
-        encoded_metadata = obnamlib.encode_metadata(metadata)
-        # FIXME: Only sets in unfinished generation
-        client.set_metadata(filename, encoded_metadata)
 
     def get_file_chunk_ids(self, generation_id, filename):
         self._require_existing_file(generation_id, filename)
