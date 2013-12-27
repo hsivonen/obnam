@@ -726,6 +726,14 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             
             }
 
+        # A cache for file key lookups. Without this, we always need to
+        # fetch and decode a full, encoded obnamlib.Metadata object.
+        # The dict is indexed by (generation_number, pathname) tuples,
+        # and is invalidated when any change is made to any file key.
+        # FIXME: This only helps with lookups, not with setting keys.
+
+        self._file_key_cache = {}
+
     def _require_existing_file(self, generation_id, filename):
         client_name, gen_number = generation_id
 
@@ -766,10 +774,15 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._require_existing_file(generation_id, filename)
 
         client_name, gen_number = generation_id
-        client = self._open_client(client_name)
-
-        encoded_metadata = client.get_metadata(gen_number, filename)
-        metadata = obnamlib.decode_metadata(encoded_metadata)
+        
+        cache_key = (gen_number, filename)
+        if cache_key in self._file_key_cache:
+            metadata = self._file_key_cache[cache_key]
+        else:
+            client = self._open_client(client_name)
+            encoded_metadata = client.get_metadata(gen_number, filename)
+            metadata = obnamlib.decode_metadata(encoded_metadata)
+            self._file_key_cache[cache_key] = metadata
 
         if key in self._file_keys:
             value = getattr(metadata, self._file_keys[key])
@@ -785,6 +798,9 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         client_name, gen_number = generation_id
         self._require_client_lock(client_name)
         self._require_existing_file(generation_id, filename)
+
+        # Invalidate the file key cache.
+        self._file_key_cache = {}
 
         client = self._open_client(client_name)
 
