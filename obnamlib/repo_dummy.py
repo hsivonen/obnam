@@ -553,6 +553,9 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
     def get_client_generation_ids(self, client_name):
         return self._client_list[client_name].get_generation_ids()
 
+    def get_client_extra_data_directory(self, client_name):
+        return client_name
+
     def create_generation(self, client_name):
         return self._client_list[client_name].create_generation()
 

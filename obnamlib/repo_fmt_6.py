@@ -442,6 +442,11 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
         return (client_name, open_client.current_generation_number)
 
+    def get_client_extra_data_directory(self, client_name):
+        tracing.trace('client_name=%s', client_name)
+        self._require_existing_client(client_name)
+        return str(self._get_client_id(client_name))
+
     # Generations for a client.
 
     def _require_existing_generation(self, generation_id):

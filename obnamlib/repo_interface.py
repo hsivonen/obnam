@@ -486,6 +486,27 @@ class RepositoryInterface(object):
         '''
         raise NotImplementedError()
 
+    def get_client_extra_data_directory(self, client_name):
+        '''Return directory for storing extra data for a client.
+
+        Obnam plugins, for example, may need to store some per-client
+        data that is specific to the plugin. This might be any kind of
+        data, making it unsuitable for file keys (see get_file_key),
+        which are suitable only for small bits of data.. The extra
+        data might further need to be written in raw format. As an
+        example, a hypothetical plugin might put the source code that
+        of the Obnam version the client is using into the repository,
+        to increase the chance that data can be restored even if only
+        the repository remains. Or an encryption plugin might store
+        encryption keys for the client here.
+
+        This method returns the name of a directory, useable as-is
+        with the VFS instance returned by the get_fs method.
+
+        '''
+
+        raise NotImplementedError()
+
     # Generations. The generation id identifies client as well.
 
     def get_allowed_generation_keys(self):
@@ -1215,6 +1236,12 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.assertEqual(
             self.repo.get_client_generation_ids('fooclient'),
             [new_id])
+
+    def test_returns_direcotry_name_for_extra_data(self):
+        self.setup_client()
+        self.assertTrue(
+            type(self.repo.get_client_extra_data_directory('fooclient')),
+            str)
 
     # Operations on one generation.
 

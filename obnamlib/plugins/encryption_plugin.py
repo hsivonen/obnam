@@ -248,14 +248,8 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
     _shared = ['chunklist', 'chunks', 'chunksums', 'clientlist']
 
     def _find_clientdirs(self, repo, client_names):
-        result = []
-        for client_name in client_names:
-            client_id = repo._client_list.get_client_id(client_name)
-            if client_id:
-                result.append(str(client_id))
-            else:
-                logging.warning("client not found: %s" % client_name)
-        return result
+        return [repo.get_client_extra_data_directory(client_name)
+                for client_name in client_names]
 
     def add_key(self, args):
         '''Add a key to the repository.'''
