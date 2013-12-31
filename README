@@ -44,6 +44,11 @@ dependencies on a Debian system. (That set actually gets tested. The
 above list is maintained manually and may get out of date from time
 to time.)
 
+If you want to run obnam from the repository directory (rather than installing
+it), you need to do some setup.  Run `./check --fast`.  You'll need dev files
+for python and the Coverage Test Runner python module (on Debian, those are the
+python-dev and python-coverage-test-runner packages).
+
 Use
 ---
 
@@ -81,8 +86,8 @@ To build and run automatic tests:
 `check` is a wrapper around `python setup.py`, but since using that
 takes several steps, the script makes things easier.
 
-You need my CoverageTestRunner to run tests, see above for where to get it.
-A couple of scripts exist to run benchmarks and profiles:
+You need my CoverageTestRunner to run tests, see above for where to get it.  A
+couple of scripts exist to run benchmarks and profiles:
 
     ./metadata-speed 10000
     ./obnam-benchmark --size=1m/100k --results /tmp/benchmark-results
