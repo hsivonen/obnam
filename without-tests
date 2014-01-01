@@ -24,10 +24,3 @@ test-plugins/hello_plugin.py
 test-plugins/oldhello_plugin.py
 test-plugins/aaa_hello_plugin.py
 test-plugins/wrongversion_plugin.py
-
-.pc/debian-changes-0.22-2/obnamlib/app.py
-.pc/debian-changes-0.22-2/obnamlib/plugins/forget_plugin.py
-.pc/debian-changes-0.22-2/obnamlib/plugins/verify_plugin.py
-.pc/debian-changes-0.22-2/obnamlib/plugins/backup_plugin.py
-.pc/debian-changes-0.22-2/obnamlib/plugins/fsck_plugin.py
-.pc/debian-changes-0.22-2/obnamlib/plugins/restore_plugin.py
