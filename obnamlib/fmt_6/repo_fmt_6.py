@@ -82,7 +82,7 @@ class _OpenClient(object):
         self.locked = False
         self.client = client
         self.current_generation_number = None
-        self.removed_generation_numbers = []
+        self.generations_removed = False
 
 
 class RepositoryFormat6(obnamlib.RepositoryInterface):
@@ -354,21 +354,11 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
         open_client = self._open_clients[client_name]
 
-        if open_client.removed_generation_numbers:
-            self._remove_chunks_from_removed_generations(
-                client_name, open_client.client,
-                open_client.removed_generation_numbers)
-            open_client.client.start_changes(create_tree=False)
-            for gen_number in open_client.removed_generation_numbers:
-                open_client.client.remove_generation(gen_number)
-
-        if (open_client.current_generation_number and
-            open_client.current_generation_number not in 
-            open_client.removed_generation_numbers):
+        if open_client.current_generation_number:
             open_client.client.set_generation_ended(self._current_time())
 
-        if (open_client.current_generation_number or 
-            open_client.removed_generation_numbers):
+        if (open_client.current_generation_number or
+            open_client.generations_removed):
             open_client.client.commit()
 
         self._raw_unlock_client(client_name)
@@ -423,8 +413,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         open_client = self._open_clients[client_name]
         return [
             (client_name, gen_number)
-            for gen_number in client.list_generations()
-            if gen_number not in open_client.removed_generation_numbers]
+            for gen_number in client.list_generations()]
 
     def create_generation(self, client_name):
         tracing.trace('client_name=%s', client_name)
@@ -529,10 +518,16 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         client_name, gen_number = gen_id
         self._require_client_lock(client_name)
         self._require_existing_generation(gen_id)
+
         open_client = self._open_clients[client_name]
         if gen_number == open_client.current_generation_number:
-            open_client.current_generation = None
-        open_client.removed_generation_numbers.append(gen_number)
+            open_client.current_generation_number = None
+        open_client.generations_removed = True
+
+        self._remove_chunks_from_removed_generations(
+            client_name, open_client.client, [gen_number])
+        open_client.client.start_changes(create_tree=False)
+        open_client.client.remove_generation(gen_number)
 
     def get_generation_chunk_ids(self, generation_id):
         client_name, gen_number = generation_id
