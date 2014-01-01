@@ -88,9 +88,11 @@ from hooks import Hook, MissingFilterError, FilterHook, HookManager
 from pluginbase import ObnamPlugin
 from vfs import VirtualFileSystem, VfsFactory, VfsTests
 from vfs_local import LocalFS
-from metadata import (read_metadata, set_metadata, Metadata, metadata_fields,
-                      metadata_verify_fields, encode_metadata, decode_metadata)
 from fsck_work_item import WorkItem
+from lockmgr import LockManager
+from forget_policy import ForgetPolicy
+from app import App
+
 from repo_factory import (
     RepositoryFactory,
     UnknownRepositoryFormat,
@@ -141,16 +143,33 @@ from repo_interface import (
     REPO_FILE_INO,
     REPO_FILE_MD5,
     REPO_FILE_INTEGER_KEYS)
+
+#
+# Repository format dummy specific modules.
+#
+
 from repo_dummy import RepositoryFormatDummy
-from repo_fmt_6 import RepositoryFormat6
-from repo_tree import RepositoryTree
-from chunklist import ChunkList
-from clientlist import ClientList
-from checksumtree import ChecksumTree
-from clientmetadatatree import ClientMetadataTree
-from lockmgr import LockManager
+
+#
+# Repository format 6 specific modules.
+#
+
+from fmt_6.metadata import (
+    Metadata,
+    read_metadata,
+    set_metadata,
+    metadata_fields,
+    metadata_verify_fields,
+    encode_metadata,
+    decode_metadata)
+from fmt_6.repo_fmt_6 import RepositoryFormat6
+from fmt_6.repo_tree import RepositoryTree
+from fmt_6.chunklist import ChunkList
+from fmt_6.clientlist import ClientList
+from fmt_6.checksumtree import ChecksumTree
+from fmt_6.clientmetadatatree import ClientMetadataTree
+
+# This is the OLD and DEPRECATED format 6 implementation.
 from repo import Repository, LockFail, BadFormat
-from forget_policy import ForgetPolicy
-from app import App
 
 __all__ = locals()
