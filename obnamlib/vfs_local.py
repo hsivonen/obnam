@@ -93,6 +93,8 @@ class LocalFS(obnamlib.VirtualFileSystem):
         tracing.trace('baseurl=%s', baseurl)
         tracing.trace('create=%s', create)
         self.cwd = os.path.abspath(baseurl)
+        if os.path.exists(self.cwd) and not os.path.isdir(self.cwd):
+            raise obnamlib.Error('%s is not a directory' % baseurl)
         if not self.isdir('.'):
             if create:
                 tracing.trace('creating %s', baseurl)
