@@ -906,6 +906,8 @@ class CheckBTree(obnamlib.WorkItem): # pragma: no cover
         logging.debug('Checking B-tree %s' % self.dirname)
         fix = self.settings['fsck-fix']
 
+        # FIXME: This accesses a private attribute. We need to add a
+        # get_real_fs accessor method to the RepositoryInterface to fix this.
         forest = larch.open_forest(
             allow_writes=fix, dirname=self.dirname, vfs=self.repo._fs)
         fsck = larch.fsck.Fsck(forest, self.warning, self.error, fix)
