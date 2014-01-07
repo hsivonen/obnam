@@ -22,16 +22,32 @@ Each tar archive will contain a directory `repo`, which is the backup
 repository, and `manifest-1` and `manifest-2`, which are the manifests
 for the first and second generation.
 
-Repository format 6 (Obnam verison 1.0)
+Repository format 6 (Obnam version 1.0)
 ---------------------------------------
+
+The repository format 6 is the one used for the 1.0 release of Obnam.
+We have two variants of reference repositories: a normal one, and one
+using the miserable `--small-files-in-btree` option. It's miserable,
+because it complicates the code but doesn't actually make anything
+better.
+
+First, the normal one reference repository.
 
     SCENARIO use repository format 6
     GIVEN unpacked test data from test-data/repo-format-6-encrypted-deflated.tar.xz in T
     WHEN user restores generation 1 in T/repo to R1
     THEN restored data in R1 matches T/manifest-1
+    WHEN user restores generation 2 in T/repo to R2
+    THEN restored data in R2 matches T/manifest-2
 
-X    WHEN user restores generation 2 in T/repo to R2
-X    THEN restored data in R2 matches T/manifest-2
+Then, the in-tree repository.
+
+    SCENARIO use repository format 6 with in-tree data
+    GIVEN unpacked test data from test-data/repo-format-6-in-tree-data.tar.xz in T
+    WHEN user restores generation 1 in T/repo to R1
+    THEN restored data in R1 matches T/manifest-1
+    WHEN user restores generation 2 in T/repo to R2
+    THEN restored data in R2 matches T/manifest-2
 
 Implementations
 ---------------
