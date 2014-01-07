@@ -531,13 +531,20 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         open_client.client.remove_generation(gen_number)
 
     def get_generation_chunk_ids(self, generation_id):
-        # FIXME: This should construct chunk ids for in-tree data?
-        # This method is currently not used, but it will be used by
-        # generation removal code, but only by that. Generation
-        # removal doesn't need to know about in-tree data. However, if
-        # something else starts calling this method, it might be
-        # useful to return the in-tree data constructed chunk ids, as
-        # well.
+        # This intentionally doesn't construct chunk ids for in-tree
+        # data, because that's very slow, as it requires iterating
+        # over all the files in the generation. Also, it's not currently
+        # required by anything: this method is currently only called
+        # by generation removal code, to find chunks to remove, and
+        # in-tree data gets removed when the file metadata in the
+        # generations is removed anyway.
+        #
+        # Also, nobody should actually be using in-tree data...
+        #
+        # However, if this ever becomes a problem, we'll have to bite
+        # the bullet. Until then, let's pretend, here, in-tree data
+        # doesn't exist.
+
         client_name, gen_number = generation_id
         client = self._open_client(client_name)
         return client.list_chunks_in_generation(gen_number)
