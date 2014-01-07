@@ -369,8 +369,8 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         def find_chunkids_in_gens(gen_nos):
             chunkids = set()
             for gen_number in gen_nos:
-                # FIXME: This should call self.get_generation_chunk_ids
-                x = client.list_chunks_in_generation(gen_number)
+                gen_id = (client_name, gen_number)
+                x = self.get_generation_chunk_ids(gen_id)
                 chunkids = chunkids.union(set(x))
             return chunkids
 
