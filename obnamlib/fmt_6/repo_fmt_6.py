@@ -375,10 +375,9 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             return chunkids
 
         def find_gens_to_keep():
-            # FIXME: This should call self.get_client_generation_ids.
-            return [gen_number
-                    for gen_number in client.list_generations()
-                    if gen_number not in remove_gen_nos]
+            return [b
+                    for (a,b) in self.get_client_generation_ids(client_name)
+                    if b not in remove_gen_nos]
 
         def remove_chunks(chunk_ids): # pragma: no cover
             for chunk_id in chunk_ids:
