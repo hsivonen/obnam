@@ -36,6 +36,7 @@ Only one command line argument: path to the Obnam executable.
 
 
 import cliapp
+import logging
 import os
 import shutil
 import tarfile
@@ -51,6 +52,11 @@ class CreateReferenceRepository(cliapp.Application):
             metavar='CMD',
             default='./obnam')
 
+        self.settings.string_list(
+            ['obnam-argument', 'a'],
+            'add ARG to obnam command line',
+            metavar='ARG')
+
     def process_args(self, args):
         if args:
             raise cliapp.AppException('Wrong command line args')
@@ -58,6 +64,9 @@ class CreateReferenceRepository(cliapp.Application):
         tempdir = tempfile.mkdtemp()
         live_dir = os.path.join(tempdir, 'data')
         repo_dir = os.path.join(tempdir, 'repo')
+
+        logging.info('Live data: %s', live_dir)
+        logging.info('Repository: %s', repo_dir)
 
         # First generation.
         self.create_live_data(live_dir)
@@ -76,30 +85,47 @@ class CreateReferenceRepository(cliapp.Application):
         self.create_tar_file(tempdir)
 
     def create_live_data(self, dirname):
+        logging.info('Creating live data in %s with funnyfarm', dirname)
         cliapp.runcmd(['./mkfunnyfarm', dirname])
 
     def modify_live_data(self, dirname):
+        logging.info('Modifying live data in %s', dirname)
         filename = os.path.join(dirname, 'new-file.txt')
         with open(filename, 'w') as f:
             f.write('This file created for 2nd generation.\n')
 
     def create_manifest(self, dirname, manifest_name):
+        logging.info('Creating manifest of %s in %s', dirname, manifest_name)
         cliapp.runcmd(
             ['summain', '--exclude=Ino', '--exclude=Dev', '--exclude=Uid',
              '--exclude=Username', '--exclude=Gid', '--exclude=Group',
              '-r', '--output', manifest_name, dirname])
 
     def backup(self, live_dir, repo_dir):
+        logging.info('Backing up %s to %s', live_dir, repo_dir)
         env = dict(os.environ)
         env['GNUPGHOME'] = 'test-gpghome'
-        # The encryption key is the one in test-gpghome.
-        cliapp.runcmd(
-            [self.settings['obnam'], '--no-default-config', '--quiet',
-             '--weak-random', '--encrypt-with=3B1802F81B321347',
-             '--compress-with=deflate', '-r', repo_dir, 'backup', live_dir],
-            env=env)
+
+        argv = [
+            self.settings['obnam'],
+            '--no-default-config',
+            '--quiet',
+             '--weak-random',
+             '--compress-with=deflate',
+            '-r', repo_dir,
+            ]
+
+        # This encryption key is the one in test-gpghome.
+        argv += ['--encrypt-with=3B1802F81B321347']
+
+        argv += self.settings['obnam-argument']
+        argv += ['backup', live_dir]
+
+        logging.info('Command line: %s', repr(argv))
+        cliapp.runcmd(argv, env=env)
 
     def create_tar_file(self, tempdir):
+        logging.info('Creating tar file of %s to stdout', tempdir)
         with tarfile.TarFile(fileobj=self.output, mode='w') as f:
             for basename in os.listdir(tempdir):
                 pathname = os.path.join(tempdir, basename)
