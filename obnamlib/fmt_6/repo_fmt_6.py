@@ -369,11 +369,13 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         def find_chunkids_in_gens(gen_nos):
             chunkids = set()
             for gen_number in gen_nos:
+                # FIXME: This should call self.get_generation_chunk_ids
                 x = client.list_chunks_in_generation(gen_number)
                 chunkids = chunkids.union(set(x))
             return chunkids
 
         def find_gens_to_keep():
+            # FIXME: This should call self.get_client_generation_ids.
             return [gen_number
                     for gen_number in client.list_generations()
                     if gen_number not in remove_gen_nos]
@@ -530,6 +532,13 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         open_client.client.remove_generation(gen_number)
 
     def get_generation_chunk_ids(self, generation_id):
+        # FIXME: This should construct chunk ids for in-tree data?
+        # This method is currently not used, but it will be used by
+        # generation removal code, but only by that. Generation
+        # removal doesn't need to know about in-tree data. However, if
+        # something else starts calling this method, it might be
+        # useful to return the in-tree data constructed chunk ids, as
+        # well.
         client_name, gen_number = generation_id
         client = self._open_client(client_name)
         return client.list_chunks_in_generation(gen_number)
@@ -570,6 +579,8 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         return chunk_id
 
     def get_chunk_content(self, chunk_id):
+        # FIXME: This should interpret a constructed chunk id for
+        # in-tree data.
         try:
             return self._fs.cat(self._chunk_filename(chunk_id))
         except IOError, e:
@@ -578,9 +589,13 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             raise # pragma: no cover
 
     def has_chunk(self, chunk_id):
+        # FIXME: This should interpret a constructed chunk id for
+        # in-tree data.
         return self._fs.exists(self._chunk_filename(chunk_id))
 
     def remove_chunk(self, chunk_id):
+        # FIXME: This should interpret a constructed chunk id for
+        # in-tree data.
         tracing.trace('chunk_id=%s', chunk_id)
         filename = self._chunk_filename(chunk_id)
         try:
@@ -589,6 +604,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             raise obnamlib.RepositoryChunkDoesNotExist(str(chunk_id))
 
     def get_chunk_ids(self):
+        # FIXME: This should constructed chunk ids for in-tree data.
         pat = re.compile(r'^.*/.*/[0-9a-fA-F]+$')
         if self._fs.exists('chunks'):
             for pathname, st in self._fs.scan_tree('chunks'):
@@ -671,6 +687,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         return self._checksum(data)
 
     def put_chunk_into_indexes(self, chunk_id, token, client_name):
+        # FIXME: This should reject chunk ids for in-tree data.
         tracing.trace('chunk_id=%s', chunk_id)
         tracing.trace('token=%s', token)
         tracing.trace('client_name=%s', client_name)
@@ -682,6 +699,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._chunksums.add(token, chunk_id, client_id)
 
     def remove_chunk_from_indexes(self, chunk_id, client_name):
+        # FIXME: This should reject chunk ids for in-tree data.
         tracing.trace('chunk_id=%s', chunk_id)
         tracing.trace('client_name=%s', client_name)
         client_id = self._get_client_id(client_name)
@@ -700,6 +718,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         raise obnamlib.RepositoryChunkContentNotInIndexes()
 
     def validate_chunk_content(self, chunk_id):
+        # FIXME: This should reject chunk ids for in-tree data.
         try:
             content = self.get_chunk_content(chunk_id)
         except obnamlib.RepositoryChunkDoesNotExist:
@@ -851,12 +870,15 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
                 self.format, client_name, key)
 
     def get_file_chunk_ids(self, generation_id, filename):
+        # FIXME: This should construct a chunk id for the in-tree
+        # data if there is any.
         self._require_existing_file(generation_id, filename)
         client_name, gen_number = generation_id
         client = self._open_client(client_name)
         return client.get_file_chunks(gen_number, filename)
 
     def clear_file_chunk_ids(self, generation_id, filename):
+        # FIXME: This should remove the in-tree data, if any.
         self._require_existing_file(generation_id, filename)
         client_name, gen_number = generation_id
         self._require_client_lock(client_name)
@@ -864,6 +886,8 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         client.set_file_chunks(filename, []) # FIXME: current gen only
 
     def append_file_chunk_id(self, generation_id, filename, chunk_id):
+        # FIXME: This should not allow a chunk id referring to in-tree
+        # data.
         self._require_existing_file(generation_id, filename)
         client_name, gen_number = generation_id
         self._require_client_lock(client_name)
