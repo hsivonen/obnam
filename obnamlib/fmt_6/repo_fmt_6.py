@@ -557,6 +557,20 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             'chunks', self._idpath_depth, self._idpath_bits,
             self._idpath_skip)
 
+    def _construct_in_tree_chunk_id(self, gen_id, filename): # pragma: no cover
+        # This constructs a synthetic chunk id for in-tree data for a
+        # file. The file is expected to have in-tree data.
+
+        return (gen_id, filename)
+
+    def _unpack_in_tree_chunk_id(self, chunk_id): # pragma: no cover
+        # Return gen_id and filename for in-tree chunk.
+        return chunk_id
+
+    def _is_in_tree_chunk_id(self, chunk_id):
+        # Is this a chunk id for in-tree data?
+        return type(chunk_id) == tuple
+
     def _chunk_filename(self, chunk_id):
         return self._chunk_idpath.convert(chunk_id)
 
@@ -585,8 +599,12 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         return chunk_id
 
     def get_chunk_content(self, chunk_id):
-        # FIXME: This should interpret a constructed chunk id for
-        # in-tree data.
+        if self._is_in_tree_chunk_id(chunk_id): # pragma: no cover
+            gen_id, filename = self._unpack_in_tree_chunk_id(chunk_id)
+            client_name, gen_number = gen_id
+            client = self._open_client(client_name)
+            return client.get_file_data(gen_number, filename)
+
         try:
             return self._fs.cat(self._chunk_filename(chunk_id))
         except IOError, e:
@@ -693,10 +711,10 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         return self._checksum(data)
 
     def put_chunk_into_indexes(self, chunk_id, token, client_name):
-        # FIXME: This should reject chunk ids for in-tree data.
         tracing.trace('chunk_id=%s', chunk_id)
         tracing.trace('token=%s', token)
         tracing.trace('client_name=%s', client_name)
+        assert not self._is_in_tree_chunk_id(chunk_id)
         client_id = self._get_client_id(client_name)
         tracing.trace('client_id=%s', client_id)
 
@@ -705,9 +723,9 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._chunksums.add(token, chunk_id, client_id)
 
     def remove_chunk_from_indexes(self, chunk_id, client_name):
-        # FIXME: This should reject chunk ids for in-tree data.
         tracing.trace('chunk_id=%s', chunk_id)
         tracing.trace('client_name=%s', client_name)
+        assert not self._is_in_tree_chunk_id(chunk_id)
         client_id = self._get_client_id(client_name)
         tracing.trace('client_id=%s', client_id)
 
@@ -724,7 +742,9 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         raise obnamlib.RepositoryChunkContentNotInIndexes()
 
     def validate_chunk_content(self, chunk_id):
-        # FIXME: This should reject chunk ids for in-tree data.
+        if self._is_in_tree_chunk_id(chunk_id): # pragma: no cover
+            # FIXME: Check whole-file md5 here
+            return True
         try:
             content = self.get_chunk_content(chunk_id)
         except obnamlib.RepositoryChunkDoesNotExist:
@@ -876,11 +896,12 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
                 self.format, client_name, key)
 
     def get_file_chunk_ids(self, generation_id, filename):
-        # FIXME: This should construct a chunk id for the in-tree
-        # data if there is any.
         self._require_existing_file(generation_id, filename)
         client_name, gen_number = generation_id
         client = self._open_client(client_name)
+        in_tree_data = client.get_file_data(gen_number, filename)
+        if in_tree_data is not None: # pragma: no cover
+            return [self._construct_in_tree_chunk_id(generation_id, filename)]
         return client.get_file_chunks(gen_number, filename)
 
     def clear_file_chunk_ids(self, generation_id, filename):
@@ -892,8 +913,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         client.set_file_chunks(filename, []) # FIXME: current gen only
 
     def append_file_chunk_id(self, generation_id, filename, chunk_id):
-        # FIXME: This should not allow a chunk id referring to in-tree
-        # data.
+        assert not self._is_in_tree_chunk_id(chunk_id)
         self._require_existing_file(generation_id, filename)
         client_name, gen_number = generation_id
         self._require_client_lock(client_name)
