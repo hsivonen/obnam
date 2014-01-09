@@ -638,7 +638,10 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             raise obnamlib.RepositoryChunkDoesNotExist(str(chunk_id))
 
     def get_chunk_ids(self):
-        # FIXME: This should constructed chunk ids for in-tree data.
+        # Note: This does not cover for in-tree chunk data. We cannot
+        # realistically iterate over all per-client B-trees to find
+        # such data.
+        
         pat = re.compile(r'^.*/.*/[0-9a-fA-F]+$')
         if self._fs.exists('chunks'):
             for pathname, st in self._fs.scan_tree('chunks'):
