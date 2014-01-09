@@ -918,7 +918,8 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         return client.get_file_chunks(gen_number, filename)
 
     def clear_file_chunk_ids(self, generation_id, filename):
-        # FIXME: This should remove the in-tree data, if any.
+        # We ignore in-tree data here. A file that has real chunks doesn't
+        # have in-tree data, so it should be OK.
         self._require_existing_file(generation_id, filename)
         client_name, gen_number = generation_id
         self._require_client_lock(client_name)
