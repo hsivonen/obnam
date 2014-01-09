@@ -756,8 +756,15 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     def validate_chunk_content(self, chunk_id):
         if self._is_in_tree_chunk_id(chunk_id): # pragma: no cover
-            # FIXME: Check whole-file md5 here
-            return True
+            gen_id, filename = self._unpack_in_tree_chunk_id(chunk_id)
+            client_name, gen_number = gen_id
+            client = self._open_client(client_name)
+            data = client.get_file_data(gen_number, filename)
+            checksum = hashlib.md5(data).hexdigest()
+            expected = self.get_file_key(
+                gen_id, filename, obnamlib.REPO_FILE_MD5)
+            return checksum == expected
+
         try:
             content = self.get_chunk_content(chunk_id)
         except obnamlib.RepositoryChunkDoesNotExist:
