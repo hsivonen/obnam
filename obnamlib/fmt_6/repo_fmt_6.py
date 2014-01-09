@@ -623,9 +623,14 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         return self._fs.exists(self._chunk_filename(chunk_id))
 
     def remove_chunk(self, chunk_id):
-        # FIXME: This should interpret a constructed chunk id for
-        # in-tree data.
         tracing.trace('chunk_id=%s', chunk_id)
+
+        # Note: we ignore in-tree data, on the assumption that if
+        # it gets removed, the whole file gets removed from the
+        # generation anyway. This should probably be fixed some day.
+        if self._is_in_tree_chunk_id(chunk_id): # pragma: no cover
+            return
+
         filename = self._chunk_filename(chunk_id)
         try:
             self._fs.remove(filename)
