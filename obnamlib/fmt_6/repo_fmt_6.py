@@ -613,8 +613,13 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             raise # pragma: no cover
 
     def has_chunk(self, chunk_id):
-        # FIXME: This should interpret a constructed chunk id for
-        # in-tree data.
+        if self._is_in_tree_chunk_id(chunk_id): # pragma: no cover
+            gen_id, filename = self._unpack_in_tree_chunk_id(chunk_id)
+            client_name, gen_number = gen_id
+            client = self._open_client(client_name)
+            data = client.get_file_data(gen_number, filename)
+            return data is not None
+
         return self._fs.exists(self._chunk_filename(chunk_id))
 
     def remove_chunk(self, chunk_id):
