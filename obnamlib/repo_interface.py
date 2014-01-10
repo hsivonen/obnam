@@ -1450,15 +1450,47 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
     def test_has_list_of_allowed_file_keys(self):
         self.assertEqual(type(self.repo.get_allowed_file_keys()), list)
 
+    def test_all_common_file_metadata_keys_are_allowed(self):
+        common = [
+            REPO_FILE_MODE,
+            REPO_FILE_MTIME_SEC,
+            REPO_FILE_MTIME_NSEC,
+            REPO_FILE_ATIME_SEC,
+            REPO_FILE_ATIME_NSEC,
+            REPO_FILE_NLINK,
+            REPO_FILE_SIZE,
+            REPO_FILE_UID,
+            REPO_FILE_GID,
+            REPO_FILE_BLOCKS,
+            REPO_FILE_DEV,
+            REPO_FILE_INO,
+            REPO_FILE_USERNAME,
+            REPO_FILE_GROUPNAME,
+            REPO_FILE_SYMLINK_TARGET,
+            REPO_FILE_XATTR_BLOB,
+            REPO_FILE_MD5,
+            ]
+        for key in common:
+            self.assertTrue(
+                key in self.repo.get_allowed_file_keys(),
+                'key %s (%d) not in allowed file keys' %
+                (_key_name(key), key))
+
     def test_gets_all_allowed_file_keys(self):
         gen_id = self.create_generation()
         self.repo.add_file(gen_id, '/foo/bar')
         for key in self.repo.get_allowed_file_keys():
             value = self.repo.get_file_key(gen_id, '/foo/bar', key)
             if key in REPO_FILE_INTEGER_KEYS:
-                self.assertEqual(type(value), int)
+                self.assertEqual(
+                    type(value), int,
+                    msg='key %s (%d) has value %s which is not an int' %
+                    (_key_name(key), key, repr(value)))
             else:
-                self.assertEqual(type(value), str)
+                self.assertEqual(
+                    type(value), str,
+                    msg='key %s (%d) has value %s which is not a str' %
+                    (_key_name(key), key, repr(value)))
 
     def test_has_empty_string_for_file_test_key(self):
         gen_id = self.create_generation()

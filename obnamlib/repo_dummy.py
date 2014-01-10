@@ -250,14 +250,10 @@ class DummyClient(object):
             raise obnamlib.RepositoryFileDoesNotExistInGeneration(
                 self.name, self.make_generation_spec(gen_id), filename)
 
-    _integer_keys = (
-        obnamlib.REPO_FILE_MTIME_SEC,
-    )
-
     def get_file_key(self, gen_id, filename, key):
         self._require_generation(gen_id)
         self._require_file(gen_id, filename)
-        if key in self._integer_keys:
+        if key in obnamlib.REPO_FILE_INTEGER_KEYS:
             default = 0
         else:
             default = ''
@@ -620,7 +616,26 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
         client.set_file_key(generation_id, filename, key, value)
 
     def get_allowed_file_keys(self):
-        return [obnamlib.REPO_FILE_TEST_KEY, obnamlib.REPO_FILE_MTIME_SEC]
+        return [
+            obnamlib.REPO_FILE_TEST_KEY,
+            obnamlib.REPO_FILE_MODE,
+            obnamlib.REPO_FILE_MTIME_SEC,
+            obnamlib.REPO_FILE_MTIME_NSEC,
+            obnamlib.REPO_FILE_ATIME_SEC,
+            obnamlib.REPO_FILE_ATIME_NSEC,
+            obnamlib.REPO_FILE_NLINK,
+            obnamlib.REPO_FILE_SIZE,
+            obnamlib.REPO_FILE_UID,
+            obnamlib.REPO_FILE_GID,
+            obnamlib.REPO_FILE_BLOCKS,
+            obnamlib.REPO_FILE_DEV,
+            obnamlib.REPO_FILE_INO,
+            obnamlib.REPO_FILE_USERNAME,
+            obnamlib.REPO_FILE_GROUPNAME,
+            obnamlib.REPO_FILE_SYMLINK_TARGET,
+            obnamlib.REPO_FILE_XATTR_BLOB,
+            obnamlib.REPO_FILE_MD5,
+            ]
 
     def get_file_chunk_ids(self, generation_id, filename):
         client = self._client_list.get_client_by_generation_id(generation_id)
