@@ -76,7 +76,7 @@ class HookedFS(object):
         self.fs.overwrite_file(filename, data)
 
 
-class _OpenClient(object):
+class _OpenClientInfo(object):
 
     def __init__(self, client):
         self.locked = False
@@ -251,10 +251,10 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         # We keep a list of all open clients. An open client may or
         # may not be locked. Each value in the dict is a tuple of
         # ClientMetadataTree and is_locked.
-        self._open_clients = {}
+        self._open_client_infos = {}
 
     def _open_client(self, client_name):
-        if client_name not in self._open_clients:
+        if client_name not in self._open_client_infos:
             tracing.trace('client_name=%s', client_name)
             client_id = self._get_client_id(client_name)
             if client_id is None: # pragma: no cover
@@ -266,18 +266,18 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
                     self._upload_queue_size, self._lru_size, self)
             client.init_forest()
 
-            self._open_clients[client_name] = _OpenClient(client)
+            self._open_client_infos[client_name] = _OpenClientInfo(client)
 
-        return self._open_clients[client_name].client
+        return self._open_client_infos[client_name].client
 
     def _get_client_dir(self, client_id):
         '''Return name of sub-directory for a given client.'''
         return str(client_id)
 
     def _client_is_locked_by_us(self, client_name):
-        if client_name in self._open_clients:
-            open_client = self._open_clients[client_name]
-            return open_client.locked
+        if client_name in self._open_client_infos:
+            open_client_info = self._open_client_infos[client_name]
+            return open_client_info.locked
         return False
 
     def _require_existing_client(self, client_name):
@@ -309,14 +309,14 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
         # Remember that we have the lock.
         self._open_client(client_name) # Ensure client is open
-        open_client = self._open_clients[client_name]
-        open_client.locked = True
+        open_client_info = self._open_client_infos[client_name]
+        open_client_info.locked = True
 
     def _raw_unlock_client(self, client_name):
         tracing.trace('client_name=%s', client_name)
-        open_client = self._open_clients[client_name]
-        self._lockmgr.unlock([open_client.client.dirname])
-        del self._open_clients[client_name]
+        open_client_info = self._open_client_infos[client_name]
+        self._lockmgr.unlock([open_client_info.client.dirname])
+        del self._open_client_infos[client_name]
 
     def client_is_locked(self, client_name):
         logging.info('Checking if %s is locked' % client_name)
@@ -338,11 +338,11 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
     def force_client_lock(self, client_name):
         logging.info('Forcing client lock open for %s', client_name)
         self._open_client(client_name)
-        open_client = self._open_clients[client_name]
-        lock_name = os.path.join(open_client.client.dirname, 'lock')
+        open_client_info = self._open_client_infos[client_name]
+        lock_name = os.path.join(open_client_info.client.dirname, 'lock')
         if self._real_fs.exists(lock_name):
             self._real_fs.remove(lock_name)
-        del self._open_clients[client_name]
+        del self._open_client_infos[client_name]
         self._setup_file_key_cache()
 
     def commit_client(self, client_name):
@@ -352,14 +352,14 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
         self._flush_file_key_cache()
 
-        open_client = self._open_clients[client_name]
+        open_client_info = self._open_client_infos[client_name]
 
-        if open_client.current_generation_number:
-            open_client.client.set_generation_ended(self._current_time())
+        if open_client_info.current_generation_number:
+            open_client_info.client.set_generation_ended(self._current_time())
 
-        if (open_client.current_generation_number or
-            open_client.generations_removed):
-            open_client.client.commit()
+        if (open_client_info.current_generation_number or
+            open_client_info.generations_removed):
+            open_client_info.client.commit()
 
         self._raw_unlock_client(client_name)
 
@@ -411,7 +411,6 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     def get_client_generation_ids(self, client_name):
         client = self._open_client(client_name)
-        open_client = self._open_clients[client_name]
         return [
             (client_name, gen_number)
             for gen_number in client.list_generations()]
@@ -421,16 +420,17 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._require_existing_client(client_name)
         self._require_client_lock(client_name)
 
-        open_client = self._open_clients[client_name]
-        if open_client.current_generation_number is not None:
+        open_client_info = self._open_client_infos[client_name]
+        if open_client_info.current_generation_number is not None:
             raise obnamlib.RepositoryClientGenerationUnfinished(client_name)
 
-        open_client.client.start_generation()
-        open_client.client.set_generation_started(self._current_time())
-        open_client.current_generation_number = \
-            open_client.client.get_generation_id(open_client.client.tree)
+        open_client_info.client.start_generation()
+        open_client_info.client.set_generation_started(self._current_time())
+        open_client_info.current_generation_number = \
+            open_client_info.client.get_generation_id(
+            open_client_info.client.tree)
 
-        return (client_name, open_client.current_generation_number)
+        return (client_name, open_client_info.current_generation_number)
 
     def get_client_extra_data_directory(self, client_name):
         tracing.trace('client_name=%s', client_name)
@@ -520,15 +520,15 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._require_client_lock(client_name)
         self._require_existing_generation(gen_id)
 
-        open_client = self._open_clients[client_name]
-        if gen_number == open_client.current_generation_number:
-            open_client.current_generation_number = None
-        open_client.generations_removed = True
+        open_client_info = self._open_client_infos[client_name]
+        if gen_number == open_client_info.current_generation_number:
+            open_client_info.current_generation_number = None
+        open_client_info.generations_removed = True
 
         self._remove_chunks_from_removed_generations(
-            client_name, open_client.client, [gen_number])
-        open_client.client.start_changes(create_tree=False)
-        open_client.client.remove_generation(gen_number)
+            client_name, open_client_info.client, [gen_number])
+        open_client_info.client.start_changes(create_tree=False)
+        open_client_info.client.remove_generation(gen_number)
 
     def get_generation_chunk_ids(self, generation_id):
         # This intentionally doesn't construct chunk ids for in-tree
