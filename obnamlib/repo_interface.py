@@ -28,7 +28,11 @@ import obnamlib
 # The following is a canonical list of all keys that can be used with
 # the repository interface for key/value pairs. Not all formats need
 # to support all keys, but they all must support the test keys, for
-# the test suite to function.
+# the test suite to function. All commong file metadata keys must also
+# be supported by all formats.
+#
+# The keys may change in value from run to run. Treat them as opaque,
+# ephemeral things, and do not store them anywhere persistent.
 #
 # The symbols are meant to be used as Python symbols, but we do a
 # little magic to get a) automatic enumeration b) mapping between
