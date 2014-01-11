@@ -96,8 +96,12 @@ class DummyClient(object):
 
     def __init__(self, name):
         self.name = name
+        self.key_id = None
         self.generation_counter = Counter()
         self.data = LockableKeyValueStore()
+
+    def is_locked(self):
+        return self.data.locked
 
     def lock(self):
         if self.data.locked:
@@ -111,6 +115,10 @@ class DummyClient(object):
     def unlock(self):
         self._require_lock()
         self.data.unlock()
+
+    def force_lock(self):
+        if self.data.locked:
+            self.data.unlock()
 
     def commit(self):
         self._require_lock()
@@ -242,14 +250,10 @@ class DummyClient(object):
             raise obnamlib.RepositoryFileDoesNotExistInGeneration(
                 self.name, self.make_generation_spec(gen_id), filename)
 
-    _integer_keys = (
-        obnamlib.REPO_FILE_MTIME,
-    )
-
     def get_file_key(self, gen_id, filename, key):
         self._require_generation(gen_id)
         self._require_file(gen_id, filename)
-        if key in self._integer_keys:
+        if key in obnamlib.REPO_FILE_INTEGER_KEYS:
             default = 0
         else:
             default = ''
@@ -305,6 +309,7 @@ class DummyClient(object):
             children.append(candidate)
         return children
 
+
 class DummyClientList(object):
 
     def __init__(self):
@@ -328,7 +333,6 @@ class DummyClientList(object):
     def force(self):
         if self.data.locked:
             self.unlock()
-        self.lock()
 
     def _require_lock(self):
         if not self.data.locked:
@@ -369,6 +373,18 @@ class DummyClientList(object):
         client_name, generation_number = gen_id
         return self[client_name]
 
+    def get_client_encryption_key_id(self, client_name):
+        client = self.data.get_value(client_name, None)
+        if client is None:
+            raise obnamlib.RepositoryClientDoesNotExist(client_name)
+        return client.key_id
+
+    def set_client_encryption_key_id(self, client_name, key_id):
+        client = self.data.get_value(client_name, None)
+        if client is None:
+            raise obnamlib.RepositoryClientDoesNotExist(client_name)
+        client.key_id = key_id
+
 
 class ChunkStore(object):
 
@@ -393,6 +409,9 @@ class ChunkStore(object):
         if chunk_id not in self.chunks:
             raise obnamlib.RepositoryChunkDoesNotExist(str(chunk_id))
         del self.chunks[chunk_id]
+
+    def get_chunk_ids(self):
+        return self.chunks.keys()
 
 
 class ChunkIndexes(object):
@@ -420,17 +439,22 @@ class ChunkIndexes(object):
     def force(self):
         if self.data.locked:
             self.unlock()
-        self.lock()
 
-    def put_chunk(self, chunk_id, chunk_content, client_id):
+    def prepare(self, chunk_content):
+        return chunk_content
+
+    def put_chunk(self, chunk_id, token_is_chunk_content, client_id):
         self._require_lock()
-        self.data.set_value(chunk_id, chunk_content)
+        self.data.set_value(chunk_id, token_is_chunk_content)
 
     def find_chunk(self, chunk_content):
+        chunk_ids = []
         for chunk_id, stored_content in self.data.items():
             if stored_content == chunk_content:
-                return chunk_id
-        raise obnamlib.RepositoryChunkContentNotInIndexes()
+                chunk_ids.append(chunk_id)
+        if not chunk_ids:
+            raise obnamlib.RepositoryChunkContentNotInIndexes()
+        return chunk_ids
 
     def remove_chunk(self, chunk_id, client_id):
         self._require_lock()
@@ -451,11 +475,18 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
         self._client_list = DummyClientList()
         self._chunk_store = ChunkStore()
         self._chunk_indexes = ChunkIndexes()
+        self._fs = None
+
+    def get_fs(self):
+        return self._fs
 
     def set_fs(self, fs):
-        pass
+        self._fs = fs
 
     def init_repo(self):
+        pass
+
+    def close(self):
         pass
 
     def get_client_names(self):
@@ -470,6 +501,9 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
     def commit_client_list(self):
         self._client_list.commit()
 
+    def got_client_list_lock(self):
+        return self._client_list.data.locked
+
     def force_client_list_lock(self):
         self._client_list.force()
 
@@ -482,6 +516,15 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
     def rename_client(self, old_client_name, new_client_name):
         self._client_list.rename(old_client_name, new_client_name)
 
+    def get_client_encryption_key_id(self, client_name):
+        return self._client_list.get_client_encryption_key_id(client_name)
+
+    def set_client_encryption_key_id(self, client_name, key_id):
+        self._client_list.set_client_encryption_key_id(client_name, key_id)
+
+    def client_is_locked(self, client_name):
+        return self._client_list[client_name].is_locked()
+
     def lock_client(self, client_name):
         self._client_list[client_name].lock()
 
@@ -490,6 +533,12 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
 
     def commit_client(self, client_name):
         self._client_list[client_name].commit()
+
+    def got_client_lock(self, client_name):
+        return self._client_list[client_name].data.locked
+
+    def force_client_lock(self, client_name):
+        self._client_list[client_name].force_lock()
 
     def get_allowed_client_keys(self):
         return [obnamlib.REPO_CLIENT_TEST_KEY]
@@ -506,11 +555,18 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
     def get_client_generation_ids(self, client_name):
         return self._client_list[client_name].get_generation_ids()
 
+    def get_client_extra_data_directory(self, client_name):
+        return client_name
+
     def create_generation(self, client_name):
         return self._client_list[client_name].create_generation()
 
     def get_allowed_generation_keys(self):
-        return [obnamlib.REPO_GENERATION_TEST_KEY]
+        return [
+            obnamlib.REPO_GENERATION_TEST_KEY,
+            obnamlib.REPO_GENERATION_STARTED,
+            obnamlib.REPO_GENERATION_ENDED,
+            ]
 
     def get_generation_key(self, generation_id, key):
         client = self._client_list.get_client_by_generation_id(generation_id)
@@ -566,7 +622,26 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
         client.set_file_key(generation_id, filename, key, value)
 
     def get_allowed_file_keys(self):
-        return [obnamlib.REPO_FILE_TEST_KEY, obnamlib.REPO_FILE_MTIME]
+        return [
+            obnamlib.REPO_FILE_TEST_KEY,
+            obnamlib.REPO_FILE_MODE,
+            obnamlib.REPO_FILE_MTIME_SEC,
+            obnamlib.REPO_FILE_MTIME_NSEC,
+            obnamlib.REPO_FILE_ATIME_SEC,
+            obnamlib.REPO_FILE_ATIME_NSEC,
+            obnamlib.REPO_FILE_NLINK,
+            obnamlib.REPO_FILE_SIZE,
+            obnamlib.REPO_FILE_UID,
+            obnamlib.REPO_FILE_GID,
+            obnamlib.REPO_FILE_BLOCKS,
+            obnamlib.REPO_FILE_DEV,
+            obnamlib.REPO_FILE_INO,
+            obnamlib.REPO_FILE_USERNAME,
+            obnamlib.REPO_FILE_GROUPNAME,
+            obnamlib.REPO_FILE_SYMLINK_TARGET,
+            obnamlib.REPO_FILE_XATTR_BLOB,
+            obnamlib.REPO_FILE_MD5,
+            ]
 
     def get_file_chunk_ids(self, generation_id, filename):
         client = self._client_list.get_client_by_generation_id(generation_id)
@@ -596,6 +671,9 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
     def remove_chunk(self, chunk_id):
         self._chunk_store.remove_chunk(chunk_id)
 
+    def get_chunk_ids(self):
+        return self._chunk_store.get_chunk_ids()
+
     def lock_chunk_indexes(self):
         self._chunk_indexes.lock()
 
@@ -605,18 +683,26 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
     def commit_chunk_indexes(self):
         self._chunk_indexes.commit()
 
+    def got_chunk_indexes_lock(self):
+        return self._chunk_indexes.data.locked
+
     def force_chunk_indexes_lock(self):
         self._chunk_indexes.force()
 
-    def put_chunk_into_indexes(self, chunk_id, chunk_content, client_id):
-        self._chunk_indexes.put_chunk(chunk_id, chunk_content, client_id)
+    def prepare_chunk_for_indexes(self, chunk_content):
+        return self._chunk_indexes.prepare(chunk_content)
 
-    def find_chunk_id_by_content(self, chunk_content):
+    def put_chunk_into_indexes(self, chunk_id, token, client_id):
+        self._chunk_indexes.put_chunk(chunk_id, token, client_id)
+
+    def find_chunk_ids_by_content(self, chunk_content):
         return self._chunk_indexes.find_chunk(chunk_content)
 
     def remove_chunk_from_indexes(self, chunk_id, client_id):
         return self._chunk_indexes.remove_chunk(chunk_id, client_id)
 
-    def get_fsck_work_item(self):
-        return 'this pretends to be a work item'
+    def validate_chunk_content(self, chunk_id):
+        return None
 
+    def get_fsck_work_items(self):
+        return []

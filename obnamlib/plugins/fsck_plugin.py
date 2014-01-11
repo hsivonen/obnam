@@ -14,23 +14,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import hashlib
 import larch.fsck
 import logging
 import os
+import stat
 import sys
 import ttystatus
 
 import obnamlib
-
-
-class WorkItem(larch.fsck.WorkItem):
-
-    '''A work item for fsck.
-
-    Whoever creates a WorkItem shall set the ``repo`` to the repository
-    being used.
-
-    '''
+from obnamlib import WorkItem
 
 
 class CheckChunk(WorkItem):
@@ -42,23 +35,16 @@ class CheckChunk(WorkItem):
 
     def do(self):
         logging.debug('Checking chunk %s' % self.chunkid)
-        if not self.repo.chunk_exists(self.chunkid):
+        if not self.repo.has_chunk(self.chunkid):
             self.error('chunk %s does not exist' % self.chunkid)
         else:
-            data = self.repo.get_chunk(self.chunkid)
-            checksum = self.repo.checksum(data)
-            try:
-                correct = self.repo.chunklist.get_checksum(self.chunkid)
-            except KeyError:
-                self.error('chunk %s not in chunklist' % self.chunkid)
-            else:
-                if checksum != correct:
-                    self.error('chunk %s has wrong checksum' % self.chunkid)
-
-            if self.chunkid not in self.repo.chunksums.find(checksum):
-                self.error('chunk %s not in chunksums' % self.chunkid)
-
+            data = self.repo.get_chunk_content(self.chunkid)
             self.checksummer.update(data)
+
+            valid = self.repo.validate_chunk_content(self.chunkid)
+            if valid is False:
+                self.error('chunk %s is corrupted' % self.chunkid)
+
         self.chunkids_seen.add(self.chunkid)
 
 
@@ -79,25 +65,26 @@ class CheckFileChecksum(WorkItem):
 
 class CheckFile(WorkItem):
 
-    def __init__(self, client_name, genid, filename, metadata):
+    def __init__(self, client_name, genid, filename):
         self.client_name = client_name
         self.genid = genid
         self.filename = filename
-        self.metadata = metadata
         self.name = 'file %s:%s:%s' % (client_name, genid, filename)
 
     def do(self):
         logging.debug('Checking client=%s genid=%s filename=%s' %
                         (self.client_name, self.genid, self.filename))
-        if self.repo.current_client != self.client_name:
-            self.repo.open_client(self.client_name)
-        if self.metadata.isfile() and not self.settings['fsck-ignore-chunks']:
-            chunkids = self.repo.get_file_chunks(self.genid, self.filename)
-            checksummer = self.repo.new_checksummer()
+        mode = self.repo.get_file_key(
+            self.genid, self.filename, obnamlib.REPO_FILE_MODE)
+        if stat.S_ISREG(mode) and not self.settings['fsck-ignore-chunks']:
+            chunkids = self.repo.get_file_chunk_ids(self.genid, self.filename)
+            checksummer = hashlib.md5()
             for chunkid in chunkids:
                 yield CheckChunk(chunkid, checksummer)
+            md5 = self.repo.get_file_key(
+                self.genid, self.filename, obnamlib.REPO_FILE_MD5)
             yield CheckFileChecksum(
-                self.name, self.metadata.md5, chunkids, checksummer)
+                self.name, md5, chunkids, checksummer)
 
 
 class CheckDirectory(WorkItem):
@@ -111,17 +98,13 @@ class CheckDirectory(WorkItem):
     def do(self):
         logging.debug('Checking client=%s genid=%s dirname=%s' %
                         (self.client_name, self.genid, self.dirname))
-        if self.repo.current_client != self.client_name:
-            self.repo.open_client(self.client_name)
-        self.repo.get_metadata(self.genid, self.dirname)
-        for basename in self.repo.listdir(self.genid, self.dirname):
-            pathname = os.path.join(self.dirname, basename)
-            metadata = self.repo.get_metadata(self.genid, pathname)
-            if metadata.isdir():
+        for pathname in self.repo.get_file_children(self.genid, self.dirname):
+            mode = self.repo.get_file_key(
+                self.genid, pathname, obnamlib.REPO_FILE_MODE)
+            if stat.S_ISDIR(mode):
                 yield CheckDirectory(self.client_name, self.genid, pathname)
             elif not self.settings['fsck-skip-files']:
-                yield CheckFile(
-                    self.client_name, self.genid, pathname, metadata)
+                yield CheckFile(self.client_name, self.genid, pathname)
 
 
 class CheckGeneration(WorkItem):
@@ -135,7 +118,10 @@ class CheckGeneration(WorkItem):
         logging.debug('Checking client=%s genid=%s' %
                         (self.client_name, self.genid))
 
-        started, ended = self.repo.client.get_generation_times(self.genid)
+        started = self.repo.get_generation_key(
+            self.genid, obnamlib.REPO_GENERATION_STARTED)
+        ended = self.repo.get_generation_key(
+            self.genid, obnamlib.REPO_GENERATION_ENDED)
         if started is None:
             self.error('%s:%s: no generation start time' %
                         (self.client_name, self.genid))
@@ -143,11 +129,13 @@ class CheckGeneration(WorkItem):
             self.error('%s:%s: no generation end time' %
                         (self.client_name, self.genid))
 
-        n = self.repo.client.get_generation_file_count(self.genid)
+        n = self.repo.get_generation_key(
+            self.genid, obnamlib.REPO_GENERATION_FILE_COUNT)
         if n is None:
             self.error('%s:%s: no file count' % (self.client_name, self.genid))
 
-        n = self.repo.client.get_generation_data(self.genid)
+        n = self.repo.get_generation_key(
+            self.genid, obnamlib.REPO_GENERATION_TOTAL_DATA)
         if n is None:
             self.error('%s:%s: no total data' % (self.client_name, self.genid))
 
@@ -175,20 +163,6 @@ class CheckGenerationIdsAreDifferent(WorkItem):
                 done.add(genid)
 
 
-class CheckClientExists(WorkItem):
-
-    def __init__(self, client_name):
-        self.client_name = client_name
-        self.name = 'does client %s exist?' % client_name
-
-    def do(self):
-        logging.debug('Checking client=%s exists' % self.client_name)
-        client_id = self.repo.clientlist.get_client_id(self.client_name)
-        if client_id is None:
-            self.error('Client %s is in client list, but has no id' %
-                          self.client_name)
-
-
 class CheckClient(WorkItem):
 
     def __init__(self, client_name):
@@ -197,9 +171,7 @@ class CheckClient(WorkItem):
 
     def do(self):
         logging.debug('Checking client=%s' % self.client_name)
-        if self.repo.current_client != self.client_name:
-            self.repo.open_client(self.client_name)
-        genids = self.repo.list_generations()
+        genids = self.repo.get_client_generation_ids(self.client_name)
         yield CheckGenerationIdsAreDifferent(self.client_name, genids)
         if self.settings['fsck-skip-generations']:
             genids = []
@@ -215,16 +187,7 @@ class CheckClientlist(WorkItem):
 
     def do(self):
         logging.debug('Checking clientlist')
-        clients = self.repo.clientlist.list_clients()
-        for client_name in clients:
-            if client_name not in self.settings['fsck-ignore-client']:
-                yield CheckClientExists(client_name)
-        if not self.settings['fsck-skip-per-client-b-trees']:
-            for client_name in clients:
-                if client_name not in self.settings['fsck-ignore-client']:
-                    client_id = self.repo.clientlist.get_client_id(client_name)
-                    client_dir = self.repo.client_dir(client_id)
-                    yield CheckBTree(str(client_dir))
+        clients = self.repo.get_client_names()
         for client_name in clients:
             if client_name not in self.settings['fsck-ignore-client']:
                 yield CheckClient(client_name)
@@ -237,28 +200,9 @@ class CheckForExtraChunks(WorkItem):
 
     def do(self):
         logging.debug('Checking for extra chunks')
-        for chunkid in self.repo.list_chunks():
+        for chunkid in self.repo.get_chunk_ids():
             if chunkid not in self.chunkids_seen:
                 self.error('chunk %s not used by anyone' % chunkid)
-
-
-class CheckBTree(WorkItem):
-
-    def __init__(self, dirname):
-        self.dirname = dirname
-        self.name = 'B-tree %s' % dirname
-
-    def do(self):
-        if not self.repo.fs.exists(self.dirname):
-            logging.debug('B-tree %s does not exist, skipping' % self.dirname)
-            return
-        logging.debug('Checking B-tree %s' % self.dirname)
-        fix = self.settings['fsck-fix']
-        forest = larch.open_forest(allow_writes=fix, dirname=self.dirname,
-                                   vfs=self.repo.fs)
-        fsck = larch.fsck.Fsck(forest, self.warning, self.error, fix)
-        for work in fsck.find_work():
-            yield work
 
 
 class CheckRepository(WorkItem):
@@ -268,10 +212,8 @@ class CheckRepository(WorkItem):
 
     def do(self):
         logging.debug('Checking repository')
-        if not self.settings['fsck-skip-shared-b-trees']:
-            yield CheckBTree('clientlist')
-            yield CheckBTree('chunklist')
-            yield CheckBTree('chunksums')
+        for work in self.repo.get_fsck_work_items():
+            yield work
         yield CheckClientlist()
 
 
@@ -343,15 +285,13 @@ class FsckPlugin(obnamlib.ObnamPlugin):
 
         self.configure_ttystatus()
 
-        self.repo = self.app.open_repository()
+        self.repo = self.app.get_repository_object()
 
-        self.repo.lock_root()
-        client_names = self.repo.list_clients()
-        client_dirs = [self.repo.client_dir(
-                            self.repo.clientlist.get_client_id(name))
-                       for name in client_names]
-        self.repo.lockmgr.lock(client_dirs)
-        self.repo.lock_shared()
+        self.repo.lock_client_list()
+        client_names = self.repo.get_client_names()
+        for client_name in client_names:
+            self.repo.lock_client(client_name)
+        self.repo.lock_chunk_indexes()
 
         self.errors = 0
         self.chunkids_seen = set()
@@ -376,11 +316,12 @@ class FsckPlugin(obnamlib.ObnamPlugin):
                     self.add_item(work, append=True)
                 final_items = []
 
-        self.repo.unlock_shared()
-        self.repo.lockmgr.unlock(client_dirs)
-        self.repo.unlock_root()
+        self.repo.unlock_chunk_indexes()
+        for client_name in client_names:
+            self.repo.unlock_client(client_name)
+        self.repo.unlock_client_list()
 
-        self.repo.fs.close()
+        self.repo.close()
         self.app.ts.finish()
 
         if self.errors:

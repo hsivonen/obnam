@@ -37,7 +37,7 @@ trace = larch
 checkpoint = 1m
 lock-timeout = 1
 log-keep = 16
-log-level = debug
+# log-level = debug
 trace = larch, obnamlib
 EOF
 

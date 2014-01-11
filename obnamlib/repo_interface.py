@@ -18,6 +18,8 @@
 # =*= License: GPL-3+ =*=
 
 
+import os
+import stat
 import unittest
 
 import obnamlib
@@ -26,17 +28,64 @@ import obnamlib
 # The following is a canonical list of all keys that can be used with
 # the repository interface for key/value pairs. Not all formats need
 # to support all keys, but they all must support the test keys, for
-# the test suite to function.
+# the test suite to function. All commong file metadata keys must also
+# be supported by all formats.
+#
+# The keys may change in value from run to run. Treat them as opaque,
+# ephemeral things, and do not store them anywhere persistent.
+#
+# The symbols are meant to be used as Python symbols, but we do a
+# little magic to get a) automatic enumeration b) mapping between
+# values and names.
 
-REPO_CLIENT_TEST_KEY            = 0     # string
-REPO_GENERATION_TEST_KEY        = 1     # string
+_string_keys = [
+    "REPO_CLIENT_TEST_KEY",
+    "REPO_GENERATION_TEST_KEY",
+    "REPO_FILE_TEST_KEY",
+    "REPO_FILE_USERNAME",
+    "REPO_FILE_GROUPNAME",
+    "REPO_FILE_SYMLINK_TARGET",
+    "REPO_FILE_XATTR_BLOB",
+    "REPO_FILE_MD5",
+]
 
-REPO_FILE_TEST_KEY              = 2     # string
-REPO_FILE_MTIME                 = 3     # integer
+_integer_keys = [
+    "REPO_GENERATION_STARTED",
+    "REPO_GENERATION_ENDED",
+    "REPO_GENERATION_IS_CHECKPOINT",
+    "REPO_GENERATION_FILE_COUNT",
+    "REPO_GENERATION_TOTAL_DATA",
 
-REPO_FILE_INTEGER_KEYS = (
-    REPO_FILE_MTIME,
-)
+    "REPO_FILE_MODE",
+    "REPO_FILE_MTIME_SEC",
+    "REPO_FILE_MTIME_NSEC",
+    "REPO_FILE_ATIME_SEC",
+    "REPO_FILE_ATIME_NSEC",
+    "REPO_FILE_NLINK",
+    "REPO_FILE_SIZE",
+    "REPO_FILE_UID",
+    "REPO_FILE_GID",
+    "REPO_FILE_BLOCKS",
+    "REPO_FILE_DEV",
+    "REPO_FILE_INO",
+]
+
+for i, name in enumerate(_string_keys + _integer_keys):
+    globals()[name] = i
+
+REPO_FILE_INTEGER_KEYS = [
+    globals()[name]
+    for name in _integer_keys
+    if name.startswith('REPO_FILE_')
+    ]
+
+
+def _key_name(key_value):
+    for key_name in _integer_keys + _string_keys:
+        if globals()[key_name] == key_value:
+            return key_name
+    return key_value
+
 
 # The following is a key that is NOT allowed for any repository format.
 
@@ -85,7 +134,7 @@ class RepositoryClientKeyNotAllowed(obnamlib.Error):
         self.msg = (
             'Client %s uses repository format %s '
             'which does not allow the key %s to be use for clients' %
-            (format, client_name, key))
+            (format, client_name, _key_name(key)))
 
 
 class RepositoryClientGenerationUnfinished(obnamlib.Error):
@@ -103,7 +152,7 @@ class RepositoryGenerationKeyNotAllowed(obnamlib.Error):
         self.msg = (
             'Client %s uses repository format %s '
             'which does not allow the key %s to be use for generations' %
-            (format, client_name, key))
+            (client_name, format, _key_name(key)))
 
 
 class RepositoryGenerationDoesNotExist(obnamlib.Error):
@@ -134,7 +183,7 @@ class RepositoryFileKeyNotAllowed(obnamlib.Error):
         self.msg = (
             'Client %s uses repository format %s '
             'which does not allow the key %s to be use for files' %
-            (client_name, format, key))
+            (client_name, format, _key_name(key)))
 
 
 class RepositoryChunkDoesNotExist(obnamlib.Error):
@@ -272,6 +321,28 @@ class RepositoryInterface(object):
 
     # Operations on the repository itself.
 
+    @classmethod
+    def setup_hooks(self, hooks): # pragma: no cover
+        '''Create any hooks for this repository format.
+
+        Note that this is a class method.
+
+        Subclasses do not need to override this method, unless they
+        need to add hooks.
+
+        '''
+
+        pass
+
+    def get_fs(self):
+        '''Get the Obnam VFS instance for accessing the filesystem.
+
+        This is None, unless set by set_fs.
+
+        '''
+
+        raise NotImplementedError()
+
     def set_fs(self, fs):
         '''Set the Obnam VFS instance for accessing the filesystem.'''
         raise NotImplementedError()
@@ -284,6 +355,10 @@ class RepositoryInterface(object):
 
         '''
 
+        raise NotImplementedError()
+
+    def close(self):
+        '''Close the repository and its filesystem.'''
         raise NotImplementedError()
 
     # Client list.
@@ -304,12 +379,16 @@ class RepositoryInterface(object):
         '''Forget changes to client list and unlock it.'''
         raise NotImplementedError()
 
+    def got_client_list_lock(self):
+        '''Have we got the client list lock?'''
+        raise NotImplementedError()
+
     def force_client_list_lock(self):
         '''Force the client list lock.
 
-        If the process that locked the client list is dead, this method
-        forces the lock open and takes it for the calling process instead.
-        Any uncommitted changes by the original locker will be lost.
+        If the process that locked the client list is dead, this
+        method forces the lock open (removes the lock). Any
+        uncommitted changes by the original locker will be lost.
 
         '''
         raise NotImplementedError()
@@ -330,7 +409,25 @@ class RepositoryInterface(object):
         '''Rename a client to have a new name.'''
         raise NotImplementedError()
 
+    def get_client_encryption_key_id(self, client_name):
+        '''Return key id for the per-client encryption key.
+
+        If client does not exist, raise RepositoryClientDoesNotExist.
+        If client exists, but does not have an encryption key set,
+        return None.
+
+        '''
+        raise NotImplementedError()
+
+    def set_client_encryption_key_id(self, client_name, key_id):
+        '''Set key id for the per-client encryption key.'''
+        raise NotImplementedError()
+
     # A particular client.
+
+    def client_is_locked(self, client_name):
+        '''Is this client locked, possibly by someone else?'''
+        raise NotImplementedError()
 
     def lock_client(self, client_name):
         '''Lock the client for changes.
@@ -350,12 +447,16 @@ class RepositoryInterface(object):
         '''Forget changes to client and unlock it.'''
         raise NotImplementedError()
 
+    def got_client_lock(self, client_name):
+        '''Have we got the lock for a given client?'''
+        raise NotImplementedError()
+
     def force_client_lock(self, client_name):
         '''Force the client lock.
 
         If the process that locked the client is dead, this method
-        forces the lock open and takes it for the calling process instead.
-        Any uncommitted changes by the original locker will be lost.
+        forces the lock open (removes the lock). Any uncommitted
+        changes by the original locker will be lost.
 
         '''
         raise NotImplementedError()
@@ -395,6 +496,27 @@ class RepositoryInterface(object):
         implicitly also identifies the client.
 
         '''
+        raise NotImplementedError()
+
+    def get_client_extra_data_directory(self, client_name):
+        '''Return directory for storing extra data for a client.
+
+        Obnam plugins, for example, may need to store some per-client
+        data that is specific to the plugin. This might be any kind of
+        data, making it unsuitable for file keys (see get_file_key),
+        which are suitable only for small bits of data.. The extra
+        data might further need to be written in raw format. As an
+        example, a hypothetical plugin might put the source code that
+        of the Obnam version the client is using into the repository,
+        to increase the chance that data can be restored even if only
+        the repository remains. Or an encryption plugin might store
+        encryption keys for the client here.
+
+        This method returns the name of a directory, useable as-is
+        with the VFS instance returned by the get_fs method.
+
+        '''
+
         raise NotImplementedError()
 
     # Generations. The generation id identifies client as well.
@@ -531,6 +653,28 @@ class RepositoryInterface(object):
         '''
         raise NotImplementedError()
 
+    def walk_generation(self, gen_id, dirname): # pragma: no cover
+        '''Like os.walk, but for a generation.
+
+        This is a generator. Each return value is a pathname.
+        Directories are recursed into. If depth_first is set to
+        Children of a directory are returned before the directory
+        itself.
+
+        Sub-classes do not need to define this method; the base
+        class provides a generic implementation.
+
+        '''
+
+        arg = os.path.normpath(dirname)
+        mode = self.get_file_key(gen_id, dirname, obnamlib.REPO_FILE_MODE)
+        if stat.S_ISDIR(mode):
+            kidpaths = self.get_file_children(gen_id, dirname)
+            for kp in kidpaths:
+                for x in self.walk_generation(gen_id, kp):
+                    yield x
+        yield arg
+
     # Chunks.
 
     def put_chunk_content(self, data):
@@ -553,6 +697,10 @@ class RepositoryInterface(object):
         '''Remove chunk from repository, but not chunk indexes.'''
         raise NotImplementedError()
 
+    def get_chunk_ids(self):
+        '''Generate all chunk ids in repository.'''
+        raise NotImplementedError()
+
     def lock_chunk_indexes(self):
         '''Locks chunk indexes for updates.'''
         raise NotImplementedError()
@@ -561,16 +709,44 @@ class RepositoryInterface(object):
         '''Unlocks chunk indexes without committing them.'''
         raise NotImplementedError()
 
+    def got_chunk_indewxes_lock(self):
+        '''Have we got the chunk index lock?'''
+        raise NotImplementedError()
+
     def force_chunk_indexex_lock(self):
-        '''Forces a chunk index lock open and takes it for the caller.'''
+        '''Forces a chunk index lock open.'''
         raise NotImplementedError()
 
     def commit_chunk_indexes(self):
         '''Commit changes to chunk indexes.'''
         raise NotImplementedError()
 
-    def put_chunk_into_indexes(self, chunk_id, data, client_id):
-        '''Adds a chunk to indexes.
+    def prepare_chunk_for_indexes(self, data):
+        '''Prepare chunk for putting into indexes.
+
+        Return a token to be given to put_chunk_into_indexes. The
+        token is opaque: the caller may not interpret or use it in any
+        way other than by giving it to put_chunk_into_indexes and for
+        comparing tokens with each other. Two identical pieces of data
+        will return identical tokens, and different pieces of data
+        will probably return different tokens, but that is not
+        guaranteed. No token is equal to None.
+
+        The point of this is to allow the repository implementation
+        to provide, say, a checksum that can be used instead of the
+        whole data. This allows the caller to discard the data and
+        do call put_chunk_into_indexes later, without excessive
+        memory consumption. Also, the equality guarantees allow the
+        caller to do de-duplication of chunks.
+
+        '''
+
+        raise NotImplementedError()
+
+    def put_chunk_into_indexes(self, chunk_id, token, client_name):
+        '''Adds a chunk to indexes using prepared token.
+
+        The token must be one returned by prepare_chunk_for_indexes.
 
         This does not do any de-duplication.
 
@@ -583,27 +759,56 @@ class RepositoryInterface(object):
         '''
         raise NotImplementedError()
 
-    def remove_chunk_from_indexes(self, chunk_id, client_id):
+    def remove_chunk_from_indexes(self, chunk_id, client_name):
         '''Removes a chunk from indexes, given its id, for a given client.'''
         raise NotImplementedError()
 
-    def find_chunk_id_by_content(self, data):
-        '''Finds a chunk id given its content.
+    def find_chunk_ids_by_content(self, data):
+        '''Finds chunk ids that probably match a given content.
 
         This will raise RepositoryChunkContentNotInIndexes if the
-        chunk is not in the indexes. Otherwise it will return one
-        chunk id that has exactly the same content. If the indexes
-        contain duplicate chunks, any one of the might be returned.
+        chunk is not in the indexes. Otherwise it will return all
+        chunk ids that would have the same token (see
+        prepare_chunk_for_indexes). Note that the chunks whose ids are
+        returned do not necessarily match the given data; if the
+        caller cares, they need to verify.
 
         '''
         raise NotImplementedError()
 
+    def validate_chunk_content(self, chunk_id):
+        '''Make sure the content of a chunk is valid.
+
+        This is (presumably) done by storing a checksum of the chunk
+        data in the chunk indexes, and then verifying that. However,
+        it could be done by error checking codes. It could also not be
+        done at all: if a repository format does not have chunk
+        indexes in any form, it can just return None for all
+        validation.
+
+        If a chunk is missing, it should be treated as an invalid
+        chunk (return False or None, depending).
+
+        Return True if content is valid, False if it is invalid, and
+        None if it is not known either way.
+
+        '''
+
+        raise NotImplementedError()
+
     # Fsck.
 
-    def get_fsck_work_item(self):
-        '''Return an fsck work item for checking this repository.
+    def get_fsck_work_items(self, settings):
+        '''Returns fsck work items for checking this repository.
 
-        The work item may spawn more items.
+        This may be a generator or may return an iterable data
+        structure.
+
+        The returned work items are of type obnamlib.WorkItem. It may
+        return further work items.
+
+        The settings argument is of type cliapp.Settings, and lets
+        the user affect what work gets done.
 
         '''
         raise NotImplementedError()
@@ -625,11 +830,32 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
     def test_has_format_attribute(self):
         self.assertEqual(type(self.repo.format), str)
 
-    def test_has_set_fs_method(self):
-        # We merely test that set_fs can be called.
-        self.assertEqual(self.repo.set_fs(None), None)
+    def test_set_fs_sets_fs(self):
+        self.repo.set_fs('foo')
+        self.assertEqual(self.repo.get_fs(), 'foo')
+
+    def test_closes_repository(self):
+        # Can't think of a test to verify the closing happened,
+        # so just calling the method will have to do for now.
+        self.repo.close()
+        self.assertTrue(True)
 
     # Tests for the client list.
+
+    def test_has_not_got_client_list_lock_initially(self):
+        self.repo.init_repo()
+        self.assertFalse(self.repo.got_client_list_lock())
+
+    def test_got_client_list_lock_after_locking(self):
+        self.repo.init_repo()
+        self.repo.lock_client_list()
+        self.assertTrue(self.repo.got_client_list_lock())
+
+    def test_not_got_client_list_lock_after_unlocking(self):
+        self.repo.init_repo()
+        self.repo.lock_client_list()
+        self.repo.unlock_client_list()
+        self.assertFalse(self.repo.got_client_list_lock())
 
     def test_has_no_clients_initially(self):
         self.repo.init_repo()
@@ -823,8 +1049,42 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.repo.lock_client_list()
         self.repo.add_client('bar')
         self.repo.force_client_list_lock()
+        self.assertRaises(
+            obnamlib.RepositoryClientListNotLocked,
+            self.repo.add_client,
+            'foo')
+        self.repo.lock_client_list()
+        self.assertEqual(self.repo.get_client_names(), [])
+
+    def test_raises_error_when_getting_encryption_key_id_for_unknown(self):
+        self.repo.init_repo()
+        self.repo.lock_client_list()
+        self.assertRaises(
+            obnamlib.RepositoryClientDoesNotExist,
+            self.repo.set_client_encryption_key_id, 'foo', 'keyid')
+
+    def test_raises_error_when_setting_encryption_key_id_for_unknown(self):
+        self.repo.init_repo()
+        self.assertRaises(
+            obnamlib.RepositoryClientDoesNotExist,
+            self.repo.get_client_encryption_key_id, 'foo')
+
+    def test_has_no_client_encryption_key_id_initially(self):
+        self.repo.init_repo()
+        self.repo.lock_client_list()
         self.repo.add_client('foo')
-        self.assertEqual(self.repo.get_client_names(), ['foo'])
+        self.assertEqual(
+            self.repo.get_client_encryption_key_id('foo'),
+            None)
+
+    def test_sets_client_encryption_key_id(self):
+        self.repo.init_repo()
+        self.repo.lock_client_list()
+        self.repo.add_client('foo')
+        self.repo.set_client_encryption_key_id('foo', 'keyid')
+        self.assertEqual(
+            self.repo.get_client_encryption_key_id('foo'),
+            'keyid')
 
     # Tests for client specific stuff.
 
@@ -832,6 +1092,21 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.repo.lock_client_list()
         self.repo.add_client('fooclient')
         self.repo.commit_client_list()
+
+    def test_have_not_got_client_lock_initially(self):
+        self.setup_client()
+        self.assertFalse(self.repo.got_client_lock('fooclient'))
+
+    def test_got_client_lock_after_locking(self):
+        self.setup_client()
+        self.repo.lock_client('fooclient')
+        self.assertTrue(self.repo.got_client_lock('fooclient'))
+
+    def test_have_not_got_client_lock_after_unlocking(self):
+        self.setup_client()
+        self.repo.lock_client('fooclient')
+        self.repo.unlock_client('fooclient')
+        self.assertFalse(self.repo.got_client_lock('fooclient'))
 
     def test_locking_client_twice_fails(self):
         self.setup_client()
@@ -845,6 +1120,21 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.assertRaises(
             obnamlib.RepositoryClientNotLocked,
             self.repo.unlock_client, 'fooclient')
+
+    def test_forcing_client_lock_works(self):
+        self.setup_client()
+
+        # Make sure client isn't locked. Then force the lock, lock it,
+        # and force it again.
+        self.assertFalse(self.repo.client_is_locked('fooclient'))
+        self.repo.force_client_lock('fooclient')
+        self.assertFalse(self.repo.client_is_locked('fooclient'))
+        self.repo.lock_client('fooclient')
+        self.assertTrue(self.repo.client_is_locked('fooclient'))
+        self.repo.force_client_lock('fooclient')
+        self.assertFalse(self.repo.client_is_locked('fooclient'))
+        self.repo.lock_client('fooclient')
+        self.assertTrue(self.repo.client_is_locked('fooclient'))
 
     def test_committing_client_when_unlocked_fails(self):
         self.setup_client()
@@ -993,6 +1283,12 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
             self.repo.get_client_generation_ids('fooclient'),
             [new_id])
 
+    def test_returns_direcotry_name_for_extra_data(self):
+        self.setup_client()
+        self.assertTrue(
+            type(self.repo.get_client_extra_data_directory('fooclient')),
+            str)
+
     # Operations on one generation.
 
     def create_generation(self):
@@ -1011,7 +1307,7 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         gen_id = self.create_generation()
         for key in self.repo.get_allowed_generation_keys():
             value = self.repo.get_generation_key(gen_id, key)
-            self.assertEqual(type(value), str)
+            self.assertTrue(type(value) in (str, int))
 
     def test_has_empty_string_for_generation_test_key(self):
         if self.generation_test_key_is_allowed():
@@ -1054,16 +1350,6 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
                 gen_id, obnamlib.REPO_GENERATION_TEST_KEY)
             self.repo.commit_client('fooclient')
             self.assertEqual(value, 'bar')
-
-    def test_unlocking_client_undoes_generation_key_changes(self):
-        if self.generation_test_key_is_allowed():
-            gen_id = self.create_generation()
-            self.repo.set_generation_key(
-                gen_id, obnamlib.REPO_GENERATION_TEST_KEY, 'bar')
-            self.repo.unlock_client('fooclient')
-            value = self.repo.get_generation_key(
-                gen_id, obnamlib.REPO_CLIENT_TEST_KEY)
-            self.assertEqual(value, '')
 
     def test_removes_unfinished_generation(self):
         gen_id = self.create_generation()
@@ -1210,15 +1496,47 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
     def test_has_list_of_allowed_file_keys(self):
         self.assertEqual(type(self.repo.get_allowed_file_keys()), list)
 
+    def test_all_common_file_metadata_keys_are_allowed(self):
+        common = [
+            REPO_FILE_MODE,
+            REPO_FILE_MTIME_SEC,
+            REPO_FILE_MTIME_NSEC,
+            REPO_FILE_ATIME_SEC,
+            REPO_FILE_ATIME_NSEC,
+            REPO_FILE_NLINK,
+            REPO_FILE_SIZE,
+            REPO_FILE_UID,
+            REPO_FILE_GID,
+            REPO_FILE_BLOCKS,
+            REPO_FILE_DEV,
+            REPO_FILE_INO,
+            REPO_FILE_USERNAME,
+            REPO_FILE_GROUPNAME,
+            REPO_FILE_SYMLINK_TARGET,
+            REPO_FILE_XATTR_BLOB,
+            REPO_FILE_MD5,
+            ]
+        for key in common:
+            self.assertTrue(
+                key in self.repo.get_allowed_file_keys(),
+                'key %s (%d) not in allowed file keys' %
+                (_key_name(key), key))
+
     def test_gets_all_allowed_file_keys(self):
         gen_id = self.create_generation()
         self.repo.add_file(gen_id, '/foo/bar')
         for key in self.repo.get_allowed_file_keys():
             value = self.repo.get_file_key(gen_id, '/foo/bar', key)
             if key in REPO_FILE_INTEGER_KEYS:
-                self.assertEqual(type(value), int)
+                self.assertEqual(
+                    type(value), int,
+                    msg='key %s (%d) has value %s which is not an int' %
+                    (_key_name(key), key, repr(value)))
             else:
-                self.assertEqual(type(value), str)
+                self.assertEqual(
+                    type(value), str,
+                    msg='key %s (%d) has value %s which is not a str' %
+                    (_key_name(key), key, repr(value)))
 
     def test_has_empty_string_for_file_test_key(self):
         gen_id = self.create_generation()
@@ -1270,16 +1588,16 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         gen_id = self.create_generation()
         self.repo.add_file(gen_id, '/foo/bar')
         value = self.repo.get_file_key(
-            gen_id, '/foo/bar', obnamlib.REPO_FILE_MTIME)
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_MTIME_SEC)
         self.assertEqual(value, 0)
 
     def test_sets_file_mtime(self):
         gen_id = self.create_generation()
         self.repo.add_file(gen_id, '/foo/bar')
         self.repo.set_file_key(
-            gen_id, '/foo/bar', obnamlib.REPO_FILE_MTIME, 123)
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_MTIME_SEC, 123)
         value = self.repo.get_file_key(
-            gen_id, '/foo/bar', obnamlib.REPO_FILE_MTIME)
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_MTIME_SEC)
         self.assertEqual(value, 123)
 
     def test_set_file_key_fails_for_nonexistent_generation(self):
@@ -1531,53 +1849,109 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
             obnamlib.RepositoryChunkDoesNotExist,
             self.repo.remove_chunk, chunk_id)
 
+    def test_get_chunk_ids_returns_nothing_initially(self):
+        self.assertEqual(list(self.repo.get_chunk_ids()), [])
+
+    def test_get_chunk_ids_returns_single_chunk(self):
+        chunk_id = self.repo.put_chunk_content('foochunk')
+        self.assertEqual(list(self.repo.get_chunk_ids()), [chunk_id])
+
+    def test_get_chunk_ids_returns_both_chunks(self):
+        chunk_id_1 = self.repo.put_chunk_content('foochunk')
+        chunk_id_2 = self.repo.put_chunk_content('otherchunk')
+        self.assertEqual(
+            set(self.repo.get_chunk_ids()),
+            set([chunk_id_1, chunk_id_2]))
+
+    def test_have_not_got_chunk_indexes_lock_initally(self):
+        self.setup_client()
+        self.assertFalse(self.repo.got_chunk_indexes_lock())
+
+    def test_got_chunk_indexes_lock_after_locking(self):
+        self.setup_client()
+        self.repo.lock_chunk_indexes()
+        self.assertTrue(self.repo.got_chunk_indexes_lock())
+
+    def test_have_not_got_chunk_indexes_lock_after_unlocking(self):
+        self.setup_client()
+        self.repo.lock_chunk_indexes()
+        self.repo.unlock_chunk_indexes()
+        self.assertFalse(self.repo.got_chunk_indexes_lock())
+
     def test_adds_chunk_to_indexes(self):
+        self.setup_client()
         self.repo.lock_chunk_indexes()
         chunk_id = self.repo.put_chunk_content('foochunk')
-        self.repo.put_chunk_into_indexes(chunk_id, 'foochunk', 123)
+        token = self.repo.prepare_chunk_for_indexes('foochunk')
+        self.repo.put_chunk_into_indexes(chunk_id, token, 'fooclient')
         self.assertEqual(
-            self.repo.find_chunk_id_by_content('foochunk'), chunk_id)
+            self.repo.find_chunk_ids_by_content('foochunk'), [chunk_id])
+
+    def test_finds_all_matching_chunk_ids(self):
+        self.setup_client()
+        token = self.repo.prepare_chunk_for_indexes('foochunk')
+        self.repo.lock_chunk_indexes()
+
+        chunk_id_1 = self.repo.put_chunk_content('foochunk')
+        self.repo.put_chunk_into_indexes(chunk_id_1, token, 'fooclient')
+
+        chunk_id_2 = self.repo.put_chunk_content('foochunk')
+        self.repo.put_chunk_into_indexes(chunk_id_2, token, 'fooclient')
+
+        self.assertEqual(
+            set(self.repo.find_chunk_ids_by_content('foochunk')),
+            set([chunk_id_1, chunk_id_2]))
 
     def test_removes_chunk_from_indexes(self):
+        self.setup_client()
         self.repo.lock_chunk_indexes()
         chunk_id = self.repo.put_chunk_content('foochunk')
-        self.repo.put_chunk_into_indexes(chunk_id, 'foochunk', 123)
-        self.repo.remove_chunk_from_indexes(chunk_id, 123)
+        token = self.repo.prepare_chunk_for_indexes('foochunk')
+        self.repo.put_chunk_into_indexes(chunk_id, token, 'fooclient')
+        self.repo.remove_chunk_from_indexes(chunk_id, 'fooclient')
         self.assertRaises(
             obnamlib.RepositoryChunkContentNotInIndexes,
-            self.repo.find_chunk_id_by_content, 'foochunk')
+            self.repo.find_chunk_ids_by_content, 'foochunk')
 
     def test_putting_chunk_to_indexes_without_locking_them_fails(self):
         chunk_id = self.repo.put_chunk_content('foochunk')
+        token = self.repo.prepare_chunk_for_indexes('foochunk')
         self.assertRaises(
             obnamlib.RepositoryChunkIndexesNotLocked,
-            self.repo.put_chunk_into_indexes, chunk_id, 'foochunk', 123)
+            self.repo.put_chunk_into_indexes,
+            chunk_id, token, 'fooclient')
 
     def test_removing_chunk_from_indexes_without_locking_them_fails(self):
+        self.setup_client()
         chunk_id = self.repo.put_chunk_content('foochunk')
         self.repo.lock_chunk_indexes()
-        self.repo.put_chunk_into_indexes(chunk_id, 'foochunk', 123)
+        token = self.repo.prepare_chunk_for_indexes('foochunk')
+        self.repo.put_chunk_into_indexes(chunk_id, token, 'fooclient')
         self.repo.commit_chunk_indexes()
         self.assertRaises(
             obnamlib.RepositoryChunkIndexesNotLocked,
-            self.repo.remove_chunk_from_indexes, chunk_id, 123)
+            self.repo.remove_chunk_from_indexes, chunk_id, 'fooclient')
 
     def test_unlocking_chunk_indexes_forgets_changes(self):
+        self.setup_client()
         chunk_id = self.repo.put_chunk_content('foochunk')
         self.repo.lock_chunk_indexes()
-        self.repo.put_chunk_into_indexes(chunk_id, 'foochunk', 123)
+        token = self.repo.prepare_chunk_for_indexes('foochunk')
+        self.repo.put_chunk_into_indexes(chunk_id, token, 'fooclient')
         self.repo.unlock_chunk_indexes()
         self.assertRaises(
             obnamlib.RepositoryChunkContentNotInIndexes,
-            self.repo.find_chunk_id_by_content, 'foochunk')
+            self.repo.find_chunk_ids_by_content, 'foochunk')
 
     def test_committing_chunk_indexes_remembers_changes(self):
+        self.setup_client()
         chunk_id = self.repo.put_chunk_content('foochunk')
         self.repo.lock_chunk_indexes()
-        self.repo.put_chunk_into_indexes(chunk_id, 'foochunk', 123)
+        token = self.repo.prepare_chunk_for_indexes('foochunk')
+        self.repo.put_chunk_into_indexes(chunk_id, token, 'fooclient')
         self.repo.commit_chunk_indexes()
         self.assertEqual(
-            self.repo.find_chunk_id_by_content('foochunk'), chunk_id)
+            self.repo.find_chunk_ids_by_content('foochunk'), [chunk_id])
 
     def test_locking_chunk_indexes_twice_fails(self):
         self.repo.lock_chunk_indexes()
@@ -1593,10 +1967,31 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
     def test_forces_chunk_index_lock(self):
         self.repo.lock_chunk_indexes()
         self.repo.force_chunk_indexes_lock()
-        self.assertEqual(self.repo.unlock_chunk_indexes(), None)
+        self.assertEqual(self.repo.lock_chunk_indexes(), None)
+
+    def test_validate_chunk_content_returns_True_or_None(self):
+        self.setup_client()
+        chunk_id = self.repo.put_chunk_content('foochunk')
+        self.repo.lock_chunk_indexes()
+        token = self.repo.prepare_chunk_for_indexes('foochunk')
+        self.repo.put_chunk_into_indexes(chunk_id, token, 'fooclient')
+        self.repo.commit_chunk_indexes()
+        ret = self.repo.validate_chunk_content(chunk_id)
+        self.assertTrue(ret is True or ret is None)
+
+    def test_validate_chunk_content_returns_False_or_None_if_corrupted(self):
+        self.setup_client()
+        chunk_id = self.repo.put_chunk_content('foochunk')
+        self.repo.lock_chunk_indexes()
+        token = self.repo.prepare_chunk_for_indexes('foochunk')
+        self.repo.put_chunk_into_indexes(chunk_id, token, 'fooclient')
+        self.repo.commit_chunk_indexes()
+        self.repo.remove_chunk(chunk_id)
+        ret = self.repo.validate_chunk_content(chunk_id)
+        self.assertTrue(ret is False or ret is None)
 
     # Fsck.
 
     def test_returns_fsck_work_item(self):
-        self.assertNotEqual(self.repo.get_fsck_work_item(), None)
-
+        for work in self.repo.get_fsck_work_items():
+            self.assertNotEqual(work, None)

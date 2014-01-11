@@ -24,9 +24,6 @@ import obnamlib
 
 class LockManagerTests(unittest.TestCase):
 
-    def locked(self, dirname):
-        return os.path.exists(os.path.join(dirname, 'lock'))
-
     def fake_time(self):
         self.now += 1
         return self.now
@@ -50,16 +47,16 @@ class LockManagerTests(unittest.TestCase):
 
     def test_has_nothing_locked_initially(self):
         for dirname in self.dirnames:
-            self.assertFalse(self.locked(dirname))
+            self.assertFalse(self.lm.is_locked(dirname))
 
     def test_locks_single_directory(self):
         self.lm.lock([self.dirnames[0]])
-        self.assertTrue(self.locked(self.dirnames[0]))
+        self.assertTrue(self.lm.is_locked(self.dirnames[0]))
 
     def test_unlocks_single_directory(self):
         self.lm.lock([self.dirnames[0]])
         self.lm.unlock([self.dirnames[0]])
-        self.assertFalse(self.locked(self.dirnames[0]))
+        self.assertFalse(self.lm.is_locked(self.dirnames[0]))
 
     def test_waits_until_timeout_for_locked_directory(self):
         self.lm.lock([self.dirnames[0]])
@@ -76,19 +73,17 @@ class LockManagerTests(unittest.TestCase):
     def test_locks_all_directories(self):
         self.lm.lock(self.dirnames)
         for dirname in self.dirnames:
-            self.assertTrue(self.locked(dirname))
+            self.assertTrue(self.lm.is_locked(dirname))
 
     def test_unlocks_all_directories(self):
         self.lm.lock(self.dirnames)
         self.lm.unlock(self.dirnames)
         for dirname in self.dirnames:
-            self.assertFalse(self.locked(dirname))
+            self.assertFalse(self.lm.is_locked(dirname))
 
     def test_does_not_lock_anything_if_one_lock_fails(self):
         self.lm.lock([self.dirnames[-1]])
         self.assertRaises(obnamlib.LockFail, self.lm.lock, self.dirnames)
         for dirname in self.dirnames[:-1]:
-            self.assertFalse(self.locked(dirname))
-        self.assertTrue(self.locked(self.dirnames[-1]))
-
-
+            self.assertFalse(self.lm.is_locked(dirname))
+        self.assertTrue(self.lm.is_locked(self.dirnames[-1]))

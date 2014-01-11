@@ -128,9 +128,10 @@ class App(cliapp.Application):
         self.pm.locations = [self.plugins_dir()]
         self.pm.plugin_arguments = (self,)
 
-        self.setup_hooks()
-
         self.fsf = obnamlib.VfsFactory()
+        self.repo_factory = obnamlib.RepositoryFactory()
+
+        self.setup_hooks()
 
         self.pm.load_plugins()
         self.pm.enable_plugins()
@@ -151,9 +152,12 @@ class App(cliapp.Application):
         # won't be instantiated until much after plugins are enabled,
         # and since all hooks must be defined when plugins are enabled,
         # we create one instance here, which will immediately be destroyed.
-        # FIXME: This is fugly.
+        # FIXME: This will be removed when obnamlib.Repository gets removed.
         obnamlib.Repository(None, 1000, 1000, 100, self.hooks, 10, 10, 10,
                             self.time, 0, '')
+
+        # The repository factory creates all repository related hooks.
+        self.repo_factory.setup_hooks(self.hooks)
 
     def plugins_dir(self):
         return os.path.join(os.path.dirname(obnamlib.__file__), 'plugins')
@@ -206,6 +210,40 @@ class App(cliapp.Application):
                                     self.time,
                                     self.settings['lock-timeout'],
                                     self.settings['client-name'])
+
+    def get_repository_object(self, create=False, repofs=None):
+        '''Return an implementation of obnamlib.RepositoryInterface.'''
+
+        logging.info('Opening repository: %s', self.settings['repository'])
+        tracing.trace('create=%s', create)
+        tracing.trace('repofs=%s', repofs)
+
+        repopath = self.settings['repository']
+        if repofs is None:
+            repofs = self.fsf.new(repopath, create=create)
+            if self.settings['crash-limit'] > 0:
+                repofs.crash_limit = self.settings['crash-limit']
+            repofs.connect()
+        else:
+            repofs.reinit(repopath)
+
+        kwargs = {
+            'lock_timeout': self.settings['lock-timeout'],
+            'node_size': self.settings['node-size'],
+            'upload_queue_size': self.settings['upload-queue-size'],
+            'lru_size': self.settings['lru-size'],
+            'idpath_depth': self.settings['idpath-depth'],
+            'idpath_bits': self.settings['idpath-bits'],
+            'idpath_skip': self.settings['idpath-skip'],
+            'hooks': self.hooks,
+            'current_time': self.time,
+            }
+
+        if create:
+            return self.repo_factory.create_repo(
+                repofs, obnamlib.RepositoryFormat6, **kwargs)
+        else:
+            return self.repo_factory.open_existing_repo(repofs, **kwargs)
 
     def time(self):
         '''Return current time in seconds since epoch.

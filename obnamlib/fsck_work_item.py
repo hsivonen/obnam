@@ -16,25 +16,15 @@
 # =*= License: GPL-3+ =*=
 
 
-# Set variables to help referring to common things in $DATADIR.
-REPO="$DATADIR/repo"
+import larch.fsck
 
 
-# Run Obnam in a safe way that ignore's any configuration files outside
-# the test.
+class WorkItem(larch.fsck.WorkItem):
 
-run_obnam()
-{
-    "$SRCDIR/obnam" --no-default-config --quiet \
-        --log-level debug --log "$DATADIR/obnam.log" "$@"
-}
+    '''A work item for fsck of a repository.
 
+    See the fsck plugin for more details. This is a separate module so
+    that other modules (specifically, repository interface
+    implementations) can provide work items.
 
-# Create a manifest with summain of a directory.
-
-manifest()
-{
-    summain -r "$1" --exclude Ino --exclude Dev |
-    sed '/^Mtime:/s/\.[0-9]* / /'
-}
-
+    '''

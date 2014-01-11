@@ -41,6 +41,7 @@ cat <<EOF > "$conf"
 client-name = $client
 quiet = yes
 log = $client.log
+log-level = debug
 trace = obnamlib, larch
 repository = $repourl
 root = $root

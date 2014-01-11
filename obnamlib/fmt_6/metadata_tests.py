@@ -245,7 +245,7 @@ class MetadataCodingTests(unittest.TestCase):
 
     def equal(self, meta1, meta2):
         for name in dir(meta1):
-            if name in obnamlib.metadata.metadata_fields:
+            if name in obnamlib.metadata_fields:
                 value1 = getattr(meta1, name)
                 value2 = getattr(meta2, name)
                 self.assertEqual(
@@ -255,39 +255,40 @@ class MetadataCodingTests(unittest.TestCase):
                         (name, value1, value2))
 
     def test_round_trip(self):
-        metadata = obnamlib.metadata.Metadata(st_mode=1,
-                                              st_mtime_sec=2,
-                                              st_mtime_nsec=12756,
-                                              st_nlink=3,
-                                              st_size=4,
-                                              st_uid=5,
-                                              st_blocks=6,
-                                              st_dev=7,
-                                              st_gid=8,
-                                              st_ino=9,
-                                              st_atime_sec=10,
-                                              st_atime_nsec=123,
-                                              groupname='group',
-                                              username='user',
-                                              target='target',
-                                              md5='checksum')
+        metadata = obnamlib.Metadata(
+            st_mode=1,
+            st_mtime_sec=2,
+            st_mtime_nsec=12756,
+            st_nlink=3,
+            st_size=4,
+            st_uid=5,
+            st_blocks=6,
+            st_dev=7,
+            st_gid=8,
+            st_ino=9,
+            st_atime_sec=10,
+            st_atime_nsec=123,
+            groupname='group',
+            username='user',
+            target='target',
+            md5='checksum')
         encoded = obnamlib.encode_metadata(metadata)
         decoded = obnamlib.decode_metadata(encoded)
         self.equal(metadata, decoded)
 
     def test_round_trip_for_None_values(self):
-        metadata = obnamlib.metadata.Metadata()
+        metadata = obnamlib.Metadata()
         encoded = obnamlib.encode_metadata(metadata)
         decoded = obnamlib.decode_metadata(encoded)
         for name in dir(metadata):
-            if name in obnamlib.metadata.metadata_fields:
+            if name in obnamlib.metadata_fields:
                 self.assertEqual(getattr(decoded, name), None,
                                  'attribute %s must be None' % name)
 
     def test_round_trip_for_maximum_values(self):
         unsigned_max = 2**64 - 1
         signed_max = 2**63 - 1
-        metadata = obnamlib.metadata.Metadata(
+        metadata = obnamlib.Metadata(
             st_mode=unsigned_max,
             st_mtime_sec=signed_max,
             st_mtime_nsec=unsigned_max,

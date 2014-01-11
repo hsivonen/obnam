@@ -88,8 +88,11 @@ from hooks import Hook, MissingFilterError, FilterHook, HookManager
 from pluginbase import ObnamPlugin
 from vfs import VirtualFileSystem, VfsFactory, VfsTests
 from vfs_local import LocalFS
-from metadata import (read_metadata, set_metadata, Metadata, metadata_fields,
-                      metadata_verify_fields, encode_metadata, decode_metadata)
+from fsck_work_item import WorkItem
+from lockmgr import LockManager
+from forget_policy import ForgetPolicy
+from app import App
+
 from repo_factory import (
     RepositoryFactory,
     UnknownRepositoryFormat,
@@ -116,19 +119,57 @@ from repo_interface import (
     RepositoryChunkIndexesLockingFailed,
     REPO_CLIENT_TEST_KEY,
     REPO_GENERATION_TEST_KEY,
+    REPO_GENERATION_STARTED,
+    REPO_GENERATION_ENDED,
+    REPO_GENERATION_IS_CHECKPOINT,
+    REPO_GENERATION_FILE_COUNT,
+    REPO_GENERATION_TOTAL_DATA,
     REPO_FILE_TEST_KEY,
-    REPO_FILE_MTIME,
+    REPO_FILE_MODE,
+    REPO_FILE_MTIME_SEC,
+    REPO_FILE_MTIME_NSEC,
+    REPO_FILE_ATIME_SEC,
+    REPO_FILE_ATIME_NSEC,
+    REPO_FILE_NLINK,
+    REPO_FILE_SIZE,
+    REPO_FILE_UID,
+    REPO_FILE_USERNAME,
+    REPO_FILE_GID,
+    REPO_FILE_GROUPNAME,
+    REPO_FILE_SYMLINK_TARGET,
+    REPO_FILE_XATTR_BLOB,
+    REPO_FILE_BLOCKS,
+    REPO_FILE_DEV,
+    REPO_FILE_INO,
+    REPO_FILE_MD5,
     REPO_FILE_INTEGER_KEYS)
+
+#
+# Repository format dummy specific modules.
+#
+
 from repo_dummy import RepositoryFormatDummy
-from repo_fmt_6 import RepositoryFormat6
-from repo_tree import RepositoryTree
-from chunklist import ChunkList
-from clientlist import ClientList
-from checksumtree import ChecksumTree
-from clientmetadatatree import ClientMetadataTree
-from lockmgr import LockManager
+
+#
+# Repository format 6 specific modules.
+#
+
+from fmt_6.metadata import (
+    Metadata,
+    read_metadata,
+    set_metadata,
+    metadata_fields,
+    metadata_verify_fields,
+    encode_metadata,
+    decode_metadata)
+from fmt_6.repo_fmt_6 import RepositoryFormat6
+from fmt_6.repo_tree import RepositoryTree
+from fmt_6.chunklist import ChunkList
+from fmt_6.clientlist import ClientList
+from fmt_6.checksumtree import ChecksumTree
+from fmt_6.clientmetadatatree import ClientMetadataTree
+
+# This is the OLD and DEPRECATED format 6 implementation.
 from repo import Repository, LockFail, BadFormat
-from forget_policy import ForgetPolicy
-from app import App
 
 __all__ = locals()

@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import hashlib
 import logging
 import os
 import stat
@@ -106,8 +107,9 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         self.file_count = 0
         self.started = time.time()
 
-        self.repo = self.app.open_repository()
-        self.repo.open_client(self.app.settings['client-name'])
+        self.repo = self.app.get_repository_object()
+        client_name = self.app.settings['client-name']
+
         if self.write_ok:
             self.fs = self.app.fsf.new(self.app.settings['to'], create=True)
             self.fs.connect()
@@ -122,12 +124,13 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         if len(generations) != 1:
             raise obnamlib.Error(
                 'The restore command wants exactly one generation option')
-
-        gen = self.repo.genspec(generations[0])
+        gen = self.repo.interpret_generation_spec(client_name, generations[0])
 
         self.configure_ttystatus()
-        self.app.ts['total'] = self.repo.client.get_generation_file_count(gen)
-        self.app.ts['total-bytes'] = self.repo.client.get_generation_data(gen)
+        self.app.ts['total'] = self.repo.get_generation_key(
+            gen, obnamlib.REPO_GENERATION_FILE_COUNT)
+        self.app.ts['total-bytes'] = self.repo.get_generation_key(
+            gen, obnamlib.REPO_GENERATION_TOTAL_DATA)
 
         self.app.dump_memory_profile('at beginning after setup')
 
@@ -135,9 +138,9 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             self.restore_something(gen, arg)
             self.app.dump_memory_profile('at restoring %s' % repr(arg))
 
-        self.repo.fs.close()
         if self.write_ok:
             self.fs.close()
+            self.repo.close()
 
         self.app.ts.clear()
         self.report_stats()
@@ -148,16 +151,46 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             raise obnamlib.Error('There were errors when restoring')
 
     def restore_something(self, gen, root):
-        for pathname, metadata in self.repo.walk(gen, root, depth_first=True):
+        for pathname in self.repo.walk_generation(gen, root):
             self.file_count += 1
             self.app.ts['current'] = pathname
-            self.restore_safely(gen, pathname, metadata)
+            self.restore_safely(gen, pathname)
 
-    def restore_safely(self, gen, pathname, metadata):
+    def construct_metadata_object(self, gen, filename):
+        allowed = set(self.repo.get_allowed_file_keys())
+        def K(key):
+            if key in allowed:
+                return self.repo.get_file_key(gen, filename, key)
+            else:
+                return None
+
+        return obnamlib.Metadata(
+            st_atime_sec=K(obnamlib.REPO_FILE_ATIME_SEC),
+            st_atime_nsec=K(obnamlib.REPO_FILE_ATIME_NSEC),
+            st_mtime_sec=K(obnamlib.REPO_FILE_MTIME_SEC),
+            st_mtime_nsec=K(obnamlib.REPO_FILE_MTIME_NSEC),
+            st_blocks=K(obnamlib.REPO_FILE_BLOCKS),
+            st_dev=K(obnamlib.REPO_FILE_DEV),
+            st_gid=K(obnamlib.REPO_FILE_GID),
+            st_ino=K(obnamlib.REPO_FILE_INO),
+            st_mode=K(obnamlib.REPO_FILE_MODE),
+            st_nlink=K(obnamlib.REPO_FILE_NLINK),
+            st_size=K(obnamlib.REPO_FILE_SIZE),
+            st_uid=K(obnamlib.REPO_FILE_UID),
+            username=K(obnamlib.REPO_FILE_USERNAME),
+            groupname=K(obnamlib.REPO_FILE_GROUPNAME),
+            target=K(obnamlib.REPO_FILE_SYMLINK_TARGET),
+            xattr=K(obnamlib.REPO_FILE_XATTR_BLOB),
+            md5=K(obnamlib.REPO_FILE_MD5),
+            )
+
+    def restore_safely(self, gen, pathname):
         try:
             dirname = os.path.dirname(pathname)
             if self.write_ok and not self.fs.exists('./' + dirname):
                 self.fs.makedirs('./' + dirname)
+
+            metadata = self.construct_metadata_object(gen, pathname)
 
             set_metadata = True
             if metadata.isdir():
@@ -225,17 +258,11 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         logging.debug('restoring regular %s' % filename)
         if self.write_ok:
             f = self.fs.open('./' + filename, 'wb')
-            summer = self.repo.new_checksummer()
+            summer = hashlib.md5()
 
             try:
-                contents = self.repo.get_file_data(gen, filename)
-                if contents is None:
-                    chunkids = self.repo.get_file_chunks(gen, filename)
-                    self.restore_chunks(f, chunkids, summer)
-                else:
-                    f.write(contents)
-                    summer.update(contents)
-                    self.downloaded_bytes += len(contents)
+                chunkids = self.repo.get_file_chunk_ids(gen, filename)
+                self.restore_chunks(f, chunkids, summer)
             except obnamlib.MissingFilterError, e:
                 msg = 'Missing filter error during restore: %s' % filename
                 logging.error(msg)
@@ -246,6 +273,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             correct_checksum = metadata.md5
             if summer.digest() != correct_checksum:
                 msg = 'File checksum restore error: %s' % filename
+                msg += '(%s vs %s)' % (summer.digest(), correct_checksum)
                 logging.error(msg)
                 self.app.ts.notify(msg)
                 self.errors = True
@@ -254,7 +282,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         zeroes = ''
         hole_at_end = False
         for chunkid in chunkids:
-            data = self.repo.get_chunk(chunkid)
+            data = self.repo.get_chunk_content(chunkid)
             self.verify_chunk_checksum(data, chunkid)
             checksummer.update(data)
             self.downloaded_bytes += len(data)
@@ -274,15 +302,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
                 f.write('\0')
 
     def verify_chunk_checksum(self, data, chunkid):
-        checksum = self.repo.checksum(data)
-        try:
-            wanted = self.repo.chunklist.get_checksum(chunkid)
-        except KeyError:
-            # Chunk might not be in the tree, but that does not
-            # mean it is invalid. We'll assume it is valid.
-            return
-        if checksum != wanted:
-            raise obnamlib.Error('chunk %s checksum error' % chunkid)
+        self.repo.validate_chunk_content(chunkid)
 
     def restore_fifo(self, gen, filename, metadata):
         logging.debug('restoring fifo %s' % filename)
@@ -356,4 +376,3 @@ class RestorePlugin(obnamlib.ObnamPlugin):
                 (self.file_count,
                  size_amount, size_unit,
                  duration_string, speed_amount, speed_unit))
-

@@ -348,7 +348,15 @@ class LocalFS(obnamlib.VirtualFileSystem):
         dirname = os.path.dirname(path)
         if not os.path.exists(dirname):
             tracing.trace('os.makedirs(%s)' % dirname)
-            os.makedirs(dirname)
+            try:
+                os.makedirs(dirname)
+            except OSError as e: # pragma: no cover
+                # This avoids a race condition: another Obnam process
+                # may have created the directory between our check and
+                # creation attempt. If so, we ignore it. As long as
+                # the directory exists, all's good.
+                if e.errno != errno.EEXIST:
+                    raise
 
         fd, tempname = tempfile.mkstemp(dir=dirname)
         os.close(fd)

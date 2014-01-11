@@ -61,6 +61,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     GEN_IS_CHECKPOINT = 3   # subkey type for whether generation is checkpoint
     GEN_FILE_COUNT = 4      # subkey type for count of files+dirs in generation
     GEN_TOTAL_DATA = 5      # subkey type for sum of all file sizes in gen
+    GEN_TEST_DATA = 6       # subkey type for REPO_GENERATION_TEST_KEY
 
     # Maximum values for the subkey type field, and the subkey field.
     # Both have a minimum value of 0.
@@ -71,7 +72,6 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     def __init__(self, fs, client_dir, node_size, upload_queue_size, lru_size,
                  repo):
         tracing.trace('new ClientMetadataTree, client_dir=%s' % client_dir)
-        self.current_time = repo.current_time
         key_bytes = len(self.hashkey(0, self.default_file_id(''), 0, 0))
         obnamlib.RepositoryTree.__init__(self, fs, client_dir, key_bytes,
                                          node_size, upload_queue_size,
@@ -211,16 +211,6 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
 
     def commit(self):
         tracing.trace('committing ClientMetadataTree')
-        if self.tree:
-            now = int(self.current_time())
-            self._insert_int(self.tree, self.genkey(self.GEN_ENDED), now)
-            genid = self._get_generation_id_or_None(self.tree)
-            if genid is not None:
-                t = [(self.GEN_FILE_COUNT, 'file_count'),
-                     (self.GEN_TOTAL_DATA, 'total_data')]
-                for subkey, attr in t:
-                    if hasattr(self, attr):
-                        self._insert_count(genid, subkey, getattr(self, attr))
         obnamlib.RepositoryTree.commit(self)
 
     def init_forest(self, *args, **kwargs):
@@ -264,11 +254,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         tracing.trace('start new generation')
         self.start_changes()
         gen_id = self.forest.new_id()
-        now = int(self.current_time())
         self._insert_int(self.tree, self.genkey(self.GEN_ID), gen_id)
-        self._insert_int(self.tree, self.genkey(self.GEN_STARTED), now)
-        self.file_count = self.get_generation_file_count(gen_id) or 0
-        self.total_data = self.get_generation_data(gen_id) or 0
 
     def set_current_generation_is_checkpoint(self, is_checkpoint):
         tracing.trace('is_checkpoint=%s', is_checkpoint)
@@ -300,21 +286,43 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         except KeyError: # pragma: no cover
             return None
 
-    def _lookup_time(self, tree, what):
+    def _lookup_time(self, tree, what): # pragma: no cover
         try:
             return self._lookup_int(tree, self.genkey(what))
         except KeyError:
             return None
 
-    def get_generation_times(self, genid):
+    def _lookup_string(self, tree, what): # pragma: no cover
+        try:
+            return tree.lookup(self.genkey(what))
+        except KeyError:
+            return None
+
+    def get_generation_times(self, genid): # pragma: no cover
         tree = self.find_generation(genid)
         return (self._lookup_time(tree, self.GEN_STARTED),
                 self._lookup_time(tree, self.GEN_ENDED))
 
-    def get_generation_data(self, genid):
+    def set_generation_started(self, timestamp): # pragma: no cover
+        self._insert_int(self.tree, self.genkey(self.GEN_STARTED), timestamp)
+
+    def set_generation_ended(self, timestamp): # pragma: no cover
+        self._insert_int(self.tree, self.genkey(self.GEN_ENDED), timestamp)
+
+    def get_generation_test_data(self): # pragma: no cover
+        return self._lookup_string(self.tree, self.GEN_TEST_DATA)
+
+    def set_generation_test_data(self, value): # pragma: no cover
+        key = self.genkey(self.GEN_TEST_DATA)
+        self.tree.insert(key, value)
+
+    def get_generation_data(self, genid): # pragma: no cover
         return self._lookup_count(genid, self.GEN_TOTAL_DATA)
 
-    def _lookup_count(self, genid, count_type):
+    def set_generation_data(self, gen_id, num_bytes): # pragma: no cover
+        self._insert_count(gen_id, self.GEN_TOTAL_DATA, num_bytes)
+
+    def _lookup_count(self, genid, count_type): # pragma: no cover
         tree = self.find_generation(genid)
         key = self.genkey(count_type)
         try:
@@ -322,13 +330,22 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         except KeyError:
             return None
 
-    def _insert_count(self, genid, count_type, count):
+    def _insert_count(self, genid, count_type, count): # pragma: no cover
         tree = self.find_generation(genid)
         key = self.genkey(count_type)
         return self._insert_int(tree, key, count)
 
-    def get_generation_file_count(self, genid):
+    def get_generation_file_count(self, genid): # pragma: no cover
         return self._lookup_count(genid, self.GEN_FILE_COUNT)
+
+    def set_generation_file_count(self, gen_id, count): # pragma: no cover
+        self._insert_count(gen_id, self.GEN_FILE_COUNT, count)
+
+    def get_generation_total_data(self, genid): # pragma: no cover
+        return self._lookup_count(genid, self.GEN_TOTAL_DATA)
+
+    def set_generation_total_data(self, gen_id, count): # pragma: no cover
+        self._insert_count(gen_id, self.GEN_TOTAL_DATA, count)
 
     def create(self, filename, encoded_metadata):
         tracing.trace('filename=%s', filename)
@@ -338,15 +355,10 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
             old_metadata = self.get_metadata(gen_id, filename)
         except KeyError:
             old_metadata = None
-            self.file_count += 1
-        else:
+        else: # pragma: no cover
             old = obnamlib.decode_metadata(old_metadata)
-            if old.isfile():
-                self.total_data -= old.st_size or 0
 
         metadata = obnamlib.decode_metadata(encoded_metadata)
-        if metadata.isfile():
-            self.total_data += metadata.st_size or 0
 
         if encoded_metadata != old_metadata:
             tracing.trace('new or changed metadata')
@@ -391,7 +403,6 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
 
         file_id = self.get_file_id(self.tree, filename)
         genid = self.get_generation_id(self.tree)
-        self.file_count -= 1
 
         try:
             encoded_metadata = self.get_metadata(genid, filename)
@@ -399,8 +410,6 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
             pass
         else:
             metadata = obnamlib.decode_metadata(encoded_metadata)
-            if metadata.isfile():
-                self.total_data -= metadata.st_size or 0
 
         # Remove any children.
         minkey = self.fskey(file_id, self.DIR_CONTENTS, 0)
