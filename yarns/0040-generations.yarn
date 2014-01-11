@@ -24,12 +24,12 @@ problem.)
     SCENARIO backup two generations
     GIVEN 1MB of new data in directory L
     AND a manifest of directory L in G1
-    WHEN user backs up directory L
+    WHEN user backs up directory L to repository R
     GIVEN 2MB of new data in directory L
     AND a manifest of directory L in G2
-    WHEN user backs up directory L
-    AND user restores generation 1 to R1
-    AND user restores generation 2 to R2
+    WHEN user backs up directory L to repository R
+    AND user restores generation 1 to R1 from repository R
+    AND user restores generation 2 to R2 from repository R
     THEN L, restored to R1, matches manifest G1
     AND L, restored to R2, matches manifest G2
 
@@ -41,11 +41,11 @@ commands should show that number of generations.
 
     SCENARIO list generations
     GIVEN 1MB of new data in directory L
-    WHEN user backs up directory L
-    AND user backs up directory L
-    AND user backs up directory L
-    THEN user sees 3 generations
-    AND user sees 3 generation ids
+    WHEN user backs up directory L to repository R
+    AND user backs up directory L to repository R
+    AND user backs up directory L to repository R
+    THEN user sees 3 generations in repository R
+    AND user sees 3 generation ids in repository R
 
 Listing contents of a generation (`obnam ls`)
 --------------------------------
@@ -56,10 +56,10 @@ everything, or only a specific directory to list.
 
     SCENARIO list generation content
     GIVEN 1MB of new data in directory D
-    WHEN user backs up directory D
-    AND user lists latest generation into all.txt
+    WHEN user backs up directory D to repository R
+    AND user lists latest generation in repository R into all.txt
     THEN all.txt matches /.*/D/.
-    WHEN user lists D in latest generation into some.txt
+    WHEN user lists D in latest generation in repository R into some.txt
     THEN all lines in some.txt match (/D|Generation)
 
 The first line of the generation listing contains the word
@@ -72,7 +72,7 @@ root directory) fails. The following is a test for that bug by
 requesting `D/` to be listed, and verifying that we get at least one
 line for that.
 
-    WHEN user lists D/ in latest generation into bug.txt
+    WHEN user lists D/ in latest generation in repository R into bug.txt
     THEN bug.txt matches /D
 
 Comparing generations (`obnam diff`)
@@ -84,9 +84,9 @@ generations are identical:
 
     SCENARIO diff identical generations
     GIVEN 1K of new data in directory L
-    WHEN user backs up directory L
-    AND user backs up directory L
-    AND user diffs generations 1 and 2 into D
+    WHEN user backs up directory L to repository R
+    AND user backs up directory L to repository R
+    AND user diffs generations 1 and 2 in repository R into D
     THEN file D is empty
     
 If we make a change to the data, that should be reflected in the diff.
@@ -94,10 +94,10 @@ We'll assume the diff works, we'll just check whether it's empty.
 
     SCENARIO diff modified generations
     GIVEN 1K of new data in directory L
-    WHEN user backs up directory L
+    WHEN user backs up directory L to repository R
     GIVEN 1K of new data in directory L
-    WHEN user backs up directory L
-    AND user diffs generations 1 and 2 into D
+    WHEN user backs up directory L to repository R
+    AND user diffs generations 1 and 2 in repository R into D
     THEN file D is not empty
 
 Forgetting a specific generation (`obnam forget`)
@@ -111,16 +111,16 @@ checking that the remaining one is the one we want.
     SCENARIO remove specific generations
     GIVEN 1kB of new data in directory L
     AND a manifest of directory L in M1
-    WHEN user backs up directory L
+    WHEN user backs up directory L to repository R
     GIVEN 1kB of new data in directory L
     AND a manifest of directory L in M2
-    WHEN user backs up directory L
-    AND user forgets the oldest generation
-    THEN user sees 1 generation
-    WHEN user restores their latest generation into X
+    WHEN user backs up directory L to repository R
+    AND user forgets the oldest generation in repository R
+    THEN user sees 1 generation in repository R
+    WHEN user restores their latest generation in repository R into X
     THEN L, restored to X, matches manifest M2
-    WHEN user forgets the oldest generation
-    THEN user sees 0 generations
+    WHEN user forgets the oldest generation in repository R
+    THEN user sees 0 generations in repository R
 
 Forgetting generations according to a schedule (`obnam forget --keep`)
 -------------------------------------------------------------
@@ -130,11 +130,11 @@ The normal way of forgetting generations is with the `obnam forget
 
     SCENARIO remove generations according to schedule
     GIVEN 1kB of new data in directory L
-    WHEN user backs up directory L
+    WHEN user backs up directory L to repository R
     GIVEN 1kB of new data in directory L
     AND a manifest of directory L in M
-    WHEN user backs up directory L
-    AND user forgets according to schedule 1y
-    THEN user sees 1 generation
-    WHEN user restores their latest generation into X
+    WHEN user backs up directory L to repository R
+    AND user forgets according to schedule 1y in repository R
+    THEN user sees 1 generation in repository R
+    WHEN user restores their latest generation in repository R into X
     THEN L, restored to X, matches manifest M

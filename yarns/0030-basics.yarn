@@ -20,10 +20,10 @@ program must be able to handle.
     SCENARIO backup simple data
     GIVEN 100kB of new data in directory L
     AND a manifest of directory L in M
-    WHEN user backs up directory L
-    AND user restores their latest generation into X
+    WHEN user backs up directory L to repository R
+    AND user restores their latest generation in repository R into X
     THEN L, restored to X, matches manifest M
-    AND user can fsck the repository
+    AND user can fsck the repository R
 
 Backup sparse files
 -------------------
@@ -47,8 +47,8 @@ more disk space than the one in live data.
     SCENARIO backup a sparse file
     GIVEN a file S in L, with a hole, data, a hole
     AND a manifest of directory L in M
-    WHEN user backs up directory L
-    AND user restores their latest generation into X
+    WHEN user backs up directory L to repository R
+    AND user restores their latest generation in repository R into X
     THEN L, restored to X, matches manifest M
     AND file S from L, restored in X doesn't use more disk
 
@@ -82,6 +82,22 @@ duplication.
     SCENARIO backup non-basic filesystem objects
     GIVEN directory L with interesting filesystem objects
     AND a manifest of directory L in M
-    WHEN user backs up directory L
-    AND user restores their latest generation into X
+    WHEN user backs up directory L to repository R
+    AND user restores their latest generation in repository R into X
     THEN L, restored to X, matches manifest M
+
+Pretend backing up: the `--pretend` setting
+-------------------------------------------
+
+The `--pretend` setting lets the user pretend they're doing a backup,
+without actually having anything backed up. This is useful for testing
+that the configuration is correct: the fake backup runs much faster
+than a real one.
+
+    SCENARIO a pretend backup
+    GIVEN directory L with interesting filesystem objects
+    WHEN user backs up directory L to repository R
+    GIVEN a manifest of directory R in M1
+    WHEN user pretends to back up directory L to repository R
+    GIVEN a manifest of directory R in M2
+    THEN manifests M1 and M2 match 

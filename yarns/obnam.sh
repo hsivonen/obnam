@@ -16,10 +16,6 @@
 # =*= License: GPL-3+ =*=
 
 
-# Set variables to help referring to common things in $DATADIR.
-REPO="$DATADIR/repo"
-
-
 # Run Obnam in a safe way that ignore's any configuration files outside
 # the test.
 
@@ -37,4 +33,3 @@ manifest()
     summain -r "$1" --exclude Ino --exclude Dev |
     sed '/^Mtime:/s/\.[0-9]* / /'
 }
-
