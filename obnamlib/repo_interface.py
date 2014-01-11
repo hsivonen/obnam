@@ -379,6 +379,10 @@ class RepositoryInterface(object):
         '''Forget changes to client list and unlock it.'''
         raise NotImplementedError()
 
+    def got_client_list_lock(self):
+        '''Have we got the client list lock?'''
+        raise NotImplementedError()
+
     def force_client_list_lock(self):
         '''Force the client list lock.
 
@@ -441,6 +445,10 @@ class RepositoryInterface(object):
 
     def unlock_client(self, client_name):
         '''Forget changes to client and unlock it.'''
+        raise NotImplementedError()
+
+    def got_client_lock(self, client_name):
+        '''Have we got the lock for a given client?'''
         raise NotImplementedError()
 
     def force_client_lock(self, client_name):
@@ -701,6 +709,10 @@ class RepositoryInterface(object):
         '''Unlocks chunk indexes without committing them.'''
         raise NotImplementedError()
 
+    def got_chunk_indewxes_lock(self):
+        '''Have we got the chunk index lock?'''
+        raise NotImplementedError()
+
     def force_chunk_indexex_lock(self):
         '''Forces a chunk index lock open.'''
         raise NotImplementedError()
@@ -829,6 +841,21 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.assertTrue(True)
 
     # Tests for the client list.
+
+    def test_has_not_got_client_list_lock_initially(self):
+        self.repo.init_repo()
+        self.assertFalse(self.repo.got_client_list_lock())
+
+    def test_got_client_list_lock_after_locking(self):
+        self.repo.init_repo()
+        self.repo.lock_client_list()
+        self.assertTrue(self.repo.got_client_list_lock())
+
+    def test_not_got_client_list_lock_after_unlocking(self):
+        self.repo.init_repo()
+        self.repo.lock_client_list()
+        self.repo.unlock_client_list()
+        self.assertFalse(self.repo.got_client_list_lock())
 
     def test_has_no_clients_initially(self):
         self.repo.init_repo()
@@ -1065,6 +1092,21 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.repo.lock_client_list()
         self.repo.add_client('fooclient')
         self.repo.commit_client_list()
+
+    def test_have_not_got_client_lock_initially(self):
+        self.setup_client()
+        self.assertFalse(self.repo.got_client_lock('fooclient'))
+
+    def test_got_client_lock_after_locking(self):
+        self.setup_client()
+        self.repo.lock_client('fooclient')
+        self.assertTrue(self.repo.got_client_lock('fooclient'))
+
+    def test_have_not_got_client_lock_after_unlocking(self):
+        self.setup_client()
+        self.repo.lock_client('fooclient')
+        self.repo.unlock_client('fooclient')
+        self.assertFalse(self.repo.got_client_lock('fooclient'))
 
     def test_locking_client_twice_fails(self):
         self.setup_client()
@@ -1820,6 +1862,21 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         self.assertEqual(
             set(self.repo.get_chunk_ids()),
             set([chunk_id_1, chunk_id_2]))
+
+    def test_have_not_got_chunk_indexes_lock_initally(self):
+        self.setup_client()
+        self.assertFalse(self.repo.got_chunk_indexes_lock())
+
+    def test_got_chunk_indexes_lock_after_locking(self):
+        self.setup_client()
+        self.repo.lock_chunk_indexes()
+        self.assertTrue(self.repo.got_chunk_indexes_lock())
+
+    def test_have_not_got_chunk_indexes_lock_after_unlocking(self):
+        self.setup_client()
+        self.repo.lock_chunk_indexes()
+        self.repo.unlock_chunk_indexes()
+        self.assertFalse(self.repo.got_chunk_indexes_lock())
 
     def test_adds_chunk_to_indexes(self):
         self.setup_client()

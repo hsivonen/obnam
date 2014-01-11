@@ -182,6 +182,9 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._client_list.commit()
         self._raw_unlock_client_list()
 
+    def got_client_list_lock(self):
+        return self._got_client_list_lock
+
     def force_client_list_lock(self):
         tracing.trace('forcing client list lock')
         lock_name = os.path.join('lock')
@@ -334,6 +337,12 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._require_client_lock(client_name)
         self._raw_unlock_client(client_name)
         self._setup_file_key_cache()
+
+    def got_client_lock(self, client_name):
+        if client_name not in self._open_client_infos:
+            return False
+        open_client_info = self._open_client_infos[client_name]
+        return open_client_info.locked
 
     def force_client_lock(self, client_name):
         logging.info('Forcing client lock open for %s', client_name)
@@ -703,6 +712,9 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
     def unlock_chunk_indexes(self):
         tracing.trace('unlocking chunk indexes')
         self._raw_unlock_chunk_indexes()
+
+    def got_chunk_indexes_lock(self):
+        return self._got_chunk_indexes_lock
 
     def force_chunk_indexes_lock(self):
         tracing.trace('forcing chunk indexes lock')

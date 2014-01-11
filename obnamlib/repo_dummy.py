@@ -501,6 +501,9 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
     def commit_client_list(self):
         self._client_list.commit()
 
+    def got_client_list_lock(self):
+        return self._client_list.data.locked
+
     def force_client_list_lock(self):
         self._client_list.force()
 
@@ -530,6 +533,9 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
 
     def commit_client(self, client_name):
         self._client_list[client_name].commit()
+
+    def got_client_lock(self, client_name):
+        return self._client_list[client_name].data.locked
 
     def force_client_lock(self, client_name):
         self._client_list[client_name].force_lock()
@@ -676,6 +682,9 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
 
     def commit_chunk_indexes(self):
         self._chunk_indexes.commit()
+
+    def got_chunk_indexes_lock(self):
+        return self._chunk_indexes.data.locked
 
     def force_chunk_indexes_lock(self):
         self._chunk_indexes.force()
