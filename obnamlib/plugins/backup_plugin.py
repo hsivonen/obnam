@@ -227,6 +227,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 'for files that match the given regular expressions',
             metavar='REGEXP')
 
+        self.app.hooks.new('backup-finished')
+
     def configure_ttystatus_for_backup(self):
         self.progress = BackupProgress(self.app.ts)
 
@@ -342,6 +344,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.progress.report_stats()
 
             logging.info('Backup finished.')
+            self.app.hooks.call('backup-finished', args, self.progress)
             self.app.dump_memory_profile('at end of backup run')
         except BaseException, e:
             logging.debug('Handling exception %s' % str(e))

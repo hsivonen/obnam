@@ -10,6 +10,11 @@ Version 1./, released UNRELEASED
   convert from a pre-1.0 backup repository, and haven't done so yet,
   please use Obnam version 1.6.1 or earlier to do so.
 
+* A new `backup-finished` hook is provided by the backup plugin, so
+  that other plugins may do processing at the end of a backup, such as
+  report the successful backup to a monitoring system. Patch by
+  Enrico Tröger.
+
 Bug fixes:
 
 * Obnam now creates a `trustdb.gpg` in the temporary GNUPGHOME it uses
