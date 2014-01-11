@@ -86,8 +86,19 @@ class App(cliapp.Application):
                               default=obnamlib.IDPATH_SKIP,
                               group=perf_group)
 
-        self.settings.boolean(['quiet'], 'be silent')
-        self.settings.boolean(['verbose'], 'be verbose')
+        self.settings.boolean(
+            ['quiet'],
+            'be silent: show only error messages, no progress updates')
+        self.settings.boolean(
+            ['verbose'],
+            'be verbose: tell the user more of what is going on and '
+            'generally make sure the user is aware of what is happening '
+            'or at least that something is happening and '
+            'also make sure their screen is getting updates frequently '
+            'and that there is changes happening all the time so they '
+            'do not get bored and that they in fact get frustrated by '
+            'getting distracted by so many updates that they will move '
+            'into the Gobi desert to live under a rock')
 
         self.settings.boolean(['pretend', 'dry-run', 'no-act'],
                            'do not actually change anything (works with '
