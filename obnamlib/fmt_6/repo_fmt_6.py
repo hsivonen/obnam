@@ -277,24 +277,18 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         '''Return name of sub-directory for a given client.'''
         return str(client_id)
 
-    def _client_is_locked_by_us(self, client_name):
-        if client_name in self._open_client_infos:
-            open_client_info = self._open_client_infos[client_name]
-            return open_client_info.locked
-        return False
-
     def _require_existing_client(self, client_name):
         if client_name not in self.get_client_names():
             raise obnamlib.RepositoryClientDoesNotExist(client_name)
 
     def _require_client_lock(self, client_name):
-        if not self._client_is_locked_by_us(client_name):
+        if not self.got_client_lock(client_name):
             raise obnamlib.RepositoryClientNotLocked(client_name)
 
     def _raw_lock_client(self, client_name):
         tracing.trace('client_name=%s', client_name)
 
-        if self._client_is_locked_by_us(client_name):
+        if self.got_client_lock(client_name):
             raise obnamlib.RepositoryClientLockingFailed(client_name)
 
         client_id = self._get_client_id(client_name)
@@ -339,6 +333,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._setup_file_key_cache()
 
     def got_client_lock(self, client_name):
+        tracing.trace('client_name=%s', client_name)
         if client_name not in self._open_client_infos:
             return False
         open_client_info = self._open_client_infos[client_name]
