@@ -57,8 +57,8 @@ access over localhost, without requiring a password to be entered.
 The user may disable such tests when the test suite is running,
 by asking yarn to set the `OBNAM_TEST_SSH` to `no`.
 
-Obnam configuration
--------------------
+Obnam configuration and multiple users/clients
+----------------------------------------------
 
 In the tests, Obnam is run without a default configuration
 (`--no-default-config`), to avoid the user's settings affecting the
@@ -71,6 +71,12 @@ tests that run Obnam MUST use `run_obnam`. In addition to adding the
 `--no-default-config` option, it also tells Obnam to use the
 `$DATADIR/obnam.conf` configuration file, for single-client tests, or
 `$DATADIR/$CLIENT.obnam.conf` for multi-client tests.
+
+We simulate multiple clients by providing each client with a different
+configuration, though on the command line instead of using
+configuration files. The relevant settings are `--client-name` and
+the backup roots (command line arguments to `obnam backup` or
+the `--root` setting).
 
 Encryption keys
 ---------------

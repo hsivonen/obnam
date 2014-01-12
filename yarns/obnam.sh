@@ -16,17 +16,99 @@
 # =*= License: GPL-3+ =*=
 
 
-# Set variables to help referring to common things in $DATADIR.
-REPO="$DATADIR/repo"
-
-
-# Run Obnam in a safe way that ignore's any configuration files outside
-# the test.
+# Run Obnam in a safe way that ignore's any configuration files
+# outside the test. The first argument MUST be the client name. The
+# configuration file $DATADIR/$1.conf is used, if it exists. In addition,
+# the environment variables specified in $DATADIR/$1.env are added for
+# the duration of running Obnam.
 
 run_obnam()
 {
-    "$SRCDIR/obnam" --no-default-config --quiet \
-        --log-level debug --log "$DATADIR/obnam.log" "$@"
+    local name="$1"
+    shift
+
+    # Create the config file, if it doesn't already exist.
+    local conf="$DATADIR/$name.conf"
+    if [ ! -e "$conf" ]
+    then
+        add_to_config "$name" client-name "$name"
+    fi
+
+    # Always turn off weak-random, or else anything that uses
+    # encryption will take a long time. We don't need strong random
+    # numbers for tests.
+    add_to_config "$name" weak-random yes
+
+    (
+        if [ -e "$DATADIR/$name.env" ]
+        then
+            . "$DATADIR/$name.env"
+        fi
+        "$SRCDIR/obnam" --no-default-config --config "$conf" \
+            --quiet --log-level debug --log "$DATADIR/obnam.log" "$@"
+    )
+}
+
+
+# Add an environment variable to the Obnam run.
+
+add_to_env()
+{
+    local user="$1"
+    local var="$2"
+    local value="$3"
+    printf 'export %s=%s\n' "$var" "$value" >> "$DATADIR/$user.env"
+}
+
+
+# Add a setting to the configuration file for a given client.
+
+add_to_config()
+{
+    local client="$1"
+    local filename="$DATADIR/$client.conf"
+    local key="$2"
+    local value="$3"
+
+    if [ ! -e "$filename" ]
+    then
+        printf '[config]\n' > "$filename"
+        printf 'client-name = %s\n' "$client" >> "$filename"
+    fi
+    printf '%s = %s\n' "$key" "$value" >> "$filename"
+}
+
+
+# Attempt to run a command, which may fail. Capture its stdout,
+# stderr, and exit code.
+
+attempt()
+{
+    if "$@" \
+        > "$DATADIR/attempt.stdout" \
+        2> "$DATADIR/attempt.stderr"
+    then
+        exit=0
+    else
+        exit=$?
+    fi
+    echo "$exit" > "$DATADIR/attempt.exit"
+}
+
+
+# Match captured output from attempt against a regular expression.
+
+attempt_matches()
+{
+    grep "$2" "$DATADIR/attempt.$1"
+}
+
+
+# Check exit code of latest attempt.
+
+attempt_exit_was()
+{
+    grep -Fx "$1" "$DATADIR/attempt.exit"
 }
 
 
@@ -37,4 +119,3 @@ manifest()
     summain -r "$1" --exclude Ino --exclude Dev |
     sed '/^Mtime:/s/\.[0-9]* / /'
 }
-

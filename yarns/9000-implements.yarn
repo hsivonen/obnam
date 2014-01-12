@@ -20,7 +20,8 @@ Functions:
 * `run_obnam`: run Obnam from the source tree, ignoring any
   system-wide or user configuration and using only the configuration
   specified by the test suite itself (`--no-default-config`). Run in
-  quiet mode (`--quiet`).
+  quiet mode (`--quiet`). The first argument to `run_obnam` is the
+  client name.
 
 * `manifest`: run summain in a way that produces a useable manifest,
   which can be compared with diff with a later manifest.
@@ -76,14 +77,49 @@ diffs.
     diff -u "$DATADIR/$MATCH_3" "$DATADIR/temp-manifest"
     rm -f "$DATADIR/temp-manifest"
 
+We may also need to check two manifests against each other.
+
+    IMPLEMENTS THEN manifests (\S+) and (\S+) match
+    diff -u "$DATADIR/$MATCH_1" "$DATADIR/$MATCH_2"
+
+Obnam configuration management
+------------------------------
+
+In some scenarios, it is easier to maintain a configuration file than
+to pass in all the options to `run_obnam` every time. This section
+contains steps to do that.
+
+Scenarios involving encryption need to specify the encryption key to
+use. We store that.
+
+    IMPLEMENTS GIVEN user (\S+) uses encryption key "(.*)" from (\S+)
+    if [ ! -e "$DATADIR/$MATCH_1.gnupg" ]
+    then
+        mkdir "$DATADIR/$MATCH_1.gnupg"
+        cp -a "$SRCDIR/$MATCH_3/." "$DATADIR/$MATCH_1.gnupg/."
+        add_to_env "$MATCH_1" GNUPGHOME "$DATADIR/$MATCH_1.gnupg"
+    fi
+    add_to_config "$MATCH_1" encrypt-with "$MATCH_2"
+
+Encryption scenarions, at least, also need users that pretend to be
+someone else.
+
+    IMPLEMENTS GIVEN a user (\S+) calling themselves (\S+)
+    add_to_config "$MATCH_1" client-name "$MATCH_2"
+
 Backing up
 ----------
 
 The simplest way to run a backup, for single-client scenarios. In
 addition to backing up, this makes a manifest of the data.
 
-    IMPLEMENTS WHEN user backs up directory (\S+)
-    run_obnam backup -r "$REPO" "$DATADIR/$MATCH_1"
+    IMPLEMENTS WHEN user (\S+) backs up directory (\S+) to repository (\S+)
+    run_obnam "$MATCH_1" backup -r "$DATADIR/$MATCH_3" "$DATADIR/$MATCH_2"
+
+We can also just pretend to make a backup.
+
+    IMPLEMENTS WHEN user (\S+) pretends to back up directory (\S+) to repository (\S+)
+    run_obnam "$MATCH_1" backup --pretend -r "$DATADIR/$MATCH_3" "$DATADIR/$MATCH_2"
 
 fsck'ing a repository
 ---------------------
@@ -91,70 +127,87 @@ fsck'ing a repository
 Verify that the repository itself is OK, by running `obnam fsck` on
 it.
 
-    IMPLEMENTS THEN user can fsck the repository
-    run_obnam fsck -r "$REPO"
+    IMPLEMENTS THEN user (\S+) can fsck the repository (\S+)
+    run_obnam "$MATCH_1" fsck -r "$DATADIR/$MATCH_2"
 
 Restoring data
 --------------
 
 We need a way to restore data from a test backup repository.
 
-    IMPLEMENTS WHEN user restores their latest generation into (\S+)
-    run_obnam restore -r "$REPO" --to "$DATADIR/$MATCH_1"
+    IMPLEMENTS WHEN user (\S+) restores their latest generation in repository (\S+) into (\S+)
+    run_obnam "$MATCH_1" restore -r "$DATADIR/$MATCH_2" \
+        --to "$DATADIR/$MATCH_3"
 
 Restore a specific generation. The generation number is an ordinal in
 the list of generations, not the "generation id" Obnam assigns, as
 that is unpredictable.
 
-    IMPLEMENTS WHEN user restores generation (\d+) to (\S+)
-    id=$(run_obnam -r "$REPO" genids | awk -v "n=$MATCH_1" 'NR == n')
-    run_obnam restore -r "$REPO" --to "$DATADIR/$MATCH_2" --generation "$id"
+    IMPLEMENTS WHEN user (\S+) restores generation (\d+) to (\S+) from repository (\S+)
+    client="$MATCH_1"
+    gen="$MATCH_2"
+    to="$DATADIR/$MATCH_3"
+    repo="$DATADIR/$MATCH_4"
+    id=$(run_obnam "$client" -r "$repo" genids |
+        awk -v "n=$gen" 'NR == n')
+    run_obnam "$client" restore -r "$repo" \
+        --to "$to" --generation "$id"
+
+We may also need to attempt a restore in a situation when we expect it
+to fail.
+
+    IMPLEMENTS WHEN user (\S+) attempts to restore their latest generation in repository (\S+) into (\S+)
+    attempt run_obnam "$MATCH_1" restore -r "$DATADIR/$MATCH_2" \
+        --to "$DATADIR/$MATCH_3"
 
 Removing (forgetting) generations
 ---------------------------------
 
 Remove the oldest generation.
 
-    IMPLEMENTS WHEN user forgets the oldest generation
+    IMPLEMENTS WHEN user (\S+) forgets the oldest generation in repository (\S+)
     # The grep below at the end of pipeline is there to make sure
     # the pipeline fails if there were no generations.
-    id=$(run_obnam -r "$REPO" genids | head -n1 | grep .)
-    run_obnam forget -r "$REPO" "$id"
+    id=$(run_obnam "$MATCH_1" -r "$DATADIR/$MATCH_2" genids | 
+        head -n1 | grep .)
+    run_obnam "$MATCH_1" forget -r "$DATADIR/$MATCH_2" "$id"
 
 Remove according to a `--keep` schedule.
 
-    IMPLEMENTS WHEN user forgets according to schedule (\S+)
-    run_obnam forget -r "$REPO" --keep "$MATCH_1"
+    IMPLEMENTS WHEN user (\S+) forgets according to schedule (\S+) in repository (\S+)
+    run_obnam "$MATCH_1" forget -r "$DATADIR/$MATCH_3" --keep "$MATCH_2"
 
 List generations
 ----------------
 
 List everything in a generation. Capture the listing in a named file.
 
-    IMPLEMENTS WHEN user lists latest generation into (\S+)
-    run_obnam  ls -r "$REPO" > "$DATADIR/$MATCH_1"
+    IMPLEMENTS WHEN user (\S+) lists latest generation in repository (\S+) into (\S+)
+    run_obnam "$MATCH_1" ls -r "$DATADIR/$MATCH_2" > "$DATADIR/$MATCH_3"
 
 List only parts of a generation. Again, capture in a named file.
 
-    IMPLEMENTS WHEN user lists (\S+) in latest generation into (\S+)
-    run_obnam ls -r "$REPO" "$DATADIR/$MATCH_1" > "$DATADIR/$MATCH_2"
+    IMPLEMENTS WHEN user (\S+) lists (\S+) in latest generation in repository (\S+) into (\S+)
+    run_obnam "$MATCH_1" ls -r "$DATADIR/$MATCH_3" "$DATADIR/$MATCH_2" > "$DATADIR/$MATCH_4"
 
 Checks on generations
 ---------------------
 
 Check that number of generations is correct.
 
-    IMPLEMENTS THEN user sees (\d+) generation(s?)
-    run_obnam generations -r "$REPO" > "$DATADIR/generation.list"
+    IMPLEMENTS THEN user (\S+) sees (\d+) generation(s?) in repository (\S+)
+    run_obnam "$MATCH_1" generations -r "$DATADIR/$MATCH_4" \
+        > "$DATADIR/generation.list"
     n=$(wc -l < "$DATADIR/generation.list")
-    test "$MATCH_1" = "$n"
+    test "$MATCH_2" = "$n"
 
 Ditto for generation ids.
 
-    IMPLEMENTS THEN user sees (\d+) generation ids
-    run_obnam generations -r "$REPO" > "$DATADIR/generation-id.list"
+    IMPLEMENTS THEN user (\S+) sees (\d+) generation ids in repository (\S+)
+    run_obnam "$MATCH_1" generations -r "$DATADIR/$MATCH_3" \
+        > "$DATADIR/generation-id.list"
     n=$(wc -l < "$DATADIR/generation-id.list")
-    test "$MATCH_1" = "$n"
+    test "$MATCH_2" = "$n"
 
 Diffs between generations
 -------------------------
@@ -163,11 +216,66 @@ Compute the difference between two generations. The generations are
 identified by the ordinal, not generation id, since the ids are
 unpredictable.
 
-    IMPLEMENTS WHEN user diffs generations (\d+) and (\d+) into (\S+)
-    id1=$(run_obnam -r "$REPO" genids | awk -v "n=$MATCH_1" 'NR == n')
-    id2=$(run_obnam -r "$REPO" genids | awk -v "n=$MATCH_2" 'NR == n')
-    run_obnam diff -r "$REPO" "$id1" "$id2" > "$DATADIR/$MATCH_3"
+    IMPLEMENTS WHEN user (\S+) diffs generations (\d+) and (\d+) in repository (\S+) into (\S+)
+    id1=$(run_obnam "$MATCH_1" -r "$DATADIR/$MATCH_4" genids | awk -v "n=$MATCH_2" 'NR == n')
+    id2=$(run_obnam "$MATCH_1" -r "$DATADIR/$MATCH_4" genids | awk -v "n=$MATCH_3" 'NR == n')
+    run_obnam "$MATCH_1" diff -r "$DATADIR/$MATCH_4" "$id1" "$id2" > "$DATADIR/$MATCH_5"
 
+Encryption key management
+-------------------------
+
+List clients and the encryption keys they use.
+
+    IMPLEMENTS THEN user (\S+) uses key "(.+)" in repository (\S+)
+    run_obnam "$MATCH_1" -r "$DATADIR/$MATCH_3" client-keys |
+        grep -x "$MATCH_1 $MATCH_2"
+
+Import a key into one user's keyring from another keyring.
+
+    IMPLEMENTS WHEN user (\S+) imports public key "(.+)" from (\S+)
+    GNUPGHOME="$SRCDIR/$MATCH_3" gpg --export --armor "$MATCH_2" |
+    GNUPGHOME="$DATADIR/$MATCH_1.gnupg" gpg --import
+
+Add a public key to a repository.
+
+    IMPLEMENTS WHEN user (\S+) adds key "(.+)" to repository (\S+)
+    run_obnam "$MATCH_1" -r "$DATADIR/$MATCH_3" add-key --keyid "$MATCH_2"
+
+Client management
+-----------------
+
+Sometimes, even if rarely, one wants to remove a complete client from
+a repository.
+
+    IMPLEMENTS WHEN user (\S+) removes user (\S+) from repository (\S+)
+    run_obnam "$MATCH_1" -r "$DATADIR/$MATCH_3" remove-client "$MATCH_2"
+
+After that, one wants to make sure the removed client isn't in the
+repository anymore.
+
+    IMPLEMENTS THEN user (\S+) can't see user (\S+) in repository (\S+)
+    if run_obnam "$MATCH_1" -r "$DATADIR/$MATCH_3" clients |
+        grep -x "$MATCH_2"
+    then
+        echo "Client $MATCH_2 still in repository $MATCH_3" 1>&2
+        exit 1
+    fi
+
+Checks on results of an attempted operation
+-------------------------------------------
+
+The `attempt` shell function in `obnam.sh` runs a command, then
+captures its stdout, stderr, and exit code. The scenarios can then
+test the results in various ways as separate steps.
+
+    IMPLEMENTS THEN the attempt failed with exit code (\d+)
+    attempt_exit_was "$MATCH_1"
+
+We can also match the stderr against a regular expression.
+    
+    IMPLEMENTS THEN the error message matches "(.+)"
+    attempt_matches stderr "$MATCH_1"
+    
 Checks on files
 ---------------
 

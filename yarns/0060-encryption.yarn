@@ -1,0 +1,146 @@
+Encrypted repositories
+======================
+
+Obnam repositories may be encrypted. The encryption is based on public
+keys, using GnuPG specifically. Internally, symmetric encryption is
+also used, but that is not visible, nor relevant, to the user. All
+encryption requires some level of key management, so the encryption
+plugin in Obnam provides a number of subcommands for that.
+
+We need to test, at minimum, that key management works. Ideally, we'd
+also test that encryption works, but that's trickier to achieve
+without making assumptions about the repository format.
+
+Test setup
+----------
+
+We need two PGP keys for these tests, and they need to be independent
+of each other so that tests can meaningfully use the different keys to
+pretend they're different users. We have, in the Obnam source tree,
+two GnuPG keyrings (`test-data/keyring-1` and `test-data/keyring-2`),
+which we use for this purpose. We use pre-generated keys instead of
+generating new ones for each test run, since key generation is a
+fairly heavy operation that easily depletes the host of entropy.
+
+However, to avoid inadvertent changes to the keys, keyrings, random
+data seeds, or other files, we make a copy of the data into `$DATADIR`
+for the duration of the test.
+
+The keys have usernames `Test Key One` and `Test Key Two` (no e-mail
+addresses). They have no passphrase. Otherwise, they are generated
+using GnuPG defaults (as of 1.4.12 in Debian wheezy).
+
+Encrypted backup and restore
+----------------------------
+
+We'll make a simple backup and restore using encryption. If this
+works, we can probably assume that any other normal repository
+operations (those not part of encryption management) also work, given
+that encryption is done at the I/O abstraction level.
+
+    SCENARIO basic encrypted backup and restore
+    GIVEN user U uses encryption key "Test Key One" from test-data/keyring-1
+    AND directory L with interesting filesystem objects
+    AND a manifest of directory L in M
+    WHEN user U backs up directory L to repository R
+    AND user U restores their latest generation in repository R into X
+    THEN L, restored to X, matches manifest M
+
+Adding and removing keys to clients
+-----------------------------------
+
+Each client specifies the key they want to use with the
+`--encrypt-with` setting. This is the primary key for the client. The
+client may additionally use other keys to encrypt to: this allows, for
+example, having a repository-wide encryption key that can run fsck or
+forget.
+
+We test these by having two keys: one for the primary one, and a
+second one, and verifying that we can, or can't, access the backup
+with the second key, depending on whether it has or hasn't been added
+to the client.
+
+First of all, we make a simple encrypted backup as the first client.
+
+    SCENARIO adding and removing encryption keys to clients
+    GIVEN user U1 uses encryption key "Test Key One" from test-data/keyring-1
+    AND directory L1 with interesting filesystem objects
+    WHEN user U1 backs up directory L1 to repository R
+    THEN user U1 uses key "Test Key One" in repository R 
+
+Then we add the key of the second client to the repository. This is
+necessary, because by now the client list is already encrypted using
+only the first client's key, meaning the second client has no access
+to the client list, and thus can't add itself.
+
+    WHEN user U1 imports public key "Test Key Two" from test-data/keyring-2
+    AND user U1 adds key "Test Key Two" to repository R
+
+Then we make a backup as the second client.
+
+    GIVEN user U2 uses encryption key "Test Key Two" from test-data/keyring-2
+    AND directory L2 with interesting filesystem objects
+    WHEN user U2 backs up directory L2 to repository R
+    THEN user U2 uses key "Test Key Two" in repository R
+
+Let's make sure both clients can still restore their own data.
+
+    GIVEN a manifest of directory L1 in M1
+    WHEN user U1 restores their latest generation in repository R into X1
+    THEN L1, restored to X1, matches manifest M1
+
+    GIVEN a manifest of directory L2 in M2
+    WHEN user U2 restores their latest generation in repository R into X2
+    THEN L2, restored to X2, matches manifest M2
+
+An unrelated client, which happens to use the same name as the first
+client, should not be able to access the data.
+
+    GIVEN a user U3 calling themselves U1
+    WHEN user U3 attempts to restore their latest generation in repository R into X3
+    THEN the attempt failed with exit code 1
+    AND the error message matches "Unknown filter tag encountered\|need more than 1 value to unpack"
+
+(The error message above indicates that there's a bug in Obnam, which
+is that the error message, when an encryption is not provided but the
+repository uses encryption, is not very clear. This should be FIXME'd
+some day.)
+
+Likewise, even if a client has access to their own data, they should
+not have access to another client's data.
+
+    GIVEN a user U2 calling themselves U1
+    WHEN user U2 attempts to restore their latest generation in repository R into X4
+    THEN the attempt failed with exit code 1
+    AND the error message matches "secret key not available"
+
+Key queries
+-----------
+
+Obnam has a couple of commands to list the keys in the repository and
+what they have access to (`list-keys`, `list-toplevels`). These are
+primarily useful for debugging, and not not worth writing tests for
+(at least for now).
+
+Removing a client
+-----------------
+
+Obnam has a `obnam remove-client` command which currently only works
+when encryption is used. This is a wart, a bug, and a disgrace.
+However, it will be fixed some day, and until then the command is
+tested in this chapter.
+
+First we make a backup as one client, then we add a second key to the
+repository. Finally, we remove the client and verify no clients
+remain.
+
+    SCENARIO remove a client
+    GIVEN user U1 uses encryption key "Test Key One" from test-data/keyring-1
+    AND user U2 uses encryption key "Test Key Two" from test-data/keyring-2
+    AND directory L with interesting filesystem objects
+    WHEN user U1 backs up directory L to repository R
+    THEN user U1 uses key "Test Key One" in repository R
+    WHEN user U1 imports public key "Test Key Two" from test-data/keyring-2
+    AND user U1 adds key "Test Key Two" to repository R
+    AND user U2 removes user U1 from repository R
+    THEN user U2 can't see user U1 in repository R
