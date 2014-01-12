@@ -82,6 +82,25 @@ We may also need to check two manifests against each other.
     IMPLEMENTS THEN manifests (\S+) and (\S+) match
     diff -u "$DATADIR/$MATCH_1" "$DATADIR/$MATCH_2"
 
+Obnam configuration management
+------------------------------
+
+In some scenarios, it is easier to maintain a configuration file than
+to pass in all the options to `run_obnam` every time. This section
+contains steps to do that.
+
+Scenarios involving encryption need to specify the encryption key to
+use. We store that.
+
+    IMPLEMENTS GIVEN user (\S+) uses encryption key "(.*)" from (\S+)
+    if [ ! -e "$DATADIR/$MATCH_1.gnupg" ]
+    then
+        mkdir "$DATADIR/$MATCH_1.gnupg"
+        cp -a "$SRCDIR/$MATCH_3/." "$DATADIR/$MATCH_1.gnupg/."
+        add_to_env "$MATCH_1" GNUPGHOME "$DATADIR/$MATCH_1.gnupg"
+    fi
+    add_to_config "$DATADIR/$MATCH_1.conf" encrypt-with "$MATCH_2"
+
 Backing up
 ----------
 
