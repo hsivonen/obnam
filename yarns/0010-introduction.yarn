@@ -49,12 +49,6 @@ been implemented.
     - with encryption
 * Compression
     - generate interesting set of test data, backup once
-* Encryption
-    - add-key
-    - client-keys
-    - list-keys
-    - list-toplevels
-    - remove-key
 * Lock handling
     - force-lock
 * Repository management
@@ -66,17 +60,7 @@ been implemented.
 
 Open questions:
 
-* how to test compression and encryption? should I re-run all tests
-  plain, compressed, encrypted, and compressed+encrypted? also,
-  network tests? do I need some kind of include mechanism for this?
-    - I can probably manage just fine with a simpler set of sets for
-      compression, encryption and networking, no need to go over all
-      the cases that plain backups go through: if things work for
-      plain, they probably work for the other cases, if those other
-      cases work at all
-    - then add regression tests as need be
 * test accessing live data over sftp
 * what errors should I test? can I test?
-* multiple clients?
 * different filesystems? run test suite multiple times, and set TMPDIR
   to point at a particular filesystem each time
