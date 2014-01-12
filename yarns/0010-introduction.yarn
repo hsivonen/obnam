@@ -53,8 +53,6 @@ been implemented.
     - force-lock
 * Repository management
     - fsck
-    - remove client
-    - list clients
 * System administration
     - nagios-last-backup-age
 
