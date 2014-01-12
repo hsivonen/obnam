@@ -35,18 +35,18 @@ First, the normal one reference repository.
 
     SCENARIO use repository format 6
     GIVEN unpacked test data from test-data/repo-format-6-encrypted-deflated.tar.xz in T
-    WHEN user restores generation 1 in T/repo to R1
+    WHEN user havelock restores generation 1 in T/repo to R1
     THEN restored data in R1 matches T/manifest-1
-    WHEN user restores generation 2 in T/repo to R2
+    WHEN user havelock restores generation 2 in T/repo to R2
     THEN restored data in R2 matches T/manifest-2
 
 Then, the in-tree repository.
 
     SCENARIO use repository format 6 with in-tree data
     GIVEN unpacked test data from test-data/repo-format-6-in-tree-data.tar.xz in T
-    WHEN user restores generation 1 in T/repo to R1
+    WHEN user havelock restores generation 1 in T/repo to R1
     THEN restored data in R1 matches T/manifest-1
-    WHEN user restores generation 2 in T/repo to R2
+    WHEN user havelock restores generation 2 in T/repo to R2
     THEN restored data in R2 matches T/manifest-2
 
 Implementations
@@ -63,12 +63,13 @@ First, we unpack the test data into a known location.
 
 Then we restore the requested generation.
 
-    IMPLEMENTS WHEN user restores generation (\d+) in (\S+) to (\S+)
+    IMPLEMENTS WHEN user (\S+) restores generation (\d+) in (\S+) to (\S+)
     export GNUPGHOME="$SRCDIR/test-gpghome"
-    genid=$(run_obnam -r "$DATADIR/$MATCH_2" \
-        --encrypt-with=3B1802F81B321347 genids | sed -n "${MATCH_1}p")
-    run_obnam -r "$DATADIR/$MATCH_2" --encrypt-with=3B1802F81B321347 \
-        restore --to "$DATADIR/$MATCH_3" --generation "$genid"
+    genid=$(run_obnam "$MATCH_1" -r "$DATADIR/$MATCH_3" \
+        --encrypt-with=3B1802F81B321347 genids | sed -n "${MATCH_2}p")
+    run_obnam "$MATCH_1" -r "$DATADIR/$MATCH_3" \
+        --encrypt-with=3B1802F81B321347 \
+        restore --to "$DATADIR/$MATCH_4" --generation "$genid"
 
 Finally, we verify the restored data against the manifest. We have one
 tricky bit here: there is no guarantee what the path to the root of

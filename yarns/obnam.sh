@@ -17,11 +17,13 @@
 
 
 # Run Obnam in a safe way that ignore's any configuration files outside
-# the test.
+# the test. The first argument MUST be the client name.
 
 run_obnam()
 {
-    "$SRCDIR/obnam" --no-default-config --quiet \
+    local name="$1"
+    shift
+    "$SRCDIR/obnam" --no-default-config --quiet --client-name="$name" \
         --log-level debug --log "$DATADIR/obnam.log" "$@"
 }
 
