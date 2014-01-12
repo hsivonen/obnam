@@ -34,6 +34,11 @@ run_obnam()
         add_to_config "$name" client-name "$name"
     fi
 
+    # Always turn off weak-random, or else anything that uses
+    # encryption will take a long time. We don't need strong random
+    # numbers for tests.
+    add_to_config "$name" weak-random yes
+
     (
         if [ -e "$DATADIR/$name.env" ]
         then
