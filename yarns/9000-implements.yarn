@@ -241,6 +241,26 @@ Add a public key to a repository.
     IMPLEMENTS WHEN user (\S+) adds key "(.+)" to repository (\S+)
     run_obnam "$MATCH_1" -r "$DATADIR/$MATCH_3" add-key --keyid "$MATCH_2"
 
+Client management
+-----------------
+
+Sometimes, even if rarely, one wants to remove a complete client from
+a repository.
+
+    IMPLEMENTS WHEN user (\S+) removes user (\S+) from repository (\S+)
+    run_obnam "$MATCH_1" -r "$DATADIR/$MATCH_3" remove-client "$MATCH_2"
+
+After that, one wants to make sure the removed client isn't in the
+repository anymore.
+
+    IMPLEMENTS THEN user (\S+) can't see user (\S+) in repository (\S+)
+    if run_obnam "$MATCH_1" -r "$DATADIR/$MATCH_3" clients |
+        grep -x "$MATCH_2"
+    then
+        echo "Client $MATCH_2 still in repository $MATCH_3" 1>&2
+        exit 1
+    fi
+
 Checks on results of an attempted operation
 -------------------------------------------
 

@@ -130,4 +130,17 @@ when encryption is used. This is a wart, a bug, and a disgrace.
 However, it will be fixed some day, and until then the command is
 tested in this chapter.
 
-#       obnam [options] remove-client [CLIENT-NAME]...
+First we make a backup as one client, then we add a second key to the
+repository. Finally, we remove the client and verify no clients
+remain.
+
+    SCENARIO remove a client
+    GIVEN user U1 uses encryption key "Test Key One" from test-data/keyring-1
+    AND user U2 uses encryption key "Test Key Two" from test-data/keyring-2
+    AND directory L with interesting filesystem objects
+    WHEN user U1 backs up directory L to repository R
+    THEN user U1 uses key "Test Key One" in repository R
+    WHEN user U1 imports public key "Test Key Two" from test-data/keyring-2
+    AND user U1 adds key "Test Key Two" to repository R
+    AND user U2 removes user U1 from repository R
+    THEN user U2 can't see user U1 in repository R
