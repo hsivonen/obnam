@@ -26,14 +26,21 @@ run_obnam()
 {
     local name="$1"
     shift
+
+    # Create the config file, if it doesn't already exist.
+    local conf="$DATADIR/$name.conf"
+    if [ ! -e "$conf" ]
+    then
+        add_to_config "$name" client-name "$name"
+    fi
+
     (
         if [ -e "$DATADIR/$name.env" ]
         then
             . "$DATADIR/$name.env"
         fi
-        "$SRCDIR/obnam" --no-default-config --config "$DATADIR/$name.conf" \
-            --quiet --client-name="$name" \
-            --log-level debug --log "$DATADIR/obnam.log" "$@"
+        "$SRCDIR/obnam" --no-default-config --config "$conf" \
+            --quiet --log-level debug --log "$DATADIR/obnam.log" "$@"
     )
 }
 
@@ -49,19 +56,54 @@ add_to_env()
 }
 
 
-# Add a setting to an Obnam configuration file.
+# Add a setting to the configuration file for a given client.
 
 add_to_config()
 {
-    local filename="$1"
+    local client="$1"
+    local filename="$DATADIR/$client.conf"
     local key="$2"
     local value="$3"
 
     if [ ! -e "$filename" ]
     then
         printf '[config]\n' > "$filename"
+        printf 'client-name = %s\n' "$client" >> "$filename"
     fi
     printf '%s = %s\n' "$key" "$value" >> "$filename"
+}
+
+
+# Attempt to run a command, which may fail. Capture its stdout,
+# stderr, and exit code.
+
+attempt()
+{
+    if "$@" \
+        > "$DATADIR/attempt.stdout" \
+        2> "$DATADIR/attempt.stderr"
+    then
+        exit=0
+    else
+        exit=$?
+    fi
+    echo "$exit" > "$DATADIR/attempt.exit"
+}
+
+
+# Match captured output from attempt against a regular expression.
+
+attempt_matches()
+{
+    grep "$2" "$DATADIR/attempt.$1"
+}
+
+
+# Check exit code of latest attempt.
+
+attempt_exit_was()
+{
+    grep -Fx "$1" "$DATADIR/attempt.exit"
 }
 
 

@@ -99,7 +99,13 @@ use. We store that.
         cp -a "$SRCDIR/$MATCH_3/." "$DATADIR/$MATCH_1.gnupg/."
         add_to_env "$MATCH_1" GNUPGHOME "$DATADIR/$MATCH_1.gnupg"
     fi
-    add_to_config "$DATADIR/$MATCH_1.conf" encrypt-with "$MATCH_2"
+    add_to_config "$MATCH_1" encrypt-with "$MATCH_2"
+
+Encryption scenarions, at least, also need users that pretend to be
+someone else.
+
+    IMPLEMENTS GIVEN a user (\S+) calling themselves (\S+)
+    add_to_config "$MATCH_1" client-name "$MATCH_2"
 
 Backing up
 ----------
@@ -130,7 +136,8 @@ Restoring data
 We need a way to restore data from a test backup repository.
 
     IMPLEMENTS WHEN user (\S+) restores their latest generation in repository (\S+) into (\S+)
-    run_obnam "$MATCH_1" restore -r "$DATADIR/$MATCH_2" --to "$DATADIR/$MATCH_3"
+    run_obnam "$MATCH_1" restore -r "$DATADIR/$MATCH_2" \
+        --to "$DATADIR/$MATCH_3"
 
 Restore a specific generation. The generation number is an ordinal in
 the list of generations, not the "generation id" Obnam assigns, as
@@ -145,6 +152,13 @@ that is unpredictable.
         awk -v "n=$gen" 'NR == n')
     run_obnam "$client" restore -r "$repo" \
         --to "$to" --generation "$id"
+
+We may also need to attempt a restore in a situation when we expect it
+to fail.
+
+    IMPLEMENTS WHEN user (\S+) attempts to restore their latest generation in repository (\S+) into (\S+)
+    attempt run_obnam "$MATCH_1" restore -r "$DATADIR/$MATCH_2" \
+        --to "$DATADIR/$MATCH_3"
 
 Removing (forgetting) generations
 ---------------------------------
@@ -207,6 +221,41 @@ unpredictable.
     id2=$(run_obnam "$MATCH_1" -r "$DATADIR/$MATCH_4" genids | awk -v "n=$MATCH_3" 'NR == n')
     run_obnam "$MATCH_1" diff -r "$DATADIR/$MATCH_4" "$id1" "$id2" > "$DATADIR/$MATCH_5"
 
+Encryption key management
+-------------------------
+
+List clients and the encryption keys they use.
+
+    IMPLEMENTS THEN user (\S+) uses key "(.+)" in repository (\S+)
+    run_obnam "$MATCH_1" -r "$DATADIR/$MATCH_3" client-keys |
+        grep -x "$MATCH_1 $MATCH_2"
+
+Import a key into one user's keyring from another keyring.
+
+    IMPLEMENTS WHEN user (\S+) imports public key "(.+)" from (\S+)
+    GNUPGHOME="$SRCDIR/$MATCH_3" gpg --export --armor "$MATCH_2" |
+    GNUPGHOME="$DATADIR/$MATCH_1.gnupg" gpg --import
+
+Add a public key to a repository.
+
+    IMPLEMENTS WHEN user (\S+) adds key "(.+)" to repository (\S+)
+    run_obnam "$MATCH_1" -r "$DATADIR/$MATCH_3" add-key --keyid "$MATCH_2"
+
+Checks on results of an attempted operation
+-------------------------------------------
+
+The `attempt` shell function in `obnam.sh` runs a command, then
+captures its stdout, stderr, and exit code. The scenarios can then
+test the results in various ways as separate steps.
+
+    IMPLEMENTS THEN the attempt failed with exit code (\d+)
+    attempt_exit_was "$MATCH_1"
+
+We can also match the stderr against a regular expression.
+    
+    IMPLEMENTS THEN the error message matches "(.+)"
+    attempt_matches stderr "$MATCH_1"
+    
 Checks on files
 ---------------
 
