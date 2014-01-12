@@ -118,15 +118,14 @@ Key queries
 -----------
 
 Obnam has a couple of commands to list the keys in the repository and
-what they have access to.
-
-#       obnam [options] list-keys
-#       obnam [options] list-toplevels
+what they have access to (`list-keys`, `list-toplevels`). These are
+primarily useful for debugging, and not not worth writing tests for
+(at least for now).
 
 Removing a client
 -----------------
 
-Obnam currently has a `obnam remove-client` command which only works
+Obnam has a `obnam remove-client` command which currently only works
 when encryption is used. This is a wart, a bug, and a disgrace.
 However, it will be fixed some day, and until then the command is
 tested in this chapter.
