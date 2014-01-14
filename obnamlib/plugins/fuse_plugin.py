@@ -20,7 +20,6 @@ import sys
 import logging
 import errno
 import struct
-import signal
 
 import obnamlib
 
@@ -77,6 +76,7 @@ class ObnamFuseFile(object):
 
             if path == '/.pid' and self.fs.obnam.app.settings['viewmode'] == 'multiple':
                 self.read = self.read_pid
+                self.release = self.release_pid
                 return
 
             self.metadata = self.fs.get_metadata(path)
@@ -93,11 +93,16 @@ class ObnamFuseFile(object):
             raise
 
     def read_pid(self, length, offset):
+        logging.debug('FUSE read_pid %d %d', length, offset)
         pid = str(os.getpid())
         if length < len(pid) or offset != 0:
             return ''
         else:
             return pid
+
+    def release_pid(self, flags):
+        self.fs.root_refresh()
+        return 0
 
     def fgetattr(self):
         logging.debug('FUSE file fgetattr')
@@ -211,15 +216,20 @@ class ObnamFuse(fuse.Fuse):
 
     MAX_METADATA_CACHE = 512
 
-    def sigUSR1(self):
+    def root_refresh(self):
+        logging.debug('FUSE root_refresh is called')
         if self.obnam.app.settings['viewmode'] == 'multiple':
-            repo = self.obnam.app.open_repository()
-            repo.open_client(self.obnam.app.settings['client-name'])
-            generations = [gen for gen in repo.list_generations()
-                            if not repo.get_is_checkpoint(gen)]
-            self.obnam.repo = repo
-            self.rootstat, self.rootlist = self.multiple_root_list(generations)
-            self.metadatacache.clear()
+            try:
+                self.obnam.reopen()
+                repo = self.obnam.repo
+                generations = [gen for gen in repo.list_generations()
+                                if not repo.get_is_checkpoint(gen)]
+                logging.debug('FUSE root_refresh found %d generations' % len(generations))
+                self.rootstat, self.rootlist = self.multiple_root_list(generations)
+                self.metadatacache.clear()
+            except:
+                logging.exception('Unexpected exception')
+                raise
 
     def get_metadata(self, path):
         #logging.debug('FUSE get_metadata(%s)', path)
@@ -584,6 +594,7 @@ class MountPlugin(obnamlib.ObnamPlugin):
         self.app.settings.require('repository')
         self.app.settings.require('client-name')
         self.app.settings.require('to')
+        self.cwd = os.getcwd()
         self.repo = self.app.open_repository()
         self.repo.open_client(self.app.settings['client-name'])
 
@@ -598,8 +609,6 @@ class MountPlugin(obnamlib.ObnamPlugin):
         try:
             ObnamFuseOptParse.obnam = self
             fs = ObnamFuse(obnam=self, parser_class=ObnamFuseOptParse)
-            signal.signal(signal.SIGUSR1, lambda s,f: fs.sigUSR1())
-            signal.siginterrupt(signal.SIGUSR1, False)
             fs.flags = 0
             fs.multithreaded = 0
             fs.parse()
@@ -609,3 +618,11 @@ class MountPlugin(obnamlib.ObnamPlugin):
 
         self.repo.fs.close()
 
+    def reopen(self):
+        try:
+            os.chdir(self.cwd)
+        except OSError:
+            pass
+        self.repo.fs.close()
+        self.repo = self.app.open_repository()
+        self.repo.open_client(self.app.settings['client-name'])

@@ -15,6 +15,9 @@ Version 1./, released UNRELEASED
   report the successful backup to a monitoring system. Patch by
   Enrico Tröger.
 
+* The FUSE plugin can now refresh its view, by having the user read
+  the `.pid` file. Patch by Verly Yundin.
+
 Bug fixes:
 
 * Obnam now creates a `trustdb.gpg` in the temporary GNUPGHOME it uses
