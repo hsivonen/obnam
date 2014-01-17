@@ -112,10 +112,18 @@ attempt_exit_was()
 }
 
 
+# Normalise time fields in a manifest that vary uncontrollably on
+# some filesystems.
+
+normalise_manifest_times()
+{
+    sed '/^Mtime:/s/\.[0-9]* / /' "$@"
+}
+
+
 # Create a manifest with summain of a directory.
 
 manifest()
 {
-    summain -r "$1" --exclude Ino --exclude Dev |
-    sed '/^Mtime:/s/\.[0-9]* / /'
+    summain -r "$1" --exclude Ino --exclude Dev | normalise_manifest_times
 }
