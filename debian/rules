@@ -6,5 +6,5 @@ override_dh_auto_test:
 	python setup.py build_ext -i
 	rm -rf build
 	cp -a test-gpghome temp.gpghome
-	env GNUPGHOME=temp.gpghome python setup.py check --fast
+	env GNUPGHOME=temp.gpghome python setup.py check -ubBylLs
 	rm -rf temp.gpghome
