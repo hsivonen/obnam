@@ -3,7 +3,7 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
-Version 1./, released UNRELEASED
+Version 1.7, released UNRELEASED
 --------------------------------
 
 * The `convert5to6` subcommand has been removed. If you need to
@@ -17,6 +17,10 @@ Version 1./, released UNRELEASED
 
 * The FUSE plugin can now refresh its view, by having the user read
   the `.pid` file. Patch by Verly Yundin.
+
+* New option `--always-restore-setuid` to always restore setuid/setgid
+  flags in permissions, even if the restore is not being run by `root`
+  or the owner of the files (as recorded in the backup).
 
 Bug fixes:
 
