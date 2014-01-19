@@ -240,6 +240,15 @@ class SetMetadataTests(unittest.TestCase):
         self.assertEqual(st.st_mode, self.metadata.st_mode)
         self.assertEqual(st.st_mtime, self.metadata.st_mtime_sec)
 
+    def test_sets_setuid_and_setgid_when_told_to(self):
+        self.metadata.st_mode = 0777 | stat.S_ISUID | stat.S_ISGID
+        obnamlib.set_metadata(self.fs, self.filename, self.metadata,
+                              always_set_id_bits=True)
+        st = os.stat(self.filename)
+
+        self.assertEqual(st.st_mode & stat.S_ISUID, stat.S_ISUID)
+        self.assertEqual(st.st_mode & stat.S_ISGID, stat.S_ISGID)
+
 
 class MetadataCodingTests(unittest.TestCase):
 
