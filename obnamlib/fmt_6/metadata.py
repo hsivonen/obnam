@@ -252,7 +252,7 @@ def set_metadata(fs, filename, metadata,
     # unless explicitly told to do so.
     mode = metadata.st_mode
     set_id_bits = always_set_id_bits or (getuid() in (0, metadata.st_uid))
-    if not set_id_bits:
+    if not set_id_bits: # pragma: no cover
         mode = mode & (~stat.S_ISUID)
         mode = mode & (~stat.S_ISGID)
     if symlink:
