@@ -61,7 +61,11 @@ First, we unpack the test data into a known location.
     mkdir "$DATADIR/$MATCH_2"
     tar -C "$DATADIR/$MATCH_2" -xf "$MATCH_1"
 
-Then we restore the requested generation.
+Then we restore the requested generation. Note the use of the
+`--always-restore-setuid` option. Without it, the setuid/setgid bits
+get restored only if the tests are being run by the `root` user, or a
+user with the same uid as recorded in the reference repository. That
+would almost always break the test for other people, including CI.
 
     IMPLEMENTS WHEN user (\S+) restores generation (\d+) in (\S+) to (\S+)
     export GNUPGHOME="$SRCDIR/test-gpghome"
@@ -69,7 +73,8 @@ Then we restore the requested generation.
         --encrypt-with=3B1802F81B321347 genids | sed -n "${MATCH_2}p")
     run_obnam "$MATCH_1" -r "$DATADIR/$MATCH_3" \
         --encrypt-with=3B1802F81B321347 \
-        restore --to "$DATADIR/$MATCH_4" --generation "$genid"
+        restore --to "$DATADIR/$MATCH_4" --generation "$genid" \
+        --always-restore-setuid
 
 Finally, we verify the restored data against the manifest. We have one
 tricky bit here: there is no guarantee what the path to the root of
