@@ -219,8 +219,11 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             else:
                 self.restore_first_link(gen, pathname, metadata)
             if set_metadata and self.write_ok:
+                always = self.app.settings['always-restore-setuid']
                 try:
-                    obnamlib.set_metadata(self.fs, './' + pathname, metadata)
+                    obnamlib.set_metadata(
+                        self.fs, './' + pathname, metadata,
+                        always_set_id_bits=always)
                 except (IOError, OSError), e:
                     msg = ('Could not set metadata: %s: %d: %s' %
                             (pathname, e.errno, e.strerror))
