@@ -226,7 +226,8 @@ def read_metadata(fs, filename, st=None, getpwuid=None, getgrgid=None):
     return metadata
 
 
-def set_metadata(fs, filename, metadata, getuid=None):
+def set_metadata(fs, filename, metadata, 
+                 getuid=None, always_set_id_bits=False):
     '''Set metadata for a filesystem entry.
 
     We only set metadata that can sensibly be set: st_atime, st_mode,
@@ -247,9 +248,11 @@ def set_metadata(fs, filename, metadata, getuid=None):
     if getuid() == 0:
         fs.lchown(filename, metadata.st_uid, metadata.st_gid)
 
-    # If we are not the owner, and not root, do not restore setuid/setgid.
+    # If we are not the owner, and not root, do not restore setuid/setgid,
+    # unless explicitly told to do so.
     mode = metadata.st_mode
-    if getuid() not in (0, metadata.st_uid): # pragma: no cover
+    set_id_bits = always_set_id_bits or (getuid() in (0, metadata.st_uid))
+    if not set_id_bits:
         mode = mode & (~stat.S_ISUID)
         mode = mode & (~stat.S_ISGID)
     if symlink:

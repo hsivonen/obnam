@@ -63,12 +63,23 @@ class RestorePlugin(obnamlib.ObnamPlugin):
     # just b if b is an absolute path.
 
     def enable(self):
-        self.app.add_subcommand('restore', self.restore,
-                                arg_synopsis='[DIRECTORY]...')
-        self.app.settings.string(['to'], 'where to restore')
-        self.app.settings.string_list(['generation'],
-                                'which generation to restore',
-                                 default=['latest'])
+        self.app.add_subcommand(
+            'restore',
+            self.restore,
+            arg_synopsis='[DIRECTORY]...')
+        self.app.settings.string(
+            ['to'],
+            'where to restore')
+        self.app.settings.string_list(
+            ['generation'],
+            'which generation to restore',
+            default=['latest'])
+        self.app.settings.boolean(
+            ['always-restore-setuid'],
+            'restore setuid/setgid bits in restored files, '
+            'even if not root or backed up file had different owner '
+            'than user running restore',
+            default=False)
 
     @property
     def write_ok(self):
@@ -208,8 +219,11 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             else:
                 self.restore_first_link(gen, pathname, metadata)
             if set_metadata and self.write_ok:
+                always = self.app.settings['always-restore-setuid']
                 try:
-                    obnamlib.set_metadata(self.fs, './' + pathname, metadata)
+                    obnamlib.set_metadata(
+                        self.fs, './' + pathname, metadata,
+                        always_set_id_bits=always)
                 except (IOError, OSError), e:
                     msg = ('Could not set metadata: %s: %d: %s' %
                             (pathname, e.errno, e.strerror))
