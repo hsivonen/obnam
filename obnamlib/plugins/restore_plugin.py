@@ -74,6 +74,12 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             ['generation'],
             'which generation to restore',
             default=['latest'])
+        self.app.settings.boolean(
+            ['always-restore-setuid'],
+            'restore setuid/setgid bits in restored files, '
+            'even if not root or backed up file had different owner '
+            'than user running restore',
+            default=False)
 
     @property
     def write_ok(self):
