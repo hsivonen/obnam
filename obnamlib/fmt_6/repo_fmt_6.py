@@ -970,17 +970,19 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
     # Fsck.
 
     def get_fsck_work_items(self): # pragma: no cover
-        yield CheckBTree('clientlist', 'fsck-skip-shared-b-trees')
+        yield CheckBTree(self._fs, 'clientlist', 'fsck-skip-shared-b-trees')
         for client_name in self.get_client_names():
             client_id = self._get_client_id(client_name)
-            yield CheckBTree(str(client_id), 'fsck-skip-per-client-b-trees')
-        yield CheckBTree('chunklist', 'fsck-skip-shared-b-trees')
-        yield CheckBTree('chunksums', 'fsck-skip-shared-b-trees')
+            yield CheckBTree(
+                self._fs, str(client_id), 'fsck-skip-per-client-b-trees')
+        yield CheckBTree(self._fs, 'chunklist', 'fsck-skip-shared-b-trees')
+        yield CheckBTree(self._fs, 'chunksums', 'fsck-skip-shared-b-trees')
 
 
 class CheckBTree(obnamlib.WorkItem): # pragma: no cover
  
-    def __init__(self, dirname, skip_setting):
+    def __init__(self, fs, dirname, skip_setting):
+        self.fs = fs
         self.dirname = dirname
         self.skip_setting = skip_setting
         self.name = 'B-tree %s' % dirname
@@ -989,17 +991,15 @@ class CheckBTree(obnamlib.WorkItem): # pragma: no cover
         if self.settings[self.skip_setting]:
             return
 
-        if not self.repo.get_fs().exists(self.dirname):
+        if not self.fs.exists(self.dirname):
             logging.debug('B-tree %s does not exist, skipping' % self.dirname)
             return
 
         logging.debug('Checking B-tree %s' % self.dirname)
         fix = self.settings['fsck-fix']
 
-        # FIXME: This accesses a private attribute. We need to add a
-        # get_real_fs accessor method to the RepositoryInterface to fix this.
         forest = larch.open_forest(
-            allow_writes=fix, dirname=self.dirname, vfs=self.repo._fs)
+            allow_writes=fix, dirname=self.dirname, vfs=self.fs)
         fsck = larch.fsck.Fsck(forest, self.warning, self.error, fix)
         for work in fsck.find_work():
             yield work
