@@ -181,6 +181,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                                  'exclude from backup (can be used multiple '
                                  'times)',
                                  group=backup_group)
+        self.app.settings.string_list(['exclude-from'],
+                                 'read exclude patterns from FILE',
+                                 metavar='FILE',
+                                 group=backup_group)
         self.app.settings.boolean(['exclude-caches'],
                                     'exclude directories (and their subdirs) '
                                     'that contain a CACHEDIR.TAG file',
@@ -389,15 +393,21 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.repo = self.app.get_repository_object(repofs=self.repo.get_fs())
 
     def compile_exclusion_patterns(self):
+        # read exclude list files from --exclude-from
+        exclude_patterns = self.read_exclusion_patterns_from_files(
+                                    self.app.settings['exclude-from'])
+        # add patterns passed via --exclude
+        exclude_patterns.extend(self.app.settings['exclude'])
+
         log = self.app.settings['log']
         if log:
             log = self.app.settings['log']
-            self.app.settings['exclude'].append(log)
-        for pattern in self.app.settings['exclude']:
+            exclude_patterns.append(log)
+        for pattern in exclude_patterns:
             logging.debug('Exclude pattern: %s' % pattern)
 
         self.exclude_pats = []
-        for x in self.app.settings['exclude']:
+        for x in exclude_patterns:
             if x != '':
                 try:
                     self.exclude_pats.append(re.compile(x))
@@ -406,6 +416,16 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                         'error compiling regular expression "%s": %s' % (x, e))
                     logging.error(msg)
                     self.progress.error(msg)
+
+    def read_exclusion_patterns_from_files(self, filenames):
+        patterns = []
+        for filename in filenames:
+            with open(filename) as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith('#'):
+                        patterns.append(line)
+        return patterns
 
     def backup_roots(self, roots):
         self.progress.what('connecting to to repository')

@@ -22,6 +22,10 @@ Version 1.7, released UNRELEASED
   flags in permissions, even if the restore is not being run by `root`
   or the owner of the files (as recorded in the backup).
 
+* New option `--exclude-from` allows exclusion patterns to be given in
+  a separate file (one per line), instead of in a configuration file
+  or on the command line. Patch by Enrico Tröger.
+
 Bug fixes:
 
 * Obnam now creates a `trustdb.gpg` in the temporary GNUPGHOME it uses
