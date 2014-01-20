@@ -241,9 +241,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         logging.error(msg)
         if exc:
             logging.error(repr(exc))
-
-        # FIXME: ttystatus.TerminalStatus.error is quiet if --quiet is used.
-        # That's a bug, so we work around it by writing to stderr directly.
         sys.stderr.write('ERROR: %s\n' % msg)
 
     def parse_checkpoint_size(self, value):
