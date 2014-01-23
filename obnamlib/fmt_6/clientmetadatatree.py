@@ -356,9 +356,10 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         except KeyError:
             old_metadata = None
         else: # pragma: no cover
-            old = obnamlib.decode_metadata(old_metadata)
+            old = obnamlib.fmt_6.metadata_codec.decode_metadata(old_metadata)
 
-        metadata = obnamlib.decode_metadata(encoded_metadata)
+        metadata = obnamlib.fmt_6.metadata_codec.decode_metadata(
+            encoded_metadata)
 
         if encoded_metadata != old_metadata:
             tracing.trace('new or changed metadata')
@@ -409,7 +410,8 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         except KeyError:
             pass
         else:
-            metadata = obnamlib.decode_metadata(encoded_metadata)
+            metadata = obnamlib.fmt_6.metadata_codec.decode_metadata(
+                encoded_metadata)
 
         # Remove any children.
         minkey = self.fskey(file_id, self.DIR_CONTENTS, 0)

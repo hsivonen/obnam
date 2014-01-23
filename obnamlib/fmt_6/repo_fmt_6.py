@@ -847,7 +847,8 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         client_name, gen_number = self._unpack_gen_id(generation_id)
         self._require_client_lock(client_name)
         client = self._open_client(client_name)
-        encoded_metadata = obnamlib.encode_metadata(obnamlib.Metadata())
+        encoded_metadata = obnamlib.fmt_6.metadata_codec.encode_metadata(
+            obnamlib.Metadata())
         client.create(filename, encoded_metadata)
 
     def remove_file(self, generation_id, filename):
@@ -883,7 +884,8 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             client_name, generation_number = self._unpack_gen_id(generation_id)
             dirty, metadata = value
             if dirty:
-                encoded_metadata = obnamlib.encode_metadata(metadata)
+                encoded_metadata = \
+                    obnamlib.fmt_6.metadata_codec.encode_metadata(metadata)
                 client = self._open_client(client_name)
                 # FIXME: Only sets in unfinished generation
                 client.set_metadata(filename, encoded_metadata)
@@ -893,7 +895,8 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         client_name, gen_number = self._unpack_gen_id(generation_id)
         client = self._open_client(client_name)
         encoded_metadata = client.get_metadata(gen_number, filename)
-        metadata = obnamlib.decode_metadata(encoded_metadata)
+        metadata = obnamlib.fmt_6.metadata_codec.decode_metadata(
+            encoded_metadata)
         cache_key = self._get_file_key_cache_key(generation_id, filename)
         self._file_key_cache[cache_key] = (False, metadata)
 

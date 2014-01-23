@@ -602,12 +602,12 @@ class Repository(object):
             encoded = self.client.get_metadata(gen, filename)
         except KeyError:
             raise obnamlib.Error('%s does not exist' % filename)
-        return obnamlib.decode_metadata(encoded)
+        return obnamlib.fmt_6.metadata_codec.decode_metadata(encoded)
 
     def create(self, filename, metadata):
         '''Create a new (empty) file in the new generation.'''
         self.require_started_generation()
-        encoded = obnamlib.encode_metadata(metadata)
+        encoded = obnamlib.fmt_6.metadata_codec.encode_metadata(metadata)
         self.client.create(filename, encoded)
 
     def remove(self, filename):

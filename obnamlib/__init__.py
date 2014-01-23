@@ -154,14 +154,11 @@ from repo_dummy import RepositoryFormatDummy
 # Repository format 6 specific modules.
 #
 
-from fmt_6.metadata import (
+from metadata import (
     Metadata,
     read_metadata,
     set_metadata,
-    metadata_fields,
-    metadata_verify_fields,
-    encode_metadata,
-    decode_metadata)
+    metadata_fields)
 from fmt_6.repo_fmt_6 import RepositoryFormat6
 from fmt_6.repo_tree import RepositoryTree
 from fmt_6.chunklist import ChunkList
