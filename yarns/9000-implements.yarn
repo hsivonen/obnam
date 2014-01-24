@@ -261,6 +261,16 @@ repository anymore.
         exit 1
     fi
 
+We may also want to make sure we do see a client.
+
+    IMPLEMENTS THEN user (\S+) can see user (\S+) in repository (\S+)
+    if ! run_obnam "$MATCH_1" -r "$DATADIR/$MATCH_3" clients |
+        grep -x "$MATCH_2"
+    then
+        echo "Client $MATCH_2 is not in repository $MATCH_3" 1>&2
+        exit 1
+    fi
+
 Checks on results of an attempted operation
 -------------------------------------------
 
