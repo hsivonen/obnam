@@ -54,6 +54,13 @@ backup programs (regular files with data and no holes).
     IMPLEMENTS GIVEN directory (\S+) with interesting filesystem objects
     "$SRCDIR/mkfunnyfarm" "$DATADIR/$MATCH_1"
 
+Some directories will be tagged as cache directories
+(see [Cache directory tagging](http://www.bford.info/cachedir/)).
+
+    IMPLEMENTS GIVEN directory (\S+) is tagged as a cache directory
+    printf 'Signature: 8a477f597d28d172789f06886806bc55' \
+        > "$DATADIR/$MATCH_1/CACHEDIR.TAG"
+
 Manifest creation and checking
 ------------------------------
 
@@ -82,6 +89,22 @@ We may also need to check two manifests against each other.
     IMPLEMENTS THEN manifests (\S+) and (\S+) match
     diff -u "$DATADIR/$MATCH_1" "$DATADIR/$MATCH_2"
 
+In a special case, we may need to update the `Mtime` for the first
+entry in a manifest. This is used, at least, when testing cache
+directory exclusion: we create wanted data, then create a manifest,
+then add the cache directory. This invalidates the Mtime for the first
+entry.
+
+    IMPLEMENTS GIVEN manifest (\S+) has Mtime for the first entry set from (\S+)
+    x=$(date -r "$DATADIR/$MATCH_2" '+Mtime: %Y-%m-%d %H:%M:%S +0000')
+    awk -v "x=$x" '
+        !x && /^Mtime:/ { print x; next }
+        /^$/ { x = 1 }
+        { print }
+        ' "$DATADIR/$MATCH_1" > "$DATADIR/new-manifest"
+    mv "$DATADIR/new-manifest" "$DATADIR/$MATCH_1"
+
+
 Obnam configuration management
 ------------------------------
 
@@ -106,6 +129,11 @@ someone else.
 
     IMPLEMENTS GIVEN a user (\S+) calling themselves (\S+)
     add_to_config "$MATCH_1" client-name "$MATCH_2"
+
+Add a setting to a client's configuration file.
+
+    IMPLEMENTS GIVEN user (\S+) sets configuration (\S+) to (\S+)
+    add_to_config "$MATCH_1" "$MATCH_2" "$MATCH_3"
 
 Backing up
 ----------

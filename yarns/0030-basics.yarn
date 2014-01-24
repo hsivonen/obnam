@@ -101,3 +101,38 @@ than a real one.
     WHEN user U pretends to back up directory L to repository R
     GIVEN a manifest of directory R in M2
     THEN manifests M1 and M2 match 
+
+Exclude cache directories
+-------------------------
+
+The [Cache directory tagging] standard provides an easy way to mark
+specific directories as cache directories, which means their data is
+easy to re-create (or re-download). Such data is often not worth
+backing up. The `--exclude-caches` option tells Obnam to exclude any
+directories tagged like that.
+
+[Cache directory tagging]: http://www.bford.info/cachedir/
+
+    SCENARIO exclude cache directories
+    GIVEN 1k of new data in directory L/wanted
+
+The directory `L` now contains what we want to restore: only the
+wanted data, no cache directory. This is a good time to create the
+manifest.
+
+    AND a manifest of directory L in M
+
+We now create the cache directory and tag it. Then we backup,
+excluding caches, and restore, and verify. However, there's a snag:
+the manifest has a modification time for `L` that is wrong: the
+creation of the cache directory modifies it. Thus, we also modify the
+manifest to update the first `Mtime` field, i.e., the one for the
+directory `L`.
+
+    AND 1k of new data in directory L/cache
+    AND directory L/cache is tagged as a cache directory
+    AND manifest M has Mtime for the first entry set from L
+    AND user U sets configuration exclude-caches to yes
+    WHEN user U backs up directory L to repository R
+    AND user U restores their latest generation in repository R into X
+    THEN L, restored to X, matches manifest M
