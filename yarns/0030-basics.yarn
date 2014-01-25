@@ -86,6 +86,22 @@ duplication.
     AND user U restores their latest generation in repository R into X
     THEN L, restored to X, matches manifest M
 
+Backup to roots at once
+-----------------------
+
+Often it's useful to backup more than one location at once. We'll
+assume that if we can backup two, then it'll all work well.
+
+    SCENARIO backup two roots
+    GIVEN directory L1 with interesting filesystem objects
+    AND directory L2 with interesting filesystem objects
+    AND a manifest of directory L1 in M1
+    AND a manifest of directory L2 in M2
+    WHEN user U backs up directories L1 and L2 to repository R
+    AND user U restores their latest generation in repository R into X
+    THEN L1, restored to X, matches manifest M1
+    THEN L2, restored to X, matches manifest M2
+
 Pretend backing up: the `--pretend` setting
 -------------------------------------------
 

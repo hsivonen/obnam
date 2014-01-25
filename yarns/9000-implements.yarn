@@ -166,6 +166,12 @@ addition to backing up, this makes a manifest of the data.
     IMPLEMENTS WHEN user (\S+) backs up directory (\S+) to repository (\S+)
     run_obnam "$MATCH_1" backup -r "$DATADIR/$MATCH_3" "$DATADIR/$MATCH_2"
 
+We may also need to backup two directories at once.
+
+    IMPLEMENTS WHEN user (\S+) backs up directories (\S+) and (\S+) to repository (\S+)
+    run_obnam "$MATCH_1" backup -r "$DATADIR/$MATCH_4" \
+         "$DATADIR/$MATCH_2" "$DATADIR/$MATCH_3"
+
 We can also just pretend to make a backup.
 
     IMPLEMENTS WHEN user (\S+) pretends to back up directory (\S+) to repository (\S+)
