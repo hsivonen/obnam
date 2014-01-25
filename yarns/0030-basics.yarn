@@ -102,6 +102,18 @@ assume that if we can backup two, then it'll all work well.
     THEN L1, restored to X, matches manifest M1
     THEN L2, restored to X, matches manifest M2
 
+Checkpoint generations
+----------------------
+
+Obnam is meant to remove checkpoint generations it created during a
+backup, if the backup finishes successfully.
+
+    SCENARIO checkpoint generations are removed
+    GIVEN 100kB of new data in directory L
+    AND user U sets configuration checkpoint to 1k
+    WHEN user U backs up directory L to repository R
+    THEN user U sees no checkpoint generations in repository R
+
 Pretend backing up: the `--pretend` setting
 -------------------------------------------
 

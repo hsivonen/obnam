@@ -265,6 +265,17 @@ Ditto for generation ids.
     n=$(wc -l < "$DATADIR/generation-id.list")
     test "$MATCH_2" = "$n"
 
+Check that there are no checkpoint generations.
+
+    IMPLEMENTS THEN user (\S+) sees no checkpoint generations in repository (\S+)
+    run_obnam "$MATCH_1" generations -r "$DATADIR/$MATCH_2" \
+        > "$DATADIR/generation.list"
+    if grep checkoint "$DATADIR/generation.list"
+    then
+        echo "Can see checkpoint generations!" 1>&2
+        exit 1
+    fi
+
 Diffs between generations
 -------------------------
 
