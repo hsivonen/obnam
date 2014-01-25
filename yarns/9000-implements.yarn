@@ -216,6 +216,14 @@ to fail.
     attempt run_obnam "$MATCH_1" restore -r "$DATADIR/$MATCH_2" \
         --to "$DATADIR/$MATCH_3"
 
+We may need to restore only a single file.
+
+    IMPLEMENTS WHEN user (\S+) restores file (\S+) to (\S+) from their latest generation in repository (\S+)
+    run_obnam "$MATCH_1" ls -r "$DATADIR/$MATCH_4"
+    run_obnam "$MATCH_1" restore -r "$DATADIR/$MATCH_4" \
+        --to "$DATADIR/$MATCH_3" "$DATADIR/$MATCH_2"
+
+
 Removing (forgetting) generations
 ---------------------------------
 

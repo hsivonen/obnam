@@ -114,6 +114,20 @@ backup, if the backup finishes successfully.
     WHEN user U backs up directory L to repository R
     THEN user U sees no checkpoint generations in repository R
 
+Restore a single file
+---------------------
+
+We need to be able to restore only a single file.
+
+    SCENARIO restore a single file
+    GIVEN a file F in L, with data
+    AND a manifest of directory L in M
+    AND 100kB of new data in directory L
+    AND manifest M has Mtime for the first entry set from L
+    WHEN user U backs up directory L to repository R
+    AND user U restores file L/F to X from their latest generation in repository R
+    THEN L, restored to X, matches manifest M
+
 Pretend backing up: the `--pretend` setting
 -------------------------------------------
 
