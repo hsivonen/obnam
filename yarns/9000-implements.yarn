@@ -61,6 +61,28 @@ Some directories will be tagged as cache directories
     printf 'Signature: 8a477f597d28d172789f06886806bc55' \
         > "$DATADIR/$MATCH_1/CACHEDIR.TAG"
 
+Sometimes it is necessary to set the modification filestamp of a file.
+Actually, it's usually useful to set both `st_mtime` and `st_atime` to
+the same value. The timestamp is given in the "seconds after epoch" in
+UTC format, as is common in Unix.
+
+    IMPLEMENTS GIVEN file (\S+) has Unix timestamp (-?\d+)
+    parent=$(dirname "$MATCH_1")
+    if [ ! -e "$DATADIR/$parent" ]
+    then
+        mkdir "$DATADIR/$parent"
+    fi
+    touch "$DATADIR/$MATCH_1"
+    python -c '
+    import os
+    filename = os.path.join(
+        os.environ["DATADIR"],
+        os.environ["MATCH_1"])
+    timestamp = int(os.environ["MATCH_2"])
+    os.utime(filename, (timestamp, timestamp))
+    '
+    
+
 Manifest creation and checking
 ------------------------------
 

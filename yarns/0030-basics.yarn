@@ -151,3 +151,17 @@ new backup.
     AND user U backs up directory L2 to repository R
     AND user U lists latest generation in repository R into F
     THEN nothing in F matches L1
+
+Pre-epoch timestamps
+--------------------
+
+It's possible to have timestamps before the epoch, i.e., negative
+ones. For example, in the UK during DST, `touch -t 197001010000` will
+create one. Test that such timestamps work.
+
+    SCENARIO pre-epoch timestamps
+    GIVEN file L/file has Unix timestamp -3600
+    AND a manifest of directory L in M
+    WHEN user U backs up directory L to repository R
+    AND user U restores their latest generation in repository R into X
+    THEN L, restored to X, matches manifest M
