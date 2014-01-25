@@ -352,6 +352,16 @@ Do all lines match?
     IMPLEMENTS THEN all lines in (\S+) match (\S+)
     ! grep -E -v -e "$MATCH_2" -- "$DATADIR/$MATCH_1"
 
+Does no line match?
+
+    IMPLEMENTS THEN nothing in (\S+) matches (\S+)
+    if grep -E -e "$MATCH_2" -- "$DATADIR/$MATCH_1" | grep '.*'
+    then
+        echo "At least one line matches, when none may!" 1>&2
+        exit 1
+    fi
+
+
 Check on user group membership
 ------------------------------
 

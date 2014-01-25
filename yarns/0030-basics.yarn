@@ -136,3 +136,18 @@ directory `L`.
     WHEN user U backs up directory L to repository R
     AND user U restores their latest generation in repository R into X
     THEN L, restored to X, matches manifest M
+
+Changing backup roots
+---------------------
+
+When we change the backup roots, i.e., the directories we want backed
+up, we do not want the any dropped backup roots to be included in the
+new backup.
+
+    SCENARIO replace backup root with new one
+    GIVEN 1k of new data in directory L1
+    AND 1k of new data in directory L2
+    WHEN user U backs up directory L1 to repository R
+    AND user U backs up directory L2 to repository R
+    AND user U lists latest generation in repository R into F
+    THEN nothing in F matches L1
