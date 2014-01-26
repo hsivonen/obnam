@@ -41,7 +41,7 @@ that encryption is done at the I/O abstraction level.
     SCENARIO basic encrypted backup and restore
     GIVEN user U uses encryption key "Test Key One" from test-data/keyring-1
     AND directory L with interesting filesystem objects
-    AND a manifest of directory L in M
+    AND a manifest of L in M
     WHEN user U backs up directory L to repository R
     AND user U restores their latest generation in repository R into X
     THEN L, restored to X, matches manifest M
@@ -85,11 +85,11 @@ Then we make a backup as the second client.
 
 Let's make sure both clients can still restore their own data.
 
-    GIVEN a manifest of directory L1 in M1
+    GIVEN a manifest of L1 in M1
     WHEN user U1 restores their latest generation in repository R into X1
     THEN L1, restored to X1, matches manifest M1
 
-    GIVEN a manifest of directory L2 in M2
+    GIVEN a manifest of L2 in M2
     WHEN user U2 restores their latest generation in repository R into X2
     THEN L2, restored to X2, matches manifest M2
 

@@ -82,6 +82,11 @@ UTC format, as is common in Unix.
     os.utime(filename, (timestamp, timestamp))
     '
     
+We need to manipulate extended attributes.
+
+    IMPLEMENTS GIVEN file (\S+) has extended attribute (\S+) set to (\S+)
+    mkdir -p $(dirname "$DATADIR/$MATCH_1")
+    setfattr --name="$MATCH_2" --value "$MATCH_3" "$DATADIR/$MATCH_1"
 
 Manifest creation and checking
 ------------------------------
@@ -91,7 +96,7 @@ that naming of the manifest is explicit. This reduces the need to
 debug weird test suite bugs, when an automatic or implicit manifest
 naming goes wrong.
 
-    IMPLEMENTS GIVEN a manifest of directory (\S+) in (\S+)
+    IMPLEMENTS GIVEN a manifest of (\S+) in (\S+)
     manifest "$DATADIR/$MATCH_1" > "$DATADIR/$MATCH_2"
 
 We need to check a directory tree against an existing manifest. We do
@@ -101,8 +106,14 @@ see what the temporary manifest actually contains. Being able to look
 at the actual file is easier than trying to interpret complicated
 diffs.
 
+We remove the restore directory prefix from the manifest (the `Name:`
+field that Summain outputs). This is necessary so that comparisons
+with **diff**(1) will work well.
+
     IMPLEMENTS THEN (\S+), restored to (\S+), matches manifest (\S+)
-    manifest "$DATADIR/$MATCH_2/$DATADIR/$MATCH_1" > "$DATADIR/temp-manifest"
+    manifest "$DATADIR/$MATCH_2/$DATADIR/$MATCH_1" |
+        sed "s*$DATADIR/$MATCH_2/**" > "$DATADIR/temp-manifest"
+
     diff -u "$DATADIR/$MATCH_3" "$DATADIR/temp-manifest"
     rm -f "$DATADIR/temp-manifest"
 

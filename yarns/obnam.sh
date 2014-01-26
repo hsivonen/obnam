@@ -121,7 +121,7 @@ normalise_manifest_times()
 }
 
 
-# Create a manifest with summain of a directory.
+# Create a manifest with summain of a file or a directory.
 
 manifest()
 {
