@@ -138,5 +138,15 @@ class MakeFunnyFarm(cliapp.Application):
             ['setfattr', '-n', 'user.foo', '-v', 'some value', 
              self.J('file-xattr-user')])
 
+    def farm_regular_file_xattr_user_empty_value(self):
+        # This is a special case: a key exists, but has an empty value.
+        # Some tools treat such keys as non-existing, but others do not,
+        # so Obnam needs to handle them.
+        with open(self.J('file-xattr-user-empty-value'), 'w'):
+            pass
+        cliapp.runcmd(
+            ['setfattr', '-n', 'user.foo', '-v', '""', 
+             self.J('file-xattr-user')])
+
 
 MakeFunnyFarm(description=__doc__).run()
