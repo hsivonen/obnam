@@ -68,7 +68,10 @@ user with the same uid as recorded in the reference repository. That
 would almost always break the test for other people, including CI.
 
     IMPLEMENTS WHEN user (\S+) restores generation (\d+) in (\S+) to (\S+)
-    export GNUPGHOME="$SRCDIR/test-gpghome"
+    # Copy the keyrings from source tree so they don't get modified
+    # by this test.
+    cp -a "$SRCDIR/test-gpghome" "$DATADIR/.gnupg"
+    export GNUPGHOME="$DATADIR/.gnupg"
     genid=$(run_obnam "$MATCH_1" -r "$DATADIR/$MATCH_3" \
         --encrypt-with=3B1802F81B321347 genids | sed -n "${MATCH_2}p")
     run_obnam "$MATCH_1" -r "$DATADIR/$MATCH_3" \
