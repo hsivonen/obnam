@@ -207,3 +207,22 @@ create one. Test that such timestamps work.
     WHEN user U backs up directory L to repository R
     AND user U restores their latest generation in repository R into X
     THEN L, restored to X, matches manifest M
+
+Change B-tree node size
+-----------------------
+
+The setting for B-tree node size (`--node-size`) only affects new
+B-trees. Thus, if we've backed up with one size, and change the
+setting to a new size, the backup should still work.
+
+    SCENARIO backup with changed B-tree node size
+    GIVEN 100kB of new data in directory L
+    AND user U sets configuration node-size to 65536
+    WHEN user U backs up directory L to repository R
+    GIVEN 100Kb of new data in directory L
+    AND a manifest of directory L in M
+    AND user U sets configuration node-size to 4096
+    WHEN user U backs up directory L to repository R
+    AND user U restores their latest generation in repository R into X
+    THEN L, restored to X, matches manifest M
+    AND user U can fsck the repository R
