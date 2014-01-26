@@ -14,8 +14,8 @@ suite we do not test concurrency at all.
     SCENARIO two clients sharing a repository
     GIVEN directory L1 with interesting filesystem objects
     AND directory L2 with interesting filesystem objects
-    AND a manifest of directory L1 in M1
-    AND a manifest of directory L2 in M2
+    AND a manifest of L1 in M1
+    AND a manifest of L2 in M2
     WHEN user U1 backs up directory L1 to repository R
     WHEN user U2 backs up directory L2 to repository R
     AND user U1 restores their latest generation in repository R into X1
@@ -28,8 +28,8 @@ a change to both sets of live data, and
 
     GIVEN 1kB of new data in directory L1
     AND 2kB of new data in directory L2
-    AND a manifest of directory L1 in M1A
-    AND a manifest of directory L2 in M2A
+    AND a manifest of L1 in M1A
+    AND a manifest of L2 in M2A
     WHEN user U1 backs up directory L1 to repository R
     AND user U2 backs up directory L2 to repository R
     AND user U1 forgets the oldest generation in repository R
@@ -38,3 +38,18 @@ a change to both sets of live data, and
     AND user U2 restores their latest generation in repository R into X2A
     THEN L1, restored to X1A, matches manifest M1A
     AND L2, restored to X2A, matches manifest M2A
+
+Listing clients
+---------------
+
+In a repository shared by many clients, it may be necessary to list
+the names, and sometimes to do that without being one of the clients.
+For example, when restoring a machine that has been destroyed, you may
+need to list the clients to pick the right one to restore. This test
+verifies that you can list the clients even if you don't know an
+existing client's name.
+
+    SCENARIO list clients without being in the client list
+    GIVEN directory L with interesting filesystem objects
+    WHEN user U1 backs up directory L to repository R
+    THEN user U2 can see user U1 in repository R

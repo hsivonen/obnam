@@ -19,7 +19,7 @@ program must be able to handle.
 
     SCENARIO backup simple data
     GIVEN 100kB of new data in directory L
-    AND a manifest of directory L in M
+    AND a manifest of L in M
     WHEN user U backs up directory L to repository R
     AND user U restores their latest generation in repository R into X
     THEN L, restored to X, matches manifest M
@@ -46,7 +46,7 @@ more disk space than the one in live data.
 
     SCENARIO backup a sparse file
     GIVEN a file S in L, with a hole, data, a hole
-    AND a manifest of directory L in M
+    AND a manifest of L in M
     WHEN user U backs up directory L to repository R
     AND user U restores their latest generation in repository R into X
     THEN L, restored to X, matches manifest M
@@ -81,10 +81,66 @@ duplication.
 
     SCENARIO backup non-basic filesystem objects
     GIVEN directory L with interesting filesystem objects
-    AND a manifest of directory L in M
+    AND a manifest of L in M
     WHEN user U backs up directory L to repository R
     AND user U restores their latest generation in repository R into X
     THEN L, restored to X, matches manifest M
+
+As a special case, Obnam needs to notice when only an extended
+attribute value changes.
+
+    SCENARIO backup notices when extended attribute value changes
+    GIVEN a file F in L, with data
+    AND file L/F has extended attribute user.foo set to foo
+    WHEN user U backs up directory L to repository R
+    GIVEN file L/F has extended attribute user.foo set to bar
+    AND a manifest of L in M
+    WHEN user U backs up directory L to repository R
+    AND user U restores their latest generation in repository R into X
+    THEN L, restored to X, matches manifest M
+
+Backup to roots at once
+-----------------------
+
+Often it's useful to backup more than one location at once. We'll
+assume that if we can backup two, then it'll all work well.
+
+    SCENARIO backup two roots
+    GIVEN directory L1 with interesting filesystem objects
+    AND directory L2 with interesting filesystem objects
+    AND a manifest of L1 in M1
+    AND a manifest of L2 in M2
+    WHEN user U backs up directories L1 and L2 to repository R
+    AND user U restores their latest generation in repository R into X
+    THEN L1, restored to X, matches manifest M1
+    THEN L2, restored to X, matches manifest M2
+
+Checkpoint generations
+----------------------
+
+Obnam is meant to remove checkpoint generations it created during a
+backup, if the backup finishes successfully.
+
+    SCENARIO checkpoint generations are removed
+    GIVEN 100kB of new data in directory L
+    AND user U sets configuration checkpoint to 1k
+    WHEN user U backs up directory L to repository R
+    THEN user U sees no checkpoint generations in repository R
+
+Restore a single file
+---------------------
+
+We need to be able to restore only a single file. Note that when
+restoring a single file, we do not set the parent directory's
+modification time according to the backup, so we need to manipulate
+the manifest to avoid getting an error.
+
+    SCENARIO restore a single file
+    GIVEN a file F in L, with data
+    AND a manifest of L/F in M
+    WHEN user U backs up directory L to repository R
+    AND user U restores file L/F to X from their latest generation in repository R
+    THEN L/F, restored to X, matches manifest M
 
 Pretend backing up: the `--pretend` setting
 -------------------------------------------
@@ -97,7 +153,90 @@ than a real one.
     SCENARIO a pretend backup
     GIVEN directory L with interesting filesystem objects
     WHEN user U backs up directory L to repository R
-    GIVEN a manifest of directory R in M1
+    GIVEN a manifest of R in M1
     WHEN user U pretends to back up directory L to repository R
-    GIVEN a manifest of directory R in M2
+    GIVEN a manifest of R in M2
     THEN manifests M1 and M2 match 
+
+Exclude cache directories
+-------------------------
+
+The [Cache directory tagging] standard provides an easy way to mark
+specific directories as cache directories, which means their data is
+easy to re-create (or re-download). Such data is often not worth
+backing up. The `--exclude-caches` option tells Obnam to exclude any
+directories tagged like that.
+
+[Cache directory tagging]: http://www.bford.info/cachedir/
+
+    SCENARIO exclude cache directories
+    GIVEN 1k of new data in directory L/wanted
+
+The directory `L` now contains what we want to restore: only the
+wanted data, no cache directory. This is a good time to create the
+manifest.
+
+    AND a manifest of L in M
+
+We now create the cache directory and tag it. Then we backup,
+excluding caches, and restore, and verify. However, there's a snag:
+the manifest has a modification time for `L` that is wrong: the
+creation of the cache directory modifies it. Thus, we also modify the
+manifest to update the first `Mtime` field, i.e., the one for the
+directory `L`.
+
+    AND 1k of new data in directory L/cache
+    AND directory L/cache is tagged as a cache directory
+    AND manifest M has Mtime for the first entry set from L
+    AND user U sets configuration exclude-caches to yes
+    WHEN user U backs up directory L to repository R
+    AND user U restores their latest generation in repository R into X
+    THEN L, restored to X, matches manifest M
+
+Changing backup roots
+---------------------
+
+When we change the backup roots, i.e., the directories we want backed
+up, we do not want the any dropped backup roots to be included in the
+new backup.
+
+    SCENARIO replace backup root with new one
+    GIVEN 1k of new data in directory L1
+    AND 1k of new data in directory L2
+    WHEN user U backs up directory L1 to repository R
+    AND user U backs up directory L2 to repository R
+    AND user U lists latest generation in repository R into F
+    THEN nothing in F matches L1
+
+Pre-epoch timestamps
+--------------------
+
+It's possible to have timestamps before the epoch, i.e., negative
+ones. For example, in the UK during DST, `touch -t 197001010000` will
+create one. Test that such timestamps work.
+
+    SCENARIO pre-epoch timestamps
+    GIVEN file L/file has Unix timestamp -3600
+    AND a manifest of L in M
+    WHEN user U backs up directory L to repository R
+    AND user U restores their latest generation in repository R into X
+    THEN L, restored to X, matches manifest M
+
+Change B-tree node size
+-----------------------
+
+The setting for B-tree node size (`--node-size`) only affects new
+B-trees. Thus, if we've backed up with one size, and change the
+setting to a new size, the backup should still work.
+
+    SCENARIO backup with changed B-tree node size
+    GIVEN 100kB of new data in directory L
+    AND user U sets configuration node-size to 65536
+    WHEN user U backs up directory L to repository R
+    GIVEN 100Kb of new data in directory L
+    AND a manifest of L in M
+    AND user U sets configuration node-size to 4096
+    WHEN user U backs up directory L to repository R
+    AND user U restores their latest generation in repository R into X
+    THEN L, restored to X, matches manifest M
+    AND user U can fsck the repository R

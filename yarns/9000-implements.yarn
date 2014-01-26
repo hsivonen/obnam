@@ -54,6 +54,40 @@ backup programs (regular files with data and no holes).
     IMPLEMENTS GIVEN directory (\S+) with interesting filesystem objects
     "$SRCDIR/mkfunnyfarm" "$DATADIR/$MATCH_1"
 
+Some directories will be tagged as cache directories
+(see [Cache directory tagging](http://www.bford.info/cachedir/)).
+
+    IMPLEMENTS GIVEN directory (\S+) is tagged as a cache directory
+    printf 'Signature: 8a477f597d28d172789f06886806bc55' \
+        > "$DATADIR/$MATCH_1/CACHEDIR.TAG"
+
+Sometimes it is necessary to set the modification filestamp of a file.
+Actually, it's usually useful to set both `st_mtime` and `st_atime` to
+the same value. The timestamp is given in the "seconds after epoch" in
+UTC format, as is common in Unix.
+
+    IMPLEMENTS GIVEN file (\S+) has Unix timestamp (-?\d+)
+    parent=$(dirname "$MATCH_1")
+    if [ ! -e "$DATADIR/$parent" ]
+    then
+        mkdir "$DATADIR/$parent"
+    fi
+    touch "$DATADIR/$MATCH_1"
+    python -c '
+    import os
+    filename = os.path.join(
+        os.environ["DATADIR"],
+        os.environ["MATCH_1"])
+    timestamp = int(os.environ["MATCH_2"])
+    os.utime(filename, (timestamp, timestamp))
+    '
+    
+We need to manipulate extended attributes.
+
+    IMPLEMENTS GIVEN file (\S+) has extended attribute (\S+) set to (\S+)
+    mkdir -p $(dirname "$DATADIR/$MATCH_1")
+    setfattr --name="$MATCH_2" --value "$MATCH_3" "$DATADIR/$MATCH_1"
+
 Manifest creation and checking
 ------------------------------
 
@@ -62,7 +96,7 @@ that naming of the manifest is explicit. This reduces the need to
 debug weird test suite bugs, when an automatic or implicit manifest
 naming goes wrong.
 
-    IMPLEMENTS GIVEN a manifest of directory (\S+) in (\S+)
+    IMPLEMENTS GIVEN a manifest of (\S+) in (\S+)
     manifest "$DATADIR/$MATCH_1" > "$DATADIR/$MATCH_2"
 
 We need to check a directory tree against an existing manifest. We do
@@ -72,8 +106,14 @@ see what the temporary manifest actually contains. Being able to look
 at the actual file is easier than trying to interpret complicated
 diffs.
 
+We remove the restore directory prefix from the manifest (the `Name:`
+field that Summain outputs). This is necessary so that comparisons
+with **diff**(1) will work well.
+
     IMPLEMENTS THEN (\S+), restored to (\S+), matches manifest (\S+)
-    manifest "$DATADIR/$MATCH_2/$DATADIR/$MATCH_1" > "$DATADIR/temp-manifest"
+    manifest "$DATADIR/$MATCH_2/$DATADIR/$MATCH_1" |
+        sed "s*$DATADIR/$MATCH_2/**" > "$DATADIR/temp-manifest"
+
     diff -u "$DATADIR/$MATCH_3" "$DATADIR/temp-manifest"
     rm -f "$DATADIR/temp-manifest"
 
@@ -81,6 +121,22 @@ We may also need to check two manifests against each other.
 
     IMPLEMENTS THEN manifests (\S+) and (\S+) match
     diff -u "$DATADIR/$MATCH_1" "$DATADIR/$MATCH_2"
+
+In a special case, we may need to update the `Mtime` for the first
+entry in a manifest. This is used, at least, when testing cache
+directory exclusion: we create wanted data, then create a manifest,
+then add the cache directory. This invalidates the Mtime for the first
+entry.
+
+    IMPLEMENTS GIVEN manifest (\S+) has Mtime for the first entry set from (\S+)
+    x=$(date -r "$DATADIR/$MATCH_2" '+Mtime: %Y-%m-%d %H:%M:%S +0000')
+    awk -v "x=$x" '
+        !x && /^Mtime:/ { print x; next }
+        /^$/ { x = 1 }
+        { print }
+        ' "$DATADIR/$MATCH_1" > "$DATADIR/new-manifest"
+    mv "$DATADIR/new-manifest" "$DATADIR/$MATCH_1"
+
 
 Obnam configuration management
 ------------------------------
@@ -107,6 +163,11 @@ someone else.
     IMPLEMENTS GIVEN a user (\S+) calling themselves (\S+)
     add_to_config "$MATCH_1" client-name "$MATCH_2"
 
+Add a setting to a client's configuration file.
+
+    IMPLEMENTS GIVEN user (\S+) sets configuration (\S+) to (\S+)
+    add_to_config "$MATCH_1" "$MATCH_2" "$MATCH_3"
+
 Backing up
 ----------
 
@@ -115,6 +176,12 @@ addition to backing up, this makes a manifest of the data.
 
     IMPLEMENTS WHEN user (\S+) backs up directory (\S+) to repository (\S+)
     run_obnam "$MATCH_1" backup -r "$DATADIR/$MATCH_3" "$DATADIR/$MATCH_2"
+
+We may also need to backup two directories at once.
+
+    IMPLEMENTS WHEN user (\S+) backs up directories (\S+) and (\S+) to repository (\S+)
+    run_obnam "$MATCH_1" backup -r "$DATADIR/$MATCH_4" \
+         "$DATADIR/$MATCH_2" "$DATADIR/$MATCH_3"
 
 We can also just pretend to make a backup.
 
@@ -159,6 +226,14 @@ to fail.
     IMPLEMENTS WHEN user (\S+) attempts to restore their latest generation in repository (\S+) into (\S+)
     attempt run_obnam "$MATCH_1" restore -r "$DATADIR/$MATCH_2" \
         --to "$DATADIR/$MATCH_3"
+
+We may need to restore only a single file.
+
+    IMPLEMENTS WHEN user (\S+) restores file (\S+) to (\S+) from their latest generation in repository (\S+)
+    run_obnam "$MATCH_1" ls -r "$DATADIR/$MATCH_4"
+    run_obnam "$MATCH_1" restore -r "$DATADIR/$MATCH_4" \
+        --to "$DATADIR/$MATCH_3" "$DATADIR/$MATCH_2"
+
 
 Removing (forgetting) generations
 ---------------------------------
@@ -209,6 +284,17 @@ Ditto for generation ids.
     n=$(wc -l < "$DATADIR/generation-id.list")
     test "$MATCH_2" = "$n"
 
+Check that there are no checkpoint generations.
+
+    IMPLEMENTS THEN user (\S+) sees no checkpoint generations in repository (\S+)
+    run_obnam "$MATCH_1" generations -r "$DATADIR/$MATCH_2" \
+        > "$DATADIR/generation.list"
+    if grep checkoint "$DATADIR/generation.list"
+    then
+        echo "Can see checkpoint generations!" 1>&2
+        exit 1
+    fi
+
 Diffs between generations
 -------------------------
 
@@ -258,6 +344,16 @@ repository anymore.
         grep -x "$MATCH_2"
     then
         echo "Client $MATCH_2 still in repository $MATCH_3" 1>&2
+        exit 1
+    fi
+
+We may also want to make sure we do see a client.
+
+    IMPLEMENTS THEN user (\S+) can see user (\S+) in repository (\S+)
+    if ! run_obnam "$MATCH_1" -r "$DATADIR/$MATCH_3" clients |
+        grep -x "$MATCH_2"
+    then
+        echo "Client $MATCH_2 is not in repository $MATCH_3" 1>&2
         exit 1
     fi
 
@@ -313,6 +409,16 @@ Do all lines match?
 
     IMPLEMENTS THEN all lines in (\S+) match (\S+)
     ! grep -E -v -e "$MATCH_2" -- "$DATADIR/$MATCH_1"
+
+Does no line match?
+
+    IMPLEMENTS THEN nothing in (\S+) matches (\S+)
+    if grep -E -e "$MATCH_2" -- "$DATADIR/$MATCH_1" | grep '.*'
+    then
+        echo "At least one line matches, when none may!" 1>&2
+        exit 1
+    fi
+
 
 Check on user group membership
 ------------------------------

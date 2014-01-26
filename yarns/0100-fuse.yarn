@@ -8,7 +8,7 @@ test suite concentrates on verifying that at least the basics work.
     SCENARIO Browsing backups with FUSE plugin
     ASSUMING user is in group fuse
     GIVEN directory L with interesting filesystem objects
-    AND a manifest of directory L in M
+    AND a manifest of L in M
     WHEN user U backs up directory L to repository R
     AND user U FUSE mounts the repository R at F
     THEN L, restored to F/latest, matches manifest M

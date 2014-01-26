@@ -23,10 +23,10 @@ problem.)
 
     SCENARIO backup two generations
     GIVEN 1MB of new data in directory L
-    AND a manifest of directory L in G1
+    AND a manifest of L in G1
     WHEN user U backs up directory L to repository R
     GIVEN 2MB of new data in directory L
-    AND a manifest of directory L in G2
+    AND a manifest of L in G2
     WHEN user U backs up directory L to repository R
     AND user U restores generation 1 to R1 from repository R
     AND user U restores generation 2 to R2 from repository R
@@ -110,10 +110,10 @@ checking that the remaining one is the one we want.
 
     SCENARIO remove specific generations
     GIVEN 1kB of new data in directory L
-    AND a manifest of directory L in M1
+    AND a manifest of L in M1
     WHEN user U backs up directory L to repository R
     GIVEN 1kB of new data in directory L
-    AND a manifest of directory L in M2
+    AND a manifest of L in M2
     WHEN user U backs up directory L to repository R
     AND user U forgets the oldest generation in repository R
     THEN user U sees 1 generation in repository R
@@ -132,7 +132,7 @@ The normal way of forgetting generations is with the `obnam forget
     GIVEN 1kB of new data in directory L
     WHEN user U backs up directory L to repository R
     GIVEN 1kB of new data in directory L
-    AND a manifest of directory L in M
+    AND a manifest of L in M
     WHEN user U backs up directory L to repository R
     AND user U forgets according to schedule 1y in repository R
     THEN user U sees 1 generation in repository R
