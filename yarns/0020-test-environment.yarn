@@ -78,13 +78,6 @@ configuration files. The relevant settings are `--client-name` and
 the backup roots (command line arguments to `obnam backup` or
 the `--root` setting).
 
-Encryption keys
----------------
-
-For tests that use encryption, we use pre-generated keys (see
-`test-gpghome` in the Obnam source tree), because generating keys is a
-heavy, slow operation.
-
 Result verification
 -------------------
 
