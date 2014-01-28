@@ -181,7 +181,7 @@ setup(name='obnam',
       author_email='liw@liw.fi',
       url='http://liw.fi/obnam/',
       scripts=['obnam', 'obnam-benchmark', 'obnam-viewprof'],
-      packages=['obnamlib', 'obnamlib.plugins'],
+      packages=['obnamlib', 'obnamlib.plugins', 'obnamlib.fmt_6'],
       ext_modules=[Extension('obnamlib._obnam', sources=['_obnammodule.c'])],
       data_files=[('share/man/man1', glob.glob('*.1'))],
       cmdclass={
