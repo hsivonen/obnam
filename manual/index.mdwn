@@ -101,3 +101,9 @@ This chapter discusses how to debug problems with Obnam. It covers
 things such as log files, various levels of logging and tracing, and
 common problems with Obnam use. It also explains what things go where
 in an Obnam backup repository.
+
+SEE ALSO
+========
+
+This chapter gives pointers to more information about obnam, backups,
+and related things.
