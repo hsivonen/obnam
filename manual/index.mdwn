@@ -1,0 +1,77 @@
+% Backups with Obnam
+% Lars Wirzenius
+
+FIXME: It would be good to have case studies for how to set up Obnam
+for specific use cases.
+
+Introduction
+============
+
+This is the manual for Obnam, a backup tool.
+
+You know you should
+===================
+
+This chapter is philosophical and theoretical about backups.
+It discusses why you should back up, various concepts around backups,
+what kinds of things you should think about when setting up backups
+and what to do in the long term (verification, etc). It also discusses
+some assumptions Obnam makes and some constraints it imposes.
+
+Installing Obnam
+================
+
+I really don't want to write this chapter, so I'll stick to just
+telling people using Debian or Ubuntu how to install it with the
+package manager, and how to build and install it from source. I expect
+this chapter will get patches from various distros and operating
+systems to explain their installation details.
+
+Backing up
+==========
+
+This chapter discusses how to set up a backup repository, and running
+your backup for the first time, plus how to do incremental backups. It
+also shows how to look at the backups you've made so you have some
+confidence the backups happened.
+
+Restoring from backups
+======================
+
+This chapter discusses how to restore data from any backup generation,
+either everything or individual files. It describes both the approach
+using just Obnam, and the approach using the FUSE filesystem.
+
+Forgetting old backup generations
+=================================
+
+This chapter will discuss how to remove old backup generations, and
+various considerations on the aspects of what to keep and for how
+long.
+
+Obnam configuration files and settings
+======================================
+
+This chapter is a reference manual for all the configuration settings
+in Obnam, and what their meaning is, and what their sensible use is,
+including examples and everything. It also explains configuration file
+location and syntax, with examples.
+
+Sharing a repository between multiple clients
+=============================================
+
+This chapter discusses what needs to be done to share a backup
+repository between clients, and why that might be useful, and when not
+to do that.
+
+Using encryption
+================
+
+This chapter discusses how to encrypt the backup repository, and how
+to manage encryption keys.
+
+Other stuff
+===========
+
+This chapter discusses topics that do not warrant a chapter of their
+own, such as compressing backups.
