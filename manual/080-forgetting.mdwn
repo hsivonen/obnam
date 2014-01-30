@@ -1,0 +1,6 @@
+Forgetting old backup generations
+=================================
+
+This chapter will discuss how to remove old backup generations, and
+various considerations on the aspects of what to keep and for how
+long.

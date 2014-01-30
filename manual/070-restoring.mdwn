@@ -1,0 +1,6 @@
+Restoring from backups
+======================
+
+This chapter discusses how to restore data from any backup generation,
+either everything or individual files. It describes both the approach
+using just Obnam, and the approach using the FUSE filesystem.

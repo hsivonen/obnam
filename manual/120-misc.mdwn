@@ -1,0 +1,5 @@
+Other stuff
+===========
+
+This chapter discusses topics that do not warrant a chapter of their
+own, such as compressing backups.

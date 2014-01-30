@@ -1,0 +1,7 @@
+Backing up
+==========
+
+This chapter discusses how to set up a backup repository, and running
+your backup for the first time, plus how to do incremental backups. It
+also shows how to look at the backups you've made so you have some
+confidence the backups happened.

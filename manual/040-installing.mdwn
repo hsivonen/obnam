@@ -1,0 +1,8 @@
+Installing Obnam
+================
+
+I really don't want to write this chapter, so I'll stick to just
+telling people using Debian or Ubuntu how to install it with the
+package manager, and how to build and install it from source. I expect
+this chapter will get patches from various distros and operating
+systems to explain their installation details.
