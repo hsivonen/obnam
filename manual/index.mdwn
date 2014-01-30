@@ -93,3 +93,10 @@ choices of backup strategy, storage, etc. Some case studies:
 * A small company with a number of laptops and desktops, a local file
   server, a rented co-lo server, backing up to a rented server in a
   co-lo and to a rotated set of large USB drives.
+
+Troubleshooting
+===============
+
+This chapter discusses how to debug problems with Obnam. It covers
+things such as log files, various levels of logging and tracing, and
+common problems with Obnam use.
