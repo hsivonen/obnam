@@ -1,9 +1,6 @@
 % Backups with Obnam
 % Lars Wirzenius
 
-FIXME: It would be good to have case studies for how to set up Obnam
-for specific use cases.
-
 Introduction
 ============
 
@@ -75,3 +72,18 @@ Other stuff
 
 This chapter discusses topics that do not warrant a chapter of their
 own, such as compressing backups.
+
+Case studies
+============
+
+This chapter goes through, in some detail, some typical use cases for
+backups. For case, it discusses the data being backed up, and explains
+choices of backup strategy, storage, etc. Some case studies:
+
+* Single laptop user, typical data of documents, photos, music,
+  backing up to a USB hard drive.
+* A VPS or similar server, with web pages, e-mail, and maybe other
+  data, backed up to another server.
+* A small company with a number of laptops and desktops, a local file
+  server, a rented co-lo server, backing up to a rented server in a
+  co-lo and to a rotated set of large USB drives.
