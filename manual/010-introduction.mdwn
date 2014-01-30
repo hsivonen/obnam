@@ -1,0 +1,4 @@
+Introduction
+============
+
+This is the manual for Obnam, a backup tool.

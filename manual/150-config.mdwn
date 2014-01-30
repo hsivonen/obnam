@@ -1,0 +1,7 @@
+Obnam configuration files and settings
+======================================
+
+This chapter is a reference manual for all the configuration settings
+in Obnam, and what their meaning is, and what their sensible use is,
+including examples and everything. It also explains configuration file
+location and syntax, with examples.

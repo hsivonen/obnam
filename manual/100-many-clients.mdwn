@@ -1,0 +1,7 @@
+Sharing a repository between multiple clients
+=============================================
+
+This chapter discusses what needs to be done to share a backup
+repository between clients, and why that might be useful, and when not
+to do that.
+

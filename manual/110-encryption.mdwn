@@ -1,0 +1,6 @@
+Using encryption
+================
+
+This chapter discusses how to encrypt the backup repository, and how
+to manage encryption keys.
+
