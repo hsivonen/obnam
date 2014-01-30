@@ -24,6 +24,12 @@ package manager, and how to build and install it from source. I expect
 this chapter will get patches from various distros and operating
 systems to explain their installation details.
 
+A quick tour of Obnam
+=====================
+
+This chapter is an extended copy of the tutorial currently at
+liw.fi/obnam/tutorial.
+
 Backing up
 ==========
 
