@@ -1,5 +1,132 @@
 A quick tour of Obnam
 =====================
 
-This chapter is an extended copy of the tutorial currently at
-liw.fi/obnam/tutorial.
+This chapter gives a quick introduction to the most important parts of
+Obnam. The rest of the book is basically a verbose version of this
+chapter. You should start by reading this chapter, then pretend you've
+read the rest, and everyone will look at you in awe at cocktail
+parties. I promise, nobody else will have read the rest of the book
+either, so there's no risk of getting caught.
+
+Configuration
+-------------
+
+Obnam does not require a configuration file, and you can configure
+everything using command line options. You can, however, use a
+configuration file: save it as `~/.obnam.conf` and
+make it have content like this:
+
+    [config]
+    repository = sftp://your.server/home/youruser/backups/
+    log = /home/liw/obnam.log
+
+The examples below assume you have created a configuration file,
+so that options do not need to be repeated every time.
+
+You probably want to enable the `log` setting, so that if there is
+a problem, you can find out all the information available to fix it
+from the log file.
+
+Initial backup
+--------------
+
+Your first backup will be pretty big, and will take a long time.
+A long backup may crash, but that is not a problem: Obnam makes
+a **checkpoint** every one hundred megabytes or so.
+
+    obnam backup $HOME
+
+Incremental backups
+-------------------
+
+When you've made your initial, full backup (possibly in stages), you can
+back up any changes simply by running Obnam again:
+
+    obnam backup $HOME
+
+This will back up all new files, and any changed files. It will also
+record which files have been deleted since the previous backup.
+
+You can run Obnam as often as you like. Only the changes from the
+previous run are backed up.
+
+Multiple clients in one repository
+----------------------------------
+
+You can backup multiple clients to a single repository by providing the
+option --client-name=<identifier> when running the program. Backup sets
+will be kept separate, but data deduplication will happen across all
+the sets.
+
+Removing old generations
+------------------------
+
+Eventually your backup repository will grow so big you'll want to
+remove some old generations. The Obnam operation is called forget:
+
+    obnam forget --keep=30d
+    
+This would keep one backup from each of the last thirty calendar
+days, counting from the newest backup (not current time). 
+If you've backed up several times during a day, only the latest
+generation from that day is kept.
+
+Any data that is part of a generation that is to be kept will
+remain in the repository. Any data that exists only in those
+generations that is to be forgotten gets removed.
+
+Restoring data
+--------------
+
+You will hopefully never need this, but the whole point of having
+backups is to restore data in case of a disaster.
+
+    obnam restore --to=/var/tmp/my-recovery $HOME
+    
+The above command will restore your entire home directory to
+`/var/tmp/my-recovery`, from the latest backup generation.
+If you only need some particular directory or file, you can
+specify that instead:
+
+    obnam restore --to=/var/tmp/my-recover $HOME/Archive/receipts
+    
+If you can't remember the name of the file you need, use `obnam ls`:
+
+    obnam ls > /var/tmp/my-recovery.list
+
+This will output the contents of the backup generation, in a format
+similar to `ls -lAR`. Save it into a file and browse that.
+(It's a fairly slow command, so it's comfortable to save to a file.)
+
+Using encryption
+----------------
+
+Obnam can use the GnuPG program to encrypt the backup. To enable
+this, you need to have or create a PGP key, and then configure
+Obnam to use it:
+
+    [config]
+    encrypt-with = CAFEBABE
+
+Here, `CAFEBABE` is the **key identifier** for your key, 
+as reported by GnuPG. You need to have `gpg-agent` or equivalent
+software configured, for now, because Obnam has no way to ask for
+or configure the passphrase.
+
+After this, Obnam will automatically encrypt and decrypt data.
+
+Note that if you encrypt your backups, you'll want to back up your GPG
+key in some other way.  You can't restore any files from the obnam
+backup without it, so you can't rely on the same obnam backup to back up
+the GPG key itself.  Back up your passphrase-encrypted GPG key somewhere
+else, and make sure you have a passphrase strong enough to stand up to
+offline brute-force attacks.  Remember that if you lose access to your
+GPG key, your entire backup becomes useless.
+
+If you enable encryption after making backups, you need to start over
+with a new repository. 
+You can't mix encrypted and unencrypted backups in the same repository.
+
+(There are a bunch of Obnam commands for administering encryption.
+You won't need them, unless you share the same repository with several
+machines. In that case, you should read the manual page.)
