@@ -240,6 +240,11 @@ class ObnamFuse(fuse.Fuse):
                 self.metadatacache.clear()
             metadata = self.obnam.repo.get_metadata(*self.get_gen_path(path))
             self.metadatacache[path] = metadata
+            # FUSE does not allow negative timestamps, truncate to zero
+            if metadata.st_atime_sec < 0:
+                metadata.st_atime_sec = 0
+            if metadata.st_mtime_sec < 0:
+                metadata.st_mtime_sec = 0
             return metadata
 
     def get_stat(self, path):
