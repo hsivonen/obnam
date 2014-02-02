@@ -1,4 +1,22 @@
 Introduction
 ============
 
-This is the manual for Obnam, a backup tool.
+> ... backups? did someone talk about backups? I'm sure I heard someone
+> mention backups here somewhere. Backups! BACKUPS! BACKUPS ARE AWESOME!
+
+That's a direct quote from my IRC history. I find backups quite
+interesting, particularly from an implementation point of view, and I
+may sometimes obsess about them a little bit. This is why I've written
+my own backup software. It's called Obnam. This is its manual.
+
+I'm unusual: most people find backups boring at best, and tedious most
+of the time. When I talk with people about backups, the usual reaction
+is "um, I know I should". There are a lot of reasons for this. One is
+that backups are a lot like insurance: you have to spend time, effort,
+and money up front to have any use for them. Another is that the whole
+topic is scary: you have to think about when things go wrong, and that
+puts people off. A third reason is that while there are lots of backup
+tools and methods, it's not always easy to choose between them.
+
+This manual is for the Obnam program, but it tries to be useful to
+everyone thinking about backups.
