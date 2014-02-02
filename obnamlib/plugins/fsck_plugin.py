@@ -301,7 +301,10 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         self.add_item(CheckRepository(), append=True)
 
         final_items = []
-        if not self.app.settings['fsck-ignore-chunks']:
+        if not any(self.app.settings['fsck-' + s] for s in
+                   ('ignore-chunks', 'skip-files', 'skip-dirs',
+                    'skip-generations', 'last-generation-only',
+                    'ignore-client')):
             final_items.append(CheckForExtraChunks())
 
         while self.work_items:
