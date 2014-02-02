@@ -26,6 +26,12 @@ Version 1.7, released UNRELEASED
   a separate file (one per line), instead of in a configuration file
   or on the command line. Patch by Enrico Tröger.
 
+* A start of a manual for Obnam. This will gain more content with
+  new releases. The current versions is mainly an edited version of
+  Lars's blog posts about backups, plus the Obnam tutorial from the
+  Obnam homepage. See <http://code.liw.fi/obnam/manual/> for
+  rendered versions (PDF, HTML).
+
 Bug fixes:
 
 * Obnam now creates a `trustdb.gpg` in the temporary GNUPGHOME it uses
