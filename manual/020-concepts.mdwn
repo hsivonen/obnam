@@ -72,10 +72,120 @@ that they work.
 Backup strategies
 -----------------
 
-This section discusses things that should be considered when defining
-a backup strategy. It includes risk analysis, risk vs cost balancing,
-etc. More from <http://blog.liw.fi/posts/backups-3/> and
-<http://blog.liw.fi/posts/backups-4/>.
+You've set up a backup repository, and you have been backing up to
+it every day for a month now: your backup history is getting long
+enough to be useful. Can you be happy now?
+
+Welcome to the world of threat modelling. Backups are about
+insurance, of mitigating small and large disasters, but disasters
+can strike backups as well. When are you so safe you no disaster
+will harm you?
+
+There is always a bigger disaster waiting to happen. If you backup
+to a USB drive on your work desk, and someone breaks in and steals
+both your computer and the USB drive, the backups did you no good.
+
+You fix that by having two USB drives, and you keep one with your
+computer and the other in a bank vault. That's pretty safe, unless
+there's an earth quake that destroys both your home and the bank.
+
+You fix that by renting online storage space from another country.
+That's quite good, except there's a bug in the operating system
+that you use, which happens to be the same operating system the
+storage provider uses, and hackers happen to break into both your
+and their systems, wiping all files.
+
+You fix that by hiring a 3D printer that prints slabs of concrete on
+which your data is encoded using QR codes. You're safe until there's a
+meteorite hits Earth and destroys the entire civilisation.
+
+You fix that by sending out satellites with copies of your data,
+into stable orbits around all nine planets (Pluto is too a planet!)
+in the solar system. Your data is safe, even though you yourself
+are dead from the meteorite, until the Sun goes supernova and
+destroys everything in the system.
+
+There is always a bigger disaster. You have to decide which
+ones are likely enough that you want to consider them, and also
+decide what the acceptable costs are for protecting against them.
+
+A short list of scenarios for thinking about threats:
+
+* What if you lose your computer?
+* What if you lose your home and all of its contents?
+* What if the area in which you live is destroyed?
+* What if you have to flee your country?
+
+These questions do not cover everything, but they're a start. For each
+one, think about:
+
+* Can you live with your loss of data? If you don't restore your
+  data, does it cause a loss of memories, or some inconvenience in your
+  daily life, or will it make it nearly impossible to go back to living
+  and working normally? What data do you care most about?
+
+* How much is it worth to you to get your data back, and how fast do
+  you want that to happen? How much are you willing to invest money
+  and effort to do the initial backup, and to continue backing up
+  over time? And for restores, how much are you willing to pay for
+  that? Is it better for you to spend less on backups, even if that
+  makes restores slower, more expensive, and more effort? Or is the
+  inverse true?
+
+The threat modelling here is about safety against accidents and
+natural disasters. Threat modelling against attacks and enemies
+is similar, but also different, and will be the topic of the
+next episode in the adventures of Bac-Kup.
+
+Backups and security
+--------------------
+
+You're not the only one who cares about your data. A variety of
+governments, corporations, criminals, and overly curious snoopers are
+probably also interested. (It's sometimes hard to tell them apart.) They
+might be interested in it to data in order to find evidence against you,
+blackmail you, or just curious about what you're talking about with your
+other friends.
+
+They might be interested in your data from a statistical point of view,
+and don't particularly care about your specifically.  Or they might be
+interested only in you.
+
+Instead of reading your files and e-mail, or looking at your photos and
+videos, they might be interested in preventing your access to them,
+or to destroy your data. They might even want to corrupt your data,
+perhaps by planting child porn in your photo archive.
+
+You protect your computer as well as you can to prevent these and other
+bad things from happening. You need to protect your backups with equal
+care.
+
+If you back up to a USB drive, you should probably make the drive be
+encrypted. Likewise, if you back up to online storage.  There are many
+forms of encryption, and I'm unqualified to give advice on this, but any
+of the common, modern ones should suffice except for quite determined
+attackers.
+
+Instead of, or in addition to, encryption, you could ensure the physical
+security of your backup storage. Keep the USB drive in a safe, perhaps,
+or a safe deposit box.
+
+The multiple backups you need to protect yourself against earthquakes,
+floods, and roving gangs of tricycle-riding clowns, are also useful
+against attackers. They might corrupt your live data, and the backups at
+your home, but probably won't be able to touch the USB drive encased in
+concrete and buried in the ground at a secret place only you know about.
+
+The other side of the coin is that you might want to, or need to, ensure
+others do have access to your backed up data. For example, if the clown
+gang kidnaps you, your spouse might need access to you backups to be
+able to contact your MI6 handler to ask them to rescue you. Arranging
+safe access to (some) backups is an interesting problem to which there
+are various solutions. You could give your spouse the encryption passphrase,
+or give the passphrase to a trusted friend or your lawyer. You could also
+use something like [libgfshare] to escrow encryption keys more safely.
+
+[libgfshare]: http://www.digital-scurf.org/software/libgfshare
 
 Backup storage media considerations
 -----------------------------------
