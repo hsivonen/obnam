@@ -612,5 +612,14 @@ ls -lh my-fuse
 fusermount -u my-fuse
 .fi
 .SH "SEE ALSO"
+.B obnam
+comes with a manual in HTML and PDF forms.
+See 
+.I /usr/share/doc/obnam
+if you have Obnam installed system-wide,
+or in the subdirectory
+.I
+manual
+in the source tree.
 .TP
 .BR cliapp (5)
