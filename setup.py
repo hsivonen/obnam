@@ -52,15 +52,19 @@ def runcmd(*args, **kwargs):
         sys.exit(1)
 
 
-class GenerateManpage(build):
+class Build(build):
 
     def run(self):
         build.run(self)
+
         print 'building manpages'
         for x in ['obnam', 'obnam-benchmark']:
             with open('%s.1' % x, 'w') as f:
                 runcmd(['python', x, '--generate-manpage=%s.1.in' % x,
                         '--output=%s.1' % x], stdout=f)
+
+        print 'building manual'
+        runcmd(['make', '-C', 'manual', 'clean', 'all'])
 
 
 class CleanMore(clean):
@@ -185,7 +189,7 @@ setup(name='obnam',
       ext_modules=[Extension('obnamlib._obnam', sources=['_obnammodule.c'])],
       data_files=[('share/man/man1', glob.glob('*.1'))],
       cmdclass={
-        'build': GenerateManpage,
+        'build': Build,
         'check': Check,
         'clean': CleanMore,
       },
