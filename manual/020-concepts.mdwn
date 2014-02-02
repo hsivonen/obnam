@@ -10,10 +10,64 @@ some assumptions Obnam makes and some constraints it imposes.
 Backup concepts
 ---------------
 
-This section covers core concepts in backups: live data, precious
-data, backups, restores, generations, restores, verification.
-And more from <http://blog.liw.fi/posts/backups-1/> and
-<http://blog.liw.fi/posts/backups-2/>.
+This section covers core concepts in backups, and defines some
+terminology used in this book.
+
+**Live data** is the data you work with or keep. It's the files on
+your hard drive: the documents you write, the photos you save, the
+unfinished novels you wish you'd finish.
+
+Most live data is **precious** in that you'll be upset if you lose it.
+Some live data is not precious: your web browser cache probably isn't,
+for example. This distinction can let you limit the amount of data
+you need to back up, which can significantly reduce your backup costs.
+
+A **backup** is a spare copy of your live data. If you lose some
+or all of your live data, you can get it back ("**restore**") from
+your backup.  The backup copy is, by practical necessity, older than
+your live data, but if you made the backup recently enough, you won't
+lose much.
+
+Sometimes it's useful to have more than one old backup copy of your
+live data.  You can have a sequence of backups, made at different
+times, giving you a **backup history**. Each copy of your live data
+in your backup history is a **generation**. This lets you retrieve a
+file you deleted a long time ago, but didn't realise you needed until
+now. If you only keep one backup version, you can't get it back,
+but if you keep, say, a daily backup for a month, you have a month
+to realise you need it, before it's lost forever.
+
+The place your backups are stored is the **backup repository**. You can
+use many kinds of **backup media** for backup storage: hard drives,
+tapes, optical disks (DVD-R, DVD-RW, etc), USB flash drives, online
+storage, etc. Each type of medium has different characteristics:
+size, speed, convenicence, reliability, price, which you'll need to
+balance for a backup solution that's reasonable for you.
+
+You may need multiple backup repositories or media, with one of
+them located **off-site**, away from where your computers normally
+live. Otherwise, if you house burns down, you'll lose all your
+backups too.
+
+You need to **verify** that your backups work. It would be awkward to
+go to the effort and expense of making backups and then not be able
+to restore your data when you need to. You may even want to test
+your **disaster recovery** by pretending that all your computer stuff
+is gone, except for the backup media. Can you still recover? You'll
+want to do this periodically, to make sure your backup system keeps
+working.
+
+There is a very large variety of **backup tools**. They can be
+very simple and manual: you can copy files to a USB drive using
+your file manager, once a blue moon. They can also be very complex:
+enterprise backup products that cost huge amounts of money and come
+with a multi-day training package for your sysadmin team, and which
+require that team to function properly.
+
+You'll need to define a **backup strategy** to tie everything
+together: what live data to back up, to what medium, using what
+tools, what kind of backup history to keep, and how to verify
+that they work.
 
 Backup strategies
 -----------------
@@ -33,6 +87,27 @@ for oneself.
 Glossary
 --------
 
-* **backup repository**: the location where are backups are stored
+* **backup**: a separate, safe copy of your live data that will remain
+  intact even if the primary copy gets destroyed, deleted, or wrongly
+  modified
+* **corruption**: unwanted modification to (backup) data
+* **disaster recovery**: what you do when something goes wrong
+* **generation**: a backup in a series of backups of the same live
+  data, to give historical insight
+* **history**: all the backup generations
 * **live data**: all the data you have
+* **local backup**: a backup repository stored physically close to the
+  live data
+* **media**, **backup media**, **storage media**: where a backup
+  repository is stored
+* **off-site backup**: a backup repository stored physically far away
+  from the live data
 * **precious data**: all the data you care about; cf. live data
+* **repository**: the location where are backups are stored
+* **restore**: retriving data from a backup repository
+* **strategy**, **backup strategy**: a plan for how to make sure your
+  data is safe even if the dinosaurs return in space ships to re-take
+  world now that the ice age is over
+* **verification**: making sure a backup system works and that data
+  actually an be restored from backups and that the backups have not
+  become corrupted
