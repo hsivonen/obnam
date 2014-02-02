@@ -194,6 +194,59 @@ This section discusses possibilities for backup storage media, and
 their various characteristics, and how to choose the suitable one
 for oneself.
 
+There are a lot of different possible storage media. Perhaps the most
+important ones are:
+
+* Magnetic tapes of various kinds.
+* Hard drives: internal vs external, spinning magnetic surfaces vs
+  SSDs vs memory sticks.
+* Optical disks: CD, DVD, Blu-ray.
+* Online storage of various kinds.
+* Paper.
+
+We'll skip more exotic or unusual forms, such as microfilm.
+
+**Magnetic tapes** are traditionally probably the most common form of
+backup storage. They can be cheap per gigabyte, but tend to require a
+fairly hefty initial investment in the tape drive. Much backup
+terminology comes from tape drives: full backup vs incremental backup,
+especially. Obnam doesn't support tape drives at all.
+
+**Hard drives** are a common modern alternative to tapes, especially for
+those who do not with pay for a tape drive. Hard drives have the
+benefit of every bit of backup being accessible at the speed as any
+other bit, making finding a particular old file easier and faster.
+This also enables **snapshot backups**, which is the model Obnam uses.
+
+Different types of hard drives have different characteristics for
+reliability, speed, and price, and they may fluctuate fairly quickly
+from week to week and year to year. We won't go into detailed
+comparisons of all the options. From Obnam's point of view, anything
+that can look like a hard drive (spinning rust, SSD, USB flash memory
+stick, or online storage) is useable for storing backups, as long as
+it is re-writeable.
+
+**Optical disks**, particularly the kind that are write-once and can't
+be updated, can be used for backup storage, but they tend to be best
+for full backups that are stored for long periods of time, perhaps
+archived permanently, rather than for a actively used backup
+repository. Alternatively, they can be used as a kind of tape backup,
+where each tape is only ever used once. Obnam does not support optical
+drives as backup storage.
+
+**Paper** likewise works better for archival purposes, and only for
+fairly small amounts of data. However, a backup printed on good paper
+with archival ink can last decades, even centuries, and is a good
+option for small, but very precious data. As an example, personal
+financial records, secret encryption keys, and love letters from your
+spouse. These can be printed either normally (preferably in a font
+that is easy to OCR), or using two-dimensional barcode (e.g, QR).
+Obnam doesn't support these, either.
+
+Obnam only works with hard drives, and anything that can simulate a
+read/writeable hard drive, such as online storage. By amazing
+co-incidence, this seems to be sufficient for most people.
+
 Glossary
 --------
 
@@ -202,9 +255,14 @@ Glossary
   modified
 * **corruption**: unwanted modification to (backup) data
 * **disaster recovery**: what you do when something goes wrong
+* **full backup**: a fresh backup of all precious live data
 * **generation**: a backup in a series of backups of the same live
   data, to give historical insight
 * **history**: all the backup generations
+* **incremental backup**: a backup of any changes (new files, modified
+  files, deletions) compared to a previous backup generation (either
+  the previous full backup, or the previous incremental backup);  usually, you can't remove a full backup without removing all of the
+  incremental backups that depend on it
 * **live data**: all the data you have
 * **local backup**: a backup repository stored physically close to the
   live data
@@ -215,6 +273,10 @@ Glossary
 * **precious data**: all the data you care about; cf. live data
 * **repository**: the location where are backups are stored
 * **restore**: retriving data from a backup repository
+* **snapshot backup**: an alternative to full/incremental backups,
+  where every backup generation is effectively a full backup of all
+  the precious live data, and can be restored and removed as easily as
+  any other generation
 * **strategy**, **backup strategy**: a plan for how to make sure your
   data is safe even if the dinosaurs return in space ships to re-take
   world now that the ice age is over
