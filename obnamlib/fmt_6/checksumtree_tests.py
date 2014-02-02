@@ -59,6 +59,13 @@ class ChecksumTreeTests(unittest.TestCase):
         self.tree.remove(self.checksum, 2, 4)
         self.assertEqual(self.tree.find(self.checksum), [1])
 
+    def test_removes_checksum_for_all_clients(self):
+        self.tree.add(self.checksum, 1, 3)
+        self.tree.add(self.checksum, 2, 4)
+        self.tree.add(self.checksum, 2, 5)
+        self.tree.remove_for_all_clients(self.checksum, 2)
+        self.assertEqual(self.tree.find(self.checksum), [1])
+
     def test_adds_same_id_only_once(self):
         self.tree.add(self.checksum, 1, 2)
         self.tree.add(self.checksum, 1, 2)

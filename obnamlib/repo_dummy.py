@@ -723,6 +723,9 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
     def remove_chunk_from_indexes(self, chunk_id, client_id):
         return self._chunk_indexes.remove_chunk(chunk_id, client_id)
 
+    def remove_chunk_from_indexes_for_all_clients(self, chunk_id):
+        return self._chunk_indexes.remove_chunk(chunk_id, None)
+
     def validate_chunk_content(self, chunk_id):
         return None
 

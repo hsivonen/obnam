@@ -197,14 +197,22 @@ class CheckClientlist(WorkItem):
 
 class CheckForExtraChunks(WorkItem):
 
-    def __init__(self):
+    def __init__(self, remove):
         self.name = 'extra chunks'
+        self.remove = remove
 
     def do(self):
         logging.debug('Checking for extra chunks')
         for chunkid in self.repo.get_chunk_ids():
             if chunkid not in self.chunkids_seen:
-                self.error('chunk %s not used by anyone' % chunkid)
+                if self.remove:
+                    self.warning('chunk %s not used by anyone; deleting'
+                                 % chunkid)
+                    self.repo.remove_chunk_from_indexes_for_all_clients(
+                        chunkid)
+                    self.repo.remove_chunk(chunkid)
+                else:
+                    self.error('chunk %s not used by anyone' % chunkid)
 
 
 class CheckRepository(WorkItem):
@@ -228,7 +236,12 @@ class FsckPlugin(obnamlib.ObnamPlugin):
 
         self.app.settings.boolean(
             ['fsck-fix'],
-            'should fsck try to fix problems?',
+            'should fsck try to fix problems? Implies --fsck-rm-unused',
+            group=group)
+
+        self.app.settings.boolean(
+            ['fsck-rm-unused'],
+            'should fsck remove unused chunks?',
             group=group)
 
         self.app.settings.boolean(
@@ -285,6 +298,9 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         self.app.settings.require('repository')
         logging.debug('fsck on %s' % self.app.settings['repository'])
 
+        rm_unused_chunks = self.app.settings['fsck-rm-unused'] \
+                or self.app.settings['fsck-fix']
+
         self.configure_ttystatus()
 
         self.repo = self.app.get_repository_object()
@@ -305,7 +321,7 @@ class FsckPlugin(obnamlib.ObnamPlugin):
                    ('ignore-chunks', 'skip-files', 'skip-dirs',
                     'skip-generations', 'last-generation-only',
                     'ignore-client')):
-            final_items.append(CheckForExtraChunks())
+            final_items.append(CheckForExtraChunks(rm_unused_chunks))
 
         while self.work_items:
             work = self.work_items.pop(0)
@@ -321,7 +337,10 @@ class FsckPlugin(obnamlib.ObnamPlugin):
                     self.add_item(work, append=True)
                 final_items = []
 
-        self.repo.unlock_chunk_indexes()
+        if rm_unused_chunks:
+            self.repo.commit_chunk_indexes()
+        else:
+            self.repo.unlock_chunk_indexes()
         for client_name in client_names:
             self.repo.unlock_client(client_name)
         self.repo.unlock_client_list()
