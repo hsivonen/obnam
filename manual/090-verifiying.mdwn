@@ -1,0 +1,5 @@
+Verifying backups
+=================
+
+This chapter discusses why and how to verify that your backups work.
+More from <http://blog.liw.fi/posts/backups-5/>.
