@@ -1,0 +1,182 @@
+<style>
+html {
+    background: white;
+    font-family: serif;
+    margin-left: 3em;
+    margin-right: 2em;
+    margin-top: 2em;
+}
+
+form#searchform {
+    font-family: monospace;
+    text-align: right;
+}
+
+div.actions {
+    font-family: monospace;
+    text-align: right;
+}
+
+div.actions ul, div.actions li {
+    display: inline;
+}
+
+div.pageheader {
+    font-family: monospace;
+    margin-bottom: 2em;
+}
+
+div.pageheader span.title {
+    display: block;
+    font-size: 200%;
+    font-weight: bold;
+    font-family: sans-serif;
+    margin-top: 0.5em;
+}
+
+div#pagebody {
+}
+
+div.pagefooter {
+    font-family: monospace;
+    margin-top: 3em;
+}
+
+div#pagebody {
+}
+
+span.date {
+    font-family: monospace;
+}
+
+div.inlineheader span.header {
+    display: block;
+    font-family: sans-serif;
+    font-size: 150%;
+    font-weight: bold;
+}
+
+div.inlinepage {
+    margin-top: 3em;
+    margin-bottom: 3em;
+}
+
+div.inlinefooter {
+    font-family: monospace;
+}
+
+div.sidebar {
+    display: none;
+    float: right;
+    max-width: 10em;
+    margin-top: 0;
+    margin-bottom: 0;
+    margin-right: 0;
+    margin-left: 1em;
+}
+
+.floatTR {
+    float: right;
+    margin-left: 1em;
+    margin-bottom: 1em;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: sans-serif;
+    font-weight: bold;
+    margin-top: 2em;
+}
+
+h1 {
+    font-size: 150%;
+}
+
+h2 {
+    font-size: 120%;
+}
+
+h3 {
+    font-size: 100%;
+}
+
+ul li, ol li {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+div#comments div.feedlink {
+    margin-top: 2em;
+}
+
+div.comment {
+    margin-top: 2em;
+}
+
+div.comment-subject {
+    margin-bottom: 1em;
+    font-size: 120%;
+    font-family: sans-serif;
+}
+
+div.comment-header {
+    margin-top: 1em;
+}
+
+div.archivepage {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+span.archivepagedate {
+    font-family: monospace;
+}
+
+
+
+/* The following are for openid logins in Ikiwiki. Copied from
+   ikiwiki. */
+
+input#openid_identifier {
+	background: url(wikiicons/openidlogin-bg.gif) no-repeat;
+	background-color: #fff;
+	background-position: 0 50%;
+	color: #000;
+	padding-left: 18px;
+}
+/* openid selector */
+#openid_choice {
+	display: none;
+}
+#openid_input_area {
+	clear: both;
+	padding: 10px;
+}
+#openid_btns, #openid_btns br {
+	clear: both;
+}
+#openid_highlight {
+	background-color: black;
+	float: left;
+}
+.openid_large_btn {
+	padding: 1em 1.5em;
+	border: 1px solid #DDD;
+	margin: 3px;
+	float: left;
+}
+.openid_small_btn {
+	padding: 4px 4px;
+	border: 1px solid #DDD;
+	margin: 3px;
+	float: left;
+}
+a.openid_large_btn:focus {
+	outline: none;
+}
+a.openid_large_btn:focus {
+	outline-style: none;
+}
+.openid_selected {
+	border: 4px solid #DDD;
+}
+</style>
