@@ -142,13 +142,13 @@ Backups and security
 
 You're not the only one who cares about your data. A variety of
 governments, corporations, criminals, and overly curious snoopers are
-probably also interested. (It's sometimes hard to tell them apart.) They
-might be interested in it to data in order to find evidence against you,
-blackmail you, or just curious about what you're talking about with your
-other friends.
+probably also interested. (It's sometimes hard to tell them apart.)
+They might be interested to find evidence against you, blackmail you,
+or just curious about what you're talking about with your other
+friends.
 
 They might be interested in your data from a statistical point of view,
-and don't particularly care about your specifically.  Or they might be
+and don't particularly care about you specifically.  Or they might be
 interested only in you.
 
 Instead of reading your files and e-mail, or looking at your photos and
@@ -178,7 +178,7 @@ concrete and buried in the ground at a secret place only you know about.
 
 The other side of the coin is that you might want to, or need to, ensure
 others do have access to your backed up data. For example, if the clown
-gang kidnaps you, your spouse might need access to you backups to be
+gang kidnaps you, your spouse might need access to your backups to be
 able to contact your MI6 handler to ask them to rescue you. Arranging
 safe access to (some) backups is an interesting problem to which there
 are various solutions. You could give your spouse the encryption passphrase,
@@ -213,8 +213,8 @@ terminology comes from tape drives: full backup vs incremental backup,
 especially. Obnam doesn't support tape drives at all.
 
 **Hard drives** are a common modern alternative to tapes, especially for
-those who do not with pay for a tape drive. Hard drives have the
-benefit of every bit of backup being accessible at the speed as any
+those who do not wish pay for a tape drive. Hard drives have the
+benefit of every bit of backup being accessible at the same speed as any
 other bit, making finding a particular old file easier and faster.
 This also enables **snapshot backups**, which is the model Obnam uses.
 
