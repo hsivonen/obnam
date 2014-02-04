@@ -1,8 +1,49 @@
 Backing up
 ==========
 
-This chapter discusses how to set up a backup repository, and running
-your backup for the first time, plus how to do incremental backups. It
-also shows how to look at the backups you've made so you have some
-confidence the backups happened. Also,
-<http://blog.liw.fi/posts/backups-6/> (consistency in backups).
+This chapter discusses the various aspects of making backups with
+Obnam.
+
+Your first backup
+-----------------
+
+This section describes how to use Obnam to make the first backup. It
+also discusses how to deal with precious data being very large, when
+you can't let the backup run for days at a time. The checkpoints are
+discussed. Progress reporting is discussed, as is the overall
+performance statisics reported by Obnam at the end of a backup.
+
+Your second backup
+------------------
+
+This section describes how to use Obnam to run additional backups. It
+also describes how to list backup generations, so that you can be sure
+that you're actually making backups.
+
+Choosing what to backup, and what not to backup
+-----------------------------------------------
+
+This section describes how to configure Obnam to include all precious
+data in the backup, but exclude that which is not interesting to
+backup. `root`, `exclude`, `exclude-caches`, `one-file-system` are all
+discussed here.
+
+De-duplication
+--------------
+
+This section discusses Obnam's de-duplication features, and when you
+might not want to use them, and when the "verify" mode is relevant.
+
+Locking
+-------
+
+This section discusses Obnam's approach to locking parts of the
+repository during backups, and what to do if the backup process
+crashes and leaves lock files around.
+
+Consistency of live data
+------------------------
+
+This section discusses how to handle backing up a live filesystem,
+which is being used and changed while the backup runs. It discusses
+LVM snapshots, btrfs subvolumes, MySQL database dumps.
