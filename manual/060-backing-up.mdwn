@@ -7,18 +7,133 @@ Obnam.
 Your first backup
 -----------------
 
-This section describes how to use Obnam to make the first backup. It
-also discusses how to deal with precious data being very large, when
-you can't let the backup run for days at a time. The checkpoints are
-discussed. Progress reporting is discussed, as is the overall
-performance statisics reported by Obnam at the end of a backup.
+Let's make a backup! To walk through the examples in this directory,
+you need to have some live data to backup. The examples use specific
+filenames for this. You'll need to adapt the examples to your own
+files. The examples assume your home directory is `/home/tomjon`, and
+that you have a directory called `Documents` in your home directory
+for your documents. Further, it assumes you have a USB drive mounted
+at `/media/backups`, and that you will be using a directory
+`tomjon-repo` on that drive as the backup repository.
+
+With those assumptions, here's how you would backup your documents:
+
+    obnam backup -r /media/backups/tomjon-repo ~/Documents
+    
+That's all. It will take a little while, if you have a lot of
+documents, but eventually it'll look something like this:
+
+    Backed up 11 files (of 11 found),
+    uploaded 97.7 KiB in 0s at 647.2 KiB/s average speed       
+
+(In reality, the above text will be all on one line, but that didn't
+fit in this manual's line width.)
+
+This tells you that Obnam found a total of eleven files, of which it
+backed up all eleven. The files contained a total of about a hundred
+kilobytes of data, and that the upload speed for that data was over
+six hundred kilobytes per second. The actual units are using IEC
+prefixes, which are base-2, for unambiguity. See
+[Wikipedia on kibibytes] for more information.
+
+[Wikipedia on kibibytes]: https://en.wikipedia.org/wiki/Kibibyte
+
+Your first backup run should probably be quite small to see that
+all settings are right without having to wait a long time. You may
+want to choose a small directory to start with, instead of your entire
+home directory.
 
 Your second backup
 ------------------
 
-This section describes how to use Obnam to run additional backups. It
-also describes how to list backup generations, so that you can be sure
-that you're actually making backups.
+Once you've run your first backup, you'll want to run a second one.
+It's done the same way:
+
+    obnam backup -r /media/backups/tomjon-repo ~/Documents
+
+Note that you don't need to tell Obnam whether you want a full backup
+or an incremental backup. Obnam makes each backup generation be a
+snapshot of the data at the time of the backup, and doesn't make a
+difference between full and incremental backups. Each backup
+generation is equal to each other backup generation. This doesn't mean
+that each generation will store all the data separately. Obnam makes
+sure each new generation only backs up data that isn't already in the
+repository. Obnam finds that data in any file in any previous
+generation, amongst all the clients sharing the same repository.
+
+We'll later cover how to remove backup generations, and you'll learn
+that Obnam can remove any generation, even if it shares some of the
+data with other generations, without those other generations losing
+any data.
+
+After you've your second backup generation, you'll want to see the
+generations you have:
+
+    $ obnam generations -r /media/backups/tomjon-repo
+    2	2014-02-05 23:13:50 .. 2014-02-05 23:13:50 (14 files, 100000 bytes) 
+    5	2014-02-05 23:42:08 .. 2014-02-05 23:42:08 (14 files, 100000 bytes) 
+
+This lists two generations, which have the identifiers 2 and 5. Note
+that generation identifiers are not necessarily a simple sequence like
+1, 2, 3. This is due to how some of the internal data structures of
+Obnam are implemented, and not because its author in any way thinks
+it's fun to confuse people.
+
+The two time stamps for each generation are when the backup run
+started and when it ended. In addition, for each generation is a count
+of files in that generation (total, not just new or changed files),
+and the total number of bytes of file content data they have.
+
+When your precious data is very large
+-------------------------------------
+
+When your precious data is very large, the first backup may a very
+long time. Ditto, if you get a lot of new precious data for a later
+backup. In these cases, you may need to be very patient, and just let
+the backup take its time, or you may choose to start small and add to
+the backups a bit at a time.
+
+The patient option is easy: you tell Obnam to backup everything, set
+it running, and wait until it's done, even if it takes hours or days.
+If the backup terminates prematurely, e.g., because of a network link
+going down, you won't have to start from scratch thanks to Obnam's
+checkpoint support. Every gigabyte or so (by default) Obnam stops a
+backup run to create a checkpoint generation. If the backup later
+crashes, you can just re-run Obnam and it will pick up from the latest
+checkpoint. This is all fully automatic, you don't need to do anything
+for it to happen. See the `--checkpoint` setting for choosing how
+often the checkpoints should happen.
+
+The only problem with the patient option is that your most precious
+data doesn't get backed up while all your large, but less precious
+data is being backed up. For example, you may have a large amount of
+downloaded videos of conference presentations, which are nice, but not
+hugely important. While those get backed up, your own documents do not
+get backed up.
+
+You can work around this by initially excluding everything except the
+most precious data. When that is backed up, you gradually reduce the
+excludes, re-running the backup, until you've backed up everything.
+As an example, your first backup might have the following
+configuration:
+
+    obnam backup -r /media/backups/tomjon-repo ~ \
+        --exclude ~/Downloads
+
+This would exclude all downloaded files. The next backup run might
+exclude only video files:
+
+    obnam backup -r /media/backups/tomjon-repo ~ \
+        --exclude ~/Downloads/'.*\.mp4$'
+
+After this, you might reduce excludes to allow a few videos, such as
+those whose name starts with a specific letter:
+
+    obnam backup -r /media/backups/tomjon-repo ~ \
+        --exclude ~/Downloads/'[^b-zB-Z].*\.mp4$'
+
+Continue allowing more and more videos until they've all been backed
+up.
 
 Choosing what to backup, and what not to backup
 -----------------------------------------------
