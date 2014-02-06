@@ -121,9 +121,37 @@ normalise_manifest_times()
 }
 
 
+# Remove "Nlink" lines for directories. It is rarely a useful thing
+# compare exactly, unlike for non-directories, since it is merely
+# extra checking that the right number of subdirectories exist. That
+# extra checking is both unnecessary (if the subdirs are in the
+# manifest, they already get checked), and harmful (if a subdirectory
+# is excluded from a backup, it won't be in the restored data
+# manifest, but the link count will be wrong).
+
+remove_nlink_for_directories()
+{
+    # This assumes tat Mode comes before Nlink, which is does in
+    # summain output.
+    awk '
+        $1 == "Mode:" && $2 ~ /^40/ { isdir = 1 }
+        $1 == "Nlink:" && isdir { skip }
+        NF > 0 { paragraph = paragraph $0 "\n" }
+        NF == 0 && paragraph {
+            printf "%s\n", paragraph
+            paragraph = ""
+            isdir = 0
+        }
+        END { if (paragraph) printf "%s", paragraph }
+    ' "$DATADIR/$MATCH_2" > "$DATADIR/$MATCH_2.new"
+}
+
+
 # Create a manifest with summain of a file or a directory.
 
 manifest()
 {
-    summain -r "$1" --exclude Ino --exclude Dev | normalise_manifest_times
+    summain -r "$1" --exclude Ino --exclude Dev |
+    normalise_manifest_times |
+    remove_nlink_for_directories
 }

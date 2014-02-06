@@ -171,23 +171,19 @@ directories tagged like that.
 
     SCENARIO exclude cache directories
     GIVEN 1k of new data in directory L/wanted
-
-The directory `L` now contains what we want to restore: only the
-wanted data, no cache directory. This is a good time to create the
-manifest.
-
-    AND a manifest of L in M
-
-We now create the cache directory and tag it. Then we backup,
-excluding caches, and restore, and verify. However, there's a snag:
-the manifest has a modification time for `L` that is wrong: the
-creation of the cache directory modifies it. Thus, we also modify the
-manifest to update the first `Mtime` field, i.e., the one for the
-directory `L`.
-
     AND 1k of new data in directory L/cache
     AND directory L/cache is tagged as a cache directory
-    AND manifest M has Mtime for the first entry set from L
+
+We'll now create the manifest, but remove `L/cache` (and files in
+`L/cache`) so that it matches what we need. We do it this instead of
+creating the manifest before `L/cache`, because creating `L/cache`
+changes the timestamp of `L`.
+
+    AND a manifest of L in M
+    AND cache is removed from manifest M
+
+Time to backup.
+
     AND user U sets configuration exclude-caches to yes
     WHEN user U backs up directory L to repository R
     AND user U restores their latest generation in repository R into X

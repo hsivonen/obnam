@@ -137,6 +137,21 @@ entry.
         ' "$DATADIR/$MATCH_1" > "$DATADIR/new-manifest"
     mv "$DATADIR/new-manifest" "$DATADIR/$MATCH_1"
 
+Sometimes we create manifests with extra stuff. This allows us to
+remove them afterwards.
+
+    IMPLEMENTS GIVEN (\S+) is removed from manifest (\S+)
+    awk -v skip1="$MATCH_1" -v skip2="$MATCH_1/" '
+        $1 == "Name:" &&
+            ($2 == skip1 || substr($2, 1, length(skip2)) == skip2) {
+                paragraph = ""; ignore = 1; next }
+        NF > 0 && !ignore { paragraph = paragraph $0 "\n" }
+        NF == 0 && paragraph { printf "%s\n", paragraph; paragraph = "" }
+        NF == 0 { ignore = 0 }
+        END { if (paragraph) printf "%s", paragraph }
+    ' "$DATADIR/$MATCH_2" > "$DATADIR/$MATCH_2.new"
+    mv "$DATADIR/$MATCH_2.new" "$DATADIR/$MATCH_2"
+
 
 Obnam configuration management
 ------------------------------
