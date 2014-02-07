@@ -18,7 +18,8 @@ Build-Depends: debhelper (>= 7.3.8),
     cmdtest (>= 0.9~),
     attr,
     python-fuse,
-    pandoc
+    pandoc,
+    texlive
 Homepage: http://liw.fi/obnam/
 X-Python-Version: >= 2.6
 
