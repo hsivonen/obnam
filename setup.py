@@ -63,9 +63,6 @@ class Build(build):
                 runcmd(['python', x, '--generate-manpage=%s.1.in' % x,
                         '--output=%s.1' % x], stdout=f)
 
-        print 'building manual'
-        runcmd(['make', '-C', 'manual', 'clean', 'all'])
-
 
 class CleanMore(clean):
 
