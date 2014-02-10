@@ -4,10 +4,13 @@ outputs = manual.pdf manual.html
 all: $(outputs)
 
 manual.pdf: Makefile $(sources)
-	pandoc --toc --chapters -o manual.pdf $(sources)
+	pandoc --smart --toc --chapters --number-sections \
+		-o manual.pdf $(sources)
 
 manual.html: Makefile $(sources)
-	pandoc -H manual.css --toc --chapters --standalone \
+	pandoc  -H manual.css --smart --toc --chapters --number-sections \
+		--standalone \
+                --self-contained \
 		-o manual.html $(sources)
 
 clean:
