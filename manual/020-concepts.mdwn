@@ -279,6 +279,8 @@ Glossary
 * **precious data**: all the data you care about; cf. live data
 * **repository**: the location where are backups are stored
 * **restore**: retriving data from a backup repository
+* **root**, **backup root**: a directory that is to be backed up,
+  including all files in it, and all its subdirectories
 * **snapshot backup**: an alternative to full/incremental backups,
   where every backup generation is effectively a full backup of all
   the precious live data, and can be restored and removed as easily as

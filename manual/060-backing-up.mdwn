@@ -84,6 +84,83 @@ started and when it ended. In addition, for each generation is a count
 of files in that generation (total, not just new or changed files),
 and the total number of bytes of file content data they have.
 
+Choosing what to backup, and what not to backup
+-----------------------------------------------
+
+Obnam needs to be told what to back up, by giving it a list of
+directories, known as backup roots. In the examples in this chapter so
+far, we've used the directory `~/Documents` (that is, the directory
+`Documents` in your home directory) as the backup root. There can be
+multiple backup roots:
+
+    obnam -r /media/backups/tomjon-repo ~/Documents ~/Photos
+
+Everything in the backup root directories gets backedup -- unless it's
+explicitly excluded. There are several ways to exclude things from
+backups:
+
+* The `--exclude` setting uses regular expressions that match the full
+  pathname of each file or directory: if the pathname matches, the
+  file or directory is not backed up. In fact, Obnam pretends it
+  doesn't exist. If a directory matches, then any files and
+  subdirectories also get excluded. This can be used, for example, to
+  exclude all MP3 files (`--exclude='\.mp3$'`).
+* The `--exclude-caches` setting excludes directories that contain a
+  special "cache tag" file called `CACHEDIR.TAG`, that starts with a
+  specific sequence of bytes. Such a tag file can be created in, for
+  example, a Firefox or other web browser cache directory. Those files
+  are usually not important to back up, and tagging the directory
+  can be easier than constructing a regular expression for
+  `--exclude`.
+* The `--one-file-system` setting excludes any mount points and the
+  contents of the mounted filesystem. This is useful for skipping,
+  for example, virtual filesystems such as `/proc`, remote filesystems
+  mounted over NFS, and Obnam repositories mounted with `obnam mount`
+  (which we'll cover in the next chapter).
+
+In general it is better to back up too much rather than too little.
+You should also make sure you know what is and isn't backed up. The
+`--pretend` option tells Obnam to run a backup, except it doesn't
+change anything in the backup repository, so it's quite fast. This way
+you can see what would be backed up, and tweak exclusions as needed.
+
+Configuration files: a quick intro
+----------------------------------
+
+By this time you may have noticed that Obnam has a number of
+configurable settings you can tweak in a number of ways. Doing it on
+the command line is always possible, but then you get quite long
+command lines. You can also put them into a configuration file.
+
+Every command line option Obnam knows can be set in a configuration
+file. Later in this manual there is a whole chapter that covers all
+the details of configuration files, and all the various settings you
+can use. For now, we'll give a quick introduction.
+
+An Obnam configuration looks like this:
+
+    [config]
+    repository = /media/backup/tomjon-repo
+    root = /home/liw/Documents, /home/liw/Photos
+    exclude = \.mp3$
+    exclude-caches = yes
+    one-file-system = no
+
+This form of configuration file is commonly known as an "INI file",
+from Microsoft Windows `.INI` files. All the Obnam settings go into a
+section titles `[config]`, and each setting has the same name as the
+command line option, but without the double dash prefix. Thus, it's
+`--exclude` on the command line and `exclude` in the configuration
+file.
+
+Some settings can have multiple values, such as `exclude` and `root`.
+The values are comma separated. If there's a lot of values, you can
+split them on multiple lines, where the second and later lines are
+indented by space or TAB characters.
+
+That should get you started, and you can reference the "Obnam
+configuration files and settings" chapter for all the details.
+
 When your precious data is very large
 -------------------------------------
 
@@ -134,14 +211,6 @@ those whose name starts with a specific letter:
 
 Continue allowing more and more videos until they've all been backed
 up.
-
-Choosing what to backup, and what not to backup
------------------------------------------------
-
-This section describes how to configure Obnam to include all precious
-data in the backup, but exclude that which is not interesting to
-backup. `root`, `exclude`, `exclude-caches`, `one-file-system` are all
-discussed here.
 
 De-duplication
 --------------

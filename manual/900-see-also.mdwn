@@ -11,3 +11,5 @@ suggestions for things to add to it are very much welcome.
 * Lars Wirzenius, interesting blog tags.
     - <http://blog.liw.fi/tag/backups/>
     - <http://blog.liw.fi/tag/obnam/>
+* Cache directory tag standard: <http://www.bford.info/cachedir/>
+    - <http://liw.fi/cachedir/> is a utility to manage the tag files
