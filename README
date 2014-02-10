@@ -21,8 +21,9 @@ On other systems, using the `setup.py` file should work: run
 "python setup.py --help" for advice. If not, please report a bug.
 (I've only tested `setup.py` enough for to build the Debian package.)
 
-You need to install my Python B-tree library, and some of my other libraries
-and tools, which you can get from:
+You need Python 2.6 or 2.7 (Python 3 is not yet supported). You also
+need to install my Python B-tree library, and some of my other
+libraries and tools, which you can get from:
 
 * <http://liw.fi/larch/>
 * <http://liw.fi/ttystatus/>
