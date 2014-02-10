@@ -14,7 +14,7 @@ manual.html: Makefile $(sources)
 		-o manual.html $(sources)
 
 clean:
-	rm -f manual.pdf manual.html
+	rm -f $(outputs)
 
 publish: $(outputs)
 	rsync $(outputs) code.liw.fi:code.liw.fi/obnam/manual/.
