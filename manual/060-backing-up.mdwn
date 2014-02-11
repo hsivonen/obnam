@@ -304,9 +304,40 @@ slow, then the comparison will take significant time.
 Locking
 -------
 
-This section discusses Obnam's approach to locking parts of the
-repository during backups, and what to do if the backup process
-crashes and leaves lock files around.
+Multiple clients can share a repository, and to prevent them from
+trampling on each other, they lock parts of the repository while
+working. The "Sharing a repository between multiple clients" chapter
+will discuss this in more detail.
+
+If Obnam terminates abruptly, even if there's only one evern client
+using the repository, the lock may stay around and prevent that one
+client for making new backups. The termination may be due to the
+network connection breaking, or due to a bug in Obnam. It can also
+happen if Obnam is interrupted by the user before it's finished.
+
+The Obnam command `force-lock` deals with this situation. It is
+dangerous, though. If you force open a lock that is in active use by
+a running Obnam instance, there will likely to be some stepping of
+toes. The result may, in extreme cases, even result in repository
+corruption. So be careful.
+
+If you've decided you can safely do it, this is an example of how to
+do it:
+
+    obnam -r /media/backups/tomjon-repo force-lock
+
+Note that some of the locks are per-client, to prevent you from
+accidentally running Obnam twice for the same client, which would
+result in standing on your own toes: kind of impressive, but
+uncomfortable and not recommended.
+
+If you need to force open a lock for specific client, you can specify
+the client name explicitly:
+
+    obnam --client-name magrat \
+        -r /media/backups/tomjon-repo force-lock
+
+(Long line broken to two for typographical reasons.)
 
 Consistency of live data
 ------------------------
