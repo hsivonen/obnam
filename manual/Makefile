@@ -2,7 +2,7 @@ TITLE = Backups with Obnam
 AUTHOR = Lars Wirzenius (liw@liw.fi)
 VERSION = Version $(shell git describe)
 
-sources = 000.mdwn $(wildcard *.mdwn)
+sources = 000.mdwn $(shell ls *.mdwn | grep -vFx 000.mdwn)
 outputs = manual.pdf manual.html
 
 all: $(outputs)
