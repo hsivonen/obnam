@@ -215,8 +215,91 @@ up.
 De-duplication
 --------------
 
-This section discusses Obnam's de-duplication features, and when you
-might not want to use them, and when the "verify" mode is relevant.
+Obnam de-duplicates the data it backs up, across all files in all
+generations for all clients sharing the repository. It does this by
+breaking up all file data into bits called chunks. Every time Obnam
+reads a file and gets a chunk together, it looks into the backup
+repository to see if an identical chunk already exists. If it does,
+Obnam doesn't need to upload the chunk, saving space, bandwidth, and
+time.
+
+De-duplication in Obnam is useful in several situations:
+
+* When you have two identical files, obviously. They might have
+  different names, and be in different directories, but contain the
+  same data.
+* When a file keeps growing, but all the new data is added at the end.
+  This is typical for log files, for example. If the leading chunks
+  are unmodified, only the new data needs to be backed up.
+* When a file or directory is renamed or moved. If you decide that the
+  English name for the `Photos` directory is annoying and you want to
+  use the the Finnish `Valokuvat` instead, you can rename that in an
+  instant. However, without de-duplication, you then have to backup
+  all your photos again.
+* When all a team works on the same things, and everyone has copies of
+  the same files, the backup repository only needs one copy of each
+  file, rather than one per team member.
+
+De-duplication in Obnam isn't perfect. The granularity of finding
+duplicate data is quite coarse (see the  `--chunk-size` setting), and
+so Obnam often doesn't find duplication when it exists, when the
+changes are small.
+
+De-duplication and safety against checksum collisions
+-----------------------------------------------------
+
+This is a bit of a scary topic, but it would be dishonest to not
+discuss it at all. Feel free to come back to this section later.
+
+Obnam uses the MD5 checksum algorithm for recognising duplicate data
+chunks. MD5 has a reputation for being unsafe: people have constructed
+files that are different, but result in the same MD5 checksum. This is
+true. MD5 is not considered safe for security critical applications.
+
+Every checksum algorithm can have collisions. Changing Obnam to use,
+say, SHA1, SHA2, or the as new SHA3 algorithm would not remove the
+chance of collisions. It would reduce the chance of accidental
+collisions, but the chance of those is already so small with MD5 that
+it can be disregarded. Or put in another way, if you care about the
+chance of accidental MD5 collisions, you should be caring about
+accidental SHA1, SHA2, or SHA3 collisions as well.
+
+Apart from accidental collisions, there are two cases where you should
+worry about checksum collisions (regardless of algorithm).
+
+First, if you have an enemy who wishes to corrupt your backed up data,
+they may replace some of the backed up data with other data that has
+the same checksum. This way, when you restore, your data is corrupted
+without Obnam noticing.
+
+Second, if you're into researching checksum collisions, you're likely
+to have files that cause checksum collisions, and in that case, if you
+restore after a catastrophe, you probably want to get the files back
+intact, rather having Obnam confuse one with the other.
+
+To deal with these situations, Obnam has three de-duplication modes,
+set using the `--deduplicate` setting:
+
+* The default mode, `fatalist`, assumes checksum collisions do not
+  happen. This is a reasonable compromise between performance, safety,
+  and security for most people.
+* The `verify` mode assumes checksum collisions do happen, and
+  verifies that the already backed up chunk is identical to the chunk
+  to be backed up, by comparing the actual data. Doing this requires
+  downloading the chunk from the backup repository, which can be quite
+  slow, since checksums will often match. This is a useful mode if you
+  have very fast access to the backup repository, and want to
+  de-duplicate, such as when the backup repository is on a locally
+  connected hard drive.
+* The `never` mode turns off de-duplication completely. This is 
+  useful if you're worried about checksum collisions, and do not
+  require de-duplication.
+
+There is, unfortunately, no way to get both de-duplication that is
+invulnerable to checksum collision and is fast even when accessing the
+backup repository is slow. The only way to be invulnerable is to
+compare the data, and if downloading the data from the repository is
+slow, then the comparison will take significant time.
 
 Locking
 -------
