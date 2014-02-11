@@ -3,4 +3,18 @@ Restoring from backups
 
 This chapter discusses how to restore data from any backup generation,
 either everything or individual files. It describes both the approach
-using just Obnam, and the approach using the FUSE filesystem.
+using using the FUSE filesystem plugin, or using the `obnam restore`
+command.
+
+Oh no! It's all FUSEd together
+------------------------------
+
+This section describes how to use the FUSE plugin in Obnam to mount
+the backup repository and restore by using file copying with various
+tools, including rsync.
+
+Restoring without FUSE
+----------------------
+
+This section describes how to restore data using the `obnam restore`
+command.
