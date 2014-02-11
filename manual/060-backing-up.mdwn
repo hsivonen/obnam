@@ -342,6 +342,47 @@ the client name explicitly:
 Consistency of live data
 ------------------------
 
-This section discusses how to handle backing up a live filesystem,
-which is being used and changed while the backup runs. It discusses
-LVM snapshots, btrfs subvolumes, MySQL database dumps.
+Making a backup can take a good while. While the backup is running,
+the filesystem may change. This leads to the snapshot of data Obnam
+presents as a backup generation being internally inconsistent. For
+example, before a backup you might have two files, A and B, which need
+to be kept in sync. You run a backup, and while it's happening, you
+change A, and then B. However, you're unlucky, and Obnam manages to
+backup A before you save your changes, and B after you save changes to
+that. The backup generation now has versions of A and B that are not
+synchronised. This is bad.
+
+This can be dealt with in various ways, depending on the
+circumstances. Here's a few:
+
+* The Logical Volume Manager (LVM) provides snapshots. You can set up
+  your backups so that they first create a snapshot of each logical
+  volume to be backed up, run the backup, and delete the snapshot
+  afterwards. This prevents anyone from modifying the files in the
+  snapshot, but allows normal use to continue while the backup
+  happens.
+* A similar thing can be done using the btrfs filesystem and its
+  subvolumes.
+* You can shut down the system, reboot it into single user mode, and
+  run the backup, before rebooting back into normal mode. This is not
+  a good way to do it, but it is the most safe way to get a consistent
+  snapshot of the filesystem.
+
+Note that filesystem level snapshots can't really guarantee a
+consistent view of the live data. An application may be in the middle
+of writing a file, or set of files, when the snapshot is being made.
+To some extent this indicates an application bug, but knowing that
+doesn't let you sleep better.
+
+Usually, though, most systems have enough idle time that a consistent
+backup snapshot can happen during that time. For a laptop, for
+example, a backup can be run whlie the user is elsewhere, instead of
+actively using the machine.
+
+Part of your backup verification suite should check that the data in a
+backup generation is internally consistent, if that can be done.
+Otherwise, you'll either have to analyse the applications you use, or
+trust they're not too buggy.
+
+If you didn't underatand this section, don't worry and be happy and
+sleep well.
