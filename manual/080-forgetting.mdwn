@@ -1,6 +1,85 @@
 Forgetting old backup generations
 =================================
 
-This chapter will discuss how to remove old backup generations, and
-various considerations on the aspects of what to keep and for how
-long.
+Every time you make a backup, your backup repository grows in size. To
+avoid overflowing all available storage, you need to get rid of some
+old backups. That's a bit of a dilemma, of course: you make backups in
+order to not lose data and now you have to do exactly that.
+
+Obnam uses the term "forget" about removing a backup generation.
+You can specify which generation to remove manually, by generation
+identifier, or you can have a schedule to forget them automatically.
+
+To forget a specific generation:
+
+    obnam forget 2
+
+(This example assumes you have a configuration file that Obnam finds
+automatically, and that you don't need to specify things like
+repository location or encryption on the command line.)
+
+You can forget any individual generation. Thanks to the way Obnam
+treats every generation as an independent snapshot (except it's not
+really a full backup every time), you don't have to worry about the
+distinctions between a full and incremental backup.
+
+Forgetting backups manually is tedious, and you probably want to use a
+schedule to have Obnam automatically pick the generations to forget.
+A common type of schedule is something like this:
+
+* keep one backup for each day for the past week
+* keep one backup for each week for the past three months
+* keep one backup for each month for the past two years
+* keep one backup for each year for the past fifty seven years
+
+Obnam uses the `--keep` setting to specify a schedule. The setting 
+for the above schedule would look like this:
+
+    --keep 7d,15w,24m,57y
+
+This isn't an exact match, due to the unfortunate ambiguity of how
+long a month is in weeks, but it's close enough. The setting "7d" is
+interpreted as "the last backup of each calendar day for the last
+seven days on which backups were made". Similarly for the other parts
+of the schedule. See the "Obnam configuration files and settings"
+chapter for exact details.
+
+The schedule picks a set of generations to keep. Everything else gets
+forgotten.
+
+Choosing a schedule for forgetting generations
+----------------------------------------------
+
+The schedule for retiring backup generations is a bit of a guessing
+game, just like backups in general. If you could reliably tell the
+future, you'd know all the disasters that threaten your data, and you
+could backup only the things that would otherwise be lost in the
+future.
+
+In this reality, alas, you have to guess. You need to think about what
+risks you're facing (or your data is), and how much backup storage
+space you're willing to spend on protecting against them.
+
+* Are you afraid of your hard drive suddenly failing in a very
+  spectacular way, such as by catching fire or being stolen? If so,
+  you really only need one very recent backup to cover against that.
+* Do you worry about your hard drive, or filesystem, or your
+  applicatin programs, or you yourself, slowly corrupting your data
+  over a longer period of time? How long will it take you to find that
+  out? You need a backup history that lasts longer than it takes for
+  you to detect slow corruption.
+* Likewise with accidental deletion of files. How long will it take
+  for you to notice? That's how long the backup history should be,
+  at minimum.
+
+There's other criteria as well. For example, would you like to see, in
+fifty years, how your files are laid out today? If so, you need a
+fifty-year-old backup, plus perhaps a backup from each year, if you
+want to compare how things were each year in between. With increasing
+storage space and nice de-duplication features, this isn't quite as
+expensive as it might be.
+
+There is no one schedule that fits everyones needs and wants. You have
+to decide for youself. That's why the default in Obnam is to keep
+everything forever. It's not Obnam's duty to decide that you should
+not keep this or that backup generation.
