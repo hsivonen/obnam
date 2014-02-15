@@ -32,3 +32,12 @@ To share a repository amongst clients you need to do the following:
 * Arrange for each client to have access to the repository.
 
 That's all.
+
+To see what clients are using a repository, use this:
+
+    obnam clients
+
+There is currently no way to remove a client from a repository, unless
+you're using encryption. This is to be considered a bug in Obnam, and
+will be fixed at a future time. After that, a time machine will be
+developed so that this paragraph will have never existed.
