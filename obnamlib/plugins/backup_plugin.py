@@ -31,6 +31,23 @@ import obnamlib
 import larch
 
 
+class RepositorySettingMissingError(obnamlib.ObnamError):
+
+    msg = ('No --repository setting. '
+           'You need to specify it on the command line or '
+           'a configuration file')
+
+
+class BackupRootMissingError(obnamlib.ObnamError):
+
+    msg = 'No backup roots specified'
+
+
+class BackupErrors(obnamlib.ObnamError):
+
+    msg = 'There were errors during the backup'
+
+
 class ChunkidPool(object):
 
     '''Data/chunkid mappings that are pending an upload to shared trees.'''
@@ -262,9 +279,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.app.settings.require('client-name')
 
         if not self.app.settings['repository']:
-            raise obnamlib.Error('No --repository setting. '
-                                  'You need to specify it on the command '
-                                  'line or a configuration file.')
+            raise RepositorySettingMissingError()
 
         self.configure_ttystatus_for_backup()
         self.progress.what('setting up')
@@ -305,7 +320,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.fs = None
             roots = self.app.settings['root'] + args
             if not roots:
-                raise obnamlib.Error('No backup roots specified')
+                raise BackupRootMissingError()
             self.backup_roots(roots)
             self.progress.what('committing changes to repository')
             if not self.pretend:
@@ -354,7 +369,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             raise
 
         if self.errors:
-            raise obnamlib.Error('There were errors during the backup')
+            raise BackupErrors()
 
     def unlock_when_error(self):
         try:
