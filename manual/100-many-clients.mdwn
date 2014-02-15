@@ -1,7 +1,34 @@
 Sharing a repository between multiple clients
 =============================================
 
-This chapter discusses what needs to be done to share a backup
-repository between clients, and why that might be useful, and when not
-to do that.
+Obnam lets you backup several computers to the same repository. Each
+client is identified by a name, which defaults to the system hostname:
+the name you get when you run the `hostname` command. You can also set
+the name explicitly, using the `--client-name` setting in Obnam.
 
+All the clients sharing a repository share the file content data (the
+chunks), and can de-duplicate across clients. Each client has its own
+backup generations, and those are fully independent from other
+clients. You can, for example, forget any generations you want for one
+client, and it doesn't affect the generations or any backed up data
+for any other client.
+
+Obnam takes care of locking automatically so you can run Obnam on each
+client without having to arrange it so that you only run it on one
+client at a time.
+
+A caveat of sharing a repository is that any client has access to all
+chunks, and can delete any other client from the repository. This
+means you should only share a repository amongst clients in the same
+security domain: all clients should be trusted equally. If one client
+gets hacked, then the intruder has access to all the data in the
+repository, and can delete the backups of all the clients using that
+repository.
+
+To share a repository amongst clients you need to do the following:
+
+* Set a unique name for each client. It needs to be unique within the
+  repository.
+* Arrange for each client to have access to the repository.
+
+That's all.
