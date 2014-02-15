@@ -50,8 +50,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         self.app.settings.require('client-name')
         self.app.settings.require('generation')
         if len(self.app.settings['generation']) != 1:
-            raise obnamlib.Error(
-                'verify must be given exactly one generation')
+            raise WrongNumberOfGenerationsForVerify()
 
         logging.debug('verifying generation %s' %
                         self.app.settings['generation'])
