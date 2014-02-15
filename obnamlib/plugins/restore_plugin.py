@@ -29,6 +29,11 @@ class WrongNumberOfGenerationSettingsError(obnamlib.ObnamError):
     msg = 'The restore command wants exactly one generation option'
 
 
+class RestoreErrors(obnamlib.ObnamError):
+
+    msg = 'There were errors when restoring'
+
+
 class Hardlinks(object):
 
     '''Keep track of inodes with unrestored hardlinks.'''
@@ -163,7 +168,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         self.app.ts.finish()
 
         if self.errors:
-            raise obnamlib.Error('There were errors when restoring')
+            raise RestoreErrors()
 
     def restore_something(self, gen, root):
         for pathname in self.repo.walk_generation(gen, root):
