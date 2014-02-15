@@ -20,6 +20,11 @@ import os
 import obnamlib
 
 
+class RepositoryAccessError(obnamlib.ObnamError):
+
+    msg = 'Repository does not exist or cannot be accessed:\n{error}'
+
+
 class ForceLockPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
@@ -39,9 +44,7 @@ class ForceLockPlugin(obnamlib.ObnamPlugin):
         try:
             repo = self.app.get_repository_object()
         except OSError, e:
-            raise obnamlib.Error('Repository does not exist '
-                                  'or cannot be accessed.\n' +
-                                  str(e))
+            raise RepositoryAccessError(error=str(e))
 
         all_clients = repo.get_client_names()
         if client_name not in all_clients:
