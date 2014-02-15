@@ -23,6 +23,21 @@ import time
 import obnamlib
 
 
+class ClientDoesNotExistError(obnamlib.ObnamError):
+
+    msg = 'Client {client} does not exist in repository {repo}'
+
+
+class WrongNumberOfGenerationsForDiffError(obnamlib.ObnamError):
+
+    msg = 'Need one or two generations'
+
+
+class ShowFirstGenerationError(obnamlib.ObnamError):
+
+    msg = "Can't show first generation. Use 'obnam ls' instead"
+
+
 class ShowPlugin(obnamlib.ObnamPlugin):
 
     '''Show information about data in the backup repository.
@@ -73,9 +88,8 @@ class ShowPlugin(obnamlib.ObnamPlugin):
             client = self.app.settings['client-name']
             clients = self.repo.get_client_names()
             if client not in clients:
-                raise obnamlib.Error(
-                    'Client %s does not exist in repository %s' %
-                    (client, self.app.settings['repository']))
+                raise ClientDoesNotExistError(
+                    client=client, repo=self.app.settings['repository'])
 
     def clients(self, args):
         '''List clients using the repository.'''
@@ -296,7 +310,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         '''Show difference between two generations.'''
 
         if len(args) not in (1, 2):
-            raise obnamlib.Error('Need one or two generations')
+            raise WrongNumberOfGenerationsForDiffError()
 
         self.open_repository()
         client_name = self.app.settings['client-name']
@@ -307,8 +321,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
             genids = self.repo.get_client_generation_ids(client_name)
             index = genids.index(gen_id2)
             if index == 0:
-                raise obnamlib.Error(
-                    'Can\'t show first generation. Use \'ls\' instead')
+                raise ShowFirstGenerationError()
             gen_id1 = genids[index - 1]
         else:
             gen_id1 = self.repo.interpret_generation_spec(
