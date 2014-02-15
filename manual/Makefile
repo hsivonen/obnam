@@ -15,6 +15,7 @@ manual.html: Makefile $(sources) ../obnam.css
 	pandoc  -H ../obnam.css --smart --toc --chapters --number-sections \
 		--standalone \
                 --self-contained \
+                -V geometry:lettersize \
 		-o manual.html $(sources)
 
 000.mdwn:
