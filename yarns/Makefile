@@ -7,6 +7,7 @@ yarns.pdf: $(yarns) Makefile
 
 yarns.html: $(yarns) Makefile ../obnam.css
 	pandoc -H ../obnam.css --smart --toc --chapters --number-sections \
+                -V geometry:lettersize \
 		--standalone --self-contained -o yarns.html $(yarns)
 
 html:
