@@ -41,6 +41,46 @@ with warnings.catch_warnings():
 import obnamlib
 
 
+class NoHostKeyError(obnamlib.ObnamError):
+
+    msg = 'No known host key for {hostname}'
+
+
+class NoHostKeyOfWantedTypeError(obnamlib.ObnamError):
+
+    msg = 'No known type {key_type} host key for {hostname}'
+
+
+class WrongHostKeyError(obnamlib.ObnamError):
+
+    msg = 'SSH server {hostname} offered wrong public key'
+
+
+class KeyAuthenticationError(obnamlib.ObnamError):
+
+    msg = "Can't authenticate to SSH server using key"
+
+
+class WrongURLSchemeError(obnamlib.ObnamError):
+
+    msg = 'SftpFS used with non-sftp URL: {url}'
+
+
+class InvalidPortError(obnamlib.ObnamError):
+
+    msg = 'Invalid port number {port} in {url}: {error}'
+
+
+class LockError(obnamlib.ObnamError):
+
+    msg = 'Failure get lock {lockname}'
+
+
+class HardlinkError(obnamlib.ObnamError):
+
+    msg = 'Cannot hardlink on SFTP; sorry'
+
+
 def ioerror_to_oserror(method):
     '''Decorator to convert an IOError exception to OSError.
 
@@ -226,7 +266,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
         known_keys = known_hosts.lookup(hostname)
         if known_keys is None:
             if self.settings['ssh-host-keys-check'] == 'yes':
-                raise obnamlib.Error('No known host key for %s' % hostname)
+                raise NoHostKeyError(hostname=hostname)
             logging.warning('No known host keys for %s; accepting offered key'
                             % hostname)
             return
@@ -234,15 +274,14 @@ class SftpFS(obnamlib.VirtualFileSystem):
         offered_type = offered_key.get_name()
         if not known_keys.has_key(offered_type):
             if self.settings['ssh-host-keys-check'] == 'yes':
-                raise obnamlib.Error('No known type %s host key for %s' %
-                                     (offered_type, hostname))
+                raise NoHostKeyOfWantedTypeError(
+                    key_type=offered_type, hostname=hostname)
             logging.warning('No known host key of type %s for %s; accepting '
                             'offered key' % (offered_type, hostname))
 
         known_key = known_keys[offered_type]
         if offered_key != known_key:
-            raise obnamlib.Error('SSH server %s offered wrong public key' %
-                                 hostname)
+            raise WrongHostKeyError(hostname=hostname)
 
         logging.debug('Host key for %s OK' % hostname)
 
@@ -255,7 +294,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
                 return
             except paramiko.SSHException:
                 pass
-        raise obnamlib.Error('Can\'t authenticate to SSH server using key.')
+        raise KeyAuthenticationError()
 
     def _find_auth_keys(self):
         if self.settings and self.settings['ssh-key']:
@@ -291,7 +330,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
         scheme, netloc, path, query, fragment = urlparse.urlsplit(baseurl)
 
         if scheme != 'sftp':
-            raise obnamlib.Error('SftpFS used with non-sftp URL: %s' % baseurl)
+            raise WrongURLSchemeError(url=baseurl)
 
         if '@' in netloc:
             user, netloc = netloc.split('@', 1)
@@ -306,10 +345,10 @@ class SftpFS(obnamlib.VirtualFileSystem):
                 try:
                     port = int(port)
                 except ValueError, e:
-                    msg = ('Invalid port number %s in %s: %s' %
-                            (port, baseurl, str(e)))
-                    logging.error(msg)
-                    raise obnamlib.Error(msg)
+                    exc = InvalidPortError(
+                        port=port, url=baseurl, error=str(e))
+                    logging.error(str(exc))
+                    raise exc
         else:
             host = netloc
             port = None
@@ -405,7 +444,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
         try:
             self.write_file(lockname, data)
         except OSError, e:
-            raise obnamlib.LockFail('Failure get lock %s' % lockname)
+            raise LockError(lockname=lockname)
 
     def unlock(self, lockname):
         self._remove_if_exists(lockname)
@@ -511,7 +550,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
         self.sftp.utime(pathname, (atime_sec, mtime_sec))
 
     def link(self, existing_path, new_path):
-        raise obnamlib.Error('Cannot hardlink on SFTP. Sorry.')
+        raise HardlinkError()
 
     def readlink(self, symlink):
         self._delay()
