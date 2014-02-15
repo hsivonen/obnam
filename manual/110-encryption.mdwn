@@ -1,19 +1,143 @@
 Using encryption
 ================
 
+Obnam allows you to encrypt your backups. This chapter discusses why
+and how to do that.
+
+You don't admit to being a spy, so isn't encryption unnecessary?
+----------------------------------------------------------------
+
+You're not the only one who cares about your data. A variety of
+governments, corporations, criminals, and overly curious snoopers und
+[lookenpeepers](https://en.wikipedia.org/wiki/Blinkenlights) may also
+be interested. (It's sometimes hard to tell them apart.) They might be
+interested in it to data in order to find evidence against you,
+blackmail you, or just curious about what you're talking about with
+your other friends.
+
+They might be interested in your data from a statistical point of view,
+and don't particularly care about your specifically.  Or they might be
+interested only in you.
+
+Instead of reading your files and e-mail, or looking at your photos and
+videos, they might be interested in preventing your access to them,
+or to destroy your data. They might even want to corrupt your data,
+perhaps by planting child porn in your photo archive.
+
+You protect your computer as well as you can to prevent these and other
+bad things from happening. You need to protect your backups with equal
+care.
+
+If you back up to a USB drive, you should probably make the drive be
+encrypted. Likewise, if you back up to online storage.  There are many
+forms of encryption, and I'm unqualified to give advice on this, but any
+of the common, modern ones should suffice except for quite determined
+attackers.
+
+Instead of, or in addition to, encryption, you could ensure the physical
+security of your backup storage. Keep the USB drive in a safe, perhaps,
+or a safe deposit box.
+
+The multiple backups you need to protect yourself against earthquakes,
+floods, and roving gangs of tricycle-riding clowns, are also useful
+against attackers. They might corrupt your live data, and the backups at
+your home, but probably won't be able to touch the USB drive encased in
+concrete and buried in the ground at a secret place only you know about.
+
+The other side of the coin is that you might want to, or need to, ensure
+others do have access to your backed up data. For example, if the clown
+gang kidnaps you, your spouse might need access to you backups to be
+able to contact your MI6 handler to ask them to rescue you. Arranging
+safe access to (some) backups is an interesting problem to which there
+are various solutions. You could give your spouse the encryption passphrase,
+or give the passphrase to a trusted friend or your lawyer. You could also
+use something like [libgfshare] to escrow encryption keys more safely.
+
+[libgfshare]: http://www.digital-scurf.org/software/libgfshare
+
 How Obnam encryption works
 --------------------------
 
-This section describes, at a fairly high level, how the encryption in
-Obnam works. It discusses how much or little encryption protects
-against other clients using the same repository.
+An Obnam repository contains several directories, for different types
+of data.
+
+* A per-client directory for each client, for data that is only
+  relevant to that client, such as the generations to that client.
+* A directory for the list of clients.
+* A directory for all the chunks of file content data, plus additional
+  directories used for de-duplicating chunks.
+
+The per-client directory is encrypted so that only that client can
+access it. This means that only the client itself can see its
+generations, and the files in each generation.
+
+The shared directories (client list, chunks) is encrypted so that all
+clients can use them. This allows clients to share chunks, so that
+de-duplication works across all clients.
+
+This encryption scheme assumes that all clients sharing a repository
+trust each other, and that it's OK for them to be able to read all the
+chunk data they want. The encryption does not protect siblings from
+reading each others e-mail from the backup repository, for example,
+but it does protect them against their parents, if the parents don't
+have a suitable encryption key.
+
+In addition to the encryptions for client you can add additional keys.
+These keys can also access the backup repository. For example, the
+parents' key might be added to the repository so that if need be, they
+could restore any child's data, even if the child had lost their own
+encryption key.
+
+In a corporate setting, the a backup administrator key might be added
+so that the administrator can, for example, verify the integrity of
+the repository, or to access data of an employee who has won the
+lottery and isn't currently available due to bad Internet access to
+the Moon.
+
+Such additional keys can be added either for any one client, or to all
+clients.
 
 Setting up Obnam to use encryption
 ----------------------------------
 
-This section shows how to make encrypted backups with Obnam.
+Obnam uses PGP keys, specifically the GNU Privacy Guard (GnuPG, gpg)
+implementation of them. To use encrypted backups, you need to first
+create a PGP key pair for yourself. See the [GnuPG documentation] for
+instructions.
 
-Managing encryption keys in a repository
+[GnuPG documentation]: http://www.gnupg.org/documentation/
+
+Once you have a working GnuPG setup and a key pair (consisting of a
+public key and a secret key), you need to find the key identifier for
+them. Run the following command and pick your key from the list.
+
+    gpg --list-keys
+
+In the rest of the examples in this chapter, we'll assume your key
+identifier is CAFEFACE.
+
+To set up encryption, use the `--encrypt-with` setting:
+
+    [config]
+    encrypt-with = CAFEFACE
+
+That's all.
+
+Note that a repository should be fully encrypted or not encrypted at
+all, and that you can't switch afterwards. If you change your mind
+about whether to use encryption at all, you'll need to start a new
+repository. All clients sharing a repository need to be using
+encryption, or else none of them may use encryption. If you mix
+encryption or cleartext backups, the error messages may prove to be
+confusing.
+
+Obnam will automatically encrypt all the files it writes to the backup
+repository, and de-crypt them when needed. As long as you only have
+one encryption key for each client, and don't add additional keys,
+Obnam will take care of adding the right keys to the right places
+automatically.
+
+FIXME: Managing encryption keys in a repository
 ----------------------------------------
 
 This section discusses how to manage encryption keys in a repository:
