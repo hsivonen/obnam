@@ -36,7 +36,15 @@ except ImportError:
 from pluginmgr import PluginManager
 
 
+# Exceptions defined by Obnam itself. They should all be a subclass
+# of obnamlib.ObnamError. The obnamlib.Error class is a remnant of
+# an old way of doing things, and will be retired.
+
 from structurederror import StructuredError
+
+class ObnamError(StructuredError):
+
+    pass
 
 
 class Error(cliapp.AppException):
