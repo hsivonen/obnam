@@ -1,5 +1,58 @@
 Verifying backups
 =================
 
-This chapter discusses why and how to verify that your backups work.
-More from <http://blog.liw.fi/posts/backups-5/>.
+It's 9 in the evening. Do you know if your backups work? Do you know
+when you last made a successful backup of all of your data? Do you
+know whether you can restore from that backup? If not, how well can
+you sleep?
+
+You should verify your backups, and do it regularly, not just when you
+first set up the backup system. Verification means doing whatever you
+need to do to ensure all of your precious data has been backed up
+and can be correctly restored from the backups.
+
+The simplest way to do that is to restore all your data, and compare it
+with your live data, and note any differences. That requires you have
+enough free disk space to restore everything, but it's almost the
+only way to be really sure.
+
+It's also a great way to ensure the restoring actually works. If
+you don't test that, don't expect it'll workd when needed.
+
+If you have the disk space to do a complete restore, doing so is a
+great way to excercise your disaster recovery process in general.
+Here's one way of doing it:
+
+* On your main computer, do a backup.
+* On a second computer, perhaps borrowed for this, restore all your data,
+  without using your main computer at all.
+* Start using the restored data as your live data. Do real work,
+  and do all the things you normally do. Pretend your main computer
+  was eaten by your pet shark.
+* If you notice something missing, or being corrupt, or being too old,
+  get the files from your main computer, and fix your backup process so
+  that the next time you won't have that problem.
+
+How often should you do that? That, again, depends on how you feel about
+your data, and how much you trust your backup tools and processes. If
+it's really important that you can recover from a disaster, you need to
+verify more frequently. If data loss is merely inconvenient and not
+life-changingly disastrous, you can verify less often.
+
+In addition to restoring data, Obnam provides two other ways to
+verify your backups:
+
+* `obnam verify` is like `obnam restore`, except it compares the
+  backed up data with live data, and reports any differences.
+  This requires you to trust that Obnam does the verification
+  correctly.
+* `obnam mount` lets you access your backed up data as if it were just
+  a directory. You can then use any tool you trust to compare the
+  backed up data with live data. This is very much like doing a
+  restore, since the comparison tool will have to extract all the data
+  and metadata from the backup; it just doesn't write it out.
+
+Both of these approaches have the problem that they compare a backup
+with live data, and the live data may have changed after the backup
+was made. You need to verify all differences manually, and if the live
+data changes frequently, the can be a large number of wrong reports.
