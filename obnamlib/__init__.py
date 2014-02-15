@@ -36,6 +36,9 @@ except ImportError:
 from pluginmgr import PluginManager
 
 
+from structurederror import StructuredError
+
+
 class Error(cliapp.AppException):
     pass
 
