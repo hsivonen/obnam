@@ -29,6 +29,11 @@ import tracing
 import obnamlib
 
 
+class ToplevelIsFileError(obnamlib.ObnamError):
+
+    msg = 'File at repository root: {filename}'
+
+
 class HookedFS(object):
 
     '''A class to filter read/written data through hooks.'''
@@ -46,7 +51,7 @@ class HookedFS(object):
         if len(parts) > 1:
             return parts[0]
         else: # pragma: no cover
-            raise obnamlib.Error('File at repository root: %s' % filename)
+            raise ToplevelIsFileError(filename=filename)
 
     def cat(self, filename, runfilters=True):
         data = self.fs.cat(filename)
