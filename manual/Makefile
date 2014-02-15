@@ -23,6 +23,3 @@ manual.html: Makefile $(sources) ../obnam.css
 
 clean:
 	rm -f $(outputs) 000.mdwn
-
-publish: $(outputs)
-	rsync $(outputs) code.liw.fi:code.liw.fi/obnam/manual/.

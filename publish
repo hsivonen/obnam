@@ -1,0 +1,13 @@
+#!/bin/sh
+#
+# This is a script Lars Wirzenius uses to publish docs on the Internet.
+# It's not useful for anyone else, as it requires access to the right
+# host.
+#
+# It is assumed that the docs have been built already.
+
+host="pieni.net"
+path="code.liw.fi/obnam"
+
+rsync manual/manual.pdf manual/manual.html "$host:$path/manual/."
+rsync yarns/yarns.pdf yarns/yarns.html "$host:$path/"
