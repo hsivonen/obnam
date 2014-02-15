@@ -24,14 +24,14 @@ import urlparse
 import obnamlib
 
 
-class Fail(obnamlib.Error):
+class WrongNumberOfGenerationsForVerify(obnamlib.ObnamError):
 
-    def __init__(self, filename, reason):
-        self.filename = filename
-        self.reason = reason
+    msg = 'verify must be given exactly one generation'
 
-    def __str__(self):
-        return '%s: %s' % (self.filename, self.reason)
+
+class Fail(obnamlib.ObnamError):
+
+    msg = '{filename}: {reason}'
 
 
 class VerifyPlugin(obnamlib.ObnamPlugin):
@@ -143,7 +143,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         print "Verify did not find problems."
 
     def log_fail(self, e):
-        msg = 'verify failure: %s: %s' % (e.filename, e.reason)
+        msg = 'verify failure: %s' % str(e)
         logging.error(msg)
         if self.app.settings['quiet']:
             sys.stderr.write('%s\n' % msg)
@@ -155,7 +155,9 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         try:
             live_data = obnamlib.read_metadata(self.fs, filename)
         except OSError, e:
-            raise Fail(filename, 'missing or inaccessible: %s' % e.strerror)
+            raise Fail(
+                filename=filename,
+                reason='missing or inaccessible: %s' % e.strerror)
 
         def X(key, field_name):
             v1 = self.repo.get_file_key(gen_id, filename, key)
@@ -169,8 +171,8 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
                 v2 = v2 or ''
             if v1 != v2:
                 raise Fail(
-                    filename,
-                    'metadata change: %s (%s vs %s)' % 
+                    filename=filename,
+                    reason='metadata change: %s (%s vs %s)' % 
                     (field_name, repr(v1), repr(v2)))
 
         X(obnamlib.REPO_FILE_MODE, 'st_mode')
@@ -188,7 +190,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
 
         chunkids = self.repo.get_file_chunk_ids(gen_id, filename)
         if not self.verify_chunks(f, chunkids):
-            raise Fail(filename, 'data changed')
+            raise Fail(filename=filename, reason='data changed')
 
         f.close()
 
