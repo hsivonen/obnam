@@ -1,6 +1,22 @@
 Using encryption
 ================
 
-This chapter discusses how to encrypt the backup repository, and how
-to manage encryption keys.
+How Obnam encryption works
+--------------------------
 
+This section describes, at a fairly high level, how the encryption in
+Obnam works. It discusses how much or little encryption protects
+against other clients using the same repository.
+
+Setting up Obnam to use encryption
+----------------------------------
+
+This section shows how to make encrypted backups with Obnam.
+
+Managing encryption keys in a repository
+----------------------------------------
+
+This section discusses how to manage encryption keys in a repository:
+how to add additional keys for each toplevel, and how to change keys
+for a client. It also shows how to check what keys are being used, and
+what access each key has.
