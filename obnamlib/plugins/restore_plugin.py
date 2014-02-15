@@ -24,6 +24,11 @@ import ttystatus
 import obnamlib
 
 
+class WrongNumberOfGenerationSettingsError(obnamlib.ObnamError):
+
+    msg = 'The restore command wants exactly one generation option'
+
+
 class Hardlinks(object):
 
     '''Keep track of inodes with unrestored hardlinks.'''
@@ -133,8 +138,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
 
         generations = self.app.settings['generation']
         if len(generations) != 1:
-            raise obnamlib.Error(
-                'The restore command wants exactly one generation option')
+            raise WrongNumberOfGenerationSettingsError()
         gen = self.repo.interpret_generation_spec(client_name, generations[0])
 
         self.configure_ttystatus()
