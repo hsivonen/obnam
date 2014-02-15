@@ -11,8 +11,8 @@ manual.pdf: Makefile $(sources)
 	pandoc --smart --toc --chapters --number-sections \
 		-o manual.pdf $(sources)
 
-manual.html: Makefile $(sources)
-	pandoc  -H manual.css --smart --toc --chapters --number-sections \
+manual.html: Makefile $(sources) ../obnam.css
+	pandoc  -H ../obnam.css --smart --toc --chapters --number-sections \
 		--standalone \
                 --self-contained \
 		-o manual.html $(sources)
