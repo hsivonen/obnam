@@ -64,6 +64,24 @@ class Build(build):
                         '--output=%s.1' % x], stdout=f)
 
 
+class BuildDocs(Command):
+
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        print 'building manual'
+        runcmd(['make', '-C', 'manual'])
+
+        print 'building yarns'
+        runcmd(['make', '-C', 'yarns'])
+
+
 class CleanMore(clean):
 
     def run(self):
@@ -187,6 +205,7 @@ setup(name='obnam',
       data_files=[('share/man/man1', glob.glob('*.1'))],
       cmdclass={
         'build': Build,
+        'docs': BuildDocs,
         'check': Check,
         'clean': CleanMore,
       },
