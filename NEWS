@@ -32,6 +32,12 @@ Version 1.7, released UNRELEASED
   Obnam homepage. See <http://code.liw.fi/obnam/manual/> for
   rendered versions (PDF, HTML).
 
+* Most of the error messages Obnam produces now have a unique error
+  code: `ERROR: R0B15DX: Cannot find requested generation for client
+  havelock` for example. More error messages will gain error codes in
+  future releases. The error codes are meant to be easy to search for,
+  and will allow error messages to be translated in the future.
+
 Bug fixes:
 
 * Obnam now creates a `trustdb.gpg` in the temporary GNUPGHOME it uses
