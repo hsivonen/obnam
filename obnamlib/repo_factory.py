@@ -22,16 +22,14 @@ import logging
 import obnamlib
 
 
-class UnknownRepositoryFormat(obnamlib.Error):
+class UnknownRepositoryFormat(obnamlib.ObnamError):
 
-    def __init__(self, fs, format):
-        self.msg = 'Unknown format %s at %s' % (format, fs.baseurl)
+    msg = 'Unknown format {format} at {url}'
 
 
-class UnknownRepositoryFormatWanted(obnamlib.Error):
+class UnknownRepositoryFormatWanted(obnamlib.ObnamError):
 
-    def __init__(self, wanted):
-        self.msg = 'Unknown format %s requested' % repr(wanted)
+    msg = 'Unknown format {format} requested'
 
 
 class RepositoryFactory(object):
@@ -72,7 +70,7 @@ class RepositoryFactory(object):
         for impl in self._implementations:
             if impl.format == existing_format:
                 return self._open_repo(impl, fs, kwargs)
-        raise UnknownRepositoryFormat(fs, existing_format)
+        raise UnknownRepositoryFormat(url=fs.baseurl, format=existing_format)
 
     def _read_existing_format(self, fs):
         f = fs.open('metadata/format', 'r')
@@ -99,7 +97,7 @@ class RepositoryFactory(object):
         '''
 
         if wanted_format not in self._implementations:
-            raise UnknownRepositoryFormatWanted(wanted_format)
+            raise UnknownRepositoryFormatWanted(format=wanted_format)
 
         try:
             fs.write_file('metadata/format', '%s\n' % wanted_format.format)
