@@ -42,6 +42,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
                                   group=encryption_group)
         self.app.settings.string(['symmetric-key-bits'],
                                    'size of symmetric key, in bits',
+                                 metavar='BITS',
                                  group=encryption_group)
 
         self.tag = "encrypt1"
