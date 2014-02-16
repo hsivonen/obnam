@@ -130,6 +130,7 @@ from repo_interface import (
     RepositoryChunkContentNotInIndexes,
     RepositoryChunkIndexesNotLocked,
     RepositoryChunkIndexesLockingFailed,
+    repo_key_name,
     REPO_CLIENT_TEST_KEY,
     REPO_GENERATION_TEST_KEY,
     REPO_GENERATION_STARTED,

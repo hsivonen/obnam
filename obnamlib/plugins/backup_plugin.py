@@ -653,7 +653,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     gen, pathname, obnamlib.REPO_FILE_GID),
                 xattr=self.repo.get_file_key(
                     gen, pathname, obnamlib.REPO_FILE_XATTR_BLOB))
-        except obnamlib.Error, e:
+        except (obnamlib.Error, obnamlib.ObnamError), e:
             # File does not exist in the previous generation, so it
             # does need to be backed up.
             tracing.trace('%s not in previous gen, so needs backup' % pathname)

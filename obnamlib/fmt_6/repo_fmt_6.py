@@ -203,14 +203,16 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
     def add_client(self, client_name):
         self._require_client_list_lock()
         if self._client_list.get_client_id(client_name):
-            raise obnamlib.RepositoryClientAlreadyExists(client_name)
+            raise obnamlib.RepositoryClientAlreadyExists(
+                client_name=client_name)
         self._client_list.add_client(client_name)
         self._added_clients.append(client_name)
 
     def remove_client(self, client_name):
         self._require_client_list_lock()
         if not self._client_list.get_client_id(client_name):
-            raise obnamlib.RepositoryClientDoesNotExist(client_name)
+            raise obnamlib.RepositoryClientDoesNotExist(
+                client_name=client_name)
         self._client_list.remove_client(client_name)
 
     def rename_client(self, old_client_name, new_client_name):
@@ -218,9 +220,11 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
         client_names = self.get_client_names()
         if old_client_name not in client_names:
-            raise obnamlib.RepositoryClientDoesNotExist(old_client_name)
+            raise obnamlib.RepositoryClientDoesNotExist(
+                client_name=old_client_name)
         if new_client_name in client_names:
-            raise obnamlib.RepositoryClientAlreadyExists(new_client_name)
+            raise obnamlib.RepositoryClientAlreadyExists(
+                client_name=new_client_name)
 
         client_id = self._get_client_id(old_client_name)
         new_key = self._client_list.key(
@@ -234,14 +238,16 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
     def get_client_encryption_key_id(self, client_name):
         client_names = self.get_client_names()
         if client_name not in client_names:
-            raise obnamlib.RepositoryClientDoesNotExist(client_name)
+            raise obnamlib.RepositoryClientDoesNotExist(
+                client_name=client_name)
         return self._client_list.get_client_keyid(client_name)
 
     def set_client_encryption_key_id(self, client_name, key_id):
         self._require_client_list_lock()
         client_names = self.get_client_names()
         if client_name not in client_names:
-            raise obnamlib.RepositoryClientDoesNotExist(client_name)
+            raise obnamlib.RepositoryClientDoesNotExist(
+                client_name=client_name)
         self._client_list.set_client_keyid(client_name, key_id)
 
     def _get_client_id(self, client_name):
@@ -266,7 +272,8 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             tracing.trace('client_name=%s', client_name)
             client_id = self._get_client_id(client_name)
             if client_id is None: # pragma: no cover
-                raise obnamlib.RepositoryClientDoesNotExist(client_name)
+                raise obnamlib.RepositoryClientDoesNotExist(
+                    client_name=client_name)
 
             client_dir = self._get_client_dir(client_id)
             client = obnamlib.ClientMetadataTree(
@@ -284,21 +291,24 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     def _require_existing_client(self, client_name):
         if client_name not in self.get_client_names():
-            raise obnamlib.RepositoryClientDoesNotExist(client_name)
+            raise obnamlib.RepositoryClientDoesNotExist(
+                client_name=client_name)
 
     def _require_client_lock(self, client_name):
         if not self.got_client_lock(client_name):
-            raise obnamlib.RepositoryClientNotLocked(client_name)
+            raise obnamlib.RepositoryClientNotLocked(client_name=client_name)
 
     def _raw_lock_client(self, client_name):
         tracing.trace('client_name=%s', client_name)
 
         if self.got_client_lock(client_name):
-            raise obnamlib.RepositoryClientLockingFailed(client_name)
+            raise obnamlib.RepositoryClientLockingFailed(
+                client_name=client_name)
 
         client_id = self._get_client_id(client_name)
         if client_id is None: # pragma: no cover
-            raise obnamlib.RepositoryClientDoesNotExist(client_name)
+            raise obnamlib.RepositoryClientDoesNotExist(
+                client_name=client_name)
 
         # Create and initialise the client's own directory, if needed.
         client_dir = self._get_client_dir(client_id)
@@ -415,11 +425,15 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     def get_client_key(self, client_name, key): # pragma: no cover
         raise obnamlib.RepositoryClientKeyNotAllowed(
-            self.format, client_name, key)
+            format=self.format,
+            client_name=client_name,
+            key_name=obnamlib.repo_key_name(key))
 
     def set_client_key(self, client_name, key, value):
         raise obnamlib.RepositoryClientKeyNotAllowed(
-            self.format, client_name, key)
+            format=self.format,
+            client_name=client_name,
+            key_name=obnamlib.repo_key_name(key))
 
     def get_client_generation_ids(self, client_name):
         client = self._open_client(client_name)
@@ -434,7 +448,8 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
         open_client_info = self._open_client_infos[client_name]
         if open_client_info.current_generation_number is not None:
-            raise obnamlib.RepositoryClientGenerationUnfinished(client_name)
+            raise obnamlib.RepositoryClientGenerationUnfinished(
+                client_name=client_name)
 
         open_client_info.client.start_generation()
         open_client_info.client.set_generation_started(self._current_time())
@@ -463,7 +478,8 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
     def _require_existing_generation(self, generation_id):
         client_name, gen_number = self._unpack_gen_id(generation_id)
         if generation_id not in self.get_client_generation_ids(client_name):
-            raise obnamlib.RepositoryGenerationDoesNotExist(client_name)
+            raise obnamlib.RepositoryGenerationDoesNotExist(
+                client_name=client_name)
 
     def get_allowed_generation_keys(self):
         return [
@@ -495,7 +511,9 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             return client.get_generation_test_data() or ''
         else:
             raise obnamlib.RepositoryGenerationKeyNotAllowed(
-                self.format, client_name, key)
+                format=self.format,
+                client_name=client_name,
+                key_name=obnamlib.repo_key_name(key))
 
     def set_generation_key(self, generation_id, key, value): # pragma: no cover
         # FIXME: This no worky for generations other than the currently
@@ -519,18 +537,22 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             client.set_generation_test_data(value)
         else:
             raise obnamlib.RepositoryGenerationKeyNotAllowed(
-                self.format, client_name, key)
+                format=self.format,
+                client_name=client_name,
+                key_name=obnamlib.repo_key_name(key))
 
     def interpret_generation_spec(self, client_name, genspec):
         ids = self.get_client_generation_ids(client_name)
         if not ids:
-            raise obnamlib.RepositoryClientHasNoGenerations(client_name)
+            raise obnamlib.RepositoryClientHasNoGenerations(
+                client_name=client_name)
         if genspec == 'latest':
             return ids[-1]
         for gen_id in ids:
             if self.make_generation_spec(gen_id) == genspec:
                 return gen_id
-        raise obnamlib.RepositoryGenerationDoesNotExist(client_name)
+        raise obnamlib.RepositoryGenerationDoesNotExist(
+            client_name=client_name)
 
     def make_generation_spec(self, gen_id):
         client_name, gen_number = self._unpack_gen_id(gen_id)
@@ -631,7 +653,8 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             return self._fs.cat(self._chunk_filename(chunk_id))
         except IOError, e:
             if e.errno == errno.ENOENT:
-                raise obnamlib.RepositoryChunkDoesNotExist(str(chunk_id))
+                raise obnamlib.RepositoryChunkDoesNotExist(
+                    chunk_id=str(chunk_id))
             raise # pragma: no cover
 
     def has_chunk(self, chunk_id):
@@ -657,7 +680,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         try:
             self._fs.remove(filename)
         except OSError:
-            raise obnamlib.RepositoryChunkDoesNotExist(str(chunk_id))
+            raise obnamlib.RepositoryChunkDoesNotExist(chunk_id=str(chunk_id))
 
     def get_chunk_ids(self):
         # Note: This does not cover for in-tree chunk data. We cannot
@@ -832,12 +855,14 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         client_name, gen_number = self._unpack_gen_id(generation_id)
 
         if generation_id not in self.get_client_generation_ids(client_name):
-            raise obnamlib.RepositoryGenerationDoesNotExist(client_name)
+            raise obnamlib.RepositoryGenerationDoesNotExist(
+                client_name=client_name)
 
         if not self.file_exists(generation_id, filename):
             raise obnamlib.RepositoryFileDoesNotExistInGeneration(
-                client_name, self.make_generation_spec(generation_id),
-                filename)
+                client_name=client_name,
+                genspec=self.make_generation_spec(generation_id),
+                filename=filename)
 
     def file_exists(self, generation_id, filename):
         client_name, gen_number = self._unpack_gen_id(generation_id)
@@ -922,7 +947,9 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         else:
             client_name, gen_number = self._unpack_gen_id(generation_id)
             raise obnamlib.RepositoryFileKeyNotAllowed(
-                self.format, client_name, key)
+                format=self.format,
+                client_name=client_name,
+                key_name=obnamlib.repo_key_name(key))
 
     def set_file_key(self, generation_id, filename, key, value):
         client_name, gen_number = self._unpack_gen_id(generation_id)
@@ -940,7 +967,9 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             self._file_key_cache[cache_key] = (True, metadata)
         else:
             raise obnamlib.RepositoryFileKeyNotAllowed(
-                self.format, client_name, key)
+                format=self.format,
+                client_name=client_name,
+                key_name=obnamlib.repo_key_name(key))
 
     def get_file_chunk_ids(self, generation_id, filename):
         self._require_existing_file(generation_id, filename)

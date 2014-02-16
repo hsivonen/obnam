@@ -80,7 +80,7 @@ REPO_FILE_INTEGER_KEYS = [
     ]
 
 
-def _key_name(key_value):
+def repo_key_name(key_value):
     for key_name in _integer_keys + _string_keys:
         if globals()[key_name] == key_value:
             return key_name
@@ -92,122 +92,104 @@ def _key_name(key_value):
 WRONG_KEY = -1
 
 
-class RepositoryClientListLockingFailed(obnamlib.Error):
+class RepositoryClientListLockingFailed(obnamlib.ObnamError):
 
-    def __init__(self):
-        self.msg = 'Repository client list could not be locked'
-
-
-class RepositoryClientListNotLocked(obnamlib.Error):
-
-    def __init__(self):
-        self.msg = 'Repository client list is not locked'
+    msg = 'Repository client list could not be locked'
 
 
-class RepositoryClientAlreadyExists(obnamlib.Error):
+class RepositoryClientListNotLocked(obnamlib.ObnamError):
 
-    def __init__(self, client_name):
-        self.msg = 'Repository client %s already exists' % client_name
-
-
-class RepositoryClientDoesNotExist(obnamlib.Error):
-
-    def __init__(self, client_name):
-        self.msg = 'Repository client %s does not exist' % client_name
+    msg = 'Repository client list is not locked'
 
 
-class RepositoryClientLockingFailed(obnamlib.Error):
+class RepositoryClientAlreadyExists(obnamlib.ObnamError):
 
-    def __init__(self, client_name):
-        self.msg = 'Repository client %s could not be locked' % client_name
-
-
-class RepositoryClientNotLocked(obnamlib.Error):
-
-    def __init__(self, client_name):
-        self.msg = 'Repository client %s is not locked' % client_name
+    msg = 'Repository client {client_name} already exists'
 
 
-class RepositoryClientKeyNotAllowed(obnamlib.Error):
+class RepositoryClientDoesNotExist(obnamlib.ObnamError):
 
-    def __init__(self, format, client_name, key):
-        self.msg = (
-            'Client %s uses repository format %s '
-            'which does not allow the key %s to be use for clients' %
-            (format, client_name, _key_name(key)))
+    msg = 'Repository client {client_name} does not exist'
 
 
-class RepositoryClientGenerationUnfinished(obnamlib.Error):
+class RepositoryClientLockingFailed(obnamlib.ObnamError):
 
-    def __init__(self, client_name):
-        self.msg = (
-            'Cannot start new generation for %s: '
-            'previous one is not finished yet (programming error)' %
-            client_name)
+    msg = 'Repository client {client_name} could not be locked'
 
 
-class RepositoryGenerationKeyNotAllowed(obnamlib.Error):
+class RepositoryClientNotLocked(obnamlib.ObnamError):
 
-    def __init__(self, format, client_name, key):
-        self.msg = (
-            'Client %s uses repository format %s '
-            'which does not allow the key %s to be use for generations' %
-            (client_name, format, _key_name(key)))
+    msg = 'Repository client {client_name} is not locked'
 
 
-class RepositoryGenerationDoesNotExist(obnamlib.Error):
+class RepositoryClientKeyNotAllowed(obnamlib.ObnamError):
 
-    def __init__(self, client_name):
-        self.msg = (
-            'Cannot find requested generation for client %s' %
-            client_name)
-
-
-class RepositoryClientHasNoGenerations(obnamlib.Error):
-
-    def __init__(self, client_name):
-        self.msg = 'Client %s has no generations' % client_name
+    msg = (
+        'Client {client_name} uses repository format {format} '
+        'which does not allow the key {key_name} to be use for clients'
+        )
 
 
-class RepositoryFileDoesNotExistInGeneration(obnamlib.Error):
+class RepositoryClientGenerationUnfinished(obnamlib.ObnamError):
 
-    def __init__(self, client_name, genspec, filename):
-        self.msg = (
-            'Client %s, generation %s does not have file %s' %
-            (client_name, genspec, filename))
-
-
-class RepositoryFileKeyNotAllowed(obnamlib.Error):
-
-    def __init__(self, format, client_name, key):
-        self.msg = (
-            'Client %s uses repository format %s '
-            'which does not allow the key %s to be use for files' %
-            (client_name, format, _key_name(key)))
+    msg = (
+        'Cannot start new generation for {client_name}: '
+        'previous one is not finished yet (programming error)'
+        )
 
 
-class RepositoryChunkDoesNotExist(obnamlib.Error):
+class RepositoryGenerationKeyNotAllowed(obnamlib.ObnamError):
 
-    def __init__(self, chunk_id_as_string):
-        self.msg = "Repository doesn't contain chunk %s" % chunk_id_as_string
-
-
-class RepositoryChunkContentNotInIndexes(obnamlib.Error):
-
-    def __init__(self):
-        self.msg = "Repository chunk indexes do not contain content"
+    msg = (
+        'Client {client_name} uses repository format {format} '
+        'which does not allow the key {key_name} to be used for generations'
+        )
 
 
-class RepositoryChunkIndexesNotLocked(obnamlib.Error):
+class RepositoryGenerationDoesNotExist(obnamlib.ObnamError):
 
-    def __init__(self):
-        self.msg = 'Repository chunk indexes are not locked'
+    msg = 'Cannot find requested generation for client {client_name}'
 
 
-class RepositoryChunkIndexesLockingFailed(obnamlib.Error):
+class RepositoryClientHasNoGenerations(obnamlib.ObnamError):
 
-    def __init__(self):
-        self.msg = 'Repository chunk indexes are already locked'
+    msg = 'Client {client_name} has no generations'
+
+
+class RepositoryFileDoesNotExistInGeneration(obnamlib.ObnamError):
+
+    msg = (
+        'Client {client_name}, generation {genspec} '
+        'does not have file {filename}'
+        )
+
+
+class RepositoryFileKeyNotAllowed(obnamlib.ObnamError):
+
+    msg = (
+        'Client {client_name} uses repository format {format} '
+        'which does not allow the key {key_name} to be use for files'
+        )
+
+
+class RepositoryChunkDoesNotExist(obnamlib.ObnamError):
+
+    msg = "Repository doesn't contain chunk {chunk_id}"
+
+
+class RepositoryChunkContentNotInIndexes(obnamlib.ObnamError):
+
+    msg = "Repository chunk indexes do not contain content"
+
+
+class RepositoryChunkIndexesNotLocked(obnamlib.ObnamError):
+
+    msg = 'Repository chunk indexes are not locked'
+
+
+class RepositoryChunkIndexesLockingFailed(obnamlib.ObnamError):
+
+    msg = 'Repository chunk indexes are already locked'
 
 
 class RepositoryInterface(object):
@@ -1520,7 +1502,7 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
             self.assertTrue(
                 key in self.repo.get_allowed_file_keys(),
                 'key %s (%d) not in allowed file keys' %
-                (_key_name(key), key))
+                (repo_key_name(key), key))
 
     def test_gets_all_allowed_file_keys(self):
         gen_id = self.create_generation()
@@ -1531,12 +1513,12 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
                 self.assertEqual(
                     type(value), int,
                     msg='key %s (%d) has value %s which is not an int' %
-                    (_key_name(key), key, repr(value)))
+                    (repo_key_name(key), key, repr(value)))
             else:
                 self.assertEqual(
                     type(value), str,
                     msg='key %s (%d) has value %s which is not a str' %
-                    (_key_name(key), key, repr(value)))
+                    (repo_key_name(key), key, repr(value)))
 
     def test_has_empty_string_for_file_test_key(self):
         gen_id = self.create_generation()
