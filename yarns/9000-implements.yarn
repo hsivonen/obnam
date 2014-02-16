@@ -385,8 +385,12 @@ test the results in various ways as separate steps.
 We can also match the stderr against a regular expression.
     
     IMPLEMENTS THEN the error message matches "(.+)"
+    echo -----------------------
+    echo stderr being matched:
+    cat "$DATADIR/attempt.stderr"
+    echo -----------------------
     attempt_matches stderr "$MATCH_1"
-    
+
 Checks on files
 ---------------
 
