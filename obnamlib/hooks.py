@@ -71,15 +71,9 @@ class Hook(object):
             del self.priorities[callback_id]
 
 
-class MissingFilterError(obnamlib.Error):
+class MissingFilterError(obnamlib.ObnamError):
 
-    '''Missing tag encountered reading filtered data.'''
-
-    def __init__(self, tagname):
-        self.tagname = tagname
-        logging.warning("Missing tag: " + repr(tagname))
-        obnamlib.Error.__init__(self, "Unknown filter tag encountered: %s" %
-                                repr(tagname))
+    msg = 'Unknown filter tag enountered: {tagname}'
 
 
 class FilterHook(Hook):
@@ -117,7 +111,7 @@ class FilterHook(Hook):
         tag, content = data.split("\0", 1)
         while tag != "":
             if tag not in self.bytag:
-                raise MissingFilterError(tag)
+                raise MissingFilterError(tagname=tag)
             data = self.bytag[tag].filter_read(content, *args, **kwargs)
             tag, content = data.split("\0", 1)
         return content

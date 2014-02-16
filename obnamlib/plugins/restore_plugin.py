@@ -287,7 +287,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
                 chunkids = self.repo.get_file_chunk_ids(gen, filename)
                 self.restore_chunks(f, chunkids, summer)
             except obnamlib.MissingFilterError, e:
-                msg = 'Missing filter error during restore: %s' % filename
+                msg = '%s: %s' % (filename, str(e))
                 logging.error(msg)
                 self.app.ts.notify(msg)
                 self.errors = True
