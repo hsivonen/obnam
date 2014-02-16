@@ -111,7 +111,7 @@ class FilterHook(Hook):
         tag, content = data.split("\0", 1)
         while tag != "":
             if tag not in self.bytag:
-                raise MissingFilterError(tagname=tag)
+                raise MissingFilterError(tagname=repr(tag))
             data = self.bytag[tag].filter_read(content, *args, **kwargs)
             tag, content = data.split("\0", 1)
         return content
