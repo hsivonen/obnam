@@ -19,22 +19,19 @@ import re
 import obnamlib
 
 
-class UnitError(obnamlib.Error):
+class UnitError(obnamlib.ObnamError):
 
-    def __str__(self):
-        return self.msg
+    pass
 
 
 class SizeSyntaxError(UnitError):
 
-    def __init__(self, string):
-        self.msg = '"%s" is not a valid size' % string
+    msg = '"{size}" is not a valid size'
 
 
 class UnitNameError(UnitError):
 
-    def __init__(self, string):
-        self.msg = '"%s" is not a valid unit' % string
+    msg = '"{unit}" is not a valid unit'
 
 
 class ByteSizeParser(object):
@@ -62,19 +59,19 @@ class ByteSizeParser(object):
 
     def set_default_unit(self, unit):
         if unit.lower() not in self.units:
-            raise UnitNameError(unit)
+            raise UnitNameError(size=unit)
         self.default_unit = unit
 
     def parse(self, string):
         m = self.pat.match(string)
         if not m:
-            raise SizeSyntaxError(string)
+            raise SizeSyntaxError(size=string)
         size = float(m.group('size'))
         unit = m.group('unit')
         if not unit:
             unit = self.default_unit
         elif unit.lower() not in self.units:
-            raise UnitNameError(unit)
+            raise UnitNameError(unit=unit)
         factor = self.units[unit.lower()]
         return int(size * factor)
 
