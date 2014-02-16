@@ -28,6 +28,7 @@ import time
 import traceback
 import urlparse
 
+
 # As of 2010-07-10, Debian's paramiko package triggers
 # RandomPool_DeprecationWarning. This will eventually be fixed. Until
 # then, there is no point in spewing the warning to the user, who can't
@@ -69,11 +70,6 @@ class WrongURLSchemeError(obnamlib.ObnamError):
 class InvalidPortError(obnamlib.ObnamError):
 
     msg = 'Invalid port number {port} in {url}: {error}'
-
-
-class LockError(obnamlib.ObnamError):
-
-    msg = 'Failure get lock {lockname}'
 
 
 class HardlinkError(obnamlib.ObnamError):
@@ -444,7 +440,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
         try:
             self.write_file(lockname, data)
         except OSError, e:
-            raise LockError(lockname=lockname)
+            raise obnamlib.LockFail("Lock %s already exists" % lockname)
 
     def unlock(self, lockname):
         self._remove_if_exists(lockname)
