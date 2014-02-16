@@ -85,11 +85,11 @@ class ByteSizeParserTests(unittest.TestCase):
 
     def test_size_syntax_error_includes_input_string(self):
         text = 'asdf asdf'
-        e = obnamlib.SizeSyntaxError(text)
+        e = obnamlib.SizeSyntaxError(size=text)
         self.assert_(text in str(e), str(e))
 
     def test_unit_name_error_includes_input_string(self):
         text = 'asdf asdf'
-        e = obnamlib.UnitNameError(text)
+        e = obnamlib.UnitNameError(unit=text)
         self.assert_(text in str(e), str(e))
 

@@ -26,16 +26,16 @@ class ForgetPolicyParseTests(unittest.TestCase):
         self.fp = obnamlib.ForgetPolicy()
 
     def test_raises_error_for_empty_string(self):
-        self.assertRaises(obnamlib.Error, self.fp.parse, '')
+        self.assertRaises(obnamlib.ObnamError, self.fp.parse, '')
 
     def test_raises_error_for_unknown_period(self):
-        self.assertRaises(obnamlib.Error, self.fp.parse, '7x')
+        self.assertRaises(obnamlib.ObnamError, self.fp.parse, '7x')
 
     def test_raises_error_if_period_is_duplicated(self):
-        self.assertRaises(obnamlib.Error, self.fp.parse, '1h,2h')
+        self.assertRaises(obnamlib.ObnamError, self.fp.parse, '1h,2h')
 
     def test_raises_error_rules_not_separated_by_comma(self):
-        self.assertRaises(obnamlib.Error, self.fp.parse, '1h 2d')
+        self.assertRaises(obnamlib.ObnamError, self.fp.parse, '1h 2d')
 
     def test_parses_single_rule(self):
         self.assertEqual(self.fp.parse('7d'),

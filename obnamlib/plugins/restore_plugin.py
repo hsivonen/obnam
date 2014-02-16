@@ -24,6 +24,16 @@ import ttystatus
 import obnamlib
 
 
+class WrongNumberOfGenerationSettingsError(obnamlib.ObnamError):
+
+    msg = 'The restore command wants exactly one generation option'
+
+
+class RestoreErrors(obnamlib.ObnamError):
+
+    msg = 'There were errors when restoring'
+
+
 class Hardlinks(object):
 
     '''Keep track of inodes with unrestored hardlinks.'''
@@ -133,8 +143,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
 
         generations = self.app.settings['generation']
         if len(generations) != 1:
-            raise obnamlib.Error(
-                'The restore command wants exactly one generation option')
+            raise WrongNumberOfGenerationSettingsError()
         gen = self.repo.interpret_generation_spec(client_name, generations[0])
 
         self.configure_ttystatus()
@@ -159,7 +168,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         self.app.ts.finish()
 
         if self.errors:
-            raise obnamlib.Error('There were errors when restoring')
+            raise RestoreErrors()
 
     def restore_something(self, gen, root):
         for pathname in self.repo.walk_generation(gen, root):
@@ -278,7 +287,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
                 chunkids = self.repo.get_file_chunk_ids(gen, filename)
                 self.restore_chunks(f, chunkids, summer)
             except obnamlib.MissingFilterError, e:
-                msg = 'Missing filter error during restore: %s' % filename
+                msg = '%s: %s' % (filename, str(e))
                 logging.error(msg)
                 self.app.ts.notify(msg)
                 self.errors = True

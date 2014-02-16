@@ -193,6 +193,10 @@ class App(cliapp.Application):
             logging.critical(str(e))
             sys.stderr.write('ERROR: %s\n' % str(e))
             sys.exit(1)
+        except obnamlib.StructuredError, e:
+            logging.critical(str(e))
+            sys.stderr.write('ERROR: %s\n' % str(e))
+            sys.exit(1)
 
     def setup_ttystatus(self):
         self.ts = ttystatus.TerminalStatus(period=0.1)

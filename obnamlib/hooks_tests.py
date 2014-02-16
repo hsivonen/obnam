@@ -132,12 +132,6 @@ class FilterHookTests(unittest.TestCase):
         self.assertRaises(obnamlib.MissingFilterError,
                           self.hook.run_filter_read, "missing\0")
 
-    def test_missing_filter_gives_tag(self):
-        try:
-            self.hook.run_filter_read("missing\0")
-        except obnamlib.MissingFilterError, e:
-            self.assertEquals(e.tagname, "missing")
-
     def test_can_remove_filters(self):
         myfilter = NeverAddsFilter()
         filterid = self.hook.add_callback(myfilter)

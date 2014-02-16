@@ -36,6 +36,19 @@ except ImportError:
 from pluginmgr import PluginManager
 
 
+# Exceptions defined by Obnam itself. They should all be a subclass
+# of obnamlib.ObnamError.
+
+from structurederror import StructuredError
+
+class ObnamError(StructuredError):
+
+    pass
+
+
+# FIXME: The obnamlib.Error class is a remnant of an old way of doing
+# things, and will be retired.
+
 class Error(cliapp.AppException):
     pass
 
@@ -117,6 +130,7 @@ from repo_interface import (
     RepositoryChunkContentNotInIndexes,
     RepositoryChunkIndexesNotLocked,
     RepositoryChunkIndexesLockingFailed,
+    repo_key_name,
     REPO_CLIENT_TEST_KEY,
     REPO_GENERATION_TEST_KEY,
     REPO_GENERATION_STARTED,

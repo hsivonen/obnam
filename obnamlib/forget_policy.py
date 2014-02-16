@@ -19,6 +19,24 @@ import re
 import obnamlib
 
 
+class ForgetPolicySyntaxError(obnamlib.ObnamError):
+
+    msg = 'Forget policy syntax error: {policy}'
+
+
+class DuplicatePeriodError(obnamlib.ObnamError):
+
+    msg = 'Forget policy may not duplicate period ({period}): {policy}'
+
+
+class SeparatorError(obnamlib.ObnamError):
+
+    msg = ('Forget policy must have rules separated by commas, '
+           'see position {position}: {policy}')
+
+
+
+
 class ForgetPolicy(object):
 
     '''Parse and interpret a policy for what to forget and what to keep.
@@ -49,23 +67,21 @@ class ForgetPolicy(object):
         remaining = optarg
         m = self.rule_pat.match(remaining)
         if not m:
-            raise obnamlib.Error('Forget policy syntax error: %s' % optarg)
+            raise ForgetPolicySyntaxError(policy=optarg)
 
         result = dict((y, None) for x, y in self.periods.iteritems())
         while m:
             count = int(m.group('count'))
             period = self.periods[m.group('period')]
             if result[period] is not None:
-                raise obnamlib.Error('Forget policy may not '
-                                     'duplicate period (%s): %s' %
-                                     (period, optarg))
+                raise DuplicatePeriodError(period=period, policy=optarg)
             result[period] = count
             remaining = remaining[m.end():]
             if not remaining:
                 break
             if not remaining.startswith(','):
-                raise obnamlib.Error('Forget policy must have rules '
-                                     'separated by commas: %s' % optarg)
+                position = len(optarg) - len(remaining) + 1
+                raise SeparatorError(position=position, policy=optarg)
             remaining = remaining[1:]
             m = self.rule_pat.match(remaining)
 

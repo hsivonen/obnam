@@ -105,12 +105,12 @@ class DummyClient(object):
 
     def lock(self):
         if self.data.locked:
-            raise obnamlib.RepositoryClientLockingFailed(self.name)
+            raise obnamlib.RepositoryClientLockingFailed(client_name=self.name)
         self.data.lock()
 
     def _require_lock(self):
         if not self.data.locked:
-            raise obnamlib.RepositoryClientNotLocked(self.name)
+            raise obnamlib.RepositoryClientNotLocked(client_name=self.name)
 
     def unlock(self):
         self._require_lock()
@@ -139,7 +139,8 @@ class DummyClient(object):
     def create_generation(self):
         self._require_lock()
         if self.data.get_value('current-generation', None) is not None:
-            raise obnamlib.RepositoryClientGenerationUnfinished(self.name)
+            raise obnamlib.RepositoryClientGenerationUnfinished(
+                client_name=self.name)
         generation_id = (self.name, self.generation_counter.next())
         ids = self.data.get_value('generation-ids', [])
         self.data.set_value('generation-ids', ids + [generation_id])
@@ -174,7 +175,8 @@ class DummyClient(object):
     def _require_generation(self, gen_id):
         ids = self.data.get_value('generation-ids', [])
         if gen_id not in ids:
-            raise obnamlib.RepositoryGenerationDoesNotExist(self.name)
+            raise obnamlib.RepositoryGenerationDoesNotExist(
+                client_name=self.name)
 
     def get_generation_key(self, gen_id, key):
         return self.data.get_value(gen_id + (key,), '')
@@ -199,7 +201,8 @@ class DummyClient(object):
     def interpret_generation_spec(self, genspec):
         ids = self.data.get_value('generation-ids', [])
         if not ids:
-            raise obnamlib.RepositoryClientHasNoGenerations(self.name)
+            raise obnamlib.RepositoryClientHasNoGenerations(
+                client_name=self.name)
         if genspec == 'latest':
             if ids:
                 return ids[-1]
@@ -207,7 +210,7 @@ class DummyClient(object):
             gen_number = int(genspec)
             if (self.name, gen_number) in ids:
                 return (self.name, gen_number)
-        raise obnamlib.RepositoryGenerationDoesNotExist(self.name)
+        raise obnamlib.RepositoryGenerationDoesNotExist(client_name=self.name)
 
     def make_generation_spec(self, generation_id):
         name, gen_number = generation_id
@@ -248,7 +251,9 @@ class DummyClient(object):
     def _require_file(self, gen_id, filename):
         if not self.file_exists(gen_id, filename):
             raise obnamlib.RepositoryFileDoesNotExistInGeneration(
-                self.name, self.make_generation_spec(gen_id), filename)
+                client_name=self.name,
+                genspec=self.make_generation_spec(gen_id),
+                filename=filename)
 
     def get_file_key(self, gen_id, filename, key):
         self._require_generation(gen_id)
@@ -344,28 +349,33 @@ class DummyClientList(object):
     def __getitem__(self, client_name):
         client = self.data.get_value(client_name, None)
         if client is None:
-            raise obnamlib.RepositoryClientDoesNotExist(client_name)
+            raise obnamlib.RepositoryClientDoesNotExist(
+                client_name=client_name)
         return client
 
     def add(self, client_name):
         self._require_lock()
         if self.data.get_value(client_name, None) is not None:
-            raise obnamlib.RepositoryClientAlreadyExists(client_name)
+            raise obnamlib.RepositoryClientAlreadyExists(
+                client_name=client_name)
         self.data.set_value(client_name, DummyClient(client_name))
 
     def remove(self, client_name):
         self._require_lock()
         if self.data.get_value(client_name, None) is None:
-            raise obnamlib.RepositoryClientDoesNotExist(client_name)
+            raise obnamlib.RepositoryClientDoesNotExist(
+                client_name=client_name)
         self.data.set_value(client_name, None)
 
     def rename(self, old_client_name, new_client_name):
         self._require_lock()
         client = self.data.get_value(old_client_name, None)
         if client is None:
-            raise obnamlib.RepositoryClientDoesNotExist(old_client_name)
+            raise obnamlib.RepositoryClientDoesNotExist(
+                client_name=old_client_name)
         if self.data.get_value(new_client_name, None) is not None:
-            raise obnamlib.RepositoryClientAlreadyExists(new_client_name)
+            raise obnamlib.RepositoryClientAlreadyExists(
+                client_name=new_client_name)
         self.data.set_value(old_client_name, None)
         self.data.set_value(new_client_name, client)
 
@@ -376,13 +386,15 @@ class DummyClientList(object):
     def get_client_encryption_key_id(self, client_name):
         client = self.data.get_value(client_name, None)
         if client is None:
-            raise obnamlib.RepositoryClientDoesNotExist(client_name)
+            raise obnamlib.RepositoryClientDoesNotExist(
+                client_name=client_name)
         return client.key_id
 
     def set_client_encryption_key_id(self, client_name, key_id):
         client = self.data.get_value(client_name, None)
         if client is None:
-            raise obnamlib.RepositoryClientDoesNotExist(client_name)
+            raise obnamlib.RepositoryClientDoesNotExist(
+                client_name=client_name)
         client.key_id = key_id
 
 
@@ -399,7 +411,7 @@ class ChunkStore(object):
 
     def get_chunk_content(self, chunk_id):
         if chunk_id not in self.chunks:
-            raise obnamlib.RepositoryChunkDoesNotExist(str(chunk_id))
+            raise obnamlib.RepositoryChunkDoesNotExist(chunk_id=str(chunk_id))
         return self.chunks[chunk_id]
 
     def has_chunk(self, chunk_id):
@@ -407,7 +419,7 @@ class ChunkStore(object):
 
     def remove_chunk(self, chunk_id):
         if chunk_id not in self.chunks:
-            raise obnamlib.RepositoryChunkDoesNotExist(str(chunk_id))
+            raise obnamlib.RepositoryChunkDoesNotExist(chunk_id=str(chunk_id))
         del self.chunks[chunk_id]
 
     def get_chunk_ids(self):
@@ -549,7 +561,9 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
     def set_client_key(self, client_name, key, value):
         if key not in self.get_allowed_client_keys():
             raise obnamlib.RepositoryClientKeyNotAllowed(
-                self.format, client_name, key)
+                format=self.format,
+                client_name=client_name,
+                key_name=obnamlib.repo_key_name(key))
         self._client_list[client_name].set_key(key, value)
 
     def get_client_generation_ids(self, client_name):
@@ -576,7 +590,9 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
         client = self._client_list.get_client_by_generation_id(generation_id)
         if key not in self.get_allowed_generation_keys():
             raise obnamlib.RepositoryGenerationKeyNotAllowed(
-                self.format, client.name, key)
+                format=self.format,
+                client_name=client.name,
+                key_name=obnamlib.repo_key_name(key))
         return client.set_generation_key(generation_id, key, value)
 
     def remove_generation(self, generation_id):
@@ -611,14 +627,18 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
         client = self._client_list.get_client_by_generation_id(generation_id)
         if key not in self.get_allowed_file_keys():
             raise obnamlib.RepositoryFileKeyNotAllowed(
-                self.format, client.name, key)
+                format=self.format,
+                client_name=client.name,
+                key_name=obnamlib.repo_key_name(key))
         return client.get_file_key(generation_id, filename, key)
 
     def set_file_key(self, generation_id, filename, key, value):
         client = self._client_list.get_client_by_generation_id(generation_id)
         if key not in self.get_allowed_file_keys():
             raise obnamlib.RepositoryFileKeyNotAllowed(
-                self.format, client.name, key)
+                format=self.format,
+                client_name=client.name,
+                key_name=obnamlib.repo_key_name(key))
         client.set_file_key(generation_id, filename, key, value)
 
     def get_allowed_file_keys(self):

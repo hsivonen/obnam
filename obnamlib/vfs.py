@@ -24,6 +24,16 @@ import urlparse
 import obnamlib
 
 
+class URLSchemeAlreadyRegisteredError(obnamlib.ObnamError):
+
+    msg = 'VFS URL scheme {scheme} already registered'
+
+
+class UnknownVFSError(obnamlib.ObnamError):
+
+    msg = 'Unknown VFS type: {url}'
+
+
 class VirtualFileSystem(object):
 
     '''A virtual filesystem interface.
@@ -291,7 +301,7 @@ class VfsFactory:
 
     def register(self, scheme, implementation, **kwargs):
         if scheme in self.implementations:
-            raise obnamlib.Error('URL scheme %s already registered' % scheme)
+            raise URLSchemeAlreadyRegisteredError(scheme=scheme)
         self.implementations[scheme] = (implementation, kwargs)
 
     def new(self, url, create=False):
@@ -300,7 +310,7 @@ class VfsFactory:
         if scheme in self.implementations:
             klass, kwargs = self.implementations[scheme]
             return klass(url, create=create, **kwargs)
-        raise obnamlib.Error('Unknown VFS type %s' % url)
+        raise UnknownVFSError(url=url)
 
 
 class VfsTests(object): # pragma: no cover
