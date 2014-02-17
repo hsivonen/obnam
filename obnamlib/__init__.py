@@ -97,7 +97,8 @@ from encryption import (generate_symmetric_key,
                         decrypt_with_secret_keys,
                         SymmetricKeyCache)
 
-from hooks import Hook, MissingFilterError, FilterHook, HookManager
+from hooks import (
+    Hook, MissingFilterError, NoFilterTagError, FilterHook, HookManager)
 from pluginbase import ObnamPlugin
 from vfs import VirtualFileSystem, VfsFactory, VfsTests
 from vfs_local import LocalFS
