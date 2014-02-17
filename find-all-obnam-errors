@@ -1,0 +1,52 @@
+import collections
+import inspect
+
+import obnamlib
+
+
+def get_modules(module):
+    objs = [getattr(module, name) for name in dir(module)]
+    return [x for x in objs if inspect.ismodule(x)]
+
+
+def get_modules_recursively(module):
+    result = []
+    queue = get_modules(module)
+    while queue:
+        item = queue.pop()
+        if item not in result:
+            result.append(item)
+            queue.extend(get_modules(item))
+    return result
+
+
+def get_obnam_errors(module):
+
+    def is_obnam_error(obj):
+        return (type(obj) is type and
+                issubclass(x, obnamlib.ObnamError) and
+                hasattr(x, 'msg'))
+
+    objs = [getattr(module, name) for name in dir(module)]
+    return [x for x in objs if is_obnam_error(x)]
+
+
+def get_obnam_errors_recursively(module):
+    modules = get_modules_recursively(obnamlib)
+    errors = set()
+    for module in modules:
+        for error in get_obnam_errors(module):
+            errors.add(error)
+    return errors
+
+
+def dump(msg, things):
+    print msg
+    for x in things:
+        print '  ', repr(x)
+
+
+
+for error_class in get_obnam_errors_recursively(obnamlib):
+    e = error_class()
+    print e.id, e.msg
