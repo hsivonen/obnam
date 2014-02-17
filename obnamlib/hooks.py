@@ -73,7 +73,12 @@ class Hook(object):
 
 class MissingFilterError(obnamlib.ObnamError):
 
-    msg = 'Unknown filter tag enountered: {tagname}'
+    msg = 'Unknown filter tag: {tagname}'
+
+
+class NoFilterTagError(obnamlib.ObnamError):
+
+    msg = 'No filter tag found'
 
 
 class FilterHook(Hook):
@@ -108,13 +113,23 @@ class FilterHook(Hook):
         raise NotImplementedError()
 
     def run_filter_read(self, data, *args, **kwargs):
-        tag, content = data.split("\0", 1)
-        while tag != "":
+
+        def filter_next_tag(data):
+            split = data.split('\0', 1)
+            if len(split) == 1:
+                raise NoFilterTagError()
+            tag, remaining = split
+            if tag == '':
+                return False, remaining
             if tag not in self.bytag:
                 raise MissingFilterError(tagname=repr(tag))
-            data = self.bytag[tag].filter_read(content, *args, **kwargs)
-            tag, content = data.split("\0", 1)
-        return content
+            callback = self.bytag[tag]
+            return True, callback.filter_read(remaining, *args, **kwargs)
+
+        more = True
+        while more:
+            more, data = filter_next_tag(data)
+        return data
 
     def run_filter_write(self, data, *args, **kwargs):
         tracing.trace('called')

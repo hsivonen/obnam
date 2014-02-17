@@ -99,7 +99,7 @@ client, should not be able to access the data.
     GIVEN a user U3 calling themselves U1
     WHEN user U3 attempts to restore their latest generation in repository R into X3
     THEN the attempt failed with exit code 1
-    AND the error message matches "Unknown filter tag encountered\|need more than 1 value to unpack"
+    AND the error message matches "R169C6X: Unknown filter tag\|R173AEX: No filter tag found"
 
 (The error message above indicates that there's a bug in Obnam, which
 is that the error message, when an encryption is not provided but the
