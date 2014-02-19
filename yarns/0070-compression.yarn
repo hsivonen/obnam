@@ -1,0 +1,29 @@
+Compressed repositories
+=======================
+
+Compressed backups should work just like normal ones, except with all
+the data written to the repository being compressed. We thus repeat a
+basic backup test, but with compression.
+
+    SCENARIO backup simple data using compression
+    GIVEN 100kB of new data in directory L
+    AND a manifest of L in M
+    AND user U sets configuration compress-with to deflate
+    WHEN user U backs up directory L to repository R
+    AND user U restores their latest generation in repository R into X
+    THEN L, restored to X, matches manifest M
+    AND user U can fsck the repository R
+
+If this works, everything else should work as well: by the time Obnam
+writes anything to the repository, it has lost its sparseness, or
+other special filesystem characteristics, and it's just B-tree nodes
+or chunk data.
+
+It should be possible to restore from a compressed repository, even
+without turning compression on. We continue the test scenario
+accordingly.
+
+    GIVEN user U sets configuration compress-with to none
+    WHEN user U restores their latest generation in repository R into Y
+    THEN L, restored to Y, matches manifest M
+    AND user U can fsck the repository R
