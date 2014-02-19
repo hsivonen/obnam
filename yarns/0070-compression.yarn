@@ -27,3 +27,16 @@ accordingly.
     WHEN user U restores their latest generation in repository R into Y
     THEN L, restored to Y, matches manifest M
     AND user U can fsck the repository R
+
+We need to be able to combine compression with encryption. Let's do
+the test again, with new options.
+
+    SCENARIO backup simple data using compression and encryption
+    GIVEN 100kB of new data in directory L
+    AND a manifest of L in M
+    AND user U sets configuration compress-with to deflate
+    GIVEN user U uses encryption key "Test Key One" from test-data/keyring-1
+    WHEN user U backs up directory L to repository R
+    AND user U restores their latest generation in repository R into X
+    THEN L, restored to X, matches manifest M
+    AND user U can fsck the repository R
