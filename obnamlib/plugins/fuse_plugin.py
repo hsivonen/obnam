@@ -38,10 +38,10 @@ except ImportError:
 
 
 class ObnamFuseOptParse(object):
-    '''Option parsing class for FUSE
 
-       has to set fuse_args.mountpoint
-    '''
+    '''Option parsing class for FUSE.'''
+
+    # NOTE: This class MUST set self.fuse_args.mountpoint.
 
     obnam = None
 
