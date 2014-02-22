@@ -323,7 +323,8 @@ class ObnamFuse(fuse.Fuse):
         rootlist['/latest'] = laststat
 
         pidstat = fuse.Stat(**rootstat.__dict__)
-        pidstat.st_mode = stat.S_IFREG | stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH
+        pidstat.st_mode = (
+            stat.S_IFREG | stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
         rootlist['/.pid'] = pidstat
 
         return (rootstat, rootlist)
