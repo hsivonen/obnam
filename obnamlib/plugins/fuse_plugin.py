@@ -46,8 +46,10 @@ class ObnamFuseOptParse(object):
     obnam = None
 
     def __init__(self, *args, **kw):
-        self.fuse_args = \
-            'fuse_args' in kw and kw.pop('fuse_args') or fuse.FuseArgs()
+        if 'fuse_args' in kw:
+            self.fuse_args = kw.pop('fuse_args')
+        else:
+            self.fuse_args = fuse.FuseArgs()
         if 'fuse' in kw:
             self.fuse = kw.pop('fuse')
 
