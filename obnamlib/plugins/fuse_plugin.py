@@ -85,7 +85,8 @@ class ObnamFuseFile(object):
 
         self.path = path
 
-        if path == '/.pid' and self.fs.obnam.app.settings['viewmode'] == 'multiple':
+        if (path == '/.pid' and 
+            self.fs.obnam.app.settings['viewmode'] == 'multiple'):
             self.read = self.read_pid
             self.release = self.release_pid
             return
