@@ -83,26 +83,27 @@ class ObnamFuseFile(object):
             (flags & os.O_TRUNC) or (flags & os.O_APPEND)):
             raise IOError(errno.EROFS, 'Read only filesystem')
 
+        self.path = path
+
+        if path == '/.pid' and self.fs.obnam.app.settings['viewmode'] == 'multiple':
+            self.read = self.read_pid
+            self.release = self.release_pid
+            return
+
         try:
-            self.path = path
-
-            if path == '/.pid' and self.fs.obnam.app.settings['viewmode'] == 'multiple':
-                self.read = self.read_pid
-                self.release = self.release_pid
-                return
-
             self.metadata = self.fs.get_metadata(path)
-            # if not a regular file return EINVAL
-            if not stat.S_ISREG(self.metadata.st_mode):
-                raise IOError(errno.EINVAL, 'Invalid argument')
-
-            self.chunkids = None
-            self.chunksize = None
-            self.lastdata = None
-            self.lastblock = None
         except:
             logging.error('Unexpected exception', exc_info=True)
             raise
+
+        # if not a regular file return EINVAL
+        if not stat.S_ISREG(self.metadata.st_mode):
+            raise IOError(errno.EINVAL, 'Invalid argument')
+        
+        self.chunkids = None
+        self.chunksize = None
+        self.lastdata = None
+        self.lastblock = None
 
     def read_pid(self, length, offset):
         tracing.trace('length=%r', length)
