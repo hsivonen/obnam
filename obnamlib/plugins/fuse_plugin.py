@@ -78,9 +78,10 @@ class ObnamFuseFile(object):
         tracing.trace('flags=%r', flags)
         tracing.trace('mode=%r', mode)
 
-        if ((flags & os.O_WRONLY) or (flags & os.O_RDWR) or
-            (flags & os.O_CREAT) or (flags & os.O_EXCL) or
-            (flags & os.O_TRUNC) or (flags & os.O_APPEND)):
+        write_flags = (
+            os.O_WRONLY | os.O_RDWR | os.O_CREAT |.O_EXCL | os.O_TRUNC |
+            os.O_APPEND)
+        if flags & write_flags:
             raise IOError(errno.EROFS, 'Read only filesystem')
 
         self.path = path
