@@ -238,18 +238,20 @@ class ObnamFuse(fuse.Fuse):
 
     def root_refresh(self):
         tracing.trace('called')
-        if self.obnam.app.settings['viewmode'] == 'multiple':
-            try:
-                self.obnam.reopen()
-                repo = self.obnam.repo
-                generations = [gen for gen in repo.list_generations()
-                                if not repo.get_is_checkpoint(gen)]
-                tracing.trace('found %d generations', len(generations))
-                self.rootstat, self.rootlist = self.multiple_root_list(generations)
-                self.metadatacache.clear()
-            except:
-                logging.exception('Unexpected exception')
-                raise
+        if not self.obnam.app.settings['viewmode'] == 'multiple':
+            return
+
+        try:
+            self.obnam.reopen()
+            repo = self.obnam.repo
+            generations = [gen for gen in repo.list_generations()
+                           if not repo.get_is_checkpoint(gen)]
+            tracing.trace('found %d generations', len(generations))
+            self.rootstat, self.rootlist = self.multiple_root_list(generations)
+            self.metadatacache.clear()
+        except:
+            logging.exception('Unexpected exception')
+            raise
 
     def get_metadata(self, path):
         tracing.trace('path=%r', path)
