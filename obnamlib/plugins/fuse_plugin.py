@@ -27,6 +27,10 @@ try:
     import fuse
     fuse.fuse_python_api = (0, 2)
 except ImportError:
+    # This is a workaround to allow us to fake a fuse module, so that
+    # this plugin file can be imported. If the module isn't there, the
+    # plugin won't work, and it will tell the user it won't work, but
+    # at least Obnam won't crash at startup.
     class Bunch:
         def __init__(self, **kwds):
             self.__dict__.update(kwds)
