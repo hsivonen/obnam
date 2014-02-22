@@ -21,6 +21,8 @@ import logging
 import errno
 import struct
 
+import tracing
+
 import obnamlib
 
 try:
@@ -72,11 +74,15 @@ class ObnamFuseFile(object):
     keep_cache = True   # cached file data need not to be invalidated.
 
     def __init__(self, path, flags, *mode):
-        logging.debug('FUSE file open %s %d', path, flags)
+        tracing.trace('path=%r', path)
+        tracing.trace('flags=%r', flags)
+        tracing.trace('mode=%r', mode)
+
         if ((flags & os.O_WRONLY) or (flags & os.O_RDWR) or
             (flags & os.O_CREAT) or (flags & os.O_EXCL) or
             (flags & os.O_TRUNC) or (flags & os.O_APPEND)):
             raise IOError(errno.EROFS, 'Read only filesystem')
+
         try:
             self.path = path
 
@@ -99,7 +105,8 @@ class ObnamFuseFile(object):
             raise
 
     def read_pid(self, length, offset):
-        logging.debug('FUSE read_pid %d %d', length, offset)
+        tracing.trace('length=%r', length)
+        tracing.trace('offset=%r', offset)
         pid = str(os.getpid())
         if length < len(pid) or offset != 0:
             return ''
@@ -111,11 +118,14 @@ class ObnamFuseFile(object):
         return 0
 
     def fgetattr(self):
-        logging.debug('FUSE file fgetattr')
+        tracing.trace('called')
         return self.fs.getattr(self.path)
 
     def read(self, length, offset):
-        logging.debug('FUSE file read(%s, %d, %d)', self.path, length, offset)
+        tracing.trace('self.path=%r', self.path)
+        tracing.trace('length=%r', length)
+        tracing.trace('offset=%r', offset)
+
         try:
             if length == 0 or offset >= self.metadata.st_size:
                 return ''
@@ -187,31 +197,33 @@ class ObnamFuseFile(object):
                         break
                 return ''.join(output)
         except (OSError, IOError), e:
-            logging.debug('FUSE Expected exception')
+            tracing.trace('expected exception: %r', e)
             raise
         except:
             logging.exception('Unexpected exception')
             raise
 
     def release(self, flags):
-        logging.debug('FUSE file release %d', flags)
+        tracing.trace('flags=%r', flags)
         self.lastdata = None
         return 0
 
     def fsync(self, isfsyncfile):
-        logging.debug('FUSE file fsync')
+        tracing.trace('called')
         return 0
 
     def flush(self):
-        logging.debug('FUSE file flush')
+        tracing.trace('called')
         return 0
 
     def ftruncate(self, size):
-        logging.debug('FUSE file ftruncate %d', size)
+        tracing.trace('size=%r', size)
         return 0
 
     def lock(self, cmd, owner, **kw):
-        logging.debug('FUSE file lock %s %s %s', repr(cmd), repr(owner), repr(kw))
+        tracing.trace('cmd=%r', cmd)
+        tracing.trace('owner=%r', owner)
+        tracing.trace('kw=%r', kw)
         raise IOError(errno.EOPNOTSUPP, 'Operation not supported')
 
 
@@ -223,14 +235,14 @@ class ObnamFuse(fuse.Fuse):
     MAX_METADATA_CACHE = 512
 
     def root_refresh(self):
-        logging.debug('FUSE root_refresh is called')
+        tracing.trace('called')
         if self.obnam.app.settings['viewmode'] == 'multiple':
             try:
                 self.obnam.reopen()
                 repo = self.obnam.repo
                 generations = [gen for gen in repo.list_generations()
                                 if not repo.get_is_checkpoint(gen)]
-                logging.debug('FUSE root_refresh found %d generations' % len(generations))
+                tracing.trace('found %d generations', len(generations))
                 self.rootstat, self.rootlist = self.multiple_root_list(generations)
                 self.metadatacache.clear()
             except:
@@ -238,7 +250,7 @@ class ObnamFuse(fuse.Fuse):
                 raise
 
     def get_metadata(self, path):
-        #logging.debug('FUSE get_metadata(%s)', path)
+        tracing.trace('path=%r', path)
         try:
             return self.metadatacache[path]
         except KeyError:
@@ -254,7 +266,7 @@ class ObnamFuse(fuse.Fuse):
             return metadata
 
     def get_stat(self, path):
-        logging.debug('FUSE get_stat(%s)', path)
+        tracing.trace('path=%r', path)
         metadata = self.get_metadata(path)
         st = fuse.Stat()
         st.st_mode = metadata.st_mode
@@ -331,7 +343,7 @@ class ObnamFuse(fuse.Fuse):
                                         or (gen, mountroot + path))
 
             self.rootstat, self.rootlist = self.single_root_list(gen)
-            logging.debug('FUSE single rootlist %s', repr(self.rootlist))
+            tracing.trace('single rootlist=%r', self.rootlist)
         elif self.obnam.app.settings['viewmode'] == 'multiple':
             # we need the list of all real (non-checkpoint) generations
             if len(generations) == 1:
@@ -358,7 +370,7 @@ class ObnamFuse(fuse.Fuse):
                 self.get_gen_path = gen_path_n
 
             self.rootstat, self.rootlist = self.multiple_root_list(generations)
-            logging.debug('FUSE multiple rootlist %s', repr(self.rootlist))
+            tracing.trace('multiple rootlist=%r', self.rootlist)
         else:
             raise obnamlib.Error('Unknown value for viewmode')
 
@@ -392,7 +404,8 @@ class ObnamFuse(fuse.Fuse):
             raise
 
     def readdir(self, path, fh):
-        logging.debug('FUSE readdir(%s, %s)', path, repr(fh))
+        tracing.trace('path=%r', path)
+        tracing.trace('fh=%r', fh)
         try:
             if path == '/':
                 listdir = [x[1:] for x in self.rootlist.keys()]
@@ -422,7 +435,7 @@ class ObnamFuse(fuse.Fuse):
             raise
 
     def statfs(self):
-        logging.debug('FUSE statfs')
+        tracing.trace('called')
         try:
             repo = self.obnam.repo
             if self.obnam.app.settings['viewmode'] == 'multiple':
@@ -452,7 +465,9 @@ class ObnamFuse(fuse.Fuse):
             raise
 
     def getxattr(self, path, name, size):
-        logging.debug('FUSE getxattr %s %s %d', path, name, size)
+        tracing.trace('path=%r', path)
+        tracing.trace('name=%r', name)
+        tracing.trace('size=%r', size)
         try:
             try:
                 metadata = self.get_metadata(path)
@@ -483,7 +498,8 @@ class ObnamFuse(fuse.Fuse):
             raise
 
     def listxattr(self, path, size):
-        logging.debug('FUSE listxattr %s %d', path, size)
+        tracing.trace('path=%r', path)
+        tracing.trace('size=%r', size)
         try:
             metadata = self.get_metadata(path)
             if not metadata.xattr:
@@ -613,9 +629,11 @@ class MountPlugin(obnamlib.ObnamPlugin):
         if self.mountroot != '/':
             self.mountroot = self.mountroot.rstrip('/')
 
-        logging.debug('FUSE Mounting %s@%s:%s to %s', self.app.settings['client-name'],
-                        self.app.settings['generation'],
-                        self.mountroot, self.app.settings['to'])
+        logging.debug(
+            'FUSE Mounting %s@%s:%s to %s',
+            self.app.settings['client-name'],
+            self.app.settings['generation'],
+            self.mountroot, self.app.settings['to'])
 
         try:
             ObnamFuseOptParse.obnam = self
