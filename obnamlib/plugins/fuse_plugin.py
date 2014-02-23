@@ -197,13 +197,10 @@ class ObnamFuse(fuse.Fuse):
 
     '''FUSE main class.'''
 
-    MAX_METADATA_CACHE = 512
-
     def __init__(self, *args, **kw):
         self.obnam = kw['obnam']
         ObnamFuseFile.fs = self
         self.file_class = ObnamFuseFile
-        self.metadatacache = {}
         self.sizecache = {}
         self.rootlist = None
         self.rootstat = None
@@ -219,7 +216,6 @@ class ObnamFuse(fuse.Fuse):
                            if not self.obnam.repo.get_is_checkpoint(gen)]
             tracing.trace('found %d generations', len(generations))
             self.rootstat, self.rootlist = self.multiple_root_list(generations)
-            self.metadatacache.clear()
         except:
             logging.exception('Unexpected exception')
             raise
@@ -227,18 +223,15 @@ class ObnamFuse(fuse.Fuse):
     def get_metadata(self, path):
         tracing.trace('path=%r', path)
 
-        if path not in self.metadatacache:
-            if len(self.metadatacache) > self.MAX_METADATA_CACHE:
-                self.metadatacache.clear()
-            metadata = self.obnam.repo.get_metadata(*self.get_gen_path(path))
-            self.metadatacache[path] = metadata
-            # FUSE does not allow negative timestamps, truncate to zero
-            if metadata.st_atime_sec < 0:
-                metadata.st_atime_sec = 0
-            if metadata.st_mtime_sec < 0:
-                metadata.st_mtime_sec = 0
+        metadata = self.obnam.repo.get_metadata(*self.get_gen_path(path))
 
-        return self.metadatacache[path]
+        # FUSE does not allow negative timestamps, truncate to zero
+        if metadata.st_atime_sec < 0:
+            metadata.st_atime_sec = 0
+        if metadata.st_mtime_sec < 0:
+            metadata.st_mtime_sec = 0
+
+        return metadata
 
     def get_stat(self, path):
         tracing.trace('path=%r', path)
