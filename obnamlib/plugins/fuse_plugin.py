@@ -581,17 +581,19 @@ class MountPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
         mount_group = obnamlib.option_group['mount'] = 'Mounting with FUSE'
-        self.app.add_subcommand('mount', self.mount,
-                                arg_synopsis='[ROOT]')
-        self.app.settings.choice(['viewmode'],
-                                 ['single', 'multiple'],
-                                 '"single" directly mount specified generation, '
-                                 '"multiple" mount all generations as separate directories',
-                                 metavar='MODE',
-                                 group=mount_group)
-        self.app.settings.string_list(['fuse-opt'],
-                                      'options to pass directly to Fuse',
-                                      metavar='FUSE', group=mount_group)
+        self.app.add_subcommand('mount', self.mount, arg_synopsis='[ROOT]')
+        self.app.settings.choice(
+            ['viewmode'],
+            ['single', 'multiple'],
+            '"single" directly mount specified generation, '
+            '"multiple" mount all generations as separate directories',
+            metavar='MODE',
+            group=mount_group)
+        self.app.settings.string_list(
+            ['fuse-opt'],
+            'options to pass directly to Fuse',
+            metavar='FUSE',
+            group=mount_group)
 
     def mount(self, args):
         '''Mount a backup repository as a FUSE filesystem.
