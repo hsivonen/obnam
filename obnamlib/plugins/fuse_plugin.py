@@ -517,7 +517,6 @@ class MountPlugin(obnamlib.ObnamPlugin):
         self.app.settings.require('repository')
         self.app.settings.require('client-name')
         self.app.settings.require('to')
-        self.cwd = os.getcwd()
         self.repo = self.app.open_repository()
         self.repo.open_client(self.app.settings['client-name'])
 
@@ -540,10 +539,6 @@ class MountPlugin(obnamlib.ObnamPlugin):
         self.repo.fs.close()
 
     def reopen(self):
-        try:
-            os.chdir(self.cwd)
-        except OSError:
-            pass
         self.repo.fs.close()
         self.repo = self.app.open_repository()
         self.repo.open_client(self.app.settings['client-name'])
