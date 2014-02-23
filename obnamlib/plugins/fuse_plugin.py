@@ -129,13 +129,11 @@ class ObnamFuseFile(object):
         if length == 0 or offset >= self.metadata.st_size:
             return ''
 
-        repo = self.fs.obnam.repo
-
         gen, repopath = self.fs.get_gen_path(self.path)
 
         # The file's data content may be stored in the per-client B-tree.
         # If so, we retrieve the data from there.
-        contents = repo.get_file_data(gen, repopath)
+        contents = self.fs.obnam.repo.get_file_data(gen, repopath)
         if contents is not None:
             return contents[offset:offset+length]
 
@@ -153,12 +151,12 @@ class ObnamFuseFile(object):
         # the chunk size was fixed, except for the last chunk for any
         # file.
 
-        chunkids = repo.get_file_chunks(gen, repopath)
+        chunkids = self.fs.obnam.repo.get_file_chunks(gen, repopath)
         output = []
         output_length = 0
         chunk_pos_in_file = 0
         for chunkid in chunkids:
-            contents = repo.get_chunk(chunkid)
+            contents = self.fs.obnam.repo.get_chunk(chunkid)
             if chunk_pos_in_file + len(contents) >= offset:
                 start = offset - chunk_pos_in_file
                 n = length - output_length
