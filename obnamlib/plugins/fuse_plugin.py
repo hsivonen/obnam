@@ -323,33 +323,32 @@ class ObnamFuse(fuse.Fuse):
         mountroot = self.obnam.mountroot
         generations = self.obnam.app.settings['generation']
 
-        if True:
-            # we need the list of all real (non-checkpoint) generations
-            if len(generations) == 1:
-                generations = [gen for gen in repo.list_generations()
-                               if not repo.get_is_checkpoint(gen)]
+        # we need the list of all real (non-checkpoint) generations
+        if len(generations) == 1:
+            generations = [gen for gen in repo.list_generations()
+                           if not repo.get_is_checkpoint(gen)]
 
-            if mountroot == '/':
-                def gen_path_0(path):
-                    if path.count('/') == 1:
-                        gen = path[1:]
-                        return (int(gen), mountroot)
-                    else:
-                        gen, repopath = path[1:].split('/', 1)
-                        return (int(gen), mountroot + repopath)
-                self.get_gen_path = gen_path_0
-            else:
-                def gen_path_n(path):
-                    if path.count('/') == 1:
-                        gen = path[1:]
-                        return (int(gen), mountroot)
-                    else:
-                        gen, repopath = path[1:].split('/', 1)
-                        return (int(gen), mountroot + '/' + repopath)
-                self.get_gen_path = gen_path_n
+        if mountroot == '/':
+            def gen_path_0(path):
+                if path.count('/') == 1:
+                    gen = path[1:]
+                    return (int(gen), mountroot)
+                else:
+                    gen, repopath = path[1:].split('/', 1)
+                    return (int(gen), mountroot + repopath)
+            self.get_gen_path = gen_path_0
+        else:
+            def gen_path_n(path):
+                if path.count('/') == 1:
+                    gen = path[1:]
+                    return (int(gen), mountroot)
+                else:
+                    gen, repopath = path[1:].split('/', 1)
+                    return (int(gen), mountroot + '/' + repopath)
+            self.get_gen_path = gen_path_n
 
-            self.rootstat, self.rootlist = self.multiple_root_list(generations)
-            tracing.trace('multiple rootlist=%r', self.rootlist)
+        self.rootstat, self.rootlist = self.multiple_root_list(generations)
+        tracing.trace('multiple rootlist=%r', self.rootlist)
 
     def __init__(self, *args, **kw):
         self.obnam = kw['obnam']
