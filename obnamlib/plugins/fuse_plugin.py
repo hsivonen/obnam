@@ -95,7 +95,7 @@ class ObnamFuseFile(object):
             return
 
         try:
-            self.metadata = self.fs.get_metadata(path)
+            self.metadata = self.fs.get_metadata_in_generation(path)
         except:
             logging.error('Unexpected exception', exc_info=True)
             raise
@@ -219,7 +219,7 @@ class ObnamFuse(fuse.Fuse):
         self.obnam.reopen()
         self.init_root()
 
-    def get_metadata(self, path):
+    def get_metadata_in_generation(self, path):
         tracing.trace('path=%r', path)
 
         metadata = self.obnam.repo.get_metadata(*self.get_gen_path(path))
@@ -232,9 +232,9 @@ class ObnamFuse(fuse.Fuse):
 
         return metadata
 
-    def get_stat(self, path):
+    def get_stat_in_generation(self, path):
         tracing.trace('path=%r', path)
-        metadata = self.get_metadata(path)
+        metadata = self.get_metadata_in_generation(path)
         st = fuse.Stat()
         st.st_mode = metadata.st_mode
         st.st_dev = metadata.st_dev
@@ -253,7 +253,7 @@ class ObnamFuse(fuse.Fuse):
         for gen in generations:
             path = '/' + str(gen)
             try:
-                genstat = self.get_stat(path)
+                genstat = self.get_stat_in_generation(path)
                 start, end = self.obnam.repo.get_generation_times(gen)
                 genstat.st_ctime = genstat.st_mtime = end
                 rootlist[path] = genstat
@@ -297,7 +297,7 @@ class ObnamFuse(fuse.Fuse):
                 else:
                     raise obnamlib.Error('ENOENT')
             else:
-                return self.get_stat(path)
+                return self.get_stat_in_generation(path)
         except obnamlib.Error:
             raise IOError(errno.ENOENT, 'No such file or directory')
         except:
@@ -324,7 +324,7 @@ class ObnamFuse(fuse.Fuse):
             statdata = self.rootlist.get(path)
             if statdata and hasattr(statdata, 'target'):
                 return statdata.target
-            metadata = self.get_metadata(path)
+            metadata = self.get_metadata_in_generation(path)
             if metadata.islink():
                 return metadata.target
             else:
@@ -368,7 +368,7 @@ class ObnamFuse(fuse.Fuse):
         tracing.trace('size=%r', size)
         try:
             try:
-                metadata = self.get_metadata(path)
+                metadata = self.get_metadata_in_generation(path)
             except ValueError:
                 return 0
             if not metadata.xattr:
@@ -399,7 +399,7 @@ class ObnamFuse(fuse.Fuse):
         tracing.trace('path=%r', path)
         tracing.trace('size=%r', size)
         try:
-            metadata = self.get_metadata(path)
+            metadata = self.get_metadata_in_generation(path)
             if not metadata.xattr:
                 return 0
             blob = metadata.xattr
