@@ -201,8 +201,6 @@ class ObnamFuse(fuse.Fuse):
         self.obnam = kw['obnam']
         ObnamFuseFile.fs = self
         self.file_class = ObnamFuseFile
-        self.rootlist = None
-        self.rootstat = None
         self.init_root()
         fuse.Fuse.__init__(self, *args, **kw)
 
@@ -211,8 +209,45 @@ class ObnamFuse(fuse.Fuse):
         generations = [gen for gen in self.obnam.repo.list_generations()
                        if not self.obnam.repo.get_is_checkpoint(gen)]
 
-        self.rootstat, self.rootlist = self.multiple_root_list(generations)
-        tracing.trace('multiple rootlist=%r', self.rootlist)
+        # self.rootlist holds the stat information for each entry at
+        # the root of the FUSE filesystem: /.pid, /latest, and one for
+        # each generation.
+        self.rootlist = {}
+
+        used_generations = []
+        for gen in generations:
+            path = '/' + str(gen)
+            try:
+                genstat = self.get_stat_in_generation(path)
+                start, end = self.obnam.repo.get_generation_times(gen)
+                genstat.st_ctime = genstat.st_mtime = end
+                self.rootlist[path] = genstat
+                used_generations.append(gen)
+            except obnamlib.Error:
+                pass
+
+        assert used_generations
+
+        # self.rootstat is the stat information for the root of the
+        # FUSE filesystem. We set it to the same as that of the latest
+        # generation.
+        latest_gen_id = used_generations[-1]
+        latest_gen_root_stat = self.rootlist['/' + str(latest_gen_id)]
+        self.rootstat = fuse.Stat(**latest_gen_root_stat.__dict__)
+
+        # Add an entry for /latest to self.rootlist.
+        symlink_stat = fuse.Stat(
+            target=str(latest_gen_id),
+            **latest_gen_root_stat.__dict__)
+        symlink_stat.st_mode &= ~(stat.S_IFDIR | stat.S_IFREG)
+        symlink_stat.st_mode |= stat.S_IFLNK
+        self.rootlist['/latest'] = symlink_stat
+
+        # Add an entry for /.pid to self.rootlist.
+        pidstat = fuse.Stat(**self.rootstat.__dict__)
+        pidstat.st_mode = (
+            stat.S_IFREG | stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
+        self.rootlist['/.pid'] = pidstat
 
     def root_refresh(self):
         tracing.trace('called')
@@ -246,38 +281,6 @@ class ObnamFuse(fuse.Fuse):
         st.st_mtime = metadata.st_mtime_sec
         st.st_ctime = st.st_mtime
         return st
-
-    def multiple_root_list(self, generations):
-        rootlist = {}
-        used_generations = []
-        for gen in generations:
-            path = '/' + str(gen)
-            try:
-                genstat = self.get_stat_in_generation(path)
-                start, end = self.obnam.repo.get_generation_times(gen)
-                genstat.st_ctime = genstat.st_mtime = end
-                rootlist[path] = genstat
-                used_generations.append(gen)
-            except obnamlib.Error:
-                pass
-
-        assert used_generations
-
-        latest = used_generations[-1]
-        laststat = rootlist['/' + str(latest)]
-        rootstat = fuse.Stat(**laststat.__dict__)
-
-        laststat = fuse.Stat(target=str(latest), **laststat.__dict__)
-        laststat.st_mode &= ~(stat.S_IFDIR | stat.S_IFREG)
-        laststat.st_mode |= stat.S_IFLNK
-        rootlist['/latest'] = laststat
-
-        pidstat = fuse.Stat(**rootstat.__dict__)
-        pidstat.st_mode = (
-            stat.S_IFREG | stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
-        rootlist['/.pid'] = pidstat
-
-        return (rootstat, rootlist)
 
     def get_gen_path(self, path):
         if path.count('/') == 1:
