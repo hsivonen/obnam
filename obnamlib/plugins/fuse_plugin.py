@@ -199,6 +199,17 @@ class ObnamFuse(fuse.Fuse):
 
     MAX_METADATA_CACHE = 512
 
+    def __init__(self, *args, **kw):
+        self.obnam = kw['obnam']
+        ObnamFuseFile.fs = self
+        self.file_class = ObnamFuseFile
+        self.metadatacache = {}
+        self.sizecache = {}
+        self.rootlist = None
+        self.rootstat = None
+        self.init_root()
+        fuse.Fuse.__init__(self, *args, **kw)
+
     def root_refresh(self):
         tracing.trace('called')
 
@@ -294,17 +305,6 @@ class ObnamFuse(fuse.Fuse):
 
         self.rootstat, self.rootlist = self.multiple_root_list(generations)
         tracing.trace('multiple rootlist=%r', self.rootlist)
-
-    def __init__(self, *args, **kw):
-        self.obnam = kw['obnam']
-        ObnamFuseFile.fs = self
-        self.file_class = ObnamFuseFile
-        self.metadatacache = {}
-        self.sizecache = {}
-        self.rootlist = None
-        self.rootstat = None
-        self.init_root()
-        fuse.Fuse.__init__(self, *args, **kw)
 
     def getattr(self, path):
         try:
