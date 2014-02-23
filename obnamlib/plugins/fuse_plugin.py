@@ -285,7 +285,6 @@ class ObnamFuse(fuse.Fuse):
 
     def multiple_root_list(self, generations):
         repo = self.obnam.repo
-        mountroot = self.obnam.mountroot
         rootlist = {}
         used_generations = []
         for gen in generations:
@@ -299,8 +298,7 @@ class ObnamFuse(fuse.Fuse):
             except obnamlib.Error:
                 pass
 
-        if not used_generations:
-            raise obnamlib.Error('No generations found for %s' % mountroot)
+        assert used_generations
 
         latest = used_generations[-1]
         laststat = rootlist['/' + str(latest)]
@@ -320,32 +318,19 @@ class ObnamFuse(fuse.Fuse):
 
     def init_root(self):
         repo = self.obnam.repo
-        mountroot = self.obnam.mountroot
-        generations = self.obnam.app.settings['generation']
 
         # we need the list of all real (non-checkpoint) generations
-        if len(generations) == 1:
-            generations = [gen for gen in repo.list_generations()
-                           if not repo.get_is_checkpoint(gen)]
+        generations = [gen for gen in repo.list_generations()
+                       if not repo.get_is_checkpoint(gen)]
 
-        if mountroot == '/':
-            def gen_path_0(path):
-                if path.count('/') == 1:
-                    gen = path[1:]
-                    return (int(gen), mountroot)
-                else:
-                    gen, repopath = path[1:].split('/', 1)
-                    return (int(gen), mountroot + repopath)
-            self.get_gen_path = gen_path_0
-        else:
-            def gen_path_n(path):
-                if path.count('/') == 1:
-                    gen = path[1:]
-                    return (int(gen), mountroot)
-                else:
-                    gen, repopath = path[1:].split('/', 1)
-                    return (int(gen), mountroot + '/' + repopath)
-            self.get_gen_path = gen_path_n
+        def gen_path_0(path):
+            if path.count('/') == 1:
+                gen = path[1:]
+                return (int(gen), '/')
+            else:
+                gen, repopath = path[1:].split('/', 1)
+                return (int(gen), '/' + repopath)
+        self.get_gen_path = gen_path_0
 
         self.rootstat, self.rootlist = self.multiple_root_list(generations)
         tracing.trace('multiple rootlist=%r', self.rootlist)
@@ -593,15 +578,11 @@ class MountPlugin(obnamlib.ObnamPlugin):
         self.repo = self.app.open_repository()
         self.repo.open_client(self.app.settings['client-name'])
 
-        self.mountroot = (['/'] + self.app.settings['root'] + args)[-1]
-        if self.mountroot != '/':
-            self.mountroot = self.mountroot.rstrip('/')
-
         logging.debug(
-            'FUSE Mounting %s@%s:%s to %s',
+            'FUSE Mounting %s@%s:/ to %s',
             self.app.settings['client-name'],
             self.app.settings['generation'],
-            self.mountroot, self.app.settings['to'])
+            self.app.settings['to'])
 
         try:
             ObnamFuseOptParse.obnam = self
