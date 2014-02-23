@@ -24,7 +24,7 @@ See the installation chapter for details on that. Most modern Linux
 desktops have this out of the box.
 
     mkdir ~/backups
-    obnam mount --to ~/backups--viewmode multiple
+    obnam mount --to ~/backups
 
 Run the above command, and then look at the `~/backups` directory.
 You'll see something like this:

@@ -26,7 +26,7 @@ against the FUSE mount, and comparing the two manifests.
     IMPLEMENTS WHEN user (\S+) FUSE mounts the repository (\S+) at (\S+)
     mkdir "$DATADIR/$MATCH_3"
     run_obnam "$MATCH_1" mount -r "$DATADIR/$MATCH_2" \
-        --to "$DATADIR/$MATCH_3" --viewmode multiple
+        --to "$DATADIR/$MATCH_3"
 
 If we did do the fuse mount, **always** unmount it, even when a step
 failed. We do not want failed test runs to leavo mounts lying around.

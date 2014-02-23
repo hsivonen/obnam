@@ -574,14 +574,12 @@ obnam restore \-\-repository sftp://your.server/~/backups \\
 Alternatively, mount the backup repository using the FUSE filesystem
 (note that the
 .B \-\-to
-option is necessary and that the
-.B \-\-viewmode
-option is usually a good idea):
+option is necessary):
 .IP
 .nf
 mkdir my-repo
 obnam restore \-\-repository sftp://your.server/~/backups \\
-\-\-to my-repo \-\-viewmode multiple
+\-\-to my-repo
 cp my-repo/latest/$HOME/myfile.txt
 fusermount -u my-repo
 .PP
@@ -607,7 +605,7 @@ obnam fsck \-\-repository sftp://your.server/~/backups
 To view the backed up files in the backup repository using FUSE:
 .IP
 .nf
-obnam mount \-\-to my-fuse \-\-viewmode multiple
+obnam mount \-\-to my-fuse
 ls -lh my-fuse
 fusermount -u my-fuse
 .fi

@@ -93,8 +93,7 @@ class ObnamFuseFile(object):
         if flags & self.write_flags:
             raise IOError(errno.EROFS, 'Read only filesystem')
 
-        if (path == '/.pid' and 
-            self.fs.obnam.app.settings['viewmode'] == 'multiple'):
+        if path == '/.pid':
             self.read = self.read_pid
             self.release = self.release_pid
             return
@@ -241,8 +240,6 @@ class ObnamFuse(fuse.Fuse):
 
     def root_refresh(self):
         tracing.trace('called')
-        if not self.obnam.app.settings['viewmode'] == 'multiple':
-            return
 
         try:
             self.obnam.reopen()
@@ -337,22 +334,7 @@ class ObnamFuse(fuse.Fuse):
         mountroot = self.obnam.mountroot
         generations = self.obnam.app.settings['generation']
 
-        if self.obnam.app.settings['viewmode'] == 'single':
-            if len(generations) != 1:
-                raise obnamlib.Error(
-                    'The single mode wants exactly one generation option')
-
-            gen = repo.genspec(generations[0])
-            if mountroot == '/':
-                self.get_gen_path = lambda path: (gen, path)
-            else:
-                self.get_gen_path = (lambda path : path == '/'
-                                        and (gen, mountroot)
-                                        or (gen, mountroot + path))
-
-            self.rootstat, self.rootlist = self.single_root_list(gen)
-            tracing.trace('single rootlist=%r', self.rootlist)
-        elif self.obnam.app.settings['viewmode'] == 'multiple':
+        if True:
             # we need the list of all real (non-checkpoint) generations
             if len(generations) == 1:
                 generations = [gen for gen in repo.list_generations()
@@ -379,8 +361,6 @@ class ObnamFuse(fuse.Fuse):
 
             self.rootstat, self.rootlist = self.multiple_root_list(generations)
             tracing.trace('multiple rootlist=%r', self.rootlist)
-        else:
-            raise obnamlib.Error('Unknown value for viewmode')
 
     def __init__(self, *args, **kw):
         self.obnam = kw['obnam']
@@ -446,15 +426,12 @@ class ObnamFuse(fuse.Fuse):
         tracing.trace('called')
         try:
             repo = self.obnam.repo
-            if self.obnam.app.settings['viewmode'] == 'multiple':
-                blocks = sum(repo.client.get_generation_data(gen)
-                            for gen in repo.list_generations())
-                files = sum(repo.client.get_generation_file_count(gen)
-                            for gen in repo.list_generations())
-            else:
-                gen = self.get_gen_path('/')[0]
-                blocks = repo.client.get_generation_data(gen)
-                files = repo.client.get_generation_file_count(gen)
+
+            blocks = sum(repo.client.get_generation_data(gen)
+                         for gen in repo.list_generations())
+            files = sum(repo.client.get_generation_file_count(gen)
+                        for gen in repo.list_generations())
+
             stv = fuse.StatVfs()
             stv.f_bsize   = 65536
             stv.f_frsize  = 0
@@ -582,13 +559,6 @@ class MountPlugin(obnamlib.ObnamPlugin):
     def enable(self):
         mount_group = obnamlib.option_group['mount'] = 'Mounting with FUSE'
         self.app.add_subcommand('mount', self.mount, arg_synopsis='[ROOT]')
-        self.app.settings.choice(
-            ['viewmode'],
-            ['single', 'multiple'],
-            '"single" directly mount specified generation, '
-            '"multiple" mount all generations as separate directories',
-            metavar='MODE',
-            group=mount_group)
         self.app.settings.string_list(
             ['fuse-opt'],
             'options to pass directly to Fuse',
@@ -606,7 +576,7 @@ class MountPlugin(obnamlib.ObnamPlugin):
         Example: To mount your backup repository:
 
         mkdir my-fuse
-        obnam mount --viewmode multiple --to my-fuse
+        obnam mount --to my-fuse
 
         You can then access the backup using commands such as these:
 
