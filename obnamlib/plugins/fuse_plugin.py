@@ -130,9 +130,10 @@ class ObnamFuseFile(object):
         tracing.trace('length=%r', length)
         tracing.trace('offset=%r', offset)
 
+        if length == 0 or offset >= self.metadata.st_size:
+            return ''
+
         try:
-            if length == 0 or offset >= self.metadata.st_size:
-                return ''
 
             repo = self.fs.obnam.repo
             gen, repopath = self.fs.get_gen_path(self.path)
