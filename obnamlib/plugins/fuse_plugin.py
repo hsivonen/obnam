@@ -528,11 +528,11 @@ class MountPlugin(obnamlib.ObnamPlugin):
 
         try:
             ObnamFuseOptParse.obnam = self
-            fs = ObnamFuse(obnam=self, parser_class=ObnamFuseOptParse)
-            fs.flags = 0
-            fs.multithreaded = 0
-            fs.parse()
-            fs.main()
+            fuse_fs = ObnamFuse(obnam=self, parser_class=ObnamFuseOptParse)
+            fuse_fs.flags = 0
+            fuse_fs.multithreaded = 0
+            fuse_fs.parse()
+            fuse_fs.main()
         except fuse.FuseError, e:
             raise obnamlib.Error(repr(e))
 
