@@ -245,14 +245,13 @@ class ObnamFuse(fuse.Fuse):
         return st
 
     def multiple_root_list(self, generations):
-        repo = self.obnam.repo
         rootlist = {}
         used_generations = []
         for gen in generations:
             path = '/' + str(gen)
             try:
                 genstat = self.get_stat(path)
-                start, end = repo.get_generation_times(gen)
+                start, end = self.obnam.repo.get_generation_times(gen)
                 genstat.st_ctime = genstat.st_mtime = end
                 rootlist[path] = genstat
                 used_generations.append(gen)
