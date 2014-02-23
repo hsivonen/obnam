@@ -206,6 +206,16 @@ class ObnamFuse(fuse.Fuse):
         self.init_root()
         fuse.Fuse.__init__(self, *args, **kw)
 
+    def init_root(self):
+        repo = self.obnam.repo
+
+        # we need the list of all real (non-checkpoint) generations
+        generations = [gen for gen in repo.list_generations()
+                       if not repo.get_is_checkpoint(gen)]
+
+        self.rootstat, self.rootlist = self.multiple_root_list(generations)
+        tracing.trace('multiple rootlist=%r', self.rootlist)
+
     def root_refresh(self):
         tracing.trace('called')
 
@@ -278,16 +288,6 @@ class ObnamFuse(fuse.Fuse):
         rootlist['/.pid'] = pidstat
 
         return (rootstat, rootlist)
-
-    def init_root(self):
-        repo = self.obnam.repo
-
-        # we need the list of all real (non-checkpoint) generations
-        generations = [gen for gen in repo.list_generations()
-                       if not repo.get_is_checkpoint(gen)]
-
-        self.rootstat, self.rootlist = self.multiple_root_list(generations)
-        tracing.trace('multiple rootlist=%r', self.rootlist)
 
     def get_gen_path(self, path):
         if path.count('/') == 1:
