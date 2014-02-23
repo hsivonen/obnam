@@ -78,13 +78,17 @@ class ObnamFuseFile(object):
         tracing.trace('flags=%r', flags)
         tracing.trace('mode=%r', mode)
 
+        self.path = path
+        self.chunkids = None
+        self.chunksize = None
+        self.lastdata = None
+        self.lastblock = None
+
         write_flags = (
             os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_EXCL |
             os.O_TRUNC | os.O_APPEND)
         if flags & write_flags:
             raise IOError(errno.EROFS, 'Read only filesystem')
-
-        self.path = path
 
         if (path == '/.pid' and 
             self.fs.obnam.app.settings['viewmode'] == 'multiple'):
@@ -102,11 +106,6 @@ class ObnamFuseFile(object):
         if not stat.S_ISREG(self.metadata.st_mode):
             raise IOError(errno.EINVAL, 'Invalid argument')
         
-        self.chunkids = None
-        self.chunksize = None
-        self.lastdata = None
-        self.lastblock = None
-
     def read_pid(self, length, offset):
         tracing.trace('length=%r', length)
         tracing.trace('offset=%r', offset)
