@@ -232,9 +232,8 @@ class ObnamFuseFile(object):
 
 
 class ObnamFuse(fuse.Fuse):
-    '''FUSE main class
 
-    '''
+    '''FUSE main class.'''
 
     MAX_METADATA_CACHE = 512
 
