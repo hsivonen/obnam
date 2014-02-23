@@ -284,16 +284,6 @@ class ObnamFuse(fuse.Fuse):
         st.st_ctime = st.st_mtime
         return st
 
-    def single_root_list(self, gen):
-        repo = self.obnam.repo
-        mountroot = self.obnam.mountroot
-        rootlist = {}
-        for entry in repo.listdir(gen, mountroot):
-            path = '/' + entry
-            rootlist[path] = self.get_stat(path)
-        rootstat = self.get_stat('/')
-        return (rootstat, rootlist)
-
     def multiple_root_list(self, generations):
         repo = self.obnam.repo
         mountroot = self.obnam.mountroot
