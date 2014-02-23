@@ -73,6 +73,12 @@ class ObnamFuseFile(object):
     direct_io = False   # do not use direct I/O on this file.
     keep_cache = True   # cached file data need not to be invalidated.
 
+    # Flags that indicate the caller wants to write to the file.
+    # Since we're read-only, we'll have to fail the request.
+    write_flags = (
+        os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_EXCL | os.O_TRUNC | 
+        os.O_APPEND)
+    
     def __init__(self, path, flags, *mode):
         tracing.trace('path=%r', path)
         tracing.trace('flags=%r', flags)
@@ -84,10 +90,7 @@ class ObnamFuseFile(object):
         self.lastdata = None
         self.lastblock = None
 
-        write_flags = (
-            os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_EXCL |
-            os.O_TRUNC | os.O_APPEND)
-        if flags & write_flags:
+        if flags & self.write_flags:
             raise IOError(errno.EROFS, 'Read only filesystem')
 
         if (path == '/.pid' and 
