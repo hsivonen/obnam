@@ -85,10 +85,6 @@ class ObnamFuseFile(object):
         tracing.trace('mode=%r', mode)
 
         self.path = path
-        self.chunkids = None
-        self.chunksize = None
-        self.lastdata = None
-        self.lastblock = None
 
         if flags & self.write_flags:
             raise IOError(errno.EROFS, 'Read only filesystem')
@@ -137,73 +133,47 @@ class ObnamFuseFile(object):
 
         gen, repopath = self.fs.get_gen_path(self.path)
 
-        # if stored inside B-tree
+        # The file's data content may be stored in the per-client B-tree.
+        # If so, we retrieve the data from there.
         contents = repo.get_file_data(gen, repopath)
         if contents is not None:
             return contents[offset:offset+length]
 
-        # stored in chunks
-        if not self.chunkids:
-            self.chunkids = repo.get_file_chunks(gen, repopath)
+        # Otherwise, the file has a list of chunks, and we need to
+        # find the right ones and return data from them. Note that we
+        # can't compute a seek: there is no guarantee all the chunks
+        # are of the same size. The user may have changed the chunk
+        # size setting between each backup run. Thus, we have to
+        # iterate over the list of chunk ids for the file, until we
+        # find the right place.
+        #
+        # This is, obviously, not good for performance.
+        #
+        # Note that previous code here did the wrong thing by assuming
+        # the chunk size was fixed, except for the last chunk for any
+        # file.
 
-        if len(self.chunkids) == 1:
-            if not self.lastdata:
-                self.lastdata = repo.get_chunk(self.chunkids[0])
-            return self.lastdata[offset:offset+length]
-
-        chunkdata = None
-        if not self.chunksize:
-            # take the cached value as the first guess for chunksize
-            self.chunksize = self.fs.sizecache.get(gen, self.fs.chunksize)
-            blocknum = offset/self.chunksize
-            blockoffs = offset - blocknum*self.chunksize
-
-            # read a chunk if guessed blocknum and chunksize make sense
-            if blocknum < len(self.chunkids):
-                chunkdata = repo.get_chunk(self.chunkids[blocknum])
-            else:
-                chunkdata = ''
-
-            # check if chunkdata is of expected length
-            validate = min(self.chunksize, self.metadata.st_size - blocknum*self.chunksize)
-            if validate != len(chunkdata):
-                if blocknum < len(self.chunkids)-1:
-                    # the length of all but last chunks is chunksize
-                    self.chunksize = len(chunkdata)
-                else:
-                    # guessing failed, get the length of the first chunk
-                    self.chunksize = len(repo.get_chunk(self.chunkids[0]))
-                chunkdata = None
-
-            # save correct chunksize
-            self.fs.sizecache[gen] = self.chunksize
-
-        if not chunkdata:
-            blocknum = offset/self.chunksize
-            blockoffs = offset - blocknum*self.chunksize
-            if self.lastblock == blocknum:
-                chunkdata = self.lastdata
-            else:
-                chunkdata = repo.get_chunk(self.chunkids[blocknum])
-
+        chunkids = repo.get_file_chunks(gen, repopath)
         output = []
-        while True:
-            output.append(chunkdata[blockoffs:blockoffs+length])
-            readlength = len(chunkdata) - blockoffs
-            if length > readlength and blocknum < len(self.chunkids)-1:
-                length -= readlength
-                blocknum += 1
-                blockoffs = 0
-                chunkdata = repo.get_chunk(self.chunkids[blocknum])
-            else:
-                self.lastblock = blocknum
-                self.lastdata = chunkdata
-                break
+        output_length = 0
+        chunk_pos_in_file = 0
+        for chunkid in chunkids:
+            contents = repo.get_chunk(chunkid)
+            if chunk_pos_in_file + len(contents) >= offset:
+                start = offset - chunk_pos_in_file
+                n = length - output_length
+                data = contents[start : n]
+                output.append(data)
+                output_length += len(data)
+                assert output_length <= length
+                if output_length == length:
+                    break
+            chunk_pos_in_file += len(contents)
+
         return ''.join(output)
 
     def release(self, flags):
         tracing.trace('flags=%r', flags)
-        self.lastdata = None
         return 0
 
     def fsync(self, isfsyncfile):
@@ -334,7 +304,6 @@ class ObnamFuse(fuse.Fuse):
         ObnamFuseFile.fs = self
         self.file_class = ObnamFuseFile
         self.metadatacache = {}
-        self.chunksize = self.obnam.app.settings['chunk-size']
         self.sizecache = {}
         self.rootlist = None
         self.rootstat = None
