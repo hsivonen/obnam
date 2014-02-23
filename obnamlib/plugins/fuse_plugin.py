@@ -207,11 +207,9 @@ class ObnamFuse(fuse.Fuse):
         fuse.Fuse.__init__(self, *args, **kw)
 
     def init_root(self):
-        repo = self.obnam.repo
-
         # we need the list of all real (non-checkpoint) generations
-        generations = [gen for gen in repo.list_generations()
-                       if not repo.get_is_checkpoint(gen)]
+        generations = [gen for gen in self.obnam.repo.list_generations()
+                       if not self.obnam.repo.get_is_checkpoint(gen)]
 
         self.rootstat, self.rootlist = self.multiple_root_list(generations)
         tracing.trace('multiple rootlist=%r', self.rootlist)
