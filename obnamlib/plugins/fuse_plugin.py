@@ -294,17 +294,16 @@ class ObnamFuse(fuse.Fuse):
         generations = [gen for gen in repo.list_generations()
                        if not repo.get_is_checkpoint(gen)]
 
-        def gen_path_0(path):
-            if path.count('/') == 1:
-                gen = path[1:]
-                return (int(gen), '/')
-            else:
-                gen, repopath = path[1:].split('/', 1)
-                return (int(gen), '/' + repopath)
-        self.get_gen_path = gen_path_0
-
         self.rootstat, self.rootlist = self.multiple_root_list(generations)
         tracing.trace('multiple rootlist=%r', self.rootlist)
+
+    def get_gen_path(self, path):
+        if path.count('/') == 1:
+            gen = path[1:]
+            return (int(gen), '/')
+        else:
+            gen, repopath = path[1:].split('/', 1)
+            return (int(gen), '/' + repopath)
 
     def getattr(self, path):
         try:
