@@ -204,9 +204,8 @@ class ObnamFuse(fuse.Fuse):
 
         try:
             self.obnam.reopen()
-            repo = self.obnam.repo
-            generations = [gen for gen in repo.list_generations()
-                           if not repo.get_is_checkpoint(gen)]
+            generations = [gen for gen in self.obnam.repo.list_generations()
+                           if not self.obnam.repo.get_is_checkpoint(gen)]
             tracing.trace('found %d generations', len(generations))
             self.rootstat, self.rootlist = self.multiple_root_list(generations)
             self.metadatacache.clear()
