@@ -131,19 +131,13 @@ class ObnamFuseFile(object):
 
         gen, repopath = self.fuse_fs.get_gen_path(self.path)
 
-        # The file's data content may be stored in the per-client B-tree.
-        # If so, we retrieve the data from there.
-        contents = self.fuse_fs.obnam.repo.get_file_data(gen, repopath)
-        if contents is not None:
-            return contents[offset:offset+length]
-
-        # Otherwise, the file has a list of chunks, and we need to
-        # find the right ones and return data from them. Note that we
-        # can't compute a seek: there is no guarantee all the chunks
-        # are of the same size. The user may have changed the chunk
-        # size setting between each backup run. Thus, we have to
-        # iterate over the list of chunk ids for the file, until we
-        # find the right place.
+        # The file has a list of chunks, and we need to find the right
+        # ones and return data from them. Note that we can't compute a
+        # seek: there is no guarantee all the chunks are of the same
+        # size. The user may have changed the chunk size setting
+        # between each backup run. Thus, we have to iterate over the
+        # list of chunk ids for the file, until we find the right
+        # place.
         #
         # This is, obviously, not good for performance.
         #
@@ -151,12 +145,12 @@ class ObnamFuseFile(object):
         # the chunk size was fixed, except for the last chunk for any
         # file.
 
-        chunkids = self.fuse_fs.obnam.repo.get_file_chunks(gen, repopath)
+        chunkids = self.fuse_fs.obnam.repo.get_file_chunk_ids(gen, repopath)
         output = []
         output_length = 0
         chunk_pos_in_file = 0
         for chunkid in chunkids:
-            contents = self.fuse_fs.obnam.repo.get_chunk(chunkid)
+            contents = self.fuse_fs.obnam.repo.get_chunk_content(chunkid)
             if chunk_pos_in_file + len(contents) >= offset:
                 start = offset - chunk_pos_in_file
                 n = length - output_length
@@ -206,8 +200,12 @@ class ObnamFuse(fuse.Fuse):
 
     def init_root(self):
         # we need the list of all real (non-checkpoint) generations
-        generations = [gen for gen in self.obnam.repo.list_generations()
-                       if not self.obnam.repo.get_is_checkpoint(gen)]
+        client_name = self.obnam.app.settings['client-name']
+        generations = [
+            gen
+            for gen in self.obnam.repo.get_client_generation_ids(client_name)
+            if not self.obnam.repo.get_generation_key(
+                gen, obnamlib.REPO_GENERATION_IS_CHECKPOINT)]
 
         # self.rootlist holds the stat information for each entry at
         # the root of the FUSE filesystem: /.pid, /latest, and one for
@@ -216,10 +214,14 @@ class ObnamFuse(fuse.Fuse):
 
         used_generations = []
         for gen in generations:
-            path = '/' + str(gen)
+            genspec = self.obnam.repo.make_generation_spec(gen)
+            path = '/' + genspec
             try:
                 genstat = self.get_stat_in_generation(path)
-                start, end = self.obnam.repo.get_generation_times(gen)
+                start = self.obnam.repo.get_generation_key(
+                    gen, obnamlib.REPO_GENERATION_STARTED)
+                end = self.obnam.repo.get_generation_key(
+                    gen, obnamlib.REPO_GENERATION_ENDED)
                 genstat.st_ctime = genstat.st_mtime = end
                 self.rootlist[path] = genstat
                 used_generations.append(gen)
@@ -232,12 +234,13 @@ class ObnamFuse(fuse.Fuse):
         # FUSE filesystem. We set it to the same as that of the latest
         # generation.
         latest_gen_id = used_generations[-1]
-        latest_gen_root_stat = self.rootlist['/' + str(latest_gen_id)]
+        latest_gen_spec = self.obnam.repo.make_generation_spec(latest_gen_id)
+        latest_gen_root_stat = self.rootlist['/' + latest_gen_spec]
         self.rootstat = fuse.Stat(**latest_gen_root_stat.__dict__)
 
         # Add an entry for /latest to self.rootlist.
         symlink_stat = fuse.Stat(
-            target=str(latest_gen_id),
+            target=latest_gen_spec,
             **latest_gen_root_stat.__dict__)
         symlink_stat.st_mode &= ~(stat.S_IFDIR | stat.S_IFREG)
         symlink_stat.st_mode |= stat.S_IFLNK
@@ -257,7 +260,8 @@ class ObnamFuse(fuse.Fuse):
     def get_metadata_in_generation(self, path):
         tracing.trace('path=%r', path)
 
-        metadata = self.obnam.repo.get_metadata(*self.get_gen_path(path))
+        metadata = self.construct_metadata_object(
+            self.obnam.repo, *self.get_gen_path(path))
 
         # FUSE does not allow negative timestamps, truncate to zero
         if metadata.st_atime_sec < 0:
@@ -266,6 +270,34 @@ class ObnamFuse(fuse.Fuse):
             metadata.st_mtime_sec = 0
 
         return metadata
+
+    def construct_metadata_object(self, repo, gen, filename):
+        allowed = set(repo.get_allowed_file_keys())
+        def K(key):
+            if key in allowed:
+                return repo.get_file_key(gen, filename, key)
+            else:
+                return None
+
+        return obnamlib.Metadata(
+            st_atime_sec=K(obnamlib.REPO_FILE_ATIME_SEC),
+            st_atime_nsec=K(obnamlib.REPO_FILE_ATIME_NSEC),
+            st_mtime_sec=K(obnamlib.REPO_FILE_MTIME_SEC),
+            st_mtime_nsec=K(obnamlib.REPO_FILE_MTIME_NSEC),
+            st_blocks=K(obnamlib.REPO_FILE_BLOCKS),
+            st_dev=K(obnamlib.REPO_FILE_DEV),
+            st_gid=K(obnamlib.REPO_FILE_GID),
+            st_ino=K(obnamlib.REPO_FILE_INO),
+            st_mode=K(obnamlib.REPO_FILE_MODE),
+            st_nlink=K(obnamlib.REPO_FILE_NLINK),
+            st_size=K(obnamlib.REPO_FILE_SIZE),
+            st_uid=K(obnamlib.REPO_FILE_UID),
+            username=K(obnamlib.REPO_FILE_USERNAME),
+            groupname=K(obnamlib.REPO_FILE_GROUPNAME),
+            target=K(obnamlib.REPO_FILE_SYMLINK_TARGET),
+            xattr=K(obnamlib.REPO_FILE_XATTR_BLOB),
+            md5=K(obnamlib.REPO_FILE_MD5),
+            )
 
     def get_stat_in_generation(self, path):
         tracing.trace('path=%r', path)
@@ -283,12 +315,17 @@ class ObnamFuse(fuse.Fuse):
         return st
 
     def get_gen_path(self, path):
+        client_name = self.obnam.app.settings['client-name']
         if path.count('/') == 1:
-            gen = path[1:]
-            return (int(gen), '/')
+            gen_spec = path[1:]
+            gen_id = self.obnam.repo.interpret_generation_spec(
+                client_name, gen_spec)
+            return (gen_id, '/')
         else:
-            gen, repopath = path[1:].split('/', 1)
-            return (int(gen), '/' + repopath)
+            gen_spec, repopath = path[1:].split('/', 1)
+            gen_id = self.obnam.repo.interpret_generation_spec(
+                client_name, gen_spec)
+            return (gen_id, '/' + repopath)
 
     def getattr(self, path):
         try:
@@ -314,7 +351,10 @@ class ObnamFuse(fuse.Fuse):
             if path == '/':
                 listdir = [x[1:] for x in self.rootlist.keys()]
             else:
-                listdir = self.obnam.repo.listdir(*self.get_gen_path(path))
+                listdir = [
+                    os.path.basename(x)
+                    for x in self.obnam.repo.get_file_children(
+                        *self.get_gen_path(path))]
             return [fuse.Direntry(name) for name in ['.', '..'] + listdir]
         except obnamlib.Error:
             raise IOError(errno.EINVAL, 'Invalid argument')
@@ -340,35 +380,48 @@ class ObnamFuse(fuse.Fuse):
 
     def statfs(self):
         tracing.trace('called')
-        try:
-            repo = self.obnam.repo
 
-            blocks = sum(repo.client.get_generation_data(gen)
-                         for gen in repo.list_generations())
-            files = sum(repo.client.get_generation_file_count(gen)
-                        for gen in repo.list_generations())
+        client_name = self.obnam.app.settings['client-name']
 
-            stv = fuse.StatVfs()
-            stv.f_bsize   = 65536
-            stv.f_frsize  = 0
-            stv.f_blocks  = blocks/65536
-            stv.f_bfree   = 0
-            stv.f_bavail  = 0
-            stv.f_files   = files
-            stv.f_ffree   = 0
-            stv.f_favail  = 0
-            stv.f_flag    = 0
-            stv.f_namemax = 255
-            #raise OSError(errno.ENOSYS, 'Unimplemented')
-            return stv
-        except:
-            logging.error('Unexpected exception', exc_info=True)
-            raise
+        total_data = sum(
+            self.obnam.repo.get_generation_key(
+                gen, obnamlib.REPO_GENERATION_TOTAL_DATA)
+            for gen in obnamlib.repo.get_clientgeneration_ids(client_name))
+
+        files = sum(
+            self.obnam.repo.get_generation_key(
+                gen, obnamlib.REPO_GENERATION_FILE_COUNT)
+            for gen in self.obnam.repo.get_client_generation_ids(client_name))
+
+        stv = fuse.StatVfs()
+        stv.f_bsize   = 65536
+        stv.f_frsize  = 0
+        stv.f_blocks  = blocks/65536
+        stv.f_bfree   = 0
+        stv.f_bavail  = 0
+        stv.f_files   = files
+        stv.f_ffree   = 0
+        stv.f_favail  = 0
+        stv.f_flag    = 0
+        stv.f_namemax = 255
+        #raise OSError(errno.ENOSYS, 'Unimplemented')
+        return stv
 
     def getxattr(self, path, name, size):
         tracing.trace('path=%r', path)
         tracing.trace('name=%r', name)
         tracing.trace('size=%r', size)
+        
+        try:
+            gen_id, repopath = self.get_gen_path(path)
+        except obnamlib.RepositoryClientHasNoGenerations:
+            return ''
+        except obnamlib.RepositoryGenerationDoesNotExist:
+            return ''
+
+        tracing.trace('gen_id=%r', gen_id)
+        tracing.trace('repopath=%r', repopath)
+
         try:
             try:
                 metadata = self.get_metadata_in_generation(path)
@@ -401,6 +454,17 @@ class ObnamFuse(fuse.Fuse):
     def listxattr(self, path, size):
         tracing.trace('path=%r', path)
         tracing.trace('size=%r', size)
+
+        try:
+            gen_id, repopath = self.get_gen_path(path)
+        except obnamlib.RepositoryClientHasNoGenerations:
+            return []
+        except obnamlib.RepositoryGenerationDoesNotExist:
+            return []
+
+        tracing.trace('gen_id=%r', gen_id)
+        tracing.trace('repopath=%r', repopath)
+
         try:
             metadata = self.get_metadata_in_generation(path)
             if not metadata.xattr:
@@ -517,8 +581,8 @@ class MountPlugin(obnamlib.ObnamPlugin):
         self.app.settings.require('repository')
         self.app.settings.require('client-name')
         self.app.settings.require('to')
-        self.repo = self.app.open_repository()
-        self.repo.open_client(self.app.settings['client-name'])
+
+        self.repo = self.app.get_repository_object()
 
         logging.debug(
             'FUSE Mounting %s@%s:/ to %s',
@@ -536,9 +600,8 @@ class MountPlugin(obnamlib.ObnamPlugin):
         except fuse.FuseError, e:
             raise obnamlib.Error(repr(e))
 
-        self.repo.fs.close()
+        self.repo.close()
 
     def reopen(self):
-        self.repo.fs.close()
-        self.repo = self.app.open_repository()
-        self.repo.open_client(self.app.settings['client-name'])
+        self.repo.close()
+        self.repo = self.app.get_repository_object()
