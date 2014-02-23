@@ -68,7 +68,7 @@ class ObnamFuseOptParse(object):
 
 class ObnamFuseFile(object):
 
-    fs = None  # points to active ObnamFuse object
+    fuse_fs = None  # points to active ObnamFuse object
 
     direct_io = False   # do not use direct I/O on this file.
     keep_cache = True   # cached file data need not to be invalidated.
@@ -95,7 +95,7 @@ class ObnamFuseFile(object):
             return
 
         try:
-            self.metadata = self.fs.get_metadata_in_generation(path)
+            self.metadata = self.fuse_fs.get_metadata_in_generation(path)
         except:
             logging.error('Unexpected exception', exc_info=True)
             raise
@@ -114,12 +114,12 @@ class ObnamFuseFile(object):
             return pid
 
     def release_pid(self, flags):
-        self.fs.root_refresh()
+        self.fuse_fs.root_refresh()
         return 0
 
     def fgetattr(self):
         tracing.trace('called')
-        return self.fs.getattr(self.path)
+        return self.fuse_fs.getattr(self.path)
 
     def read(self, length, offset):
         tracing.trace('self.path=%r', self.path)
@@ -129,11 +129,11 @@ class ObnamFuseFile(object):
         if length == 0 or offset >= self.metadata.st_size:
             return ''
 
-        gen, repopath = self.fs.get_gen_path(self.path)
+        gen, repopath = self.fuse_fs.get_gen_path(self.path)
 
         # The file's data content may be stored in the per-client B-tree.
         # If so, we retrieve the data from there.
-        contents = self.fs.obnam.repo.get_file_data(gen, repopath)
+        contents = self.fuse_fs.obnam.repo.get_file_data(gen, repopath)
         if contents is not None:
             return contents[offset:offset+length]
 
@@ -151,12 +151,12 @@ class ObnamFuseFile(object):
         # the chunk size was fixed, except for the last chunk for any
         # file.
 
-        chunkids = self.fs.obnam.repo.get_file_chunks(gen, repopath)
+        chunkids = self.fuse_fs.obnam.repo.get_file_chunks(gen, repopath)
         output = []
         output_length = 0
         chunk_pos_in_file = 0
         for chunkid in chunkids:
-            contents = self.fs.obnam.repo.get_chunk(chunkid)
+            contents = self.fuse_fs.obnam.repo.get_chunk(chunkid)
             if chunk_pos_in_file + len(contents) >= offset:
                 start = offset - chunk_pos_in_file
                 n = length - output_length
@@ -199,7 +199,7 @@ class ObnamFuse(fuse.Fuse):
 
     def __init__(self, *args, **kw):
         self.obnam = kw['obnam']
-        ObnamFuseFile.fs = self
+        ObnamFuseFile.fuse_fs = self
         self.file_class = ObnamFuseFile
         self.init_root()
         fuse.Fuse.__init__(self, *args, **kw)
