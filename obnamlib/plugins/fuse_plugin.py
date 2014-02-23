@@ -133,80 +133,73 @@ class ObnamFuseFile(object):
         if length == 0 or offset >= self.metadata.st_size:
             return ''
 
-        try:
+        repo = self.fs.obnam.repo
 
-            repo = self.fs.obnam.repo
-            gen, repopath = self.fs.get_gen_path(self.path)
+        gen, repopath = self.fs.get_gen_path(self.path)
 
-            # if stored inside B-tree
-            contents = repo.get_file_data(gen, repopath)
-            if contents is not None:
-                return contents[offset:offset+length]
+        # if stored inside B-tree
+        contents = repo.get_file_data(gen, repopath)
+        if contents is not None:
+            return contents[offset:offset+length]
 
-            # stored in chunks
-            if not self.chunkids:
-                self.chunkids = repo.get_file_chunks(gen, repopath)
+        # stored in chunks
+        if not self.chunkids:
+            self.chunkids = repo.get_file_chunks(gen, repopath)
 
-            if len(self.chunkids) == 1:
-                if not self.lastdata:
-                    self.lastdata = repo.get_chunk(self.chunkids[0])
-                return self.lastdata[offset:offset+length]
-            else:
-                chunkdata = None
-                if not self.chunksize:
-                    # take the cached value as the first guess for chunksize
-                    self.chunksize = self.fs.sizecache.get(gen, self.fs.chunksize)
-                    blocknum = offset/self.chunksize
-                    blockoffs = offset - blocknum*self.chunksize
+        if len(self.chunkids) == 1:
+            if not self.lastdata:
+                self.lastdata = repo.get_chunk(self.chunkids[0])
+            return self.lastdata[offset:offset+length]
+        else:
+            chunkdata = None
+            if not self.chunksize:
+                # take the cached value as the first guess for chunksize
+                self.chunksize = self.fs.sizecache.get(gen, self.fs.chunksize)
+                blocknum = offset/self.chunksize
+                blockoffs = offset - blocknum*self.chunksize
 
-                    # read a chunk if guessed blocknum and chunksize make sense
-                    if blocknum < len(self.chunkids):
-                        chunkdata = repo.get_chunk(self.chunkids[blocknum])
+                # read a chunk if guessed blocknum and chunksize make sense
+                if blocknum < len(self.chunkids):
+                    chunkdata = repo.get_chunk(self.chunkids[blocknum])
+                else:
+                    chunkdata = ''
+
+                # check if chunkdata is of expected length
+                validate = min(self.chunksize, self.metadata.st_size - blocknum*self.chunksize)
+                if validate != len(chunkdata):
+                    if blocknum < len(self.chunkids)-1:
+                        # the length of all but last chunks is chunksize
+                        self.chunksize = len(chunkdata)
                     else:
-                        chunkdata = ''
+                        # guessing failed, get the length of the first chunk
+                        self.chunksize = len(repo.get_chunk(self.chunkids[0]))
+                    chunkdata = None
 
-                    # check if chunkdata is of expected length
-                    validate = min(self.chunksize, self.metadata.st_size - blocknum*self.chunksize)
-                    if validate != len(chunkdata):
-                        if blocknum < len(self.chunkids)-1:
-                            # the length of all but last chunks is chunksize
-                            self.chunksize = len(chunkdata)
-                        else:
-                            # guessing failed, get the length of the first chunk
-                            self.chunksize = len(repo.get_chunk(self.chunkids[0]))
-                        chunkdata = None
+                # save correct chunksize
+                self.fs.sizecache[gen] = self.chunksize
 
-                    # save correct chunksize
-                    self.fs.sizecache[gen] = self.chunksize
+            if not chunkdata:
+                blocknum = offset/self.chunksize
+                blockoffs = offset - blocknum*self.chunksize
+                if self.lastblock == blocknum:
+                    chunkdata = self.lastdata
+                else:
+                    chunkdata = repo.get_chunk(self.chunkids[blocknum])
 
-                if not chunkdata:
-                    blocknum = offset/self.chunksize
-                    blockoffs = offset - blocknum*self.chunksize
-                    if self.lastblock == blocknum:
-                        chunkdata = self.lastdata
-                    else:
-                        chunkdata = repo.get_chunk(self.chunkids[blocknum])
-
-                output = []
-                while True:
-                    output.append(chunkdata[blockoffs:blockoffs+length])
-                    readlength = len(chunkdata) - blockoffs
-                    if length > readlength and blocknum < len(self.chunkids)-1:
-                        length -= readlength
-                        blocknum += 1
-                        blockoffs = 0
-                        chunkdata = repo.get_chunk(self.chunkids[blocknum])
-                    else:
-                        self.lastblock = blocknum
-                        self.lastdata = chunkdata
-                        break
-                return ''.join(output)
-        except (OSError, IOError), e:
-            tracing.trace('expected exception: %r', e)
-            raise
-        except:
-            logging.exception('Unexpected exception')
-            raise
+            output = []
+            while True:
+                output.append(chunkdata[blockoffs:blockoffs+length])
+                readlength = len(chunkdata) - blockoffs
+                if length > readlength and blocknum < len(self.chunkids)-1:
+                    length -= readlength
+                    blocknum += 1
+                    blockoffs = 0
+                    chunkdata = repo.get_chunk(self.chunkids[blocknum])
+                else:
+                    self.lastblock = blocknum
+                    self.lastdata = chunkdata
+                    break
+            return ''.join(output)
 
     def release(self, flags):
         tracing.trace('flags=%r', flags)
