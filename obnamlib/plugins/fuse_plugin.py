@@ -215,9 +215,8 @@ class ObnamFuse(fuse.Fuse):
 
     def get_metadata(self, path):
         tracing.trace('path=%r', path)
-        try:
-            return self.metadatacache[path]
-        except KeyError:
+
+        if path not in self.metadatacache:
             if len(self.metadatacache) > self.MAX_METADATA_CACHE:
                 self.metadatacache.clear()
             metadata = self.obnam.repo.get_metadata(*self.get_gen_path(path))
@@ -227,7 +226,8 @@ class ObnamFuse(fuse.Fuse):
                 metadata.st_atime_sec = 0
             if metadata.st_mtime_sec < 0:
                 metadata.st_mtime_sec = 0
-            return metadata
+
+        return self.metadatacache[path]
 
     def get_stat(self, path):
         tracing.trace('path=%r', path)
