@@ -201,7 +201,6 @@ class ObnamFuse(fuse.Fuse):
         self.obnam = kw['obnam']
         ObnamFuseFile.fs = self
         self.file_class = ObnamFuseFile
-        self.sizecache = {}
         self.rootlist = None
         self.rootstat = None
         self.init_root()
