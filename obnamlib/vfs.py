@@ -34,6 +34,12 @@ class UnknownVFSError(obnamlib.ObnamError):
     msg = 'Unknown VFS type: {url}'
 
 
+class LockFail(obnamlib.ObnamError):
+
+    msg = "Couldn't create lock {lock_name}: {reason}"
+
+
+
 class VirtualFileSystem(object):
 
     '''A virtual filesystem interface.

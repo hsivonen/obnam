@@ -29,9 +29,10 @@ import tracing
 import obnamlib
 
 
-class LockFail(obnamlib.Error):
+class LockFail(obnamlib.LockFail):
 
-    pass
+    def __init__(self, msg):
+        obnamlib.LockFail.__init__(self, lockname='foo', reason=msg)
 
 
 class BadFormat(obnamlib.Error):

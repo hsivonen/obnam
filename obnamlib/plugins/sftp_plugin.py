@@ -440,7 +440,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
         try:
             self.write_file(lockname, data)
         except OSError, e:
-            raise obnamlib.LockFail("Lock %s already exists" % lockname)
+            raise obnamlib.LockFail(lock_name=lockname, reason=str(e))
 
     def unlock(self, lockname):
         self._remove_if_exists(lockname)

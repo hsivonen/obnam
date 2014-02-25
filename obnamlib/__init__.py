@@ -100,7 +100,7 @@ from encryption import (generate_symmetric_key,
 from hooks import (
     Hook, MissingFilterError, NoFilterTagError, FilterHook, HookManager)
 from pluginbase import ObnamPlugin
-from vfs import VirtualFileSystem, VfsFactory, VfsTests
+from vfs import VirtualFileSystem, VfsFactory, VfsTests, LockFail
 from vfs_local import LocalFS
 from fsck_work_item import WorkItem
 from lockmgr import LockManager
@@ -182,6 +182,6 @@ from fmt_6.checksumtree import ChecksumTree
 from fmt_6.clientmetadatatree import ClientMetadataTree
 
 # This is the OLD and DEPRECATED format 6 implementation.
-from repo import Repository, LockFail, BadFormat
+from repo import Repository, BadFormat
 
 __all__ = locals()
