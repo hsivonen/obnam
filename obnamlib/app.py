@@ -203,29 +203,6 @@ class App(cliapp.Application):
         if self.settings['quiet']:
             self.ts.disable()
 
-    def open_repository(self, create=False, repofs=None): # pragma: no cover
-        logging.debug('opening repository (create=%s)' % create)
-        tracing.trace('repofs=%s' % repr(repofs))
-        repopath = self.settings['repository']
-        if repofs is None:
-            repofs = self.fsf.new(repopath, create=create)
-            if self.settings['crash-limit'] > 0:
-                repofs.crash_limit = self.settings['crash-limit']
-            repofs.connect()
-        else:
-            repofs.reinit(repopath)
-        return obnamlib.Repository(repofs,
-                                    self.settings['node-size'],
-                                    self.settings['upload-queue-size'],
-                                    self.settings['lru-size'],
-                                    self.hooks,
-                                    self.settings['idpath-depth'],
-                                    self.settings['idpath-bits'],
-                                    self.settings['idpath-skip'],
-                                    self.time,
-                                    self.settings['lock-timeout'],
-                                    self.settings['client-name'])
-
     def get_repository_object(self, create=False, repofs=None):
         '''Return an implementation of obnamlib.RepositoryInterface.'''
 
