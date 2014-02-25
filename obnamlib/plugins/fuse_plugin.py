@@ -149,11 +149,23 @@ class ObnamFuseFile(object):
         output = []
         output_length = 0
         chunk_pos_in_file = 0
+        size_cache = self.fuse_fs.obnam.chunk_sizes
+
         for chunkid in chunkids:
-            contents = self.fuse_fs.obnam.repo.get_chunk_content(chunkid)
-            if chunk_pos_in_file + len(contents) >= offset:
+            if chunkid in size_cache:
+                contents = None
+                size = size_cache[chunkid]
+            else:
+                contents = self.fuse_fs.obnam.repo.get_chunk_content(chunkid)
+                size = len(contents)
+                size_cache[chunkid] = size
+
+            if chunk_pos_in_file + size >= offset:
                 start = offset - chunk_pos_in_file
                 n = length - output_length
+                if contents is None:
+                    contents = self.fuse_fs.obnam.repo.get_chunk_content(
+                        chunkid)
                 data = contents[start : n]
                 output.append(data)
                 output_length += len(data)
@@ -596,6 +608,11 @@ class MountPlugin(obnamlib.ObnamPlugin):
             self.app.settings['client-name'],
             self.app.settings['generation'],
             self.app.settings['to'])
+
+        # For speed, we need to remember how large each chunk is.
+        # We store it here in the plugin so the cache survives a
+        # re-open.
+        self.chunk_sizes = {}
 
         try:
             ObnamFuseOptParse.obnam = self
