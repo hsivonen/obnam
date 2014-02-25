@@ -159,14 +159,6 @@ class App(cliapp.Application):
         self.hooks.new('config-loaded')
         self.hooks.new('shutdown')
 
-        # The Repository class defines some hooks, but the class
-        # won't be instantiated until much after plugins are enabled,
-        # and since all hooks must be defined when plugins are enabled,
-        # we create one instance here, which will immediately be destroyed.
-        # FIXME: This will be removed when obnamlib.Repository gets removed.
-        obnamlib.Repository(None, 1000, 1000, 100, self.hooks, 10, 10, 10,
-                            self.time, 0, '')
-
         # The repository factory creates all repository related hooks.
         self.repo_factory.setup_hooks(self.hooks)
 
@@ -202,29 +194,6 @@ class App(cliapp.Application):
         self.ts = ttystatus.TerminalStatus(period=0.1)
         if self.settings['quiet']:
             self.ts.disable()
-
-    def open_repository(self, create=False, repofs=None): # pragma: no cover
-        logging.debug('opening repository (create=%s)' % create)
-        tracing.trace('repofs=%s' % repr(repofs))
-        repopath = self.settings['repository']
-        if repofs is None:
-            repofs = self.fsf.new(repopath, create=create)
-            if self.settings['crash-limit'] > 0:
-                repofs.crash_limit = self.settings['crash-limit']
-            repofs.connect()
-        else:
-            repofs.reinit(repopath)
-        return obnamlib.Repository(repofs,
-                                    self.settings['node-size'],
-                                    self.settings['upload-queue-size'],
-                                    self.settings['lru-size'],
-                                    self.hooks,
-                                    self.settings['idpath-depth'],
-                                    self.settings['idpath-bits'],
-                                    self.settings['idpath-skip'],
-                                    self.time,
-                                    self.settings['lock-timeout'],
-                                    self.settings['client-name'])
 
     def get_repository_object(self, create=False, repofs=None):
         '''Return an implementation of obnamlib.RepositoryInterface.'''

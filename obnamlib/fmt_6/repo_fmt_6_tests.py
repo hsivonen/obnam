@@ -25,7 +25,9 @@ class RepositoryFormat6Tests(obnamlib.RepositoryInterfaceTests):
     def setUp(self):
         self.tempdir = tempfile.mkdtemp()
         fs = obnamlib.LocalFS(self.tempdir)
-        self.repo = obnamlib.RepositoryFormat6()
+        self.hooks = obnamlib.HookManager()
+        obnamlib.RepositoryFormat6.setup_hooks(self.hooks)
+        self.repo = obnamlib.RepositoryFormat6(hooks=self.hooks)
         self.repo.set_fs(fs)
 
     def tearDown(self):

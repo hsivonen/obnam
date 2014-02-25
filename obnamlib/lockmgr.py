@@ -65,7 +65,9 @@ class LockManager(object):
                 self._fs.lock(lock_name, self.data)
             except obnamlib.LockFail:
                 if self._time() - started >= self.timeout:
-                    raise obnamlib.LockFail('Lock timeout: %s' % lock_name)
+                    raise obnamlib.LockFail(
+                        lock_name=lock_name,
+                        reason='timeout')
             else:
                 return
             self._sleep()

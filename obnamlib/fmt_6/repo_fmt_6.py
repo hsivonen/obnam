@@ -114,16 +114,16 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._idpath_bits = idpath_bits
         self._idpath_skip = idpath_skip
         self._current_time = current_time or time.time
+        self.hooks = hooks
 
-        self._setup_hooks(hooks or obnamlib.HookManager())
         self._setup_chunks()
         self._setup_file_keys()
 
-    def _setup_hooks(self, hooks):
-        self.hooks = hooks
-        self.hooks.new('repository-toplevel-init')
-        self.hooks.new_filter('repository-data')
-        self.hooks.new('repository-add-client')
+    @classmethod
+    def setup_hooks(self, hooks):
+        hooks.new('repository-toplevel-init')
+        hooks.new_filter('repository-data')
+        hooks.new('repository-add-client')
 
     def get_fs(self):
         return self._real_fs
