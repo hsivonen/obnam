@@ -438,6 +438,11 @@ Does no line match?
         exit 1
     fi
 
+Merely read a file. This checks that the file exists and can be read
+by the user.
+
+    IMPLEMENTS WHEN user (\S+) reads file (\S+)
+    cat "$DATADIR/$MATCH_2"
 
 Check on user group membership
 ------------------------------

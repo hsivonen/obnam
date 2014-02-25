@@ -12,6 +12,23 @@ test suite concentrates on verifying that at least the basics work.
     WHEN user U backs up directory L to repository R
     AND user U FUSE mounts the repository R at F
     THEN L, restored to F/latest, matches manifest M
+
+The FUSE view of the repository won't change while we have it mounted,
+even if we make a new backup.
+
+    GIVEN 100k of new data in directory L
+    AND a manifest of L in M2
+    WHEN user U backs up directory L to repository R
+    THEN L, restored to F/latest, matches manifest M
+
+However, if we read the file `F/.pid`, the FUSE plugin refreshes the
+view and we can now see the new backup.
+
+    WHEN user U reads file F/.pid
+    THEN L, restored to F/latest, matches manifest M2
+
+Clean up.
+
     FINALLY unmount repository F
 
 We can only run this test if the user is in the `fuse` group. This may
@@ -26,7 +43,7 @@ against the FUSE mount, and comparing the two manifests.
     IMPLEMENTS WHEN user (\S+) FUSE mounts the repository (\S+) at (\S+)
     mkdir "$DATADIR/$MATCH_3"
     run_obnam "$MATCH_1" mount -r "$DATADIR/$MATCH_2" \
-        --to "$DATADIR/$MATCH_3" --viewmode multiple
+        --to "$DATADIR/$MATCH_3"
 
 If we did do the fuse mount, **always** unmount it, even when a step
 failed. We do not want failed test runs to leavo mounts lying around.

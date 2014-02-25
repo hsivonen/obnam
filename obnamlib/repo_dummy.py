@@ -176,7 +176,7 @@ class DummyClient(object):
         ids = self.data.get_value('generation-ids', [])
         if gen_id not in ids:
             raise obnamlib.RepositoryGenerationDoesNotExist(
-                client_name=self.name)
+                client_name=self.name, gen_id=gen_id)
 
     def get_generation_key(self, gen_id, key):
         return self.data.get_value(gen_id + (key,), '')
@@ -210,7 +210,8 @@ class DummyClient(object):
             gen_number = int(genspec)
             if (self.name, gen_number) in ids:
                 return (self.name, gen_number)
-        raise obnamlib.RepositoryGenerationDoesNotExist(client_name=self.name)
+        raise obnamlib.RepositoryGenerationDoesNotExist(
+            client_name=self.name, gen_id=genspec)
 
     def make_generation_spec(self, generation_id):
         name, gen_number = generation_id

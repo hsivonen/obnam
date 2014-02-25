@@ -21,12 +21,18 @@ import logging
 import errno
 import struct
 
+import tracing
+
 import obnamlib
 
 try:
     import fuse
     fuse.fuse_python_api = (0, 2)
 except ImportError:
+    # This is a workaround to allow us to fake a fuse module, so that
+    # this plugin file can be imported. If the module isn't there, the
+    # plugin won't work, and it will tell the user it won't work, but
+    # at least Obnam won't crash at startup.
     class Bunch:
         def __init__(self, **kwds):
             self.__dict__.update(kwds)
@@ -34,16 +40,18 @@ except ImportError:
 
 
 class ObnamFuseOptParse(object):
-    '''Option parsing class for FUSE
 
-       has to set fuse_args.mountpoint
-    '''
+    '''Option parsing class for FUSE.'''
+
+    # NOTE: This class MUST set self.fuse_args.mountpoint.
 
     obnam = None
 
     def __init__(self, *args, **kw):
-        self.fuse_args = \
-            'fuse_args' in kw and kw.pop('fuse_args') or fuse.FuseArgs()
+        if 'fuse_args' in kw:
+            self.fuse_args = kw.pop('fuse_args')
+        else:
+            self.fuse_args = fuse.FuseArgs()
         if 'fuse' in kw:
             self.fuse = kw.pop('fuse')
 
@@ -60,40 +68,45 @@ class ObnamFuseOptParse(object):
 
 class ObnamFuseFile(object):
 
-    fs = None  # points to active ObnamFuse object
+    fuse_fs = None  # points to active ObnamFuse object
 
     direct_io = False   # do not use direct I/O on this file.
     keep_cache = True   # cached file data need not to be invalidated.
 
+    # Flags that indicate the caller wants to write to the file.
+    # Since we're read-only, we'll have to fail the request.
+    write_flags = (
+        os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_EXCL | os.O_TRUNC | 
+        os.O_APPEND)
+    
     def __init__(self, path, flags, *mode):
-        logging.debug('FUSE file open %s %d', path, flags)
-        if ((flags & os.O_WRONLY) or (flags & os.O_RDWR) or
-            (flags & os.O_CREAT) or (flags & os.O_EXCL) or
-            (flags & os.O_TRUNC) or (flags & os.O_APPEND)):
+        tracing.trace('path=%r', path)
+        tracing.trace('flags=%r', flags)
+        tracing.trace('mode=%r', mode)
+
+        self.path = path
+
+        if flags & self.write_flags:
             raise IOError(errno.EROFS, 'Read only filesystem')
+
+        if path == '/.pid':
+            self.read = self.read_pid
+            self.release = self.release_pid
+            return
+
         try:
-            self.path = path
-
-            if path == '/.pid' and self.fs.obnam.app.settings['viewmode'] == 'multiple':
-                self.read = self.read_pid
-                self.release = self.release_pid
-                return
-
-            self.metadata = self.fs.get_metadata(path)
-            # if not a regular file return EINVAL
-            if not stat.S_ISREG(self.metadata.st_mode):
-                raise IOError(errno.EINVAL, 'Invalid argument')
-
-            self.chunkids = None
-            self.chunksize = None
-            self.lastdata = None
-            self.lastblock = None
+            self.metadata = self.fuse_fs.get_metadata_in_generation(path)
         except:
             logging.error('Unexpected exception', exc_info=True)
             raise
 
+        # if not a regular file return EINVAL
+        if not stat.S_ISREG(self.metadata.st_mode):
+            raise IOError(errno.EINVAL, 'Invalid argument')
+        
     def read_pid(self, length, offset):
-        logging.debug('FUSE read_pid %d %d', length, offset)
+        tracing.trace('length=%r', length)
+        tracing.trace('offset=%r', offset)
         pid = str(os.getpid())
         if length < len(pid) or offset != 0:
             return ''
@@ -101,155 +114,206 @@ class ObnamFuseFile(object):
             return pid
 
     def release_pid(self, flags):
-        self.fs.root_refresh()
+        self.fuse_fs.root_refresh()
         return 0
 
     def fgetattr(self):
-        logging.debug('FUSE file fgetattr')
-        return self.fs.getattr(self.path)
+        tracing.trace('called')
+        return self.fuse_fs.getattr(self.path)
 
     def read(self, length, offset):
-        logging.debug('FUSE file read(%s, %d, %d)', self.path, length, offset)
-        try:
-            if length == 0 or offset >= self.metadata.st_size:
-                return ''
+        tracing.trace('self.path=%r', self.path)
+        tracing.trace('length=%r', length)
+        tracing.trace('offset=%r', offset)
 
-            repo = self.fs.obnam.repo
-            gen, repopath = self.fs.get_gen_path(self.path)
+        if length == 0 or offset >= self.metadata.st_size:
+            return ''
 
-            # if stored inside B-tree
-            contents = repo.get_file_data(gen, repopath)
-            if contents is not None:
-                return contents[offset:offset+length]
+        gen, repopath = self.fuse_fs.get_gen_path(self.path)
 
-            # stored in chunks
-            if not self.chunkids:
-                self.chunkids = repo.get_file_chunks(gen, repopath)
+        # The file has a list of chunks, and we need to find the right
+        # ones and return data from them. Note that we can't compute a
+        # seek: there is no guarantee all the chunks are of the same
+        # size. The user may have changed the chunk size setting
+        # between each backup run. Thus, we have to iterate over the
+        # list of chunk ids for the file, until we find the right
+        # place.
+        #
+        # This is, obviously, not good for performance.
+        #
+        # Note that previous code here did the wrong thing by assuming
+        # the chunk size was fixed, except for the last chunk for any
+        # file.
 
-            if len(self.chunkids) == 1:
-                if not self.lastdata:
-                    self.lastdata = repo.get_chunk(self.chunkids[0])
-                return self.lastdata[offset:offset+length]
+        chunkids = self.fuse_fs.obnam.repo.get_file_chunk_ids(gen, repopath)
+        output = []
+        output_length = 0
+        chunk_pos_in_file = 0
+        size_cache = self.fuse_fs.obnam.chunk_sizes
+
+        for chunkid in chunkids:
+            if chunkid in size_cache:
+                contents = None
+                size = size_cache[chunkid]
             else:
-                chunkdata = None
-                if not self.chunksize:
-                    # take the cached value as the first guess for chunksize
-                    self.chunksize = self.fs.sizecache.get(gen, self.fs.chunksize)
-                    blocknum = offset/self.chunksize
-                    blockoffs = offset - blocknum*self.chunksize
+                contents = self.fuse_fs.obnam.repo.get_chunk_content(chunkid)
+                size = len(contents)
+                size_cache[chunkid] = size
 
-                    # read a chunk if guessed blocknum and chunksize make sense
-                    if blocknum < len(self.chunkids):
-                        chunkdata = repo.get_chunk(self.chunkids[blocknum])
-                    else:
-                        chunkdata = ''
+            if chunk_pos_in_file + size >= offset:
+                start = offset - chunk_pos_in_file
+                n = length - output_length
+                if contents is None:
+                    contents = self.fuse_fs.obnam.repo.get_chunk_content(
+                        chunkid)
+                data = contents[start : n]
+                output.append(data)
+                output_length += len(data)
+                assert output_length <= length
+                if output_length == length:
+                    break
+            chunk_pos_in_file += len(contents)
 
-                    # check if chunkdata is of expected length
-                    validate = min(self.chunksize, self.metadata.st_size - blocknum*self.chunksize)
-                    if validate != len(chunkdata):
-                        if blocknum < len(self.chunkids)-1:
-                            # the length of all but last chunks is chunksize
-                            self.chunksize = len(chunkdata)
-                        else:
-                            # guessing failed, get the length of the first chunk
-                            self.chunksize = len(repo.get_chunk(self.chunkids[0]))
-                        chunkdata = None
-
-                    # save correct chunksize
-                    self.fs.sizecache[gen] = self.chunksize
-
-                if not chunkdata:
-                    blocknum = offset/self.chunksize
-                    blockoffs = offset - blocknum*self.chunksize
-                    if self.lastblock == blocknum:
-                        chunkdata = self.lastdata
-                    else:
-                        chunkdata = repo.get_chunk(self.chunkids[blocknum])
-
-                output = []
-                while True:
-                    output.append(chunkdata[blockoffs:blockoffs+length])
-                    readlength = len(chunkdata) - blockoffs
-                    if length > readlength and blocknum < len(self.chunkids)-1:
-                        length -= readlength
-                        blocknum += 1
-                        blockoffs = 0
-                        chunkdata = repo.get_chunk(self.chunkids[blocknum])
-                    else:
-                        self.lastblock = blocknum
-                        self.lastdata = chunkdata
-                        break
-                return ''.join(output)
-        except (OSError, IOError), e:
-            logging.debug('FUSE Expected exception')
-            raise
-        except:
-            logging.exception('Unexpected exception')
-            raise
+        return ''.join(output)
 
     def release(self, flags):
-        logging.debug('FUSE file release %d', flags)
-        self.lastdata = None
+        tracing.trace('flags=%r', flags)
         return 0
 
     def fsync(self, isfsyncfile):
-        logging.debug('FUSE file fsync')
+        tracing.trace('called')
         return 0
 
     def flush(self):
-        logging.debug('FUSE file flush')
+        tracing.trace('called')
         return 0
 
     def ftruncate(self, size):
-        logging.debug('FUSE file ftruncate %d', size)
+        tracing.trace('size=%r', size)
         return 0
 
     def lock(self, cmd, owner, **kw):
-        logging.debug('FUSE file lock %s %s %s', repr(cmd), repr(owner), repr(kw))
+        tracing.trace('cmd=%r', cmd)
+        tracing.trace('owner=%r', owner)
+        tracing.trace('kw=%r', kw)
         raise IOError(errno.EOPNOTSUPP, 'Operation not supported')
 
 
 class ObnamFuse(fuse.Fuse):
-    '''FUSE main class
 
-    '''
+    '''FUSE main class.'''
 
-    MAX_METADATA_CACHE = 512
+    def __init__(self, *args, **kw):
+        self.obnam = kw['obnam']
+        ObnamFuseFile.fuse_fs = self
+        self.file_class = ObnamFuseFile
+        self.init_root()
+        fuse.Fuse.__init__(self, *args, **kw)
+
+    def init_root(self):
+        # we need the list of all real (non-checkpoint) generations
+        client_name = self.obnam.app.settings['client-name']
+        generations = [
+            gen
+            for gen in self.obnam.repo.get_client_generation_ids(client_name)
+            if not self.obnam.repo.get_generation_key(
+                gen, obnamlib.REPO_GENERATION_IS_CHECKPOINT)]
+
+        # self.rootlist holds the stat information for each entry at
+        # the root of the FUSE filesystem: /.pid, /latest, and one for
+        # each generation.
+        self.rootlist = {}
+
+        used_generations = []
+        for gen in generations:
+            genspec = self.obnam.repo.make_generation_spec(gen)
+            path = '/' + genspec
+            try:
+                genstat = self.get_stat_in_generation(path)
+                start = self.obnam.repo.get_generation_key(
+                    gen, obnamlib.REPO_GENERATION_STARTED)
+                end = self.obnam.repo.get_generation_key(
+                    gen, obnamlib.REPO_GENERATION_ENDED)
+                genstat.st_ctime = genstat.st_mtime = end
+                self.rootlist[path] = genstat
+                used_generations.append(gen)
+            except obnamlib.Error:
+                pass
+
+        assert used_generations
+
+        # self.rootstat is the stat information for the root of the
+        # FUSE filesystem. We set it to the same as that of the latest
+        # generation.
+        latest_gen_id = used_generations[-1]
+        latest_gen_spec = self.obnam.repo.make_generation_spec(latest_gen_id)
+        latest_gen_root_stat = self.rootlist['/' + latest_gen_spec]
+        self.rootstat = fuse.Stat(**latest_gen_root_stat.__dict__)
+
+        # Add an entry for /latest to self.rootlist.
+        symlink_stat = fuse.Stat(
+            target=latest_gen_spec,
+            **latest_gen_root_stat.__dict__)
+        symlink_stat.st_mode &= ~(stat.S_IFDIR | stat.S_IFREG)
+        symlink_stat.st_mode |= stat.S_IFLNK
+        self.rootlist['/latest'] = symlink_stat
+
+        # Add an entry for /.pid to self.rootlist.
+        pidstat = fuse.Stat(**self.rootstat.__dict__)
+        pidstat.st_mode = (
+            stat.S_IFREG | stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
+        self.rootlist['/.pid'] = pidstat
 
     def root_refresh(self):
-        logging.debug('FUSE root_refresh is called')
-        if self.obnam.app.settings['viewmode'] == 'multiple':
-            try:
-                self.obnam.reopen()
-                repo = self.obnam.repo
-                generations = [gen for gen in repo.list_generations()
-                                if not repo.get_is_checkpoint(gen)]
-                logging.debug('FUSE root_refresh found %d generations' % len(generations))
-                self.rootstat, self.rootlist = self.multiple_root_list(generations)
-                self.metadatacache.clear()
-            except:
-                logging.exception('Unexpected exception')
-                raise
+        tracing.trace('called')
+        self.obnam.reopen()
+        self.init_root()
 
-    def get_metadata(self, path):
-        #logging.debug('FUSE get_metadata(%s)', path)
-        try:
-            return self.metadatacache[path]
-        except KeyError:
-            if len(self.metadatacache) > self.MAX_METADATA_CACHE:
-                self.metadatacache.clear()
-            metadata = self.obnam.repo.get_metadata(*self.get_gen_path(path))
-            self.metadatacache[path] = metadata
-            # FUSE does not allow negative timestamps, truncate to zero
-            if metadata.st_atime_sec < 0:
-                metadata.st_atime_sec = 0
-            if metadata.st_mtime_sec < 0:
-                metadata.st_mtime_sec = 0
-            return metadata
+    def get_metadata_in_generation(self, path):
+        tracing.trace('path=%r', path)
 
-    def get_stat(self, path):
-        logging.debug('FUSE get_stat(%s)', path)
-        metadata = self.get_metadata(path)
+        metadata = self.construct_metadata_object(
+            self.obnam.repo, *self.get_gen_path(path))
+
+        # FUSE does not allow negative timestamps, truncate to zero
+        if metadata.st_atime_sec < 0:
+            metadata.st_atime_sec = 0
+        if metadata.st_mtime_sec < 0:
+            metadata.st_mtime_sec = 0
+
+        return metadata
+
+    def construct_metadata_object(self, repo, gen, filename):
+        allowed = set(repo.get_allowed_file_keys())
+        def K(key):
+            if key in allowed:
+                return repo.get_file_key(gen, filename, key)
+            else:
+                return None
+
+        return obnamlib.Metadata(
+            st_atime_sec=K(obnamlib.REPO_FILE_ATIME_SEC),
+            st_atime_nsec=K(obnamlib.REPO_FILE_ATIME_NSEC),
+            st_mtime_sec=K(obnamlib.REPO_FILE_MTIME_SEC),
+            st_mtime_nsec=K(obnamlib.REPO_FILE_MTIME_NSEC),
+            st_blocks=K(obnamlib.REPO_FILE_BLOCKS),
+            st_dev=K(obnamlib.REPO_FILE_DEV),
+            st_gid=K(obnamlib.REPO_FILE_GID),
+            st_ino=K(obnamlib.REPO_FILE_INO),
+            st_mode=K(obnamlib.REPO_FILE_MODE),
+            st_nlink=K(obnamlib.REPO_FILE_NLINK),
+            st_size=K(obnamlib.REPO_FILE_SIZE),
+            st_uid=K(obnamlib.REPO_FILE_UID),
+            username=K(obnamlib.REPO_FILE_USERNAME),
+            groupname=K(obnamlib.REPO_FILE_GROUPNAME),
+            target=K(obnamlib.REPO_FILE_SYMLINK_TARGET),
+            xattr=K(obnamlib.REPO_FILE_XATTR_BLOB),
+            md5=K(obnamlib.REPO_FILE_MD5),
+            )
+
+    def get_stat_in_generation(self, path):
+        tracing.trace('path=%r', path)
+        metadata = self.get_metadata_in_generation(path)
         st = fuse.Stat()
         st.st_mode = metadata.st_mode
         st.st_dev = metadata.st_dev
@@ -262,111 +326,18 @@ class ObnamFuse(fuse.Fuse):
         st.st_ctime = st.st_mtime
         return st
 
-    def single_root_list(self, gen):
-        repo = self.obnam.repo
-        mountroot = self.obnam.mountroot
-        rootlist = {}
-        for entry in repo.listdir(gen, mountroot):
-            path = '/' + entry
-            rootlist[path] = self.get_stat(path)
-        rootstat = self.get_stat('/')
-        return (rootstat, rootlist)
-
-    def multiple_root_list(self, generations):
-        repo = self.obnam.repo
-        mountroot = self.obnam.mountroot
-        rootlist = {}
-        used_generations = []
-        for gen in generations:
-            path = '/' + str(gen)
-            try:
-                genstat = self.get_stat(path)
-                start, end = repo.get_generation_times(gen)
-                genstat.st_ctime = genstat.st_mtime = end
-                rootlist[path] = genstat
-                used_generations.append(gen)
-            except obnamlib.Error:
-                pass
-
-        if not used_generations:
-            raise obnamlib.Error('No generations found for %s' % mountroot)
-
-        latest = used_generations[-1]
-        laststat = rootlist['/' + str(latest)]
-        rootstat = fuse.Stat(**laststat.__dict__)
-
-        laststat = fuse.Stat(target=str(latest), **laststat.__dict__)
-        laststat.st_mode &= ~(stat.S_IFDIR | stat.S_IFREG)
-        laststat.st_mode |= stat.S_IFLNK
-        rootlist['/latest'] = laststat
-
-        pidstat = fuse.Stat(**rootstat.__dict__)
-        pidstat.st_mode = stat.S_IFREG | stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH
-        rootlist['/.pid'] = pidstat
-
-        return (rootstat, rootlist)
-
-    def init_root(self):
-        repo = self.obnam.repo
-        mountroot = self.obnam.mountroot
-        generations = self.obnam.app.settings['generation']
-
-        if self.obnam.app.settings['viewmode'] == 'single':
-            if len(generations) != 1:
-                raise obnamlib.Error(
-                    'The single mode wants exactly one generation option')
-
-            gen = repo.genspec(generations[0])
-            if mountroot == '/':
-                self.get_gen_path = lambda path: (gen, path)
-            else:
-                self.get_gen_path = (lambda path : path == '/'
-                                        and (gen, mountroot)
-                                        or (gen, mountroot + path))
-
-            self.rootstat, self.rootlist = self.single_root_list(gen)
-            logging.debug('FUSE single rootlist %s', repr(self.rootlist))
-        elif self.obnam.app.settings['viewmode'] == 'multiple':
-            # we need the list of all real (non-checkpoint) generations
-            if len(generations) == 1:
-                generations = [gen for gen in repo.list_generations()
-                               if not repo.get_is_checkpoint(gen)]
-
-            if mountroot == '/':
-                def gen_path_0(path):
-                    if path.count('/') == 1:
-                        gen = path[1:]
-                        return (int(gen), mountroot)
-                    else:
-                        gen, repopath = path[1:].split('/', 1)
-                        return (int(gen), mountroot + repopath)
-                self.get_gen_path = gen_path_0
-            else:
-                def gen_path_n(path):
-                    if path.count('/') == 1:
-                        gen = path[1:]
-                        return (int(gen), mountroot)
-                    else:
-                        gen, repopath = path[1:].split('/', 1)
-                        return (int(gen), mountroot + '/' + repopath)
-                self.get_gen_path = gen_path_n
-
-            self.rootstat, self.rootlist = self.multiple_root_list(generations)
-            logging.debug('FUSE multiple rootlist %s', repr(self.rootlist))
+    def get_gen_path(self, path):
+        client_name = self.obnam.app.settings['client-name']
+        if path.count('/') == 1:
+            gen_spec = path[1:]
+            gen_id = self.obnam.repo.interpret_generation_spec(
+                client_name, gen_spec)
+            return (gen_id, '/')
         else:
-            raise obnamlib.Error('Unknown value for viewmode')
-
-    def __init__(self, *args, **kw):
-        self.obnam = kw['obnam']
-        ObnamFuseFile.fs = self
-        self.file_class = ObnamFuseFile
-        self.metadatacache = {}
-        self.chunksize = self.obnam.app.settings['chunk-size']
-        self.sizecache = {}
-        self.rootlist = None
-        self.rootstat = None
-        self.init_root()
-        fuse.Fuse.__init__(self, *args, **kw)
+            gen_spec, repopath = path[1:].split('/', 1)
+            gen_id = self.obnam.repo.interpret_generation_spec(
+                client_name, gen_spec)
+            return (gen_id, '/' + repopath)
 
     def getattr(self, path):
         try:
@@ -378,7 +349,7 @@ class ObnamFuse(fuse.Fuse):
                 else:
                     raise obnamlib.Error('ENOENT')
             else:
-                return self.get_stat(path)
+                return self.get_stat_in_generation(path)
         except obnamlib.Error:
             raise IOError(errno.ENOENT, 'No such file or directory')
         except:
@@ -386,12 +357,16 @@ class ObnamFuse(fuse.Fuse):
             raise
 
     def readdir(self, path, fh):
-        logging.debug('FUSE readdir(%s, %s)', path, repr(fh))
+        tracing.trace('path=%r', path)
+        tracing.trace('fh=%r', fh)
         try:
             if path == '/':
                 listdir = [x[1:] for x in self.rootlist.keys()]
             else:
-                listdir = self.obnam.repo.listdir(*self.get_gen_path(path))
+                listdir = [
+                    os.path.basename(x)
+                    for x in self.obnam.repo.get_file_children(
+                        *self.get_gen_path(path))]
             return [fuse.Direntry(name) for name in ['.', '..'] + listdir]
         except obnamlib.Error:
             raise IOError(errno.EINVAL, 'Invalid argument')
@@ -404,7 +379,7 @@ class ObnamFuse(fuse.Fuse):
             statdata = self.rootlist.get(path)
             if statdata and hasattr(statdata, 'target'):
                 return statdata.target
-            metadata = self.get_metadata(path)
+            metadata = self.get_metadata_in_generation(path)
             if metadata.islink():
                 return metadata.target
             else:
@@ -416,40 +391,52 @@ class ObnamFuse(fuse.Fuse):
             raise
 
     def statfs(self):
-        logging.debug('FUSE statfs')
-        try:
-            repo = self.obnam.repo
-            if self.obnam.app.settings['viewmode'] == 'multiple':
-                blocks = sum(repo.client.get_generation_data(gen)
-                            for gen in repo.list_generations())
-                files = sum(repo.client.get_generation_file_count(gen)
-                            for gen in repo.list_generations())
-            else:
-                gen = self.get_gen_path('/')[0]
-                blocks = repo.client.get_generation_data(gen)
-                files = repo.client.get_generation_file_count(gen)
-            stv = fuse.StatVfs()
-            stv.f_bsize   = 65536
-            stv.f_frsize  = 0
-            stv.f_blocks  = blocks/65536
-            stv.f_bfree   = 0
-            stv.f_bavail  = 0
-            stv.f_files   = files
-            stv.f_ffree   = 0
-            stv.f_favail  = 0
-            stv.f_flag    = 0
-            stv.f_namemax = 255
-            #raise OSError(errno.ENOSYS, 'Unimplemented')
-            return stv
-        except:
-            logging.error('Unexpected exception', exc_info=True)
-            raise
+        tracing.trace('called')
+
+        client_name = self.obnam.app.settings['client-name']
+
+        total_data = sum(
+            self.obnam.repo.get_generation_key(
+                gen, obnamlib.REPO_GENERATION_TOTAL_DATA)
+            for gen in obnamlib.repo.get_clientgeneration_ids(client_name))
+
+        files = sum(
+            self.obnam.repo.get_generation_key(
+                gen, obnamlib.REPO_GENERATION_FILE_COUNT)
+            for gen in self.obnam.repo.get_client_generation_ids(client_name))
+
+        stv = fuse.StatVfs()
+        stv.f_bsize   = 65536
+        stv.f_frsize  = 0
+        stv.f_blocks  = blocks/65536
+        stv.f_bfree   = 0
+        stv.f_bavail  = 0
+        stv.f_files   = files
+        stv.f_ffree   = 0
+        stv.f_favail  = 0
+        stv.f_flag    = 0
+        stv.f_namemax = 255
+        #raise OSError(errno.ENOSYS, 'Unimplemented')
+        return stv
 
     def getxattr(self, path, name, size):
-        logging.debug('FUSE getxattr %s %s %d', path, name, size)
+        tracing.trace('path=%r', path)
+        tracing.trace('name=%r', name)
+        tracing.trace('size=%r', size)
+        
+        try:
+            gen_id, repopath = self.get_gen_path(path)
+        except obnamlib.RepositoryClientHasNoGenerations:
+            return ''
+        except obnamlib.RepositoryGenerationDoesNotExist:
+            return ''
+
+        tracing.trace('gen_id=%r', gen_id)
+        tracing.trace('repopath=%r', repopath)
+
         try:
             try:
-                metadata = self.get_metadata(path)
+                metadata = self.get_metadata_in_generation(path)
             except ValueError:
                 return 0
             if not metadata.xattr:
@@ -477,9 +464,21 @@ class ObnamFuse(fuse.Fuse):
             raise
 
     def listxattr(self, path, size):
-        logging.debug('FUSE listxattr %s %d', path, size)
+        tracing.trace('path=%r', path)
+        tracing.trace('size=%r', size)
+
         try:
-            metadata = self.get_metadata(path)
+            gen_id, repopath = self.get_gen_path(path)
+        except obnamlib.RepositoryClientHasNoGenerations:
+            return []
+        except obnamlib.RepositoryGenerationDoesNotExist:
+            return []
+
+        tracing.trace('gen_id=%r', gen_id)
+        tracing.trace('repopath=%r', repopath)
+
+        try:
+            metadata = self.get_metadata_in_generation(path)
             if not metadata.xattr:
                 return 0
             blob = metadata.xattr
@@ -551,17 +550,12 @@ class MountPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
         mount_group = obnamlib.option_group['mount'] = 'Mounting with FUSE'
-        self.app.add_subcommand('mount', self.mount,
-                                arg_synopsis='[ROOT]')
-        self.app.settings.choice(['viewmode'],
-                                 ['single', 'multiple'],
-                                 '"single" directly mount specified generation, '
-                                 '"multiple" mount all generations as separate directories',
-                                 metavar='MODE',
-                                 group=mount_group)
-        self.app.settings.string_list(['fuse-opt'],
-                                      'options to pass directly to Fuse',
-                                      metavar='FUSE', group=mount_group)
+        self.app.add_subcommand('mount', self.mount, arg_synopsis='[ROOT]')
+        self.app.settings.string_list(
+            ['fuse-opt'],
+            'options to pass directly to Fuse',
+            metavar='FUSE',
+            group=mount_group)
 
     def mount(self, args):
         '''Mount a backup repository as a FUSE filesystem.
@@ -574,7 +568,7 @@ class MountPlugin(obnamlib.ObnamPlugin):
         Example: To mount your backup repository:
 
         mkdir my-fuse
-        obnam mount --viewmode multiple --to my-fuse
+        obnam mount --to my-fuse
 
         You can then access the backup using commands such as these:
 
@@ -599,35 +593,44 @@ class MountPlugin(obnamlib.ObnamPlugin):
         self.app.settings.require('repository')
         self.app.settings.require('client-name')
         self.app.settings.require('to')
+
+        # Remember the current working directory. FUSE will change
+        # the current working directory to / when it backgrounds itself,
+        # and this can break a --repository setting value that is a
+        # relative pathname. When we re-open the repository, we'll first
+        # chdir to where we are now, so this doesn't break.
         self.cwd = os.getcwd()
-        self.repo = self.app.open_repository()
-        self.repo.open_client(self.app.settings['client-name'])
 
-        self.mountroot = (['/'] + self.app.settings['root'] + args)[-1]
-        if self.mountroot != '/':
-            self.mountroot = self.mountroot.rstrip('/')
+        self.repo = self.app.get_repository_object()
 
-        logging.debug('FUSE Mounting %s@%s:%s to %s', self.app.settings['client-name'],
-                        self.app.settings['generation'],
-                        self.mountroot, self.app.settings['to'])
+        logging.debug(
+            'FUSE Mounting %s@%s:/ to %s',
+            self.app.settings['client-name'],
+            self.app.settings['generation'],
+            self.app.settings['to'])
+
+        # For speed, we need to remember how large each chunk is.
+        # We store it here in the plugin so the cache survives a
+        # re-open.
+        self.chunk_sizes = {}
 
         try:
             ObnamFuseOptParse.obnam = self
-            fs = ObnamFuse(obnam=self, parser_class=ObnamFuseOptParse)
-            fs.flags = 0
-            fs.multithreaded = 0
-            fs.parse()
-            fs.main()
+            fuse_fs = ObnamFuse(obnam=self, parser_class=ObnamFuseOptParse)
+            fuse_fs.flags = 0
+            fuse_fs.multithreaded = 0
+            fuse_fs.parse()
+            fuse_fs.main()
         except fuse.FuseError, e:
             raise obnamlib.Error(repr(e))
 
-        self.repo.fs.close()
+        self.repo.close()
 
     def reopen(self):
-        try:
-            os.chdir(self.cwd)
-        except OSError:
-            pass
-        self.repo.fs.close()
-        self.repo = self.app.open_repository()
-        self.repo.open_client(self.app.settings['client-name'])
+        self.repo.close()
+
+        # Change to original working directory, to allow relative paths
+        # for --repository to work correctly.
+        os.chdir(self.cwd)
+
+        self.repo = self.app.get_repository_object()

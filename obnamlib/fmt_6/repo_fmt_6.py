@@ -479,7 +479,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         client_name, gen_number = self._unpack_gen_id(generation_id)
         if generation_id not in self.get_client_generation_ids(client_name):
             raise obnamlib.RepositoryGenerationDoesNotExist(
-                client_name=client_name)
+                client_name=client_name, gen_id=generation_id)
 
     def get_allowed_generation_keys(self):
         return [
@@ -552,7 +552,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             if self.make_generation_spec(gen_id) == genspec:
                 return gen_id
         raise obnamlib.RepositoryGenerationDoesNotExist(
-            client_name=client_name)
+            client_name=client_name, gen_id=genspec)
 
     def make_generation_spec(self, gen_id):
         client_name, gen_number = self._unpack_gen_id(gen_id)
@@ -856,7 +856,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
         if generation_id not in self.get_client_generation_ids(client_name):
             raise obnamlib.RepositoryGenerationDoesNotExist(
-                client_name=client_name)
+                client_name=client_name, gen_id=generation_id)
 
         if not self.file_exists(generation_id, filename):
             raise obnamlib.RepositoryFileDoesNotExistInGeneration(

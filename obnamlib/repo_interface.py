@@ -148,7 +148,7 @@ class RepositoryGenerationKeyNotAllowed(obnamlib.ObnamError):
 
 class RepositoryGenerationDoesNotExist(obnamlib.ObnamError):
 
-    msg = 'Cannot find requested generation for client {client_name}'
+    msg = 'Cannot find requested generation {gen_id!r} for client {client_name}'
 
 
 class RepositoryClientHasNoGenerations(obnamlib.ObnamError):

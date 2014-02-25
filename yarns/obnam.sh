@@ -45,7 +45,8 @@ run_obnam()
             . "$DATADIR/$name.env"
         fi
         "$SRCDIR/obnam" --no-default-config --config "$conf" \
-            --quiet --log-level debug --log "$DATADIR/obnam.log" "$@"
+            --quiet --log-level debug --log "$DATADIR/obnam.log" \
+            --trace obnamlib --trace larch "$@"
     )
 }
 
