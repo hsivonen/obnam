@@ -181,7 +181,4 @@ from fmt_6.clientlist import ClientList
 from fmt_6.checksumtree import ChecksumTree
 from fmt_6.clientmetadatatree import ClientMetadataTree
 
-# This is the OLD and DEPRECATED format 6 implementation.
-from repo import Repository, BadFormat
-
 __all__ = locals()
