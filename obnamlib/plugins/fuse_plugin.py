@@ -582,6 +582,13 @@ class MountPlugin(obnamlib.ObnamPlugin):
         self.app.settings.require('client-name')
         self.app.settings.require('to')
 
+        # Remember the current working directory. FUSE will change
+        # the current working directory to / when it backgrounds itself,
+        # and this can break a --repository setting value that is a
+        # relative pathname. When we re-open the repository, we'll first
+        # chdir to where we are now, so this doesn't break.
+        self.cwd = os.getcwd()
+
         self.repo = self.app.get_repository_object()
 
         logging.debug(
@@ -604,4 +611,9 @@ class MountPlugin(obnamlib.ObnamPlugin):
 
     def reopen(self):
         self.repo.close()
+
+        # Change to original working directory, to allow relative paths
+        # for --repository to work correctly.
+        os.chdir(self.cwd)
+
         self.repo = self.app.get_repository_object()
