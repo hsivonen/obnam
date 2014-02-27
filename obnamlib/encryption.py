@@ -23,6 +23,16 @@ import tracing
 import obnamlib
 
 
+class EncryptionError(obnamlib.ObnamError):
+
+    pass
+
+
+class GpgError(EncryptionError):
+
+    msg = 'gpg failed with exit code {returncode}:\n{stderr}'
+
+
 def generate_symmetric_key(numbits, filename='/dev/random'):
     '''Generate a random key of at least numbits for symmetric encryption.'''
 
@@ -93,7 +103,7 @@ def _gpg_pipe(args, data, passphrase):
 
     # Return output data, or deal with errors.
     if p.returncode: # pragma: no cover
-        raise obnamlib.EncryptionError(err)
+        raise GpgError(returncode=p.returncode, stderr=err)
 
     return out
 
@@ -125,7 +135,7 @@ def _gpg(args, stdin='', gpghome=None):
 
     # Return output data, or deal with errors.
     if p.returncode: # pragma: no cover
-        raise obnamlib.EncryptionError(err)
+        raise GpgError(returncode=p.returncode, stderr=err)
 
     return out
 

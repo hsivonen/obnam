@@ -44,6 +44,21 @@ Bug fixes:
   during encryption operations. From version 2.0.22 (or thereabouts),
   `gpg` insists on having a `trustdb.gpg` in the GNUPGHOME it uses.
 
+Internal changes:
+
+* The `obnamlib.Error` exception class has been replaced by the
+  `obnamlib.ObnamError` class, which derives from the new
+  `obnamlib.StructuredError` class. All new exceptions will need
+  to be derived from `obnamlib.Error` in the future. Also, due to the
+  way `StructuredError` works, it is now necessary to create a new
+  exception class for each kind of error. This gives us unique the
+  error codes mentioned above.
+
+* The old `obnamlib.Repository` class is gone, and replaced with the
+  `obnamlib.RepositoryInterface` class, which gets implemented for
+  each repository format (there is only one, for now, but there will
+  be more).
+
 Version 1.6.1, released 2013-11-30
 ----------------------------------
 

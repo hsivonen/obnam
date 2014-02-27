@@ -46,17 +46,6 @@ class ObnamError(StructuredError):
     pass
 
 
-# FIXME: The obnamlib.Error class is a remnant of an old way of doing
-# things, and will be retired.
-
-class Error(cliapp.AppException):
-    pass
-
-
-class EncryptionError(Error):
-    pass
-
-
 DEFAULT_NODE_SIZE = 256 * 1024 # benchmarked on 2011-09-01
 DEFAULT_CHUNK_SIZE = 1024 * 1024 # benchmarked on 2011-09-01
 DEFAULT_UPLOAD_QUEUE_SIZE = 128
@@ -95,7 +84,8 @@ from encryption import (generate_symmetric_key,
                         SecretKeyring,
                         encrypt_with_keyring,
                         decrypt_with_secret_keys,
-                        SymmetricKeyCache)
+                        SymmetricKeyCache,
+                        EncryptionError)
 
 from hooks import (
     Hook, MissingFilterError, NoFilterTagError, FilterHook, HookManager)

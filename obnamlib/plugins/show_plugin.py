@@ -131,7 +131,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         '''Check if the most recent generation is recent enough.'''
         try:	
             self.open_repository()
-        except (obnamlib.Error, obnamlib.ObnamError), e:
+        except obnamlib.ObnamError as e:
             self.app.output.write('CRITICAL: %s\n' % e)
             sys.exit(2)
 

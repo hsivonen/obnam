@@ -39,6 +39,16 @@ except ImportError:
     fuse = Bunch(Fuse = object)
 
 
+class FileNotFoundError(obnamlib.ObnamError):
+
+    msg = 'FUSE: File not found: {filename}'
+
+
+class FuseModuleNotFoundError(obnamlib.ObnamError):
+
+    msg = 'Failed to load module "fuse", try installing python-fuse'
+
+
 class ObnamFuseOptParse(object):
 
     '''Option parsing class for FUSE.'''
@@ -237,7 +247,7 @@ class ObnamFuse(fuse.Fuse):
                 genstat.st_ctime = genstat.st_mtime = end
                 self.rootlist[path] = genstat
                 used_generations.append(gen)
-            except obnamlib.Error:
+            except obnamlib.ObnamError:
                 pass
 
         assert used_generations
@@ -347,10 +357,10 @@ class ObnamFuse(fuse.Fuse):
                 elif path in self.rootlist:
                     return self.rootlist[path]
                 else:
-                    raise obnamlib.Error('ENOENT')
+                    raise FileNotFoundError(filename=path)
             else:
                 return self.get_stat_in_generation(path)
-        except obnamlib.Error:
+        except obnamlib.ObnamError:
             raise IOError(errno.ENOENT, 'No such file or directory')
         except:
             logging.error('Unexpected exception', exc_info=True)
@@ -368,7 +378,7 @@ class ObnamFuse(fuse.Fuse):
                     for x in self.obnam.repo.get_file_children(
                         *self.get_gen_path(path))]
             return [fuse.Direntry(name) for name in ['.', '..'] + listdir]
-        except obnamlib.Error:
+        except obnamlib.ObnamError:
             raise IOError(errno.EINVAL, 'Invalid argument')
         except:
             logging.error('Unexpected exception', exc_info=True)
@@ -384,7 +394,7 @@ class ObnamFuse(fuse.Fuse):
                 return metadata.target
             else:
                 raise IOError(errno.EINVAL, 'Invalid argument')
-        except obnamlib.Error:
+        except obnamlib.ObnamError:
             raise IOError(errno.ENOENT, 'No such file or directory')
         except:
             logging.error('Unexpected exception', exc_info=True)
@@ -457,7 +467,7 @@ class ObnamFuse(fuse.Fuse):
                 pos = lengths_size + sum(lengths_list[:idx])
                 value = value_blob[pos:pos + lengths_list[idx]]
                 return value
-        except obnamlib.Error:
+        except obnamlib.ObnamError:
             raise IOError(errno.ENOENT, 'No such file or directory')
         except:
             logging.error('Unexpected exception', exc_info=True)
@@ -488,7 +498,7 @@ class ObnamFuse(fuse.Fuse):
                 return name_blob_size
             name_blob = blob[sizesize : sizesize + name_blob_size]
             return name_blob.split('\0')[:-1]
-        except obnamlib.Error:
+        except obnamlib.ObnamError:
             raise IOError(errno.ENOENT, 'No such file or directory')
         except:
             logging.error('Unexpected exception', exc_info=True)
@@ -588,8 +598,7 @@ class MountPlugin(obnamlib.ObnamPlugin):
         '''
 
         if not hasattr(fuse, 'fuse_python_api'):
-            raise obnamlib.Error('Failed to load module "fuse", '
-                                 'try installing python-fuse')
+            raise FuseModuleNotFoundError()
         self.app.settings.require('repository')
         self.app.settings.require('client-name')
         self.app.settings.require('to')
@@ -614,15 +623,12 @@ class MountPlugin(obnamlib.ObnamPlugin):
         # re-open.
         self.chunk_sizes = {}
 
-        try:
-            ObnamFuseOptParse.obnam = self
-            fuse_fs = ObnamFuse(obnam=self, parser_class=ObnamFuseOptParse)
-            fuse_fs.flags = 0
-            fuse_fs.multithreaded = 0
-            fuse_fs.parse()
-            fuse_fs.main()
-        except fuse.FuseError, e:
-            raise obnamlib.Error(repr(e))
+        ObnamFuseOptParse.obnam = self
+        fuse_fs = ObnamFuse(obnam=self, parser_class=ObnamFuseOptParse)
+        fuse_fs.flags = 0
+        fuse_fs.multithreaded = 0
+        fuse_fs.parse()
+        fuse_fs.main()
 
         self.repo.close()
 
