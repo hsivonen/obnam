@@ -28,6 +28,16 @@ import ttystatus
 import obnamlib
 
 
+class ObnamIOError(obnamlib.ObnamError):
+
+    msg = 'I/O error: {filename}: {errno}: {strerror}'
+
+
+class ObnamSystemError(obnamlib.ObnamError):
+
+    msg = 'System error: {filename}: {errno}: {strerror}'
+
+
 class App(cliapp.Application):
 
     '''Main program for backup program.'''
@@ -174,18 +184,25 @@ class App(cliapp.Application):
 
     def process_args(self, args):
         try:
-            if self.settings['quiet']:
-                self.ts.disable()
-            for pattern in self.settings['trace']:
-                tracing.trace_add_pattern(pattern)
-            self.hooks.call('config-loaded')
-            cliapp.Application.process_args(self, args)
-            self.hooks.call('shutdown')
-        except larch.Error, e:
+            try:
+                if self.settings['quiet']:
+                    self.ts.disable()
+                for pattern in self.settings['trace']:
+                    tracing.trace_add_pattern(pattern)
+                self.hooks.call('config-loaded')
+                cliapp.Application.process_args(self, args)
+                self.hooks.call('shutdown')
+            except IOError as e:
+                raise ObnamIOError(
+                    errno=e.errno, strerror=e.strerror, filename=e.filename)
+            except OSError as e:
+                raise ObnamSystemError(
+                    errno=e.errno, strerror=e.strerror, filename=e.filename)
+        except larch.Error as e:
             logging.critical(str(e))
             sys.stderr.write('ERROR: %s\n' % str(e))
             sys.exit(1)
-        except obnamlib.StructuredError, e:
+        except obnamlib.StructuredError as e:
             logging.critical(str(e))
             sys.stderr.write('ERROR: %s\n' % str(e))
             sys.exit(1)
