@@ -112,8 +112,9 @@ class ObnamBenchmark(object):
         print '  obnam mount && cp restore'
         self.restore_with_obnam_mount()
 
-        print '  cleanup'
-        shutil.rmtree(self.tempdir)
+        if self.settings['cleanup']:
+            print '  cleanup'
+            shutil.rmtree(self.tempdir)
 
     def create_live_data(self):
         # Subclasses MUST override this.
@@ -207,14 +208,16 @@ class EmptyFilesBenchmark(ObnamBenchmark):
 
 class SingleLargeFileBenchmark(ObnamBenchmark):
 
-    file_size = 2**3
-
     @classmethod
     def add_settings(self, settings):
         settings.bytesize(
             ['single-large-file-size'],
             'size of file to create for %s' % self.__class__.__name__,
             default='1TB')
+
+    @property
+    def file_size(self):
+        return self.settings['single-large-file-size']
 
     def create_live_data(self):
         filename = os.path.join(self.live_data, 'file.dat')
@@ -237,6 +240,11 @@ class ObnamBenchmarkRunner(cliapp.Application):
             metavar='DIR',
             default='.')
 
+        self.settings.boolean(
+            ['cleanup'],
+            'clean up after each benchmark?',
+            default=True)
+
         for benchmark_class in self.benchmark_classes:
             benchmark_class.add_settings(self.settings)
 
@@ -250,4 +258,3 @@ class ObnamBenchmarkRunner(cliapp.Application):
 
 if __name__ == '__main__':
     ObnamBenchmarkRunner().run()
-
