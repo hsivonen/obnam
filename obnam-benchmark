@@ -65,9 +65,10 @@ class ObnamBenchmark(object):
 
     def run(self):
         self.tempdir = tempfile.mkdtemp()
-        self.live_data = self.create_live_data()
+        self.live_data = self.create_live_data_dir()
         self.repo = self.create_repo()
         self.results = self.create_results_dir()
+        self.create_live_data()
         self.backup('initial-backup')
         self.backup('no-op-backup')
         self.restore_with_obnam_restore()
@@ -75,7 +76,13 @@ class ObnamBenchmark(object):
         shutil.rmtree(self.tempdir)
 
     def create_live_data(self):
+        # Subclasses MUST override this.
         raise NotImplementedError()
+
+    def create_live_data_dir(self):
+        live_data = os.path.join(self.tempdir, 'live-data')
+        os.mkdir(live_data)
+        return live_data
 
     def create_repo(self):
         repo = os.path.join(self.tempdir, 'repo')
@@ -148,17 +155,14 @@ class EmptyFilesBenchmark(ObnamBenchmark):
         return self.settings['empty-files-count']
 
     def create_live_data(self):
-        live_data = os.path.join(self.tempdir, 'live-data')
-        os.mkdir(live_data)
         for i in range(self.num_files):
             subdir = os.path.join(
-                live_data, 'dir-%d' % (i / self.files_per_dir))
+                self.live_data, 'dir-%d' % (i / self.files_per_dir))
             if (i % self.files_per_dir) == 0:
                 os.mkdir(subdir)
             filename = os.path.join(subdir, 'file-%d' % i)
             with open(filename, 'w'):
                 pass
-        return live_data
 
 
 class SingleLargeFileBenchmark(ObnamBenchmark):
@@ -173,15 +177,10 @@ class SingleLargeFileBenchmark(ObnamBenchmark):
             default='1TB')
 
     def create_live_data(self):
-        live_data = os.path.join(self.tempdir, 'live-data')
-        os.mkdir(live_data)
-
-        filename = os.path.join(live_data, 'file.dat')
+        filename = os.path.join(self.live_data, 'file.dat')
         with open(filename, 'w') as f:
             for i in range(self.file_size):
                 f.write('x')
-
-        return live_data
 
 
 class ObnamBenchmarkRunner(cliapp.Application):
@@ -202,7 +201,6 @@ class ObnamBenchmarkRunner(cliapp.Application):
             benchmark_class.add_settings(self.settings)
 
     def process_args(self, args):
-
         for benchmark_class in self.benchmark_classes:
             benchmark = benchmark_class(self.settings)
             benchmark.run()
