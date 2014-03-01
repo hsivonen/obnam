@@ -26,6 +26,7 @@ import time
 
 import cliapp
 import Crypto.Cipher.ARC4
+import ttystatus
 
 
 class BinaryJunkGenerator(object):
@@ -108,10 +109,10 @@ class ObnamBenchmark(object):
         print '  no-op second backup'
         self.backup('no-op-backup')
 
-        print '  obnam restore'
-        self.restore_with_obnam_restore()
+        print '  obnam verify'
+        self.restore_with_obnam_verify()
 
-        print '  obnam mount && cp restore'
+        print '  obnam mount && tar'
         self.restore_with_obnam_mount()
 
         if self.settings['cleanup']:
@@ -136,33 +137,24 @@ class ObnamBenchmark(object):
         with self.new_measurer(label, self.result_filename(label, '.json')):
             self.run_obnam(['backup', '-r', self.repo, self.live_data], label)
 
-    def restore_with_obnam_restore(self):
-        restored = os.path.join(self.tempdir, 'restored')
-        os.mkdir(restored)
-        label = 'obnam-restore'
+    def restore_with_obnam_verify(self):
+        label = 'obnam-verify'
         with self.new_measurer(label, self.result_filename(label, '.json')):
             self.run_obnam(
-                ['restore', '-r', self.repo, '--to', restored],
+                ['verify', '-r', self.repo],
                 label)
-        shutil.rmtree(restored)
 
     def restore_with_obnam_mount(self):
         mount = os.path.join(self.tempdir, 'mount')
         os.mkdir(mount)
-
-        restored = os.path.join(self.tempdir, 'restored')
-        os.mkdir(restored)
 
         label = 'obnam-mount'
         self.run_obnam(
             ['mount', '-r', self.repo, '--to', mount],
             label)
         with self.new_measurer(label, self.result_filename(label, '.json')):
-            cliapp.runcmd(['cp', '-a', mount + '/.', restored + '/.'])
+            cliapp.runcmd(['tar', '-cf', '/dev/null', mount + '/.'])
         cliapp.runcmd(['fusermount', '-u', mount])
-
-        shutil.rmtree(restored)
-        os.rmdir(mount)
 
     def run_obnam(self, args, label):
         base_command = [
@@ -221,8 +213,21 @@ class SingleLargeFileBenchmark(ObnamBenchmark):
     def create_live_data(self):
         filename = os.path.join(self.live_data, 'file.dat')
         with open(filename, 'w') as f:
-            for i in range(self.file_size):
-                f.write(self.junk_generator.get(1))
+            n = 0
+            max_chunk_size = 2**10
+            ts = ttystatus.TerminalStatus()
+            ts['written'] = 0
+            ts['total'] = self.file_size
+            ts.format(
+                'writing live data: %ByteSize(written) of %ByteSize(total)')
+            while n < self.file_size:
+                num_bytes = min(max_chunk_size, self.file_size - n)
+                data = self.junk_generator.get(num_bytes)
+                f.write(data)
+                n += len(data)
+                ts['written'] = n
+            ts.clear()
+            ts.finish()
 
 
 class ObnamBenchmarkRunner(cliapp.Application):
