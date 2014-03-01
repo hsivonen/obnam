@@ -221,7 +221,8 @@ class SingleLargeFileBenchmark(ObnamBenchmark):
             ts['total'] = self.file_size
             ts.format(
                 '%ElapsedTime() '
-                'writing live data: %ByteSize(written) of %ByteSize(total)')
+                'writing live data: %ByteSize(written) of %ByteSize(total) '
+                '(%PercentDone(written,total))')
             while n < self.file_size:
                 num_bytes = min(max_chunk_size, self.file_size - n)
                 data = self.junk_generator.get(num_bytes)
