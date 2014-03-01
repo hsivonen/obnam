@@ -154,6 +154,7 @@ class ObnamBenchmark(object):
             label)
         with self.new_measurer(label, self.result_filename(label, '.json')):
             cliapp.runcmd(['tar', '-cf', '/dev/null', mount + '/.'])
+        time.sleep(1)
         cliapp.runcmd(['fusermount', '-u', mount])
 
     def run_obnam(self, args, label):
@@ -219,6 +220,7 @@ class SingleLargeFileBenchmark(ObnamBenchmark):
             ts['written'] = 0
             ts['total'] = self.file_size
             ts.format(
+                '%ElapsedTime() '
                 'writing live data: %ByteSize(written) of %ByteSize(total)')
             while n < self.file_size:
                 num_bytes = min(max_chunk_size, self.file_size - n)
