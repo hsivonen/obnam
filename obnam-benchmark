@@ -45,13 +45,14 @@ class Measurer(object):
         return False
 
 
-class EmptyFilesBenchmark(object):
-
-    num_files = 10
-    files_per_dir = 3
+class ObnamBenchmark(object):
 
     def __init__(self, settings):
         self.settings = settings
+
+    @classmethod
+    def add_settings(self, settings):
+        pass
 
     @property
     def benchmark_name(self):
@@ -74,17 +75,7 @@ class EmptyFilesBenchmark(object):
         shutil.rmtree(self.tempdir)
 
     def create_live_data(self):
-        live_data = os.path.join(self.tempdir, 'live-data')
-        os.mkdir(live_data)
-        for i in range(self.num_files):
-            subdir = os.path.join(
-                live_data, 'dir-%d' % (i / self.files_per_dir))
-            if (i % self.files_per_dir) == 0:
-                os.mkdir(subdir)
-            filename = os.path.join(subdir, 'file-%d' % i)
-            with open(filename, 'w'):
-                pass
-        return live_data
+        raise NotImplementedError()
 
     def create_repo(self):
         repo = os.path.join(self.tempdir, 'repo')
@@ -141,7 +132,64 @@ class EmptyFilesBenchmark(object):
         cliapp.runcmd(base_command + args, env=env)
 
 
+class EmptyFilesBenchmark(ObnamBenchmark):
+
+    files_per_dir = 1000
+
+    @classmethod
+    def add_settings(self, settings):
+        settings.integer(
+            ['empty-files-count'],
+            'number of empty files for %s' % self.__class__.__name__,
+            default=10**6)
+
+    @property
+    def num_files(self):
+        return self.settings['empty-files-count']
+
+    def create_live_data(self):
+        live_data = os.path.join(self.tempdir, 'live-data')
+        os.mkdir(live_data)
+        for i in range(self.num_files):
+            subdir = os.path.join(
+                live_data, 'dir-%d' % (i / self.files_per_dir))
+            if (i % self.files_per_dir) == 0:
+                os.mkdir(subdir)
+            filename = os.path.join(subdir, 'file-%d' % i)
+            with open(filename, 'w'):
+                pass
+        return live_data
+
+
+class SingleLargeFileBenchmark(ObnamBenchmark):
+
+    file_size = 2**3
+
+    @classmethod
+    def add_settings(self, settings):
+        settings.bytesize(
+            ['single-large-file-size'],
+            'size of file to create for %s' % self.__class__.__name__,
+            default='1TB')
+
+    def create_live_data(self):
+        live_data = os.path.join(self.tempdir, 'live-data')
+        os.mkdir(live_data)
+
+        filename = os.path.join(live_data, 'file.dat')
+        with open(filename, 'w') as f:
+            for i in range(self.file_size):
+                f.write('x')
+
+        return live_data
+
+
 class ObnamBenchmarkRunner(cliapp.Application):
+
+    benchmark_classes = [
+        EmptyFilesBenchmark,
+        SingleLargeFileBenchmark,
+        ]
 
     def add_settings(self):
         self.settings.string(
@@ -150,9 +198,14 @@ class ObnamBenchmarkRunner(cliapp.Application):
             metavar='DIR',
             default='.')
 
+        for benchmark_class in self.benchmark_classes:
+            benchmark_class.add_settings(self.settings)
+
     def process_args(self, args):
-        benchmark = EmptyFilesBenchmark(self.settings)
-        benchmark.run()
+
+        for benchmark_class in self.benchmark_classes:
+            benchmark = benchmark_class(self.settings)
+            benchmark.run()
 
 
 if __name__ == '__main__':
