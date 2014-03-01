@@ -63,14 +63,19 @@ class Measurer(object):
             'label': label,
             }
 
+    def stop_timer(self):
+        self.end = time.time()
+
     def __enter__(self):
         self.start = time.time()
+        self.end = None
         return self.measurements
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type is None:
-            end = time.time()
-            self.measurements['duration'] = end - self.start
+            if self.end is None:
+                self.end = time.time()
+            self.measurements['duration'] = self.end - self.start
             with open(self.filename, 'w') as f:
                 json.dump(self.measurements, f, indent=4)
         return False
