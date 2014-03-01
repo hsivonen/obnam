@@ -26,9 +26,16 @@ I've decided on the following data sets:
   each. Obnam has (at least with repository format 6) a high overhead
   per file, regardless of the contents of the file, and this is a
   pessimal situation for that.
+
+  The interesting numbers here are: number of files backed up per
+  second, and size of backup repository.
+
 * A single directory with a single file, 2^12 bytes (1 TiB) long.
   little repetition in the data. This benchmarks the opposite end of
   the spectrum of number of files vs size of data.
+  
+  The interesting numbers here are number of bytes of actual file data
+  backed up per second and size of backup repository.
 
 Later, I may add more data sets. An intriguing idea would be to
 generate data from [Summain] manifests, where everything except the
