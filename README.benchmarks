@@ -66,6 +66,7 @@ A benchmark run will produce the following:
 * A Python profiling file for each operation for each dataset.
   (Two datasets times four operations gives eight profiles.)
 
-I will run the benchmark for each release of Obnam and Larch, starting
-with Obnam 1.6.1 and Larch 1.20131130. I will store the resulting data
-sets in a separate git repository for reference.
+I will run the benchmark for each release of Obnam, starting with
+Obnam 1.6.1. I will not care about Larch versions at this time: I will
+use the installed version. I will store the resulting data sets in a
+separate git repository for reference.
