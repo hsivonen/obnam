@@ -1,0 +1,71 @@
+README for Obnam benchmarks
+===========================
+
+I've tried a number of approaches to benchmarks with Obnam over the
+years, but no approach has prevailed. This README describes my current
+approach in the hope that it will evolve into something useful.
+
+Ideally I would optimise Obnam for real-world use, but for now, I will
+be content with the simple synthetic benchmarks described here.
+
+Lars Wirzenius
+
+Overview
+--------
+
+I do not want a large number of different benchmarks, at least for
+now. I want a small set that I can and will run systematically, at
+least for each release. Too much data can be just as bad as too little
+data: if it takes too much effort to analyse the data, then that eats
+up from development time. That said, hard numbers are better than
+guesses.
+
+I've decided on the following data sets:
+
+* 10^6 empty files, spread over a 1000 directories with 1000 files
+  each. Obnam has (at least with repository format 6) a high overhead
+  per file, regardless of the contents of the file, and this is a
+  pessimal situation for that.
+* A single directory with a single file, 2^12 bytes (1 TiB) long.
+  little repetition in the data. This benchmarks the opposite end of
+  the spectrum of number of files vs size of data.
+
+Later, I may add more data sets. An intriguing idea would be to
+generate data from [Summain] manifests, where everything except the
+actual file data is duplicated from anonymised manifests captured from
+real systems.
+
+[Summain]: http://liw.fi/summain/
+
+For each data set, I will run the following operations:
+
+* An initial backup.
+* A no-op second generation backup.
+* A restore of the second generation, with `obnam restore`.
+* A restore of the second generation, with `obnam mount`.
+
+I will measure the following about each operation:
+
+* Total wall-clock time.
+* Maximum VmRSS memory, as logged by Obnam itself.
+
+I will additionally capture Python profiler output of each operation,
+to allow easier analysis of where time is going.
+
+I will run the benchmarks without compression or encryption, at least
+for now, and in general use the default settings built into Obnam for
+everything, unless there's a need to tweak them to make the benchmark
+work at all.
+
+Benchmark results
+-----------------
+
+A benchmark run will produce the following:
+
+* A JSON file with the measurements given above.
+* A Python profiling file for each operation for each dataset.
+  (Two datasets times four operations gives eight profiles.)
+
+I will run the benchmark for each release of Obnam and Larch, starting
+with Obnam 1.6.1 and Larch 1.20131130. I will store the resulting data
+sets in a separate git repository for reference.
