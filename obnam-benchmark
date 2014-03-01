@@ -18,6 +18,7 @@
 
 import json
 import os
+import platform
 import shutil
 import sys
 import tempfile
@@ -69,7 +70,7 @@ class Measurer(object):
             end = time.time()
             self.measurements['duration'] = end - self.start
             with open(self.filename, 'w') as f:
-                json.dump(self.measurements, f)
+                json.dump(self.measurements, f, indent=4)
         return False
 
 
@@ -249,6 +250,7 @@ class ObnamBenchmarkRunner(cliapp.Application):
     def process_args(self, args):
         results = self.create_results_dir()
         self.store_settings_in_results(results)
+        self.store_system_info_in_results(results)
 
         junk_generator = BinaryJunkGenerator()
         for benchmark_class in self.benchmark_classes:
@@ -268,6 +270,17 @@ class ObnamBenchmarkRunner(cliapp.Application):
         filename = os.path.join(results, 'obnam-benchmark.conf')
         with open(filename, 'w') as f:
             cp.write(f)
+
+    def store_system_info_in_results(self, results):
+        info = {
+            'hostname': platform.node(),
+            'machine': platform.machine(),
+            'architecture': platform.architecture(),
+            'uname': platform.uname(),
+            }
+
+        with open(os.path.join(results, 'system.json'), 'w') as f:
+            json.dump(info, f, indent=4)
 
 
 if __name__ == '__main__':
