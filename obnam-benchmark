@@ -74,8 +74,9 @@ class Measurer(object):
 
 class ObnamBenchmark(object):
 
-    def __init__(self, settings, junk_generator):
+    def __init__(self, settings, results, junk_generator):
         self.settings = settings
+        self.results = results
         self.junk_generator = junk_generator
 
     @classmethod
@@ -95,7 +96,6 @@ class ObnamBenchmark(object):
         self.tempdir = tempfile.mkdtemp()
         self.live_data = self.create_live_data_dir()
         self.repo = self.create_repo()
-        self.results = self.create_results_dir()
 
         print '  create live data'
         self.create_live_data()
@@ -129,12 +129,6 @@ class ObnamBenchmark(object):
         repo = os.path.join(self.tempdir, 'repo')
         os.mkdir(repo)
         return repo
-
-    def create_results_dir(self):
-        results = self.settings['results-dir']
-        if not os.path.exists(results):
-            os.mkdir(results)
-        return results
 
     def backup(self, label):
         with Measurer(label, self.result_filename(label, '.json')):
@@ -249,11 +243,20 @@ class ObnamBenchmarkRunner(cliapp.Application):
             benchmark_class.add_settings(self.settings)
 
     def process_args(self, args):
+        results = self.create_results_dir()
+
         junk_generator = BinaryJunkGenerator()
         for benchmark_class in self.benchmark_classes:
             print 'Benchmark %s' % benchmark_class.__name__
-            benchmark = benchmark_class(self.settings, junk_generator)
+            benchmark = benchmark_class(
+                self.settings, results, junk_generator)
             benchmark.run()
+
+    def create_results_dir(self):
+        results = self.settings['results-dir']
+        if not os.path.exists(results):
+            os.mkdir(results)
+        return results
 
 
 if __name__ == '__main__':
