@@ -53,9 +53,10 @@ class BinaryJunkGenerator(object):
 
 class Measurer(object):
 
-    def __init__(self, label, filename):
+    def __init__(self, benchmark_name, label, filename):
         self.filename = filename
         self.measurements = {
+            'benchmark': benchmark_name,
             'label': label,
             }
 
@@ -131,14 +132,14 @@ class ObnamBenchmark(object):
         return repo
 
     def backup(self, label):
-        with Measurer(label, self.result_filename(label, '.json')):
+        with self.new_measurer(label, self.result_filename(label, '.json')):
             self.run_obnam(['backup', '-r', self.repo, self.live_data], label)
 
     def restore_with_obnam_restore(self):
         restored = os.path.join(self.tempdir, 'restored')
         os.mkdir(restored)
         label = 'obnam-restore'
-        with Measurer(label, self.result_filename(label, '.json')):
+        with self.new_measurer(label, self.result_filename(label, '.json')):
             self.run_obnam(
                 ['restore', '-r', self.repo, '--to', restored],
                 label)
@@ -155,7 +156,7 @@ class ObnamBenchmark(object):
         self.run_obnam(
             ['mount', '-r', self.repo, '--to', mount],
             label)
-        with Measurer(label, self.result_filename(label, '.json')):
+        with self.new_measurer(label, self.result_filename(label, '.json')):
             cliapp.runcmd(['cp', '-a', mount + '/.', restored + '/.'])
         cliapp.runcmd(['fusermount', '-u', mount])
 
@@ -172,6 +173,9 @@ class ObnamBenchmark(object):
         env = dict(os.environ)
         env['OBNAM_PROFILE'] = self.result_filename(label, '.prof')
         cliapp.runcmd(base_command + args, env=env)
+
+    def new_measurer(self, label, suffix):
+        return Measurer(self.benchmark_name, label, suffix)
 
 
 class EmptyFilesBenchmark(ObnamBenchmark):
