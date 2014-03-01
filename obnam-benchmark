@@ -26,8 +26,8 @@ import time
 
 class Measurer(object):
 
-    def __init__(self, results, label):
-        self.results = results
+    def __init__(self, label, filename):
+        self.filename = filename
         self.measurements = {
             'label': label,
             }
@@ -40,9 +40,7 @@ class Measurer(object):
         if exc_type is None:
             end = time.time()
             self.measurements['duration'] = end - self.start
-            filename = os.path.join(
-                self.results, '%s.json' % self.measurements['label'])
-            with open(filename, 'w') as f:
+            with open(self.filename, 'w') as f:
                 json.dump(self.measurements, f)
         return False
 
@@ -54,6 +52,15 @@ class EmptyFilesBenchmark(object):
 
     def __init__(self, settings):
         self.settings = settings
+
+    @property
+    def benchmark_name(self):
+        return self.__class__.__name__
+
+    def result_filename(self, label, suffix):
+        return os.path.join(
+            self.results,
+            '%s-%s%s' % (self.benchmark_name, label, suffix))
 
     def run(self):
         self.tempdir = tempfile.mkdtemp()
@@ -91,16 +98,17 @@ class EmptyFilesBenchmark(object):
         return results
 
     def backup(self, label):
-        with Measurer(self.results, label):
+        with Measurer(label, self.result_filename(label, '.json')):
             self.run_obnam(['backup', '-r', self.repo, self.live_data], label)
 
     def restore_with_obnam_restore(self):
         restored = os.path.join(self.tempdir, 'restored')
         os.mkdir(restored)
-        with Measurer(self.results, 'obnam-restore'):
+        label = 'obnam-restore'
+        with Measurer(label, self.result_filename(label, '.json')):
             self.run_obnam(
                 ['restore', '-r', self.repo, '--to', restored],
-                'obnam-restore')
+                label)
         shutil.rmtree(restored)
 
     def restore_with_obnam_mount(self):
@@ -110,10 +118,11 @@ class EmptyFilesBenchmark(object):
         restored = os.path.join(self.tempdir, 'restored')
         os.mkdir(restored)
 
+        label = 'obnam-mount'
         self.run_obnam(
             ['mount', '-r', self.repo, '--to', mount],
-            'obnam-mount')
-        with Measurer(self.results, 'obnam-mount'):
+            label)
+        with Measurer(label, self.result_filename(label, '.json')):
             cliapp.runcmd(['cp', '-a', mount + '/.', restored + '/.'])
         cliapp.runcmd(['fusermount', '-u', mount])
 
@@ -124,12 +133,11 @@ class EmptyFilesBenchmark(object):
         base_command = [
             './obnam',
             '--no-default-config',
-            '--log', os.path.join(self.results, '%s.log' % label),
+            '--log', self.result_filename(label, '.log'),
             '--log-level', 'debug',
             ]
         env = dict(os.environ)
-        env['OBNAM_PROFILE'] = os.path.join(
-            self.results, '%s.prof' % label)
+        env['OBNAM_PROFILE'] = self.result_filename(label, '.prof')
         cliapp.runcmd(base_command + args, env=env)
 
 
