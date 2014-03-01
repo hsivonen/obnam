@@ -63,13 +63,16 @@ class Measurer(object):
             'label': label,
             }
 
+    def add_info(self, key, value):
+        self.measurements[key] = value
+
     def stop_timer(self):
         self.end = time.time()
 
     def __enter__(self):
         self.start = time.time()
         self.end = None
-        return self.measurements
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type is None:
@@ -143,8 +146,10 @@ class ObnamBenchmark(object):
         filename = self.result_filename(label, '.json')
         with self.new_measurer(label, filename) as m:
             self.run_obnam(['backup', '-r', self.repo, self.live_data], label)
-            m['repo-size'] = self.sum_of_file_sizes(self.repo)
-            m['live-data-size'] = self.sum_of_file_sizes(self.live_data)
+            m.stop_timer()
+            m.add_info('repo-size', self.sum_of_file_sizes(self.repo))
+            m.add_info(
+                'live-data-size', self.sum_of_file_sizes(self.live_data))
 
     def sum_of_file_sizes(self, root_dir):
         total = 0
@@ -159,7 +164,7 @@ class ObnamBenchmark(object):
     def restore_with_obnam_verify(self):
         label = 'obnam-verify'
         filename = self.result_filename(label, '.json')
-        with self.new_measurer(label, filename) as m:
+        with self.new_measurer(label, filename):
             self.run_obnam(
                 ['verify', '-r', self.repo],
                 label)
