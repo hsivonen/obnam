@@ -180,7 +180,10 @@ class ObnamBenchmark(object):
         with self.new_measurer(label, self.result_filename(label, '.json')):
             cliapp.runcmd(['tar', '-cf', '/dev/null', mount + '/.'])
         time.sleep(1)
-        cliapp.runcmd(['fusermount', '-u', mount])
+        try:
+            cliapp.runcmd(['fusermount', '-u', mount])
+        except cliapp.AppException as e:
+            print 'ERROR from fusermount: %s' % str(e)
 
     def run_obnam(self, args, label):
         base_command = [
