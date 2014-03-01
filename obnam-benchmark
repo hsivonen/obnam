@@ -19,10 +19,36 @@
 import json
 import os
 import shutil
+import sys
 import tempfile
 import time
 
 import cliapp
+import Crypto.Cipher.ARC4
+
+
+class BinaryJunkGenerator(object):
+
+    key = b'obnam-benchmark'
+    data = b'fake live data' * 1024
+
+    def __init__(self):
+        self.cipher = Crypto.Cipher.ARC4.new(self.key)
+        self.buffer = ''
+
+    def get(self, num_bytes):
+        n = 0
+        result = []
+        while n < num_bytes:
+            if not self.buffer:
+                self.buffer = self.cipher.encrypt(self.data)
+
+            part = self.buffer[:num_bytes - n]
+            result.append(part)
+            n += len(part)
+            self.buffer = self.buffer[len(part):]
+
+        return ''.join(result)
 
 
 class Measurer(object):
@@ -48,8 +74,9 @@ class Measurer(object):
 
 class ObnamBenchmark(object):
 
-    def __init__(self, settings):
+    def __init__(self, settings, junk_generator):
         self.settings = settings
+        self.junk_generator = junk_generator
 
     @classmethod
     def add_settings(self, settings):
@@ -193,7 +220,7 @@ class SingleLargeFileBenchmark(ObnamBenchmark):
         filename = os.path.join(self.live_data, 'file.dat')
         with open(filename, 'w') as f:
             for i in range(self.file_size):
-                f.write('x')
+                f.write(self.junk_generator.get(1))
 
 
 class ObnamBenchmarkRunner(cliapp.Application):
@@ -214,9 +241,10 @@ class ObnamBenchmarkRunner(cliapp.Application):
             benchmark_class.add_settings(self.settings)
 
     def process_args(self, args):
+        junk_generator = BinaryJunkGenerator()
         for benchmark_class in self.benchmark_classes:
             print 'Benchmark %s' % benchmark_class.__name__
-            benchmark = benchmark_class(self.settings)
+            benchmark = benchmark_class(self.settings, junk_generator)
             benchmark.run()
 
 
