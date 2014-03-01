@@ -244,6 +244,7 @@ class ObnamBenchmarkRunner(cliapp.Application):
 
     def process_args(self, args):
         results = self.create_results_dir()
+        self.store_settings_in_results(results)
 
         junk_generator = BinaryJunkGenerator()
         for benchmark_class in self.benchmark_classes:
@@ -257,6 +258,12 @@ class ObnamBenchmarkRunner(cliapp.Application):
         if not os.path.exists(results):
             os.mkdir(results)
         return results
+
+    def store_settings_in_results(self, results):
+        cp = self.settings.as_cp()
+        filename = os.path.join(results, 'obnam-benchmark.conf')
+        with open(filename, 'w') as f:
+            cp.write(f)
 
 
 if __name__ == '__main__':
