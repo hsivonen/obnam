@@ -69,11 +69,23 @@ class ObnamBenchmark(object):
         self.live_data = self.create_live_data_dir()
         self.repo = self.create_repo()
         self.results = self.create_results_dir()
+
+        print '  create live data'
         self.create_live_data()
+
+        print '  initial backup'
         self.backup('initial-backup')
+
+        print '  no-op second backup'
         self.backup('no-op-backup')
+
+        print '  obnam restore'
         self.restore_with_obnam_restore()
+
+        print '  obnam mount && cp restore'
         self.restore_with_obnam_mount()
+
+        print '  cleanup'
         shutil.rmtree(self.tempdir)
 
     def create_live_data(self):
@@ -203,6 +215,7 @@ class ObnamBenchmarkRunner(cliapp.Application):
 
     def process_args(self, args):
         for benchmark_class in self.benchmark_classes:
+            print 'Benchmark %s' % benchmark_class.__name__
             benchmark = benchmark_class(self.settings)
             benchmark.run()
 
