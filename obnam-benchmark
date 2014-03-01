@@ -16,12 +16,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import cliapp
 import json
 import os
 import shutil
 import tempfile
 import time
+
+import cliapp
 
 
 class Measurer(object):
