@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright 2010, 2011  Lars Wirzenius
+# Copyright 2014  Lars Wirzenius
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,203 +16,364 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import cliapp
-import ConfigParser
-import glob
-import logging
+import json
 import os
+import platform
 import shutil
-import socket
-import subprocess
+import stat
+import sys
 import tempfile
+import time
+
+import cliapp
+import Crypto.Cipher.ARC4
+import larch
+import ttystatus
 
 
-class ObnamBenchmark(cliapp.Application):
+class BinaryJunkGenerator(object):
 
-    default_sizes = ['1g/100m']
-    keyid = '3B1802F81B321347'
-    opers = ('backup', 'restore', 'list_files', 'forget')
+    key = b'obnam-benchmark'
+    data = b'fake live data' * 1024
+
+    def __init__(self):
+        self.cipher = Crypto.Cipher.ARC4.new(self.key)
+        self.buffer = ''
+
+    def get(self, num_bytes):
+        n = 0
+        result = []
+        while n < num_bytes:
+            if not self.buffer:
+                self.buffer = self.cipher.encrypt(self.data)
+
+            part = self.buffer[:num_bytes - n]
+            result.append(part)
+            n += len(part)
+            self.buffer = self.buffer[len(part):]
+
+        return ''.join(result)
+
+
+class StepInfo(object):
+
+    def __init__(self, label):
+        self.label = label
+        self.info = {
+            'step': label,
+            }
+
+    def add_info(self, key, value):
+        self.info[key] = value
+
+    def stop_timer(self):
+        self.end = time.time()
+
+    def __enter__(self):
+        self.start = time.time()
+        self.end = None
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is None:
+            if self.end is None:
+                self.end = time.time()
+            self.info['duration'] = self.end - self.start
+        return False
+
+
+class ObnamBenchmark(object):
+
+    def __init__(self, settings, results_dir, srctree, junk_generator):
+        self.settings = settings
+        self.results_dir = results_dir
+        self.srctree = srctree
+        self.junk_generator = junk_generator
+
+    @classmethod
+    def add_settings(self, settings):
+        pass
+
+    @property
+    def benchmark_name(self):
+        s = self.__class__.__name__
+        if s.endswith('Benchmark'):
+            s = s[:-len('Benchmark')]
+        return s
+
+    def result_filename(self, label, suffix):
+        return os.path.join(
+            self.results_dir,
+            '%s-%s%s' % (self.benchmark_name, label, suffix))
+
+    def run(self):
+        self.tempdir = tempfile.mkdtemp()
+        self.live_data = self.create_live_data_dir()
+        self.repo = self.create_repo()
+        step_infos = []
+
+        steps = [
+            ('create-live-data', self.create_live_data),
+            ('initial-backup', self.backup),
+            ('no-op-backup', self.backup),
+            ('obnam-verify', self.obnam_verify),
+            ('obnam-mount', self.obnam_mount),
+            ('cleanup',
+             lambda si:
+                 self.cleanup(si) if self.settings['cleanup'] else None),
+            ]
+
+        for label, method in steps:
+            print '  %s' % label
+            with StepInfo(label) as step_info:
+                method(step_info)
+            step_infos.append(step_info)
+
+        return {
+            'steps': [step_info.info for step_info in step_infos],
+            }
+
+    def create_live_data_dir(self):
+        live_data = os.path.join(self.tempdir, 'live-data')
+        os.mkdir(live_data)
+        return live_data
+
+    def create_repo(self):
+        repo = os.path.join(self.tempdir, 'repo')
+        os.mkdir(repo)
+        return repo
+
+    def create_live_data(self, step_info):
+        # Subclasses MUST override this.
+        raise NotImplementedError()
+
+    def backup(self, step_info):
+        self.run_obnam(
+            ['backup', '-r', self.repo, self.live_data], step_info.label)
+        step_info.stop_timer()
+        step_info.add_info('repo-size', self.sum_of_file_sizes(self.repo))
+        step_info.add_info(
+            'live-data-size', self.sum_of_file_sizes(self.live_data))
+
+    def obnam_verify(self, step_info):
+        self.run_obnam(
+            ['verify', '-r', self.repo],
+            step_info.label)
+
+    def obnam_mount(self, step_info):
+        mount = os.path.join(self.tempdir, 'mount')
+        os.mkdir(mount)
+
+        self.run_obnam(
+            ['mount', '-r', self.repo, '--to', mount],
+            step_info.label)
+
+        cliapp.runcmd(['tar', '-cf', '/dev/null', mount + '/.'])
+        time.sleep(1)
+
+        try:
+            cliapp.runcmd(['fusermount', '-u', mount])
+        except cliapp.AppException as e:
+            print 'ERROR from fusermount: %s' % str(e)
+
+    def cleanup(self, step_info):
+        shutil.rmtree(self.tempdir)
+
+    def run_obnam(self, args, label):
+        base_command = [
+            self.settings['obnam-cmd'],
+            '--no-default-config',
+            '--log', self.result_filename(label, '.log'),
+            '--log-level', 'debug',
+            ]
+        env = dict(os.environ)
+        env['OBNAM_PROFILE'] = self.result_filename(label, '.prof')
+        cliapp.runcmd(base_command + args, env=env, cwd=self.srctree)
+
+    def sum_of_file_sizes(self, root_dir):
+        total = 0
+        for dirname, subdirs, basenames in os.walk(root_dir):
+            for basename in basenames:
+                pathname = os.path.join(dirname, basename)
+                st = os.lstat(pathname)
+                if stat.S_ISREG(st.st_mode):
+                    total += st.st_size
+        return total
+
+
+class EmptyFilesBenchmark(ObnamBenchmark):
+
+    files_per_dir = 1000
+
+    @classmethod
+    def add_settings(self, settings):
+        settings.integer(
+            ['empty-files-count'],
+            'number of empty files for %s' % self.__class__.__name__,
+            default=10**6)
+
+    @property
+    def num_files(self):
+        return self.settings['empty-files-count']
+
+    def create_live_data(self, step_info):
+        step_info.add_info('empty-files-count', self.num_files)
+        for i in range(self.num_files):
+            subdir = os.path.join(
+                self.live_data, 'dir-%d' % (i / self.files_per_dir))
+            if (i % self.files_per_dir) == 0:
+                os.mkdir(subdir)
+            filename = os.path.join(subdir, 'file-%d' % i)
+            with open(filename, 'w'):
+                pass
+
+
+class SingleLargeFileBenchmark(ObnamBenchmark):
+
+    @classmethod
+    def add_settings(self, settings):
+        settings.bytesize(
+            ['single-large-file-size'],
+            'size of file to create for %s' % self.__class__.__name__,
+            default='1TB')
+
+    @property
+    def file_size(self):
+        return self.settings['single-large-file-size']
+
+    def create_live_data(self, step_info):
+        step_info.add_info('single-large-file-size', self.file_size)
+        filename = os.path.join(self.live_data, 'file.dat')
+        with open(filename, 'w') as f:
+            n = 0
+            max_chunk_size = 2**10
+            ts = ttystatus.TerminalStatus()
+            ts['written'] = 0
+            ts['total'] = self.file_size
+            ts.format(
+                '%ElapsedTime() '
+                'writing live data: %ByteSize(written) of %ByteSize(total) '
+                '(%PercentDone(written,total))')
+            while n < self.file_size:
+                num_bytes = min(max_chunk_size, self.file_size - n)
+                data = self.junk_generator.get(num_bytes)
+                f.write(data)
+                n += len(data)
+                ts['written'] = n
+            ts.clear()
+            ts.finish()
+
+
+class ObnamBenchmarkRunner(cliapp.Application):
+
+    benchmark_classes = [
+        EmptyFilesBenchmark,
+        SingleLargeFileBenchmark,
+        ]
 
     def add_settings(self):
-        self.settings.string(['results'], 'put results under DIR (%default)',
-                            metavar='DIR', default='../benchmarks')
-        self.settings.string(['obnam-branch'],
-                             'use DIR as the obnam branch to benchmark '
-                                '(default: %default)',
-                              metavar='DIR',
-                              default='.')
-        self.settings.string(['larch-branch'],
-                             'use DIR as the larch branch (default: %default)',
-                             metavar='DIR',
-                            )
-        self.settings.string(['seivot-branch'],
-                             'use DIR as the seivot branch '
-                                '(default: installed seivot)',
-                             metavar='DIR')
-        self.settings.boolean(['with-encryption'],
-                              'run benchmark using encryption')
+        self.settings.string(
+            ['obnam-cmd'],
+            'use CMD as the argv[0] to invoke obnam',
+            metavar='CMD',
+            default='./obnam')
 
-        self.settings.string(['profile-name'],
-                             'short name for benchmark scenario',
-                             default='unknown')
-        self.settings.string_list(['size'],
-                                  'add PAIR to list of sizes to '
-                                    'benchmark (e.g., 10g/1m)',
-                                  metavar='PAIR')
-        self.settings.bytesize(['file-size'], 'how big should files be?',
-                               default=4096)
-        self.settings.integer(['generations'],
-                              'benchmark N generations (default: %default)',
-                              metavar='N',
-                              default=5)
-        self.settings.boolean(['use-sftp-repository'],
-                              'access the repository over SFTP '
-                                '(requires ssh to localhost to work)')
-        self.settings.boolean(['use-sftp-root'],
-                              'access the live data over SFTP '
-                                '(requires ssh to localhost to work)')
-        self.settings.integer(['sftp-delay'],
-                              'add artifical delay to sftp transfers '
-                                '(in milliseconds)')
-        self.settings.string(['description'], 'describe benchmark')
-        self.settings.boolean(['drop-caches'], 'drop kernel buffer caches')
-        self.settings.string(['seivot-log'], 'seivot log setting')
+        self.settings.string(
+            ['obnam-treeish'],
+            'run Obnam from TREEISH in its git repository',
+            metavar='TREEISH',
+            default='HEAD')
 
-        self.settings.boolean(['verify'], 'verify restores')
+        self.settings.string(
+            ['results-dir'],
+            'put results in DIR',
+            metavar='DIR',
+            default='.')
+
+        self.settings.boolean(
+            ['cleanup'],
+            'clean up after each benchmark?',
+            default=True)
+
+        for benchmark_class in self.benchmark_classes:
+            benchmark_class.add_settings(self.settings)
 
     def process_args(self, args):
-        self.require_tmpdir()
+        results_dir = self.create_results_dir()
+        self.store_settings_in_results(results_dir)
+        result_obj = {
+            'system-info': self.get_system_info_dict(),
+            'versions': self.get_version_info_dict(),
+            }
 
-        obnam_revno = self.bzr_revno(self.settings['obnam-branch'])
-        if self.settings['larch-branch']:
-            larch_revno = self.bzr_revno(self.settings['larch-branch'])
-        else:
-            larch_revno = None
+        srctree = self.prepare_source_tree()
 
-        results = self.results_dir(obnam_revno, larch_revno)
+        junk_generator = BinaryJunkGenerator()
+        benchmark_infos = {}
+        for benchmark_class in self.benchmark_classes:
+            print 'Benchmark %s' % benchmark_class.__name__
+            benchmark = benchmark_class(
+                self.settings, results_dir, srctree, junk_generator)
+            benchmark_info = benchmark.run()
+            benchmark_infos[benchmark.benchmark_name] = benchmark_info
+        result_obj['benchmarks'] = benchmark_infos
 
-        obnam_branch = self.settings['obnam-branch']
-        if self.settings['seivot-branch']:
-            seivot = os.path.join(self.settings['seivot-branch'], 'seivot')
-        else:
-            seivot = 'seivot'
+        self.save_result_obj(results_dir, result_obj)
 
-        generations = self.settings['generations']
+        shutil.rmtree(srctree)
 
-        tempdir = tempfile.mkdtemp()
-        env = self.setup_gnupghome(tempdir)
+    def create_results_dir(self):
+        results = os.path.abspath(self.settings['results-dir'])
+        if not os.path.exists(results):
+            os.mkdir(results)
+        return results
 
-        sizes = self.settings['size'] or self.default_sizes
-        logging.debug('sizes: %s' % repr(sizes))
+    def store_settings_in_results(self, results):
+        cp = self.settings.as_cp()
+        filename = os.path.join(results, 'obnam-benchmark.conf')
+        with open(filename, 'w') as f:
+            cp.write(f)
 
-        file_size = self.settings['file-size']
-        profile_name = self.settings['profile-name']
+    def get_system_info_dict(self):
+        return {
+            'hostname': platform.node(),
+            'machine': platform.machine(),
+            'architecture': platform.architecture(),
+            'uname': platform.uname(),
+            }
 
-        for pair in sizes:
-            initial, inc = self.parse_size_pair(pair)
+    def get_version_info_dict(self):
+        treeish = self.settings['obnam-treeish']
+        sha1 = cliapp.runcmd(['git', 'show-ref', treeish]).split()[0]
+        describe = cliapp.runcmd(['git', 'describe', treeish]).strip()
+        return {
+            'obnam-treeish': treeish,
+            'obnam-sha1': sha1,
+            'obnam-version': describe,
+            'larch-version': larch.__version__,
+            }
 
-            msg = 'Profile %s, size %s inc %s' % (profile_name, initial, inc)
-            print
-            print msg
-            print '-' * len(msg)
-            print
+    def prepare_source_tree(self):
+        srctree = tempfile.mkdtemp()
+        self.extract_sources_from_git(srctree)
+        self.build_obnam(srctree)
+        return srctree
 
-            obnam_profile = os.path.join(results,
-                                         'obnam--%(op)s-%(gen)s.prof')
-            output = os.path.join(results, 'obnam.seivot')
-            if os.path.exists(output):
-                print ('%s already exists, not re-running benchmark' %
-                        output)
-            else:
-                argv = [seivot,
-                        '--obnam-branch', obnam_branch,
-                        '--incremental-data', inc,
-                        '--file-size', str(file_size),
-                        '--obnam-profile', obnam_profile,
-                        '--generations', str(generations),
-                        '--profile-name', profile_name,
-                        '--sftp-delay', str(self.settings['sftp-delay']),
-                        '--initial-data', initial,
-                        '--output', output]
-                if self.settings['larch-branch']:
-                    argv.extend(['--larch-branch', self.settings['larch-branch']])
-                if self.settings['seivot-log']:
-                    argv.extend(['--log', self.settings['seivot-log']])
-                if self.settings['drop-caches']:
-                    argv.append('--drop-caches')
-                if self.settings['use-sftp-repository']:
-                    argv.append('--use-sftp-repository')
-                if self.settings['use-sftp-root']:
-                    argv.append('--use-sftp-root')
-                if self.settings['with-encryption']:
-                    argv.extend(['--encrypt-with', self.keyid])
-                if self.settings['description']:
-                    argv.extend(['--description',
-                                 self.settings['description']])
-                if self.settings['verify']:
-                    argv.append('--verify')
-                self.runcmd(argv, env=env)
+    def extract_sources_from_git(self, srctree):
+        cliapp.runcmd(
+            ['git', 'archive', self.settings['obnam-treeish']],
+            ['tar', '-C', srctree, '-xf', '-'])
 
-        shutil.rmtree(tempdir)
+    def build_obnam(self, srctree):
+        cliapp.runcmd(
+            ['python', 'setup.py', 'build_ext', '-i'],
+            cwd=srctree)
 
-    def require_tmpdir(self):
-        if 'TMPDIR' not in os.environ:
-            raise cliapp.AppException('TMPDIR is not set. '
-                                       'You would probably run out of space '
-                                       'on /tmp.')
-        if not os.path.exists(os.environ['TMPDIR']):
-            raise cliapp.AppException('TMPDIR points at a non-existent '
-                                        'directory %s' % os.environ['TMPDIR'])
-        logging.debug('TMPDIR=%s' % repr(os.environ['TMPDIR']))
-
-    @property
-    def hostname(self):
-        return socket.gethostname()
-
-    @property
-    def obnam_branch_name(self):
-        obnam_branch = os.path.abspath(self.settings['obnam-branch'])
-        return os.path.basename(obnam_branch)
-
-    def results_dir(self, obnam_revno, larch_revno):
-        parent = self.settings['results']
-        parts = [self.hostname, self.obnam_branch_name, str(obnam_revno)]
-        if larch_revno:
-            parts.append(str(larch_revno))
-        prefix = os.path.join(parent, "-".join(parts))
-
-        get_path = lambda counter: "%s-%d" % (prefix, counter)
-
-        counter = 0
-        dirname = get_path(counter)
-        while os.path.exists(dirname):
-            counter += 1
-            dirname = get_path(counter)
-        os.makedirs(dirname)
-        return dirname
-
-    def setup_gnupghome(self, tempdir):
-        gnupghome = os.path.join(tempdir, 'gnupghome')
-        shutil.copytree('test-gpghome', gnupghome)
-        env = dict(os.environ)
-        env['GNUPGHOME'] = gnupghome
-        return env
-
-    def bzr_revno(self, branch):
-        p = subprocess.Popen(['bzr', 'revno'], cwd=branch,
-                             stdout=subprocess.PIPE)
-        out, err = p.communicate()
-        if p.returncode != 0:
-            raise cliapp.AppException('bzr failed')
-
-        revno = out.strip()
-        logging.debug('bzr branch %s has revno %s' % (branch, revno))
-        return revno
-
-    def parse_size_pair(self, pair):
-        return pair.split('/', 1)
+    def save_result_obj(self, results_dir, result_obj):
+        filename = os.path.join(results_dir, 'benchmark.json')
+        with open(filename, 'w') as f:
+            json.dump(result_obj, f, indent=4)
 
 
 if __name__ == '__main__':
-    ObnamBenchmark().run()
-
+    ObnamBenchmarkRunner().run()

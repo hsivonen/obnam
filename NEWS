@@ -38,6 +38,11 @@ Version 1.7, released UNRELEASED
   future releases. The error codes are meant to be easy to search for,
   and will allow error messages to be translated in the future.
 
+* The `obnam-benchmark` program got rewritten so that it'll do
+  something useful, but at the same time, it is no longer useful as a
+  general tool. It is now expected to be run from the Obnam source
+  tree (a cloned git repository), and isn't installed anymore.
+
 Bug fixes:
 
 * Obnam now creates a `trustdb.gpg` in the temporary GNUPGHOME it uses
