@@ -187,7 +187,7 @@ class ObnamBenchmark(object):
 
     def run_obnam(self, args, label):
         base_command = [
-            './obnam',
+            self.settings['obnam-cmd'],
             '--no-default-config',
             '--log', self.result_filename(label, '.log'),
             '--log-level', 'debug',
@@ -269,6 +269,12 @@ class ObnamBenchmarkRunner(cliapp.Application):
         ]
 
     def add_settings(self):
+        self.settings.string(
+            ['obnam-cmd'],
+            'use CMD as the argv[0] to invoke obnam',
+            metavar='CMD',
+            default='./obnam')
+
         self.settings.string(
             ['results-dir'],
             'put results in DIR',
