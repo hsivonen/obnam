@@ -298,10 +298,12 @@ class ObnamBenchmarkRunner(cliapp.Application):
             benchmark_class.add_settings(self.settings)
 
     def process_args(self, args):
-        result_obj = {}
         results_dir = self.create_results_dir()
         self.store_settings_in_results(results_dir)
-        result_obj['system-info'] = self.get_system_info_dict()
+        result_obj = {
+            'system-info': self.get_system_info_dict(),
+            'versions': self.get_version_info_dict(),
+            }
 
         srctree = self.prepare_source_tree()
 
@@ -337,6 +339,16 @@ class ObnamBenchmarkRunner(cliapp.Application):
             'machine': platform.machine(),
             'architecture': platform.architecture(),
             'uname': platform.uname(),
+            }
+
+    def get_version_info_dict(self):
+        treeish = self.settings['obnam-treeish']
+        sha1 = cliapp.runcmd(['git', 'show-ref', treeish]).split()[0]
+        describe = cliapp.runcmd(['git', 'describe', treeish]).strip()
+        return {
+            'obnam-treeish': treeish,
+            'obnam-sha1': sha1,
+            'obnam-version': describe,
             }
 
     def prepare_source_tree(self):
