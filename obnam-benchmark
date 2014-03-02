@@ -86,9 +86,10 @@ class Measurer(object):
 
 class ObnamBenchmark(object):
 
-    def __init__(self, settings, results, junk_generator):
+    def __init__(self, settings, results, srctree, junk_generator):
         self.settings = settings
         self.results = results
+        self.srctree = srctree
         self.junk_generator = junk_generator
 
     @classmethod
@@ -194,7 +195,7 @@ class ObnamBenchmark(object):
             ]
         env = dict(os.environ)
         env['OBNAM_PROFILE'] = self.result_filename(label, '.prof')
-        cliapp.runcmd(base_command + args, env=env)
+        cliapp.runcmd(base_command + args, env=env, cwd=self.srctree)
 
     def new_measurer(self, label, suffix):
         return Measurer(self.benchmark_name, label, suffix)
@@ -276,6 +277,12 @@ class ObnamBenchmarkRunner(cliapp.Application):
             default='./obnam')
 
         self.settings.string(
+            ['obnam-treeish'],
+            'run Obnam from TREEISH in its git repository',
+            metavar='TREEISH',
+            default='HEAD')
+
+        self.settings.string(
             ['results-dir'],
             'put results in DIR',
             metavar='DIR',
@@ -294,15 +301,19 @@ class ObnamBenchmarkRunner(cliapp.Application):
         self.store_settings_in_results(results)
         self.store_system_info_in_results(results)
 
+        srctree = self.prepare_source_tree()
+
         junk_generator = BinaryJunkGenerator()
         for benchmark_class in self.benchmark_classes:
             print 'Benchmark %s' % benchmark_class.__name__
             benchmark = benchmark_class(
-                self.settings, results, junk_generator)
+                self.settings, results, srctree, junk_generator)
             benchmark.run()
 
+        shutil.rmtree(srctree)
+
     def create_results_dir(self):
-        results = self.settings['results-dir']
+        results = os.path.abspath(self.settings['results-dir'])
         if not os.path.exists(results):
             os.mkdir(results)
         return results
@@ -323,6 +334,22 @@ class ObnamBenchmarkRunner(cliapp.Application):
 
         with open(os.path.join(results, 'system.json'), 'w') as f:
             json.dump(info, f, indent=4)
+
+    def prepare_source_tree(self):
+        srctree = tempfile.mkdtemp()
+        self.extract_sources_from_git(srctree)
+        self.build_obnam(srctree)
+        return srctree
+
+    def extract_sources_from_git(self, srctree):
+        cliapp.runcmd(
+            ['git', 'archive', self.settings['obnam-treeish']],
+            ['tar', '-C', srctree, '-xf', '-'])
+
+    def build_obnam(self, srctree):
+        cliapp.runcmd(
+            ['python', 'setup.py', 'build_ext', '-i'],
+            cwd=srctree)
 
 
 if __name__ == '__main__':
