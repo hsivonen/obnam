@@ -27,6 +27,7 @@ import time
 
 import cliapp
 import Crypto.Cipher.ARC4
+import larch
 import ttystatus
 
 
@@ -349,6 +350,7 @@ class ObnamBenchmarkRunner(cliapp.Application):
             'obnam-treeish': treeish,
             'obnam-sha1': sha1,
             'obnam-version': describe,
+            'larch-version': larch.__version__,
             }
 
     def prepare_source_tree(self):
