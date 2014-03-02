@@ -216,6 +216,7 @@ class EmptyFilesBenchmark(ObnamBenchmark):
         return self.settings['empty-files-count']
 
     def create_live_data(self, step_info):
+        step_info.add_info('empty-files-count', self.num_files)
         for i in range(self.num_files):
             subdir = os.path.join(
                 self.live_data, 'dir-%d' % (i / self.files_per_dir))
@@ -240,6 +241,7 @@ class SingleLargeFileBenchmark(ObnamBenchmark):
         return self.settings['single-large-file-size']
 
     def create_live_data(self, step_info):
+        step_info.add_info('single-large-file-size', self.file_size)
         filename = os.path.join(self.live_data, 'file.dat')
         with open(filename, 'w') as f:
             n = 0
