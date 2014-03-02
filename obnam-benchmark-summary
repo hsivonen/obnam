@@ -112,7 +112,9 @@ class ObnamBenchmarkSummary(cliapp.Application):
 
         widths = self.compute_column_widths(lines)
 
-        for line in sorted(lines):
+        titles = lines[0]
+        results = sorted(lines[1:])
+        for line in [titles] + results:
             cells = []
             for i, cell in enumerate(line):
                 cells.append('%*s' % (widths[i], cell))
