@@ -54,17 +54,16 @@ class BinaryJunkGenerator(object):
         return ''.join(result)
 
 
-class Measurer(object):
+class StepInfo(object):
 
-    def __init__(self, benchmark_name, label, filename):
-        self.filename = filename
-        self.measurements = {
-            'benchmark': benchmark_name,
-            'label': label,
+    def __init__(self, label):
+        self.label = label
+        self.info = {
+            'step': label,
             }
 
     def add_info(self, key, value):
-        self.measurements[key] = value
+        self.info[key] = value
 
     def stop_timer(self):
         self.end = time.time()
@@ -78,17 +77,15 @@ class Measurer(object):
         if exc_type is None:
             if self.end is None:
                 self.end = time.time()
-            self.measurements['duration'] = self.end - self.start
-            with open(self.filename, 'w') as f:
-                json.dump(self.measurements, f, indent=4)
+            self.info['duration'] = self.end - self.start
         return False
 
 
 class ObnamBenchmark(object):
 
-    def __init__(self, settings, results, srctree, junk_generator):
+    def __init__(self, settings, results_dir, srctree, junk_generator):
         self.settings = settings
-        self.results = results
+        self.results_dir = results_dir
         self.srctree = srctree
         self.junk_generator = junk_generator
 
@@ -98,40 +95,42 @@ class ObnamBenchmark(object):
 
     @property
     def benchmark_name(self):
-        return self.__class__.__name__
+        s = self.__class__.__name__
+        if s.endswith('Benchmark'):
+            s = s[:-len('Benchmark')]
+        return s
 
     def result_filename(self, label, suffix):
         return os.path.join(
-            self.results,
+            self.results_dir,
             '%s-%s%s' % (self.benchmark_name, label, suffix))
 
     def run(self):
         self.tempdir = tempfile.mkdtemp()
         self.live_data = self.create_live_data_dir()
         self.repo = self.create_repo()
+        step_infos = []
 
-        print '  create live data'
-        self.create_live_data()
+        steps = [
+            ('create-live-data', self.create_live_data),
+            ('initial-backup', self.backup),
+            ('no-op-backup', self.backup),
+            ('obnam-verify', self.obnam_verify),
+            ('obnam-mount', self.obnam_mount),
+            ('cleanup',
+             lambda si:
+                 self.cleanup(si) if self.settings['cleanup'] else None),
+            ]
 
-        print '  initial backup'
-        self.backup('initial-backup')
+        for label, method in steps:
+            print '  %s' % label
+            with StepInfo(label) as step_info:
+                method(step_info)
+            step_infos.append(step_info)
 
-        print '  no-op second backup'
-        self.backup('no-op-backup')
-
-        print '  obnam verify'
-        self.restore_with_obnam_verify()
-
-        print '  obnam mount && tar'
-        self.restore_with_obnam_mount()
-
-        if self.settings['cleanup']:
-            print '  cleanup'
-            shutil.rmtree(self.tempdir)
-
-    def create_live_data(self):
-        # Subclasses MUST override this.
-        raise NotImplementedError()
+        return {
+            'steps': [step_info.info for step_info in step_infos],
+            }
 
     def create_live_data_dir(self):
         live_data = os.path.join(self.tempdir, 'live-data')
@@ -143,48 +142,41 @@ class ObnamBenchmark(object):
         os.mkdir(repo)
         return repo
 
-    def backup(self, label):
-        filename = self.result_filename(label, '.json')
-        with self.new_measurer(label, filename) as m:
-            self.run_obnam(['backup', '-r', self.repo, self.live_data], label)
-            m.stop_timer()
-            m.add_info('repo-size', self.sum_of_file_sizes(self.repo))
-            m.add_info(
-                'live-data-size', self.sum_of_file_sizes(self.live_data))
+    def create_live_data(self, step_info):
+        # Subclasses MUST override this.
+        raise NotImplementedError()
 
-    def sum_of_file_sizes(self, root_dir):
-        total = 0
-        for dirname, subdirs, basenames in os.walk(root_dir):
-            for basename in basenames:
-                pathname = os.path.join(dirname, basename)
-                st = os.lstat(pathname)
-                if stat.S_ISREG(st.st_mode):
-                    total += st.st_size
-        return total
+    def backup(self, step_info):
+        self.run_obnam(
+            ['backup', '-r', self.repo, self.live_data], step_info.label)
+        step_info.stop_timer()
+        step_info.add_info('repo-size', self.sum_of_file_sizes(self.repo))
+        step_info.add_info(
+            'live-data-size', self.sum_of_file_sizes(self.live_data))
 
-    def restore_with_obnam_verify(self):
-        label = 'obnam-verify'
-        filename = self.result_filename(label, '.json')
-        with self.new_measurer(label, filename):
-            self.run_obnam(
-                ['verify', '-r', self.repo],
-                label)
+    def obnam_verify(self, step_info):
+        self.run_obnam(
+            ['verify', '-r', self.repo],
+            step_info.label)
 
-    def restore_with_obnam_mount(self):
+    def obnam_mount(self, step_info):
         mount = os.path.join(self.tempdir, 'mount')
         os.mkdir(mount)
 
-        label = 'obnam-mount'
         self.run_obnam(
             ['mount', '-r', self.repo, '--to', mount],
-            label)
-        with self.new_measurer(label, self.result_filename(label, '.json')):
-            cliapp.runcmd(['tar', '-cf', '/dev/null', mount + '/.'])
+            step_info.label)
+
+        cliapp.runcmd(['tar', '-cf', '/dev/null', mount + '/.'])
         time.sleep(1)
+
         try:
             cliapp.runcmd(['fusermount', '-u', mount])
         except cliapp.AppException as e:
             print 'ERROR from fusermount: %s' % str(e)
+
+    def cleanup(self, step_info):
+        shutil.rmtree(self.tempdir)
 
     def run_obnam(self, args, label):
         base_command = [
@@ -197,8 +189,15 @@ class ObnamBenchmark(object):
         env['OBNAM_PROFILE'] = self.result_filename(label, '.prof')
         cliapp.runcmd(base_command + args, env=env, cwd=self.srctree)
 
-    def new_measurer(self, label, suffix):
-        return Measurer(self.benchmark_name, label, suffix)
+    def sum_of_file_sizes(self, root_dir):
+        total = 0
+        for dirname, subdirs, basenames in os.walk(root_dir):
+            for basename in basenames:
+                pathname = os.path.join(dirname, basename)
+                st = os.lstat(pathname)
+                if stat.S_ISREG(st.st_mode):
+                    total += st.st_size
+        return total
 
 
 class EmptyFilesBenchmark(ObnamBenchmark):
@@ -216,7 +215,7 @@ class EmptyFilesBenchmark(ObnamBenchmark):
     def num_files(self):
         return self.settings['empty-files-count']
 
-    def create_live_data(self):
+    def create_live_data(self, step_info):
         for i in range(self.num_files):
             subdir = os.path.join(
                 self.live_data, 'dir-%d' % (i / self.files_per_dir))
@@ -240,7 +239,7 @@ class SingleLargeFileBenchmark(ObnamBenchmark):
     def file_size(self):
         return self.settings['single-large-file-size']
 
-    def create_live_data(self):
+    def create_live_data(self, step_info):
         filename = os.path.join(self.live_data, 'file.dat')
         with open(filename, 'w') as f:
             n = 0
@@ -297,18 +296,24 @@ class ObnamBenchmarkRunner(cliapp.Application):
             benchmark_class.add_settings(self.settings)
 
     def process_args(self, args):
-        results = self.create_results_dir()
-        self.store_settings_in_results(results)
-        self.store_system_info_in_results(results)
+        result_obj = {}
+        results_dir = self.create_results_dir()
+        self.store_settings_in_results(results_dir)
+        result_obj['system-info'] = self.get_system_info_dict()
 
         srctree = self.prepare_source_tree()
 
         junk_generator = BinaryJunkGenerator()
+        benchmark_infos = {}
         for benchmark_class in self.benchmark_classes:
             print 'Benchmark %s' % benchmark_class.__name__
             benchmark = benchmark_class(
-                self.settings, results, srctree, junk_generator)
-            benchmark.run()
+                self.settings, results_dir, srctree, junk_generator)
+            benchmark_info = benchmark.run()
+            benchmark_infos[benchmark.benchmark_name] = benchmark_info
+        result_obj['benchmarks'] = benchmark_infos
+
+        self.save_result_obj(results_dir, result_obj)
 
         shutil.rmtree(srctree)
 
@@ -324,16 +329,13 @@ class ObnamBenchmarkRunner(cliapp.Application):
         with open(filename, 'w') as f:
             cp.write(f)
 
-    def store_system_info_in_results(self, results):
-        info = {
+    def get_system_info_dict(self):
+        return {
             'hostname': platform.node(),
             'machine': platform.machine(),
             'architecture': platform.architecture(),
             'uname': platform.uname(),
             }
-
-        with open(os.path.join(results, 'system.json'), 'w') as f:
-            json.dump(info, f, indent=4)
 
     def prepare_source_tree(self):
         srctree = tempfile.mkdtemp()
@@ -350,6 +352,11 @@ class ObnamBenchmarkRunner(cliapp.Application):
         cliapp.runcmd(
             ['python', 'setup.py', 'build_ext', '-i'],
             cwd=srctree)
+
+    def save_result_obj(self, results_dir, result_obj):
+        filename = os.path.join(results_dir, 'benchmark.json')
+        with open(filename, 'w') as f:
+            json.dump(result_obj, f, indent=4)
 
 
 if __name__ == '__main__':
