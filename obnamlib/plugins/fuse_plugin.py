@@ -247,7 +247,8 @@ class ObnamFuse(fuse.Fuse):
                 genstat.st_ctime = genstat.st_mtime = end
                 self.rootlist[path] = genstat
                 used_generations.append(gen)
-            except obnamlib.ObnamError:
+            except obnamlib.ObnamError as e:
+                logging.warning('Ignoring error %s' % str(e))
                 pass
 
         assert used_generations
