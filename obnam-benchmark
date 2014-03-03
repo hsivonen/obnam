@@ -344,11 +344,9 @@ class ObnamBenchmarkRunner(cliapp.Application):
 
     def get_version_info_dict(self):
         treeish = self.settings['obnam-treeish']
-        sha1 = cliapp.runcmd(['git', 'show-ref', treeish]).split()[0]
         describe = cliapp.runcmd(['git', 'describe', treeish]).strip()
         return {
             'obnam-treeish': treeish,
-            'obnam-sha1': sha1,
             'obnam-version': describe,
             'larch-version': larch.__version__,
             }
