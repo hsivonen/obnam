@@ -31,9 +31,9 @@ class ObnamBenchmarkSummary(cliapp.Application):
     columns = (
         ('version', 'version'),
         ('ef-speed', 'EF files/s'),
-        ('ef-repo-size', 'EF repo (GiB)'),
+        ('ef-repo-size', 'EF repo (MiB)'),
         ('lf-speed', 'LF MiB/s'),
-        ('lf-repo-size', 'LF repo (GiB)'),
+        ('lf-repo-size', 'LF repo (MiB)'),
         )
 
     def process_args(self, args):
@@ -56,13 +56,13 @@ class ObnamBenchmarkSummary(cliapp.Application):
             'ef-files':
                 self.get_empty_files_count(obj),
             'ef-repo-size':
-                self.format_size(self.get_empty_files_repo_size(obj), GiB),
+                self.format_size(self.get_empty_files_repo_size(obj), MiB),
             'lf-speed':
                 self.format_size(self.get_large_file_speed(obj), MiB),
             'lf-size':
                 self.format_size(self.get_large_file_size(obj), GiB),
             'lf-repo-size':
-                self.format_size(self.get_large_file_repo_size(obj), GiB),
+                self.format_size(self.get_large_file_repo_size(obj), MiB),
             }
 
     def get_obnam_version(self, obj):
