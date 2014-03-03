@@ -344,6 +344,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     self.new_generation,
                     obnamlib.REPO_GENERATION_TOTAL_DATA,
                     self.progress.scanned_bytes)
+                self.repo.set_generation_key(
+                    self.new_generation,
+                    obnamlib.REPO_GENERATION_IS_CHECKPOINT,
+                    False)
                 
                 self.progress.what(
                     'committing changes to repository: '
