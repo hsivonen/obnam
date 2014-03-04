@@ -169,7 +169,6 @@ class ObnamBenchmark(object):
             step_info.label)
 
         cliapp.runcmd(['tar', '-cf', '/dev/null', mount + '/.'])
-        time.sleep(1)
 
         try:
             cliapp.runcmd(['fusermount', '-u', mount])
