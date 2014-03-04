@@ -674,7 +674,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                  current.st_gid != old.st_gid or
                  current.xattr != old.xattr)
         if needs:
-            tracing.trace('%s has changed metadata, so needs backup' % pathname)
+            tracing.trace(
+                '%s has changed metadata, so needs backup' % pathname)
         return needs
 
     def add_file_to_generation(self, filename, metadata):
