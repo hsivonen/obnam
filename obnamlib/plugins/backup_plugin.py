@@ -641,19 +641,19 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         tracing.trace('gen=%s' % repr(gen))
         try:
             old = obnamlib.Metadata(
-                mtime_sec=self.repo.get_file_key(
+                st_mtime_sec=self.repo.get_file_key(
                     gen, pathname, obnamlib.REPO_FILE_MTIME_SEC),
-                mtime_nsec=self.repo.get_file_key(
+                st_mtime_nsec=self.repo.get_file_key(
                     gen, pathname, obnamlib.REPO_FILE_MTIME_NSEC),
-                mode=self.repo.get_file_key(
+                st_mode=self.repo.get_file_key(
                     gen, pathname, obnamlib.REPO_FILE_MODE),
-                nlink=self.repo.get_file_key(
+                st_nlink=self.repo.get_file_key(
                     gen, pathname, obnamlib.REPO_FILE_NLINK),
-                size=self.repo.get_file_key(
+                st_size=self.repo.get_file_key(
                     gen, pathname, obnamlib.REPO_FILE_SIZE),
-                uid=self.repo.get_file_key(
+                st_uid=self.repo.get_file_key(
                     gen, pathname, obnamlib.REPO_FILE_UID),
-                gid=self.repo.get_file_key(
+                st_gid=self.repo.get_file_key(
                     gen, pathname, obnamlib.REPO_FILE_GID),
                 xattr=self.repo.get_file_key(
                     gen, pathname, obnamlib.REPO_FILE_XATTR_BLOB))
@@ -665,18 +665,38 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             tracing.trace(traceback.format_exc())
             return True
 
-        needs = (current.st_mtime_sec != old.st_mtime_sec or
-                 current.st_mtime_nsec != old.st_mtime_nsec or
-                 current.st_mode != old.st_mode or
-                 current.st_nlink != old.st_nlink or
-                 current.st_size != old.st_size or
-                 current.st_uid != old.st_uid or
-                 current.st_gid != old.st_gid or
-                 current.xattr != old.xattr)
-        if needs:
-            tracing.trace(
-                '%s has changed metadata, so needs backup' % pathname)
-        return needs
+        must_be_equal = (
+            'st_mtime_sec',
+            'st_mtime_nsec',
+            'st_mode',
+            'st_nlink',
+            'st_size',
+            'st_uid',
+            'st_gid',
+            )
+
+        for field in must_be_equal:
+            current_value = getattr(current, field)
+            old_value = getattr(old, field)
+            tracing.trace('current.%s=%r', field, current_value)
+            tracing.trace('old.%s=%r', field, old_value)
+            if current_value != old_value:
+                tracing.trace('NEED to backup %r', pathname)
+                return True
+
+        # Treat xattr values None (no extended attributes) and ''
+        # (there are no values, but the xattr blob exists as an empty
+        # string) as equal values.
+        xattr_current = current.xattr or None
+        xattr_old = old.xattr or None
+        tracing.trace('xattr_current=%r', xattr_current)
+        tracing.trace('xattr_old=%r', xattr_old)
+        if xattr_current != xattr_old:
+            tracing.trace('NEED to backup %r', pathname)
+            return True
+
+        tracing.trace('Do NOT need to backup %r', pathname)
+        return False
 
     def add_file_to_generation(self, filename, metadata):
         self.repo.add_file(self.new_generation, filename)
