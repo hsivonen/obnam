@@ -845,6 +845,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             if not self.pretend and self.time_for_checkpoint():
                 logging.debug('making checkpoint in the middle of a file')
                 self.make_checkpoint()
+                self.progress.what(filename)
 
         tracing.trace('closing file')
         f.close()

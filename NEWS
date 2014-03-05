@@ -54,6 +54,11 @@ Bug fixes:
   during encryption operations. From version 2.0.22 (or thereabouts),
   `gpg` insists on having a `trustdb.gpg` in the GNUPGHOME it uses.
 
+* When backing up a large file, and making a checkpoint generation in
+  the middle of it, Obnam would say "continuing backup" after the
+  checkpoint was finished, instead of saying the name of the file.
+  This is now fixed.
+
 Internal changes:
 
 * The `obnamlib.Error` exception class has been replaced by the
