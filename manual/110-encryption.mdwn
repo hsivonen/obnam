@@ -137,6 +137,13 @@ one encryption key for each client, and don't add additional keys,
 Obnam will take care of adding the right keys to the right places
 automatically.
 
+Checking if a repository uses encryption
+----------------------------------------
+
+There is no direct way with Obnam to check if a repository uses
+encryption. However, you can check that manually: if your repository
+contains the file `clientlist/key`, the repository is encrypted.
+
 FIXME: Managing encryption keys in a repository
 ----------------------------------------
 
