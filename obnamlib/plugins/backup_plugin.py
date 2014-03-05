@@ -83,6 +83,7 @@ class BackupProgress(object):
         self.uploaded_bytes = 0
         self.scanned_bytes = 0
         self.started = None
+        self.errors = False
 
         self._ts = ts
         self._ts['current-file'] = ''
@@ -97,8 +98,13 @@ class BackupProgress(object):
     def clear(self):
         self._ts.clear()
 
-    def error(self, msg):
-        self._ts.error(msg)
+    def error(self, msg, exc=None):
+        self.errors = True
+
+        logging.error(msg)
+        if exc:
+            logging.error(repr(exc))
+        self._ts.error('ERROR: %s' % msg)
 
     def what(self, what_what):
         if self.started is None:
@@ -252,13 +258,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
     def configure_ttystatus_for_backup(self):
         self.progress = BackupProgress(self.app.ts)
-
-    def error(self, msg, exc=None):
-        self.errors = True
-        logging.error(msg)
-        if exc:
-            logging.error(repr(exc))
-        sys.stderr.write('ERROR: %s\n' % msg)
 
     def parse_checkpoint_size(self, value):
         p = obnamlib.ByteSizeParser()
@@ -486,7 +485,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     self.backup_metadata(pathname, metadata)
                 except (IOError, OSError), e:
                     msg = 'Can\'t back up %s: %s' % (pathname, e.strerror)
-                    self.error(msg, e)
+                    self.progress.error(msg, e)
                     if not existed and not self.pretend:
                         try:
                             self.repo.remove_file(
@@ -505,7 +504,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                             msg = (
                                 'Error removing partly backed up file %s: %s'
                                 % (pathname, repr(ee)))
-                            self.error(msg, ee)
+                            self.progress.error(msg, ee)
                     if e.errno == errno.ENOSPC:
                         raise
                 if self.time_for_checkpoint():
@@ -595,7 +594,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 raise
             except BaseException, e:
                 msg = 'Cannot back up %s: %s' % (pathname, str(e))
-                self.error(msg, e)
+                self.progress.error(msg, e)
 
     def can_be_backed_up(self, pathname, st):
         if self.app.settings['one-file-system']:
