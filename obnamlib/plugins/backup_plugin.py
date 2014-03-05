@@ -131,7 +131,72 @@ class BackupProgress(object):
     def update_progress_with_removed_checkpoint(self, gen):
         self._ts['checkpoint'] = gen
 
-    def report_stats(self):
+    def report_stats(self, fs):
+        duration = time.time() - self.started
+        duration_string = self.humanise_duration(duration)
+
+        chunk_amount, chunk_unit = self.humanise_size(self.uploaded_bytes)
+
+        fs_amount, fs_unit = self.humanise_size(fs.bytes_written)
+
+        dl_amount, dl_unit = self.humanise_size(fs.bytes_read)
+
+        overhead_bytes = (
+            fs.bytes_read + (fs.bytes_written - self.uploaded_bytes))
+        overhead_bytes = max(0, overhead_bytes)
+        overhead_amount, overhead_unit = self.humanise_size(
+            overhead_bytes)
+
+        speed_amount, speed_unit = self.humanise_speed(
+            self.uploaded_bytes, duration)
+
+        logging.info(
+            'Backup performance statistics:')
+        logging.info(
+            '* files found: %s',
+            self.file_count)
+        logging.info(
+            '* files backed up: %s',
+            self.backed_up_count)
+        logging.info(
+            '* uploaded chunk data: %s bytes (%s %s)',
+            self.uploaded_bytes, chunk_amount, chunk_unit)
+        logging.info(
+            '* total uploaded data (incl. metadata): %s bytes (%s %s)',
+            fs.bytes_written, fs_amount, fs_unit)
+        logging.info(
+            '* total downloaded data (incl. metadata): %s bytes (%s %s)',
+            fs.bytes_read, dl_amount, dl_unit)
+        logging.info(
+            '* transfer overhead: %s bytes (%s %s)',
+            overhead_bytes, overhead_amount, overhead_unit)
+        logging.info(
+            '* duration: %s s (%s)',
+            duration, duration_string)
+        logging.info(
+            '* average speed: %s %s',
+            speed_amount, speed_unit)
+
+        self._ts.notify(
+            'Backed up %d files (of %d found), '
+            'uploaded %.1f %s in %s at %.1f %s average speed' %
+                (self.backed_up_count, self.file_count,
+                 chunk_amount, chunk_unit,
+                 duration_string, speed_amount, speed_unit))
+
+    def humanise_duration(self, seconds):
+        duration_string = ''
+        if seconds >= 3600:
+            duration_string += '%dh' % int(seconds/3600)
+            seconds %= 3600
+        if seconds >= 60:
+            duration_string += '%dm' % int(seconds/60)
+            seconds %= 60
+        if seconds > 0:
+            duration_string += '%ds' % round(seconds)
+        return duration_string
+
+    def humanise_size(self, size):
         size_table = [
             (1024**4, 'TiB'),
             (1024**3, 'GiB'),
@@ -141,53 +206,32 @@ class BackupProgress(object):
         ]
 
         for size_base, size_unit in size_table:
-            if self.uploaded_bytes >= size_base:
+            if size >= size_base:
                 if size_base > 0:
-                    size_amount = float(self.uploaded_bytes) / float(size_base)
+                    size_amount = int(float(size) / float(size_base))
                 else:
-                    size_amount = float(self.uploaded_bytes)
-                break
+                    size_amount = float(size)
+                return size_amount, size_unit
+        raise Exception("This can't happen: size=%r" % size)
 
+    def humanise_speed(self, size, duration):
         speed_table = [
             (1024**3, 'GiB/s'),
             (1024**2, 'MiB/s'),
             (1024**1, 'KiB/s'),
             (0, 'B/s')
         ]
-        duration = time.time() - self.started
-        speed = float(self.uploaded_bytes) / duration
+
+        speed = float(size) / duration
         for speed_base, speed_unit in speed_table:
             if speed >= speed_base:
                 if speed_base > 0:
                     speed_amount = speed / speed_base
                 else:
                     speed_amount = speed
-                break
-
-        duration_string = ''
-        seconds = duration
-        if seconds >= 3600:
-            duration_string += '%dh' % int(seconds/3600)
-            seconds %= 3600
-        if seconds >= 60:
-            duration_string += '%dm' % int(seconds/60)
-            seconds %= 60
-        if seconds > 0:
-            duration_string += '%ds' % round(seconds)
-
-        logging.info('Backup performance statistics:')
-        logging.info('* files found: %s' % self.file_count)
-        logging.info('* files backed up: %s' % self.backed_up_count)
-        logging.info('* uploaded data: %s bytes (%s %s)' %
-                        (self.uploaded_bytes, size_amount, size_unit))
-        logging.info('* duration: %s s' % duration)
-        logging.info('* average speed: %s %s' % (speed_amount, speed_unit))
-        self._ts.notify(
-            'Backed up %d files (of %d found), '
-            'uploaded %.1f %s in %s at %.1f %s average speed' %
-                (self.backed_up_count, self.file_count,
-                 size_amount, size_unit,
-                 duration_string, speed_amount, speed_unit))
+                return speed_amount, speed_unit
+        raise Exception(
+            "This can't happen: size=%r duration=%r" % (size, duration))
 
 
 class BackupPlugin(obnamlib.ObnamPlugin):
@@ -309,7 +353,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.repo.unlock_chunk_indexes()
             self.got_chunk_indexes_lock = False
 
-        self.errors = False
         self.chunkid_pool = ChunkidPool()
         try:
             if not self.pretend:
@@ -360,7 +403,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.progress.what('closing connection to repository')
             self.repo.close()
             self.progress.clear()
-            self.progress.report_stats()
+            self.progress.report_stats(self.repo.get_fs())
 
             logging.info('Backup finished.')
             self.app.hooks.call('backup-finished', args, self.progress)
@@ -371,7 +414,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.unlock_when_error()
             raise
 
-        if self.errors:
+        if self.progress.errors:
             raise BackupErrors()
 
     def unlock_when_error(self):
@@ -513,7 +556,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
             self.backup_parents('.')
 
-        remove_checkpoints = (not self.errors and
+        remove_checkpoints = (not self.progress.errors and
                               not self.app.settings['leave-checkpoints']
                               and not self.pretend)
         if remove_checkpoints:
