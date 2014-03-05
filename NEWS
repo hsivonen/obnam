@@ -48,6 +48,9 @@ Version 1.7, released UNRELEASED
   data: filenames, permission bits, extended attributes, etc, plus
   Obnam internal bookkeeping.
 
+* `obnam verify` now shows progress both based on number of files and
+  amount of data.
+
 Bug fixes:
 
 * Obnam now creates a `trustdb.gpg` in the temporary GNUPGHOME it uses

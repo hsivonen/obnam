@@ -79,12 +79,15 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
 
         self.app.ts['done'] = 0
         self.app.ts['total'] = 0
+        self.app.ts['done_bytes'] = 0
+        self.app.ts['total_bytes'] = 0
         self.app.ts['filename'] = ''
         if not self.app.settings['quiet']:
             self.app.ts.format(
                 '%ElapsedTime() '
                 'verifying file %Counter(filename)/%Integer(total) '
-                '%PercentDone(done,total): '
+                '%ByteSize(done_bytes)/%ByteSize(total_bytes) '
+                '%PercentDone(done_bytes,total_bytes): '
                 '%Pathname(filename)')
 
         num_randomly = self.app.settings['verify-randomly']
@@ -92,6 +95,9 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
             self.app.ts['total'] = \
                 self.repo.get_generation_key(
                 gen_id, obnamlib.REPO_GENERATION_FILE_COUNT)
+            self.app.ts['total_bytes'] = \
+                self.repo.get_generation_key(
+                gen_id, obnamlib.REPO_GENERATION_TOTAL_DATA)
             for filename in self.walk(gen_id, args):
                 self.app.ts['filename'] = filename
                 try:
@@ -197,6 +203,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         for chunkid in chunkids:
             backed_up = self.repo.get_chunk_content(chunkid)
             live_data = f.read(len(backed_up))
+            self.app.ts['done_bytes'] += len(backed_up)
             if backed_up != live_data:
                 return False
         return True
