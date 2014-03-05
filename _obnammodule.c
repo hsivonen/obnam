@@ -183,6 +183,10 @@ llistxattr_wrapper(PyObject *self, PyObject *args)
 #ifdef __FreeBSD__
     bufsize = extattr_list_link(filename, EXTATTR_NAMESPACE_USER, NULL, 0);
     buf = malloc(bufsize);
+    if (buf == NULL) {
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
     n = extattr_list_link(filename, EXTATTR_NAMESPACE_USER, buf, bufsize);
     if (n >= 0) {
          /* Convert from length-prefixed BSD style to '\0'-suffixed
@@ -205,6 +209,10 @@ llistxattr_wrapper(PyObject *self, PyObject *args)
     do {
         bufsize += 1024;
         buf = malloc(bufsize);
+        if (buf == NULL) {
+            Py_INCREF(Py_None);
+            return Py_None;
+        }
         n = llistxattr(filename, buf, bufsize);
 
         if (n >= 0)
@@ -234,6 +242,10 @@ lgetxattr_wrapper(PyObject *self, PyObject *args)
     do {
         bufsize += 1024;
         char *buf = malloc(bufsize);
+        if (buf == NULL) {
+            Py_INCREF(Py_None);
+            return Py_None;
+        }
 #ifdef __FreeBSD__
 	int n = extattr_get_link(filename, EXTATTR_NAMESPACE_USER, attrname, buf, bufsize);
 #else

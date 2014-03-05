@@ -33,6 +33,11 @@ import obnamlib
 EXTRA_OPEN_FLAGS = getattr(os, "O_NOATIME", 0)
 
 
+class MallocError(obnamlib.ObnamError):
+
+    msg = 'malloc out of memory while calling {function}'
+
+
 class LocalFSFile(file):
 
     def read(self, amount=-1):
@@ -179,12 +184,16 @@ class LocalFS(obnamlib.VirtualFileSystem):
 
     def llistxattr(self, filename): # pragma: no cover
         ret = obnamlib._obnam.llistxattr(self.join(filename))
+        if ret is None:
+            raise MallocError(function='llistxattr')
         if type(ret) is int:
             raise OSError(ret, os.strerror(ret), filename)
         return [s for s in ret.split('\0') if s]
 
     def lgetxattr(self, filename, attrname): # pragma: no cover
         ret = obnamlib._obnam.lgetxattr(self.join(filename), attrname)
+        if ret is None:
+            raise MallocError(function='llistxattr')
         if type(ret) is int:
             raise OSError(ret, os.strerror(ret), filename)
         return ret
