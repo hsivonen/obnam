@@ -58,7 +58,7 @@ class Build(build):
         build.run(self)
 
         print 'building manpages'
-        for x in ['obnam', 'obnam-benchmark']:
+        for x in ['obnam']:
             with open('%s.1' % x, 'w') as f:
                 runcmd(['python', x, '--generate-manpage=%s.1.in' % x,
                         '--output=%s.1' % x], stdout=f)
