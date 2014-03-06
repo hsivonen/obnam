@@ -53,3 +53,19 @@ existing client's name.
     GIVEN directory L with interesting filesystem objects
     WHEN user U1 backs up directory L to repository R
     THEN user U2 can see user U1 in repository R
+
+Two clients sharing chunks, one forgets its generations
+-------------------------------------------------------
+
+What happens when two clients share chunks and one of them forgets its
+generations? A problem was found in this scenario by Nemo Inis in
+2014.
+
+    SCENARIO two clients share chunks and one forgets is generations
+    GIVEN 1k of new data in directory L
+    AND a manifest of L in M
+    WHEN user U1 backs up directory L to repository R
+    AND user U2 backs up directory L to repository R
+    AND user U1 forgets the oldest generation in repository R
+    AND user U2 restores their latest generation in repository R into X
+    THEN L, restored to X, matches manifest M
