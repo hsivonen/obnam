@@ -237,13 +237,13 @@ class RestorePlugin(obnamlib.ObnamPlugin):
                     msg = ('Could not set metadata: %s: %d: %s' %
                             (pathname, e.errno, e.strerror))
                     logging.error(msg)
-                    self.app.ts.notify(msg)
+                    self.app.ts.error(msg)
                     self.errors = True
         except Exception, e:
             # Reaching this code path means we've hit a bug, so we log a full traceback.
             msg = "Failed to restore %s:" % (pathname,)
             logging.exception(msg)
-            self.app.ts.notify(msg + " " + str(e))
+            self.app.ts.error(msg + " " + str(e))
             self.errors = True
 
     def restore_dir(self, gen, root, metadata):
