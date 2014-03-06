@@ -240,7 +240,8 @@ class RestorePlugin(obnamlib.ObnamPlugin):
                     self.app.ts.error(msg)
                     self.errors = True
         except Exception, e:
-            # Reaching this code path means we've hit a bug, so we log a full traceback.
+            # Reaching this code path means we've hit a bug, so we log
+            # a full traceback.
             msg = "Failed to restore %s:" % (pathname,)
             logging.exception(msg)
             self.app.ts.error(msg + " " + str(e))
