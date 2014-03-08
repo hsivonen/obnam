@@ -890,6 +890,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             for chunkid in find():
                 data2 = get(chunkid)
                 if data == data2:
+                    share(chunkid)
                     return chunkid
             else:
                 chunkid = put()
@@ -898,11 +899,11 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         elif mode == 'fatalist':
             existing = find()
             if existing:
-                return existing[0]
+                chunkid = existing[0]
             else:
                 chunkid = put()
-                share(chunkid)
-                return chunkid
+            share(chunkid)
+            return chunkid
         else:
             if not hasattr(self, 'bad_deduplicate_reported'):
                 logging.error('unknown --deduplicate setting value')
