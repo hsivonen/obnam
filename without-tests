@@ -24,3 +24,4 @@ test-plugins/hello_plugin.py
 test-plugins/oldhello_plugin.py
 test-plugins/aaa_hello_plugin.py
 test-plugins/wrongversion_plugin.py
+obnamlib/plugins/dump_repo_plugin.py
