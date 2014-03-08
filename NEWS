@@ -62,6 +62,11 @@ Bug fixes:
   checkpoint was finished, instead of saying the name of the file.
   This is now fixed.
 
+* Obnam now doesn't remove chunks that are shared between clients.
+  Previously, this would sometimes happen, because only the first
+  client would correctly record itself as using a chunk. Now all
+  clients do that.
+
 Internal changes:
 
 * The `obnamlib.Error` exception class has been replaced by the
