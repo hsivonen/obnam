@@ -818,7 +818,12 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         except obnamlib.RepositoryChunkDoesNotExist:
             return False
         actual_checksum = self._checksum(content)
-        expected_checksum = self._chunklist.get_checksum(chunk_id)
+        try:
+            expected_checksum = self._chunklist.get_checksum(chunk_id)
+        except KeyError: # pragma: no cover
+            # Chunk is not in the checksum tree, so we cannot valide
+            # its checksum. We'll just assume it's OK.
+            return True
         return actual_checksum == expected_checksum
 
     # Individual files in a generation.
