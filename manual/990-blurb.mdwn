@@ -1,0 +1,26 @@
+Supporting Obnam development
+============================
+
+Obnam is free software: you get full access to the source code, you
+can modify the software as you wish, and you can distribute copies of
+the software in its original or modified form. It is also free of
+charge.
+
+One of the goals of Obnam is to make sure everyone has access to
+nice backup software, and are not beholden to anyone else for that
+software. You can use Obnam, and store your backups anywhere that
+suits you, and the Obnam developers have no say in that.
+
+However, Obnam development requires some resources. Obnam is primarily
+developed by Lars Wirzenius, its original author (hi!), in his free
+time. If you would like to help support Obnam development, here's a
+list of things you could do:
+
+* Send fixes and improvements, either to code or documentation.
+* Donate something to the author. See
+  <http://liw.fi/obnam/donate/> for suggestions.
+* Hire the author to do some Obnam development. Contact him privately
+  by e-mail (liw@liw.fi).
+
+Note that any of these are optional. If you like Obnam, and are happy
+just using it, that's completely OK.
