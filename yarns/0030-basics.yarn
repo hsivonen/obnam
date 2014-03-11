@@ -99,6 +99,32 @@ attribute value changes.
     AND user U restores their latest generation in repository R into X
     THEN L, restored to X, matches manifest M
 
+Backup without changes
+----------------------
+
+If we run a backup, then a new one, then the new generation should
+match the first one, and no files should be have been backed up in the
+second generation.
+
+    SCENARIO no-op backup
+    GIVEN a file F in L, with data
+    AND a manifest of L in M
+    WHEN user U backs up directory L to repository R
+    THEN L, restored to X, matches manifest M
+
+Remove the Obnam log file, so we only have the log from the next
+backup run.
+
+    WHEN user U removes file obnam.log
+    AND user U backs up directory L to repository R
+
+Note that Obnam always backs up the root directory, so we match
+against one, not zero, below.
+
+    THEN obnam.log matches INFO \* files backed up: 1$
+    AND L, restored to X, matches manifest M
+
+
 Backup to roots at once
 -----------------------
 

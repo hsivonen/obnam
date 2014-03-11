@@ -88,6 +88,11 @@ We need to manipulate extended attributes.
     mkdir -p $(dirname "$DATADIR/$MATCH_1")
     setfattr --name="$MATCH_2" --value "$MATCH_3" "$DATADIR/$MATCH_1"
 
+Sometimes we need to remove a file.
+
+    IMPLEMENTS WHEN user (\S+) removes file (\S+)
+    rm -f "$DATADIR/$MATCH_2"
+
 Manifest creation and checking
 ------------------------------
 
@@ -421,7 +426,7 @@ be careful. `grep -E` regular expressions are used here.
 
 Does any line match?
 
-    IMPLEMENTS THEN (\S+) matches (\S+)
+    IMPLEMENTS THEN (\S+) matches (.*)$
     grep -E -e "$MATCH_2" -- "$DATADIR/$MATCH_1"
 
 Do all lines match?
