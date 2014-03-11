@@ -21,6 +21,8 @@ import shutil
 import tempfile
 import unittest
 
+import cliapp
+
 import obnamlib
 from obnamlib import _obnam
 
@@ -54,21 +56,51 @@ class XAttrTests(unittest.TestCase):
     '''Tests for extended attributes.'''
 
     def setUp(self):
-        fd, self.filename = tempfile.mkstemp()
-        os.close(fd)
+        self.tempdir = tempfile.mkdtemp()
+        self.filename = os.path.join(self.tempdir, 'file.txt')
+        self.other = os.path.join(self.tempdir, 'other.txt')
+
+    def tearDown(self):
+        shutil.rmtree(self.tempdir)
+
+    def user_xattr_are_supported(self):
+        # Not all filesystems, or mounts of them, support extended
+        # attributes. In order to not fail, we verify that things
+        # work. We do this by checking if we can set a user.foo
+        # attribute with the command line tool.
+
+        try:
+            exit, out, err = cliapp.runcmd_unchecked(
+                ['setfattr', '-n', 'user.foo', 'bar', self.other])
+        except OSError:
+            # Either xattr aren't supported, or setfattr isn't
+            # installed and we can't test.
+            return False
+        return exit == 0
 
     def test_empty_list(self):
         '''A new file has no extended attributes.'''
-        self.assertEqual(_obnam.llistxattr(self.filename), "")
+
+        if self.user_xattr_are_supported():
+            self.assertEqual(_obnam.llistxattr(self.filename), "")
 
     def test_lsetxattr(self):
         '''lsetxattr() sets an attribute on a file.'''
-        _obnam.lsetxattr(self.filename, "user.key", "value")
-        _obnam.lsetxattr(self.filename, "user.hello", "world")
-        self.assertEqual(sorted(_obnam.llistxattr(self.filename).strip("\0").split("\0")),
-                         ["user.hello", "user.key"])
+
+        if self.user_xattr_are_supported():
+            _obnam.lsetxattr(self.filename, "user.key", "value")
+            _obnam.lsetxattr(self.filename, "user.hello", "world")
+            ret = _obnam.llistxattr(self.filename)
+
+            self.assertEqual(
+                sorted(ret.strip("\0").split("\0")),
+                ["user.hello", "user.key"])
 
     def test_lgetxattr(self):
         '''lgetxattr() gets the value of an attribute set on the file.'''
-        _obnam.lsetxattr(self.filename, "user.hello", "world")
-        self.assertEqual(_obnam.lgetxattr(self.filename, "user.hello"), "world")
+
+        if self.user_xattr_are_supported():
+            _obnam.lsetxattr(self.filename, "user.hello", "world")
+            self.assertEqual(
+                _obnam.lgetxattr(self.filename, "user.hello"),
+                "world")
