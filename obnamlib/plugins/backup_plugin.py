@@ -526,9 +526,21 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                         metadata.md5 = self.backup_file_contents(pathname,
                                                                  metadata)
                     self.backup_metadata(pathname, metadata)
-                except (IOError, OSError), e:
-                    msg = 'Can\'t back up %s: %s' % (pathname, e.strerror)
-                    self.progress.error(msg, e)
+                except (IOError, OSError) as e:
+
+                    if type(e) is IOError:
+                        e2 = obnamlib.ObnamIOError(
+                            errno=e.errno,
+                            strerror=e.strerror,
+                            filename=e.filename)
+                    else:
+                        e2 = obnamlib.ObnamSystemError(
+                            errno=e.errno,
+                            strerror=e.strerror,
+                            filename=e.filename)
+
+                    msg = 'Can\'t back up %s: %s' % (pathname, str(e2))
+                    self.progress.error(msg, exc=e)
                     if not existed and not self.pretend:
                         try:
                             self.repo.remove_file(
@@ -550,6 +562,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                             self.progress.error(msg, ee)
                     if e.errno == errno.ENOSPC:
                         raise
+
                 if self.time_for_checkpoint():
                     self.make_checkpoint()
                     self.progress.what(pathname)

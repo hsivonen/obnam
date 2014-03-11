@@ -95,7 +95,7 @@ from vfs_local import LocalFS
 from fsck_work_item import WorkItem
 from lockmgr import LockManager
 from forget_policy import ForgetPolicy
-from app import App
+from app import App, ObnamIOError, ObnamSystemError
 
 from repo_factory import (
     RepositoryFactory,

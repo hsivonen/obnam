@@ -1,2 +1,2 @@
-ERROR: Can't back up TMP/data/bbb: Permission denied
+ERROR: Can't back up TMP/data/bbb: RD5FA4X: System error: TMP/data/bbb: 13: Permission denied
 ERROR: R4C3BCX: There were errors during the backup
