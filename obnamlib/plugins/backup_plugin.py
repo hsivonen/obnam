@@ -532,12 +532,12 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                         e2 = obnamlib.ObnamIOError(
                             errno=e.errno,
                             strerror=e.strerror,
-                            filename=e.filename)
+                            filename=e.filename or pathname)
                     else:
                         e2 = obnamlib.ObnamSystemError(
                             errno=e.errno,
                             strerror=e.strerror,
-                            filename=e.filename)
+                            filename=e.filename or pathname)
 
                     msg = 'Can\'t back up %s: %s' % (pathname, str(e2))
                     self.progress.error(msg, exc=e)
