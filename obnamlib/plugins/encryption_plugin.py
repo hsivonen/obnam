@@ -122,8 +122,6 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         self._write_file(repo, os.path.join(toplevel, 'userkeys'), encrypted)
 
     def filter_read(self, encrypted, repo, toplevel):
-        if not self.keyid:
-            return encrypted
         symmetric_key = self.get_symmetric_key(repo, toplevel)
         return obnamlib.decrypt_symmetric(encrypted, symmetric_key)
 

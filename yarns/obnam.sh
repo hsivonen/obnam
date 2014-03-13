@@ -156,3 +156,8 @@ manifest()
     normalise_manifest_times |
     remove_nlink_for_directories
 }
+
+
+# Create a dummy $HOME that actually exists.
+export HOME="$DATADIR/home"
+mkdir -p "$HOME"
