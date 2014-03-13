@@ -100,6 +100,25 @@ We'll assume the diff works, we'll just check whether it's empty.
     AND user U diffs generations 1 and 2 in repository R into D
     THEN file D is not empty
 
+`obnam forget` does nothing by default
+----------------------
+
+`obnam forget` is the command to remove backup generations from the
+repository. It can be used to remove specific generations, or to
+remove generations according to a schedule. If neither is specified,
+it should do nothing.
+
+    SCENARIO forget does nothing by default
+    GIVEN 1K of new data in directory L
+    AND a manifest of L in M
+
+    WHEN user U backs up directory L to repository R
+    AND user U runs obnam forget without generations or keep policy on repository R
+    THEN user U sees 1 generation in repository R
+
+    WHEN user U restores their latest generation in repository R into X
+    THEN L, restored to X, matches manifest M
+
 Forgetting a specific generation (`obnam forget`)
 --------------------------------
 

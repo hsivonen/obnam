@@ -258,6 +258,12 @@ We may need to restore only a single file.
 Removing (forgetting) generations
 ---------------------------------
 
+Run `obnam forget` with neither a policy of what to keep, nor a
+specific list of generations.
+
+    IMPLEMENTS WHEN user (\S+) runs obnam forget without generations or keep policy on repository (\S+)
+    run_obnam "$MATCH_1" forget -r "$DATADIR/$MATCH_2"
+
 Remove the oldest generation.
 
     IMPLEMENTS WHEN user (\S+) forgets the oldest generation in repository (\S+)
