@@ -1,6 +1,9 @@
 obnam (1.7.1-1) UNRELEASED; urgency=low
 
   * Add python-yaml as a build and runtime dependency.
+  * New upstream version. Fixes bugs in Debian:
+    - Explain CACHEDIR.TAG with
+      http://www.brynosaurus.com/cachedir/spec.html (Closes: #732317)
 
  -- Lars Wirzenius <liw@liw.fi>  Tue, 11 Mar 2014 19:39:41 +0000
 
