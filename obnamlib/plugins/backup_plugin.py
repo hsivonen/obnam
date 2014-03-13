@@ -252,10 +252,14 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                                  'read exclude patterns from FILE',
                                  metavar='FILE',
                                  group=backup_group)
-        self.app.settings.boolean(['exclude-caches'],
-                                    'exclude directories (and their subdirs) '
-                                    'that contain a CACHEDIR.TAG file',
-                                 group=backup_group)
+        self.app.settings.boolean(
+            ['exclude-caches'],
+            'exclude directories (and their subdirs) '
+            'that contain a CACHEDIR.TAG file (see '
+            'http://www.brynosaurus.com/cachedir/spec.html for what '
+            'it needs to contain, and http://liw.fi/cachedir/ for a '
+            'helper tool)',
+            group=backup_group)
         self.app.settings.boolean(['one-file-system'],
                                     'exclude directories (and their subdirs) '
                                     'that are in a different filesystem',
