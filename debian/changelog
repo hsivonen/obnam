@@ -4,6 +4,7 @@ obnam (1.7.1-1) UNRELEASED; urgency=low
   * New upstream version. Fixes bugs in Debian:
     - Explain CACHEDIR.TAG with
       http://www.brynosaurus.com/cachedir/spec.html (Closes: #732317)
+    - "ship an example obnam.conf" (Closes: #678885)
 
  -- Lars Wirzenius <liw@liw.fi>  Tue, 11 Mar 2014 19:39:41 +0000
 
