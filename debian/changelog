@@ -1,4 +1,4 @@
-obnam (1.7.1-1) unstable; urgency=low
+obnam (1.7-1) unstable; urgency=low
 
   * Add python-yaml as a build and runtime dependency.
   * New upstream version. Fixes bugs in Debian:
