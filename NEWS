@@ -3,8 +3,13 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
-Version 1.7, released UNRELEASED
+Version 1.7, released 2014-03-15
 --------------------------------
+
+WARNING: This release has had fairly large parts of the internals
+re-written. There shouldn't be any externally visible changes due to
+that, but there is a chance of bugs. Be careful. Make a copy of your
+backup repository before upgrading, if you can.
 
 * The `convert5to6` subcommand has been removed. If you need to
   convert from a pre-1.0 backup repository, and haven't done so yet,
@@ -53,6 +58,11 @@ Version 1.7, released UNRELEASED
 
 Bug fixes:
 
+* Obnam now doesn't remove chunks that are shared between clients.
+  Previously, this would sometimes happen, because only the first
+  client would correctly record itself as using a chunk. Now all
+  clients do that.
+
 * Obnam now creates a `trustdb.gpg` in the temporary GNUPGHOME it uses
   during encryption operations. From version 2.0.22 (or thereabouts),
   `gpg` insists on having a `trustdb.gpg` in the GNUPGHOME it uses.
@@ -61,11 +71,6 @@ Bug fixes:
   the middle of it, Obnam would say "continuing backup" after the
   checkpoint was finished, instead of saying the name of the file.
   This is now fixed.
-
-* Obnam now doesn't remove chunks that are shared between clients.
-  Previously, this would sometimes happen, because only the first
-  client would correctly record itself as using a chunk. Now all
-  clients do that.
 
 Internal changes:
 

@@ -1,4 +1,4 @@
-obnam (1.7.1-1) UNRELEASED; urgency=low
+obnam (1.7.1-1) unstable; urgency=low
 
   * Add python-yaml as a build and runtime dependency.
   * New upstream version. Fixes bugs in Debian:
@@ -7,8 +7,9 @@ obnam (1.7.1-1) UNRELEASED; urgency=low
     - "ship an example obnam.conf" (Closes: #678885)
   * debian/control: Updated build and runtime dependencies to versions
     in wheezy or my current package versions, as appropriate.
+  * debian/control: Bumped Standards-Version. No changes required.
 
- -- Lars Wirzenius <liw@liw.fi>  Tue, 11 Mar 2014 19:39:41 +0000
+ -- Lars Wirzenius <liw@liw.fi>  Sat, 15 Mar 2014 17:18:30 +0000
 
 obnam (1.6.1-1) unstable; urgency=low
 
