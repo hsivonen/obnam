@@ -1,6 +1,6 @@
 Source: obnam
 Maintainer: Lars Wirzenius <liw@liw.fi>
-Uploader: Gaudenz Steinlin <gaudenz@debian.org>
+Uploaders: Gaudenz Steinlin <gaudenz@debian.org>
 Section: python
 Priority: optional
 Standards-Version: 3.9.5
