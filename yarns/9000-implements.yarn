@@ -278,6 +278,12 @@ Remove according to a `--keep` schedule.
     IMPLEMENTS WHEN user (\S+) forgets according to schedule (\S+) in repository (\S+)
     run_obnam "$MATCH_1" forget -r "$DATADIR/$MATCH_3" --keep "$MATCH_2"
 
+Pretend to forget.
+
+    IMPLEMENTS WHEN user (\S+) pretends to forget according to schedule (\S+) in repository (\S+)
+    run_obnam "$MATCH_1" \
+        forget --pretend -r "$DATADIR/$MATCH_3" --keep "$MATCH_2"
+
 List generations
 ----------------
 

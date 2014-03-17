@@ -157,3 +157,20 @@ The normal way of forgetting generations is with the `obnam forget
     THEN user U sees 1 generation in repository R
     WHEN user U restores their latest generation in repository R into X
     THEN L, restored to X, matches manifest M
+
+Dnn't really forget anything if pretending
+------------------------------------------
+
+The `--pretend` option prevents `obnam forget` from actually removing
+anything, but lets the user see what would be removed.
+
+    SCENARIO forget doesn't really, when pretending
+    GIVEN 1kB of new data in directory L
+    WHEN user U backs up directory L to repository R
+    GIVEN 1kB of new data in directory L
+    AND a manifest of L in M
+    WHEN user U backs up directory L to repository R
+    AND user U pretends to forget according to schedule 1y in repository R
+    THEN user U sees 2 generations in repository R
+    WHEN user U restores their latest generation in repository R into X
+    THEN L, restored to X, matches manifest M
