@@ -163,20 +163,21 @@ class ObnamFuseFile(object):
 
         for chunkid in chunkids:
             if chunkid in size_cache:
+                # Don't read the contents of the chunk until later,
+                # in case it can be skipped completely.
                 contents = None
-                size = size_cache[chunkid]
             else:
                 contents = self.fuse_fs.obnam.repo.get_chunk_content(chunkid)
-                size = len(contents)
-                size_cache[chunkid] = size
+                size_cache[chunkid] = len(contents)
+            size = size_cache[chunkid]
 
-            if chunk_pos_in_file + size >= offset:
+            if chunk_pos_in_file + size > offset:
                 start = offset - chunk_pos_in_file
                 n = length - output_length
                 if contents is None:
                     contents = self.fuse_fs.obnam.repo.get_chunk_content(
                         chunkid)
-                data = contents[start : n]
+                data = contents[start : start+n]
                 output.append(data)
                 output_length += len(data)
                 assert output_length <= length
