@@ -1,10 +1,11 @@
 obnam (1.8-1) UNRELEASED; urgency=low
 
   * New upstream release.
-  * Fix "typo in debian/control: s/Uploader/Uploaders/" <explain what
-    you changed and why> (Closes: #729347)
+    * Fix "obnam mount fails to retrieve files over 64KB (obnam restore
+      works fine)" (Closes: #741968)
+  * Fix "typo in debian/control: s/Uploader/Uploaders/" (Closes: #729347)
 
- -- Lars Wirzenius <liw@liw.fi>  Sun, 16 Mar 2014 12:47:32 +0000
+ -- Lars Wirzenius <liw@liw.fi>  Tue, 18 Mar 2014 08:42:28 +0000
 
 obnam (1.7-1) unstable; urgency=low
 
