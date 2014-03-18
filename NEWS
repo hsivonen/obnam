@@ -3,6 +3,16 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
+Version 1.8, released UNRELEASED
+--------------------------------
+
+Bug fixes:
+
+* Nemo Inis found a bug in the FUSE plugin (`obnam mount`), where
+  Obnam would return the wrong data when the program reading the file
+  didn't read the whole file from the beginning in one read(2) system
+  call.
+
 Version 1.7, released 2014-03-15
 --------------------------------
 

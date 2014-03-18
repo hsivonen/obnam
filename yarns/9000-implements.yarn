@@ -37,6 +37,11 @@ between steps.
     IMPLEMENTS GIVEN (\S+) of new data in directory (\S+)
     genbackupdata --quiet --create "$MATCH_1" "$DATADIR/$MATCH_2"
 
+Sometimes we need an amount of data in a specific file.
+
+    IMPLEMENTS GIVEN (\S+) of data in file (\S+)
+    "$SRCDIR/mkdata" --size "$MATCH_1" "$DATADIR/$MATCH_2"
+
 We also need to generate a sparse file. A sparse file has at least one
 hole in it, and it may matter where the hole is: at the beginning,
 middle, or end of the file. Thus, we provide a way for scenarios to

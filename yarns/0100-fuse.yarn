@@ -31,6 +31,20 @@ Clean up.
 
     FINALLY unmount repository F
 
+In 2014, for Obnam 1.7, a bug was reported that the FUSE plugin would
+only read the first 64 kilobytes of a file. Verify that this is no
+longer a problem.
+
+    SCENARIO restoring a big file with FUSE
+    ASSUMING user is in group fuse
+    GIVEN 1M of data in file L/big.dat
+    AND a manifest of L in M
+    WHEN user U backs up directory L to repository R
+    AND user U FUSE mounts the repository R at F
+    THEN L, restored to F/latest, matches manifest M
+    AND big.dat in L and in mounted F compare equally
+    FINALLY unmount repository F
+
 We can only run this test if the user is in the `fuse` group. This may
 be a portability concern: this works in Debian GNU/Linux, but might be
 different in other Linux distros, or on non-Linux systems. (If it
@@ -44,6 +58,15 @@ against the FUSE mount, and comparing the two manifests.
     mkdir "$DATADIR/$MATCH_3"
     run_obnam "$MATCH_1" mount -r "$DATADIR/$MATCH_2" \
         --to "$DATADIR/$MATCH_3"
+
+We also check a specific file by comparing it in the mount and in its
+original location. We do the comparison with cmp(1) instead of the
+usual way, because this triggered a bug.
+
+    IMPLEMENTS THEN (\S+) in (\S+) and in mounted (\S+) compare equally
+    cmp \
+        "$DATADIR/$MATCH_2/$MATCH_1" \
+        "$DATADIR/$MATCH_3/latest/$DATADIR/$MATCH_2/$MATCH_1"
 
 If we did do the fuse mount, **always** unmount it, even when a step
 failed. We do not want failed test runs to leavo mounts lying around.
