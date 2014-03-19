@@ -158,6 +158,72 @@ The normal way of forgetting generations is with the `obnam forget
     WHEN user U restores their latest generation in repository R into X
     THEN L, restored to X, matches manifest M
 
+There has been reports that the "keep N hourly backups" type of
+`--keep` policy doesn't work. Test this by creating several
+generations, pretending the time is something specific, and then check
+that the right ones get kept. For each calendar hour, we make two
+generations, and we create them for every other calendar hour, for
+four such hours (covering a total of eight hours). We then keep two
+hourly backups. This should result in the later of each backup during
+a calendar hour to be kept, for the last two calendar hours.
+
+    SCENARIO keep N hourly generations
+
+The first generation of the first hour.
+
+    GIVEN user U sets configuration pretend-time to 2014-03-19 01:00:00
+    AND 1kB of new data in directory L
+    WHEN user U backs up directory L to repository R
+
+The second generation of the first hour.
+
+    GIVEN user U sets configuration pretend-time to 2014-03-19 01:30:00
+    AND 1kB of new data in directory L
+    WHEN user U backs up directory L to repository R
+
+The first generation of the second hour.
+
+    GIVEN user U sets configuration pretend-time to 2014-03-19 02:00:00
+    AND 1kB of new data in directory L
+    WHEN user U backs up directory L to repository R
+
+The second generation of the second hour.
+
+    GIVEN user U sets configuration pretend-time to 2014-03-19 02:30:00
+    AND 1kB of new data in directory L
+    WHEN user U backs up directory L to repository R
+
+The first generation of the third hour.
+
+    GIVEN user U sets configuration pretend-time to 2014-03-19 03:00:00
+    AND 1kB of new data in directory L
+    WHEN user U backs up directory L to repository R
+
+The second generation of the third hour.
+
+    GIVEN user U sets configuration pretend-time to 2014-03-19 03:30:00
+    AND 1kB of new data in directory L
+    WHEN user U backs up directory L to repository R
+
+The first generation of the fourth hour.
+
+    GIVEN user U sets configuration pretend-time to 2014-03-19 04:00:00
+    AND 1kB of new data in directory L
+    WHEN user U backs up directory L to repository R
+
+The second generation of the fourth hour.
+
+    GIVEN user U sets configuration pretend-time to 2014-03-19 04:30:00
+    AND 1kB of new data in directory L
+    WHEN user U backs up directory L to repository R
+
+Now run the forget and verify.
+
+    WHEN user U forgets according to schedule 2h in repository R
+    THEN user U sees 2 generations in repository R
+    AND user U has 1st generation timestamp 2014-03-19 03:30:00 in repository R
+    AND user U has 2nd generation timestamp 2014-03-19 04:30:00 in repository R
+
 Dnn't really forget anything if pretending
 ------------------------------------------
 

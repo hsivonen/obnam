@@ -190,7 +190,7 @@ someone else.
 
 Add a setting to a client's configuration file.
 
-    IMPLEMENTS GIVEN user (\S+) sets configuration (\S+) to (\S+)
+    IMPLEMENTS GIVEN user (\S+) sets configuration (\S+) to (.*)
     add_to_config "$MATCH_1" "$MATCH_2" "$MATCH_3"
 
 Backing up
@@ -331,6 +331,18 @@ Check that there are no checkpoint generations.
         echo "Can see checkpoint generations!" 1>&2
         exit 1
     fi
+
+Check timestamps of specific generations.
+
+    IMPLEMENTS THEN user (\S+) has (\d+)(st|nd|rd|th) generation timestamp (.*) in repository (\S+)
+    run_obnam "$MATCH_1" generations -r "$DATADIR/$MATCH_5" |
+    sed -n "${MATCH_2}p" |
+    awk -v "T=$MATCH_4" '
+        ($2 " " $3) != T {
+            print "Fail to match: " $0
+            exit 1 
+        }
+    '
 
 Diffs between generations
 -------------------------
