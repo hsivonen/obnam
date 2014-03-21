@@ -4,6 +4,7 @@ obnam (1.8-1) UNRELEASED; urgency=low
     * Fix "obnam mount fails to retrieve files over 64KB (obnam restore
       works fine)" (Closes: #741968)
   * Fix "typo in debian/control: s/Uploader/Uploaders/" (Closes: #729347)
+  * Drop dependency on python-yaml, since yaml is no longer used.
 
  -- Lars Wirzenius <liw@liw.fi>  Tue, 18 Mar 2014 08:42:28 +0000
 

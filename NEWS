@@ -6,6 +6,9 @@ This file summarizes changes between releases of Obnam.
 Version 1.8, released UNRELEASED
 --------------------------------
 
+* The `dump-repo` command now outputs JSON instead of YAML. The
+  dependency on PyYAML is no longer.
+
 Bug fixes:
 
 * Nemo Inis found a bug in the FUSE plugin (`obnam mount`), where

@@ -14,7 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import yaml
+import json
 
 import obnamlib
 
@@ -31,10 +31,9 @@ class DumpRepositoryPlugin(obnamlib.ObnamPlugin):
 
     def cmd_dump_repo(self, args):
         repo = self.app.get_repository_object()
-        yaml.safe_dump_all(
-            self.dump_repository(repo),
-            stream=self.app.output,
-            default_flow_style=False)
+        for obj in self.dump_repository(repo):
+            json.dump(obj, self.app.output, indent=4)
+            self.app.output.write('\n')
         repo.close()
 
     def dump_repository(self, repo):
