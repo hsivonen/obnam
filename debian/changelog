@@ -5,6 +5,9 @@ obnam (1.8-1) UNRELEASED; urgency=low
       works fine)" (Closes: #741968)
   * Fix "typo in debian/control: s/Uploader/Uploaders/" (Closes: #729347)
   * Drop dependency on python-yaml, since yaml is no longer used.
+  * Drop python-coverage-test-runner build-dependency to 0.8, which is
+    in Debian. Newer upstream versions have no functional changes, so
+    are not uploaded to Debian.
 
  -- Lars Wirzenius <liw@liw.fi>  Tue, 18 Mar 2014 08:42:28 +0000
 
