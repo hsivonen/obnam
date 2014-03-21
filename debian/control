@@ -19,8 +19,7 @@ Build-Depends: debhelper (>= 7.3.8),
     python-fuse,
     pandoc,
     texlive,
-    lmodern,
-    python-yaml
+    lmodern
 Homepage: http://liw.fi/obnam/
 X-Python-Version: >= 2.6
 
@@ -33,8 +32,7 @@ Depends: ${shlibs:Depends}, ${python:Depends}, ${misc:Depends},
     python-paramiko,
     python-tracing (>= 0.8~),
     python-cliapp (>= 1.20130808~),
-    python-fuse,
-    python-yaml
+    python-fuse
 Description: online and disk-based backup application
  Obnam makes backups. Backups can be stored on local hard disks, or online
  via the SSH SFTP protocol. The backup server, if used, does not require any
