@@ -8,6 +8,7 @@ obnam (1.8-1) UNRELEASED; urgency=low
   * Drop python-coverage-test-runner build-dependency to 0.8, which is
     in Debian. Newer upstream versions have no functional changes, so
     are not uploaded to Debian.
+  * debian/control: Update format and source URLs.
 
  -- Lars Wirzenius <liw@liw.fi>  Tue, 18 Mar 2014 08:42:28 +0000
 

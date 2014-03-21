@@ -1,7 +1,7 @@
-Format-Specification: http://svn.debian.org/wsvn/dep/web/deps/dep5.mdwn?op=file&rev=135
+Format-Specification: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Name: obnam
 Maintainer: Lars Wirzenius <liw@liw.fi>
-Source: http://braawi.org/obnam/
+Source: http://liw.fi/obnam/
 
 Files: *
 Copyright: 2010, Lars Wirzenius
