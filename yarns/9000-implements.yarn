@@ -260,6 +260,15 @@ We may need to restore only a single file.
         --to "$DATADIR/$MATCH_3" "$DATADIR/$MATCH_2"
 
 
+Verifying live data
+-------------------
+
+Run `obnam verify` and remember the output.
+
+    IMPLEMENTS WHEN user (\S+) attempts to verify (\S+) against repository (\S+)
+    attempt run_obnam "$MATCH_1" \
+        verify -r "$DATADIR/$MATCH_3" "$DATADIR/$MATCH_2"
+
 Removing (forgetting) generations
 ---------------------------------
 
@@ -412,6 +421,9 @@ Checks on results of an attempted operation
 The `attempt` shell function in `obnam.sh` runs a command, then
 captures its stdout, stderr, and exit code. The scenarios can then
 test the results in various ways as separate steps.
+
+    IMPLEMENTS THEN the attempt succeeded
+    attempt_exit_was 0
 
     IMPLEMENTS THEN the attempt failed with exit code (\d+)
     attempt_exit_was "$MATCH_1"

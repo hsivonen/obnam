@@ -1,0 +1,24 @@
+Verify backed up data
+=====================
+
+The user may want to verify that all their live data is still intact.
+This is done with `obnam verify`.
+
+    SCENARIO verify live data
+    GIVEN 100kB of new data in directory L
+    AND file L/foo has Unix timestamp 0
+    WHEN user U backs up directory L to repository R
+    AND user U attempts to verify L against repository R
+    THEN the attempt succeeded
+
+However, if there have been any changes, such as for a timestamp, then
+the verification should find a problem.
+
+    GIVEN file L/foo has Unix timestamp 1
+    WHEN user U attempts to verify L against repository R
+    THEN the attempt failed with exit code 1
+
+RDF30DX is the error code for metadata change, of which modification
+time is one.
+
+    THEN the error message matches "RDF30DX.*st_mtime_sec"
