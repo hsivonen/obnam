@@ -80,6 +80,7 @@ other parts of Obnam's test suite as well, and this reduces code
 duplication.
 
     SCENARIO backup non-basic filesystem objects
+    ASSUMING extended attributes are allowed for users
     GIVEN directory L with interesting filesystem objects
     AND a manifest of L in M
     WHEN user U backs up directory L to repository R
@@ -90,6 +91,7 @@ As a special case, Obnam needs to notice when only an extended
 attribute value changes.
 
     SCENARIO backup notices when extended attribute value changes
+    ASSUMING extended attributes are allowed for users
     GIVEN a file F in L, with data
     AND file L/F has extended attribute user.foo set to foo
     WHEN user U backs up directory L to repository R
@@ -132,8 +134,8 @@ Often it's useful to backup more than one location at once. We'll
 assume that if we can backup two, then it'll all work well.
 
     SCENARIO backup two roots
-    GIVEN directory L1 with interesting filesystem objects
-    AND directory L2 with interesting filesystem objects
+    GIVEN 4kB of new data in directory L1
+    AND 16kB of new data in directory L2
     AND a manifest of L1 in M1
     AND a manifest of L2 in M2
     WHEN user U backs up directories L1 and L2 to repository R
@@ -177,7 +179,7 @@ that the configuration is correct: the fake backup runs much faster
 than a real one.
 
     SCENARIO a pretend backup
-    GIVEN directory L with interesting filesystem objects
+    GIVEN 10kB of new data in directory L
     WHEN user U backs up directory L to repository R
     GIVEN a manifest of R in M1
     WHEN user U pretends to back up directory L to repository R

@@ -504,3 +504,15 @@ in a specific group.
 
     IMPLEMENTS ASSUMING user is in group (\S+)
     groups | tr ' ' '\n' | grep -Fx "$MATCH_1"
+
+
+Check on whether user extended attributes work
+----------------------------------------------
+
+Extended attributes are, at least on some filesystems, a mount-time
+option which may be disabled. In fact, experience has shown that it
+often is disabled on build servers.
+
+    IMPLEMENTS ASSUMING extended attributes are allowed for users
+    touch "$DATADIR/xattr.test"
+    setfattr -n user.foo -v bar "$DATADIR/xattr.test"

@@ -12,8 +12,8 @@ for locking, which we assume will test that, and so in this yarn test
 suite we do not test concurrency at all.
 
     SCENARIO two clients sharing a repository
-    GIVEN directory L1 with interesting filesystem objects
-    AND directory L2 with interesting filesystem objects
+    GIVEN 64kB of new data in directory L1
+    AND 96kB of new data in directory L2
     AND a manifest of L1 in M1
     AND a manifest of L2 in M2
     WHEN user U1 backs up directory L1 to repository R
@@ -50,7 +50,7 @@ verifies that you can list the clients even if you don't know an
 existing client's name.
 
     SCENARIO list clients without being in the client list
-    GIVEN directory L with interesting filesystem objects
+    GIVEN 1kB of new data in directory L
     WHEN user U1 backs up directory L to repository R
     THEN user U2 can see user U1 in repository R
 

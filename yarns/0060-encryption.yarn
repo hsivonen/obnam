@@ -40,7 +40,7 @@ that encryption is done at the I/O abstraction level.
 
     SCENARIO basic encrypted backup and restore
     GIVEN user U uses encryption key "Test Key One" from test-data/keyring-1
-    AND directory L with interesting filesystem objects
+    AND 128kB of new data in directory L
     AND a manifest of L in M
     WHEN user U backs up directory L to repository R
     AND user U restores their latest generation in repository R into X
@@ -64,7 +64,7 @@ First of all, we make a simple encrypted backup as the first client.
 
     SCENARIO adding and removing encryption keys to clients
     GIVEN user U1 uses encryption key "Test Key One" from test-data/keyring-1
-    AND directory L1 with interesting filesystem objects
+    AND 16kB of new data in directory L1
     WHEN user U1 backs up directory L1 to repository R
     THEN user U1 uses key "Test Key One" in repository R 
 
@@ -79,7 +79,7 @@ to the client list, and thus can't add itself.
 Then we make a backup as the second client.
 
     GIVEN user U2 uses encryption key "Test Key Two" from test-data/keyring-2
-    AND directory L2 with interesting filesystem objects
+    AND 32kB of new data in directory L2
     WHEN user U2 backs up directory L2 to repository R
     THEN user U2 uses key "Test Key Two" in repository R
 
@@ -138,7 +138,7 @@ remain.
     SCENARIO remove a client
     GIVEN user U1 uses encryption key "Test Key One" from test-data/keyring-1
     AND user U2 uses encryption key "Test Key Two" from test-data/keyring-2
-    AND directory L with interesting filesystem objects
+    AND 48kB of new data in directory L
     WHEN user U1 backs up directory L to repository R
     THEN user U1 uses key "Test Key One" in repository R
     WHEN user U1 imports public key "Test Key Two" from test-data/keyring-2

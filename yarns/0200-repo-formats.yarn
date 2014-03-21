@@ -34,6 +34,7 @@ better.
 First, the normal one reference repository.
 
     SCENARIO use repository format 6
+    ASSUMING extended attributes are allowed for users
     GIVEN unpacked test data from test-data/repo-format-6-encrypted-deflated.tar.xz in T
     WHEN user havelock restores generation 1 in T/repo to R1
     THEN restored data in R1 matches T/manifest-1
@@ -43,6 +44,7 @@ First, the normal one reference repository.
 Then, the in-tree repository.
 
     SCENARIO use repository format 6 with in-tree data
+    ASSUMING extended attributes are allowed for users
     GIVEN unpacked test data from test-data/repo-format-6-in-tree-data.tar.xz in T
     WHEN user havelock restores generation 1 in T/repo to R1
     THEN restored data in R1 matches T/manifest-1

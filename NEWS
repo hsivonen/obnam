@@ -16,6 +16,10 @@ Bug fixes:
   didn't read the whole file from the beginning in one read(2) system
   call.
 
+* The test suite now skips tests that require use of extended
+  attributes in the `user` namespace. This should allow the test suite
+  to be run on more build servers run by various distributions.
+
 Version 1.7, released 2014-03-15
 --------------------------------
 
