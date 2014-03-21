@@ -269,6 +269,12 @@ Run `obnam verify` and remember the output.
     attempt run_obnam "$MATCH_1" \
         verify -r "$DATADIR/$MATCH_3" "$DATADIR/$MATCH_2"
 
+Verify a random file in live data.
+
+    IMPLEMENTS WHEN user (\S+) attempts to verify a random file in (\S+) against repository (\S+)
+    attempt run_obnam "$MATCH_1" \
+        verify -r "$DATADIR/$MATCH_3" --verify-randomly=1 "$DATADIR/$MATCH_2"
+
 Removing (forgetting) generations
 ---------------------------------
 

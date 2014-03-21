@@ -1,10 +1,13 @@
 Verify backed up data
 =====================
 
+Verify notices modification time change
+---------------------------------------
+
 The user may want to verify that all their live data is still intact.
 This is done with `obnam verify`.
 
-    SCENARIO verify live data
+    SCENARIO verify notices mtime change
     GIVEN 100kB of new data in directory L
     AND file L/foo has Unix timestamp 0
     WHEN user U backs up directory L to repository R
@@ -22,3 +25,14 @@ RDF30DX is the error code for metadata change, of which modification
 time is one.
 
     THEN the error message matches "RDF30DX.*st_mtime_sec"
+
+Verify one file randomly
+------------------------
+
+`obnam verify` can pick files to verify randomly, for spot checks.
+
+    SCENARIO verify a random file
+    GIVEN 100kB of new data in directory L
+    WHEN user U backs up directory L to repository R
+    AND user U attempts to verify a random file in  L against repository R
+    THEN the attempt succeeded
