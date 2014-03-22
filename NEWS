@@ -3,7 +3,7 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
-Version 1.8, released UNRELEASED
+Version 1.7.1, released 2014-03-22
 --------------------------------
 
 * The `dump-repo` command now outputs JSON instead of YAML. The
