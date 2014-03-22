@@ -3,6 +3,14 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
+Version 1.7.2, released 2014-03-22
+--------------------------------
+
+Bug fixes:
+
+* Fix another bug in the FUSE plugin's file reading code, found during
+  the release process of 1.7.2.
+
 Version 1.7.1, released 2014-03-22
 --------------------------------
 
