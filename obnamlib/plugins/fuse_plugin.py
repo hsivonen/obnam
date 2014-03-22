@@ -183,7 +183,7 @@ class ObnamFuseFile(object):
                 assert output_length <= length
                 if output_length == length:
                     break
-            chunk_pos_in_file += len(contents)
+            chunk_pos_in_file += size
 
         return ''.join(output)
 
