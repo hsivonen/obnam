@@ -119,11 +119,7 @@ backup run.
 
     WHEN user U removes file obnam.log
     AND user U backs up directory L to repository R
-
-Note that Obnam always backs up the root directory, so we match
-against one, not zero, below.
-
-    THEN obnam.log matches INFO \* files backed up: 1$
+    THEN obnam.log matches INFO \* files backed up: 0$
     AND L, restored to X, matches manifest M
 
 

@@ -3,6 +3,15 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
+Version 1.X, released UNRELEASED
+--------------------------------
+
+Bug fixes:
+
+* Fix count of backed up files. It used to always count directories.
+  Reported by Alberto Fuentes as Debian bug
+  [742384](https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=742384).
+
 Version 1.7.2, released 2014-03-22
 --------------------------------
 

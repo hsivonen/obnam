@@ -524,12 +524,27 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 try:
                     self.maybe_simulate_error(pathname)
                     if stat.S_ISDIR(metadata.st_mode):
+                        # Directories should only be counted in the
+                        # progress their metadata has changed. This
+                        # covers the case when files have been deleted
+                        # from them.
+                        gen = self.get_current_generation()
+                        if self.metadata_has_changed(gen, pathname, metadata):
+                            self.progress.backed_up_count += 1
+
                         self.backup_dir_contents(pathname)
-                    elif stat.S_ISREG(metadata.st_mode):
-                        assert metadata.md5 is None
-                        metadata.md5 = self.backup_file_contents(pathname,
-                                                                 metadata)
-                    self.backup_metadata(pathname, metadata)
+                        self.backup_metadata(pathname, metadata)
+                    else:
+                        # Non-directories' progress can be updated
+                        # without further thinking.
+                        self.progress.backed_up_count += 1
+
+                        if stat.S_ISREG(metadata.st_mode):
+                            assert metadata.md5 is None
+                            metadata.md5 = self.backup_file_contents(
+                                pathname, metadata)
+                        self.backup_metadata(pathname, metadata)
+
                 except (IOError, OSError) as e:
 
                     if type(e) is IOError:
@@ -642,7 +657,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 metadata = obnamlib.read_metadata(self.fs, pathname, st=st)
                 self.progress.update_progress_with_file(pathname, metadata)
                 if self.needs_backup(pathname, metadata):
-                    self.progress.backed_up_count += 1
                     yield pathname, metadata
                 else:
                     self.progress.update_progress_with_scanned(
@@ -690,36 +704,39 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         if current.isdir():
             tracing.trace('%s is directory, so needs backup' % pathname)
             return True
+
+        gen = self.get_current_generation()
+        tracing.trace('gen=%s' % repr(gen))
+        return self.metadata_has_changed(gen, pathname, current)
+
+    def get_current_generation(self):
+        '''Return the current generation.
+
+        This handles pretend-mode correctly (in pretend-mode we don't
+        have self.new_generation).
+
+        '''
+
         if self.pretend:
             gens = self.repo.get_client_generation_ids(self.client_name)
-            if not gens:
-                return True
-            gen = gens[-1]
+            assert gens, "Can't handle --pretend without generations"
+            return gens[-1]
         else:
-            gen = self.new_generation
-        tracing.trace('gen=%s' % repr(gen))
+            return self.new_generation
+
+    def metadata_has_changed(self, gen, pathname, current):
+        '''Has the metadata for pathname changed since given generation?
+
+        Treat a file that didn't exist in the generation as changed.
+
+        '''
+
         try:
-            old = obnamlib.Metadata(
-                st_mtime_sec=self.repo.get_file_key(
-                    gen, pathname, obnamlib.REPO_FILE_MTIME_SEC),
-                st_mtime_nsec=self.repo.get_file_key(
-                    gen, pathname, obnamlib.REPO_FILE_MTIME_NSEC),
-                st_mode=self.repo.get_file_key(
-                    gen, pathname, obnamlib.REPO_FILE_MODE),
-                st_nlink=self.repo.get_file_key(
-                    gen, pathname, obnamlib.REPO_FILE_NLINK),
-                st_size=self.repo.get_file_key(
-                    gen, pathname, obnamlib.REPO_FILE_SIZE),
-                st_uid=self.repo.get_file_key(
-                    gen, pathname, obnamlib.REPO_FILE_UID),
-                st_gid=self.repo.get_file_key(
-                    gen, pathname, obnamlib.REPO_FILE_GID),
-                xattr=self.repo.get_file_key(
-                    gen, pathname, obnamlib.REPO_FILE_XATTR_BLOB))
+            old = self.get_metadata_from_generation(gen, pathname)
         except obnamlib.ObnamError as e:
             # File does not exist in the previous generation, so it
             # does need to be backed up.
-            tracing.trace('%s not in previous gen, so needs backup' % pathname)
+            tracing.trace('%s not in previous gen so has changed' % pathname)
             tracing.trace('error: %s' % str(e))
             tracing.trace(traceback.format_exc())
             return True
@@ -740,7 +757,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             tracing.trace('current.%s=%r', field, current_value)
             tracing.trace('old.%s=%r', field, old_value)
             if current_value != old_value:
-                tracing.trace('NEED to backup %r', pathname)
+                tracing.trace(
+                    'DIFFERENT metadata %r for %r', field, pathname)
                 return True
 
         # Treat xattr values None (no extended attributes) and ''
@@ -751,11 +769,30 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         tracing.trace('xattr_current=%r', xattr_current)
         tracing.trace('xattr_old=%r', xattr_old)
         if xattr_current != xattr_old:
-            tracing.trace('NEED to backup %r', pathname)
+            tracing.trace('DIFFERENT xattr for %r', pathname)
             return True
 
-        tracing.trace('Do NOT need to backup %r', pathname)
+        tracing.trace('NOT DIFFERENT metadata for %r', pathname)
         return False
+
+    def get_metadata_from_generation(self, gen, pathname):
+        return obnamlib.Metadata(
+            st_mtime_sec=self.repo.get_file_key(
+                gen, pathname, obnamlib.REPO_FILE_MTIME_SEC),
+            st_mtime_nsec=self.repo.get_file_key(
+                gen, pathname, obnamlib.REPO_FILE_MTIME_NSEC),
+            st_mode=self.repo.get_file_key(
+                gen, pathname, obnamlib.REPO_FILE_MODE),
+            st_nlink=self.repo.get_file_key(
+                gen, pathname, obnamlib.REPO_FILE_NLINK),
+            st_size=self.repo.get_file_key(
+                gen, pathname, obnamlib.REPO_FILE_SIZE),
+            st_uid=self.repo.get_file_key(
+                gen, pathname, obnamlib.REPO_FILE_UID),
+            st_gid=self.repo.get_file_key(
+                gen, pathname, obnamlib.REPO_FILE_GID),
+            xattr=self.repo.get_file_key(
+                gen, pathname, obnamlib.REPO_FILE_XATTR_BLOB))
 
     def add_file_to_generation(self, filename, metadata):
         self.repo.add_file(self.new_generation, filename)
