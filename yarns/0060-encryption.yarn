@@ -115,6 +115,33 @@ not have access to another client's data.
     THEN the attempt failed with exit code 1
     AND the error message matches "secret key not available"
 
+Replace a key for a client
+--------------------------
+
+If we replace the key for a client in a repository, and then the
+client gets rid of the old key, the new key should be able to restore
+old backups.
+
+First, backup using the old key.
+
+    SCENARIO replace client key
+    GIVEN user U uses encryption key "Test Key One" from test-data/keyring-1
+    AND 1kB of new data in directory L
+    AND a manifest of L in M
+    WHEN user U backs up directory L to repository R
+
+Then, replace the old key with the new one and get rid of the old key.
+
+    GIVEN user U uses encryption key "Test Key Two" from test-data/keyring-2
+    WHEN user U adds key "Test Key Two" to repository R
+    AND user U removes key "Test Key One" from repository R
+    WHEN user U no longer has key "Test Key One"
+
+Finally, verify that restores still work with the new key.
+
+    WHEN user U restores their latest generation in repository R into X
+    THEN L, restored to X, matches manifest M
+
 Key queries
 -----------
 
