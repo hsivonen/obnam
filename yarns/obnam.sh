@@ -158,6 +158,25 @@ manifest()
 }
 
 
+# Get a GPG fingerprint given a username.
+
+get_fingerprint()
+{
+    gpg --fingerprint "$1" |
+    sed -n '/^ *Key fingerprint = /s///p' |
+    sed 's/ *//g'
+}
+
+
+# Get a GPG keyid given a username.
+
+get_keyid()
+{
+    get_fingerprint "$1" |
+    awk '{ print substr($0, length-8) }'
+}
+
+
 # Create a dummy $HOME that actually exists.
 export HOME="$DATADIR/home"
 mkdir -p "$HOME"
