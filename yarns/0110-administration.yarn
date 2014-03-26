@@ -1,0 +1,40 @@
+System administration tasks
+===========================
+
+System administrators may want to do some tasks related to backups
+that normal users might not care about, such as monitoring and
+integrity checking.
+
+
+Nagios monitoring support
+-------------------------
+
+Obnam has a command to help it be integrated into a monitoring system
+using Nagios plugins. First, setup a known configuration of the plugin
+to make things testable.
+
+    SCENARIO Nagios monitoring support
+    GIVEN user U sets configuration warn-age to 1h
+    AND user U sets configuration critical-age to 1d
+
+Then make a backup at a known (pretended) time.
+
+    GIVEN 1kB of new data in directory L
+    AND user U sets configuration pretend-time to 1999-01-01 00:00:00
+    WHEN user U backs up directory L to repository R
+    
+Now, pretend that it's an hour and a second later. We should now be
+getting a warning.
+
+    GIVEN user U sets configuration pretend-time to 1999-01-01 01:00:01
+    WHEN user U attempts nagios-last-backup-age against repository R
+    THEN the attempt failed with exit code 1
+    AND the output matches "^WARNING:"
+
+If it's more than a day later (just a second over), there should be an
+error.
+
+    GIVEN user U sets configuration pretend-time to 1999-01-02 00:00:01
+    WHEN user U attempts nagios-last-backup-age against repository R
+    THEN the attempt failed with exit code 2
+    AND the output matches "^CRITICAL:"
