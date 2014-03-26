@@ -179,7 +179,18 @@ use. We store that.
         mkdir "$DATADIR/$MATCH_1.gnupg"
         cp -a "$SRCDIR/$MATCH_3/." "$DATADIR/$MATCH_1.gnupg/."
         add_to_env "$MATCH_1" GNUPGHOME "$DATADIR/$MATCH_1.gnupg"
+    else
+        # Export public and secret keys from new keyring.
+        export GNUPGHOME="$SRCDIR/$MATCH_3"
+        gpg --export "$MATCH_2" > "$DATADIR/public.key"
+        gpg --export-secret-keys "$MATCH_2" > "$DATADIR/secret.key"
+
+        # Import into the keyring uses for tests.
+        export GNUPGHOME="$DATADIR/$MATCH_1.gnupg"
+        gpg --import "$DATADIR/public.key"
+        gpg --import "$DATADIR/secret.key"
     fi
+
     add_to_config "$MATCH_1" encrypt-with "$MATCH_2"
 
 Encryption scenarions, at least, also need users that pretend to be
@@ -389,7 +400,25 @@ Import a key into one user's keyring from another keyring.
 Add a public key to a repository.
 
     IMPLEMENTS WHEN user (\S+) adds key "(.+)" to repository (\S+)
-    run_obnam "$MATCH_1" -r "$DATADIR/$MATCH_3" add-key --keyid "$MATCH_2"
+    run_obnam "$MATCH_1" -r "$DATADIR/$MATCH_3" \
+        add-key --keyid "$MATCH_2" "$MATCH_1"
+
+Remove a public key from a repository.
+
+    IMPLEMENTS WHEN user (\S+) removes key "(.+)" from repository (\S+)
+    export GNUPGHOME="$DATADIR/$MATCH_1.gnupg"
+    keyid="$(
+        get_fingerprint "$MATCH_2" |
+        awk '{ print substr($0, length-16) }')"
+    run_obnam "$MATCH_1" -r "$DATADIR/$MATCH_3" \
+        remove-key --keyid "$keyid" \
+
+Forget a key from the user's keyring.
+
+    IMPLEMENTS WHEN user (\S+) no longer has key "(.+)"
+    export GNUPGHOME="$DATADIR/$MATCH_1.gnupg"
+    fingerprint="$(get_fingerprint "$MATCH_2")"
+    gpg --batch --delete-secret-key "$fingerprint"
 
 Client management
 -----------------
@@ -433,6 +462,15 @@ test the results in various ways as separate steps.
 
     IMPLEMENTS THEN the attempt failed with exit code (\d+)
     attempt_exit_was "$MATCH_1"
+
+We want to match the stdout against a regular expression.
+    
+    IMPLEMENTS THEN the output matches "(.+)"
+    echo -----------------------
+    echo stdout being matched:
+    cat "$DATADIR/attempt.stdout"
+    echo -----------------------
+    attempt_matches stdout "$MATCH_1"
 
 We can also match the stderr against a regular expression.
     
@@ -516,3 +554,13 @@ often is disabled on build servers.
     IMPLEMENTS ASSUMING extended attributes are allowed for users
     touch "$DATADIR/xattr.test"
     setfattr -n user.foo -v bar "$DATADIR/xattr.test"
+
+
+Nagios
+------
+
+Run the Nagios monitoring subcommand.
+
+    IMPLEMENTS WHEN user (\S+) attempts nagios-last-backup-age against repository (\S+)
+    attempt run_obnam "$MATCH_1" nagios-last-backup-age \
+        -r "$DATADIR/$MATCH_2"
