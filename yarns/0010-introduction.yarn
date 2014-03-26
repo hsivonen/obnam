@@ -47,8 +47,6 @@ been implemented.
     - single client vs multiple clients
     - across generations
     - with encryption
-* Compression
-    - generate interesting set of test data, backup once
 * Lock handling
     - force-lock
 * Repository management
