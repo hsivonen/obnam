@@ -106,8 +106,6 @@ class Check(Command):
 
     user_options = [
         ('unit-tests', 'u', 'run unit tests?'),
-        ('cmdtests', 'b', 'run cmdtest tests locally?'),
-        ('network-cmdtests', 'B', 'run cmdtest tests against localhost?'),
         ('yarns', 'y', 'run yarn tests locally?'),
         ('lock-tests', 'l', 'run lock tests locally?'),
         ('network-lock-tests', 'L', 'run lock tests against localhost?'),
@@ -117,8 +115,6 @@ class Check(Command):
 
     def set_all_options(self, new_value):
         self.unit_tests = new_value
-        self.cmdtests = new_value
-        self.network_cmdtests = new_value
         self.yarns = new_value
         self.lock_tests = new_value
         self.network_lock_tests = new_value
@@ -131,8 +127,6 @@ class Check(Command):
     def finalize_options(self):
         any_set = (
             self.unit_tests or
-            self.cmdtests or
-            self.network_cmdtests or
             self.yarns or
             self.lock_tests or
             self.network_lock_tests or
@@ -147,10 +141,6 @@ class Check(Command):
             runcmd(['python', '-m', 'CoverageTestRunner',
                     '--ignore-missing-from=without-tests'])
             os.remove('.coverage')
-
-        if self.cmdtests:
-            print "run cmdtest tests"
-            runcmd(['cmdtest', 'tests'])
 
         if self.yarns and got_yarn:
             runcmd(
@@ -174,13 +164,6 @@ class Check(Command):
         if self.sftp_tests:
             print "run sftp tests"
             runcmd(['./test-sftpfs'])
-
-        if self.network_cmdtests:
-            print "run black box tests using localhost networking"
-            env = dict(os.environ)
-            env['OBNAM_TEST_SFTP_ROOT'] = 'yes'
-            env['OBNAM_TEST_SFTP_REPOSITORY'] = 'yes'
-            runcmd(['cmdtest', 'tests'], env=env)
 
         if self.network_lock_tests:
             print "re-run locking tests using localhost networking"
