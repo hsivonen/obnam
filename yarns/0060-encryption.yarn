@@ -74,7 +74,7 @@ only the first client's key, meaning the second client has no access
 to the client list, and thus can't add itself.
 
     WHEN user U1 imports public key "Test Key Two" from test-data/keyring-2
-    AND user U1 adds key "Test Key Two" to repository R
+    AND user U1 adds key "Test Key Two" to repository R only
 
 Then we make a backup as the second client.
 
@@ -115,6 +115,33 @@ not have access to another client's data.
     THEN the attempt failed with exit code 1
     AND the error message matches "secret key not available"
 
+Replace a key for a client
+--------------------------
+
+If we replace the key for a client in a repository, and then the
+client gets rid of the old key, the new key should be able to restore
+old backups.
+
+First, backup using the old key.
+
+    SCENARIO replace client key
+    GIVEN user U uses encryption key "Test Key One" from test-data/keyring-1
+    AND 1kB of new data in directory L
+    AND a manifest of L in M
+    WHEN user U backs up directory L to repository R
+
+Then, replace the old key with the new one and get rid of the old key.
+
+    GIVEN user U uses encryption key "Test Key Two" from test-data/keyring-2
+    WHEN user U adds key "Test Key Two" to repository R and self
+    AND user U removes key "Test Key One" from repository R
+    WHEN user U no longer has key "Test Key One"
+
+Finally, verify that restores still work with the new key.
+
+    WHEN user U restores their latest generation in repository R into X
+    THEN L, restored to X, matches manifest M
+
 Key queries
 -----------
 
@@ -142,6 +169,6 @@ remain.
     WHEN user U1 backs up directory L to repository R
     THEN user U1 uses key "Test Key One" in repository R
     WHEN user U1 imports public key "Test Key Two" from test-data/keyring-2
-    AND user U1 adds key "Test Key Two" to repository R
+    AND user U1 adds key "Test Key Two" to repository R only
     AND user U2 removes user U1 from repository R
     THEN user U2 can't see user U1 in repository R
