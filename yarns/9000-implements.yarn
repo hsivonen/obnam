@@ -397,9 +397,16 @@ Import a key into one user's keyring from another keyring.
     GNUPGHOME="$SRCDIR/$MATCH_3" gpg --export --armor "$MATCH_2" |
     GNUPGHOME="$DATADIR/$MATCH_1.gnupg" gpg --import
 
-Add a public key to a repository.
+Add a public key to a repository, but not to the calling user, only to
+the shared parts.
 
-    IMPLEMENTS WHEN user (\S+) adds key "(.+)" to repository (\S+)
+    IMPLEMENTS WHEN user (\S+) adds key "(.+)" to repository (\S+) only
+    run_obnam "$MATCH_1" -r "$DATADIR/$MATCH_3" \
+        add-key --keyid "$MATCH_2"
+
+Add a public key to a repository, and the calling user.
+
+    IMPLEMENTS WHEN user (\S+) adds key "(.+)" to repository (\S+) and self
     run_obnam "$MATCH_1" -r "$DATADIR/$MATCH_3" \
         add-key --keyid "$MATCH_2" "$MATCH_1"
 

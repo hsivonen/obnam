@@ -74,7 +74,7 @@ only the first client's key, meaning the second client has no access
 to the client list, and thus can't add itself.
 
     WHEN user U1 imports public key "Test Key Two" from test-data/keyring-2
-    AND user U1 adds key "Test Key Two" to repository R
+    AND user U1 adds key "Test Key Two" to repository R only
 
 Then we make a backup as the second client.
 
@@ -133,7 +133,7 @@ First, backup using the old key.
 Then, replace the old key with the new one and get rid of the old key.
 
     GIVEN user U uses encryption key "Test Key Two" from test-data/keyring-2
-    WHEN user U adds key "Test Key Two" to repository R
+    WHEN user U adds key "Test Key Two" to repository R and self
     AND user U removes key "Test Key One" from repository R
     WHEN user U no longer has key "Test Key One"
 
@@ -169,6 +169,6 @@ remain.
     WHEN user U1 backs up directory L to repository R
     THEN user U1 uses key "Test Key One" in repository R
     WHEN user U1 imports public key "Test Key Two" from test-data/keyring-2
-    AND user U1 adds key "Test Key Two" to repository R
+    AND user U1 adds key "Test Key Two" to repository R only
     AND user U2 removes user U1 from repository R
     THEN user U2 can't see user U1 in repository R
