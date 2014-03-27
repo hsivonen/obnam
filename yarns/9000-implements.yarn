@@ -93,6 +93,11 @@ Create a file with given permissions.
     touch "$DATADIR/$MATCH_1"
     chmod "$MATCH_2" "$DATADIR/$MATCH_1"
 
+Create a directory with given permissions.
+
+    IMPLEMENTS GIVEN directory (\S+) with permissions (\S+)
+    install -d -m "$MATCH_2" "$DATADIR/$MATCH_1"
+
 We need to manipulate extended attributes.
 
     IMPLEMENTS GIVEN file (\S+) has extended attribute (\S+) set to (\S+)

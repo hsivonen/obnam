@@ -141,6 +141,21 @@ Create some live data, and a file that is unreadable.
     AND file L/unreadable-file with permissions 000
     WHEN user U attempts to back up directory L to repository R
     THEN the error message matches "RCE08AX.*L/unreadable-file"
+    WHEN user U attempts to verify L against repository R
+    THEN the attempt succeeded
+
+Next, let's do the same thing again, but with an unreadable directory
+instead of a file.
+
+    SCENARIO unreadable live data directory
+    ASSUMING not running as root
+    GIVEN 1k of new data in directory L
+    AND directory L/unreadable-dir with permissions 000
+    WHEN user U attempts to back up directory L to repository R
+    THEN the error message matches "RD5FA4X.*L/unreadable-dir"
+    WHEN user U attempts to verify L against repository R
+    THEN the attempt succeeded
+
 
 Backup to roots at once
 -----------------------
