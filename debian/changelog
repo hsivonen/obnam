@@ -3,6 +3,8 @@ obnam (1.7.3-1) UNRELEASED; urgency=low
   * New upstream release.
     * Fix "several consecutive runs back up unmodified files" 
       (Closes: #742384)
+  * debian/control: Increase build-dependency on cmdtest to 0.12 so
+    that yarn will not fail when a test creates an unreadable file.
 
  -- Lars Wirzenius <liw@liw.fi>  Mon, 24 Mar 2014 21:19:14 +0000
 

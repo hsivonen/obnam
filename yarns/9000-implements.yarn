@@ -1,4 +1,4 @@
-Test implementation
+ implementation
 ===================
 
 This chapter documents the generic, shared IMPLEMENTS sections for
@@ -87,6 +87,12 @@ UTC format, as is common in Unix.
     os.utime(filename, (timestamp, timestamp))
     '
     
+Create a file with given permissions.
+
+    IMPLEMENTS GIVEN file (\S+) with permissions (\S+)
+    touch "$DATADIR/$MATCH_1"
+    chmod "$MATCH_2" "$DATADIR/$MATCH_1"
+
 We need to manipulate extended attributes.
 
     IMPLEMENTS GIVEN file (\S+) has extended attribute (\S+) set to (\S+)
@@ -213,6 +219,13 @@ addition to backing up, this makes a manifest of the data.
     IMPLEMENTS WHEN user (\S+) backs up directory (\S+) to repository (\S+)
     run_obnam "$MATCH_1" backup -r "$DATADIR/$MATCH_3" "$DATADIR/$MATCH_2"
 
+A test may make a backup fail. Run without failing the test so the
+failure may be inspected.
+
+    IMPLEMENTS WHEN user (\S+) attempts to back up directory (\S+) to repository (\S+)
+    attempt run_obnam "$MATCH_1" \
+        backup -r "$DATADIR/$MATCH_3" "$DATADIR/$MATCH_2"
+
 We may also need to backup two directories at once.
 
     IMPLEMENTS WHEN user (\S+) backs up directories (\S+) and (\S+) to repository (\S+)
@@ -255,15 +268,6 @@ that is unpredictable.
         awk -v "n=$gen" 'NR == n')
     run_obnam "$client" restore -r "$repo" \
         --to "$to" --generation "$id"
-
-We want to match the stdout against a regular expression.
-    
-    IMPLEMENTS THEN the output matches "(.+)"
-    echo -----------------------
-    echo stdout being matched:
-    cat "$DATADIR/attempt.stdout"
-    echo -----------------------
-    attempt_matches stdout "$MATCH_1"
 
 We may also need to attempt a restore in a situation when we expect it
 to fail.
@@ -550,8 +554,13 @@ by the user.
     IMPLEMENTS WHEN user (\S+) reads file (\S+)
     cat "$DATADIR/$MATCH_2"
 
-Check on user group membership
-------------------------------
+Check on user running test suite
+--------------------------------
+
+Some tests won't work correctly when `root` is running them.
+
+    IMPLEMENTS ASSUMING not running as root
+    test "$(id -u)" != 0
 
 Some tests, such as those for the FUSE plugin, require the user to be
 in a specific group.

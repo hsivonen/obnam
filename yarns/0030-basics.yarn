@@ -123,6 +123,25 @@ backup run.
     AND L, restored to X, matches manifest M
 
 
+Backup when a file or directory is unreadable
+---------------------------------------------
+
+The backup shouldn't fail even if a file or directory is inaccessible.
+
+    SCENARIO unreadable live data file
+
+We can't run this test as the `root` user, since then everything is
+readable.
+
+    ASSUMING not running as root
+
+Create some live data, and a file that is unreadable.
+
+    GIVEN 1k of new data in directory L
+    AND file L/unreadable-file with permissions 000
+    WHEN user U attempts to back up directory L to repository R
+    THEN the error message matches "RCE08AX.*L/unreadable-file"
+
 Backup to roots at once
 -----------------------
 
