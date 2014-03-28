@@ -6,6 +6,9 @@ This file summarizes changes between releases of Obnam.
 Version 1.X, released UNRELEASED
 --------------------------------
 
+* The manual is now dual-licensed under GNU GPL v3 or later, and
+  Creative Commons CC-BY-SA 4.0.
+
 Bug fixes:
 
 * Fix count of backed up files. It used to always count directories.

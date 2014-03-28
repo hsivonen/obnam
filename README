@@ -146,19 +146,31 @@ Legal stuff
 Most of the code is written by Lars Wirzenius. (Please provide patches
 so that can change.)
 
-The code is covered by the GNU General Public License, version 3 or later.
+This entire work is covered by the GNU General Public
+License, version 3 or later.
 
-Copyright 2010-2013  Lars Wirzenius
+> Copyright 2010-2013  Lars Wirzenius
+> 
+> This program is free software: you can redistribute it and/or modify
+> it under the terms of the GNU General Public License as published by
+> the Free Software Foundation, either version 3 of the License, or
+> (at your option) any later version.
+> 
+> This program is distributed in the hope that it will be useful,
+> but WITHOUT ANY WARRANTY; without even the implied warranty of
+> MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> GNU General Public License for more details.
+> 
+> You should have received a copy of the GNU General Public License
+> along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+A copy of the GPL is included in the file `COPYING` in the source tree.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+The manual (all the contents of the `manual` subdirectory) is
+additionally licensed under a Creative Commons Attribution 4.0
+International License. You can choose whether to use the GPL or the CC
+license for the manual.
 
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+A copy of the Creative Commons license is included in the file
+`CC-BY-SA-4.0.txt` in the source tree, and can be viewed online
+at <http://creativecommons.org/licenses/by-sa/4.0/legalcode>.
