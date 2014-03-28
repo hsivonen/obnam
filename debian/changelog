@@ -5,6 +5,7 @@ obnam (1.7.3-1) UNRELEASED; urgency=low
       (Closes: #742384)
   * debian/control: Increase build-dependency on cmdtest to 0.12 so
     that yarn will not fail when a test creates an unreadable file.
+  * debian/rules: No longer run cmdtests, since they no longer exist.
 
  -- Lars Wirzenius <liw@liw.fi>  Mon, 24 Mar 2014 21:19:14 +0000
 
