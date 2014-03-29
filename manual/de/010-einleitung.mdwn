@@ -1,0 +1,22 @@
+Einleitung
+============
+
+> ... Backups? Hat hier jemand was von Backups gesagt? Ich bin sicher
+das hier irgendwer über backups gesprochen hat.
+> Backups! BACKUPS! BACKUPS SIND ABGEFAHREN!
+
+Das ist ein Zitat direkt aus meiner IRC history. Ich finde Backups recht
+interessant, besonders die Implementierung, und manchmal bin ich
+sogar etwas besessen davon. Deswegen habe ich meine eigenes Backup-Programm
+geschrieben. Ich nenne es Obnam. Das ist sein Handbuch.
+
+Ich bin ungewöhnlich: Leute finden Backups meistens nervtötend
+und allenfalls langweilig. Wenn ich mit Leuten über Backups rede, dann
+ist die Reaktion normalwerweise "Ich weiß, ich sollte...". Es gibt viele
+Gründe dafür. Einer ist, daß Backups so ähnlich wie Versicherungen sind:
+Man muß zunächst Zeit, Arbeit und Geld 'reinstecken um hinterher von ihnen
+Gebrauch zu machen. Ein anderer Grund ist, daß das gesamte Thema beängstigend ist:
+Man muss darüber nachdenken was passiert wenn etwas richtig schief läuft, und das schreckt die Leute ab.
+Ein dritter Grund ist: Es gibt zwar eine Menge an Backup-Tools, aber es ist nicht immer einfach eines auszuwählen.
+
+Dieses Handbuch ist für das Obnam Programm, aber es versucht für jeden nützlich zu sein, der über Backups nachdenkt.
