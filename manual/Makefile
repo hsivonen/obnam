@@ -11,15 +11,7 @@ obnam-manual.en.pdf: Makefile $(en_sources)
 	./format-pdf $@ "$(TITLE_EN)" "$(AUTHOR)" "$(VERSION)" $(en_sources)
 
 obnam-manual.en.html: Makefile $(en_sources) ../obnam.css
-	pandoc  -H ../obnam.css --smart --toc --chapters --number-sections \
-		--standalone \
-                --self-contained \
-                -V geometry:lettersize \
-		-o $@ $(en_sources)
-
-en/000.mdwn:
-	(echo "% $(TITLE)"; echo "% $(AUTHOR)"; echo "% $(VERSION)") \
-		> $@
+	./format-html $@ "$(TITLE_EN)" "$(AUTHOR)" "$(VERSION)" $(en_sources)
 
 clean:
 	rm -f $(outputs) en/000.mdwn
