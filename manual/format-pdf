@@ -14,8 +14,5 @@ cat > 000.mdwn <<EOF
 % $VERSION
 EOF
 
-cat 000.mdwn
-
 pandoc --smart --toc --chapters --number-sections -o "$OUTPUT" 000.mdwn "$@"
-
 rm -f 000.mdwn
