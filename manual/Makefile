@@ -1,26 +1,17 @@
-TITLE = Backups with Obnam
+TITLE_EN = Backups with Obnam
 AUTHOR = Lars Wirzenius (liw@liw.fi)
 VERSION = Version $(shell git describe)
 
-sources = 000.mdwn $(shell ls *.mdwn | grep -vFx 000.mdwn)
-outputs = manual.pdf manual.html
+en_sources = $(shell ls en/*.mdwn)
+outputs = obnam-manual.en.pdf obnam-manual.en.html
 
 all: $(outputs)
 
-manual.pdf: Makefile $(sources)
-	pandoc --smart --toc --chapters --number-sections \
-		-o manual.pdf $(sources)
+obnam-manual.en.pdf: Makefile $(en_sources)
+	./format-pdf $@ "$(TITLE_EN)" "$(AUTHOR)" "$(VERSION)" $(en_sources)
 
-manual.html: Makefile $(sources) ../obnam.css
-	pandoc  -H ../obnam.css --smart --toc --chapters --number-sections \
-		--standalone \
-                --self-contained \
-                -V geometry:lettersize \
-		-o manual.html $(sources)
-
-000.mdwn:
-	(echo "% $(TITLE)"; echo "% $(AUTHOR)"; echo "% $(VERSION)") \
-		> 000.mdwn
+obnam-manual.en.html: Makefile $(en_sources) ../obnam.css
+	./format-html $@ "$(TITLE_EN)" "$(AUTHOR)" "$(VERSION)" $(en_sources)
 
 clean:
-	rm -f $(outputs) 000.mdwn
+	rm -f $(outputs) en/000.mdwn
