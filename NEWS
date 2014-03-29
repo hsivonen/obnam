@@ -15,6 +15,9 @@ Bug fixes:
   Reported by Alberto Fuentes as Debian bug
   [742384](https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=742384).
 
+* `obnam diff latest` would fail due to a programming error. Reported
+  by Junyx.
+
 Version 1.7.2, released 2014-03-22
 --------------------------------
 
