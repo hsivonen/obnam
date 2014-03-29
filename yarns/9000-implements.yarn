@@ -400,6 +400,12 @@ unpredictable.
     id2=$(run_obnam "$MATCH_1" -r "$DATADIR/$MATCH_4" genids | awk -v "n=$MATCH_3" 'NR == n')
     run_obnam "$MATCH_1" diff -r "$DATADIR/$MATCH_4" "$id1" "$id2" > "$DATADIR/$MATCH_5"
 
+Show the diff between the latest generation and the generation before
+that.
+
+    IMPLEMENTS WHEN user (\S+) diffs latest generation in repository (\S+) into (\S+)
+    run_obnam "$MATCH_1" diff -r "$DATADIR/$MATCH_2" latest > "$DATADIR/$MATCH_3"
+
 Encryption key management
 -------------------------
 

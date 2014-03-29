@@ -315,7 +315,8 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         self.open_repository()
         client_name = self.app.settings['client-name']
         if len(args) == 1:
-            gen_id2 = self.repo.interpret_generation_spec(args[0])
+            gen_id2 = self.repo.interpret_generation_spec(
+                client_name, args[0])
             # Now we have the dst/second generation for show_diff. Use
             # genids/list_generations to find the previous generation
             genids = self.repo.get_client_generation_ids(client_name)

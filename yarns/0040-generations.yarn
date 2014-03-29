@@ -88,6 +88,12 @@ generations are identical:
     AND user U backs up directory L to repository R
     AND user U diffs generations 1 and 2 in repository R into D
     THEN file D is empty
+
+`obnam diff` can be used with just one generation, and that compares
+it with the generation preceding the given one.
+
+    WHEN user U diffs latest generation in repository R into D
+    THEN file D is empty
     
 If we make a change to the data, that should be reflected in the diff.
 We'll assume the diff works, we'll just check whether it's empty.
