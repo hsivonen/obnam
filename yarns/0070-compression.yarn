@@ -31,6 +31,24 @@ accordingly.
     THEN L, restored to Y, matches manifest M
     AND user U can fsck the repository R
 
+We would also like to turn compression on after not using it, without
+having to do any extra work. This requires a new scenario.
+
+    SCENARIO enable compression later
+    GIVEN 100kB of new data in directory L
+    WHEN user U backs up directory L to repository R
+
+Then enable compression, add some more data, and backup again. The
+result should now be verifiable.
+
+    GIVEN user U sets configuration compress-with to deflate
+    AND 100kB of new data in directory L
+    AND a manifest of L in M
+    WHEN user U backs up directory L to repository R
+    AND user U restores their latest generation in repository R into X
+    THEN L, restored to X, matches manifest M
+    AND user U can fsck the repository R
+
 Using both compression and encryption
 -------------------------------------
 
