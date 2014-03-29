@@ -1,5 +1,5 @@
-manual/manual.html
-manual/manual.pdf
+manual/*.html
+manual/*.pdf
 manual/000.mdwn
-yarns/yarns.html
-yarns/yarns.pdf
+yarns/*.html
+yarns/*.pdf
