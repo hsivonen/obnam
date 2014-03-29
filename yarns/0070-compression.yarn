@@ -1,6 +1,9 @@
 Compressed repositories
 =======================
 
+Backup and restore with compression
+-----------------------------------
+
 Compressed backups should work just like normal ones, except with all
 the data written to the repository being compressed. We thus repeat a
 basic backup test, but with compression.
@@ -27,6 +30,9 @@ accordingly.
     WHEN user U restores their latest generation in repository R into Y
     THEN L, restored to Y, matches manifest M
     AND user U can fsck the repository R
+
+Using both compression and encryption
+-------------------------------------
 
 We need to be able to combine compression with encryption. Let's do
 the test again, with new options.
