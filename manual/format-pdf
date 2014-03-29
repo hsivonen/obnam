@@ -1,0 +1,21 @@
+#!/bin/sh
+
+set -eu
+
+OUTPUT="$1"
+TITLE="$2"
+AUTHOR="$3"
+VERSION="$4"
+shift 4
+
+cat > 000.mdwn <<EOF
+% $TITLE
+% $AUTHOR
+% $VERSION
+EOF
+
+cat 000.mdwn
+
+pandoc --smart --toc --chapters --number-sections -o "$OUTPUT" 000.mdwn "$@"
+
+rm -f 000.mdwn
