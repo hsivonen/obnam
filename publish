@@ -9,5 +9,5 @@
 host="pieni.net"
 path="code.liw.fi/obnam"
 
-rsync manual/manual.pdf manual/manual.html "$host:$path/manual/."
+rsync manual/*.pdf manual/*.html "$host:$path/manual/."
 rsync yarns/yarns.pdf yarns/yarns.html "$host:$path/"
