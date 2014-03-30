@@ -11,6 +11,10 @@ Version 1.X, released UNRELEASED
 
 Bug fixes:
 
+* Obnam FUSE got another bug fix from Valery Yundin, to fix a bug I
+  introduced in 1.7. Reading big files via `obnam mount` should now
+  work better.
+
 * Fix count of backed up files. It used to always count directories.
   Reported by Alberto Fuentes as Debian bug
   [742384](https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=742384).
