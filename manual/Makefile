@@ -2,7 +2,7 @@ TITLE_EN = Backups with Obnam
 TITLE_DE = Backups mit Obnam
 TRANS_DE = Übersetzung: Jan Niggemann (jn@hz6.de)
 AUTHOR = Lars Wirzenius (liw@liw.fi)
-VERSION = Version $(shell git describe)
+VERSION = Version $(shell git describe || python ../setup.py --version)
 
 en_sources = $(shell ls en/*.mdwn)
 de_sources = $(shell ls de/*.mdwn)
