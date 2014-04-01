@@ -2,7 +2,7 @@ Installing Obnam
 ================
 
 This chapter explains how to install Obnam. It is not a very extensive
-set of instructions, yet. In particular, itreally only caters to
+set of instructions, yet. In particular, it really only caters to
 Debian users. Instructions for other systems would be very much welcome.
 
 Debian
