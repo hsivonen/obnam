@@ -1,4 +1,4 @@
-obnam (1.7.3-1) UNRELEASED; urgency=low
+obnam (1.7.3-1) unstable; urgency=low
 
   * New upstream release.
     * Fix "several consecutive runs back up unmodified files" 
@@ -11,7 +11,7 @@ obnam (1.7.3-1) UNRELEASED; urgency=low
   * debian/control: Add build-dependency on texlive-lang-german, for the
     German translation of the manual.
 
- -- Lars Wirzenius <liw@liw.fi>  Mon, 24 Mar 2014 21:19:14 +0000
+ -- Lars Wirzenius <liw@liw.fi>  Tue, 01 Apr 2014 11:03:18 +0100
 
 obnam (1.7.2-1) unstable; urgency=low
 
