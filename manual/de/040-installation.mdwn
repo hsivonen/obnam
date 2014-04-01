@@ -1,0 +1,40 @@
+Installation
+============
+
+Dieses Kapitel beschreibt die Installation von Obnam. Es ist bisher keine
+sehr umfangreiche Anleitung. Insbesondere bietet es im Moment nur 
+Informationen für Debian Benutzer. Hinweise für andere Systeme
+sind sehr willkommen.
+
+Debian
+------
+
+Obnam auf einem Debian System zu installieren ist am einfachsten. Wenn Sie
+`Wheezy` oder ein neueres Release einsetzen ist Obnam bereits enthalten, Sie
+können es mit einem einfachen Befehl installieren:
+
+    apt-get install obnam
+
+Auf der Webseite des Autors könnte es eine neuere Version geben,
+der Rest dieses Kapitels beschreibt wie das Repository des Autors
+eingebunden und dann von dort installiert wird.
+
+Fügen Sie die folgende Zeile Ihrer `/etc/apt/sources.list` hinzu:
+
+    deb http://code.liw.fi/debian wheezy main
+
+Führen Sie dann als root diese Befehle aus:
+
+* `apt-get update`
+* `apt-get install obnam`
+
+Sie werden eine Fehlermeldung über fehlende PGP Schlüssel erhalten, mit welchen
+das Archiv signiert ist. Sie können diese Meldung entweder ignorieren, oder
+-- nach geeigneter Prüfung -- den Schlüssel von der Webseite 
+<http://code.liw.fi/apt.asc> Ihren Schlüsseln hinzufügen.
+
+Andere Systeme
+--------------
+
+Auf anderen Systemen müssen Sie Obnam aus den Quellen installieren.
+Hinweise dazu finden Sie in der Datei `README` in den Quellen.
