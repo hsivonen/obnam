@@ -1,0 +1,297 @@
+Sie wissen, daß Sie sollten...
+==============================
+
+Dieses Kapitel beschreibt Philosophie und Theorie von Backups.
+Es erläutert, warum Sie sichern sollten, verschiedene Konzepte rund um Backups,
+Dinge an die Sie bei der Einrichtung von Backups denken sollten
+und was langfristig zu tun ist (z.B. Verifizierung usw.). Außerdem werden 
+einige Annahmen erläutert die Obnam macht, und welche Einschränkungen es gibt.
+
+Warum sichern?
+--------------
+
+FIXME: Add some horror stories here about why backups are important.
+With references/links.
+
+Backup-Konzepte
+---------------
+
+Dieser Abschnitt behandelt Kernkonzepte von Backups und legt einige
+Begriffe fest, die in diesem Buch verwendet werden.
+
+**Live-Daten** sind die Daten, mit denen Sie arbeiten oder die Sie aufbewahren, die Dateien auf
+Ihrer Festplatte: Dokumente, die Sie schreiben, Fotos, die Sie speichern, der 
+unvollendete Roman, von dem Sie wünschen das Sie ihn fertig schrieben.
+
+Die meisten Live-Daten sind **kostbar**, Sie wären aufgeschmissen wenn 
+sie verloren gingen. Einige Live-Daten sind es allerdings nicht, zum Beispiel Ihr
+Browser-Cache. Durch diese Unterscheidung können Sie die Datenmenge begrenzen,
+welche Sie sichern müssen -- was die Kosten des Backups erheblich senken kann.
+
+Ein **Backup** ist eine Ersatz-Kopie Ihrer Live-Daten. Sollten Sie einige
+oder alle Ihre Live-Daten verlieren, können Sie sie aus Ihrem
+Backup wieder herstellen (**restore**).
+Die Sicherungskopie ist notwendigerweise älter als Ihre Live-Daten,
+aber wenn Sie die Sicherung erst kürzlich erstellt haben
+werden Sie nicht viel verlieren.
+
+Manchmal ist es sinnvoll, mehr als eine Backup-Kopie Ihrer Live-Daten
+zu haben. Eine Abfolge von Backups, die zu verschiedenen Zeiten erstellt wurden,
+wird **Sicherungsverlauf** genannt. Jede Kopie Ihrer Live-Daten in
+Ihrem Sicherungsverlauf ist eine **Generation**. Dadurch können Sie jetzt eine
+Datei wieder herstellen, die Sie schon vor langer Zeit gelöscht hatten,
+von der Sie aber nicht wussten, daß Sie sie heute benötigen.
+Wenn Sie nur eine einzige Backup-Version vorhielten, könnten Sie die
+Datei nicht zurückbekommen. Aber wenn Sie, sagen wir, einen Monat lang
+ein tägliches Backup behalten, dann haben Sie einen Monat Zeit
+zu erkennen, das Sie eine Datei noch brauchen, bevor sie für immer verloren ist.
+
+Der Ort an dem Ihre Backups gespeichert werden wird **Repository** genannt.
+Sie können viele Arten von **Backup-Medien** verwenden um Ihr Backup
+zu speichern: Festplatten, Bänder, optische Medien (DVD-R, DVD-RW, usw.), USB-Sticks,
+Online-Speicher und so weiter. Jedes Medium hat dabei verschiedene Eigenschaften:
+Größe, Geschwindigkeit, Komfort, Zuverlässigkeit, Preis.
+Diese Eigenschaften sollten Sie bei der Auswahl Ihrer Backup-Lösung in Erwägung ziehen.
+
+Sie sollten mehrere Backup-Repositories benützen, eines
+davon sollte sich **off-site** ("außerhalb") befinden, also wo anders, als
+Ihre Computer in der Regel stehen. Andernfalls verlieren Sie alle Ihre Backups,
+wenn z.B. Ihr Haus abbrennt.
+
+
+Sie müssen **überprüfen**, dass Ihre Backups auch wirklich funktionieren.
+Es wäre schade um den Aufwand für das Erstellen von Backups, wenn Sie im
+Fall der Fälle dann nicht in der Lage wären, Ihre Daten wieder herzustellen.
+Sie möchten vielleicht sogar Ihr **Desaster Recovery** testen. Tun Sie so
+als wäre all Ihr Computer-Zeug weg, bis auf die Backup-Medien. Können Sie alles
+wieder herstellen? Sie sollten dies von Zeit zu Zeit tun, um sicher zu stellen
+das Ihr Backup-System einsatzfähig ist.
+
+Es gibt eine sehr große Auswahl an **Backup-Tools**. Sie können 
+sehr einfach und händisch sein: Sie können Ihre Dateien alle Jubeljahre
+mit dem Dateimanager auf ein USB-Laufwerk kopieren. Sie können auch sehr komplex sein:
+Enterprise Backup-Produkte, die riesige Mengen an Geld kosten und 
+mit mehrtägigen Schulungspaketen für Ihr Sysadmin-Team begleitet werden, und 
+nur dann vernünftig funktionieren, wenn das gesamte Team vernünftig funktioniert.
+
+Sie müssen eine **Backup-Strategie** definieren, die alles zusammenhält.
+Welche Live-Daten sind zu sichern, auf welchem Medium, mit welchen Tools,
+welche Art von Backup-History wollen Sie behalten, und wie überprüfen Sie,
+dass sie auch funktionieren.
+
+Backup Strategien
+-----------------
+
+Sie haben ein Backup-Repository eingerichtet und Sie erstellen seit
+einem Monat Tag für Tag ein Backup. Ihre Backup-History
+wird langsam lang genug, um nützlich zu sein. Können Sie Sich
+jetzt zufrieden zurück lehnen?
+
+Willkommen in der Welt der Bedrohungsmodellierung. Backups sind Ihre 
+Versicherung, sie mildern kleine und große Katastrophen, aber Katastrophen 
+können auch Backups zustoßen. Wann sind Sie so sicher, daß keine Katastrophe 
+Ihnen mehr schaden können?
+
+Es gibt immer eine größeres Problem, das darauf wartet zu zu schlagen. Wenn
+Sie Ihre Daten auf eine USB-Laufwerk auf Ihrem Schreibtisch sichern, und 
+jemand bricht ein und stiehlt Ihren PC und auch das USB-Laufwerk,
+dann haben Sie nichts gewonnen.
+
+Eine Lösung wäre, zwei USB-Laufwerke zu verwenden. Eines bleibt bei Ihrem
+Computer, das andere wandert in ein Bankschließfach. Das ist
+recht sicher, außer wenn ein Erdbeben neben Ihrem Haus auch die
+Bank zerstört.
+
+Eine Lösung wäre, das Sie Online-Speicherplatz in einem anderen
+Land mieten. Das ist recht sicher, außer es gibt einen Fehler im Betriebssystem
+(das nicht nur Sie, sondern auch der Provider benutzen) und Hacker dringen
+ein und löschen all Ihre Daten.
+
+Eine Lösung wäre, das Sie mit einem 3D Drucker Betonblöcke drucken,
+auf denen Ihre Daten mittels QR Code verewigt sind. Das ist recht
+sicher, außer ein Meteorit trifft die Erde und zerstört unsere
+gesamte Zivilisation.
+
+Eine Lösung wäre, das Sie Satelliten mit Kopien Ihrer Daten in
+stationäre Umlaufbahnen um alle 9 Planeten (Pluto ist auch ein Planet!)
+des Sonnensystems schicken. Das ist - auch wenn Sie vom 
+Meteoriteneinschlag gestorben sind - recht sicher, außer die Sonne wird zur Supernova.
+
+Es gibt immer eine noch größere Katastrophe. Sie müssen entscheiden,
+welche davon so wahrscheinlich sind, das Sie sie in Ihrem Szenario berücksichtigen
+und welche Kosten Sie für den Schutz dagegen akzeptieren.
+
+Eine kurze Liste von Bedrohungsszenarien zum Bedenken:
+
+* Was wäre, wenn Sie Ihren Computer verlieren?
+* Was wäre, wenn Sie Ihr Heim und alles was drin ist verlieren?
+* Was wäre, wenn die Gegend in welcher Sie leben zerstört wird?
+* Was wäre, wenn Sie Ihr Land verlassen müssten?
+
+Diese Fragen sind nicht abschließend, aber ein Anfang. Fragen Sie sich:
+
+* Können Sie mit dem Verlust Ihrer Daten leben? Wenn Ihre Daten
+  verloren sind, bedeutet es einen Verlust von Erinnerungen,
+  oder ein Paar Unbequemlichkeiten im täglichen Leben, oder wird es
+  Ihnen fast unmöglich, wieder normal zu leben und zu arbeiten?
+  Welche Daten sind Ihnen am wichtigsten?
+
+* Wie viel ist es Ihnen wert, Ihre Daten wieder zu bekommen, und wie schnell
+  soll das passieren? Wie viel Geld und Mühe sind Sie bereit 
+  für das erste Backup zu investieren, und wie viel für weitere Backups?
+  Und für die Wiederherstellung, wie viel sind Sie da bereit zu zahlen?
+  Ist es besser für Sie, weniger für Backups auszugeben, auch wenn das 
+  Restore dann langsamer und teurer ist und mehr Aufwand bedeutet?
+  Oder ist es umgekehrt?
+
+Dieses Bedrohungsmodell berücksichtigt Unfälle und
+Naturkatastrophen. Modelle die Angriffe und Feinde berücksichtigen
+sind ähnlich aber auch etwas anders, und werden in der Nächsten
+Episode ein Thema sein, wenn es wieder heißt: Sie Abenteuer von Bac-Kup.
+
+Backups und Sicherheit
+----------------------
+
+Sie sind nicht der einzige, der sich um Ihre Daten sorgt. 
+Eine Vielzahl von Regierungen, Unternehmen, Kriminellen und allzu 
+neugierigen Schnüfflern sind wahrscheinlich ebenfalls interessiert
+(... und es ist manchmal schwer, diese auseinander zu halten). Sie könnten 
+Beweise gegen Sie (er)finden wollen, Sie erpressen wollen, oder
+einfach nur neugierig darauf sein, was Sie mit Freunden besprechen.
+
+Sie könnten Ihre Daten aus statistischen Gründen interessant finden
+und überhaupt kein Interesse an Ihnen persönlich haben.
+Oder sie könnten ausschließlich an Ihnen interessiert sein.
+
+Statt Ihre Dateien und eMails zu lesen oder Ihre Fotos
+und Videos anzusehen könnten sie Interesse daran haben, Ihnen den Zugang
+dazu zu versperren, oder einfach Ihre Daten ganz zerstören. Sie könnten sogar
+Ihre Daten korrumpieren, indem sie Kinderpornographie in Ihr Foto-Archiv ablegen.
+
+Sie schützen Ihren Computer so gut Sie können damit diese und andere
+schlimme Dinge nicht passieren. Ihre Sicherungen sollten Sie mit der gleichen Sorgfalt behandeln.
+
+Wenn Sie auf ein USB-Laufwerk sichern, sollten Sie das Laufwerk verschlüsseln,
+genau wie auch Online-Speicher. Es gibt viele Arten von Verschlüsselung und
+ich bin nicht qualifiziert Ihnen Rat zu geben, aber jegliche gängige,
+moderne Verschlüsselung sollte ausreichen -- außer für besonders entschlossene Angreifer.
+
+Anstatt oder zusätzlich zur Verschlüsselung können Sie den physischen Zugang
+zu Ihren Backup-Medien absichern. Lagern Sie Ihr USB-Laufwerk z.B. in einem Safe oder Schließfach.
+
+Die Vielzahl von Backups die Sie benötigen um sich gegen Erdbeben,
+Flutkatastrophen und marodierende Gangs dreirad-fahrender Clowns zu schützen,
+sind auch ein guter Schutz gegen Angreifer. Sie können Ihre Live-Daten 
+und die Backups bei Ihnen zu Hause korrumpieren, aber vermutlich könnten Sie
+nicht an das USB-Laufwerk herankommen, das in Beton gegossen an einem geheimen
+Ort vergraben ist, den nur Sie kennen.
+
+Auf der anderen Seite möchten oder müssen Sie vielleicht Anderen
+Zugriff auf Ihre gesicherten Daten geben. Wenn Sie zum Beispiel von der Clown
+Gang entführt wurden, sollte Ihr Partner in der Lage sein, Ihren
+MI6-Verbindungsmann zu kontaktieren, damit der Geheimdienst Sie retten kann.
+Den sicheren Zugang zu (Teilen) Ihres Backups herzustellen ist ein interessantes
+Problem für sich, für das es verschiedene Lösungen gibt:
+Geben Sie Ihrem Partner das Verschlüsselungspasswort, oder geben Sie es einem
+Freund dem Sie vertrauen, oder einem Anwalt. Sie könnten auch so etwas wie
+[libgfshare] verwenden, um die Schlüssel aus sichere Weise treuhänderisch zu hinterlegen.
+
+[libgfshare]: http://www.digital-scurf.org/software/libgfshare
+
+Betrachtung von Backup-Medien
+-----------------------------
+
+Dieser Abschnitt behandelt Backup-Medien, ihre unterschiedlichen
+Charakteristiken, und wie Sie für sich selbst etwas passendes auswählen.
+
+Es gibt viele verschiedene Speicher-Medien. Die wohl bekanntesten sind:
+
+* verschiedene Arten von Magnetbändern
+* Festplatte: interne oder externe, drehende Magnetscheiben oder SSDs oder USB-Sticks
+* Optische Medien: CD, DVD, Blu-ray
+* verschiedene Online-Speicher
+* Papier
+
+Die exotischeren und / oder ungebräuchlichen Dinge wie Microfiche 
+überspringen wir mal.
+
+**Magnetbänder** sind traditionell die wohl gebräuchlichste Form von 
+Backup-Medien. Die Bänder an sich sind (je GB) preiswert,
+aber für das Laufwerk ist eine hohe Anfangsinvestition fällig.
+Vieles in der Backup-Terminologie ist Magnetbändern entlehnt, z.B.
+volle Sicherung / inkrementelle Sicherung. Obnam unterstützt keine Bandlaufwerke.
+
+**Festplatten** sind eine gängige moderne Alternative zu Magnetbändern,
+besonders für alle, die nichts für ein Bandlaufwerk ausgeben möchten.
+Festplatten haben den Vorteil, das auf jedes Bit des Backups mit gleicher
+Geschwindigkeit zugegriffen werden kann, was das Auffinden einer alten
+Datei schneller und einfacher macht. So werden auch **Snapshots** möglich,
+die von Obnam benutzt werden.
+
+Verschiedene Typen Festplatten haben verschiedene Eigenschaften z.B.
+was Verlässlichkeit, Geschwindigkeit und Preis angeht, und diese
+Eigenschaften variieren häufig von Woche zu Woche und Jahr zu Jahr.
+Wir wollen nicht ins Details aller möglichen Eigenschaften gehen.
+Aus Sicht von Obnam ist alles, das sich wie eine Festplatte verhält
+(drehender Rost, SSD, USB Flash-Spiecher oder Online-Speicher)
+brauchbar um Backups abzulegen, Hauptsache es ist wiederbeschreibbar.
+
+**Optische Medien**, besonders welche die nur einmal beschrieben werden können,
+können für Backups benutzt werden. Sie eignen sich aber eher für
+Komplettsicherungen, die lange Zeit aufbewahrt werden als für aktiv
+genutzte Backup-Repositorien. Alternativ können Sie als eine Art
+Bandsicherung verwendet werden, in der jedes Band nur einmal beschrieben wird.
+Obnam unterstützt keine optischen Medien als Backup-Speicher.
+
+**Papier** funktioniert ebenso gut für die Archivierung, allerdings
+nur für kleine Datenmengen. Trotzdem kann ein Papier-Backup,
+das mit Archivier-Tinte auf gutem Papier gedruckt wurde,
+Jahrzehnte oder sogar Jahrhunderte halten. Das macht es zu einer
+guten Option für kleine, aber wichtige Datenmengen. Beispiele
+wären persönliche Finanz-Unterlagen, geheime Chiffrierschlüssel und
+Liebesbriefe Ihres Partners. Diese können ganz normal gedruckt werden
+(am Besten in einer Schriftart die einfach zu OCRen ist), oder als
+zweidimensionale Barcodes (z.B. QR).
+Obnam unterstützt auch dies nicht.
+
+Obnam unterstützt ausschließlich Festplatten und alles das sich wie
+eine (beschreibbare) Festplatte benimmt, z.B. Online-Speicher --
+erstaunlicherweise scheint das den Meisten zu reichen.
+
+Glossar
+-------
+
+* **Backup**: Eine getrennte Sicherheitskopie Ihrer Live-Daten,
+  die intakt bleibt, auch wenn das Original zerstört, gelöscht oder ungewollt geändert wird.
+* **corruption**: unwanted modification to (backup) data
+* **disaster recovery**: what you do when something goes wrong
+* **full backup**: a fresh backup of all precious live data
+* **generation**: a backup in a series of backups of the same live
+  data, to give historical insight
+* **history**: all the backup generations
+* **incremental backup**: a backup of any changes (new files, modified
+  files, deletions) compared to a previous backup generation (either
+  the previous full backup, or the previous incremental backup);  usually, you can't remove a full backup without removing all of the
+  incremental backups that depend on it
+* **live data**: all the data you have
+* **local backup**: a backup repository stored physically close to the
+  live data
+* **media**, **backup media**, **storage media**: where a backup
+  repository is stored
+* **off-site backup**: a backup repository stored physically far away
+  from the live data
+* **precious data**: all the data you care about; cf. live data
+* **repository**: the location where are backups are stored
+* **restore**: retriving data from a backup repository
+* **root**, **backup root**: a directory that is to be backed up,
+  including all files in it, and all its subdirectories
+* **snapshot backup**: an alternative to full/incremental backups,
+  where every backup generation is effectively a full backup of all
+  the precious live data, and can be restored and removed as easily as
+  any other generation
+* **strategy**, **backup strategy**: a plan for how to make sure your
+  data is safe even if the dinosaurs return in space ships to re-take
+  world now that the ice age is over
+* **verification**: making sure a backup system works and that data
+  actually an be restored from backups and that the backups have not
+  become corrupted
