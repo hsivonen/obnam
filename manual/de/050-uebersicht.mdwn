@@ -1,0 +1,136 @@
+Eine Übersicht über Obnam
+=========================
+
+Dieses Kapitel gibt eine kurze Einführung in die wichtigsten Teile von
+Obnam. Der Rest des Buches ist im Grunde eine ausführliche Version dieses
+Kapitels. Sie sollten dieses Kapitel zuerst lesen und dann einfach behaupten,
+Sie hätten auch den Rest gelesen -- auf Cocktailparties wird Sie jeder
+ehrfürchtig ansehen. Ich verspreche, das auch niemand sonst den Rest
+des Buches gelesen haben wird, es gibt also kein Risiko erwischt zu werden.
+
+Konfiguration
+-------------
+
+Obnam benötigt keine Konfigurationsdatei, Sie können alles mittels
+Optionen auf der Kommandozeile konfigurieren. 
+Aber natürlich können Sie auch eine Konfigurationsdatei verwenden,
+speichern Sie sie unter `~/obnam.conf` und geben Sie ihr z.B. folgenden Inhalt:
+
+    [config]
+    repository = sftp://your.server/home/youruser/backups/
+    log = /home/liw/obnam.log
+
+
+Die folgenden Beispiele gehen davon aus, das Sie eine Konfigurationsdatei erstellt haben,
+so dass Sie die Optionen nicht jedes Mal wiederholen müssen. 
+
+Vermutlich wollen Sie jetzt die `log` Einstellung aktivieren, damit Sie im Falle eines
+Problems alle verfügbaren Informationen zur Problembehebung in der Protokolldatei finden.
+
+Das erste Backup
+----------------
+
+Ihr erstes Backup wird recht groß sein und eine ganze Weile dauern.
+Ein langes Backup kann abstürzen, aber das ist kein Problem:
+Obnam erstellt alle Paar hundert Megabytes einen **Checkpoint**,
+von dem aus es abgebrochene Vorgänge wieder aufnehmen kann.
+
+    obnam backup $HOME
+
+Inkrementelle Backups
+---------------------
+
+Wenn Sie Ihr erstes Vollbackup gemacht haben (eventuell in mehreren Schritten),
+sichern Sie sämtliche Änderungen einfach indem Sie Obnam nochmal aufrufen:
+
+    obnam backup $HOME
+
+Dies wird alle neuen und geänderten Dateien sichern. Es wird ebenfalls
+aufgezeichnet, welche Dateien seit dem letzten Backup gelöscht wurden.
+
+Sie können Obnam so oft ausführen, wie Sie mögen. Es werden immer nur
+die Änderungen zum letzen Backup gesichert.
+
+Mehrere Clients in einem Repository
+-----------------------------------
+
+Sie können mehrere Clients in ein einzelnes Repository sichern,
+indem Sie die Option `--client-name=<identifier>` beim Programmaufruf
+mitgeben. Die Sicherungssätze werden getrennt gespeichert, aber die
+Deduplizierung läuft über alle Sätze.
+
+Alte Generationen entfernen
+---------------------------
+
+Irgendwann wird Ihr Backup Repository so groß, das Sie einige alte
+Generationen entfernen wollen. Diese Operation wird "forget" genannt:
+
+    obnam forget --keep=30d
+    
+Dieser Befehl behält ein Backup von jedem der letzten 30 Kalendertage,
+beginnend mit dem neuesten Backup (nicht der aktuellen Uhrzeit).
+Wenn Sie mehrmals am Tag gesichert haben, wird nur die letzte Generation
+des Tages behalten.
+
+Alle Daten, die zu einer Generation gehören die behalten wird,
+bleiben im Repository. Jegliche Daten die ausschließlich einer
+Generation angehören die vergessen wird, wird entfernt.
+
+Daten wieder herstellen
+-----------------------
+
+Hoffentlich werden Sie das nie benötigen, aber der einzige Grund warum
+man Backups anlegt ist, das man eines Tages die Daten wieder herstellen kann,
+falls ein Unglück geschieht:
+
+    obnam restore --to=/var/tmp/my-recovery $HOME
+    
+Dieser Befehl wird Ihr gesamtes Home-Directory aus der letzten Generation
+nach `/var/tmp/my-recovery` wiederherstellen.
+Wenn Sie nur einzelne Verzeichnisse oder Dateien benötigen, können Sie diese
+stattdessen angeben:
+
+    obnam restore --to=/var/tmp/my-recover $HOME/Archive/receipts
+    
+Sollten Sie Sich nicht mehr an den Dateinamen erinnern, benutzen Sie zuerst `obnam ls`:
+
+    obnam ls > /var/tmp/my-recovery.list
+
+Dies wird den Inhalt der Generation in einem Format ähnlich `ls -lAR` ausgeben.
+Speichern Sie den Inhalt in einer Datei und sehen Sie sie durch.
+(Das ist ein eher langsames Kommando, daher ist es komfortabler 
+die Ausgabe in eine Datei zu speichern.)
+
+Verschlüsselung nutzen
+----------------------
+
+Obnam kann Backups mittels GnuPG verschlüsseln. Um dies einzuschalten
+müssen Sie einen PGP-Schlüssel besitzen (oder erzeugen) und Obnam
+dann erklären was es machen soll.
+
+    [config]
+    encrypt-with = CAFEBABE
+
+In diesem Fall ist `CAFEBABE` die **Key-ID** Ihres Schlüssels, 
+so wie GnuPG sie ausgibt. Im Moment benötigen Sie entweder `gpg-agent` oder etwas
+ähnliches, denn Obnam hat keine Möglichkeit nach dem Passwort zu fragen.
+
+Wenn das geschafft ist, wird Obnam von da an automatisch ver- und entschlüsseln.
+
+Wenn Sie Ihre Backups verschlüssseln, sollten Sie unbedingt auf anderem Weg eine
+Sicherheitskopie Ihres GPG Schlüssels anfertigen. Ohne den Schlüssel
+können Sie keine Dateien wieder herstellen, daher können Sie sich nicht 
+auf das gleiche Obnam Backup verlassen um den Schlüssel zu sichern.
+Sichern Sie Ihren GPG-Schlüssel irgendwo anderes und stellen Sie sicher,
+eine ausreichend starke Passphrase zu verwenden, um offline Brute-Force Attacken
+stand zu halten. Denken Sie daran: Sollten Sie Ihren GPG Schlüssel
+verlieren oder nicht mehr darauf zugreifen können, wird Ihre gesamte
+Backup unbrauchbar.
+
+Wenn Sie die Verschlüsselung erst nachträglich aktivieren,
+müssen Sie mit einem neuen Repository von vorne beginnen.
+Sie können keine verschlüsselten und unverschlüsselten Backups im gleichen Repository mischen.
+
+(Es gibt eine Reihe von Befehlen für die Verwaltung von Obnams Verschlüsselung.
+Normalerweise benötigen Sie sie nicht, es sei denn mehrere Ihrer Clients teilen sich
+das gleiche Repository. In diesem Fall sollten Sie die manpage lesen.)
