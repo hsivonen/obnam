@@ -1,0 +1,95 @@
+Alte Backup-Generationen löschen
+================================
+
+Jedes Mal wenn Sie ein Backup erstellen, wächst Ihr Backup-Repository in 
+der Größe. Um ein Vollaufen des verfügbaren Speichers zu vermeiden 
+müssen Sie ab und zu einige alte Backups los werden. Das ist natürlich 
+ein bisschen ein Dilemma: Sie machen Backups um keine Daten zu 
+verlieren, und jetzt müssen Sie genau das tun.
+
+Obnam verwendet den Begriff "vergessen" für das Entfernen einer 
+Sicherungsgeneration. Sie können mittels des Generation Identifier 
+angeben, welche Generation manuell entfernt werden soll, oder Sie können 
+einen Zeitplan anlegen, nach dem dann automatisch "vergessen" wird.
+
+Eine bestimmte Generation löschen:
+
+    obnam forget 2
+
+(Dieses Beispiel setzt voraus, dass Sie eine Konfigurationsdatei haben 
+die Obnam automatisch findet, und dass Sie Dinge wie den Pfad zum 
+Repository oder die Verschlüsselung nicht auf der Kommandozeile 
+einzugeben brauchen).
+
+Sie können jede Generation unabhängig von einander löschen. Obnam 
+behandelt jede Generation als unabhängigen vollständigen Snapshot (in 
+Wirklichkeit wird natürlich nicht jedes Mal eine vollständige Sicherung 
+gemacht), Sie brauchen Sich also keine Sorgen um Unterschiede zwischen 
+einer vollständigen und inkrementellen Sicherung machen.
+
+Backups manuell zu löschen ist mühsam, wahrscheinlich werden Sie
+einen Plan verwenden wollen, nach dem Obnam die Generationen automatisch
+löscht.
+
+Eine oft angewandter Zeitplan ist zum Beispiel dieser:
+
+* Behalte ein Backup für jeden Tag der vorigen Woche
+* Behalte ein Backup für jede Woche der vorigen 3 Monate
+* Behalte ein Backup für jeden Monat der vergangenen 2 Jahre
+* Behalte ein Backup für jedes Jahr der vergangenen 57 Jahre
+
+Obnam verwendet die `--keep` Option um einen Zeitplan festzulegen.
+Die Einstellung für den oben Zeitplan sähe wie folgt aus: 
+
+    --keep 7d,15w,24m,57y
+
+Die Übereinstimmung ist etwas ungenau, weil ein Monat mehr oder weniger 
+Wochen haben kann, aber sie sollte ausreichen. Die Einstellung "7d" wird 
+als "die letzte Sicherung jedes Kalendertags der letzten sieben Tage, an 
+denen Sicherungen gemacht wurden" interpretiert. Für den Rest des 
+Zeitplans gilt das analog. Lesen Sie das Kapitel "Obnam 
+Konfigurationsdateien und Einstellungen" für genauere Details.
+
+Der Zeitplan wählt eine Reihe von Generationen aus, die behalten werden. 
+Alles andere wird gelöscht.
+
+Einen Zeitplan für das Löschen von Generationen auswählen
+---------------------------------------------------------
+
+Der Zeitplan für das löschen von Backup-Generationen ist ein bisschen 
+ein Ratespiel, genau wie Backups im Allgemeinen. Wenn Sie sicher die 
+Zukunft vorhersagen könnten, wüssten Sie alle Katastrophen, die Ihre 
+Daten gefährden können schon vorher und Sie könnten Ihr Backup auf die 
+Dinge beschränken, die sonst verloren gehen würden.
+
+In dieser Welt müssen Sie leider raten. Sie müssen darüber nachdenken 
+mit welchen Risiken Sie (oder Ihre Daten) konfrontiert sind und wie viel 
+Sie ausgeben wollen um sich (oder Ihre Daten) zu schützen.
+
+* Haben Sie Angst das Ihre Festplatte plötzlich auf sehr spektakuläre 
+  Art und Weise, z.B. durch Brand oder Diebstahl abhanden kommt? Wenn ja, 
+  brauchen Sie eigentlich nur eine recht aktuelle Sicherung, um das Risiko 
+  abzusichern.
+* Machen Sie sich Sorgen Ihre Festplatte, Ihr Dateisystem, Ihre 
+  Anwendungen oder Sie selbst könnten langsam Ihre Daten zerstören? Wie 
+  lange würde es dauern um das zu bemerken? Sie brauchen eine 
+  Backup-History die weiter zurückreicht als es dauert, das Problem zu 
+  erkennen.
+* Ähnlich bei versehentlichem Löschen von Dateien. Wie lange wird es 
+  dauern bis Sie das bemerken? Mindestens so lang sollte Ihre 
+  Backup-History sein.
+
+Natürlich gibt es auch noch andere Kriterien, zum Beispiel:
+
+Möchten Sie in 50 Jahren sehen, wie Ihre Dateien werden heute abgelegt 
+sind? Wenn ja, benötigen Sie ein fünfzig Jahre altes Backup, sowie 
+vielleicht ein Backup von jedem Jahr, falls Sie vergleichen wollen, wie 
+sich die Dateien jedes Jahr entwickelt haben. Mit wachsenden 
+Speichermedien und guter Deduplizierung ist dies nicht ganz so teurer 
+als es auf den ersten Blick scheint.
+
+Es gibt keinen Zeitplan der jedermanns Bedürfnisse erfüllt. Sie müssen 
+für sich selbst entscheiden, deshalb ist die Standard-Einstellung in 
+Obnam alles für immer zu behalten. Es ist nicht Obnams Aufgabe zu 
+entscheiden, ob Sie diese oder jene Sicherungsgeneration nicht 
+vielleicht behalten sollten.

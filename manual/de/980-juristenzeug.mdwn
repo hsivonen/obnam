@@ -1,0 +1,34 @@
+Rechtliches
+===========
+
+Dieses Werk steht unter der GNU General Public License Version 3
+oder,je nach Vorliebe, einer beliebigen neueren Version.
+
+> Copyright 2010-2013  Lars Wirzenius
+> 
+> This program is free software: you can redistribute it and/or modify
+> it under the terms of the GNU General Public License as published by
+> the Free Software Foundation, either version 3 of the License, or
+> (at your option) any later version.
+> 
+> This program is distributed in the hope that it will be useful,
+> but WITHOUT ANY WARRANTY; without even the implied warranty of
+> MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> GNU General Public License for more details.
+> 
+> You should have received a copy of the GNU General Public License
+> along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Eine Kopie der GPL liegt in Form der Datei `COPYING` dem Quellcode
+bei und kann zusätzlich unter der oben angegebenen URL
+abgerufen werden.
+
+Dieses Handbuch (alle Inhalte des Verzeichnisses `manual` in den Quellen)
+steht zusätzlich unter der Creative Commons Attribution 4.0 International
+Lizenz. Sie können sich aussuchen ob Sie die GPL or die CC-Licenz 
+für das Handbuch anwenden.
+
+Eine Kopie der Creative Commons Lizenz liegt in Form der Datei
+`CC-BY-SA-4.0.txt` den Quellen bei und kann zusätzlich online
+unter folgender URL eingesehen werden (Englisch):
+<http://creativecommons.org/licenses/by-sa/4.0/legalcode>

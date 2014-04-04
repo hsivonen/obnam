@@ -1,0 +1,6 @@
+Verschiedenes
+=============
+
+Dieses Kapitel behandelt Themen die kein eigenes Kapitel füllen,
+z.B. das Komprimieren von Backups und wie Obnam von cron ausgeführt wird.
+

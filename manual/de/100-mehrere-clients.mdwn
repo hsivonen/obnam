@@ -1,0 +1,46 @@
+Ein Repository mit mehreren Clients benutzen
+============================================
+
+Mit Obnam können Sie mehrere Computer in das gleiche Repository sichern.
+Jeder Client wird durch einen Namen identifiziert, der standardmäßig dem Hostnamen
+entspricht, also dem Namen den Sie erhalten, wenn Sie den Befehl
+`hostname` ausführen. Sie können den Name aber auch explizit mittels
+`--client-name` selbst angeben.
+
+Alle Clients in einem gemeinsamen Repository benutzen sämtliche Daten
+(die chunks), die Deduplizierung funktioniert also über Client-Grenzen
+hinweg. Jeder Client hat seine eigenen Backup-Generationen, die völlig
+unabhängig von anderen Clients sind. Sie können beispielsweise alle
+Generationen eines Clients löschen (forget), ohne das dies einen
+Einfluss auf die Generationen oder gar die gesicherten Daten der
+anderen Clients hat.
+
+Obnam kümmert sich automatisch um das Locking, so dass Sie auf jedem
+Client Obnam laufen lassen können, ohne sich darum kümmern zu müssen
+das zu jeder Zeit nur ein Client aktiv ist.
+
+Einen Vorbehalt müssen Sie bei der gemeinsamen Nutzung von
+Repositories beachten: Jeder Client hat Zugriff auf alle chunks und
+kann jeden anderen Client aus dem Repository löschen. Das heißt,
+Sie sollten nur ein Repository mit Clientes teilen, die in der
+gleichen Sicherheitsdomäne sind: Allen Clients sollte gleichermaßen
+vertraut werden. Wenn ein Client gehackt wird, dann erhält der
+Eindringling Zugriff auf alle Daten im Repository und kann die Backups 
+aller Clients des Repository löschen.
+
+Um ein gemeinsames Repository zu erstellen müssen Sie folgendes tun:
+
+* Legen Sie einen eindeutigen Namen für jeden Client fest. Der
+  Name muss innerhalb des Repository eindeutig sein.
+* Geben Sie jedem Client Zugriff auf das Repository.
+
+Das ist schon alles.
+
+Um zu sehen welche Clients ein Repository benutzen, führen Sie einfach dies aus:
+
+    obnam clients
+
+Es gibt derzeit keine Möglichkeit, einen Client aus einem Repository
+zu entfernen, es sei denn, Sie benutzen die GnuPG-Verschlüsselung.
+Das ist als Bug in Obnam berücksichtigt und wird irgendwann gefixt.
+Danach wird eine Zeitmaschine entwickelt, so dass dieser Absatz nie existiert haben wird.

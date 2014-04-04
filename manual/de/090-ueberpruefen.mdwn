@@ -1,0 +1,64 @@
+Backups überprüfen
+==================
+
+Es ist 9 Uhr abends. Wissen Sie, ob Ihre Backups funktionieren? Wissen Sie,
+wann Sie das letzte mal eine erfolgreiche Sicherung aller Ihrer Daten gemacht
+haben? Wissen Sie, ob Sie aus dieser Sicherung alles wieder herstellen
+können? Wenn nicht, wie können Sie gut schlafen?
+
+Sie sollten Ihre Backups überprüfen, und zwar regelmäßig -- nicht nur das eine Mal, als
+Sie das Backup-System aufsetzten. Überprüfen bedeutet, das Sie tun was auch immer
+getan werden muss, um sicherzustellen, dass alle Ihre wertvollen Daten gesichert wurden
+und fehlerfrei aus den Backups wieder hergestellt werden können.
+
+Der einfachste Weg dies zu tun ist alle Ihre Daten wieder herzustellen und
+dann mit den Live-Daten zu vergleichen um Unterschiede zu finden. Das
+erfordert entsprechend Speicherplatz um alles wieder herzustellen, aber es ist fast die
+einzige Möglichkeit sicher zu sein.
+
+Gleichzeitig ist das auch ein guter Weg um sicherzustellen, das die Wiederherstellung
+tatsächlich funktioniert. Wenn Sie dies nicht testen, dürfen Sie -- wenn es
+darauf ankommt -- nicht erwarten, daß das Restore auch wirklich funktioniert.
+
+Wenn Sie den Speicherplatz haben um eine komplette Wiederherstellung zu
+machhen, sollten Sie dies auch tun. Es ist eine großartige Möglichkeit, Ihre
+Desaster-Recovery-Prozesse durchzuspielen.
+
+Ein Weg das mal zu tun wäre dieser:
+
+* Machen Sie ein Backup auf Ihrem Hauptcomputer
+* Machen Sie eine komplette Wiederherstellung auf einem zweiten Computer
+  (eventuell leihen Sie einfach einen), ohne den Hauptcomputer überhaupt zu benutzen.
+* Beginnen Sie, mit den wiederhergestellten Daten als Live-Daten zu arbeiten.
+  Machen Sie echte Arbeit  und all die Dinge, die Sie normalerweise tun. Tun Sie
+  so, als wäre Ihr Hauptcomputer von Ihrem Haustier gefressen worden.
+* Wenn Sie bemerken das etwas fehlt oder korrupt ist, oder zu alt, holen Sie
+  die Dateien von Ihrem Hauptcomputer und richten Sie Ihren Backup-Prozess
+  damit Sie das nächste Mal nicht dieses Problem haben werden.
+
+Wie oft man das tun sollte? Das wiederum hängt davon ab, wie viel Ihnen
+Ihre Daten bedeuten und wie viel Sie Ihren Backup-Tools und Prozessen vertrauen.
+Wenn es wirklich wichtig ist, dass Sie nach einer Katastrophe ein Restore erstellen
+können, benötigen Sie häufigere Überprüfungen. Wenn der Datenverlust höchstens
+Umstände macht und Ihr Leben nicht katastrophal verändert,
+können Sie weniger häufig überprüfen.
+
+Neben der Wiederherstellung von Daten bietet Obnam noch zwei andere 
+Möglichkeiten, wie Sie Ihre Backups überprüfen können:
+
+* `obnam verify` ist fast wie `obnam restore`, außer das es die 
+  gesicherten Daten mit Live-Daten vergleicht und meldet Unterschiede 
+  meldet. Das bedeutet natürlich, dass Sie darauf vertrauen, dass Obnam 
+  die Überprüfung richtig macht.
+* Mit `obnam mount` können Sie auf Ihre 
+  gesicherten Daten zugreifen, als ob sie in einem normalen Verzeichnis 
+  lägen. Anschließend können Sie ein beliebiges Werkzeug Ihres Vertrauens 
+  benutzen, um die gesicherten Daten mit den Live-Daten zu vergleichen. 
+  Das ist fast genau so wie alles wiederherzustellen, da das 
+  Vergleichs-Tool alle Daten und Metadaten aus dem Backup extrahieren 
+  muss. Die Daten weden nur nicht weg geschrieben.
+
+Beide Ansätze haben das Problem, dass sie eine Sicherung mit Live-Daten 
+vergleichen und die Live-Daten sich nach der Sicherung geändert haben 
+könnten. Sie müssen alle Unterschiede manuell überprüfen, was eine 
+größere Aufgabe sein kann, wenn sich die Live-Daten häufig ändern.

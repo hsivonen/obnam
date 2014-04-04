@@ -1,0 +1,19 @@
+Fallbeispiele
+=============
+
+In diesem Kapitel gehen wir auf einige typische Anwendungsfälle für
+Backups ein. Wir besprechen welche Daten gesichert werden und erklären
+wie Sie eine passende Backup-Strategie, ein passendes Medium usw. auswählen.
+
+Einige Fallbeispiele:
+
+* Einzelner Laptop-Benutzer, typische Daten wie Dokumente, Fotos, Musik,
+  Backup auf eine USB-Festplatte.
+* Ein VPS oder ähnlicher Server mit Web-Seiten, eMails und vielleicht anderen
+  Daten, Backup auf einen anderen Server.
+* Ein kleines Unternehmen mit einer Reihe von Laptops und Desktop-PCs, einem
+  lokalen Fileserver, ein gemieteter Server bei einem Provider,
+  Backup auf einem gemieteten Server beim Provider und auf mehrere große
+  USB-Laufwerke die durchgetauscht werden.
+* Wiederherstellung eines Offsite-Backup nachdem alle lokalen Computern und
+   Speichermedien zerstört wurden.

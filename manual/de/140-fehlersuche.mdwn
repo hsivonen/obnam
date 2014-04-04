@@ -1,0 +1,7 @@
+Fehlersuche
+===========
+
+Dieses Kapitel beschreibt, wie Sie Probleme mit Obnam debuggen. Es umfasst
+Dinge wie Log-Dateien, verschiedene Ebenen der Protokollierung und Ablaufverfolgung und
+häufige Probleme bei der Benutzung von Obnam. Es erklärt auch, welche
+Dinge wo ein einem Obnam Backup-Repository landen.

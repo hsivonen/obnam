@@ -1,0 +1,29 @@
+Die Entwicklung von Obnam unterstützen
+======================================
+
+Obnam ist freie Software: Sie erhalten vollen Zugriff auf den
+Quellcode, können die Software so modifizieren wie Sie wollen,
+und Sie können Kopien der Software in ihrer ursprünglichen
+oder geänderten Form verteilen. Obnam ist auch komplett kostenlos.
+
+Eines der Ziele von Obnam ist es sicherzustellen, dass jeder
+Zugang zu einer vernünftigen Backup-Software hat, ohne
+jemand anderem dafür verpflichtet zu sein. Sie können Obnam
+verwenden und Ihre Backups überall dort speichern wo es
+Ihnen passt, die Obnam Entwickler haben dazu nichts zu sagen.
+
+Allerdings erfordert die Entwicklung von Obnam einige Ressourcen.
+Obnam wird in erster Linie von Lars Wirzenius, seinem
+ursprünglichen Autor, in seiner Freizeit entwickelt (Hi!).
+Wenn Sie helfen möchten die Entwicklung zu unterstützen,
+finden Sie hier eine Liste der Dinge, die Sie tun können:
+
+* Senden Sie Korrekturen und Verbesserungen, entweder
+  am Code oder der Dokumentation.
+* Spenden Sie etwas an den Autor. Anregungen finden Sie
+  unter <http://liw.fi/obnam/donate/> 
+* Beauftragen Sie den Autor mit der Obnam-Weiterentwicklung.
+  Treten Sie dazu mit ihm privat in Kontakt (liw@liw.fi).
+
+Beachten Sie, dass all dies optional ist. Wenn Sie Obnam
+einfach benutzen und glücklich dabei sind, ist das völlig OK.
