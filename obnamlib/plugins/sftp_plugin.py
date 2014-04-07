@@ -671,8 +671,7 @@ class SftpPlugin(obnamlib.ObnamPlugin):
                                  group=ssh_group)
 
         self.app.settings.string(['ssh-known-hosts'],
-                                 'filename of the user\'s known hosts file '
-                                    '(default: %default)',
+                                 'filename of the user\'s known hosts file',
                                  metavar='FILENAME',
                                  default=
                                     os.path.expanduser('~/.ssh/known_hosts'),

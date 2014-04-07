@@ -48,33 +48,31 @@ class App(cliapp.Application):
 
         self.settings.string(['repository', 'r'], 'name of backup repository')
 
-        self.settings.string(['client-name'], 'name of client (%default)',
-                           default=self.deduce_client_name())
+        self.settings.string(
+            ['client-name'],
+            'name of client (defaults to hostname)',
+            default=self.deduce_client_name())
 
         self.settings.bytesize(['node-size'],
                              'size of B-tree nodes on disk; only affects new '
                                 'B-trees so you may need to delete a client '
                                 'or repository to change this for existing '
-                                'repositories '
-                                 '(default: %default)',
+                                'repositories',
                               default=obnamlib.DEFAULT_NODE_SIZE,
                               group=perf_group)
 
         self.settings.bytesize(['chunk-size'],
-                            'size of chunks of file data backed up '
-                                 '(default: %default)',
+                            'size of chunks of file data backed up',
                              default=obnamlib.DEFAULT_CHUNK_SIZE,
                               group=perf_group)
 
         self.settings.bytesize(['upload-queue-size'],
-                            'length of upload queue for B-tree nodes '
-                                 '(default: %default)',
+                            'length of upload queue for B-tree nodes',
                             default=obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
                             group=perf_group)
 
         self.settings.bytesize(['lru-size'],
-                             'size of LRU cache for B-tree nodes '
-                                 '(default: %default)',
+                             'size of LRU cache for B-tree nodes',
                              default=obnamlib.DEFAULT_LRU_SIZE,
                              group=perf_group)
 

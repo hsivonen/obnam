@@ -265,13 +265,12 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                                     'that are in a different filesystem',
                                  group=backup_group)
         self.app.settings.bytesize(['checkpoint'],
-                                      'make a checkpoint after a given SIZE '
-                                      '(%default)',
+                                      'make a checkpoint after a given SIZE',
                                     metavar='SIZE',
                                     default=1024**3,
                                  group=backup_group)
         self.app.settings.integer(['chunkids-per-group'],
-                                  'encode NUM chunk ids per group (%default)',
+                                  'encode NUM chunk ids per group',
                                   metavar='NUM',
                                   default=obnamlib.DEFAULT_CHUNKIDS_PER_GROUP,
                                   group=perf_group)

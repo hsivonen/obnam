@@ -3,6 +3,19 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
+Version 1.X, released UNRELEASED
+--------------------------------
+
+Bug fixes:
+
+* `--help` output no longer shows the default value of any options. It
+  was shown only for a few options anyway. The proper way to see the
+  current settings is with the `--dump-config` option. The bug that
+  was fixed that the generated manual page no longer contains values
+  that are specific to the machine doing the generation, such as the
+  hostname as the default value for `--client-name`. Reported by
+  SanskritFritz.
+
 Version 1.7.4, released 2014-03-31
 --------------------------------
 

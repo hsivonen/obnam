@@ -48,7 +48,7 @@ class CreateReferenceRepository(cliapp.Application):
     def add_settings(self):
         self.settings.string(
             ['obnam'],
-            'which obnam to execute (default: %default)',
+            'which obnam to execute',
             metavar='CMD',
             default='./obnam')
 
