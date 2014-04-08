@@ -247,6 +247,25 @@ Time to backup.
     AND user U restores their latest generation in repository R into X
     THEN L, restored to X, matches manifest M
 
+Excluded, already backed up files, are not included in next generation
+----------------------------------------------------------------------
+
+Until Obnam version 1.7.4, but fixed after that, Obnam had a bug where
+a file that was not excluded became excluded was not removed from new
+backup generations. In other words, if file `foo` exists and is backed
+up, and the user then makes a new backup with `--exclude=foo`, the new
+backup generation still contains `foo`. This is clearly a bug. This
+scenario verifies that the bug no longer exists, and prevents it from
+recurring.
+
+    SCENARIO new generation drops excluded, previously backed up files
+    GIVEN a file foo in L, with data
+    WHEN user U backs up directory L to repository R
+    GIVEN user U sets configuration exclude to foo
+    WHEN user U backs up directory L to repository R
+    AND user U restores their latest generation in repository R into X
+    THEN L, restored to X, is empty
+
 Changing backup roots
 ---------------------
 

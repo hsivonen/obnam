@@ -533,6 +533,14 @@ original one in live data.
     new=$(stat -c %b "$DATADIR/$MATCH_3/$DATADIR/$MATCH_2/$MATCH_1")
     test "$old" -lt "$new"
 
+Check that a restored directory is empty.
+
+    IMPLEMENTS THEN (\S+), restored to (\S+), is empty
+    if find "$DATADIR/$MATCH_2/$DATADIR/$MATCH_1" -mindepth 1 | grep .
+    then
+        die "$DATADIR/$MATCH_2/$DATADIR/$MATCH_1 isn't empty"
+    fi
+
 Checks on contents of files
 ---------------------------
 

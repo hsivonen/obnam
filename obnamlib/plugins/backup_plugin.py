@@ -983,6 +983,15 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         for old in old_pathnames:
             if old not in new_pathnames:
                 self.repo.remove_file(self.new_generation, old)
+            else:
+                try:
+                    st = self.fs.lstat(old)
+                except OSError:
+                    pass
+                else:
+                    if not self.can_be_backed_up(old, st): 
+                        self.repo.remove_file(self.new_generation, old)
+
         # Files that are created after the previous generation will be
         # added to the directory when they are backed up, so we don't
         # need to worry about them here.

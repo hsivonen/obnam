@@ -16,6 +16,15 @@
 # =*= License: GPL-3+ =*=
 
 
+# A helper to print an error message and terminate.
+
+die()
+{
+    printf '%s\n' -- "$*" 1>&2
+    exit 1
+}
+
+
 # Run Obnam in a safe way that ignore's any configuration files
 # outside the test. The first argument MUST be the client name. The
 # configuration file $DATADIR/$1.conf is used, if it exists. In addition,

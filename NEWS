@@ -16,6 +16,11 @@ Bug fixes:
   hostname as the default value for `--client-name`. Reported by
   SanskritFritz.
 
+* When a file was backed up, and later excluded with `--exclude`,
+  Obnam wouldn't remove it from the new backups. Now it does. Bug
+  fixed by Anssi Hannula, though his patch got changed because it no
+  longer applied.
+
 Version 1.7.4, released 2014-03-31
 --------------------------------
 
