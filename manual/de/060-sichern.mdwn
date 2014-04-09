@@ -1,0 +1,387 @@
+Sichern
+=======
+
+Dieses Kapitel beschreibt verschiedene Aspekte der Erstellung von Backups mit Obnam.
+
+Ihr erstes Backup
+-----------------
+
+Ok, dann lasst uns mal ein Backup machen! Um den Beispielen zu folgen
+benötigen Sie Live-Daten, die Sie sichern können. Diese Beispiele benutzen
+Dateinamen, die Sie an Ihre eigenen Dateinamen anpassen müssen.
+Die Beispiele gehen davon aus, daß Ihr Home-Verzeichnis `/home/tomjon` ist und
+Sie Dokumente in einem weiteren Verzeichnis names `Documents`
+in Ihrem Home-Verzeichnis haben. Weiterhin wird davon ausgegangen das Sie ein
+USB-Laufwerk unter `/media/backups` gemounted haben und das Sie das Verzeichnis
+`tomjon-repo` auf diesem USB-Laufwerk als Backup-Repository benutzen.
+
+Diesen Annahmen folgend sichern Sie Ihre Dokumente so:
+
+    obnam backup -r /media/backups/tomjon-repo ~/Documents
+    
+Das ist alles. Wenn Sie viele Dokumente haben dauert es eine Weile, aber 
+am Ende sieht es dann ungefähr so aus:
+
+    Backed up 11 files (of 11 found), uploaded 97.7 KiB in 0s at 647.2 KiB/s average speed       
+
+Das bedeutet, das Obnam insgesamt 11 Dateien gefunden hat, von denen
+alle 11 gesichert wurden. Die Dateien waren zusammen ungefähr 100
+Kilobyte groß und die Upload Geschwindigkeit für diese Daten war 
+über 600 Kilobytes pro Sekunde. Für die Eindeutigkeit sind Einheiten
+mit IEC Präfixen versehen (Basis 2), weitere Informationen finden
+Sie unter [Wikipedia on kibibytes].
+
+[Wikipedia zum Thema Kibibytes]: https://de.wikipedia.org/wiki/Kibibyte
+
+Ihr erster Sicherungslauf sollte eher wenige Daten enthalten,
+so können Sie prüfen das alle Einstellungen korrekt sind ohne lange
+zu warten. Anstatt Ihres gesamten Home-Verzeichnisses könnten Sie mit
+einem kleineren Unterordner beginnen.
+
+Ihr zweites Backup
+------------------
+
+Nach Ihrem ersten Backup möchten Sie irgendwann einmal ein Weiteres erstellen.
+Das tun Sie auf die gleiche Weise:
+
+    obnam backup -r /media/backups/tomjon-repo ~/Documents
+
+Beachten Sie das Sie Obnam nicht mitteilen müssen ob Sie ein Vollbackup oder
+ein inkrementelles Backup erstellen wollen. Obnam sorgt dafür das jede
+Generation ein Snapshot der Daten zur Zeit des Backups ist. Somit wird nicht 
+zwischen Vollbackup und inkrementellem Backup unterschieden.
+Jede Generation ist eine vollständige Sicherung, was aber nicht heisst,
+daß jede einzelne Generation sämtliche Daten separat vorhält.
+Obnam sorgt dafür das mit jeder neuen Generation nur die Daten gesichert
+werden, die bisher nicht im Repository waren. Obnam sucht die Daten
+in jeder Datei und jeder vorausgehenden Generation aller Clients,
+die sich das Repository teilen.
+
+Wir kommen später auf das Thema zurück, wie Generationen gelöscht werden können,
+Sie werden dabei sehen das Obnam jede beliebige Generation löschen kann,
+auch wenn sie sich mit anderen Generationen Daten teilt.
+Die anderen Generationen werden dabei natürlich keinerlei Daten verlieren.
+
+Nachdem Sie das zweite Backup erstellt haben, können Sie die Generationen
+ansehen:
+
+    $ obnam generations -r /media/backups/tomjon-repo
+    2	2014-02-05 23:13:50 .. 2014-02-05 23:13:50 (14 files, 100000 bytes) 
+    5	2014-02-05 23:42:08 .. 2014-02-05 23:42:08 (14 files, 100000 bytes) 
+
+Wir sehen zwei Generationen, die die Kennungen 2 und 5 haben. Die
+Bezeichner der Generationen sind nicht unbedingt eine einfache Folge wie
+1, 2, 3. Dies liegt daran wie einige der internen Datenstrukturen
+in Obnam umgesetzt werden, und in keinster Weise daran das der Autor 
+Spaß daran hat, Menschen zu verwirren.
+
+Die beiden Zeitstempel zeigen wenn der Backup-Lauf begann und wann 
+er endete. Darüber hinaus wird für jede Generation die Anzahl der 
+Dateien in dieser Generation ausgegeben (insgesamt, nicht nur neue oder geänderte Dateien),
+und die summierte Größe der Dateien.
+
+Auswählen was zu sichern ist -- und was nicht
+---------------------------------------------
+
+Obnam muss wissen, was gesichert werden soll. Dazu übergeben Sie eine Liste
+von Verzeichnissen, die backup roots genannt werden. Bisher haben wir
+in den Beispielen dieses Kapitels das Verzeichnis `~/Documents` als backup root benutzt
+(das ist das Verzeichnis `Documents` in Ihrem Home Verzeichnis).
+Es darf aber auch mehrere backup roots geben:
+
+    obnam -r /media/backups/tomjon-repo ~/Documents ~/Photos
+
+Alles in den backup root Verzeichnissen wird gesichert -- außer es ist
+explizit ausgeschlossen. Es gibt mehrere Möglichkeiten um etwas von Backups
+auszuschließen:
+
+* Die `--exclude` Option verwendet reguläre Ausdrücke, die dem kompletten 
+  Pfadnamen jeder Datei bzw. jeden Verzeichnisses entsprechen.
+  Wenn der Pfadname übereinstimmt, werden die Datei oder das Verzeichnis
+  nicht gesichert; Obnam tut so als wären die Dateien / das Verzeichnis 
+  nicht vorhanden. Wird ein Verzeichnis ausgeschlossen, dann werden alle Dateien und
+  Unterverzeichnisse ebenfalls ausgeschlossen. Um beispielsweise
+  alle MP3-Dateien auszuschließen, verwenden Sie (`--exclude='\.mp3$'`).
+* Die `--exclude-caches` Option schließt Verzeichnisse aus,
+  die eine spezielle Datei namens `CACHEDIR.TAG` enthalten, die
+  mit einer bestimmten Byte-Sequenz anfangen muss. Eine solche Datei könnte
+  z.B. im Cache-Verzeichnis Ihre Browsers abgelegt werden. Die Daten in
+  diesen Verzeichnissen sind meist nicht wichtig und brauchen nicht
+  gesichert zu werden und es ist einfacher, das gesamte Verzeichnis mittels
+  der Spezialdatei für den Ausschluß zu markieren, als einen regulären Ausdruck
+  für `--exclude` zu schreiben.
+* Die `--one-file-system` Option schließt alle mount points und den Inhalt
+  der gemounteten Dateisysteme aus. Das ist praktisch um z.B. virtuelle
+  Dateisysteme wie `/proc`, remote Dateisysteme (z.B. NFS-mounts) und
+  mittels `obnam mount` eingebundene Obnam Repositories auszuschließen
+  (letzteres behandeln wir im nächsten Kapitel).
+
+Generell ist es besser zu viel zu sichern als zu wenig.
+Sie sollten auch genau wissen, was gesichert wird und was nicht.
+Die Option `--pretend` bewirkt das Obnam ein Backup anfertigt, das Repository
+dabei aber nicht verändert, es ist also schnell durchgelaufen. So können Sie
+sehen was gesichert würde und die excludes entsprechend anpassen.
+
+Konfigurationsdateien: Eine kurze Einführung
+--------------------------------------------
+
+Zu diesem Zeitpunkt werden Sie vielleicht bemerkt haben, dass Obnam 
+eine ganze Reihe von konfigurierbare Einstellungen hat, die Sie auf vielfältige
+Art verändern können. Auf der Kommandozeile ist das immer möglich,
+aber dann wird das Kommando doch recht lang. Stattdessen könnten 
+Sie auch eine Konfigurationsdatei verwenden.
+
+Jede Option die Obnam kennt, kann auch in einer Konfigurationsdatei verwendet werden.
+Später in diesem Handbuch gibt es ein ganzes Kapitel, das alle Details 
+der Konfigurationsdateien und verschiedenen Einstellungen, die Sie
+verwenden können, umfasst. Hier geben wir erstmal eine kurze Einführung.
+
+Eine Obnam Konfigurationsdatei sieht so aus:
+
+    [config]
+    repository = /media/backup/tomjon-repo
+    root = /home/liw/Documents, /home/liw/Photos
+    exclude = \.mp3$
+    exclude-caches = yes
+    one-file-system = no
+
+Diese Form der Konfigurationsdatei ist als "INI file" bekannt,
+vielen z.B. von Microsoft Windows. Jede Obnam-Option wird in den
+Abschnitt `[config]` geschrieben, und jede Einstellung hat den
+gleichen Namen wie die Kommandozeilen-Option (ohne die Doppel-Minuszeichen).
+Demnach wird `--exclude` auf der Kommandozeile und `exclude` im Config-File verwendet.
+
+Einige Optionen können mehrere Werte annehmen, z.B. `exclude` und `root`,
+die Werte werde mittels Komma getrennt. Wenn die Anzahl der Werte zu groß wird
+können Sie sie über mehrere Zeilen verteilen; die zweite
+und weitere Zeilen müssen dann mit Leerzeichen oder TAB eingerückt werden.
+
+Jetzt sollten Sie genug für den Anfang haben, Details finden
+Sie im Kapitel "Obnam Konfigurationsdateien und Einstellungen".
+
+Wenn Ihre wertvollen Daten sehr groß sind
+-----------------------------------------
+
+Wenn Ihre wertvollen Daten sehr groß ist, kann die erste Sicherung sehr
+lange dauern. Ditto, wenn Sie viele neue wertvolle Daten in eine späteres
+Backup aufnehmen. In diesen Fällen müssen Sie sehr geduldig sein und 
+dem Backup Zeit lassen. Oder Sie können klein beginnen und dann nach
+und nach Sicherungen hinzufügen.
+
+Die Option "Geduld" ist einfach: Sie lassen Obnam alles sichern, starten
+die Sicherung und warten, bis es fertig ist, auch wenn das Stunden oder Tage
+dauert. Sollte die Sicherung vorzeitig abbrechen, z. B. wegen einer 
+ausgefallenen Netzwerkverbindung, brauchen Sie Dank Obnams
+Checkpoint-Unterstützung nicht von Grund auf neu beginnen.
+Jedes Gigabyte oder so (standardmäßig) erzeugt Obnam 
+eine Checkpoint Generation. Wenn die Sicherung später
+abstürzt, können Sie Obnam einfach erneut ausführen und es wird 
+beim letzten Checkpoint weitermachen. Das alles passiert vollautomatisch.
+Wie oft die Checkpoints erstellt werden sollen können Sie in der
+Option `--checkpoint` verändern.
+
+Das Problem mit der Option "Geduld" ist, dass Ihre wichtigsten
+Daten nicht gesichert werden, während alle Ihre großen, aber weniger wertvollen
+Daten gesichert werden. Zum Beispiel können Sie eine große Menge an
+heruntergeladenen Videos von Konferenz-Präsentationen haben, was schön ist, aber nicht
+enorm wichtig. Während diejenigen gesichert werden, bleiben Ihre eigenen Dokumente
+ungesichert.
+
+Sie können dies umgehen, indem Sie zunächst alles außer Ihren 
+wertvollsten Daten vom Backup ausschließen. Wenn diese dann gesichert 
+sind, können Sie nach und nach die Ausschlüsse reduzieren, bis Sie alles 
+gesichert haben. Zum Beispiel könnte Ihr erstes Backup folgende 
+Konfiguration haben:
+
+    obnam backup -r /media/backups/tomjon-repo ~ \
+        --exclude ~/Downloads
+
+So werden alle Downloads ausgeschlossen. Im nächsten Lauf schließen
+Sie nur noch Video-Dateien (mp4) aus:
+
+    obnam backup -r /media/backups/tomjon-repo ~ \
+        --exclude ~/Downloads/'.*\.mp4$'
+
+Dann reduzieren Sie den Ausschluss auf einzelne Videos, deren
+Namen mit einem bestimmten Buchstaben beginnen:
+
+    obnam backup -r /media/backups/tomjon-repo ~ \
+        --exclude ~/Downloads/'[^b-zB-Z].*\.mp4$'
+
+Reduzieren Sie die ausschlüsse immer weiter bis alle Videos gesichert sind.
+
+Deduplizierung
+--------------
+
+Obnam de-dupliziert die Daten die es sichert über alle Dateien in allen 
+Generationen für alle Clients, die sich das Repository teilen. Dies 
+geschieht durch Aufteilen der Dateidaten in "chunks" genannte Teile. 
+Jedes Mal wenn Obnam eine Datei liest und ein chunk zusammenkommt, 
+schaut es im Repository nach, ob ein identischer chunk bereits vorhanden 
+ist. Wenn ja muss Obnam den chunk nicht hochladen, was Platz, Bandbreite 
+und Zeit spart.
+
+Deduplizierung in Obnam ist in verschiedenen Situationen hilfreich:
+
+* Wenn Sie zwei identische Dateien haben. Sie haben vielleicht
+  verschiedene Namen und liegen in verschiedenen Verzeichnissen,
+  enthalten aber die selben Daten.
+* Wenn Dateien wachsen, aber neue Daten nur am Ende angehängt werden,
+  was z.B. für Logfiles typisch ist. Falls die ersten chunks unverändert
+  sind, müssen nur die neuen Daten gesichert werden.
+* Wenn eine Datei oder ein Verzeichnis umbenannt oder verschoben wird.
+  Wenn Sie meinen das der englische Begriff `Photos` für das Verzeichnis
+  unpassen ist und Sie lieber das finnische `Valokuvat` möchteninstead,
+  können Sie das Verzeichnis einfach umbenennen. Ohne Deduplizierung
+  müssen Sie dann aber alle Fotos nochmal sichern.
+* Wenn ein Team mit den gleichen Daten arbeitet und demnach jeder
+  eine Kopie der Daten vorhält, muss das Repository statt eine Kopie pro
+  Team-Mitglied nur eine einzelne Kopie der Daten vorhalten.
+
+Die Deduplizierung in Obnam ist nicht perfekt. Die Granularität des Findens
+doppelter Daten ist recht grob (vgl. Option `--chunk-size`) , daher
+kann Obnam oft keine Überschneidungen finden, wenn die Änderungen nur klein sind.
+
+Deduplizierung und Sicherheit gegen Prüfsummen-Kollisionen
+----------------------------------------------------------
+
+Dieses Thema ist ein bisschen beängstigend, aber es wäre unehrlich,
+es überhaupt nicht zu behandeln. Sie dürfen gern später auf diesen Abschnitt
+zurück kommen.
+
+Obnam verwendet den MD5-Algorithmus zur Erkennung von doppelten chunks.
+MD5 hat den Ruf, unsicher zu sein: Menschen haben Dateien gebaut die zwar
+unterschiedlich sind, aber zu der gleichen MD5-Prüfsumme führen. Es
+stimmt -- MD5 ist nicht für sicherheitskritische Anwendungen geeignet.
+
+Jeder Prüfsummen-Algorithmus kann Kollisionen haben. Obnam auf, sagen 
+wir, SHA1, SHA2, oder den neuen SHA3 Algorithmus umzustellen, würde 
+nicht die Möglichkeit von Kollisionen ausschließen. Es reduzierte die 
+Chance von zufälligen Kollisionen, aber die Chance ist bereits so klein, 
+dass sie mit MD5 vernachlässigt werden kann. Oder, anders ausgedrückt: 
+Wenn Sie über zufällige MD5-Kollisionen besorgt sind, sollten Sie 
+ebenfalls über versehentliche SHA1, SHA2 oder SHA3 Kollisionen besorgt 
+sein.
+
+Abgesehen von zufälligen Kollisionen gibt es zwei Fälle, in denen Sorgen
+um Prüfsummen-Kollisionen angebracht sind (unabhängig von Algorithmus).
+
+Erstens: Wenn Sie einen Gegner haben der Ihre gesicherten Daten 
+korrumpieren möchte, kann er einige der gesicherten Daten mit anderen 
+Daten mit der gleichen Prüfsumme austauschen. Auf diese Weise werden 
+Ihre Daten beschädigt ohne das Obnam es merkt und Sie können sie nicht 
+wieder herstellen.
+
+Zweitens: Wenn Sie Prüfsummen-Kollisionen erforschen, haben Sie 
+wahrscheinlich Dateien, deren Prüfsummen kollidieren. In diesem Fall 
+werden Sie nach einer Katastrophe die Daten in ihrem Ursprungszustand 
+wieder herstellen wollen, ohne das Obnam eine mit der anderen 
+verwechselt.
+
+Um mit diesen Situationen umzugehen besitzt Obnam drei
+Deduplizierungs-Modi, die Sie mit der `--deduplicate` Einstellung
+steuern:
+
+* Der Standard-Modus `fatalist` geht davon aus, das keine Kollisionen 
+  auftreten. Das ist für die Meisten Anwender ein vernünftiger Kompromiss
+  zwischen Geschwindigkeit, Schutz und Sicherheit.
+* Der Modus `verify` geht nimmt an das Kollisionen passieren und stellt sicher,
+  das bereits gesicherte chunks auch wirklich mit dem zu sichernden chunk
+  übereinstimmen, indem die eigentlichen Daten verglichen werden.
+  Um das zu tun muss der chunk aus dem Repository geladen werden, was
+  recht langsam sein könne, da die Prüfsummen oft passen. Dieser Modus
+  macht Sinn wenn Sie deduplizieren wollen und sehr schnellen Zugriff auf
+  das Repository haben, z.B. wenn es auf einer lokalen Platte liegt.
+* Mit `never` wird die Deduplizierung komplett abgeschaltet.
+  Wenn Sie keine Deduplizierung benötigen oder Kollisionen fürchten, ist 
+  dies der richtige Modus für Sie.
+
+Leider gibt es keine Deduplizierung die unverwundbar gegen Kollisionen 
+ist und dabei auch noch schnell arbeitet, wenn der Zugriff auf das 
+Repository langsam ist. Der einzige Weg um dagegen geschützt zu sein 
+ist, die Daten zu vergleichen. Wenn das Herunterladen der Daten aus dem 
+Repository langsam ist, dann wird der Vergleich natürlich erhebliche 
+Zeit in Anspruch nehmen.
+
+Locking
+-------
+
+Mehrere Clients können sich ein Repository teilen. Um zu verhindern das 
+sie sich dabei gegenseitig auf die Füße treten, sperren sie Teile des 
+Repositories während des Vorgangs. Im Kapitel "Mehrere Clients in
+einem Repository" finden Sie Details.
+
+Wenn Obnam abrupt abbricht kann die Sperre bestehen bleiben, auch wenn 
+es nur einen einzelnen Client im Repository gibt. Neue Backups sind so 
+nicht mehr möglich. Der Abbruch kann z.B. durch eine abgebrochene 
+Netzwerkverbindung oder aufgrund eines Fehlers in Obnam passieren, genau 
+so wenn Obnam vom Benutzer unterbrochen wird, bevor es fertig ist.
+
+Die Befehl `force-lock` kann diese Situation bereinigen, aber das ist 
+gefährlich. Wenn Sie eine Sperre, die von Obnam aktiv benutzt wird, 
+manuell aufheben, dann wird es wahrscheinlich ins Stolpern geraten. Im 
+Extremfall kann sogar das Repository beschädigt werden. Seien Sie also 
+vorsichtig.
+
+Wenn Sie entschieden haben das es kein Problem darstellt, wird die Sperre
+wie folgt aufgehoben:
+
+    obnam -r /media/backups/tomjon-repo force-lock
+
+Beachten Sie, dass manche Locks je Client gelten, um zu verhindern das 
+Obnam versehentlich zweimal auf dem gleichen Client läuft. Das wäre, wie 
+auf die eigenen Zehen zu steigen: Irgendwie beeindruckend, aber 
+unangenehm und nicht zu empfehlen.
+
+Wenn Sie eine Sperre für einen bestimmten Client manuell aufheben 
+müssen, können Sie den Client-Namen explizit angeben:
+
+    obnam --client-name magrat \
+        -r /media/backups/tomjon-repo force-lock
+
+(Lange Zeile aus Layout-Gründen umgebrochen.)
+
+Konsistenz der Live-Daten
+-------------------------
+
+Das Erstellen einer Sicherungskopie kann eine ganze Weile dauern, und 
+während das Backup läuft, könnte sich das Dateisystem ändern. Dies führt 
+dazu, das der Snapshot, den Obnam als Generation sichert, in sich 
+inkonsistent ist. Ein Beispiel: Sie haben zwei Dateien, A und B, die 
+synchron gehalten werden müssen. Sie machen ein Backup, währenddessen 
+Sie zuerst A und dann B ändern. Unglücklicherweise sichert Obnam File A 
+bevor Sie Ihre Änderungen speichern und File B, nachdem Sie die 
+Änderungen gespeichert haben. Die Sicherungsgeneration hat nun Versionen 
+von A und B, die nicht synchron sind. Das ist schlecht.
+
+Es gibt mehrere Möglichkeiten, mit diesem Problem umzugehen:
+
+* Der Logical Volume Manager (LVM) ermöglichst Snapshots. Sie können
+  Ihre Backups so einrichten, das zuerst ein Snapshot von jedem logischen
+  Volume gemacht wird, das gesichert weden soll. Dann machen Sie das
+  Backup und löschen danach den Snapshot wieder. Niemand kann die Daten
+  im Snapshot verändern, während trotzdem normal weiter gearbeitet weden
+  kann, während das Backup läuft.
+* Ähnlich können Sie auch mit btrfs und seinen subvolumes vorgehen.
+* Sie können das System herunterfahren und im Einzelbenutzermodus
+  neu starten, das Backup machen, und dann wieder im Mehrbenutzermodus
+  starten. Das ist nicht der schönste Weg, aber der sicherste, um
+  ein konsistentes Backup zu erhalten.
+
+Beachten Sie, dass Snapshots auf Dateisystemebene nicht wirklich eine 
+konsistente Sicht auf die Live-Daten garantieren können. Eine Anwendung 
+kann mitten im Schreiben einer Datei oder Gruppe von Dateien sein, wenn 
+der Snapshot gemacht wird. Das ist gewissermaßen ein Bug in der 
+Anwendung, aber das zu wissen hilft Ihnen nicht besser zu schlafen.
+
+In der Regel haben die meisten Systeme aber ausreichend Leerlaufzeit, 
+um ein konsistentes Backup während dieser Zeit zu erstellen. Zum 
+Beispiel kann das Backup auf einem Laptop ausgeführt werden, während der 
+Benutzer anderswo ist und nicht aktiv mit der Maschine arbeitet.
+
+Wenn irgend möglich sollte Ihr Backup-Programm überprüfen, ob die Daten 
+einer Backup-Generation in sich konsistent sind. Ansonsten werden Sie 
+entweder darauf vertrauchen müssen das die Anwendungen, die Sie 
+verwenden, nicht zu buggy sind.
+
+Wenn Sie diesen Abschnitt nicht verstanden haben: Keine Sorge, seien Sie glücklich und schlafen Sie gut.
