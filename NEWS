@@ -6,6 +6,9 @@ This file summarizes changes between releases of Obnam.
 Version 1.X, released UNRELEASED
 --------------------------------
 
+* The error message has been improved for when setting metadata
+  (owner, permission, and similar) of a restored file fails.
+
 Bug fixes:
 
 * `--help` output no longer shows the default value of any options. It
