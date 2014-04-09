@@ -20,3 +20,22 @@ Man muss darüber nachdenken was passiert wenn etwas richtig schief läuft, und 
 Ein dritter Grund ist: Es gibt zwar eine Menge an Backup-Tools, aber es ist nicht immer einfach eines auszuwählen.
 
 Dieses Handbuch ist für das Obnam Programm, aber es versucht für jeden nützlich zu sein, der über Backups nachdenkt.
+
+Anmerkung des Übersetzers
+-------------------------
+
+Ich bin kein professioneller Übersetzer, sondern ein
+interessierter Obnam Anwender. Aus Erfahrung weiß ich,
+das man sich beim Übersetzen von fremdsprachigen Texten immer wieder
+die Frage stellt, ob man Begriffe eindeutschen soll, oder nicht.
+Viele englische Begriffe werden auch im deutschen Umfeld
+verwendet, daher habe ich einige Begriffe nicht übersetzt von
+denen ich denke, das sie dem Leser bekannt sind.
+
+Sicherlich kann die eine oder andere Stelle anders, manchmal
+auch besser übersetzt werden. Für Anregungen und konstruktive Kritik
+bin ich dankbar und werde sie gegebenenfalls an Lars weiterleiten.
+
+
+-- Jan Niggemann
+
