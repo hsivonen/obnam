@@ -174,15 +174,27 @@ class SecretKeyringTests(unittest.TestCase):
 
 class PublicKeyEncryptionTests(unittest.TestCase):
 
+    def setUp(self):
+        self.dirname = tempfile.mkdtemp()
+        self.gpghome = os.path.join(self.dirname, 'gpghome')
+        shutil.copytree('test-gpghome', self.gpghome)
+        self.keyid = '1B321347'
+
+    def tearDown(self):
+        shutil.rmtree(self.dirname)
+
     def test_roundtrip_works(self):
         cleartext = 'hello, world'
         passphrase = 'password1'
-        keyring = obnamlib.Keyring(cat('test-gpghome/pubring.gpg'))
-        seckeys = obnamlib.SecretKeyring(cat('test-gpghome/secring.gpg'))
+        pubring = os.path.join(self.gpghome, 'pubring.gpg')
+        secring = os.path.join(self.gpghome, 'secring.gpg')
+
+        keyring = obnamlib.Keyring(cat(pubring))
+        seckeys = obnamlib.SecretKeyring(cat(secring))
 
         encrypted = obnamlib.encrypt_with_keyring(cleartext, keyring)
-        decrypted = obnamlib.decrypt_with_secret_keys(encrypted,
-                                                      gpghome='test-gpghome')
+        decrypted = obnamlib.decrypt_with_secret_keys(
+            encrypted, gpghome=self.gpghome)
 
         self.assertEqual(decrypted, cleartext)
 
