@@ -226,6 +226,23 @@ def read_metadata(fs, filename, st=None, getpwuid=None, getgrgid=None):
     return metadata
 
 
+class SetMetadataError(obnamlib.ObnamError):
+
+    msg = "{filename}: Couldn't set metadata {metadata}: {errno}: {strerror}"
+
+
+def _set_something(filename, what, func): # pragma: no cover
+    try:
+        func()
+    except OSError as e:
+        logging.error(str(e), exc_info=True)
+        raise SetMetadataError(
+            filename=filename,
+            metadata=what,
+            errno=e.errno,
+            strerror=e.strerror)
+
+
 def set_metadata(fs, filename, metadata, 
                  getuid=None, always_set_id_bits=False):
     '''Set metadata for a filesystem entry.
@@ -237,16 +254,22 @@ def set_metadata(fs, filename, metadata,
     if they want to mess with things. This makes the user take care
     of error situations and looking up user preferences.
 
+    Raise SetMetadataError if setting any metadata fails.
+
     '''
 
     symlink = stat.S_ISLNK(metadata.st_mode)
     if symlink:
-        fs.symlink(metadata.target, filename)
+        _set_something(
+            filename, 'symlink target',
+            lambda: fs.symlink(metadata.target, filename))
 
     # Set owner before mode, so that a setuid bit does not get reset.
     getuid = getuid or os.getuid
     if getuid() == 0:
-        fs.lchown(filename, metadata.st_uid, metadata.st_gid)
+        _set_something(
+            filename, 'uid and gid',
+            lambda: fs.lchown(filename, metadata.st_uid, metadata.st_gid))
 
     # If we are not the owner, and not root, do not restore setuid/setgid,
     # unless explicitly told to do so.
@@ -256,12 +279,22 @@ def set_metadata(fs, filename, metadata,
         mode = mode & (~stat.S_ISUID)
         mode = mode & (~stat.S_ISGID)
     if symlink:
-        fs.chmod_symlink(filename, mode)
+        _set_something(
+            filename, 'symlink chmod',
+            lambda: fs.chmod_symlink(filename, mode))
     else:
-        fs.chmod_not_symlink(filename, mode)
+        _set_something(
+            filename, 'chmod',
+            lambda: fs.chmod_not_symlink(filename, mode))
 
     if metadata.xattr: # pragma: no cover
-        set_xattrs_from_blob(fs, filename, metadata.xattr)
+        _set_something(
+            filename, 'xattrs',
+            lambda: set_xattrs_from_blob(fs, filename, metadata.xattr))
 
-    fs.lutimes(filename, metadata.st_atime_sec, metadata.st_atime_nsec,
-               metadata.st_mtime_sec, metadata.st_mtime_nsec)
+    _set_something(
+        filename, 'timestamps',
+        lambda: 
+        fs.lutimes(
+            filename, metadata.st_atime_sec, metadata.st_atime_nsec,
+            metadata.st_mtime_sec, metadata.st_mtime_nsec))

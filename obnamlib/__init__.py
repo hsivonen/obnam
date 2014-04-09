@@ -163,6 +163,7 @@ from metadata import (
     Metadata,
     read_metadata,
     set_metadata,
+    SetMetadataError,
     metadata_fields)
 from fmt_6.repo_fmt_6 import RepositoryFormat6
 from fmt_6.repo_tree import RepositoryTree
