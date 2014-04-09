@@ -233,11 +233,8 @@ class RestorePlugin(obnamlib.ObnamPlugin):
                     obnamlib.set_metadata(
                         self.fs, './' + pathname, metadata,
                         always_set_id_bits=always)
-                except (IOError, OSError), e:
-                    msg = ('Could not set metadata: %s: %d: %s' %
-                            (pathname, e.errno, e.strerror))
-                    logging.error(msg)
-                    self.app.ts.error(msg)
+                except obnamlib.SetMetadataError as e:
+                    self.app.ts.error(str(e))
                     self.errors = True
         except Exception, e:
             # Reaching this code path means we've hit a bug, so we log
