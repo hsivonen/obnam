@@ -33,8 +33,6 @@ try:
 except ImportError:
     _obnam = DummyExtension()
 
-from pluginmgr import PluginManager
-
 
 # Exceptions defined by Obnam itself. They should all be a subclass
 # of obnamlib.ObnamError.

@@ -14,13 +14,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import cliapp
+
 import obnamlib
 
 
-class ObnamPlugin(obnamlib.pluginmgr.Plugin):
+class ObnamPlugin(cliapp.Plugin):
 
     '''Base class for plugins in Obnam.'''
 
     def __init__(self, app):
         self.app = app
 
+    def disable(self):
+        pass

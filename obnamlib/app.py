@@ -143,18 +143,10 @@ class App(cliapp.Application):
 
         self.setup_ttystatus()
 
-        self.pm = obnamlib.PluginManager()
-        self.pm.locations = [self.plugins_dir()]
-        self.pm.plugin_arguments = (self,)
-
         self.fsf = obnamlib.VfsFactory()
         self.repo_factory = obnamlib.RepositoryFactory()
 
         self.setup_hooks()
-
-        self.pm.load_plugins()
-        self.pm.enable_plugins()
-        self.hooks.call('plugins-loaded')
 
         self.settings['log-level'] = 'info'
 
@@ -163,15 +155,14 @@ class App(cliapp.Application):
 
     def setup_hooks(self):
         self.hooks = obnamlib.HookManager()
-        self.hooks.new('plugins-loaded')
         self.hooks.new('config-loaded')
         self.hooks.new('shutdown')
 
         # The repository factory creates all repository related hooks.
         self.repo_factory.setup_hooks(self.hooks)
 
-    def plugins_dir(self):
-        return os.path.join(os.path.dirname(obnamlib.__file__), 'plugins')
+    def setup(self):
+        self.pluginmgr.plugin_arguments = (self,)
 
     def process_args(self, args):
         try:
