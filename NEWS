@@ -28,6 +28,9 @@ Bug fixes:
   (named like `user.foo`) Obnam now ignores them, instead of trying to
   set them and crashing.
 
+* When restoring from a directory that is not a repository, the
+  error message is now clearer.
+
 Version 1.7.4, released 2014-03-31
 --------------------------------
 

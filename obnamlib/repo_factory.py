@@ -32,6 +32,11 @@ class UnknownRepositoryFormatWanted(obnamlib.ObnamError):
     msg = 'Unknown format {format} requested'
 
 
+class NotARepository(obnamlib.ObnamError):
+
+    msg = '{url} does not seem to be an Obnam repository'
+
+
 class RepositoryFactory(object):
 
     '''Create new objects implementing obnamlib.RepositoryInterface.'''
@@ -66,7 +71,13 @@ class RepositoryFactory(object):
 
         '''
 
-        existing_format = self._read_existing_format(fs)
+        try:
+            existing_format = self._read_existing_format(fs)
+        except EnvironmentError as e: # pragma: no cover
+            if e.errno == errno.ENOENT:
+                raise NotARepository(url=fs.baseurl)
+            raise
+
         for impl in self._implementations:
             if impl.format == existing_format:
                 return self._open_repo(impl, fs, kwargs)
