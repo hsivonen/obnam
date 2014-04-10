@@ -24,6 +24,10 @@ Bug fixes:
   fixed by Anssi Hannula, though his patch got changed because it no
   longer applied.
 
+* When restoring extended attributes _not_ in the user namespace
+  (named like `user.foo`) Obnam now ignores them, instead of trying to
+  set them and crashing.
+
 Version 1.7.4, released 2014-03-31
 --------------------------------
 

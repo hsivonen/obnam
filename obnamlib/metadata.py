@@ -178,7 +178,7 @@ def get_xattrs_as_blob(fs, filename): # pragma: no cover
              value_blob))
 
 
-def set_xattrs_from_blob(fs, filename, blob): # pragma: no cover
+def set_xattrs_from_blob(fs, filename, blob, user_only): # pragma: no cover
     sizesize = struct.calcsize('!Q')
     name_blob_size = struct.unpack('!Q', blob[:sizesize])[0]
     name_blob = blob[sizesize : sizesize + name_blob_size]
@@ -193,7 +193,12 @@ def set_xattrs_from_blob(fs, filename, blob): # pragma: no cover
     for i, name in enumerate(names):
         value = value_blob[pos:pos + lengths[i]]
         pos += lengths[i]
-        fs.lsetxattr(filename, name, value)
+        if not user_only or name.startswith('user.'):
+            fs.lsetxattr(filename, name, value)
+        else:
+            logging.warning(
+                '%s: Not setting extended attribute %s due to not being root',
+                filename, name)
 
 
 def read_metadata(fs, filename, st=None, getpwuid=None, getgrgid=None):
@@ -288,9 +293,11 @@ def set_metadata(fs, filename, metadata,
             lambda: fs.chmod_not_symlink(filename, mode))
 
     if metadata.xattr: # pragma: no cover
+        user_only = getuid() != 0
         _set_something(
             filename, 'xattrs',
-            lambda: set_xattrs_from_blob(fs, filename, metadata.xattr))
+            lambda:
+                set_xattrs_from_blob(fs, filename, metadata.xattr, user_only))
 
     _set_something(
         filename, 'timestamps',
