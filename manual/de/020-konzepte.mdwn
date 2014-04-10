@@ -263,35 +263,33 @@ Glossar
 
 * **Backup**: Eine getrennte Sicherheitskopie Ihrer Live-Daten,
   die intakt bleibt, auch wenn das Original zerstört, gelöscht oder ungewollt geändert wird.
-* **corruption**: unwanted modification to (backup) data
-* **disaster recovery**: what you do when something goes wrong
-* **full backup**: a fresh backup of all precious live data
-* **generation**: a backup in a series of backups of the same live
-  data, to give historical insight
-* **history**: all the backup generations
-* **incremental backup**: a backup of any changes (new files, modified
-  files, deletions) compared to a previous backup generation (either
-  the previous full backup, or the previous incremental backup);  usually, you can't remove a full backup without removing all of the
-  incremental backups that depend on it
-* **live data**: all the data you have
-* **local backup**: a backup repository stored physically close to the
-  live data
-* **media**, **backup media**, **storage media**: where a backup
-  repository is stored
-* **off-site backup**: a backup repository stored physically far away
-  from the live data
-* **precious data**: all the data you care about; cf. live data
-* **repository**: the location where are backups are stored
-* **restore**: retriving data from a backup repository
-* **root**, **backup root**: a directory that is to be backed up,
-  including all files in it, and all its subdirectories
-* **snapshot backup**: an alternative to full/incremental backups,
-  where every backup generation is effectively a full backup of all
-  the precious live data, and can be restored and removed as easily as
-  any other generation
-* **strategy**, **backup strategy**: a plan for how to make sure your
-  data is safe even if the dinosaurs return in space ships to re-take
-  world now that the ice age is over
-* **verification**: making sure a backup system works and that data
-  actually an be restored from backups and that the backups have not
-  become corrupted
+* **corruption**: Unerwünschte Veränderung Ihrer (Backup-)Daten
+* **disaster recovery**: Was Sie tun wenn etwas schief lief
+* **full backup**: Eine komplette Sicherung Ihrer wertvollen Livedaten
+* **generation**: Ein Backup in einer Serie von Backups der selben Livedaten,
+  eine historische Sicht auf selbige
+* **history**: Alle generations
+* **incremental backup**: Eine Sicherung jeglicher Änderungen (Neue Daten, geänderte Daten,
+  gelöschte Daten) im Vergleich zu einer früheren Generation (entweder die vorhergehende
+  Vollsicherung oder eine vorhergehende inkrementelle Sicherung)
+  Normalerweise kann eine Vollsicherung nur dann entfernt werden, wenn auch alle inkrementellen
+  Sicherungen die darauf aufbauen mitgelöscht werden)
+* **live data**: Alle Daten die Sie haben
+* **local backup**: Eine Sicherung, deren Repository physisch in der Nähe der Livedaten
+  gespeichert ist.
+* **Medium**, **Backup-Medium**, **Speichermedium**: Das, wo ein Backup Repository
+  drauf gespeichert wird
+* **off-site backup**: Eine Sicherung, deren Repository physisch weit weg von den Livedaten ist
+* **precious data**: Alle Daten, die Ihnen etwas bedeuten, vgl. "live data"
+* **Repository**: Der Ort an dem Backups gespeichert weden
+* **restore**: Daten aus einem Repository wieder herstellen
+* **root**, **backup root**: Ein Verzeichnis das gesichert werden soll, inkl.
+  aller Dateien und Verzeichnisse darunter
+* **Snapshot-Sicherung**: Eine Alternative zu kompletter/inkrementeller Sicherung,
+  bei der jede Generation effektiv ein Vollbackup der Livedaten darstellt, das einzeln
+  wieder hergestellt oder gelöscht werden kann
+* **strategy**, **backup strategy**: Ein Plan um Ihre Daten abzusichern, sogar
+  wenn die Dinosaurier in Raumschiffen zurückkommen um die Welt zu übernehmen,
+  jetzt wo die eiszeit vorüber ist
+* **verification**: Sicherstellen das ein Backup-System auch funktioniert und Daten
+  aus der Sicherung wieder hergestellt werden können und das die Sicherung nicht beschädigt ist
