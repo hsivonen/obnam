@@ -79,7 +79,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             arg_synopsis='[DIRECTORY]...')
         self.app.settings.string(
             ['to'],
-            'where to restore')
+            'where to restore or FUSE mount')
         self.app.settings.string_list(
             ['generation'],
             'which generation to restore',
