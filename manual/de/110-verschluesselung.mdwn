@@ -1,0 +1,157 @@
+Verschlüsselung nutzen
+======================
+
+Mit Obnam können Sie Ihre Backups verschlüsseln. Dieses Kapitel beschreibt, warum
+und wie Sie das tun.
+
+Sie sind kein Spion, ist Verschlüsselung da nicht überflüssig?
+-------------------------------------------------------------------------------
+
+Sie sind nicht der einzige, der sich um Ihre Daten sorgt.
+Eine Vielzahl von Regierungen, Unternehmen, Kriminellen und allzu
+neugierigen Schnüfflern sind wahrscheinlich ebenfalls interessiert
+(... und es ist manchmal schwer, diese auseinander zu halten). Sie könnten
+Beweise gegen Sie (er)finden wollen, Sie erpressen wollen, oder
+einfach nur neugierig darauf sein, was Sie mit Freunden besprechen.
+
+Sie könnten Ihre Daten aus statistischen Gründen interessant finden
+und überhaupt kein Interesse an Ihnen persönlich haben.
+Oder sie könnten ausschließlich an Ihnen interessiert sein.
+
+Statt Ihre Dateien und eMails zu lesen oder Ihre Fotos
+und Videos anzusehen könnten sie Interesse daran haben, Ihnen den Zugang
+dazu zu versperren, oder einfach Ihre Daten ganz zerstören. Sie könnten sogar
+Ihre Daten korrumpieren, indem sie Kinderpornographie in Ihr Foto-Archiv ablegen.
+
+Sie schützen Ihren Computer so gut Sie können damit diese und andere
+schlimme Dinge nicht passieren. Ihre Sicherungen sollten Sie mit der gleichen Sorgfalt behandeln.
+
+Wenn Sie auf ein USB-Laufwerk sichern, sollten Sie das Laufwerk verschlüsseln,
+genau wie auch Online-Speicher. Es gibt viele Arten von Verschlüsselung und
+ich bin nicht qualifiziert Ihnen Rat zu geben, aber jegliche gängige,
+moderne Verschlüsselung sollte ausreichen -- außer für besonders entschlossene Angreifer.
+
+Anstatt oder zusätzlich zur Verschlüsselung können Sie den physischen Zugang
+zu Ihren Backup-Medien absichern. Lagern Sie Ihr USB-Laufwerk z.B. in einem Safe oder Schließfach.
+
+Die Vielzahl von Backups die Sie benötigen um sich gegen Erdbeben,
+Flutkatastrophen und marodierende Gangs dreirad-fahrender Clowns zu schützen,
+sind auch ein guter Schutz gegen Angreifer. Sie können Ihre Live-Daten
+und die Backups bei Ihnen zu Hause korrumpieren, aber vermutlich könnten Sie
+nicht an das USB-Laufwerk herankommen, das in Beton gegossen an einem geheimen
+Ort vergraben ist, den nur Sie kennen.
+
+Auf der anderen Seite möchten oder müssen Sie vielleicht Anderen
+Zugriff auf Ihre gesicherten Daten geben. Wenn Sie zum Beispiel von der Clown
+Gang entführt wurden, sollte Ihr Partner in der Lage sein, Ihren
+MI6-Verbindungsmann zu kontaktieren, damit der Geheimdienst Sie retten kann.
+Den sicheren Zugang zu (Teilen) Ihres Backups herzustellen ist ein interessantes
+Problem für sich, für das es verschiedene Lösungen gibt:
+Geben Sie Ihrem Partner das Verschlüsselungspasswort, oder geben Sie es einem
+Freund dem Sie vertrauen, oder einem Anwalt. Sie könnten auch so etwas wie
+[libgfshare] verwenden, um die Schlüssel auf sichere Weise treuhänderisch zu hinterlegen.
+
+[libgfshare]: http://www.digital-scurf.org/software/libgfshare
+
+Wie Obnams Verschlüsselung funktioniert
+---------------------------------------
+
+Ein Obnam Repository enthält mehrere Verzeichnisse für verschiedene
+Arten von Daten.
+
+* Ein Verzeichnis je Client, für Daten, die nur für diesen Client
+  relevant sind, z.B. Generationen dieses Clients.
+* Ein Verzeichnis für die Liste der Clients.
+* Ein Verzeichnis für alle chunks, sowie zusätzliche Verzeichnisse,
+  die für die Deduplizierung von chunks verwendet werden.
+
+Das Verzeichnis je Client ist verschlüsselt, so dass nur der jeweilige
+Client zugreifen kann. Das bedeutet, dass nur der Client selbst seine
+Generationen, und die darin enthaltenen Dateien sehen kann.
+
+Die gemeinsam genutzten Verzeichnisse (Client-Liste, chunks) sind so
+verschlüsselt, dass alle Clients sie benutzen können. Dies ermöglicht es
+den Clients, chunks gemeinsam zu nutzen, so dass die Deduplizierung über
+alle Clients laufen kann.
+
+Dieses Verschlüsselungsverfahren geht davon aus das alle Clients die
+sich ein Repository teilen einander vertrauen und dass es in Ordnung
+ist, sämtliche chunks zu lesen, die sie wollen. Zum Beispiel verhindert
+die Verschlüsselung nicht, das Geschwister die eMails des anderen aus
+dem Repository lesen, aber die Eltern können das nicht, weil ihnen der
+geeignete Schlüssel fehlt.
+
+Zusätzlich zu den für die Client-Verschlüsselungen können Sie
+zusätzliche Schlüssel hinzufügen. Diese Schlüssel haben dann ebenfalls
+Zugang zum Backup-Repository. Beispielsweise könnte der Schlüssel der
+Eltern dem Repository hinzugefügt werden, so dass, wenn es sein muss,
+die Eltern Daten der Kinder wiederherstellen können, auch wenn das Kind
+seinen eigenen Schlüssel verloren hat.
+
+In einer Unternehmensumgebung könnte der Schlüssel des Backup-
+Administrators hinzugefügt werden. So kann dieser zum Beispiel
+die Integrität des Repository prüfen, oder auf Daten eines Mitarbeiters
+zugreifen, der im Lotto gewonnen hat und wegen der schlechten
+Internet-Verbindung zum Mond nicht verfügbar ist.
+
+Solche zusätzlichen Schlüssel können entweder für jeden einzelnen Client
+oder alle gleichzeitig hinzugefügt werden.
+
+Verschlüsselung in Obnam einrichten
+-----------------------------------
+
+Obnam benutzt PGP-Schlüssel, genauer gesagt deren GNU Privacy
+Guard (GnuPG, gpg) Implementierung. Um verschlüsselte Backups zu erstellen
+müssen Sie erst ein PGP-Schlüsselpaar erzeugen. Wie das geht
+steht in der [GnuPG Dokumentation] (englisch).
+
+[GnuPG Dokumentation]: http://www.gnupg.org/documentation/
+
+Sobald Sie eine funktionierendes GnuPG-Setup und ein Schlüsselpaar
+(bestehend aus einem öffentlichen Schlüssel und einem geheimen
+Schlüssel) haben, müssen Sie die Schlüssel-ID finden. Führen Sie
+den folgenden Befehl aus und wählen Sie Ihren Schlüssel aus der Liste.
+
+    gpg --list-keys
+
+Für die restlichen Beispielen dieses Kapitels gehen wir davon aus das
+Ihre Key-ID CAFEFACE ist.
+
+Um von der Verschlüsselung zu profitieren benutzten Sie den `--encrypt-with`
+Schalter:
+
+    [config]
+    encrypt-with = CAFEFACE
+
+Das ist alles.
+
+Beachten Sie, dass ein Repository vollständig oder gar nicht
+verschlüsselt sein sollte, und dass man nicht hin und her wechseln kann.
+Wenn Sie Ihre Meinung ob sie Verschlüsselung benutzen möchten ändern,
+müssen Sie mit einem neuen Repository von vorn beginnen. Alle Clients,
+die ein Repository teilen müssen verschlüsseln, oder aber keiner von
+ihnen. Wenn Sie beides vermischen können verwirrende Fehlermeldungen
+erscheinen.
+
+Obnam verschlüsselt automatisch alle Daten, die es ins Repository
+schreibt und entschlüsselt sie wenn nötig. Solange Sie nur ein Schlüssel
+für jeden Clientbenutzen, kümmert sich Obnam darum die richtigen
+Schlüssel an den richtigen Stellen hinzu zu fügen.
+
+Prüfen ob ein Repository Verschlüsselung nutzt
+----------------------------------------------
+
+Es gibt keinen direkten Weg um mit Obnam zu überprüfen, ob ein
+Repository Verschlüsselung benutzt. Sie können das jedoch auch manuell
+überprüfen: Wenn Ihr Repository die Datei `clientlist/key` enthält, wird
+das Repository verschlüsselt.
+
+FIXME: Verwalten der Schlüssel in einem Repository
+----------------------------------------
+
+In diesem Abschnitt wird erläutert, wie Sie die Schlüssel in einem
+Repository verwalten: Wie Sie zusätzliche Schlüssel für jedes Toplevel
+hinzufügen und wie Sie die Schlüssel eines Client ändern. Es zeigt auch
+wie Sie prüfen können, welche Schlüssel verwendet werden, und welchen
+Zugriff jeder Schlüssel hat.
+
