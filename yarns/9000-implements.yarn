@@ -104,6 +104,11 @@ We need to manipulate extended attributes.
     mkdir -p $(dirname "$DATADIR/$MATCH_1")
     setfattr --name="$MATCH_2" --value "$MATCH_3" "$DATADIR/$MATCH_1"
 
+Create a symlink.
+
+    IMPLEMENTS GIVEN a symlink (\S+) pointing at (\S+)
+    ln -s "$MATCH_2" "$DATADIR/$MATCH_1"
+
 Sometimes we need to remove a file.
 
     IMPLEMENTS WHEN user (\S+) removes file (\S+)

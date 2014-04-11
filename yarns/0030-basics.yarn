@@ -157,6 +157,26 @@ instead of a file.
     THEN the attempt succeeded
 
 
+Backup root is not a directory
+------------------------------
+
+Obnam does not, currently, support backing up individual files. The
+backup root must be a directory. This scenario verifies that Obnam
+gives the right error if the root is not a directory. The error code
+is R79ED6X, for "Backup root does not exist or is not a directory".
+
+    SCENARIO backup root is not a directory
+
+    GIVEN a symlink L pointing at /dev/null
+    WHEN user U attempts to back up directory L to repository R
+    THEN the attempt failed with exit code 1
+    THEN the error message matches "R79ED6X"
+
+    GIVEN a file F in ., with data
+    WHEN user U attempts to back up directory F to repository R
+    THEN the attempt failed with exit code 1
+    THEN the error message matches "R79ED6X"
+
 Backup to roots at once
 -----------------------
 

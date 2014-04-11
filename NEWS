@@ -31,6 +31,12 @@ Bug fixes:
 * When restoring from a directory that is not a repository, the
   error message is now clearer.
 
+* Obnam would previously allow the backup root to be a symbolic link
+  pointing at a directory. However, this only worked for backups. No
+  other operations would work and would only see the symbolic link,
+  not the directory it pointed at. Obnam now gives an error message
+  even for the backup.
+
 Version 1.7.4, released 2014-03-31
 --------------------------------
 

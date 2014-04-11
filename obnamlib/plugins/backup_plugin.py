@@ -43,6 +43,11 @@ class BackupRootMissingError(obnamlib.ObnamError):
     msg = 'No backup roots specified'
 
 
+class BackupRootDoesNotExist(obnamlib.ObnamError):
+
+    msg = 'Backup root does not exist or is not a directory: {root}'
+
+
 class BackupErrors(obnamlib.ObnamError):
 
     msg = 'There were errors during the backup'
@@ -499,8 +504,13 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
     def backup_roots(self, roots):
         self.progress.what('connecting to to repository')
-        self.fs = self.app.fsf.new(roots[0])
-        self.fs.connect()
+        try:
+            self.fs = self.app.fsf.new(roots[0])
+            self.fs.connect()
+        except OSError as e:
+            if e.errno == errno.ENOENT:
+                raise BackupRootDoesNotExist(root=roots[0])
+            raise
 
         absroots = []
         for root in roots:
@@ -518,7 +528,13 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         for root in roots:
             logging.info('Backing up root %s' % root)
             self.progress.what('connecting to live data %s' % root)
-            self.fs.reinit(root)
+
+            try:
+                self.fs.reinit(root)
+            except OSError as e:
+                if e.errno == errno.ENOENT:
+                    raise BackupRootDoesNotExist(root=root)
+                raise
 
             self.progress.what('scanning for files in %s' % root)
             absroot = self.fs.abspath('.')
