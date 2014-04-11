@@ -289,5 +289,5 @@ Glossary
   data is safe even if the dinosaurs return in space ships to re-take
   world now that the ice age is over
 * **verification**: making sure a backup system works and that data
-  actually an be restored from backups and that the backups have not
+  actually can be restored from backups and that the backups have not
   become corrupted
