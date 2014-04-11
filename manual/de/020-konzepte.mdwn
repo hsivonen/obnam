@@ -1,4 +1,4 @@
-Sie wissen, daß Sie sollten...
+Sie wissen, dass Sie sollten...
 ==============================
 
 Dieses Kapitel beschreibt Philosophie und Theorie von Backups.
@@ -40,7 +40,7 @@ zu haben. Eine Abfolge von Backups, die zu verschiedenen Zeiten erstellt wurden,
 wird **Sicherungsverlauf** genannt. Jede Kopie Ihrer Live-Daten in
 Ihrem Sicherungsverlauf ist eine **Generation**. Dadurch können Sie jetzt eine
 Datei wieder herstellen, die Sie schon vor langer Zeit gelöscht hatten,
-von der Sie aber nicht wussten, daß Sie sie heute benötigen.
+von der Sie aber nicht wussten, dass Sie sie heute benötigen.
 Wenn Sie nur eine einzige Backup-Version vorhielten, könnten Sie die
 Datei nicht zurückbekommen. Aber wenn Sie, sagen wir, einen Monat lang
 ein tägliches Backup behalten, dann haben Sie einen Monat Zeit
@@ -89,10 +89,10 @@ jetzt zufrieden zurück lehnen?
 
 Willkommen in der Welt der Bedrohungsmodellierung. Backups sind Ihre
 Versicherung, sie mildern kleine und große Katastrophen, aber Katastrophen
-können auch Backups zustoßen. Wann sind Sie so sicher, daß keine Katastrophe
+können auch Backups zustoßen. Wann sind Sie so sicher, dass keine Katastrophe
 Ihnen mehr schaden können?
 
-Es gibt immer eine größeres Problem, das darauf wartet zu zu schlagen. Wenn
+Es gibt immer eine größeres Problem, das darauf wartet zu zuschlagen. Wenn
 Sie Ihre Daten auf eine USB-Laufwerk auf Ihrem Schreibtisch sichern, und
 jemand bricht ein und stiehlt Ihren PC und auch das USB-Laufwerk,
 dann haben Sie nichts gewonnen.
@@ -102,17 +102,17 @@ Computer, das andere wandert in ein Bankschließfach. Das ist
 recht sicher, außer wenn ein Erdbeben neben Ihrem Haus auch die
 Bank zerstört.
 
-Eine Lösung wäre, das Sie Online-Speicherplatz in einem anderen
+Eine Lösung wäre, dass Sie Online-Speicherplatz in einem anderen
 Land mieten. Das ist recht sicher, außer es gibt einen Fehler im Betriebssystem
 (das nicht nur Sie, sondern auch der Provider benutzen) und Hacker dringen
 ein und löschen all Ihre Daten.
 
-Eine Lösung wäre, das Sie mit einem 3D Drucker Betonblöcke drucken,
+Eine Lösung wäre, dass Sie mit einem 3D Drucker Betonblöcke drucken,
 auf denen Ihre Daten mittels QR Code verewigt sind. Das ist recht
 sicher, außer ein Meteorit trifft die Erde und zerstört unsere
 gesamte Zivilisation.
 
-Eine Lösung wäre, das Sie Satelliten mit Kopien Ihrer Daten in
+Eine Lösung wäre, dass Sie Satelliten mit Kopien Ihrer Daten in
 stationäre Umlaufbahnen um alle 9 Planeten (Pluto ist auch ein Planet!)
 des Sonnensystems schicken. Das ist - auch wenn Sie vom
 Meteoriteneinschlag gestorben sind - recht sicher, außer die Sonne wird zur Supernova.
@@ -202,7 +202,7 @@ Betrachtung von Backup-Medien
 -----------------------------
 
 Dieser Abschnitt behandelt Backup-Medien, ihre unterschiedlichen
-Charakteristiken, und wie Sie für sich selbst etwas passendes auswählen.
+Charakteristiken, und wie Sie für sich selbst etwas Passendes auswählen.
 
 Es gibt viele verschiedene Speicher-Medien. Die wohl bekanntesten sind:
 
@@ -281,7 +281,7 @@ Glossar
   drauf gespeichert wird
 * **off-site backup**: Eine Sicherung, deren Repository physisch weit weg von den Livedaten ist
 * **precious data**: Alle Daten, die Ihnen etwas bedeuten, vgl. "live data"
-* **Repository**: Der Ort an dem Backups gespeichert weden
+* **Repository**: Der Ort an dem Backups gespeichert werden
 * **restore**: Daten aus einem Repository wieder herstellen
 * **root**, **backup root**: Ein Verzeichnis das gesichert werden soll, inkl.
   aller Dateien und Verzeichnisse darunter
@@ -290,6 +290,6 @@ Glossar
   wieder hergestellt oder gelöscht werden kann
 * **strategy**, **backup strategy**: Ein Plan um Ihre Daten abzusichern, sogar
   wenn die Dinosaurier in Raumschiffen zurückkommen um die Welt zu übernehmen,
-  jetzt wo die eiszeit vorüber ist
+  jetzt wo die Eiszeit vorüber ist
 * **verification**: Sicherstellen das ein Backup-System auch funktioniert und Daten
   aus der Sicherung wieder hergestellt werden können und das die Sicherung nicht beschädigt ist
