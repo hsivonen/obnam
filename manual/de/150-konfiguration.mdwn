@@ -1,0 +1,134 @@
+Obnam Konfigurationsdateien und Einstellungen
+=============================================
+
+In diesem Kapitel geht es um Obnams Konfigurationsdateien: Wo sie sind, was
+sie enthalten, und wie sie verwendet werden.
+
+Wo ist meine Konfiguration?
+---------------------------
+
+Obnam sucht seine Konfigurationsdatei an folgenden Orten:
+
+* `/etc/obnam.conf`
+* `/etc/obnam/*.conf`
+* `~/.obnam.conf`
+* `~/.config/obnam/*.conf`
+
+In `/etc/obnam` und `~/.config/obnam` werden alle Dateien mit dem
+Suffix `.conf` in "asciibetischer" Reihenfolge geladen. Das ist ähnlich
+wie alphabetisch, basiert aber auf dem Zeichencode und nicht auf dem,
+was die Leute denken. Im Gegensatz zu alphabetisch ist das sprachunabhängig.
+
+Alle Dateien der obigen Liste können existieren (oder auch nicht). Wenn
+eine Datei vorhanden ist wird sie gelesen, dann die nächste Datei, und
+so weiter. Eine Einstellung in einer Datei wird durch eine spätere Datei
+überschrieben, wenn auch dort die Option eingestellt ist. Zum
+Beispiel könnte `/etc /obnam.conf` den `log-level` auf `INFO` setzen,
+aber `~ /.obnam.conf` setzt ihn dann auf `DEBUG`, weil der Benutzer
+detailiertere Log-Dateien wünscht.
+
+Die Obnam Konfigurationsdateien in `/ etc` gelten für alle, die Obnam
+auf dieser Maschine benutzen. Das ist wichtig: Sie gelten nicht nur für
+`root`.
+
+Wenn Sie mehrere Konfigurationen für Obnam haben möchten, um zum
+Beispiel verschiedene Backup-Repositories zu nutzen, müssen Sie die
+Dateien so ablegen oder benennen, das sie nicht zur Liste oben passen.
+Zum Beispiel:
+
+* `/etc/obnam/system-backup.profile`
+* `~/.config/obnam/online.profile`
+* `~/.config/obnam/usbdrive.profile`
+
+Bei der Ausführung von Obnam müssen Sie dann nur noch
+das File angeben, mit dessen Konfiguration gearbeitet werden soll:
+
+    obnam --config ~/.config/obnam/usbdrive.profile`
+
+Sollten Sie außerdem wünschen das Obnam sämtliche Standard-Konfigurationsdateien
+ignoriert, müssen Sie die Option `--no-default-config` mitgeben:
+
+    obnam --no-default-config --config ~/.obnam-is-fun.conf
+
+Optionen die auf der Kommandozeile geben werden, überschreiben Werte die aus
+Konfigurationsdateien geladen wurden.
+
+Syntax der Konfigurationsdateien
+--------------------------------
+
+Obnam Konfigurationsdateien verwenden die [INI-Datei] Syntax,
+genauer gesagt die Variante, die von der Python [ConfigParser] Bibliothek implementiert wird.
+
+Sie sehen so aus:
+
+    [config]
+    log-level = debug
+    log = /var/log/obnam.log
+    encrypt-with = CAFEBEEF
+    root = /
+    one-file-system = yes
+
+[INI-Datei]: https://de.wikipedia.org/wiki/Initialisierungsdatei
+[ConfigParser]: http://docs.python.org/2/library/configparser.html
+
+Die Namen der Konfigurationsvariablen sind die gleichen wie die
+entsprechenden Befehlszeilenoptionen. Wenn `--foo` die
+Befehlszeilenoption ist, dann ist die Variable in der Datei `foo`. Jede
+Kommandozeilen-Option `- foo = bar` kann in einer Konfigurationsdatei
+als `foo = bar` verwendet werden. Es gibt einige Ausnahmen (`--
+no-default-config`, `--config`, `--help` und ein paar andere), aber die
+würden Sie sowieso nicht in einer Konfigurationsdatei setzen.
+
+Jede Option oder Einstellung hat einen Typ. Meist ist dies nicht
+relevant, es sei denn, Sie geben ihr einen Wert der ungeeignet ist. Die
+beiden wichtigsten Ausnahmen sind:
+
+* Boolean bzw. ja/nein oder an/aus
+  Zum Beispiel ist `--exclude-caches` eine Option, die entweder an ist
+  (wenn die Option benutzt wird) oder aus ist (wenn sie nicht benutzt wird).
+  Für jede Option `--foo` gibt es auch eine Option `--no-foo`. In
+  Konfigurationsdateien wird `foo` durch setzen auf `yes` oder `true`
+  eingeschaltet, und durch `no` oder `false` abgeschaltet.
+
+* Einige Optionen können eine Werteliste aufnehmen, zum Beispiel
+  `--exclude`. Sie können `--exclude` verwenden so oft Sie wollen,
+  jedes Mal wird ein neuer Ausschluss hinzugefügt, statt den vorherigen
+  zu ersetzen. In einer Konfigurationsdatei trennen Sie die Werte mit
+  Komma und schreiben Sie hintereinander, z.B.: `exclude = foo, bar,
+  baz`. Durch später geladenen Konfigurationsdateien wird die gesamte
+  Werteliste ersetzt, anstatt hinzugefügt.
+
+Eine genauere Erklärung der Syntax finden Sie in der **cliapp**(5)
+manpage Ihres Systems oder im WWW [cliapp man page].
+
+[cliapp man page]: http://liw.fi/cliapp/cliapp.5.txt
+
+Meine Konfiguration prüfen
+--------------------------
+
+Weil Obnam seine Konfigurationsdaten von mehreren Stellen bezieht,
+kann es schwierig sein herauszufinden welche Optionen nun wirklich
+Anwendung finden. Die Option `--dump-config` hilft dabei.
+
+    obnam --config ~/.obnam.fun --exclude-caches --dump-config
+
+Diese Option liest alle Konfigurationsdateien und gibt eine Zusammenfassung
+auf stdout aus, die jede Einstellung enthält, als wäre `--dump-config`
+nicht benutzt worden.
+
+So können Sie schnell die Einstellungen überprüfen. Außerdem ist das ein
+guter Anfang wenn Sie mal eine Konfigurationsdatei von Hand neu erstellen
+möchten.
+
+Alle Konfigurationseinstellungen herausfinden
+---------------------------------------------
+
+Diese Anleitung beinhaltet und erklärt noch nicht alle Einstellungen.
+Obnam bietet aber eine integrierte Hilfe (`obnam - help`) und eine
+manpage, die automatisch aus der integrierten Hilfe erzeugt wird (`man
+obnam` oder siehe [obnam man page]). Eines Tages wird dieses Kapitel
+einen automatisch generierten Abschnitt enthalten der jede Einstellung
+erklärt. Bis dahin dürfen Sie gern mit dem Finger auf Obnams Autor
+zeigen und über seine Faulheit kichern.
+
+[obnam man page]: http://liw.fi/obnam/obnam.1.txt

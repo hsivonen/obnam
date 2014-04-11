@@ -1,0 +1,110 @@
+Wiederherstellen von Backups
+============================
+
+Das Schlimmste ist passiert! Ihre Katze hat das Katzenklo und Ihre
+Festplatte verwechselt! Ihre Ziege hat Ihr allerwichtigstes Dokument
+gelöscht! Wehe Dir!
+
+Bleiben wir ruhig. Genau dafür haben wir ja Backups. Es gibt keinen
+Grund für Ausrufezeichen. Atmen Sie tief ein, trinken Sie eine Tasse
+Tee, und alles wird gut.
+
+Es gibt zwei verschiedene Ansätze für die Wiederherstellung von Daten
+mit Obnam. Einer stützt sich auf das FUSE-Dateisystem. Dieses sehr
+schöne Stück Technik macht es möglich, dass Obnam Ihre Backups einfach
+als eine Verzeichnis darstellt. Es ist der bevorzugte Weg, aber nicht
+immer möglich, daher hat Obnam auch eine primitivere, weniger leicht zu
+bedienende Methode.
+
+Wiederherstellen mit FUSE^[Anm. d. Ü.: Sprachkomik zu übersetzen ist schwer, der
+Witz bleibt dabei zu oft auf der Strecke. Daher versuche ich es garnicht erst.]
+-------------------------
+
+Mittels `obnam mount` können Sie Ihre Backups ansehen, als wären sie ein
+Verzeichnis wie jedes andere. Dazu müssen Sie allerdings FUSE installiert
+haben (vgl. Kapitel "Installation" für Details). Die meisten modernen
+Linux Desktops bringen FUSE schon mit.
+
+    mkdir ~/backups
+    obnam mount --to ~/backups
+
+Führen Sie den Befehl oben aus und schauen Sie dann in das Verzeichnis
+`~/backups`. Sie werden ungefähr das hier sehen:
+
+    $ ls -l ~/backups
+    total 12
+    drwxr-xr-x 24 root root 4096 Feb 11 21:41 2
+    drwxr-xr-x 24 root root 4096 Feb 11 21:41 5
+    lrwxr-xr-x 24 root root 4096 Feb 11 21:41 latest -> 5
+    $
+
+Jedes Verzeichnis unter `~/backups` ist eine Generation Ihres Backups,
+bennant nach dem "generation identifier" den Obnam vergibt.
+Der Symlink `latest` zeigt immer auf die neueste Generation.
+
+Jetzt können Sie kinderleicht eine Datei wieder herstellen:
+
+    cp ~/backups/latest/home/tomjon/Documents/iloveyou.txt ~/restored.txt
+
+Sie können beliebige Dateien aus dem Verzeichnis `~/backups` kopieren, aus jeder
+Generation, oder aus allen wenn Sie möchten. Sie können die Dateien auch erst
+ansehen, bevor Sie sie herauskopieren:
+
+    less ~/backups/2/home/tomjon/Documents/iloveyou.txt
+
+So finden Sie leicht die Version die Sie suchen, nicht nur die neueste.
+
+Etwas löschen können Sie in `~/backups` nicht. Das Verzeichnis ist read-only und
+Sie können weder absichtlich noch unabsichtlich etwas darin löschen oder verändern.
+Dieses Verhalten ist beabsichtigt: `obnam mount` soll eine sichere Möglichkeit bieten,
+Ihre Backups zu betrachten, ohne das Sie besondere Sorgfalt walten lassen müssen.
+
+Wenn Sie Ihre Backups nicht mehr ansehen möchten, können Sie das Repository un-mounten:
+
+    fusermount -u ~/backups
+
+Neben der Kommandozeile können Sie natürlich auch den Filemanager Ihrer Wahl benutzen.
+Den mount und un-mount Vorgang müssen Sie (abhängig von der Konfiguration Ihres PCs)
+eventuell trotzdem auf der Kommandozeile durchführen.
+
+Wiederherstellen ohne FUSE
+--------------------------
+
+Wenn `obnam mount` nicht verfügbar ist, können Sie direkt mit Obnam
+wiederherstellen. Verwenden `obnam generations` und ` obnam ls`, um die
+richtige Generation zur Wiederherstellung zu finden, und führen Sie dann
+einen Befehl wie diesen aus:
+
+    obnam restore --to /tmp/tomjon-restored /home/tomjon/Documents
+
+So wir das angegebene Verzeichnis wieder hergestellt. Ohne Angabe, was wieder
+herzustellen ist wird die gesamte neueste Generation wieder hersgestellt.
+Eine andere Generation währen Sie mit `--generation` aus:
+
+    obnam restore --to /tmp/tomjon-restored --generation 2
+
+Hinweis: Sie können kein Verzeichnis wiederherstellen, das bereits existiert.
+So wird verhindert, das Sie ein bereits existierendes Verzeichnis mit den
+wieder hergestellten Daten überschreiben. Wenn Sie Ihre Live-Daten
+wirklich ersetzen möchten, sollten Sie zunächst in ein temporäres Verzeichnis
+zurücksichern und dann die Daten verschieben.
+
+Übung macht den Meister
+-----------------------
+
+Sie sollten das Zurücksichern üben. So bekommen Sie mehr Vertrauen und Ihre
+Backups und können ruhiger bleiben, wenn das Schlimmste passiert.
+Etwas hochgestocherner ausgedrückt: Sie sollten Ihren Disaster Recovery Plan
+testen.
+
+Machen Sie testweise eine Wiederherstellung von ein paar Dateien oder
+sogar allen, bis Sie sicher wissen wie das geht. Von Zeit zu Zeit
+sollten Sie das wiederholen um sicher zu sein das Ihre Backups immer
+noch funktionieren. Es ist viel weniger beängstigend, nach Datenverlust
+eine echte Wiederherstellung zu machen, wenn man vorher geübt hat.
+
+In extremen Fällen, insbesondere wenn Sie ein Obnam Entwickler sind,
+sollten Sie vielleicht mal Ihre Festplatte formatieren und dann die
+Wiederherstellung durchführen, nur um zu wissen, das Sie es können. Wenn
+Sie kein Obnam Entwickler sind, wäre das vielleicht ein bisschen extrem:
+Benutzen Sie einfach eine separate Festplatte statt der eingebauten.

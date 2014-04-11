@@ -1,10 +1,10 @@
-Sie wissen, daß Sie sollten...
+Sie wissen, dass Sie sollten...
 ==============================
 
 Dieses Kapitel beschreibt Philosophie und Theorie von Backups.
 Es erläutert, warum Sie sichern sollten, verschiedene Konzepte rund um Backups,
 Dinge an die Sie bei der Einrichtung von Backups denken sollten
-und was langfristig zu tun ist (z.B. Verifizierung usw.). Außerdem werden 
+und was langfristig zu tun ist (z.B. Verifizierung usw.). Außerdem werden
 einige Annahmen erläutert die Obnam macht, und welche Einschränkungen es gibt.
 
 Warum sichern?
@@ -20,10 +20,10 @@ Dieser Abschnitt behandelt Kernkonzepte von Backups und legt einige
 Begriffe fest, die in diesem Buch verwendet werden.
 
 **Live-Daten** sind die Daten, mit denen Sie arbeiten oder die Sie aufbewahren, die Dateien auf
-Ihrer Festplatte: Dokumente, die Sie schreiben, Fotos, die Sie speichern, der 
+Ihrer Festplatte: Dokumente, die Sie schreiben, Fotos, die Sie speichern, der
 unvollendete Roman, von dem Sie wünschen das Sie ihn fertig schrieben.
 
-Die meisten Live-Daten sind **kostbar**, Sie wären aufgeschmissen wenn 
+Die meisten Live-Daten sind **kostbar**, Sie wären aufgeschmissen wenn
 sie verloren gingen. Einige Live-Daten sind es allerdings nicht, zum Beispiel Ihr
 Browser-Cache. Durch diese Unterscheidung können Sie die Datenmenge begrenzen,
 welche Sie sichern müssen -- was die Kosten des Backups erheblich senken kann.
@@ -40,7 +40,7 @@ zu haben. Eine Abfolge von Backups, die zu verschiedenen Zeiten erstellt wurden,
 wird **Sicherungsverlauf** genannt. Jede Kopie Ihrer Live-Daten in
 Ihrem Sicherungsverlauf ist eine **Generation**. Dadurch können Sie jetzt eine
 Datei wieder herstellen, die Sie schon vor langer Zeit gelöscht hatten,
-von der Sie aber nicht wussten, daß Sie sie heute benötigen.
+von der Sie aber nicht wussten, dass Sie sie heute benötigen.
 Wenn Sie nur eine einzige Backup-Version vorhielten, könnten Sie die
 Datei nicht zurückbekommen. Aber wenn Sie, sagen wir, einen Monat lang
 ein tägliches Backup behalten, dann haben Sie einen Monat Zeit
@@ -67,11 +67,11 @@ als wäre all Ihr Computer-Zeug weg, bis auf die Backup-Medien. Können Sie alle
 wieder herstellen? Sie sollten dies von Zeit zu Zeit tun, um sicher zu stellen
 das Ihr Backup-System einsatzfähig ist.
 
-Es gibt eine sehr große Auswahl an **Backup-Tools**. Sie können 
+Es gibt eine sehr große Auswahl an **Backup-Tools**. Sie können
 sehr einfach und händisch sein: Sie können Ihre Dateien alle Jubeljahre
 mit dem Dateimanager auf ein USB-Laufwerk kopieren. Sie können auch sehr komplex sein:
-Enterprise Backup-Produkte, die riesige Mengen an Geld kosten und 
-mit mehrtägigen Schulungspaketen für Ihr Sysadmin-Team begleitet werden, und 
+Enterprise Backup-Produkte, die riesige Mengen an Geld kosten und
+mit mehrtägigen Schulungspaketen für Ihr Sysadmin-Team begleitet werden, und
 nur dann vernünftig funktionieren, wenn das gesamte Team vernünftig funktioniert.
 
 Sie müssen eine **Backup-Strategie** definieren, die alles zusammenhält.
@@ -87,13 +87,13 @@ einem Monat Tag für Tag ein Backup. Ihre Backup-History
 wird langsam lang genug, um nützlich zu sein. Können Sie Sich
 jetzt zufrieden zurück lehnen?
 
-Willkommen in der Welt der Bedrohungsmodellierung. Backups sind Ihre 
-Versicherung, sie mildern kleine und große Katastrophen, aber Katastrophen 
-können auch Backups zustoßen. Wann sind Sie so sicher, daß keine Katastrophe 
+Willkommen in der Welt der Bedrohungsmodellierung. Backups sind Ihre
+Versicherung, sie mildern kleine und große Katastrophen, aber Katastrophen
+können auch Backups zustoßen. Wann sind Sie so sicher, dass keine Katastrophe
 Ihnen mehr schaden können?
 
-Es gibt immer eine größeres Problem, das darauf wartet zu zu schlagen. Wenn
-Sie Ihre Daten auf eine USB-Laufwerk auf Ihrem Schreibtisch sichern, und 
+Es gibt immer eine größeres Problem, das darauf wartet zu zuschlagen. Wenn
+Sie Ihre Daten auf eine USB-Laufwerk auf Ihrem Schreibtisch sichern, und
 jemand bricht ein und stiehlt Ihren PC und auch das USB-Laufwerk,
 dann haben Sie nichts gewonnen.
 
@@ -102,19 +102,19 @@ Computer, das andere wandert in ein Bankschließfach. Das ist
 recht sicher, außer wenn ein Erdbeben neben Ihrem Haus auch die
 Bank zerstört.
 
-Eine Lösung wäre, das Sie Online-Speicherplatz in einem anderen
+Eine Lösung wäre, dass Sie Online-Speicherplatz in einem anderen
 Land mieten. Das ist recht sicher, außer es gibt einen Fehler im Betriebssystem
 (das nicht nur Sie, sondern auch der Provider benutzen) und Hacker dringen
 ein und löschen all Ihre Daten.
 
-Eine Lösung wäre, das Sie mit einem 3D Drucker Betonblöcke drucken,
+Eine Lösung wäre, dass Sie mit einem 3D Drucker Betonblöcke drucken,
 auf denen Ihre Daten mittels QR Code verewigt sind. Das ist recht
 sicher, außer ein Meteorit trifft die Erde und zerstört unsere
 gesamte Zivilisation.
 
-Eine Lösung wäre, das Sie Satelliten mit Kopien Ihrer Daten in
+Eine Lösung wäre, dass Sie Satelliten mit Kopien Ihrer Daten in
 stationäre Umlaufbahnen um alle 9 Planeten (Pluto ist auch ein Planet!)
-des Sonnensystems schicken. Das ist - auch wenn Sie vom 
+des Sonnensystems schicken. Das ist - auch wenn Sie vom
 Meteoriteneinschlag gestorben sind - recht sicher, außer die Sonne wird zur Supernova.
 
 Es gibt immer eine noch größere Katastrophe. Sie müssen entscheiden,
@@ -137,10 +137,10 @@ Diese Fragen sind nicht abschließend, aber ein Anfang. Fragen Sie sich:
   Welche Daten sind Ihnen am wichtigsten?
 
 * Wie viel ist es Ihnen wert, Ihre Daten wieder zu bekommen, und wie schnell
-  soll das passieren? Wie viel Geld und Mühe sind Sie bereit 
+  soll das passieren? Wie viel Geld und Mühe sind Sie bereit
   für das erste Backup zu investieren, und wie viel für weitere Backups?
   Und für die Wiederherstellung, wie viel sind Sie da bereit zu zahlen?
-  Ist es besser für Sie, weniger für Backups auszugeben, auch wenn das 
+  Ist es besser für Sie, weniger für Backups auszugeben, auch wenn das
   Restore dann langsamer und teurer ist und mehr Aufwand bedeutet?
   Oder ist es umgekehrt?
 
@@ -152,10 +152,10 @@ Episode ein Thema sein, wenn es wieder heißt: Sie Abenteuer von Bac-Kup.
 Backups und Sicherheit
 ----------------------
 
-Sie sind nicht der einzige, der sich um Ihre Daten sorgt. 
-Eine Vielzahl von Regierungen, Unternehmen, Kriminellen und allzu 
+Sie sind nicht der einzige, der sich um Ihre Daten sorgt.
+Eine Vielzahl von Regierungen, Unternehmen, Kriminellen und allzu
 neugierigen Schnüfflern sind wahrscheinlich ebenfalls interessiert
-(... und es ist manchmal schwer, diese auseinander zu halten). Sie könnten 
+(... und es ist manchmal schwer, diese auseinander zu halten). Sie könnten
 Beweise gegen Sie (er)finden wollen, Sie erpressen wollen, oder
 einfach nur neugierig darauf sein, was Sie mit Freunden besprechen.
 
@@ -181,7 +181,7 @@ zu Ihren Backup-Medien absichern. Lagern Sie Ihr USB-Laufwerk z.B. in einem Safe
 
 Die Vielzahl von Backups die Sie benötigen um sich gegen Erdbeben,
 Flutkatastrophen und marodierende Gangs dreirad-fahrender Clowns zu schützen,
-sind auch ein guter Schutz gegen Angreifer. Sie können Ihre Live-Daten 
+sind auch ein guter Schutz gegen Angreifer. Sie können Ihre Live-Daten
 und die Backups bei Ihnen zu Hause korrumpieren, aber vermutlich könnten Sie
 nicht an das USB-Laufwerk herankommen, das in Beton gegossen an einem geheimen
 Ort vergraben ist, den nur Sie kennen.
@@ -194,7 +194,7 @@ Den sicheren Zugang zu (Teilen) Ihres Backups herzustellen ist ein interessantes
 Problem für sich, für das es verschiedene Lösungen gibt:
 Geben Sie Ihrem Partner das Verschlüsselungspasswort, oder geben Sie es einem
 Freund dem Sie vertrauen, oder einem Anwalt. Sie könnten auch so etwas wie
-[libgfshare] verwenden, um die Schlüssel aus sichere Weise treuhänderisch zu hinterlegen.
+[libgfshare] verwenden, um die Schlüssel auf sichere Weise treuhänderisch zu hinterlegen.
 
 [libgfshare]: http://www.digital-scurf.org/software/libgfshare
 
@@ -202,7 +202,7 @@ Betrachtung von Backup-Medien
 -----------------------------
 
 Dieser Abschnitt behandelt Backup-Medien, ihre unterschiedlichen
-Charakteristiken, und wie Sie für sich selbst etwas passendes auswählen.
+Charakteristiken, und wie Sie für sich selbst etwas Passendes auswählen.
 
 Es gibt viele verschiedene Speicher-Medien. Die wohl bekanntesten sind:
 
@@ -212,10 +212,10 @@ Es gibt viele verschiedene Speicher-Medien. Die wohl bekanntesten sind:
 * verschiedene Online-Speicher
 * Papier
 
-Die exotischeren und / oder ungebräuchlichen Dinge wie Microfiche 
+Die exotischeren und / oder ungebräuchlichen Dinge wie Microfiche
 überspringen wir mal.
 
-**Magnetbänder** sind traditionell die wohl gebräuchlichste Form von 
+**Magnetbänder** sind traditionell die wohl gebräuchlichste Form von
 Backup-Medien. Die Bänder an sich sind (je GB) preiswert,
 aber für das Laufwerk ist eine hohe Anfangsinvestition fällig.
 Vieles in der Backup-Terminologie ist Magnetbändern entlehnt, z.B.
@@ -281,7 +281,7 @@ Glossar
   drauf gespeichert wird
 * **off-site backup**: Eine Sicherung, deren Repository physisch weit weg von den Livedaten ist
 * **precious data**: Alle Daten, die Ihnen etwas bedeuten, vgl. "live data"
-* **Repository**: Der Ort an dem Backups gespeichert weden
+* **Repository**: Der Ort an dem Backups gespeichert werden
 * **restore**: Daten aus einem Repository wieder herstellen
 * **root**, **backup root**: Ein Verzeichnis das gesichert werden soll, inkl.
   aller Dateien und Verzeichnisse darunter
@@ -290,6 +290,6 @@ Glossar
   wieder hergestellt oder gelöscht werden kann
 * **strategy**, **backup strategy**: Ein Plan um Ihre Daten abzusichern, sogar
   wenn die Dinosaurier in Raumschiffen zurückkommen um die Welt zu übernehmen,
-  jetzt wo die eiszeit vorüber ist
+  jetzt wo die Eiszeit vorüber ist
 * **verification**: Sicherstellen das ein Backup-System auch funktioniert und Daten
   aus der Sicherung wieder hergestellt werden können und das die Sicherung nicht beschädigt ist
