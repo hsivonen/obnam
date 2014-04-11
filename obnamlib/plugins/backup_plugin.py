@@ -338,7 +338,16 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.got_client_lock = False
         self.got_chunk_indexes_lock = False
         if self.pretend:
-            self.repo = self.app.get_repository_object()
+            try:
+                self.repo = self.app.get_repository_object()
+            except Exception as e:
+                self.progress.error(
+                    'Are you using --pretend without an existing repository?\n'
+                    'That does not work, sorry.\n'
+                    'You can create a small repository, backing up\n'
+                    'just one small directory, and then use --pretend\n'
+                    'with the real data.')
+                raise
         else:
             self.repo = self.app.get_repository_object(create=True)
             self.progress.what('adding client')
