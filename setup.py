@@ -216,6 +216,8 @@ class Check(Command):
             r'\.gz$',
             r'\.xz$',
             r'\.yarn$',
+            r'\.mdwn$',
+            r'\.css$',
             r'^without-tests$',
             r'^test-plugins/.*\.py$',
             ]
