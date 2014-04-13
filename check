@@ -22,4 +22,3 @@ python setup.py --quiet clean
 python setup.py --quiet build_ext -i
 rm -rf build
 python setup.py --quiet check "$@"
-
