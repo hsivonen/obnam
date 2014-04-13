@@ -1,6 +1,6 @@
 # repo_interface.py -- interface class for repository access
 #
-# Copyright 2013  Lars Wirzenius
+# Copyright 2013-2014  Lars Wirzenius
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

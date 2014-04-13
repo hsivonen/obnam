@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (C) 2008-2012  Lars Wirzenius <liw@liw.fi>
+# Copyright (C) 2008-2014  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -217,6 +217,7 @@ class Check(Command):
             r'\.xz$',
             r'\.yarn$',
             r'^without-tests$',
+            r'^test-plugins/.*\.py$',
             ]
 
         pats = [re.compile(x) for x in exclude]
