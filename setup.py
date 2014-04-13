@@ -194,6 +194,7 @@ class Check(Command):
         max_line_length = 80
         with open(filename) as f:
             for i, line in enumerate(f):
+                line = line.expandtabs()
                 if len(line) >= max_line_length:
                     print 'LONG: %s: %d: %s' % (filename, i+1, line),
 
