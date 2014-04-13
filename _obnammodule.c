@@ -1,7 +1,7 @@
 /*
  * _obnammodule.c -- Python extensions for Obna
  *
- * Copyright (C) 2008, 2009  Lars Wirzenius <liw@liw.fi>
+ * Copyright (C) 2008-2014  Lars Wirzenius <liw@liw.fi>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

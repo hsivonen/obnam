@@ -218,8 +218,15 @@ class Check(Command):
             r'\.yarn$',
             r'\.mdwn$',
             r'\.css$',
+            r'\.conf$',
             r'^without-tests$',
             r'^test-plugins/.*\.py$',
+            r'^debian/',
+            r'^README\.',
+            r'^NEWS$',
+            r'^COPYING$',
+            r'^CC-BY-SA-4\.0\.txt$',
+            r'^\.gitignore$',
             ]
 
         pats = [re.compile(x) for x in exclude]
