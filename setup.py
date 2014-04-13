@@ -213,8 +213,10 @@ class Check(Command):
         exclude = [
             r'\.gpg$',
             r'/random_seed$',
-            r'\.gz',
-            r'\.xz',
+            r'\.gz$',
+            r'\.xz$',
+            r'\.yarn$',
+            r'^without-tests$',
             ]
 
         pats = [re.compile(x) for x in exclude]
