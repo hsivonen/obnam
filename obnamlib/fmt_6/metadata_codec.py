@@ -66,9 +66,11 @@ def encode_metadata(metadata):
         logging.error('ERROR: Packing error due to %s' % str(e))
         logging.error('ERROR: st_mode=%s' % repr(metadata.st_mode))
         logging.error('ERROR: st_mtime_sec=%s' % repr(metadata.st_mtime_sec))
-        logging.error('ERROR: st_mtime_nsec=%s' % repr(metadata.st_mtime_nsec))
+        logging.error(
+            'ERROR: st_mtime_nsec=%s' % repr(metadata.st_mtime_nsec))
         logging.error('ERROR: st_atime_sec=%s' % repr(metadata.st_atime_sec))
-        logging.error('ERROR: st_atime_nsec=%s' % repr(metadata.st_atime_nsec))
+        logging.error(
+            'ERROR: st_atime_nsec=%s' % repr(metadata.st_atime_nsec))
         logging.error('ERROR: st_nlink=%s' % repr(metadata.st_nlink))
         logging.error('ERROR: st_size=%s' % repr(metadata.st_size))
         logging.error('ERROR: st_uid=%s' % repr(metadata.st_uid))

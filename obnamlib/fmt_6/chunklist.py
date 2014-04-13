@@ -1,4 +1,4 @@
-# Copyright 2010  Lars Wirzenius
+# Copyright 2010-2014  Lars Wirzenius
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -37,9 +37,9 @@ class ChunkList(obnamlib.RepositoryTree):
         tracing.trace('new ChunkList')
         self.fmt = '!Q'
         self.key_bytes = struct.calcsize(self.fmt)
-        obnamlib.RepositoryTree.__init__(self, fs, 'chunklist', self.key_bytes,
-                                         node_size, upload_queue_size,
-                                         lru_size, hooks)
+        obnamlib.RepositoryTree.__init__(
+            self, fs, 'chunklist', self.key_bytes, node_size,
+            upload_queue_size, lru_size, hooks)
         self.keep_just_one_tree = True
 
     def key(self, chunk_id):

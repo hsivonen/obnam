@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (C) 2008-2012  Lars Wirzenius <liw@liw.fi>
+# Copyright (C) 2008-2014  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,10 +21,13 @@ from distutils.command.build import build
 from distutils.command.clean import clean
 import glob
 import os
+import re
 import shutil
 import subprocess
 import sys
 import tempfile
+
+import cliapp
 
 
 # We need to know whether we can run yarn. We do this by checking
@@ -111,6 +114,7 @@ class Check(Command):
         ('network-lock-tests', 'L', 'run lock tests against localhost?'),
         ('crash-tests', 'c', 'run crash tests?'),
         ('sftp-tests', 's', 'run sftp tests against localhost?'),
+        ('nitpick', 'n', 'check copyright statements, line lengths, etc'),
     ]
 
     def set_all_options(self, new_value):
@@ -120,6 +124,7 @@ class Check(Command):
         self.network_lock_tests = new_value
         self.crash_tests = new_value
         self.sftp_tests = new_value
+        self.nitpick = new_value
 
     def initialize_options(self):
         self.set_all_options(False)
@@ -131,7 +136,8 @@ class Check(Command):
             self.lock_tests or
             self.network_lock_tests or
             self.crash_tests or
-            self.sftp_tests)
+            self.sftp_tests or
+            self.nitpick)
         if not any_set:
             self.set_all_options(True)
 
@@ -173,7 +179,68 @@ class Check(Command):
                     num_generations, repo_url, test_repo])
             shutil.rmtree(test_repo)
 
+        if self.nitpick:
+            sources = self.find_all_source_files()
+            self.check_sources_for_long_lines(sources)
+            self.check_copyright_statements(sources)
+
         print "setup.py check done"
+
+    def check_sources_for_long_lines(self, sources):
+        for filename in sources:
+            self.check_one_source_for_long_lines(filename)
+
+    def check_one_source_for_long_lines(self, filename):
+        max_line_length = 80
+        with open(filename) as f:
+            for i, line in enumerate(f):
+                line = line.expandtabs()
+                if len(line) >= max_line_length:
+                    print 'LONG: %s: %d: %s' % (filename, i+1, line),
+
+    def check_copyright_statements(self, sources):
+        if self.copylint_is_available():
+            print 'check copyright statements in source files'
+            cliapp.runcmd(['copyright-statement-lint'] + sources)
+        else:
+            print 'no copyright-statement-lint: no copyright checks'
+
+    def copylint_is_available(self):
+        returncode, stdout, stderr = cliapp.runcmd_unchecked(
+            ['copyright-statement-lint', '--help'])
+        return returncode == 0
+
+    def find_all_source_files(self):
+        exclude = [
+            r'\.gpg$',
+            r'/random_seed$',
+            r'\.gz$',
+            r'\.xz$',
+            r'\.yarn$',
+            r'\.mdwn$',
+            r'\.css$',
+            r'\.conf$',
+            r'^without-tests$',
+            r'^test-plugins/.*\.py$',
+            r'^debian/',
+            r'^README\.',
+            r'^NEWS$',
+            r'^COPYING$',
+            r'^CC-BY-SA-4\.0\.txt$',
+            r'^\.gitignore$',
+            ]
+
+        pats = [re.compile(x) for x in exclude]
+
+        output = cliapp.runcmd(['git', 'ls-files'])
+        result = []
+        for line in output.splitlines():
+            for pat in pats:
+                if pat.search(line):
+                    break
+            else:
+                result.append(line)
+        return result
 
 
 setup(name='obnam',

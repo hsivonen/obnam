@@ -1,6 +1,6 @@
 # repo_interface.py -- interface class for repository access
 #
-# Copyright 2013  Lars Wirzenius
+# Copyright 2013-2014  Lars Wirzenius
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -148,7 +148,9 @@ class RepositoryGenerationKeyNotAllowed(obnamlib.ObnamError):
 
 class RepositoryGenerationDoesNotExist(obnamlib.ObnamError):
 
-    msg = 'Cannot find requested generation {gen_id!r} for client {client_name}'
+    msg = (
+        'Cannot find requested generation {gen_id!r} '
+        'for client {client_name}')
 
 
 class RepositoryClientHasNoGenerations(obnamlib.ObnamError):
@@ -346,7 +348,7 @@ class RepositoryInterface(object):
     # Client list.
 
     def get_client_names(self):
-        '''Return list of client names currently existing in the repository.'''
+        '''Return client names currently existing in the repository.'''
         raise NotImplementedError()
 
     def lock_client_list(self):

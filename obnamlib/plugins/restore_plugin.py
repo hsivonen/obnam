@@ -1,4 +1,4 @@
-# Copyright (C) 2009, 2010  Lars Wirzenius
+# Copyright (C) 2009-2014  Lars Wirzenius
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -249,7 +249,8 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         if self.write_ok:
             if not self.fs.exists('./' + root):
                 self.fs.mkdir('./' + root)
-        self.app.dump_memory_profile('after recursing through %s' % repr(root))
+        self.app.dump_memory_profile(
+            'after recursing through %s' % repr(root))
 
     def restore_hardlink(self, filename, link, metadata):
         logging.debug('restoring hardlink %s to %s' % (filename, link))

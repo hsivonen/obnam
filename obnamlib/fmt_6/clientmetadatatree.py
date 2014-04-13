@@ -1,4 +1,4 @@
-# Copyright 2010  Lars Wirzenius
+# Copyright 2010-2014  Lars Wirzenius
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -59,7 +59,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     GEN_STARTED = 1         # subkey type for when generation was started
     GEN_ENDED = 2           # subkey type for when generation was ended
     GEN_IS_CHECKPOINT = 3   # subkey type for whether generation is checkpoint
-    GEN_FILE_COUNT = 4      # subkey type for count of files+dirs in generation
+    GEN_FILE_COUNT = 4      # subkey type for count of files+dirs in a gen
     GEN_TOTAL_DATA = 5      # subkey type for sum of all file sizes in gen
     GEN_TEST_DATA = 6       # subkey type for REPO_GENERATION_TEST_KEY
 

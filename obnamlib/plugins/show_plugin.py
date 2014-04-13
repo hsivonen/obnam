@@ -1,4 +1,4 @@
-# Copyright (C) 2009, 2010  Lars Wirzenius
+# Copyright (C) 2009-2014  Lars Wirzenius
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -60,24 +60,26 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         self.app.add_subcommand('nagios-last-backup-age',
                                 self.nagios_last_backup_age)
 
-        self.app.settings.string(['warn-age'],
-                                 'for nagios-last-backup-age: maximum age (by '
-                                    'default in hours) for the most recent '
-                                    'backup before status is warning. '
-                                    'Accepts one char unit specifier '
-                                    '(s,m,h,d for seconds, minutes, hours, '
-                                    'and days.',
-                                  metavar='AGE',
-                                  default=obnamlib.DEFAULT_NAGIOS_WARN_AGE)
-        self.app.settings.string(['critical-age'],
-                                 'for nagios-last-backup-age: maximum age '
-                                    '(by default in hours) for the most '
-                                    'recent backup before statis is critical. '
-                                    'Accepts one char unit specifier '
-                                    '(s,m,h,d for seconds, minutes, hours, '
-                                    'and days.',
-                                  metavar='AGE',
-                                  default=obnamlib.DEFAULT_NAGIOS_WARN_AGE)
+        self.app.settings.string(
+            ['warn-age'],
+            'for nagios-last-backup-age: maximum age (by '
+            'default in hours) for the most recent '
+            'backup before status is warning. '
+            'Accepts one char unit specifier '
+            '(s,m,h,d for seconds, minutes, hours, '
+            'and days.',
+            metavar='AGE',
+            default=obnamlib.DEFAULT_NAGIOS_WARN_AGE)
+        self.app.settings.string(
+            ['critical-age'],
+            'for nagios-last-backup-age: maximum age '
+            '(by default in hours) for the most '
+            'recent backup before statis is critical. '
+            'Accepts one char unit specifier '
+            '(s,m,h,d for seconds, minutes, hours, '
+            'and days.',
+            metavar='AGE',
+            default=obnamlib.DEFAULT_NAGIOS_WARN_AGE)
 
     def open_repository(self, require_client=True):
         self.app.settings.require('repository')

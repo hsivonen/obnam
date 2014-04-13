@@ -1,4 +1,4 @@
-# Copyright 2013  Lars Wirzenius
+# Copyright 2013-2014  Lars Wirzenius
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -105,7 +105,8 @@ class DummyClient(object):
 
     def lock(self):
         if self.data.locked:
-            raise obnamlib.RepositoryClientLockingFailed(client_name=self.name)
+            raise obnamlib.RepositoryClientLockingFailed(
+                client_name=self.name)
         self.data.lock()
 
     def _require_lock(self):

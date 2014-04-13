@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright 2012  Lars Wirzenius
+# Copyright 2012-2014  Lars Wirzenius
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -41,7 +41,8 @@ log-keep = 16
 trace = larch, obnamlib
 EOF
 
-# Do a minimal backup to make sure the repository works at least once, without the crash-limit option
+# Do a minimal backup to make sure the repository works at least once,
+# without the crash-limit option
 mkdir "$tempdir/data"
 ./obnam backup --no-default-config --config "$tempdir/conf"
 
@@ -56,7 +57,8 @@ do
     # rm -f "$tempdir/obnam.log"
 
     echo "Trying backup with at most $N writes to repository"
-    ./obnam force-lock --no-default-config --config "$tempdir/conf" 2>/dev/null
+    ./obnam force-lock --no-default-config --config "$tempdir/conf" \
+        2>/dev/null
     if ./obnam backup --no-default-config --config "$tempdir/conf" 2>/dev/null
     then
         echo "Backup finished ok, done"

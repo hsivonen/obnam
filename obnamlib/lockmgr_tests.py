@@ -1,4 +1,4 @@
-# Copyright 2012  Lars Wirzenius
+# Copyright 2012-2014  Lars Wirzenius
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -66,7 +66,8 @@ class LockManagerTests(unittest.TestCase):
 
     def test_notices_when_preexisting_lock_goes_away(self):
         self.lm.lock([self.dirnames[0]])
-        self.lm._sleep = lambda: os.remove(self.lm._lockname(self.dirnames[0]))
+        self.lm._sleep = lambda: os.remove(
+            self.lm._lockname(self.dirnames[0]))
         self.lm.lock([self.dirnames[0]])
         self.assertTrue(True)
 

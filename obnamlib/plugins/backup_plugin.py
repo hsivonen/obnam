@@ -1,4 +1,4 @@
-# Copyright (C) 2009, 2010, 2011, 2012  Lars Wirzenius
+# Copyright (C) 2009-2014  Lars Wirzenius
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -347,11 +347,12 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 self.repo = self.app.get_repository_object()
             except Exception as e:
                 self.progress.error(
-                    'Are you using --pretend without an existing repository?\n'
-                    'That does not work, sorry.\n'
-                    'You can create a small repository, backing up\n'
-                    'just one small directory, and then use --pretend\n'
-                    'with the real data.')
+                    'Are you using --pretend without an existing '
+                    'repository? That does not\n'
+                    'work, sorry. You can create a small repository, '
+                    'backing up just one\n'
+                    'small directory, and then use --pretend with '
+                    'the real data.')
                 raise
         else:
             self.repo = self.app.get_repository_object(create=True)
@@ -384,7 +385,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.progress.what('committing changes to repository')
             if not self.pretend:
                 self.progress.what(
-                    'committing changes to repository: locking shared B-trees')
+                    'committing changes to repository: '
+                    'locking shared B-trees')
                 self.repo.lock_chunk_indexes()
 
                 self.progress.what(
@@ -488,7 +490,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     self.exclude_pats.append(re.compile(x))
                 except re.error, e:
                     msg = (
-                        'error compiling regular expression "%s": %s' % (x, e))
+                        'error compiling regular expression "%s": %s' % 
+                        (x, e))
                     logging.error(msg)
                     self.progress.error(msg)
 
@@ -646,11 +649,14 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.backup_parents('.')
             self.progress.what('making checkpoint: locking shared B-trees')
             self.repo.lock_chunk_indexes()
-            self.progress.what('making checkpoint: adding chunks to shared B-trees')
+            self.progress.what(
+                'making checkpoint: adding chunks to shared B-trees')
             self.add_chunks_to_shared()
-            self.progress.what('making checkpoint: committing per-client B-tree')
+            self.progress.what(
+                'making checkpoint: committing per-client B-tree')
             self.repo.set_generation_key(
-                self.new_generation, obnamlib.REPO_GENERATION_IS_CHECKPOINT, 1)
+                self.new_generation,
+                obnamlib.REPO_GENERATION_IS_CHECKPOINT, 1)
             self.repo.commit_client(self.client_name)
             self.progress.what('making checkpoint: committing shared B-trees')
             self.repo.commit_chunk_indexes()
@@ -661,7 +667,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.progress.what('making checkpoint: locking client')
             self.repo.lock_client(self.client_name)
             self.progress.what('making checkpoint: starting a new generation')
-            self.new_generation = self.repo.create_generation(self.client_name)
+            self.new_generation = self.repo.create_generation(
+                self.client_name)
             self.app.dump_memory_profile('at end of checkpoint')
             self.progress.what('making checkpoint: continuing backup')
 
@@ -1052,7 +1059,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                         helper(pathname)
             else:
                 tracing.trace('is extra and removed: %s' % dirname)
-                self.progress.what('removing %s from new generation' % dirname)
+                self.progress.what(
+                    'removing %s from new generation' % dirname)
                 self.repo.remove_file(self.new_generation, dirname)
                 self.progress.what(msg)
 
