@@ -132,12 +132,14 @@ class CheckGeneration(WorkItem):
         n = self.repo.get_generation_key(
             self.genid, obnamlib.REPO_GENERATION_FILE_COUNT)
         if n is None:
-            self.error('%s:%s: no file count' % (self.client_name, self.genid))
+            self.error(
+                '%s:%s: no file count' % (self.client_name, self.genid))
 
         n = self.repo.get_generation_key(
             self.genid, obnamlib.REPO_GENERATION_TOTAL_DATA)
         if n is None:
-            self.error('%s:%s: no total data' % (self.client_name, self.genid))
+            self.error(
+                '%s:%s: no total data' % (self.client_name, self.genid))
 
         if self.settings['fsck-skip-dirs']:
             return []

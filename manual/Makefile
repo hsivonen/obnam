@@ -24,7 +24,11 @@ VERSION = Version $(shell git describe || python ../setup.py --version)
 
 en_sources = $(shell ls en/*.mdwn)
 de_sources = $(shell ls de/*.mdwn)
-outputs = obnam-manual.en.pdf obnam-manual.en.html obnam-manual.de.pdf obnam-manual.de.html
+outputs = \
+        obnam-manual.en.pdf \
+        obnam-manual.en.html \
+        obnam-manual.de.pdf \
+        obnam-manual.de.html
 
 all: $(outputs)
 
@@ -35,10 +39,14 @@ obnam-manual.en.html: Makefile $(en_sources) ../obnam.css
 	./format-html $@ "$(TITLE_EN)" "$(AUTHOR)" "$(VERSION)" $(en_sources)
 
 obnam-manual.de.pdf: Makefile $(de_sources)
-	./format-de-pdf $@ "$(TITLE_DE)" "$(AUTHOR)" "$(VERSION)" "$(TRANS_DE)" $(de_sources)
+	./format-de-pdf $@ \
+		"$(TITLE_DE)" "$(AUTHOR)" "$(VERSION)" "$(TRANS_DE)" \
+		$(de_sources)
 
 obnam-manual.de.html: Makefile $(de_sources) ../obnam.css
-	./format-de-html $@ "$(TITLE_DE)" "$(AUTHOR)" "$(VERSION)" "$(TRANS_DE)" $(de_sources)
+	./format-de-html $@ \
+		"$(TITLE_DE)" "$(AUTHOR)" "$(VERSION)" "$(TRANS_DE)" \
+		$(de_sources)
 
 clean:
 	rm -f $(outputs) en/000.mdwn

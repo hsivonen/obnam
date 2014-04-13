@@ -203,7 +203,7 @@ class Check(Command):
             print 'check copyright statements in source files'
             cliapp.runcmd(['copyright-statement-lint'] + sources)
         else:
-            print 'copyright-statement-lint not available: no copyright checks'
+            print 'no copyright-statement-lint: no copyright checks'
 
     def copylint_is_available(self):
         returncode, stdout, stderr = cliapp.runcmd_unchecked(

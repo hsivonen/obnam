@@ -545,7 +545,8 @@ class VfsTests(object): # pragma: no cover
         st = self.fs.lstat('.')
         for field in obnamlib.metadata_fields:
             if field.startswith('st_'):
-                self.assert_(hasattr(st, field), 'stat must return %s' % field)
+                self.assertTrue(
+                    hasattr(st, field), 'stat must return %s' % field)
 
     def test_lstat_returns_right_filetype_for_directory(self):
         st = self.fs.lstat('.')

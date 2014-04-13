@@ -247,7 +247,8 @@ lgetxattr_wrapper(PyObject *self, PyObject *args)
             return Py_None;
         }
 #ifdef __FreeBSD__
-	int n = extattr_get_link(filename, EXTATTR_NAMESPACE_USER, attrname, buf, bufsize);
+	int n = extattr_get_link(filename, EXTATTR_NAMESPACE_USER, 
+                                 attrname, buf, bufsize);
 #else
         ssize_t n = lgetxattr(filename, attrname, buf, bufsize);
 #endif
@@ -275,7 +276,8 @@ lsetxattr_wrapper(PyObject *self, PyObject *args)
         return NULL;
 
 #ifdef __FreeBSD__
-    ret = extattr_set_link(filename, EXTATTR_NAMESPACE_USER, name, value, size);
+    ret = extattr_set_link(filename, EXTATTR_NAMESPACE_USER, 
+                           name, value, size);
 #else
     ret = lsetxattr(filename, name, value, size, 0);
 #endif

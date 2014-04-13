@@ -33,5 +33,6 @@ cat > 000.mdwn <<EOF
 % $VERSION
 EOF
 
-pandoc --smart --toc --chapters --number-sections -V lang=german -V geometry:a4paper -o "$OUTPUT" 000.mdwn "$@"
+pandoc --smart --toc --chapters --number-sections \
+    -V lang=german -V geometry:a4paper -o "$OUTPUT" 000.mdwn "$@"
 rm -f 000.mdwn

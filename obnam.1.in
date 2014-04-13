@@ -181,7 +181,8 @@ This allows
 to deal with files that have been changed or renamed since the previous
 backup run.
 It also allows several backup clients to avoid uploading the same data.
-If, for example, everyone in the office has a copy of the same sales brochures,
+If,
+for example, everyone in the office has a copy of the same sales brochures,
 only one copy needs to be stored in the backup repository.
 .PP
 Every backup run is a
@@ -431,8 +432,9 @@ section is used
 .PP
 The long names of options are used as keys for configuration
 variables.
-Any setting that can be set from the command line can be set in a configuration
-file, in the
+Any setting that can be set from the command line
+can be set in a configuration file,
+in the
 .I [config]
 section.
 .PP

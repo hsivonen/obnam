@@ -105,7 +105,8 @@ class DummyClient(object):
 
     def lock(self):
         if self.data.locked:
-            raise obnamlib.RepositoryClientLockingFailed(client_name=self.name)
+            raise obnamlib.RepositoryClientLockingFailed(
+                client_name=self.name)
         self.data.lock()
 
     def _require_lock(self):

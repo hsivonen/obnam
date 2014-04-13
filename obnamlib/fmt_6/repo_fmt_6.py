@@ -515,7 +515,8 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
                 client_name=client_name,
                 key_name=obnamlib.repo_key_name(key))
 
-    def set_generation_key(self, generation_id, key, value): # pragma: no cover
+    def set_generation_key(
+        self, generation_id, key, value): # pragma: no cover
         # FIXME: This no worky for generations other than the currently
         # started one. There should at least be an assert about it.
 
@@ -601,7 +602,8 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             'chunks', self._idpath_depth, self._idpath_bits,
             self._idpath_skip)
 
-    def _construct_in_tree_chunk_id(self, gen_id, filename): # pragma: no cover
+    def _construct_in_tree_chunk_id(
+        self, gen_id, filename): # pragma: no cover
         # This constructs a synthetic chunk id for in-tree data for a
         # file. The file is expected to have in-tree data.
 
@@ -916,7 +918,8 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
     def _flush_file_key_cache(self):
         for cache_key, value in self._file_key_cache.items():
             generation_id, filename = cache_key
-            client_name, generation_number = self._unpack_gen_id(generation_id)
+            client_name, generation_number = self._unpack_gen_id(
+                generation_id)
             dirty, metadata = value
             if dirty:
                 encoded_metadata = \

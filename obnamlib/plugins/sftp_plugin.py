@@ -110,8 +110,10 @@ class SSHChannelAdapter(object):
         try:
             return os.read(self.proc.stdout.fileno(), count)
         except socket.error, e:
-            if e.args[0] in (errno.EPIPE, errno.ECONNRESET, errno.ECONNABORTED,
-                             errno.EBADF):
+            errnos = (
+                errno.EPIPE, errno.ECONNRESET, errno.ECONNABORTED,
+                errno.EBADF)
+            if e.args[0] in errnos:
                 # Connection has closed.  Paramiko expects an empty string in
                 # this case, not an exception.
                 return ''
@@ -596,7 +598,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
         f.close()
 
     def _tempfile(self, dirname):
-        '''Create a new file with a random name, return file handle and name.'''
+        '''Create a new file with a random name, return handle and name.'''
 
         if dirname:
             try:
@@ -641,53 +643,55 @@ class SftpPlugin(obnamlib.ObnamPlugin):
         ssh_group = obnamlib.option_group['ssh'] = 'SSH/SFTP'
         devel_group = obnamlib.option_group['devel']
 
-        self.app.settings.integer(['sftp-delay'],
-                                  'add an artificial delay (in milliseconds) '
-                                    'to all SFTP transfers',
-                                  group=devel_group)
+        self.app.settings.integer(
+            ['sftp-delay'],
+            'add an artificial delay (in milliseconds) to all SFTP transfers',
+            group=devel_group)
 
-        self.app.settings.string(['ssh-key'],
-                                 'use FILENAME as the ssh RSA private key for '
-                                    'sftp access (default is using keys known '
-                                    'to ssh-agent)',
-                                 metavar='FILENAME',
-                                 group=ssh_group)
+        self.app.settings.string(
+            ['ssh-key'],
+            'use FILENAME as the ssh RSA private key for sftp access '
+            '(default is using keys known to ssh-agent)',
+            metavar='FILENAME',
+            group=ssh_group)
 
-        self.app.settings.boolean(['strict-ssh-host-keys'],
-                                  'DEPRECATED, use --ssh-host-keys-check '
-                                    'instead',
-                                 group=ssh_group)
+        self.app.settings.boolean(
+            ['strict-ssh-host-keys'],
+            'DEPRECATED, use --ssh-host-keys-check instead',
+            group=ssh_group)
 
-        self.app.settings.choice(['ssh-host-keys-check'],
-                                 ['ssh-config', 'yes', 'no', 'ask'],
-                                  'If "yes", require that the ssh host key must '
-                                    'be known and correct to be accepted. If '
-                                    '"no", do not require that. If "ask", the '
-                                    'user is interactively asked to accept new '
-                                    'hosts. The default ("ssh-config") is to '
-                                    'rely on the settings of the underlying '
-                                    'SSH client',
-                                 metavar='VALUE',
-                                 group=ssh_group)
+        self.app.settings.choice(
+            ['ssh-host-keys-check'],
+            ['ssh-config', 'yes', 'no', 'ask'],
+            'If "yes", require that the ssh host key must '
+            'be known and correct to be accepted. If '
+            '"no", do not require that. If "ask", the '
+            'user is interactively asked to accept new '
+            'hosts. The default ("ssh-config") is to '
+            'rely on the settings of the underlying '
+            'SSH client',
+            metavar='VALUE',
+            group=ssh_group)
 
-        self.app.settings.string(['ssh-known-hosts'],
-                                 'filename of the user\'s known hosts file',
-                                 metavar='FILENAME',
-                                 default=
-                                    os.path.expanduser('~/.ssh/known_hosts'),
-                                 group=ssh_group)
+        self.app.settings.string(
+            ['ssh-known-hosts'],
+            'filename of the user\'s known hosts file',
+            metavar='FILENAME',
+            default=os.path.expanduser('~/.ssh/known_hosts'),
+            group=ssh_group)
 
-        self.app.settings.string(['ssh-command'],
-                                 'alternative executable to be used instead '
-                                    'of "ssh" (full path is allowed, no '
-                                    'arguments may be added)',
-                                 metavar='EXECUTABLE',
-                                 group=ssh_group)
+        self.app.settings.string(
+            ['ssh-command'],
+            'alternative executable to be used instead '
+            'of "ssh" (full path is allowed, no '
+            'arguments may be added)',
+            metavar='EXECUTABLE',
+            group=ssh_group)
 
-        self.app.settings.boolean(['pure-paramiko'],
-                                 'do not use openssh even if available, '
-                                    'use paramiko only instead',
-                                  group=ssh_group)
+        self.app.settings.boolean(
+            ['pure-paramiko'],
+            'do not use openssh even if available, '
+            'use paramiko only instead',
+            group=ssh_group)
 
         self.app.fsf.register('sftp', SftpFS, settings=self.app.settings)
-

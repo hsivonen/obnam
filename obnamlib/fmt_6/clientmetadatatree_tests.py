@@ -146,11 +146,10 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
         fs = obnamlib.LocalFS(self.tempdir)
         self.hooks = obnamlib.HookManager()
         self.hooks.new('repository-toplevel-init')
-        self.client = obnamlib.ClientMetadataTree(fs, 'clientid',
-                                            obnamlib.DEFAULT_NODE_SIZE,
-                                            obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
-                                            obnamlib.DEFAULT_LRU_SIZE,
-                                            self)
+        self.client = obnamlib.ClientMetadataTree(
+            fs, 'clientid', obnamlib.DEFAULT_NODE_SIZE,
+            obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE, obnamlib.DEFAULT_LRU_SIZE,
+            self)
         # Force use of filename hash collisions.
         self.client.default_file_id = self.client._bad_default_file_id
         self.client.start_generation()
@@ -209,19 +208,24 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
         self.client.create('/foo/bar', self.dir_encoded)
         self.client.create('/foo/bar/baz', self.file_encoded)
         self.assertEqual(self.client.listdir(self.clientid, '/'), ['foo'])
-        self.assertEqual(sorted(self.client.listdir(self.clientid, '/foo')),
-                         ['bar', 'foobar'])
-        self.assertEqual(self.client.listdir(self.clientid, '/foo/bar'),
-                         ['baz'])
-        self.assertEqual(self.client.get_metadata(self.clientid, '/foo'),
-                         self.dir_encoded)
-        self.assertEqual(self.client.get_metadata(self.clientid, '/foo/bar'),
-                         self.dir_encoded)
-        self.assertEqual(self.client.get_metadata(self.clientid, '/foo/foobar'),
-                         self.file_encoded)
-        self.assertEqual(self.client.get_metadata(self.clientid,
-                                                  '/foo/bar/baz'),
-                         self.file_encoded)
+        self.assertEqual(
+            sorted(self.client.listdir(self.clientid, '/foo')),
+            ['bar', 'foobar'])
+        self.assertEqual(
+            self.client.listdir(self.clientid, '/foo/bar'),
+            ['baz'])
+        self.assertEqual(
+            self.client.get_metadata(self.clientid, '/foo'),
+            self.dir_encoded)
+        self.assertEqual(
+            self.client.get_metadata(self.clientid, '/foo/bar'),
+            self.dir_encoded)
+        self.assertEqual(
+            self.client.get_metadata(self.clientid, '/foo/foobar'),
+            self.file_encoded)
+        self.assertEqual(
+            self.client.get_metadata(self.clientid, '/foo/bar/baz'),
+            self.file_encoded)
 
     def test_removes_directory_and_files_and_subdirs(self):
         self.client.create('/foo', self.dir_encoded)
@@ -240,7 +244,9 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
                           self.clientid, '/foo/bar/baz')
 
     def test_has_no_file_chunks_initially(self):
-        self.assertEqual(self.client.get_file_chunks(self.clientid, '/foo'), [])
+        self.assertEqual(
+            self.client.get_file_chunks(self.clientid, '/foo'),
+            [])
 
     def test_sets_file_chunks(self):
         self.client.set_file_chunks('/foo', [1, 2, 3])
