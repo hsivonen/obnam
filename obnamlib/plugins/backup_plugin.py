@@ -242,21 +242,36 @@ class BackupProgress(object):
 class BackupPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
-        backup_group = obnamlib.option_group['backup'] = 'Backing up'
-        perf_group = obnamlib.option_group['perf']
+        self.app.add_subcommand(
+            'backup', self.backup, arg_synopsis='[DIRECTORY]...')
+        self.add_backup_settings()
+        self.app.hooks.new('backup-finished')
 
-        self.app.add_subcommand('backup', self.backup,
-                                arg_synopsis='[DIRECTORY]...')
-        self.app.settings.string_list(['root'], 'what to backup')
-        self.app.settings.string_list(['exclude'],
-                                 'regular expression for pathnames to '
-                                 'exclude from backup (can be used multiple '
-                                 'times)',
-                                 group=backup_group)
-        self.app.settings.string_list(['exclude-from'],
-                                 'read exclude patterns from FILE',
-                                 metavar='FILE',
-                                 group=backup_group)
+    def add_backup_settings(self):
+
+        # Backup related settings.
+
+        backup_group = obnamlib.option_group['backup'] = 'Backing up'
+
+        self.app.settings.string_list(
+            ['root'],
+            'what to backup',
+            metavar='URL',
+            group=backup_group)
+
+        self.app.settings.string_list(
+            ['exclude'],
+            'regular expression for pathnames to '
+            'exclude from backup (can be used multiple '
+            'times)',
+            group=backup_group)
+
+        self.app.settings.string_list(
+            ['exclude-from'],
+            'read exclude patterns from FILE',
+            metavar='FILE',
+            group=backup_group)
+
         self.app.settings.boolean(
             ['exclude-caches'],
             'exclude directories (and their subdirs) '
@@ -265,48 +280,67 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             'it needs to contain, and http://liw.fi/cachedir/ for a '
             'helper tool)',
             group=backup_group)
-        self.app.settings.boolean(['one-file-system'],
-                                    'exclude directories (and their subdirs) '
-                                    'that are in a different filesystem',
-                                 group=backup_group)
-        self.app.settings.bytesize(['checkpoint'],
-                                      'make a checkpoint after a given SIZE',
-                                    metavar='SIZE',
-                                    default=1024**3,
-                                 group=backup_group)
-        self.app.settings.integer(['chunkids-per-group'],
-                                  'encode NUM chunk ids per group',
-                                  metavar='NUM',
-                                  default=obnamlib.DEFAULT_CHUNKIDS_PER_GROUP,
-                                  group=perf_group)
-        self.app.settings.choice(['deduplicate'],
-                                 ['fatalist', 'never', 'verify'],
-                                 'find duplicate data in backed up data '
-                                    'and store it only once; three modes '
-                                    'are available: never de-duplicate, '
-                                    'verify that no hash collisions happen, '
-                                    'or (the default) fatalistically accept '
-                                    'the risk of collisions',
-                                 metavar='MODE',
-                                 group=backup_group)
-        self.app.settings.boolean(['leave-checkpoints'],
-                                  'leave checkpoint generations at the end '
-                                    'of a successful backup run',
-                                 group=backup_group)
-        self.app.settings.boolean(['small-files-in-btree'],
-                                  'put contents of small files directly into '
-                                    'the per-client B-tree, instead of '
-                                    'separate chunk files; do not use this '
-                                    'as it is quite bad for performance',
-                                 group=backup_group)
+
+        self.app.settings.boolean(
+            ['one-file-system'],
+            'exclude directories (and their subdirs) '
+            'that are in a different filesystem',
+            group=backup_group)
+
+        self.app.settings.bytesize(
+            ['checkpoint'],
+            'make a checkpoint after a given SIZE',
+            metavar='SIZE',
+            default=1024**3,
+            group=backup_group)
+
+        self.app.settings.choice(
+            ['deduplicate'],
+            ['fatalist', 'never', 'verify'],
+            'find duplicate data in backed up data '
+            'and store it only once; three modes '
+            'are available: never de-duplicate, '
+            'verify that no hash collisions happen, '
+            'or (the default) fatalistically accept '
+            'the risk of collisions',
+            metavar='MODE',
+            group=backup_group)
+
+        self.app.settings.boolean(
+            ['leave-checkpoints'],
+            'leave checkpoint generations at the end '
+            'of a successful backup run',
+            group=backup_group)
+
+        self.app.settings.boolean(
+            ['small-files-in-btree'],
+            'put contents of small files directly into '
+            'the per-client B-tree, instead of '
+            'separate chunk files; do not use this '
+            'as it is quite bad for performance',
+            group=backup_group)
+
+        # Performance related settings.
+
+        perf_group = obnamlib.option_group['perf']
+
+        self.app.settings.integer(
+            ['chunkids-per-group'],
+            'encode NUM chunk ids per group',
+            metavar='NUM',
+            default=obnamlib.DEFAULT_CHUNKIDS_PER_GROUP,
+            group=perf_group)
+
+        # Development related settings.
+
+        devel_group = obnamlib.option_group['devel']
 
         self.app.settings.string_list(
             ['testing-fail-matching'],
             'development testing helper: simulate failures during backup '
-                'for files that match the given regular expressions',
-            metavar='REGEXP')
-
-        self.app.hooks.new('backup-finished')
+            'for files that match the given regular expressions',
+            metavar='REGEXP',
+            group=devel_group)
 
     def configure_ttystatus_for_backup(self):
         self.progress = BackupProgress(self.app.ts)
