@@ -565,7 +565,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
 
     def cat(self, pathname):
         self._delay()
-        f = self.open(pathname, 'r')
+        f = self.open(pathname, 'rb')
         f.prefetch()
         chunks = []
         while True:
@@ -580,7 +580,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
     @ioerror_to_oserror
     def write_file(self, pathname, contents):
         try:
-            f = self.open(pathname, 'wx')
+            f = self.open(pathname, 'wbx')
         except (IOError, OSError), e:
             # When the path to the file to be written does not
             # exist, we try to create the directories below. Note that
@@ -615,7 +615,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
             basename = 'tmp.%x' % i
             pathname = os.path.join(dirname, basename)
             try:
-                f = self.open(pathname, 'wx', bufsize=self.chunk_size)
+                f = self.open(pathname, 'wbx', bufsize=self.chunk_size)
             except OSError:
                 pass
             else:
