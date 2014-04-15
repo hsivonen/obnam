@@ -43,60 +43,23 @@ class App(cliapp.Application):
     '''Main program for backup program.'''
 
     def add_settings(self):
-        devel_group = obnamlib.option_group['devel']
-        perf_group = obnamlib.option_group['perf']
 
-        self.settings.string(['repository', 'r'], 'name of backup repository')
+        # General settings.
+
+        self.settings.string(
+            ['repository', 'r'],
+            'name of backup repository',
+            metavar='URL')
 
         self.settings.string(
             ['client-name'],
             'name of client (defaults to hostname)',
             default=self.deduce_client_name())
 
-        self.settings.bytesize(['node-size'],
-                             'size of B-tree nodes on disk; only affects new '
-                                'B-trees so you may need to delete a client '
-                                'or repository to change this for existing '
-                                'repositories',
-                              default=obnamlib.DEFAULT_NODE_SIZE,
-                              group=perf_group)
-
-        self.settings.bytesize(['chunk-size'],
-                            'size of chunks of file data backed up',
-                             default=obnamlib.DEFAULT_CHUNK_SIZE,
-                              group=perf_group)
-
-        self.settings.bytesize(['upload-queue-size'],
-                            'length of upload queue for B-tree nodes',
-                            default=obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
-                            group=perf_group)
-
-        self.settings.bytesize(['lru-size'],
-                             'size of LRU cache for B-tree nodes',
-                             default=obnamlib.DEFAULT_LRU_SIZE,
-                             group=perf_group)
-
-        self.settings.string_list(['trace'],
-                                'add to filename patters for which trace '
-                                'debugging logging happens')
-
-
-        self.settings.integer(['idpath-depth'],
-                              'depth of chunk id mapping',
-                              default=obnamlib.IDPATH_DEPTH,
-                              group=perf_group)
-        self.settings.integer(['idpath-bits'],
-                              'chunk id level size',
-                              default=obnamlib.IDPATH_BITS,
-                              group=perf_group)
-        self.settings.integer(['idpath-skip'],
-                              'chunk id mapping lowest bits skip',
-                              default=obnamlib.IDPATH_SKIP,
-                              group=perf_group)
-
         self.settings.boolean(
             ['quiet'],
             'be silent: show only error messages, no progress updates')
+
         self.settings.boolean(
             ['verbose'],
             'be verbose: tell the user more of what is going on and '
@@ -108,32 +71,95 @@ class App(cliapp.Application):
             'getting distracted by so many updates that they will move '
             'into the Gobi desert to live under a rock')
 
-        self.settings.boolean(['pretend', 'dry-run', 'no-act'],
-                           'do not actually change anything (works with '
-                           'backup, forget and restore only, and may only '
-                           'simulate approximately real behavior)')
+        self.settings.boolean(
+            ['pretend', 'dry-run', 'no-act'],
+            'do not actually change anything (works with '
+            'backup, forget and restore only, and may only '
+            'simulate approximately real behavior)')
 
-        self.settings.string(['pretend-time'],
-                             'pretend it is TIMESTAMP (YYYY-MM-DD HH:MM:SS); '
-                                'this is only useful for testing purposes',
-                             metavar='TIMESTAMP',
-                             group=devel_group)
+        self.settings.integer(
+            ['lock-timeout'],
+            'when locking in the backup repository, '
+            'wait TIMEOUT seconds for an existing lock '
+            'to go away before giving up',
+            metavar='TIMEOUT',
+            default=60)
 
-        self.settings.integer(['lock-timeout'],
-                              'when locking in the backup repository, '
-                                'wait TIMEOUT seconds for an existing lock '
-                                'to go away before giving up',
-                              metavar='TIMEOUT',
-                              default=60)
+        # Performance related settings.
 
-        self.settings.integer(['crash-limit'],
-                              'artificially crash the program after COUNTER '
-                                'files written to the repository; this is '
-                                'useful for crash testing the application, '
-                                'and should not be enabled for real use; '
-                                'set to 0 to disable (disabled by default)',
-                              metavar='COUNTER',
-                              group=devel_group)
+        perf_group = obnamlib.option_group['perf']
+
+        self.settings.bytesize(
+            ['node-size'],
+            'size of B-tree nodes on disk; only affects new '
+            'B-trees so you may need to delete a client '
+            'or repository to change this for existing '
+            'repositories',
+            default=obnamlib.DEFAULT_NODE_SIZE,
+            group=perf_group)
+
+        self.settings.bytesize(
+            ['chunk-size'],
+            'size of chunks of file data backed up',
+            default=obnamlib.DEFAULT_CHUNK_SIZE,
+            group=perf_group)
+
+        self.settings.bytesize(
+            ['upload-queue-size'],
+            'length of upload queue for B-tree nodes',
+            default=obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
+            group=perf_group)
+
+        self.settings.bytesize(
+            ['lru-size'],
+            'size of LRU cache for B-tree nodes',
+            default=obnamlib.DEFAULT_LRU_SIZE,
+            group=perf_group)
+
+        self.settings.integer(
+            ['idpath-depth'],
+            'depth of chunk id mapping',
+            default=obnamlib.IDPATH_DEPTH,
+            group=perf_group)
+
+        self.settings.integer(
+            ['idpath-bits'],
+            'chunk id level size',
+            default=obnamlib.IDPATH_BITS,
+            group=perf_group)
+
+        self.settings.integer(
+            ['idpath-skip'],
+            'chunk id mapping lowest bits skip',
+            default=obnamlib.IDPATH_SKIP,
+            group=perf_group)
+
+        # Settings to help developers and development of Obnam.
+
+        devel_group = obnamlib.option_group['devel']
+
+        self.settings.string_list(
+            ['trace'],
+            'add to filename patters for which trace '
+            'debugging logging happens',
+            group=devel_group)
+
+        self.settings.string(
+            ['pretend-time'],
+            'pretend it is TIMESTAMP (YYYY-MM-DD HH:MM:SS); '
+            'this is only useful for testing purposes',
+            metavar='TIMESTAMP',
+            group=devel_group)
+
+        self.settings.integer(
+            ['crash-limit'],
+            'artificially crash the program after COUNTER '
+            'files written to the repository; this is '
+            'useful for crash testing the application, '
+            'and should not be enabled for real use; '
+            'set to 0 to disable (disabled by default)',
+            metavar='COUNTER',
+            group=devel_group)
 
         # The following needs to be done here, because it needs
         # to be done before option processing. This is a bit ugly,
