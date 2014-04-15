@@ -194,11 +194,11 @@ llistxattr_wrapper(PyObject *self, PyObject *args)
          size_t i = 0;
          while (i < n) {
              unsigned char length = (unsigned char) buf[i];
-	     memmove(buf + i, buf + i + 1, length);
-	     buf[i + length] = '\0';
-	     i += length + 1;
-	 }
-	 o = Py_BuildValue("s#", buf, (int) n);
+             memmove(buf + i, buf + i + 1, length);
+             buf[i + length] = '\0';
+             i += length + 1;
+         }
+         o = Py_BuildValue("s#", buf, (int) n);
     } else {
          o = Py_BuildValue("i", errno);
     }
@@ -247,7 +247,7 @@ lgetxattr_wrapper(PyObject *self, PyObject *args)
             return Py_None;
         }
 #ifdef __FreeBSD__
-	int n = extattr_get_link(filename, EXTATTR_NAMESPACE_USER, 
+        int n = extattr_get_link(filename, EXTATTR_NAMESPACE_USER, 
                                  attrname, buf, bufsize);
 #else
         ssize_t n = lgetxattr(filename, attrname, buf, bufsize);
