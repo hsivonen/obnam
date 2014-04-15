@@ -30,6 +30,15 @@ class DumpRepositoryPlugin(obnamlib.ObnamPlugin):
             'dump metadata about files?')
 
     def cmd_dump_repo(self, args):
+        '''Dump (some) data structures from a repository.
+
+        This is a debugging aid for Obnam developers. It writes out
+        some of the binary data structures in a repository in JSON
+        format so they can be inspected by the developer for problems.
+        The dump is not complete, however.
+
+        '''
+
         repo = self.app.get_repository_object()
         for obj in self.dump_repository(repo):
             json.dump(obj, self.app.output, indent=4)
