@@ -181,22 +181,13 @@ class Check(Command):
 
         if self.nitpick:
             sources = self.find_all_source_files()
-            self.check_sources_for_long_lines(sources)
+            self.check_sources_for_nitpicks(sources)
             self.check_copyright_statements(sources)
 
         print "setup.py check done"
 
-    def check_sources_for_long_lines(self, sources):
-        for filename in sources:
-            self.check_one_source_for_long_lines(filename)
-
-    def check_one_source_for_long_lines(self, filename):
-        max_line_length = 80
-        with open(filename) as f:
-            for i, line in enumerate(f):
-                line = line.expandtabs()
-                if len(line) >= max_line_length:
-                    print 'LONG: %s: %d: %s' % (filename, i+1, line),
+    def check_sources_for_nitpicks(self, sources):
+        cliapp.runcmd(['./nitpicker'] + sources, stdout=None, stderr=None)
 
     def check_copyright_statements(self, sources):
         if self.copylint_is_available():
