@@ -476,8 +476,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         # add patterns passed via --exclude
         exclude_patterns.extend(self.app.settings['exclude'])
 
+        # Ignore log file, except don't exclude the words cliapp uses
+        # for not logging or for logging to syslog.
         log = self.app.settings['log']
-        if log:
+        if log and log not in ('none', 'syslog'):
             log = self.app.settings['log']
             exclude_patterns.append(log)
         for pattern in exclude_patterns:

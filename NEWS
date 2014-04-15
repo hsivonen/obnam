@@ -37,6 +37,9 @@ Bug fixes:
   not the directory it pointed at. Obnam now gives an error message
   even for the backup.
 
+* Obnam no longer excludes files named `syslog` or `none`, if the
+  setting `--log=none` or `--log=syslog` is used.
+
 Version 1.7.4, released 2014-03-31
 --------------------------------
 
