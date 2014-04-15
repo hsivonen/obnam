@@ -1,6 +1,7 @@
 setup.py
 obnamlib/__init__.py
 obnamlib/app.py
+obnamlib/humanise.py
 obnamlib/fsck_work_item.py
 obnamlib/repo_interface.py
 obnamlib/vfs.py

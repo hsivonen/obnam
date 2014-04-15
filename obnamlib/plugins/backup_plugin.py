@@ -138,21 +138,22 @@ class BackupProgress(object):
 
     def report_stats(self, fs):
         duration = time.time() - self.started
-        duration_string = self.humanise_duration(duration)
+        duration_string = obnamlib.humanise_duration(duration)
 
-        chunk_amount, chunk_unit = self.humanise_size(self.uploaded_bytes)
+        chunk_amount, chunk_unit = obnamlib.humanise_size(
+            self.uploaded_bytes)
 
-        fs_amount, fs_unit = self.humanise_size(fs.bytes_written)
+        fs_amount, fs_unit = obnamlib.humanise_size(fs.bytes_written)
 
-        dl_amount, dl_unit = self.humanise_size(fs.bytes_read)
+        dl_amount, dl_unit = obnamlib.humanise_size(fs.bytes_read)
 
         overhead_bytes = (
             fs.bytes_read + (fs.bytes_written - self.uploaded_bytes))
         overhead_bytes = max(0, overhead_bytes)
-        overhead_amount, overhead_unit = self.humanise_size(
+        overhead_amount, overhead_unit = obnamlib.humanise_size(
             overhead_bytes)
 
-        speed_amount, speed_unit = self.humanise_speed(
+        speed_amount, speed_unit = obnamlib.humanise_speed(
             self.uploaded_bytes, duration)
 
         logging.info(
@@ -188,55 +189,6 @@ class BackupProgress(object):
                 (self.backed_up_count, self.file_count,
                  chunk_amount, chunk_unit,
                  duration_string, speed_amount, speed_unit))
-
-    def humanise_duration(self, seconds):
-        duration_string = ''
-        if seconds >= 3600:
-            duration_string += '%dh' % int(seconds/3600)
-            seconds %= 3600
-        if seconds >= 60:
-            duration_string += '%dm' % int(seconds/60)
-            seconds %= 60
-        if seconds > 0:
-            duration_string += '%ds' % round(seconds)
-        return duration_string
-
-    def humanise_size(self, size):
-        size_table = [
-            (1024**4, 'TiB'),
-            (1024**3, 'GiB'),
-            (1024**2, 'MiB'),
-            (1024**1, 'KiB'),
-            (0, 'B')
-        ]
-
-        for size_base, size_unit in size_table:
-            if size >= size_base:
-                if size_base > 0:
-                    size_amount = int(float(size) / float(size_base))
-                else:
-                    size_amount = float(size)
-                return size_amount, size_unit
-        raise Exception("This can't happen: size=%r" % size)
-
-    def humanise_speed(self, size, duration):
-        speed_table = [
-            (1024**3, 'GiB/s'),
-            (1024**2, 'MiB/s'),
-            (1024**1, 'KiB/s'),
-            (0, 'B/s')
-        ]
-
-        speed = float(size) / duration
-        for speed_base, speed_unit in speed_table:
-            if speed >= speed_base:
-                if speed_base > 0:
-                    speed_amount = speed / speed_base
-                else:
-                    speed_amount = speed
-                return speed_amount, speed_unit
-        raise Exception(
-            "This can't happen: size=%r duration=%r" % (size, duration))
 
 
 class BackupPlugin(obnamlib.ObnamPlugin):
