@@ -131,7 +131,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
 
     def nagios_last_backup_age(self, args):
         '''Check if the most recent generation is recent enough.'''
-        try:	
+        try:
             self.open_repository()
         except obnamlib.ObnamError as e:
             self.app.output.write('CRITICAL: %s\n' % e)
