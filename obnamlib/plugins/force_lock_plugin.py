@@ -35,30 +35,20 @@ class ForceLockPlugin(obnamlib.ObnamPlugin):
         '''Force a locked repository to be open.'''
 
         self.app.settings.require('repository')
-        self.app.settings.require('client-name')
 
         repourl = self.app.settings['repository']
         client_name = self.app.settings['client-name']
         logging.info('Forcing lock')
         logging.info('Repository: %s' % repourl)
-        logging.info('Client: %s' % client_name)
 
         try:
             repo = self.app.get_repository_object()
         except OSError, e:
             raise RepositoryAccessError(error=str(e))
 
-        all_clients = repo.get_client_names()
-        if client_name not in all_clients:
-            msg = 'Client does not exist in repository.'
-            logging.warning(msg)
-            self.app.output.write('Warning: %s\n' % msg)
-            return
-
-        all_dirs = ['clientlist', 'chunksums', 'chunklist', 'chunks', '.']
         repo.force_client_list_lock()
-        for x in all_clients:
-            repo.force_client_lock(x)
+        for client_name in repo.get_client_names():
+            repo.force_client_lock(client_name)
         repo.force_chunk_indexes_lock()
 
         repo.close()
