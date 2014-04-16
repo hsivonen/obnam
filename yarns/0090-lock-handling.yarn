@@ -25,7 +25,7 @@ We then lock the repository, and verify that a backup now fails.
     AND user U locks repository R
     AND user U attempts to back up directory L to repository R
     THEN the attempt failed with exit code 1
-    AND the error message matches "xxxxx"
+    AND the error message matches "R681AEX"
 
 Now we can force the lock open and verify that a backup now succeeds.
 
