@@ -50,8 +50,9 @@ class SourceCodeNitpicker(cliapp.Application):
         self.check_for_long_line (filename, line)
 
     def check_for_tabs(self, filename, line):
-        if '\t' in line:
-            self.error(filename, self.lineno, TabCharacter(line=line))
+        if not filename.endswith('Makefile'):
+            if '\t' in line:
+                self.error(filename, self.lineno, TabCharacter(line=line))
 
     def check_for_long_line(self, filename, line):
         expanded = line.expandtabs()
