@@ -456,6 +456,21 @@ Forget a key from the user's keyring.
     fingerprint="$(get_fingerprint "$MATCH_2")"
     gpg --batch --delete-secret-key "$fingerprint"
 
+
+Lock management
+---------------
+
+We need to lock parts of the repository, and force those locks open.
+
+    IMPLEMENTS WHEN user (\S+) locks repository (\S+)
+    run_obnam "$MATCH_1" -r "$DATADIR/$MATCH_2" _lock
+
+Force it open.
+
+    IMPLEMENTS WHEN user (\S+) forces open the lock on repository (\S+)
+    run_obnam "$MATCH_1" -r "$DATADIR/$MATCH_2" force-lock
+
+
 Client management
 -----------------
 
