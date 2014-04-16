@@ -48,6 +48,12 @@ run_obnam()
     # numbers for tests.
     add_to_config "$name" weak-random yes
 
+    # Make lock timeout be very short, to make test suite not take
+    # long. Since the test suite only does one thing at a time, and
+    # does not run things in parallel, there's no way a lock will go
+    # away, so a zero timeout is OK.
+    add_to_config "$name" lock-timeout 0
+
     (
         if [ -e "$DATADIR/$name.env" ]
         then
