@@ -1,0 +1,34 @@
+Lock handling
+=============
+
+This chapter contains scenarios for testing Obnam's lock handling,
+specifically the forcing of locks to become open when lock files have
+been left by Obnam for whatever reason.
+
+
+Basic forcing of a lock
+-----------------------
+
+In this scenario, we force a repository to be locked, and force the
+lock open. To do this, we use an Obnam command that locks the desired
+parts of the repository, and does nothing else; this is a testing aid.
+
+    SCENARIO force repository open
+
+We first create the repository and back up some data.
+
+    GIVEN 1kB of new data in directory L
+    WHEN user U backs up directory L to repository R
+
+We then lock the repository, and verify that a backup now fails.
+
+    AND user U locks repository R
+    AND user U attempts to back up directory L to repository R
+    THEN the attempt failed with exit code 1
+    AND the error message matches "xxxxx"
+
+Now we can force the lock open and verify that a backup now succeeds.
+
+    WHEN user U forces open the lock on repository R
+    AND user U attempts to back up directory L to repository R
+    THEN the attempt succeeded
