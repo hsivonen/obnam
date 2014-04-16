@@ -32,3 +32,34 @@ Now we can force the lock open and verify that a backup now succeeds.
     WHEN user U forces open the lock on repository R
     AND user U attempts to back up directory L to repository R
     THEN the attempt succeeded
+
+
+Forcing of someone else's lock
+------------------------------
+
+We also need to force a lock by someone else. This is otherwise
+similar to the basic lock forcing scenario, but the lock is held by a
+different client. The lock is created before the second client even
+gets added to the client list, to maximise the difficulty.
+
+    SCENARIO force someone else's lock
+
+We first create the repository and back up some data as the first
+client.
+
+    GIVEN 1kB of new data in directory L
+    WHEN user U1 backs up directory L to repository R
+
+We then lock the repository as the first user, and verify that a
+backup now fails when run as the second client.
+
+    AND user U1 locks repository R
+    AND user U2 attempts to back up directory L to repository R
+    THEN the attempt failed with exit code 1
+    AND the error message matches "R681AEX"
+
+The second client can force the lock open and successfully back up.
+
+    WHEN user U2 forces open the lock on repository R
+    AND user U2 attempts to back up directory L to repository R
+    THEN the attempt succeeded
