@@ -46,9 +46,14 @@ class SourceCodeNitpicker(cliapp.Application):
     def process_input_line(self, filename, line):
         line = line.rstrip('\n')
 
+        self.check_for_tabs(filename, line)
+        self.check_for_long_line (filename, line)
+
+    def check_for_tabs(self, filename, line):
         if '\t' in line:
             self.error(filename, self.lineno, TabCharacter(line=line))
 
+    def check_for_long_line(self, filename, line):
         expanded = line.expandtabs()
         if len(expanded) > 79:
             self.error(
