@@ -755,9 +755,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         except obnamlib.ObnamError as e:
             # File does not exist in the previous generation, so it
             # does need to be backed up.
-            tracing.trace('%s not in previous gen so has changed' % pathname)
-            tracing.trace('error: %s' % str(e))
-            tracing.trace(traceback.format_exc())
             return True
 
         must_be_equal = (
@@ -773,11 +770,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         for field in must_be_equal:
             current_value = getattr(current, field)
             old_value = getattr(old, field)
-            tracing.trace('current.%s=%r', field, current_value)
-            tracing.trace('old.%s=%r', field, old_value)
             if current_value != old_value:
-                tracing.trace(
-                    'DIFFERENT metadata %r for %r', field, pathname)
                 return True
 
         # Treat xattr values None (no extended attributes) and ''
@@ -785,13 +778,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         # string) as equal values.
         xattr_current = current.xattr or None
         xattr_old = old.xattr or None
-        tracing.trace('xattr_current=%r', xattr_current)
-        tracing.trace('xattr_old=%r', xattr_old)
         if xattr_current != xattr_old:
-            tracing.trace('DIFFERENT xattr for %r', pathname)
             return True
 
-        tracing.trace('NOT DIFFERENT metadata for %r', pathname)
         return False
 
     def get_metadata_from_generation(self, gen, pathname):
