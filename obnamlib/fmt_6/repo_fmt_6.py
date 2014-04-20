@@ -88,6 +88,7 @@ class _OpenClientInfo(object):
         self.client = client
         self.current_generation_number = None
         self.generations_removed = False
+        self.cached_generation_ids = None
 
 
 class RepositoryFormat6(obnamlib.RepositoryInterface):
@@ -267,7 +268,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         # ClientMetadataTree and is_locked.
         self._open_client_infos = {}
 
-    def _open_client(self, client_name):
+    def _get_open_client_info(self, client_name):
         if client_name not in self._open_client_infos:
             tracing.trace('client_name=%s', client_name)
             client_id = self._get_client_id(client_name)
@@ -283,7 +284,11 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
             self._open_client_infos[client_name] = _OpenClientInfo(client)
 
-        return self._open_client_infos[client_name].client
+        return self._open_client_infos[client_name]
+
+    def _open_client(self, client_name):
+        open_client_info = self._get_open_client_info(client_name)
+        return open_client_info.client
 
     def _get_client_dir(self, client_id):
         '''Return name of sub-directory for a given client.'''
@@ -436,10 +441,33 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             key_name=obnamlib.repo_key_name(key))
 
     def get_client_generation_ids(self, client_name):
-        client = self._open_client(client_name)
-        return [
-            self._construct_gen_id(client_name, gen_number)
-            for gen_number in client.list_generations()]
+        client_info = self._get_open_client_info(client_name)
+        self._refresh_open_client_info_cached_generation_ids(
+            client_name, client_info)
+        return client_info.cached_generation_ids
+
+    def _refresh_open_client_info_cached_generation_ids(self, 
+                                                        client_name,
+                                                        client_info):
+        if client_info.cached_generation_ids is None:
+            client_info.cached_generation_ids = [
+                self._construct_gen_id(client_name, gen_number)
+                for gen_number in client_info.client.list_generations()]
+
+    def _add_to_open_client_info_cached_generation_ids(self,
+                                                       client_info,
+                                                       gen_id):
+        ids = client_info.cached_generation_ids
+        assert ids is not None
+        if gen_id not in ids: # pragma: no cover
+            ids.append(gen_id)
+
+    def _forget_open_client_info_cached_generation(self, 
+                                                   client_info, gen_id):
+        ids = client_info.cached_generation_ids
+        if ids is not None:
+            if gen_id in ids:
+                ids.remove(gen_id)
 
     def create_generation(self, client_name):
         tracing.trace('client_name=%s', client_name)
@@ -453,9 +481,16 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
         open_client_info.client.start_generation()
         open_client_info.client.set_generation_started(self._current_time())
-        open_client_info.current_generation_number = \
-            open_client_info.client.get_generation_id(
+
+        new_gen_number = open_client_info.client.get_generation_id(
             open_client_info.client.tree)
+        open_client_info.current_generation_number = new_gen_number
+
+        self._refresh_open_client_info_cached_generation_ids(
+            client_name, open_client_info)
+        new_gen_id = self._construct_gen_id(client_name, new_gen_number)
+        self._add_to_open_client_info_cached_generation_ids(
+            open_client_info, new_gen_id)
 
         return self._construct_gen_id(
             client_name, open_client_info.current_generation_number)
@@ -569,6 +604,8 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         if gen_number == open_client_info.current_generation_number:
             open_client_info.current_generation_number = None
         open_client_info.generations_removed = True
+        self._forget_open_client_info_cached_generation(
+            open_client_info, gen_id)
 
         self._remove_chunks_from_removed_generations(
             client_name, open_client_info.client, [gen_number])
