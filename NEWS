@@ -12,6 +12,16 @@ Version 1.X, released UNRELEASED
 * `obnam force-lock` now works even when the client running it is not
   in the client list.
 
+Security issues:
+
+* Joey Hess found a problem in `obnam restore`: restored files would
+  be created with quite liberal default permissions, which would be
+  set to the backed-up permissions later. This could allow a snooper
+  to read files they shouldn't be. This has been fixed now by using
+  restrictive default permissions. A workaround for older versions is
+  to create a directory, set its permissions to 0700, and restore to a
+  subdirectory of that directory.
+
 Bug fixes:
 
 * `--help` output no longer shows the default value of any options. It
