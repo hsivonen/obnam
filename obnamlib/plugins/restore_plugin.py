@@ -134,6 +134,14 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         if self.write_ok:
             self.fs = self.app.fsf.new(self.app.settings['to'], create=True)
             self.fs.connect()
+
+            # Set permissions on this directory to be quite
+            # restrictive, so that nobody else can access the files
+            # while the restore is happening. The directory named by
+            # --to is set to have the permissions of the filesystem
+            # root directory (/) in the backup as the final step, so
+            # the permissions will eventually be correct.
+            self.fs.chmod_not_symlink('.', 0700)
         else:
             self.fs = None # this will trigger error if we try to really write
 

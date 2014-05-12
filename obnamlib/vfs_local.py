@@ -277,12 +277,12 @@ class LocalFS(obnamlib.VirtualFileSystem):
 
     def mkdir(self, pathname):
         tracing.trace('mkdir %s', pathname)
-        os.mkdir(self.join(pathname))
+        os.mkdir(self.join(pathname), obnamlib.NEW_DIR_MODE)
         self.maybe_crash()
 
     def makedirs(self, pathname):
         tracing.trace('makedirs %s', pathname)
-        os.makedirs(self.join(pathname))
+        os.makedirs(self.join(pathname), obnamlib.NEW_DIR_MODE)
         self.maybe_crash()
 
     def rmdir(self, pathname):
@@ -335,7 +335,9 @@ class LocalFS(obnamlib.VirtualFileSystem):
 
         # Nope, didn't work. Now try with O_EXCL instead.
         try:
-            fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0666)
+            fd = os.open(
+                path, os.O_CREAT | os.O_EXCL | os.O_WRONLY,
+                obnamlib.NEW_FILE_MODE)
             os.close(fd)
             os.rename(tempname, path)
         except OSError, e:
@@ -359,7 +361,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
         if not os.path.exists(dirname):
             tracing.trace('os.makedirs(%s)' % dirname)
             try:
-                os.makedirs(dirname)
+                os.makedirs(dirname, mode=obnamlib.NEW_DIR_MODE)
             except OSError as e: # pragma: no cover
                 # This avoids a race condition: another Obnam process
                 # may have created the directory between our check and
@@ -369,6 +371,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
                     raise
 
         fd, tempname = tempfile.mkstemp(dir=dirname)
+        os.fchmod(fd, obnamlib.NEW_FILE_MODE)
         os.close(fd)
         f = self.open(tempname, 'wb')
 

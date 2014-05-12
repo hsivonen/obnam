@@ -473,14 +473,14 @@ class SftpFS(obnamlib.VirtualFileSystem):
     @ioerror_to_oserror
     def mkdir(self, pathname):
         self._delay()
-        self.sftp.mkdir(pathname)
+        self.sftp.mkdir(pathname, obnamlib.NEW_DIR_MODE)
 
     @ioerror_to_oserror
     def makedirs(self, pathname):
         parent = os.path.dirname(pathname)
         if parent and parent != pathname and not self.exists(parent):
             self.makedirs(parent)
-        self.mkdir(pathname)
+        self.mkdir(pathname, obnamlib.NEW_DIR_MODE)
 
     @ioerror_to_oserror
     def rmdir(self, pathname):
@@ -616,6 +616,10 @@ class SftpFS(obnamlib.VirtualFileSystem):
             pathname = os.path.join(dirname, basename)
             try:
                 f = self.open(pathname, 'wbx', bufsize=self.chunk_size)
+                # paramiko.SFTPClient doesn't allow setting the mode
+                # on creation, so we set it separately. This leaves a
+                # short window where the file is possible to open.
+                self.chmod_not_symlink(pathname, obnamlib.NEW_FILE_MODE)
             except OSError:
                 pass
             else:

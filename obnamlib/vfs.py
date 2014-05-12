@@ -24,6 +24,27 @@ import urlparse
 import obnamlib
 
 
+# Modes (permissions) for new directories and files. We use minimal
+# permissions to avoid allowing access to files being restored until
+# their original permissions have been set.
+#
+# Directories are RWX for owner, nothing for anyone else. We need
+# the R to be able to do listdir, W to create and remove files, and
+# X to access anything in the directory. We _could_ do without R,
+# but then everything that needs to later read needs to add the R
+# manually, and that's most things, so it's much easier to just add
+# R to everything. We can't do without W and X.
+#
+# Files are RW for owner, nothing for anyone else. Again, we could
+# do without R in some cases, but they're few enough that it's easier
+# to give R to everything. In any case, if an attacker has gained
+# access to our UID, they can already chmod to add R and then they
+# can read anyway.
+
+NEW_DIR_MODE = 0700
+NEW_FILE_MODE = 0600
+
+
 class URLSchemeAlreadyRegisteredError(obnamlib.ObnamError):
 
     msg = 'VFS URL scheme {scheme} already registered'
