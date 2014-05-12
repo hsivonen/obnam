@@ -471,9 +471,9 @@ class SftpFS(obnamlib.VirtualFileSystem):
         raise NotImplementedError('mknod on SFTP: %s' % pathname)
 
     @ioerror_to_oserror
-    def mkdir(self, pathname):
+    def mkdir(self, pathname, mode=obnamlib.NEW_DIR_MODE):
         self._delay()
-        self.sftp.mkdir(pathname, obnamlib.NEW_DIR_MODE)
+        self.sftp.mkdir(pathname, mode)
 
     @ioerror_to_oserror
     def makedirs(self, pathname):
