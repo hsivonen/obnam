@@ -88,7 +88,13 @@ from encryption import (generate_symmetric_key,
 from hooks import (
     Hook, MissingFilterError, NoFilterTagError, FilterHook, HookManager)
 from pluginbase import ObnamPlugin
-from vfs import VirtualFileSystem, VfsFactory, VfsTests, LockFail
+from vfs import (
+    VirtualFileSystem,
+    VfsFactory,
+    VfsTests,
+    LockFail,
+    NEW_DIR_MODE,
+    NEW_FILE_MODE)
 from vfs_local import LocalFS
 from fsck_work_item import WorkItem
 from lockmgr import LockManager

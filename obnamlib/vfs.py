@@ -24,6 +24,13 @@ import urlparse
 import obnamlib
 
 
+# Modes (permissions) for new directories and files. We use minimal
+# permissions to avoid allowing access to files being restored until
+# their original permissions have been set.
+NEW_DIR_MODE = 0700
+NEW_FILE_MODE = 0600
+
+
 class URLSchemeAlreadyRegisteredError(obnamlib.ObnamError):
 
     msg = 'VFS URL scheme {scheme} already registered'
