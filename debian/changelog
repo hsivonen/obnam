@@ -1,4 +1,4 @@
-obnam (1.8-1) UNRELEASED; urgency=low
+obnam (1.8-1) unstable; urgency=low
 
   * New upstream version.
     - "obnam excludes files with "syslog" in the name without me
@@ -6,7 +6,7 @@ obnam (1.8-1) UNRELEASED; urgency=low
     - "obnam: client not found, but cannot remove lock" (Closes: #675825)
     - "data leak during restore" (Closes: #745112)
 
- -- Lars Wirzenius <liw@liw.fi>  Tue, 15 Apr 2014 18:52:57 +0100
+ -- Lars Wirzenius <liw@liw.fi>  Tue, 13 May 2014 08:04:18 +0100
 
 obnam (1.7.4-1) unstable; urgency=low
 

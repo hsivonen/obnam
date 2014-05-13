@@ -3,7 +3,7 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
-Version 1.X, released UNRELEASED
+Version 1.8, released 2014-05-13
 --------------------------------
 
 * The error message has been improved for when setting metadata
