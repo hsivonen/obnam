@@ -1,7 +1,7 @@
 Format-Specification: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Name: obnam
 Maintainer: Lars Wirzenius <liw@liw.fi>
-Source: http://liw.fi/obnam/
+Source: http://obnam.org/
 
 Files: *
 Copyright: 2010, Lars Wirzenius

@@ -21,7 +21,7 @@ Build-Depends: debhelper (>= 7.3.8),
     texlive,
     texlive-lang-german,
     lmodern
-Homepage: http://liw.fi/obnam/
+Homepage: http://obnam.org/
 X-Python-Version: >= 2.6
 
 Package: obnam
