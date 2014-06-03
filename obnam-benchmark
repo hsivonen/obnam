@@ -196,6 +196,7 @@ class ObnamBenchmark(object):
         base_command = [
             self.settings['obnam-cmd'],
             '--no-default-config',
+            '--checkpoint=10000T',
             '--log', log_file,
             '--log-level', 'debug',
             ]
