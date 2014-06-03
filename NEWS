@@ -3,6 +3,15 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
+Version 1.9, released UNRELEASED
+--------------------------------
+
+* James Vasile changed Obnam so it can backup an individual file,
+  instead of an entire directory.
+
+* James Vasile added the `--include` option to Obnam, allowing one to
+  include files that would otherwise be excluded (see `--exclude`).
+
 Version 1.8, released 2014-05-13
 --------------------------------
 
