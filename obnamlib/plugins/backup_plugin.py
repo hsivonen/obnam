@@ -523,8 +523,14 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
     def backup_roots(self, roots):
         self.progress.what('connecting to to repository')
+
+        if os.path.isdir(roots[0]):
+            rootdir = roots[0] 
+        else:
+            rootdir = os.path.dirname(roots[0])
+
         try:
-            self.fs = self.app.fsf.new(roots[0])
+            self.fs = self.app.fsf.new(rootdir)
             self.fs.connect()
         except OSError as e:
             if e.errno == errno.ENOENT:
@@ -534,7 +540,13 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         absroots = []
         for root in roots:
             self.progress.what('determining absolute path for %s' % root)
-            self.fs.reinit(root)
+
+            if os.path.isdir(root):
+                rootdir = root
+            else:
+                rootdir = os.path.dirname(root)
+
+            self.fs.reinit(rootdir)
             absroots.append(self.fs.abspath('.'))
 
         if not self.pretend:
@@ -548,8 +560,13 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             logging.info('Backing up root %s' % root)
             self.progress.what('connecting to live data %s' % root)
 
+            if os.path.isdir(root):
+                rootdir = root
+            else:
+                rootdir = os.path.dirname(root)
+
             try:
-                self.fs.reinit(root)
+                self.fs.reinit(rootdir)
             except OSError as e:
                 if e.errno == errno.ENOENT:
                     raise BackupRootDoesNotExist(root=root)
@@ -557,6 +574,14 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
             self.progress.what('scanning for files in %s' % root)
             absroot = self.fs.abspath('.')
+
+            # If the root is a file, we can just back up the file.
+            if os.path.isfile(root):
+                self.just_one_file = os.path.join(
+                    absroot, os.path.split(root)[1])
+            else:
+                self.just_one_file = None
+
             self.root_metadata = self.fs.lstat(absroot)
 
             for pathname, metadata in self.find_files(absroot):
@@ -724,6 +749,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         return False
 
     def can_be_backed_up(self, pathname, st):
+        if self.just_one_file:
+            return pathname == self.just_one_file
+
         if self.app.settings['one-file-system']:
             if st.st_dev != self.root_metadata.st_dev:
                 logging.debug('Excluding (one-file-system): %s' % pathname)
