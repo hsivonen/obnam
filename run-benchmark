@@ -1,0 +1,10 @@
+#!/bin/sh
+
+set -eu
+
+rm -rf t.results
+mkdir t.results
+./obnam-benchmark \
+    --no-default-config \
+    --config obnam-benchmark.conf \
+    --results-dir t.results
