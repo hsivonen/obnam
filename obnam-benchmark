@@ -17,8 +17,10 @@
 
 
 import json
+import logging
 import os
 import platform
+import re
 import shutil
 import stat
 import sys
@@ -212,10 +214,28 @@ class ObnamBenchmark(object):
         return total
 
     def bytes_downloaded_from_repo(self, log_file):
-        return 0
+        pattern = r'INFO \* total downloaded data.* (?P<bytes>\d+) bytes'
+        return self.get_transferred_bytes_from_log_file(log_file, pattern)
 
     def bytes_uploaded_to_repo(self, log_file):
+        pattern = r'INFO \* total uploaded data.* (?P<bytes>\d+) bytes'
+        return self.get_transferred_bytes_from_log_file(log_file, pattern)
+
+    def get_transferred_bytes_from_log_file(self, log_file, pattern):
+        data = self.tail(log_file)
+        m = re.search(pattern, data)
+        if m:
+            return int(m.group('bytes'))
         return 0
+
+    def tail(self, filename):
+        kibibyte = 1024
+        tail_length = 10 * kibibyte
+        with open(filename, 'rb') as f:
+            f.seek(0, os.SEEK_END)
+            length = f.tell()
+            f.seek(max(0, length - tail_length), os.SEEK_SET)
+            return f.read()
 
 
 class EmptyFilesBenchmark(ObnamBenchmark):
