@@ -233,6 +233,13 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             'helper tool)',
             group=backup_group)
 
+        self.app.settings.string_list(
+            ['include'],
+            'regular expression for pathnames to include from backup '
+            'even if it matches an exclude rule '
+            '(can be used multiple times)',
+            group=backup_group)
+
         self.app.settings.boolean(
             ['one-file-system'],
             'exclude directories (and their subdirs) '
@@ -322,6 +329,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.progress.what('setting up')
 
         self.compile_exclusion_patterns()
+        self.compile_inclusion_patterns()
         self.memory_dump_counter = 0
 
         self.progress.what('connecting to repository')
@@ -471,6 +479,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         for pattern in exclude_patterns:
             logging.debug('Exclude pattern: %s' % pattern)
 
+        self.exclude_pats = self.compile_patterns(exclude_patterns)
+
         self.exclude_pats = []
         for x in exclude_patterns:
             if x != '':
@@ -482,6 +492,24 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                         (x, e))
                     logging.error(msg)
                     self.progress.error(msg)
+
+    def compile_inclusion_patterns(self):
+        include_patterns = self.app.settings['include']
+        self.include_pats = self.compile_patterns(include_patterns)
+
+    def compile_patterns(self, patterns):
+        pats = []
+        for x in patterns:
+            if x != '':
+                try:
+                    pats.append(re.compile(x))
+                except re.error, e:
+                    msg = (
+                        'error compiling regular expression "%s": %s' % 
+                        (x, e))
+                    logging.error(msg)
+                    self.progress.error(msg)
+        return pats
 
     def read_exclusion_patterns_from_files(self, filenames):
         patterns = []
@@ -689,6 +717,12 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 msg = 'Cannot back up %s: %s' % (pathname, str(e))
                 self.progress.error(msg, e)
 
+    def is_included(self, pathname):
+        for pat in self.include_pats:
+            if pat.search(pathname):
+                return True
+        return False
+
     def can_be_backed_up(self, pathname, st):
         if self.app.settings['one-file-system']:
             if st.st_dev != self.root_metadata.st_dev:
@@ -696,7 +730,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 return False
 
         for pat in self.exclude_pats:
-            if pat.search(pathname):
+            if pat.search(pathname) and not self.is_included(pathname):
                 logging.debug('Excluding (pattern): %s' % pathname)
                 return False
 
