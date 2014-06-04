@@ -17,8 +17,10 @@
 
 
 import json
+import logging
 import os
 import platform
+import re
 import shutil
 import stat
 import sys
@@ -148,25 +150,37 @@ class ObnamBenchmark(object):
         raise NotImplementedError()
 
     def backup(self, step_info):
+        log_file = self.log_file_name(step_info.label)
         self.run_obnam(
-            ['backup', '-r', self.repo, self.live_data], step_info.label)
+            ['backup', '-r', self.repo, self.live_data],
+            step_info.label, log_file)
         step_info.stop_timer()
         step_info.add_info('repo-size', self.sum_of_file_sizes(self.repo))
         step_info.add_info(
             'live-data-size', self.sum_of_file_sizes(self.live_data))
 
+        step_info.add_info(
+            'downloaded-bytes', self.bytes_downloaded_from_repo(log_file))
+        step_info.add_info(
+            'uploaded-bytes', self.bytes_uploaded_to_repo(log_file))
+
+    def log_file_name(self, label):
+        return self.result_filename(label, '.log')
+
     def obnam_verify(self, step_info):
+        log_file = self.log_file_name(step_info.label)
         self.run_obnam(
             ['verify', '-r', self.repo],
-            step_info.label)
+            step_info.label, log_file)
 
     def obnam_mount(self, step_info):
         mount = os.path.join(self.tempdir, 'mount')
         os.mkdir(mount)
 
+        log_file = self.log_file_name(step_info.label)
         self.run_obnam(
             ['mount', '-r', self.repo, '--to', mount],
-            step_info.label)
+            step_info.label, log_file)
 
         cliapp.runcmd(['tar', '-cf', '/dev/null', mount + '/.'])
 
@@ -178,11 +192,12 @@ class ObnamBenchmark(object):
     def cleanup(self, step_info):
         shutil.rmtree(self.tempdir)
 
-    def run_obnam(self, args, label):
+    def run_obnam(self, args, label, log_file):
         base_command = [
             self.settings['obnam-cmd'],
             '--no-default-config',
-            '--log', self.result_filename(label, '.log'),
+            '--checkpoint=10000T',
+            '--log', log_file,
             '--log-level', 'debug',
             ]
         env = dict(os.environ)
@@ -198,6 +213,30 @@ class ObnamBenchmark(object):
                 if stat.S_ISREG(st.st_mode):
                     total += st.st_size
         return total
+
+    def bytes_downloaded_from_repo(self, log_file):
+        pattern = r'INFO \* total downloaded data.* (?P<bytes>\d+) bytes'
+        return self.get_transferred_bytes_from_log_file(log_file, pattern)
+
+    def bytes_uploaded_to_repo(self, log_file):
+        pattern = r'INFO \* total uploaded data.* (?P<bytes>\d+) bytes'
+        return self.get_transferred_bytes_from_log_file(log_file, pattern)
+
+    def get_transferred_bytes_from_log_file(self, log_file, pattern):
+        data = self.tail(log_file)
+        m = re.search(pattern, data)
+        if m:
+            return int(m.group('bytes'))
+        return 0
+
+    def tail(self, filename):
+        kibibyte = 1024
+        tail_length = 10 * kibibyte
+        with open(filename, 'rb') as f:
+            f.seek(0, os.SEEK_END)
+            length = f.tell()
+            f.seek(max(0, length - tail_length), os.SEEK_SET)
+            return f.read()
 
 
 class EmptyFilesBenchmark(ObnamBenchmark):
