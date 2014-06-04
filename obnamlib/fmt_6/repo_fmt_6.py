@@ -388,7 +388,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._raw_unlock_client(client_name)
 
     def _remove_chunks_from_removed_generations(
-        self, client_name, client, remove_gen_nos):
+        self, client_name, remove_gen_nos):
 
         def find_chunkids_in_gens(gen_nos):
             chunkids = set()
@@ -607,8 +607,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._forget_open_client_info_cached_generation(
             open_client_info, gen_id)
 
-        self._remove_chunks_from_removed_generations(
-            client_name, open_client_info.client, [gen_number])
+        self._remove_chunks_from_removed_generations(client_name, [gen_number])
         open_client_info.client.start_changes(create_tree=False)
         open_client_info.client.remove_generation(gen_number)
 

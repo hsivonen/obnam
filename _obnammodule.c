@@ -1,5 +1,5 @@
 /*
- * _obnammodule.c -- Python extensions for Obna
+ * _obnammodule.c -- Python extensions for Obnam
  *
  * Copyright (C) 2008-2014  Lars Wirzenius <liw@liw.fi>
  *
