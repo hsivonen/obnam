@@ -292,7 +292,7 @@ class RepositoryInterface(object):
     This is to allow maximum flexibility in how data is actually stored
     in the repository, and to make the least amount of assumptions
     that will hinder convertability between repository formats.
-    However, storing them independently is likely to be epxensive,
+    However, storing them independently is likely to be expensive,
     and so the implementation may actually pool file key changes to
     a file and only actually encode all of them, as a blob, when the
     API user is finished with a file. There is no API call to indicate
