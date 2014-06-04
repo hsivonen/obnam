@@ -7,4 +7,5 @@ mkdir t.results
 ./obnam-benchmark \
     --no-default-config \
     --config obnam-benchmark.conf \
-    --results-dir t.results
+    --results-dir t.results \
+    "$@"
