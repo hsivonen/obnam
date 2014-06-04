@@ -41,6 +41,10 @@ class ChecksumTree(obnamlib.RepositoryTree):
     def key(self, checksum, chunk_id, client_id):
         return struct.pack(self.fmt, checksum, chunk_id, client_id)
 
+    def key_range(self, checksum, chunk_id):
+        return self.key(checksum, chunk_id, 0), \
+                self.key(checksum, chunk_id, obnamlib.MAX_ID)
+
     def unkey(self, key):
         return struct.unpack(self.fmt, key)
 
@@ -70,13 +74,16 @@ class ChecksumTree(obnamlib.RepositoryTree):
         key = self.key(checksum, chunk_id, client_id)
         self.tree.remove_range(key, key)
 
+    def remove_for_all_clients(self, checksum, chunk_id):
+        tracing.trace('checksum=%s', repr(checksum))
+        tracing.trace('chunk_id=%s', chunk_id)
+        self.start_changes()
+        self.tree.remove_range(*self.key_range(checksum, chunk_id))
+
     def chunk_is_used(self, checksum, chunk_id):
         '''Is a given chunk used by anyone?'''
         if self.init_forest() and self.forest.trees:
-            minkey = self.key(checksum, chunk_id, 0)
-            maxkey = self.key(checksum, chunk_id, obnamlib.MAX_ID)
             t = self.forest.trees[-1]
-            return not t.range_is_empty(minkey, maxkey)
+            return not t.range_is_empty(*self.key_range(checksum, chunk_id))
         else:
             return False
-
