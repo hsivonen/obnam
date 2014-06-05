@@ -6,6 +6,8 @@ This file summarizes changes between releases of Obnam.
 Version 1.9, released UNRELEASED
 --------------------------------
 
+New features:
+
 * James Vasile changed Obnam so it can backup an individual file,
   instead of an entire directory.
 
@@ -16,6 +18,12 @@ Version 1.9, released UNRELEASED
   `--fsck-fix` or `--fsck-rm-unused` settings are used. He also made
   it not check for unused chunks when it's useless to do so, because
   of various `--fsck-skip` settings are used.
+
+Bug fixes:
+
+* The Obnam SFTP plugin would loop infinitely if it lost the
+  connection to the SSH server while creating a temporary file. Itamar
+  Turner-Trauring provided a fix for this.
 
 Version 1.8, released 2014-05-13
 --------------------------------

@@ -610,7 +610,20 @@ class SftpFS(obnamlib.VirtualFileSystem):
                 # that when we open the file for writing.
                 pass
 
-        while True:
+        # Create a file with a random filename. This is unfortunately
+        # a bit tricky, since paramiko doesn't seem to provide enough
+        # information in its exceptions as to the cause of the
+        # problem. Specifically, we don't get information about
+        # whether creating a file failed because the file already
+        # existed, or the connection to the ssh server was lost. Thus,
+        # we try a maximum number of times and give up after that.
+        #
+        # The max try count is chosen arbitrarily. The likelihood of a
+        # thousand tries hitting existing files seems to be low enough
+        # that it's not worth making this user-settable.
+
+        max_tries = 1000
+        for try_number in range(max_tries):
             i = random.randint(0, 2**64-1)
             basename = 'tmp.%x' % i
             pathname = os.path.join(dirname, basename)
@@ -620,8 +633,9 @@ class SftpFS(obnamlib.VirtualFileSystem):
                 # on creation, so we set it separately. This leaves a
                 # short window where the file is possible to open.
                 self.chmod_not_symlink(pathname, obnamlib.NEW_FILE_MODE)
-            except OSError:
-                pass
+            except (IOError, OSError) as e:
+                if try_number == max_tries - 1:
+                    raise
             else:
                 return f, pathname
 
