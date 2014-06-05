@@ -842,9 +842,9 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             checksum = self._chunklist.get_checksum(chunk_id)
         except KeyError: # pragma: no cover
             tracing.trace('chunk does not exist in chunklist tree')
-            # Because commit_chunk_indexes commits _chunklist before _chunksums,
-            # at this point we know the chunk isn't going to be in _chunksums
-            # either.
+            # Because commit_chunk_indexes commits _chunklist before
+            # _chunksums, at this point we know the chunk isn't going
+            # to be in _chunksums either.
         else:
             self._chunksums.remove_for_all_clients(checksum, chunk_id)
             self._chunklist.remove(chunk_id)

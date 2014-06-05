@@ -1938,7 +1938,7 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
             obnamlib.RepositoryChunkIndexesNotLocked,
             self.repo.remove_chunk_from_indexes, chunk_id, 'fooclient')
 
-    def test_removing_chunk_from_indexes_for_all_clients_without_locking_them_fails(self):
+    def test_removing_chunk_from_all_clients_without_locking_them_fails(self):
         self.setup_client()
         chunk_id = self.repo.put_chunk_content('foochunk')
         self.repo.lock_chunk_indexes()
