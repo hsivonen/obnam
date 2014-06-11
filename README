@@ -136,9 +136,9 @@ my release checklist: <http://liw.fi/obnam/release/>.
 Feedback
 --------
 
-I welcome bug fixes, enhancements, bug reports, suggestions, requests,
-and other feedback. I prefer e-mail the mailing list:
-see <http://vlists.pepperfish.net/cgi-bin/mailman/listinfo/obnam-flarn.net>
+I welcome bug fixes, enhancements, bug reports, suggestions,
+requests, and other feedback. I prefer e-mail the mailing list: see
+<http://listmaster.pepperfish.net/cgi-bin/mailman/listinfo/obnam-support-obnam.org>
 for instructions.
 
 It would be helpful if you can run `make clean check` before submitting
