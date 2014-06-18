@@ -131,4 +131,4 @@ einen automatisch generierten Abschnitt enthalten der jede Einstellung
 erklärt. Bis dahin dürfen Sie gern mit dem Finger auf Obnams Autor
 zeigen und über seine Faulheit kichern.
 
-[obnam man page]: http://liw.fi/obnam/obnam.1.txt
+[obnam man page]: http://obnam.org/obnam.1.txt
