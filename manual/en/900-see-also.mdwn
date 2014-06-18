@@ -5,7 +5,7 @@ This chapter gives pointers to more information about Obnam, backups,
 and related things. For the time being, this is a very short list, but
 suggestions for things to add to it are very much welcome.
 
-* Obnam home page: <http://liw.fi/obnam/>.
+* Obnam home page: <http://obnam.org>.
     - There are short tutorials, download links, an FAQ, contact
       information, etc, here.
 * Lars Wirzenius, interesting blog tags.
