@@ -21,7 +21,7 @@ finden Sie hier eine Liste der Dinge, die Sie tun können:
 * Senden Sie Korrekturen und Verbesserungen, entweder
   am Code oder der Dokumentation.
 * Spenden Sie etwas an den Autor. Anregungen finden Sie
-  unter <http://liw.fi/obnam/donate/> 
+  unter <http://obnam.org/donate/>
 * Beauftragen Sie den Autor mit der Obnam-Weiterentwicklung.
   Treten Sie dazu mit ihm privat in Kontakt (liw@liw.fi).
 
