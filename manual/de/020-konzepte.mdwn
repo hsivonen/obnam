@@ -231,9 +231,9 @@ die von Obnam benutzt werden.
 Verschiedene Typen Festplatten haben verschiedene Eigenschaften z.B.
 was Verlässlichkeit, Geschwindigkeit und Preis angeht, und diese
 Eigenschaften variieren häufig von Woche zu Woche und Jahr zu Jahr.
-Wir wollen nicht ins Details aller möglichen Eigenschaften gehen.
+Wir wollen nicht ins Detail aller möglichen Eigenschaften gehen.
 Aus Sicht von Obnam ist alles, das sich wie eine Festplatte verhält
-(drehender Rost, SSD, USB Flash-Spiecher oder Online-Speicher)
+(drehender Rost, SSD, USB Flash-Speicher oder Online-Speicher)
 brauchbar um Backups abzulegen, Hauptsache es ist wiederbeschreibbar.
 
 **Optische Medien**, besonders welche die nur einmal beschrieben werden können,
