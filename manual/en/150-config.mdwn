@@ -128,4 +128,4 @@ include an automatically generated section that explains each setting.
 Until then, you're free to point fingers at Obnam's author and giggle
 at his laziness.
 
-[obnam man page]: http://liw.fi/obnam/obnam.1.txt
+[obnam man page]: http://obnam.org/obnam.1.txt
