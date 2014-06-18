@@ -18,7 +18,7 @@ list of things you could do:
 
 * Send fixes and improvements, either to code or documentation.
 * Donate something to the author. See
-  <http://liw.fi/obnam/donate/> for suggestions.
+  <http://obnam.org/donate/> for suggestions.
 * Hire the author to do some Obnam development. Contact him privately
   by e-mail (liw@liw.fi).
 
