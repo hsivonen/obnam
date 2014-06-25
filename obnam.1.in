@@ -373,7 +373,7 @@ If the backup frequency was once per day,
 .B obnam
 would keep the backup of each calendar hour for which a backup was made,
 for 72 such backups.
-In other words, it would effectively keep the the last 72 daily backups.
+In other words, it would effectively keep the last 72 daily backups.
 .PP
 Sound confusing?
 Just wonder how confused the developer was when writing the code.

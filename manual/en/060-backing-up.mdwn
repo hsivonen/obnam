@@ -233,7 +233,7 @@ De-duplication in Obnam is useful in several situations:
   are unmodified, only the new data needs to be backed up.
 * When a file or directory is renamed or moved. If you decide that the
   English name for the `Photos` directory is annoying and you want to
-  use the the Finnish `Valokuvat` instead, you can rename that in an
+  use the Finnish `Valokuvat` instead, you can rename that in an
   instant. However, without de-duplication, you then have to backup
   all your photos again.
 * When all a team works on the same things, and everyone has copies of
