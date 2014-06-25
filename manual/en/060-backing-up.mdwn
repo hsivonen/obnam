@@ -365,7 +365,7 @@ circumstances. Here's a few:
   subvolumes.
 * You can shut down the system, reboot it into single user mode, and
   run the backup, before rebooting back into normal mode. This is not
-  a good way to do it, but it is the most safe way to get a consistent
+  a good way to do it, but it is the safest way to get a consistent
   snapshot of the filesystem.
 
 Note that filesystem level snapshots can't really guarantee a
