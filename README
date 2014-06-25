@@ -7,7 +7,7 @@ Obnam is a backup program.
 Home page
 ---------
 
-The Obnam home page is at <http://liw.fi/obnam/>, see there
+The Obnam home page is at <http://obnam.org/>, see there
 for more information.
 
 
@@ -129,9 +129,6 @@ each pair, test coverage must be 100% or the test will fail.
 Mark statements that should not be included in coverage test with
 "# pragma: no cover", if you really, really can't write a test.
 without-tests lists modules that have no test modules.
-
-If you want to make a new release of Obnam, I recommend following
-my release checklist: <http://liw.fi/obnam/release/>.
 
 Feedback
 --------

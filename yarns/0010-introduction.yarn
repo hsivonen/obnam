@@ -1,5 +1,5 @@
 % Obnam integration test suite
-% http://liw.fi/obnam
+% http://obnam.org/
 
 Introduction
 ============
@@ -34,7 +34,7 @@ part.
 
 For more information:
 
-* Obnam: <http://liw.fi/obnam/>
+* Obnam: <http://obnam.org/>
 * Yarn: <http://liw.fi/cmdtest/>
 
 FIXME: Outline of test suite
