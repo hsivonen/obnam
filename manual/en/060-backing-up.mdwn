@@ -33,7 +33,7 @@ This tells you that Obnam found a total of eleven files, of which it
 backed up all eleven. The files contained a total of about a hundred
 kilobytes of data, and that the upload speed for that data was over
 six hundred kilobytes per second. The actual units are using IEC
-prefixes, which are base-2, for unambiguity. See
+prefixes, which are base-2, to avoid ambiguity. See
 [Wikipedia on kibibytes] for more information.
 
 [Wikipedia on kibibytes]: https://en.wikipedia.org/wiki/Kibibyte
@@ -95,7 +95,7 @@ multiple backup roots:
 
     obnam -r /media/backups/tomjon-repo ~/Documents ~/Photos
 
-Everything in the backup root directories gets backedup -- unless it's
+Everything in the backup root directories gets backed up -- unless it's
 explicitly excluded. There are several ways to exclude things from
 backups:
 
@@ -103,7 +103,7 @@ backups:
   pathname of each file or directory: if the pathname matches, the
   file or directory is not backed up. In fact, Obnam pretends it
   doesn't exist. If a directory matches, then any files and
-  subdirectories also get excluded. This can be used, for example, to
+  sub-directories also get excluded. This can be used, for example, to
   exclude all MP3 files (`--exclude='\.mp3$'`).
 * The `--exclude-caches` setting excludes directories that contain a
   special "cache tag" file called `CACHEDIR.TAG`, that starts with a
@@ -309,7 +309,7 @@ trampling on each other, they lock parts of the repository while
 working. The "Sharing a repository between multiple clients" chapter
 will discuss this in more detail.
 
-If Obnam terminates abruptly, even if there's only one evern client
+If Obnam terminates abruptly, even if there's only one client ever
 using the repository, the lock may stay around and prevent that one
 client for making new backups. The termination may be due to the
 network connection breaking, or due to a bug in Obnam. It can also
@@ -376,7 +376,7 @@ doesn't let you sleep better.
 
 Usually, though, most systems have enough idle time that a consistent
 backup snapshot can happen during that time. For a laptop, for
-example, a backup can be run whlie the user is elsewhere, instead of
+example, a backup can be run while the user is elsewhere, instead of
 actively using the machine.
 
 Part of your backup verification suite should check that the data in a
@@ -384,5 +384,5 @@ backup generation is internally consistent, if that can be done.
 Otherwise, you'll either have to analyse the applications you use, or
 trust they're not too buggy.
 
-If you didn't underatand this section, don't worry and be happy and
+If you didn't understand this section, don't worry and be happy and
 sleep well.

@@ -17,10 +17,10 @@ enough free disk space to restore everything, but it's almost the
 only way to be really sure.
 
 It's also a great way to ensure the restoring actually works. If
-you don't test that, don't expect it'll workd when needed.
+you don't test that, don't expect it'll work when needed.
 
 If you have the disk space to do a complete restore, doing so is a
-great way to excercise your disaster recovery process in general.
+great way to exercise your disaster recovery process in general.
 Here's one way of doing it:
 
 * On your main computer, do a backup.
@@ -37,7 +37,7 @@ How often should you do that? That, again, depends on how you feel about
 your data, and how much you trust your backup tools and processes. If
 it's really important that you can recover from a disaster, you need to
 verify more frequently. If data loss is merely inconvenient and not
-life-changingly disastrous, you can verify less often.
+disastrous in a life changing way, you can verify less often.
 
 In addition to restoring data, Obnam provides two other ways to
 verify your backups:

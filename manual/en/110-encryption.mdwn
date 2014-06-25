@@ -82,11 +82,11 @@ reading each others e-mail from the backup repository, for example,
 but it does protect them against their parents, if the parents don't
 have a suitable encryption key.
 
-In addition to the encryptions for client you can add additional keys.
-These keys can also access the backup repository. For example, the
-parents' key might be added to the repository so that if need be, they
-could restore any child's data, even if the child had lost their own
-encryption key.
+In addition to the encryption keys for a client you can add additional
+keys. These keys can also access the backup repository. For example,
+the parents' key might be added to the repository so that if need be,
+they could restore any child's data, even if the child had lost their
+own encryption key.
 
 In a corporate setting, the a backup administrator key might be added
 so that the administrator can, for example, verify the integrity of

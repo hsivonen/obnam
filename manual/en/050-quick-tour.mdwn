@@ -55,7 +55,7 @@ Multiple clients in one repository
 
 You can backup multiple clients to a single repository by providing the
 option --client-name=<identifier> when running the program. Backup sets
-will be kept separate, but data deduplication will happen across all
+will be kept separate, but data de-duplication will happen across all
 the sets.
 
 Removing old generations

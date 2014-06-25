@@ -64,7 +64,7 @@ space you're willing to spend on protecting against them.
   spectacular way, such as by catching fire or being stolen? If so,
   you really only need one very recent backup to cover against that.
 * Do you worry about your hard drive, or filesystem, or your
-  applicatin programs, or you yourself, slowly corrupting your data
+  application programs, or you yourself, slowly corrupting your data
   over a longer period of time? How long will it take you to find that
   out? You need a backup history that lasts longer than it takes for
   you to detect slow corruption.
@@ -79,7 +79,7 @@ want to compare how things were each year in between. With increasing
 storage space and nice de-duplication features, this isn't quite as
 expensive as it might be.
 
-There is no one schedule that fits everyones needs and wants. You have
-to decide for youself. That's why the default in Obnam is to keep
+There is no one schedule that fits everyone's needs and wants. You have
+to decide for yourself. That's why the default in Obnam is to keep
 everything forever. It's not Obnam's duty to decide that you should
 not keep this or that backup generation.

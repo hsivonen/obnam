@@ -65,7 +65,7 @@ repository:
     fusermount -u ~/backups
 
 In addition to doing these things from the command line, you can, of
-course, use your favorite file manager (graphical or textual) to look
+course, use your favourite file manager (graphical or textual) to look
 at your backed up files. The mounting and un-mounting (depending on
 your desktop setup) may need to be done on the command line.
 

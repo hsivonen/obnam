@@ -47,7 +47,7 @@ The place your backups are stored is the **backup repository**. You can
 use many kinds of **backup media** for backup storage: hard drives,
 tapes, optical disks (DVD-R, DVD-RW, etc), USB flash drives, online
 storage, etc. Each type of medium has different characteristics:
-size, speed, convenicence, reliability, price, which you'll need to
+size, speed, convenience, reliability, price, which you'll need to
 balance for a backup solution that's reasonable for you.
 
 You may need multiple backup repositories or media, with one of
@@ -229,8 +229,8 @@ reliability, speed, and price, and they may fluctuate fairly quickly
 from week to week and year to year. We won't go into detailed
 comparisons of all the options. From Obnam's point of view, anything
 that can look like a hard drive (spinning rust, SSD, USB flash memory
-stick, or online storage) is useable for storing backups, as long as
-it is re-writeable.
+stick, or online storage) is usable for storing backups, as long as
+it is re-writable.
 
 **Optical disks**, particularly the kind that are write-once and can't
 be updated, can be used for backup storage, but they tend to be best
@@ -250,7 +250,7 @@ that is easy to OCR), or using two-dimensional barcode (e.g, QR).
 Obnam doesn't support these, either.
 
 Obnam only works with hard drives, and anything that can simulate a
-read/writeable hard drive, such as online storage. By amazing
+read/writable hard drive, such as online storage. By amazing
 co-incidence, this seems to be sufficient for most people.
 
 Glossary
@@ -278,7 +278,7 @@ Glossary
   from the live data
 * **precious data**: all the data you care about; cf. live data
 * **repository**: the location where are backups are stored
-* **restore**: retriving data from a backup repository
+* **restore**: retrieving data from a backup repository
 * **root**, **backup root**: a directory that is to be backed up,
   including all files in it, and all its subdirectories
 * **snapshot backup**: an alternative to full/incremental backups,

@@ -81,7 +81,7 @@ exceptions to this are:
 
 * Boolean or yes/no or on/off settings. For example,
   `--exclude-caches` is a setting that is either turned on (when the
-  option is used) or off (when it's not used). For every boolean
+  option is used) or off (when it's not used). For every Boolean
   setting `--foo`, there is an option `--no-foo`. In a configuration
   files, `foo` is turned on by setting it to `yes` or `true`, and off
   by setting it to `no` or `false`.
