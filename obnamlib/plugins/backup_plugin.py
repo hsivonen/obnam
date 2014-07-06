@@ -414,14 +414,16 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     'committing shared B-trees')
                 self.repo.commit_chunk_indexes()
 
-                remove_checkpoints = (not self.progress.errors and
-                                      not self.app.settings['leave-checkpoints'])
+                remove_checkpoints = (
+                    not self.progress.errors and
+                    not self.app.settings['leave-checkpoints'])
                 if remove_checkpoints:
                     self.progress.what('removing checkpoints')
                     self.repo.lock_client(self.client_name)
                     self.repo.lock_chunk_indexes()
                     for gen in self.checkpoints:
-                        self.progress.update_progress_with_removed_checkpoint(gen)
+                        self.progress.update_progress_with_removed_checkpoint(
+                            gen)
                         self.repo.remove_generation(gen)
 
                     self.progress.what('removing checkpoints: '
