@@ -36,6 +36,8 @@ class LongLine(obnamlib.ObnamError):
 
 class SourceCodeNitpicker(cliapp.Application):
 
+    max_line_length = 79
+
     def setup(self):
         self.errors = False
 
@@ -56,10 +58,16 @@ class SourceCodeNitpicker(cliapp.Application):
 
     def check_for_long_line(self, filename, line):
         expanded = line.expandtabs()
-        if len(expanded) > 79:
+        if self.line_is_long(expanded) and self.line_can_be_broken(line):
             self.error(
                 filename, self.lineno,
                 LongLine(line=line, length=len(expanded)))
+
+    def line_is_long(self, line):
+        return len(line) > self.max_line_length
+
+    def line_can_be_broken(self, line):
+        return len(line.split()) > 1
 
     def error(self, filename, lineno, error):
         self.output.write(
