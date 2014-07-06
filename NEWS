@@ -25,6 +25,9 @@ Bug fixes:
   connection to the SSH server while creating a temporary file. Itamar
   Turner-Trauring provided a fix for this.
 
+* Will Dyson fixed a bug about locking while removing checkpoint
+  generations.
+
 Version 1.8, released 2014-05-13
 --------------------------------
 
