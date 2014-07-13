@@ -84,7 +84,7 @@ enough to be useful. Can you be happy now?
 
 Welcome to the world of threat modelling. Backups are about
 insurance, of mitigating small and large disasters, but disasters
-can strike backups as well. When are you so safe you no disaster
+can strike backups as well. When are you so safe you that no disaster
 will harm you?
 
 There is always a bigger disaster waiting to happen. If you backup
