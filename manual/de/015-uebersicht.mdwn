@@ -1,5 +1,7 @@
-Eine Übersicht über Obnam
-=========================
+TL;DR: Zuerst Lesen: Eine kurze Übersicht über Obnam
+====================================================
+
+Vermutlich müssen Sie nur dieses Kapitel lesen.
 
 Dieses Kapitel gibt eine kurze Einführung in die wichtigsten Teile von
 Obnam. Der Rest des Buches ist im Grunde eine ausführliche Version dieses
