@@ -1,5 +1,7 @@
-A quick tour of Obnam
-=====================
+TL;DR: README FIRST: A quick tour of Obnam
+==========================================
+
+You probably only need to read this chapter.
 
 This chapter gives a quick introduction to the most important parts of
 Obnam. The rest of the book is basically a verbose version of this
