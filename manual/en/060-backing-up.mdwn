@@ -182,12 +182,12 @@ for it to happen. See the `--checkpoint` setting for choosing how
 often the checkpoints should happen.
 
 Note that if Obnam doesn't get to finish, and you have to re-start it,
-it starts over from the beginning. The checkpoint generation does not
-contain enough state for Obnam to start backing up from the latest
-file in the checkpoint: it'd be very complicated state, and easily
-invalidated by filesystem changes. Instead, Obnam scans all files, but
-since the checkpoint was made, most files will hopefully not have
-changed since, so the scanning should be relatively fast.
+the scanning starts over from the beginning. The checkpoint generation
+does not contain enough state for Obnam to continue scanning from the
+latest file in the checkpoint: it'd be very complicated state, and
+easily invalidated by filesystem changes. Instead, Obnam scans all
+files, but most files will hopefully not have changed since the
+checkpoint was made, so the scanning should be relatively fast.
 
 The only problem with the patient option is that your most precious
 data doesn't get backed up while all your large, but less precious
