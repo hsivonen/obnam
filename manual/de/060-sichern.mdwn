@@ -180,6 +180,17 @@ beim letzten Checkpoint weitermachen. Das alles passiert vollautomatisch.
 Wie oft die Checkpoints erstellt werden sollen können Sie in der
 Option `--checkpoint` verändern.
 
+Falls Obnam nicht bis zum Ende durchläuft und Sie es neu starten müssen, 
+dann beginnt der Scan der Quelldateien wieder von vorne. Die Checkpoint 
+Generationen enthalten nicht genügend Zustandsinformationen über die 
+gescannten Quelldateien, um Obnam einfach bei der aktuellen Datei im 
+Checkpoint weiter laufen zu lassen: Es wäre ein sehr komplizierter 
+Zustand, der außerdem leicht von Dateisystem-Änderungen invalidiert 
+würde. Stattdessen scannt Obnam erneut alle Dateien, wobei die meisten 
+hoffentlich schon in einer Checkpoint Generation enthalten sind und 
+seitdem nicht geändert wurden, so dass der Scan recht schnell gehen 
+sollte.
+
 Das Problem mit der Option "Geduld" ist, dass Ihre wichtigsten
 Daten nicht gesichert werden, während alle Ihre großen, aber weniger wertvollen
 Daten gesichert werden. Zum Beispiel können Sie eine große Menge an
