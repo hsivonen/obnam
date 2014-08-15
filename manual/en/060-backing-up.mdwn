@@ -124,6 +124,79 @@ You should also make sure you know what is and isn't backed up. The
 change anything in the backup repository, so it's quite fast. This way
 you can see what would be backed up, and tweak exclusions as needed.
 
+Storing backups remotely
+------------------------
+
+You probably want to store at least one backup remotely, or "off
+site". Obnam can make backups over a network, using the SFTP
+protocol (part of SSH). You need the following to achieve this:
+
+* A **server** that you can access over SFTP. This can be a server you
+  own, a virtual machine ("VPS") you rent, or some other arrangement.
+  You could, for example, have a machine at a friends' place, in
+  exchange for having one of their machines at your place, so that you
+  both can backup remotely.
+  
+* An **ssh key** for logging into the server. You _can_ log in using
+  passwords too, but it is quite cumbersome.
+
+* Enough disk space on the server to hold your backups.
+
+Obnam only uses the SFTP part of the SSH connection to access the
+server. To test whether it will work, you can run this command:
+
+    sftp USER@SERVER
+    
+Change `USER@SERVER` to be your actual user and address for your
+server. This should say something like `Connected to localhost.` and
+you should be able to run the `ls -la` command to see a directory list
+of files on the remote side.
+
+Once all of that is set up correctly, to get Obnam to use the server
+as a backup repository, you only need to give an SFTP URL:
+
+    obnam -r sftp://USER@SERVER/~/my-precious-backups
+    
+For details on SFTP URLs, see the next section.
+
+URL syntax
+----------
+
+Whenever obnam accepts a URL, it can be either a local pathname, or an
+SFTP URL. An SFTP URL has the following form:
+
+    sftp://[user@]domain[:port]/path
+
+where `domain` is a normal Internet domain name for a server, `user`
+is your username on that server, `port` is an optional numeric port
+number, and `path` is a pathname on the server side. Like **bzr**(1),
+but unlike the SFTP URL standard, the pathname is absolute, unless it
+starts with `/~/` in which case it is relative to the user's home
+directory on the server.
+
+Examples:
+
+* `sftp://liw@backups.pieni.net/~/backup-repo` is the directory
+  `backup-repo` in the home directory of the user `liw` on the server
+  `backups.pieni.net`. Note that we don't need to know the absolute
+  path of the home directory.
+
+* `sftp://root@my.server.example.com/home` is the directory `/home`
+  (note absolute path) on the server `my.server.example.com`, and the
+  `root` user is used to access the server.
+
+* `sftp://foo.example.com:12765/anti-clown-society` is the directory
+  `/anti-clown-society` on the server `foo.example.com`, accessed via
+  the port 12765.
+
+You can use SFTP URLs for the repository, or the live data (`--root`),
+but note that due to limitations in the protocol, and its
+implementation in the paramiko library, some things will not work very
+well for accessing live data over SFTP. Most importantly, the handling
+of of hardlinks is rather suboptimal. For live data access, you should
+not end the URL with /~/ and should append a dot at the end in this
+special case.
+
 Configuration files: a quick intro
 ----------------------------------
 
