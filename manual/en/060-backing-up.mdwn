@@ -197,6 +197,22 @@ of of hardlinks is rather suboptimal. For live data access, you should
 not end the URL with /~/ and should append a dot at the end in this
 special case.
 
+Pull backups
+------------
+
+Obnam can also access the live data over SFTP, instead of via the
+local filesystem. This means you can run Obnam on, say, your desktop
+machine to backup your server, or on your laptop to backup your phone
+(assuming you can get an SSH server installed on your phone).
+Sometimes it is not possible to install Obnam on the machine where the
+live data resides, and then it is useful to do a **pull backup**
+instead: you run Obnam on a different machine, and read the live data
+over the SFTP protocol.
+
+To do this, you specify the live data location (the `root` setting, or
+as a command line argument to `obnam backup`) using an SFTP URL.
+That's all there is to it.
+
 Configuration files: a quick intro
 ----------------------------------
 
