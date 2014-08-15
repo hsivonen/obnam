@@ -210,8 +210,22 @@ instead: you run Obnam on a different machine, and read the live data
 over the SFTP protocol.
 
 To do this, you specify the live data location (the `root` setting, or
-as a command line argument to `obnam backup`) using an SFTP URL.
-That's all there is to it.
+as a command line argument to `obnam backup`) using an SFTP URL. You
+should also set the client name explicitly. Otherwise Obnam will use
+the hostname of the machine on which it runs as the name, and this can
+be highly confusing: the client name is `my-laptop` and the server is
+`down-with-clowns` and Obnam will store the backups as if the data
+belongs to `my-laptop`.
+
+It gets worse if you backup your laptop as well to the same backup
+repository. Then Obnam will store both the server and the laptop
+backups using the same client name, resulting in much confusion to
+everyone.
+
+Example:
+
+    obnam backup -r /mnt/backups sftp://server.example.com/home \
+        --client-name=server.example.com
 
 Configuration files: a quick intro
 ----------------------------------
