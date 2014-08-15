@@ -122,6 +122,37 @@ Die Option `--pretend` bewirkt das Obnam ein Backup anfertigt, das Repository
 dabei aber nicht verändert, es ist also schnell durchgelaufen. So können Sie
 sehen was gesichert würde und die excludes entsprechend anpassen.
 
+Pull Backups
+------------
+
+Obnam kann die Live-Daten auch über SFTP statt über das lokale Dateisystem
+sichern. Das heißt Sie können Obnam auf, sagen wir, Ihrem Desktop zur Sicherung Ihres
+Servers oder auf Ihrem Laptop zur Sicherung Ihres Telefons laufen lassen
+(vorausgesetzt, Sie bekommen den SSH-Server auf dem Telefon zum laufen).
+Manchmal ist es nicht möglich, Obnam auf der Maschine zu installieren, auf der die
+Live-Daten liegen. Dann ist es sinnvoll, stattdessen ein **Pull Backup** zu machen:
+Sie lassen Obnam auf einem anderen Rechner laufen und lesen Sie die Live-Daten
+über das SFTP-Protokoll.
+
+Um dies zu tun spezifizieren Sie die Backup-Quelle (`root` im config file oder
+als Kommandozeilen-Argument zu `obnam backup`) mittels einer SFTP-URL. Sie
+sollten auch den Client-Namen explizit angeben. Ansonsten wird Obnam
+den Hostnamen des Rechners verwenden auf dem es läuft. Dies kann höchst verwirrend
+sein: Angenommen der Client-Name ist `my-laptop` und der des Servers ist
+`down-with-clowns`, dann speichert Obnam die Backups als ob die Daten zu `my-laptop`
+gehörten.
+
+Wenn Sie Ihr Laptop ebenfalls in das gleiche Backup-Repository sichern, wird
+es noch schlimmer. Obnam speichert dann sowohl Server- und Laptop-Daten
+mit dem gleichen Client-Namen, was zu viel Verwirrung für alle führt.
+
+
+Beispiel:
+
+    obnam backup -r /mnt/backups sftp://server.example.com/home \
+        --client-name=server.example.com3
+
+
 Konfigurationsdateien: Eine kurze Einführung
 --------------------------------------------
 
