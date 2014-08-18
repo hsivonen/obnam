@@ -48,7 +48,7 @@ class App(cliapp.Application):
 
         self.settings.string(
             ['repository', 'r'],
-            'name of backup repository',
+            'name of backup repository (can be pathname or supported URL)',
             metavar='URL')
 
         self.settings.string(

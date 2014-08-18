@@ -19,6 +19,12 @@ New features:
   it not check for unused chunks when it's useless to do so, because
   of various `--fsck-skip` settings are used.
 
+Minor changes:
+
+* The manual page and `obnam --help` are now clearer that the `--root`
+  setting and command line arguments to `obnam backup` can be SFTP
+  URLs. Thanks to Simone Piccardi for reporting the issue.
+
 Bug fixes:
 
 * The Obnam SFTP plugin would loop infinitely if it lost the

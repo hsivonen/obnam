@@ -195,7 +195,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
         self.app.add_subcommand(
-            'backup', self.backup, arg_synopsis='[DIRECTORY]...')
+            'backup', self.backup, arg_synopsis='[DIRECTORY|URL]...')
         self.add_backup_settings()
         self.app.hooks.new('backup-finished')
 
@@ -314,7 +314,13 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         return self.app.settings['pretend']
 
     def backup(self, args):
-        '''Backup data to repository.'''
+        '''Backup data to repository.
+
+        Live data location must be a directory, but can be either a
+        local pathname or a supported URL (sftp).
+
+        '''
+
         logging.info('Backup starts')
         logging.debug(
             'Checkpoints every %s bytes' % self.app.settings['checkpoint'])
