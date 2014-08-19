@@ -27,6 +27,8 @@ Minor changes:
 
 * David Fries filled in the displayed file permission mode bits.
 
+* David Fries filled in the displayed file permission mode bits.
+
 Bug fixes:
 
 * The Obnam SFTP plugin would loop infinitely if it lost the
