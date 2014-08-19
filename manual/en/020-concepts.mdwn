@@ -277,7 +277,7 @@ Glossary
 * **off-site backup**: a backup repository stored physically far away
   from the live data
 * **precious data**: all the data you care about; cf. live data
-* **repository**: the location where are backups are stored
+* **repository**: the location where backup data is stored
 * **restore**: retrieving data from a backup repository
 * **root**, **backup root**: a directory that is to be backed up,
   including all files in it, and all its subdirectories

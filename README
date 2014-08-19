@@ -45,9 +45,10 @@ above list is maintained manually and may get out of date from time
 to time.)
 
 If you want to run obnam from the repository directory (rather than installing
-it), you need to do some setup.  Run `./check --fast`.  You'll need dev files
-for python and the Coverage Test Runner python module (on Debian, those are the
-python-dev and python-coverage-test-runner packages).
+it), you need to do some setup.  Run `./check --unit-tests` for setup and
+to verify with unit tests or `./check --help` to setup without any tests.
+You'll need dev files for python and the Coverage Test Runner python module (on
+Debian, those are the python-dev and python-coverage-test-runner packages).
 
 Use
 ---
@@ -80,7 +81,7 @@ to master when the changes are done and considered good.
 To build and run automatic tests:
 
     ./check
-    ./check --fast # unit tests only, no black box tests
+    ./check --unit-tests # unit tests only, no black box tests
     ./check --network # requires ssh access to localhost
 
 `check` is a wrapper around `python setup.py`, but since using that
