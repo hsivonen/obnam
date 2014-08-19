@@ -353,10 +353,13 @@ class ShowPlugin(obnamlib.ObnamPlugin):
 
         perms = ['?'] + ['-'] * 9
         tab = [
-            (stat.S_IFREG, 0, '-'),
             (stat.S_IFDIR, 0, 'd'),
-            (stat.S_IFLNK, 0, 'l'),
+            (stat.S_IFCHR, 0, 'c'), # character device
+            (stat.S_IFBLK, 0, 'b'), # block device
+            (stat.S_IFREG, 0, '-'),
             (stat.S_IFIFO, 0, 'p'),
+            (stat.S_IFLNK, 0, 'l'),
+            #(stat.S_IFSOCK, 0, 's'), # not stored, listed for completeness
             (stat.S_IRUSR, 1, 'r'),
             (stat.S_IWUSR, 2, 'w'),
             (stat.S_IXUSR, 3, 'x'),
@@ -370,6 +373,19 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         for bitmap, offset, char in tab:
             if (mode & bitmap) == bitmap:
                 perms[offset] = char
+
+        # set modifiers based on the x bit in that position
+        tab = [
+            (stat.S_ISUID, 3, 's', 'S'),
+            (stat.S_ISGID, 6, 's', 'S'),
+            (stat.S_ISVTX, 9, 't', 'T'),
+        ]
+        for bitmap, offset, has_X, no_X in tab:
+            if mode & bitmap:
+                if perms[offset] == 'x':
+                    perms[offset] = has_X
+                else:
+                    perms[offset] = no_X
         perms = ''.join(perms)
 
         timestamp = time.strftime(

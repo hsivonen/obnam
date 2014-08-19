@@ -25,6 +25,8 @@ Minor changes:
   setting and command line arguments to `obnam backup` can be SFTP
   URLs. Thanks to Simone Piccardi for reporting the issue.
 
+* David Fries filled in the displayed file permission mode bits.
+
 Bug fixes:
 
 * The Obnam SFTP plugin would loop infinitely if it lost the
