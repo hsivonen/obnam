@@ -47,11 +47,12 @@ class DeflateCompressionFilter(object):
 class CompressionPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
-        self.app.settings.choice(['compress-with'],
-                                 ['none', 'deflate', 'gzip'],
-                                 'use PROGRAM to compress repository with '
-                                    '(one of none, deflate)',
-                                 metavar='PROGRAM')
+        self.app.settings.choice(
+            ['compress-with'],
+            ['none', 'deflate', 'gzip'],
+            'use PROGRAM to compress repository with '
+            '(one of none, deflate)',
+            metavar='PROGRAM')
 
         hooks = [
             ('repository-data', DeflateCompressionFilter(self.app),

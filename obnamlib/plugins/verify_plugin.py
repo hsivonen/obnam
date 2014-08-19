@@ -38,11 +38,12 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
         self.app.add_subcommand('verify', self.verify,
-                                arg_synopsis='[DIRECTORY]...')
-        self.app.settings.integer(['verify-randomly'],
-                                  'verify N files randomly from the backup '
-                                    '(default is zero, meaning everything)',
-                                  metavar='N')
+            arg_synopsis='[DIRECTORY]...')
+        self.app.settings.integer(
+            ['verify-randomly'],
+            'verify N files randomly from the backup '
+            '(default is zero, meaning everything)',
+            metavar='N')
 
     def verify(self, args):
         '''Verify that live data and backed up data match.'''
