@@ -48,9 +48,15 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__)
     #include <sys/extattr.h>
     #define NO_NANOSECONDS 1
+#elif defined(__APPLE__)
+    #include <sys/xattr.h>
+    #define NO_NANOSECONDS 1
+    #define llistxattr(path, list, size) (listxattr(path, list, size, XATTR_NOFOLLOW))
+    #define lgetxattr(path, name, value, size) (getxattr(path, name, value, size, 0, XATTR_NOFOLLOW))
+    #define lsetxattr(path, name, value, size, flags) (setxattr(path, name, value, size, 0, flags | XATTR_NOFOLLOW))
 #else
     #include <sys/xattr.h>
     #define NO_NANOSECONDS 0
@@ -159,12 +165,21 @@ lstat_wrapper(PyObject *self, PyObject *args)
                          (long long) st.st_size,
                          (long long) st.st_blksize,
                          (long long) st.st_blocks,
+#ifdef __APPLE__
+                         (long long) st.st_atimespec.tv_sec,
+                         remove_precision(st.st_atimespec.tv_nsec),
+                         (long long) st.st_mtimespec.tv_sec,
+                         remove_precision(st.st_mtimespec.tv_nsec),
+                         (long long) st.st_ctimespec.tv_sec,
+                         remove_precision(st.st_ctimespec.tv_nsec));
+#else
                          (long long) st.st_atim.tv_sec,
                          remove_precision(st.st_atim.tv_nsec),
                          (long long) st.st_mtim.tv_sec,
                          remove_precision(st.st_mtim.tv_nsec),
                          (long long) st.st_ctim.tv_sec,
                          remove_precision(st.st_ctim.tv_nsec));
+#endif
 }
 
 
@@ -247,7 +262,7 @@ lgetxattr_wrapper(PyObject *self, PyObject *args)
             return Py_None;
         }
 #ifdef __FreeBSD__
-        int n = extattr_get_link(filename, EXTATTR_NAMESPACE_USER, 
+        int n = extattr_get_link(filename, EXTATTR_NAMESPACE_USER,
                                  attrname, buf, bufsize);
 #else
         ssize_t n = lgetxattr(filename, attrname, buf, bufsize);
@@ -276,7 +291,7 @@ lsetxattr_wrapper(PyObject *self, PyObject *args)
         return NULL;
 
 #ifdef __FreeBSD__
-    ret = extattr_set_link(filename, EXTATTR_NAMESPACE_USER, 
+    ret = extattr_set_link(filename, EXTATTR_NAMESPACE_USER,
                            name, value, size);
 #else
     ret = lsetxattr(filename, name, value, size, 0);
