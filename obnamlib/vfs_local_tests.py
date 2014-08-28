@@ -48,7 +48,7 @@ class LocalFSTests(obnamlib.VfsTests, unittest.TestCase):
         self.assertEqual(self.fs.get_username(0), 'root')
 
     def test_get_groupname_returns_root_for_zero(self):
-        root = 'wheel' if platform.system() == 'FreeBSD' else 'root'
+        root = 'wheel' if platform.system() == 'FreeBSD' or 'Darwin' else 'root'
         self.assertEqual(self.fs.get_groupname(0), root)
 
 

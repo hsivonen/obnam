@@ -29,7 +29,7 @@ NCLIENTS="$1"
 NGENERATIONS="$2"
 repourl="$3"
 repopath="$4"
-tempdir="$(mktemp -d)"
+tempdir="$(mktemp -d -t XXXXXX)"
 pids="$tempdir/pids"
 
 echo "Starting backups: $NCLIENTS clients $NGENERATIONS generations"
