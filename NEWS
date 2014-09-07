@@ -19,6 +19,8 @@ New features:
   it not check for unused chunks when it's useless to do so, because
   of various `--fsck-skip` settings are used.
 
+* A start of a French translation of the manual by pedrito2.
+
 Minor changes:
 
 * The manual page and `obnam --help` are now clearer that the `--root`
