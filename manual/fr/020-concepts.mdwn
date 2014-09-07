@@ -1,0 +1,293 @@
+You know you should
+===================
+
+This chapter is philosophical and theoretical about backups.
+It discusses why you should back up, various concepts around backups,
+what kinds of things you should think about when setting up backups
+and what to do in the long term (verification, etc). It also discusses
+some assumptions Obnam makes and some constraints it imposes.
+
+Why backup?
+-----------
+
+FIXME: Add some horror stories here about why backups are important.
+With references/links.
+
+Backup concepts
+---------------
+
+This section covers core concepts in backups, and defines some
+terminology used in this book.
+
+**Live data** is the data you work with or keep. It's the files on
+your hard drive: the documents you write, the photos you save, the
+unfinished novels you wish you'd finish.
+
+Most live data is **precious** in that you'll be upset if you lose it.
+Some live data is not precious: your web browser cache probably isn't,
+for example. This distinction can let you limit the amount of data
+you need to back up, which can significantly reduce your backup costs.
+
+A **backup** is a spare copy of your live data. If you lose some
+or all of your live data, you can get it back ("**restore**") from
+your backup.  The backup copy is, by practical necessity, older than
+your live data, but if you made the backup recently enough, you won't
+lose much.
+
+Sometimes it's useful to have more than one old backup copy of your
+live data.  You can have a sequence of backups, made at different
+times, giving you a **backup history**. Each copy of your live data
+in your backup history is a **generation**. This lets you retrieve a
+file you deleted a long time ago, but didn't realise you needed until
+now. If you only keep one backup version, you can't get it back,
+but if you keep, say, a daily backup for a month, you have a month
+to realise you need it, before it's lost forever.
+
+The place your backups are stored is the **backup repository**. You can
+use many kinds of **backup media** for backup storage: hard drives,
+tapes, optical disks (DVD-R, DVD-RW, etc), USB flash drives, online
+storage, etc. Each type of medium has different characteristics:
+size, speed, convenience, reliability, price, which you'll need to
+balance for a backup solution that's reasonable for you.
+
+You may need multiple backup repositories or media, with one of
+them located **off-site**, away from where your computers normally
+live. Otherwise, if you house burns down, you'll lose all your
+backups too.
+
+You need to **verify** that your backups work. It would be awkward to
+go to the effort and expense of making backups and then not be able
+to restore your data when you need to. You may even want to test
+your **disaster recovery** by pretending that all your computer stuff
+is gone, except for the backup media. Can you still recover? You'll
+want to do this periodically, to make sure your backup system keeps
+working.
+
+There is a very large variety of **backup tools**. They can be
+very simple and manual: you can copy files to a USB drive using
+your file manager, once a blue moon. They can also be very complex:
+enterprise backup products that cost huge amounts of money and come
+with a multi-day training package for your sysadmin team, and which
+require that team to function properly.
+
+You'll need to define a **backup strategy** to tie everything
+together: what live data to back up, to what medium, using what
+tools, what kind of backup history to keep, and how to verify
+that they work.
+
+Backup strategies
+-----------------
+
+You've set up a backup repository, and you have been backing up to
+it every day for a month now: your backup history is getting long
+enough to be useful. Can you be happy now?
+
+Welcome to the world of threat modelling. Backups are about
+insurance, of mitigating small and large disasters, but disasters
+can strike backups as well. When are you so safe that no disaster
+will harm you?
+
+There is always a bigger disaster waiting to happen. If you backup
+to a USB drive on your work desk, and someone breaks in and steals
+both your computer and the USB drive, the backups did you no good.
+
+You fix that by having two USB drives, and you keep one with your
+computer and the other in a bank vault. That's pretty safe, unless
+there's an earth quake that destroys both your home and the bank.
+
+You fix that by renting online storage space from another country.
+That's quite good, except there's a bug in the operating system
+that you use, which happens to be the same operating system the
+storage provider uses, and hackers happen to break into both your
+and their systems, wiping all files.
+
+You fix that by hiring a 3D printer that prints slabs of concrete on
+which your data is encoded using QR codes. You're safe until there's a
+meteorite hits Earth and destroys the entire civilisation.
+
+You fix that by sending out satellites with copies of your data,
+into stable orbits around all nine planets (Pluto is too a planet!)
+in the solar system. Your data is safe, even though you yourself
+are dead from the meteorite, until the Sun goes supernova and
+destroys everything in the system.
+
+There is always a bigger disaster. You have to decide which
+ones are likely enough that you want to consider them, and also
+decide what the acceptable costs are for protecting against them.
+
+A short list of scenarios for thinking about threats:
+
+* What if you lose your computer?
+* What if you lose your home and all of its contents?
+* What if the area in which you live is destroyed?
+* What if you have to flee your country?
+
+These questions do not cover everything, but they're a start. For each
+one, think about:
+
+* Can you live with your loss of data? If you don't restore your
+  data, does it cause a loss of memories, or some inconvenience in your
+  daily life, or will it make it nearly impossible to go back to living
+  and working normally? What data do you care most about?
+
+* How much is it worth to you to get your data back, and how fast do
+  you want that to happen? How much are you willing to invest money
+  and effort to do the initial backup, and to continue backing up
+  over time? And for restores, how much are you willing to pay for
+  that? Is it better for you to spend less on backups, even if that
+  makes restores slower, more expensive, and more effort? Or is the
+  inverse true?
+
+The threat modelling here is about safety against accidents and
+natural disasters. Threat modelling against attacks and enemies
+is similar, but also different, and will be the topic of the
+next episode in the adventures of Bac-Kup.
+
+Backups and security
+--------------------
+
+You're not the only one who cares about your data. A variety of
+governments, corporations, criminals, and overly curious snoopers are
+probably also interested. (It's sometimes hard to tell them apart.)
+They might be interested to find evidence against you, blackmail you,
+or just curious about what you're talking about with your other
+friends.
+
+They might be interested in your data from a statistical point of view,
+and don't particularly care about you specifically.  Or they might be
+interested only in you.
+
+Instead of reading your files and e-mail, or looking at your photos and
+videos, they might be interested in preventing your access to them,
+or to destroy your data. They might even want to corrupt your data,
+perhaps by planting child porn in your photo archive.
+
+You protect your computer as well as you can to prevent these and other
+bad things from happening. You need to protect your backups with equal
+care.
+
+If you back up to a USB drive, you should probably make the drive be
+encrypted. Likewise, if you back up to online storage.  There are many
+forms of encryption, and I'm unqualified to give advice on this, but any
+of the common, modern ones should suffice except for quite determined
+attackers.
+
+Instead of, or in addition to, encryption, you could ensure the physical
+security of your backup storage. Keep the USB drive in a safe, perhaps,
+or a safe deposit box.
+
+The multiple backups you need to protect yourself against earthquakes,
+floods, and roving gangs of tricycle-riding clowns, are also useful
+against attackers. They might corrupt your live data, and the backups at
+your home, but probably won't be able to touch the USB drive encased in
+concrete and buried in the ground at a secret place only you know about.
+
+The other side of the coin is that you might want to, or need to, ensure
+others do have access to your backed up data. For example, if the clown
+gang kidnaps you, your spouse might need access to your backups to be
+able to contact your MI6 handler to ask them to rescue you. Arranging
+safe access to (some) backups is an interesting problem to which there
+are various solutions. You could give your spouse the encryption passphrase,
+or give the passphrase to a trusted friend or your lawyer. You could also
+use something like [libgfshare] to escrow encryption keys more safely.
+
+[libgfshare]: http://www.digital-scurf.org/software/libgfshare
+
+Backup storage media considerations
+-----------------------------------
+
+This section discusses possibilities for backup storage media, and
+their various characteristics, and how to choose the suitable one
+for oneself.
+
+There are a lot of different possible storage media. Perhaps the most
+important ones are:
+
+* Magnetic tapes of various kinds.
+* Hard drives: internal vs external, spinning magnetic surfaces vs
+  SSDs vs memory sticks.
+* Optical disks: CD, DVD, Blu-ray.
+* Online storage of various kinds.
+* Paper.
+
+We'll skip more exotic or unusual forms, such as microfilm.
+
+**Magnetic tapes** are traditionally probably the most common form of
+backup storage. They can be cheap per gigabyte, but tend to require a
+fairly hefty initial investment in the tape drive. Much backup
+terminology comes from tape drives: full backup vs incremental backup,
+especially. Obnam doesn't support tape drives at all.
+
+**Hard drives** are a common modern alternative to tapes, especially for
+those who do not wish pay for a tape drive. Hard drives have the
+benefit of every bit of backup being accessible at the same speed as any
+other bit, making finding a particular old file easier and faster.
+This also enables **snapshot backups**, which is the model Obnam uses.
+
+Different types of hard drives have different characteristics for
+reliability, speed, and price, and they may fluctuate fairly quickly
+from week to week and year to year. We won't go into detailed
+comparisons of all the options. From Obnam's point of view, anything
+that can look like a hard drive (spinning rust, SSD, USB flash memory
+stick, or online storage) is usable for storing backups, as long as
+it is re-writable.
+
+**Optical disks**, particularly the kind that are write-once and can't
+be updated, can be used for backup storage, but they tend to be best
+for full backups that are stored for long periods of time, perhaps
+archived permanently, rather than for a actively used backup
+repository. Alternatively, they can be used as a kind of tape backup,
+where each tape is only ever used once. Obnam does not support optical
+drives as backup storage.
+
+**Paper** likewise works better for archival purposes, and only for
+fairly small amounts of data. However, a backup printed on good paper
+with archival ink can last decades, even centuries, and is a good
+option for small, but very precious data. As an example, personal
+financial records, secret encryption keys, and love letters from your
+spouse. These can be printed either normally (preferably in a font
+that is easy to OCR), or using two-dimensional barcode (e.g, QR).
+Obnam doesn't support these, either.
+
+Obnam only works with hard drives, and anything that can simulate a
+read/writable hard drive, such as online storage. By amazing
+co-incidence, this seems to be sufficient for most people.
+
+Glossary
+--------
+
+* **backup**: a separate, safe copy of your live data that will remain
+  intact even if the primary copy gets destroyed, deleted, or wrongly
+  modified
+* **corruption**: unwanted modification to (backup) data
+* **disaster recovery**: what you do when something goes wrong
+* **full backup**: a fresh backup of all precious live data
+* **generation**: a backup in a series of backups of the same live
+  data, to give historical insight
+* **history**: all the backup generations
+* **incremental backup**: a backup of any changes (new files, modified
+  files, deletions) compared to a previous backup generation (either
+  the previous full backup, or the previous incremental backup);  usually, you can't remove a full backup without removing all of the
+  incremental backups that depend on it
+* **live data**: all the data you have
+* **local backup**: a backup repository stored physically close to the
+  live data
+* **media**, **backup media**, **storage media**: where a backup
+  repository is stored
+* **off-site backup**: a backup repository stored physically far away
+  from the live data
+* **precious data**: all the data you care about; cf. live data
+* **repository**: the location where are backups are stored
+* **restore**: retrieving data from a backup repository
+* **root**, **backup root**: a directory that is to be backed up,
+  including all files in it, and all its subdirectories
+* **snapshot backup**: an alternative to full/incremental backups,
+  where every backup generation is effectively a full backup of all
+  the precious live data, and can be restored and removed as easily as
+  any other generation
+* **strategy**, **backup strategy**: a plan for how to make sure your
+  data is safe even if the dinosaurs return in space ships to re-take
+  world now that the ice age is over
+* **verification**: making sure a backup system works and that data
+  actually can be restored from backups and that the backups have not
+  become corrupted

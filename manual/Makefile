@@ -18,15 +18,19 @@
 
 TITLE_EN = Backups with Obnam
 TITLE_DE = Backups mit Obnam
+TITLE_FR = Sauvegardes avec Obnam
 TRANS_DE = Übersetzung: Jan Niggemann (jn@hz6.de)
 AUTHOR = Lars Wirzenius (liw@liw.fi)
 VERSION = Version $(shell git describe || python ../setup.py --version)
 
 en_sources = $(shell ls en/*.mdwn)
+fr_sources = $(shell ls fr/*.mdwn)
 de_sources = $(shell ls de/*.mdwn)
 outputs = \
         obnam-manual.en.pdf \
         obnam-manual.en.html \
+	obnam-manual.fr.pdf \
+	obnam-manual.fr.html \
         obnam-manual.de.pdf \
         obnam-manual.de.html
 
@@ -37,6 +41,12 @@ obnam-manual.en.pdf: Makefile $(en_sources)
 
 obnam-manual.en.html: Makefile $(en_sources) ../obnam.css
 	./format-html $@ "$(TITLE_EN)" "$(AUTHOR)" "$(VERSION)" $(en_sources)
+
+obnam-manual.fr.pdf: Makefile $(fr_sources)
+	./format-pdf $@ "$(TITLE_FR)" "$(AUTHOR)" "$(VERSION)" $(fr_sources)
+
+obnam-manual.fr.html: Makefile $(fr_sources) ../obnam.css
+	./format-html $@ "$(TITLE_FR)" "$(AUTHOR)" "$(VERSION)" $(fr_sources)
 
 obnam-manual.de.pdf: Makefile $(de_sources)
 	./format-de-pdf $@ \

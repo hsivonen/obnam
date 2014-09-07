@@ -1,0 +1,8 @@
+# Performance tuning
+
+This chapter discusses ways to tune Obnam performance for various
+situations. It covers the various options that can affect CPU and
+memory consumptions, as well as ways to experiment to find a good set
+of values.
+
+See <http://obnam.org/faq/tuning/> for a start.

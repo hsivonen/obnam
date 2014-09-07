@@ -1,0 +1,37 @@
+Installing Obnam
+================
+
+This chapter explains how to install Obnam. It is not a very extensive
+set of instructions, yet. In particular, it really only caters to
+Debian users. Instructions for other systems would be very much welcome.
+
+Debian
+------
+
+It is easiest to install Obnam on a Debian system. If you're running
+Debian `wheezy` or a later release, Obnam is included and you can just
+install it:
+
+    apt-get install obnam
+
+There may be a newer version of Obnam on the author's site. The rest
+of this section explains how to install from there.
+
+Add the following line to your `/etc/apt/sources.list` file:
+
+    deb http://code.liw.fi/debian squeeze main
+
+Then run the following commands as root:
+
+* `apt-get update`
+* `apt-get install obnam`
+
+The commands will complain that the PGP key used to sign the archive
+is not known to apt. You can either ignore this, or add the key from
+<http://code.liw.fi/apt.asc> to your key, after suitable verification.
+
+Other systems
+-------------
+
+For other systems, you need to install from sources. See the `README`
+file in the source tree for instructions.

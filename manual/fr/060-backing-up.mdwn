@@ -1,0 +1,499 @@
+Backing up
+==========
+
+This chapter discusses the various aspects of making backups with
+Obnam.
+
+Your first backup
+-----------------
+
+Let's make a backup! To walk through the examples in this directory,
+you need to have some live data to backup. The examples use specific
+filenames for this. You'll need to adapt the examples to your own
+files. The examples assume your home directory is `/home/tomjon`, and
+that you have a directory called `Documents` in your home directory
+for your documents. Further, it assumes you have a USB drive mounted
+at `/media/backups`, and that you will be using a directory
+`tomjon-repo` on that drive as the backup repository.
+
+With those assumptions, here's how you would backup your documents:
+
+    obnam backup -r /media/backups/tomjon-repo ~/Documents
+    
+That's all. It will take a little while, if you have a lot of
+documents, but eventually it'll look something like this:
+
+    Backed up 11 files (of 11 found),
+    uploaded 97.7 KiB in 0s at 647.2 KiB/s average speed       
+
+(In reality, the above text will be all on one line, but that didn't
+fit in this manual's line width.)
+
+This tells you that Obnam found a total of eleven files, of which it
+backed up all eleven. The files contained a total of about a hundred
+kilobytes of data, and that the upload speed for that data was over
+six hundred kilobytes per second. The actual units are using IEC
+prefixes, which are base-2, to avoid ambiguity. See
+[Wikipedia on kibibytes] for more information.
+
+[Wikipedia on kibibytes]: https://en.wikipedia.org/wiki/Kibibyte
+
+Your first backup run should probably be quite small to see that
+all settings are right without having to wait a long time. You may
+want to choose a small directory to start with, instead of your entire
+home directory.
+
+Your second backup
+------------------
+
+Once you've run your first backup, you'll want to run a second one.
+It's done the same way:
+
+    obnam backup -r /media/backups/tomjon-repo ~/Documents
+
+Note that you don't need to tell Obnam whether you want a full backup
+or an incremental backup. Obnam makes each backup generation be a
+snapshot of the data at the time of the backup, and doesn't make a
+difference between full and incremental backups. Each backup
+generation is equal to each other backup generation. This doesn't mean
+that each generation will store all the data separately. Obnam makes
+sure each new generation only backs up data that isn't already in the
+repository. Obnam finds that data in any file in any previous
+generation, amongst all the clients sharing the same repository.
+
+We'll later cover how to remove backup generations, and you'll learn
+that Obnam can remove any generation, even if it shares some of the
+data with other generations, without those other generations losing
+any data.
+
+After you've your second backup generation, you'll want to see the
+generations you have:
+
+    $ obnam generations -r /media/backups/tomjon-repo
+    2	2014-02-05 23:13:50 .. 2014-02-05 23:13:50 (14 files, 100000 bytes) 
+    5	2014-02-05 23:42:08 .. 2014-02-05 23:42:08 (14 files, 100000 bytes) 
+
+This lists two generations, which have the identifiers 2 and 5. Note
+that generation identifiers are not necessarily a simple sequence like
+1, 2, 3. This is due to how some of the internal data structures of
+Obnam are implemented, and not because its author in any way thinks
+it's fun to confuse people.
+
+The two time stamps for each generation are when the backup run
+started and when it ended. In addition, for each generation is a count
+of files in that generation (total, not just new or changed files),
+and the total number of bytes of file content data they have.
+
+Choosing what to backup, and what not to backup
+-----------------------------------------------
+
+Obnam needs to be told what to back up, by giving it a list of
+directories, known as backup roots. In the examples in this chapter so
+far, we've used the directory `~/Documents` (that is, the directory
+`Documents` in your home directory) as the backup root. There can be
+multiple backup roots:
+
+    obnam -r /media/backups/tomjon-repo ~/Documents ~/Photos
+
+Everything in the backup root directories gets backed up -- unless it's
+explicitly excluded. There are several ways to exclude things from
+backups:
+
+* The `--exclude` setting uses regular expressions that match the full
+  pathname of each file or directory: if the pathname matches, the
+  file or directory is not backed up. In fact, Obnam pretends it
+  doesn't exist. If a directory matches, then any files and
+  sub-directories also get excluded. This can be used, for example, to
+  exclude all MP3 files (`--exclude='\.mp3$'`).
+* The `--exclude-caches` setting excludes directories that contain a
+  special "cache tag" file called `CACHEDIR.TAG`, that starts with a
+  specific sequence of bytes. Such a tag file can be created in, for
+  example, a Firefox or other web browser cache directory. Those files
+  are usually not important to back up, and tagging the directory
+  can be easier than constructing a regular expression for
+  `--exclude`.
+* The `--one-file-system` setting excludes any mount points and the
+  contents of the mounted filesystem. This is useful for skipping,
+  for example, virtual filesystems such as `/proc`, remote filesystems
+  mounted over NFS, and Obnam repositories mounted with `obnam mount`
+  (which we'll cover in the next chapter).
+
+In general it is better to back up too much rather than too little.
+You should also make sure you know what is and isn't backed up. The
+`--pretend` option tells Obnam to run a backup, except it doesn't
+change anything in the backup repository, so it's quite fast. This way
+you can see what would be backed up, and tweak exclusions as needed.
+
+Storing backups remotely
+------------------------
+
+You probably want to store at least one backup remotely, or "off
+site". Obnam can make backups over a network, using the SFTP
+protocol (part of SSH). You need the following to achieve this:
+
+* A **server** that you can access over SFTP. This can be a server you
+  own, a virtual machine ("VPS") you rent, or some other arrangement.
+  You could, for example, have a machine at a friends' place, in
+  exchange for having one of their machines at your place, so that you
+  both can backup remotely.
+  
+* An **ssh key** for logging into the server. You _can_ log in using
+  passwords too, but it is quite cumbersome.
+
+* Enough disk space on the server to hold your backups.
+
+Obnam only uses the SFTP part of the SSH connection to access the
+server. To test whether it will work, you can run this command:
+
+    sftp USER@SERVER
+    
+Change `USER@SERVER` to be your actual user and address for your
+server. This should say something like `Connected to localhost.` and
+you should be able to run the `ls -la` command to see a directory list
+of files on the remote side.
+
+Once all of that is set up correctly, to get Obnam to use the server
+as a backup repository, you only need to give an SFTP URL:
+
+    obnam -r sftp://USER@SERVER/~/my-precious-backups
+    
+For details on SFTP URLs, see the next section.
+
+URL syntax
+----------
+
+Whenever obnam accepts a URL, it can be either a local pathname, or an
+SFTP URL. An SFTP URL has the following form:
+
+    sftp://[user@]domain[:port]/path
+
+where `domain` is a normal Internet domain name for a server, `user`
+is your username on that server, `port` is an optional numeric port
+number, and `path` is a pathname on the server side. Like **bzr**(1),
+but unlike the SFTP URL standard, the pathname is absolute, unless it
+starts with `/~/` in which case it is relative to the user's home
+directory on the server.
+
+Examples:
+
+* `sftp://liw@backups.pieni.net/~/backup-repo` is the directory
+  `backup-repo` in the home directory of the user `liw` on the server
+  `backups.pieni.net`. Note that we don't need to know the absolute
+  path of the home directory.
+
+* `sftp://root@my.server.example.com/home` is the directory `/home`
+  (note absolute path) on the server `my.server.example.com`, and the
+  `root` user is used to access the server.
+
+* `sftp://foo.example.com:12765/anti-clown-society` is the directory
+  `/anti-clown-society` on the server `foo.example.com`, accessed via
+  the port 12765.
+
+You can use SFTP URLs for the repository, or the live data (`--root`),
+but note that due to limitations in the protocol, and its
+implementation in the paramiko library, some things will not work very
+well for accessing live data over SFTP. Most importantly, the handling
+of of hardlinks is rather suboptimal. For live data access, you should
+not end the URL with /~/ and should append a dot at the end in this
+special case.
+
+Pull backups
+------------
+
+Obnam can also access the live data over SFTP, instead of via the
+local filesystem. This means you can run Obnam on, say, your desktop
+machine to backup your server, or on your laptop to backup your phone
+(assuming you can get an SSH server installed on your phone).
+Sometimes it is not possible to install Obnam on the machine where the
+live data resides, and then it is useful to do a **pull backup**
+instead: you run Obnam on a different machine, and read the live data
+over the SFTP protocol.
+
+To do this, you specify the live data location (the `root` setting, or
+as a command line argument to `obnam backup`) using an SFTP URL. You
+should also set the client name explicitly. Otherwise Obnam will use
+the hostname of the machine on which it runs as the name, and this can
+be highly confusing: the client name is `my-laptop` and the server is
+`down-with-clowns` and Obnam will store the backups as if the data
+belongs to `my-laptop`.
+
+It gets worse if you backup your laptop as well to the same backup
+repository. Then Obnam will store both the server and the laptop
+backups using the same client name, resulting in much confusion to
+everyone.
+
+Example:
+
+    obnam backup -r /mnt/backups sftp://server.example.com/home \
+        --client-name=server.example.com
+
+Configuration files: a quick intro
+----------------------------------
+
+By this time you may have noticed that Obnam has a number of
+configurable settings you can tweak in a number of ways. Doing it on
+the command line is always possible, but then you get quite long
+command lines. You can also put them into a configuration file.
+
+Every command line option Obnam knows can be set in a configuration
+file. Later in this manual there is a whole chapter that covers all
+the details of configuration files, and all the various settings you
+can use. For now, we'll give a quick introduction.
+
+An Obnam configuration looks like this:
+
+    [config]
+    repository = /media/backup/tomjon-repo
+    root = /home/liw/Documents, /home/liw/Photos
+    exclude = \.mp3$
+    exclude-caches = yes
+    one-file-system = no
+
+This form of configuration file is commonly known as an "INI file",
+from Microsoft Windows `.INI` files. All the Obnam settings go into a
+section titles `[config]`, and each setting has the same name as the
+command line option, but without the double dash prefix. Thus, it's
+`--exclude` on the command line and `exclude` in the configuration
+file.
+
+Some settings can have multiple values, such as `exclude` and `root`.
+The values are comma separated. If there's a lot of values, you can
+split them on multiple lines, where the second and later lines are
+indented by space or TAB characters.
+
+That should get you started, and you can reference the "Obnam
+configuration files and settings" chapter for all the details.
+
+When your precious data is very large
+-------------------------------------
+
+When your precious data is very large, the first backup may a very
+long time. Ditto, if you get a lot of new precious data for a later
+backup. In these cases, you may need to be very patient, and just let
+the backup take its time, or you may choose to start small and add to
+the backups a bit at a time.
+
+The patient option is easy: you tell Obnam to backup everything, set
+it running, and wait until it's done, even if it takes hours or days.
+If the backup terminates prematurely, e.g., because of a network link
+going down, you won't have to start from scratch thanks to Obnam's
+checkpoint support. Every gigabyte or so (by default) Obnam stops a
+backup run to create a checkpoint generation. If the backup later
+crashes, you can just re-run Obnam and it will pick up from the latest
+checkpoint. This is all fully automatic, you don't need to do anything
+for it to happen. See the `--checkpoint` setting for choosing how
+often the checkpoints should happen.
+
+Note that if Obnam doesn't get to finish, and you have to re-start it,
+the scanning starts over from the beginning. The checkpoint generation
+does not contain enough state for Obnam to continue scanning from the
+latest file in the checkpoint: it'd be very complicated state, and
+easily invalidated by filesystem changes. Instead, Obnam scans all
+files, but most files will hopefully not have changed since the
+checkpoint was made, so the scanning should be relatively fast.
+
+The only problem with the patient option is that your most precious
+data doesn't get backed up while all your large, but less precious
+data is being backed up. For example, you may have a large amount of
+downloaded videos of conference presentations, which are nice, but not
+hugely important. While those get backed up, your own documents do not
+get backed up.
+
+You can work around this by initially excluding everything except the
+most precious data. When that is backed up, you gradually reduce the
+excludes, re-running the backup, until you've backed up everything.
+As an example, your first backup might have the following
+configuration:
+
+    obnam backup -r /media/backups/tomjon-repo ~ \
+        --exclude ~/Downloads
+
+This would exclude all downloaded files. The next backup run might
+exclude only video files:
+
+    obnam backup -r /media/backups/tomjon-repo ~ \
+        --exclude ~/Downloads/'.*\.mp4$'
+
+After this, you might reduce excludes to allow a few videos, such as
+those whose name starts with a specific letter:
+
+    obnam backup -r /media/backups/tomjon-repo ~ \
+        --exclude ~/Downloads/'[^b-zB-Z].*\.mp4$'
+
+Continue allowing more and more videos until they've all been backed
+up.
+
+De-duplication
+--------------
+
+Obnam de-duplicates the data it backs up, across all files in all
+generations for all clients sharing the repository. It does this by
+breaking up all file data into bits called chunks. Every time Obnam
+reads a file and gets a chunk together, it looks into the backup
+repository to see if an identical chunk already exists. If it does,
+Obnam doesn't need to upload the chunk, saving space, bandwidth, and
+time.
+
+De-duplication in Obnam is useful in several situations:
+
+* When you have two identical files, obviously. They might have
+  different names, and be in different directories, but contain the
+  same data.
+* When a file keeps growing, but all the new data is added at the end.
+  This is typical for log files, for example. If the leading chunks
+  are unmodified, only the new data needs to be backed up.
+* When a file or directory is renamed or moved. If you decide that the
+  English name for the `Photos` directory is annoying and you want to
+  use the Finnish `Valokuvat` instead, you can rename that in an
+  instant. However, without de-duplication, you then have to backup
+  all your photos again.
+* When all a team works on the same things, and everyone has copies of
+  the same files, the backup repository only needs one copy of each
+  file, rather than one per team member.
+
+De-duplication in Obnam isn't perfect. The granularity of finding
+duplicate data is quite coarse (see the  `--chunk-size` setting), and
+so Obnam often doesn't find duplication when it exists, when the
+changes are small.
+
+De-duplication and safety against checksum collisions
+-----------------------------------------------------
+
+This is a bit of a scary topic, but it would be dishonest to not
+discuss it at all. Feel free to come back to this section later.
+
+Obnam uses the MD5 checksum algorithm for recognising duplicate data
+chunks. MD5 has a reputation for being unsafe: people have constructed
+files that are different, but result in the same MD5 checksum. This is
+true. MD5 is not considered safe for security critical applications.
+
+Every checksum algorithm can have collisions. Changing Obnam to use,
+say, SHA1, SHA2, or the as new SHA3 algorithm would not remove the
+chance of collisions. It would reduce the chance of accidental
+collisions, but the chance of those is already so small with MD5 that
+it can be disregarded. Or put in another way, if you care about the
+chance of accidental MD5 collisions, you should be caring about
+accidental SHA1, SHA2, or SHA3 collisions as well.
+
+Apart from accidental collisions, there are two cases where you should
+worry about checksum collisions (regardless of algorithm).
+
+First, if you have an enemy who wishes to corrupt your backed up data,
+they may replace some of the backed up data with other data that has
+the same checksum. This way, when you restore, your data is corrupted
+without Obnam noticing.
+
+Second, if you're into researching checksum collisions, you're likely
+to have files that cause checksum collisions, and in that case, if you
+restore after a catastrophe, you probably want to get the files back
+intact, rather having Obnam confuse one with the other.
+
+To deal with these situations, Obnam has three de-duplication modes,
+set using the `--deduplicate` setting:
+
+* The default mode, `fatalist`, assumes checksum collisions do not
+  happen. This is a reasonable compromise between performance, safety,
+  and security for most people.
+* The `verify` mode assumes checksum collisions do happen, and
+  verifies that the already backed up chunk is identical to the chunk
+  to be backed up, by comparing the actual data. Doing this requires
+  downloading the chunk from the backup repository, which can be quite
+  slow, since checksums will often match. This is a useful mode if you
+  have very fast access to the backup repository, and want to
+  de-duplicate, such as when the backup repository is on a locally
+  connected hard drive.
+* The `never` mode turns off de-duplication completely. This is 
+  useful if you're worried about checksum collisions, and do not
+  require de-duplication.
+
+There is, unfortunately, no way to get both de-duplication that is
+invulnerable to checksum collision and is fast even when accessing the
+backup repository is slow. The only way to be invulnerable is to
+compare the data, and if downloading the data from the repository is
+slow, then the comparison will take significant time.
+
+Locking
+-------
+
+Multiple clients can share a repository, and to prevent them from
+trampling on each other, they lock parts of the repository while
+working. The "Sharing a repository between multiple clients" chapter
+will discuss this in more detail.
+
+If Obnam terminates abruptly, even if there's only one client ever
+using the repository, the lock may stay around and prevent that one
+client for making new backups. The termination may be due to the
+network connection breaking, or due to a bug in Obnam. It can also
+happen if Obnam is interrupted by the user before it's finished.
+
+The Obnam command `force-lock` deals with this situation. It is
+dangerous, though. If you force open a lock that is in active use by
+a running Obnam instance, there will likely to be some stepping of
+toes. The result may, in extreme cases, even result in repository
+corruption. So be careful.
+
+If you've decided you can safely do it, this is an example of how to
+do it:
+
+    obnam -r /media/backups/tomjon-repo force-lock
+
+Note that some of the locks are per-client, to prevent you from
+accidentally running Obnam twice for the same client, which would
+result in standing on your own toes: kind of impressive, but
+uncomfortable and not recommended.
+
+If you need to force open a lock for specific client, you can specify
+the client name explicitly:
+
+    obnam --client-name magrat \
+        -r /media/backups/tomjon-repo force-lock
+
+(Long line broken to two for typographical reasons.)
+
+Consistency of live data
+------------------------
+
+Making a backup can take a good while. While the backup is running,
+the filesystem may change. This leads to the snapshot of data Obnam
+presents as a backup generation being internally inconsistent. For
+example, before a backup you might have two files, A and B, which need
+to be kept in sync. You run a backup, and while it's happening, you
+change A, and then B. However, you're unlucky, and Obnam manages to
+backup A before you save your changes, and B after you save changes to
+that. The backup generation now has versions of A and B that are not
+synchronised. This is bad.
+
+This can be dealt with in various ways, depending on the
+circumstances. Here's a few:
+
+* The Logical Volume Manager (LVM) provides snapshots. You can set up
+  your backups so that they first create a snapshot of each logical
+  volume to be backed up, run the backup, and delete the snapshot
+  afterwards. This prevents anyone from modifying the files in the
+  snapshot, but allows normal use to continue while the backup
+  happens.
+* A similar thing can be done using the btrfs filesystem and its
+  subvolumes.
+* You can shut down the system, reboot it into single user mode, and
+  run the backup, before rebooting back into normal mode. This is not
+  a good way to do it, but it is the safest way to get a consistent
+  snapshot of the filesystem.
+
+Note that filesystem level snapshots can't really guarantee a
+consistent view of the live data. An application may be in the middle
+of writing a file, or set of files, when the snapshot is being made.
+To some extent this indicates an application bug, but knowing that
+doesn't let you sleep better.
+
+Usually, though, most systems have enough idle time that a consistent
+backup snapshot can happen during that time. For a laptop, for
+example, a backup can be run while the user is elsewhere, instead of
+actively using the machine.
+
+Part of your backup verification suite should check that the data in a
+backup generation is internally consistent, if that can be done.
+Otherwise, you'll either have to analyse the applications you use, or
+trust they're not too buggy.
+
+If you didn't understand this section, don't worry and be happy and
+sleep well.

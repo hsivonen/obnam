@@ -1,0 +1,21 @@
+Introduction
+============
+
+> ... des sauvegardes ? Quelqu'un a parlé de sauvegardes ? Je suis sûr 
+> d'avoir entendu quelqu'un mentionner "sauvegarde" par ici.
+> Sauvegardes ! SAUVEGARDES ! LES SAUVEGARDES C'EST EXCELLENT !
+
+Ceci est une citation issue de l'historique de mon IRC. Je trouve les
+sauvegardes particulièrement intéressantes, en particulier du point de 
+vue de l'implémentation, à en faire une obsession parfois. C'est pourquoi 
+j'ai développé mon propre logiciel. Il s'appelle Obnam. Ceci est son 
+manuel.
+
+Je suis original : la pluspart des gens trouvent les sauvegardes ennuyeuses
+au mieux, pénibles plus fréquemment.
+Lorsque j'échange avec d'autre au sujet des sauvegardes, la réaction 
+habituelle est "Moui, je sais que je devrais". Il ya de nombreuses 
+raisons à cela. L'une d'elle est très semblable à l'assurance : vous devez dépenser du temps, de l'énergie et de l'argent pour ne rien en faire.
+Une autre raison est que le sujet est effrayant : vous avez à envisager que tout vas mal, et cela ne met pas les gens à l'aise. Enfin, malgrès les nombreus outils et méthodes existants, ce n'est pas toujours facile de choisir parmi elles.
+
+Ce manuel est pour le programme Obnam, mais il essaie d'être utile à tout un chacun qui réfléchit sur les sauvegardes.

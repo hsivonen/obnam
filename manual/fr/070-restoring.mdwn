@@ -1,0 +1,110 @@
+Restoring from backups
+======================
+
+The worst has happened! Your cat got confused between its litter box
+and your hard drive! Your goat deleted your most important document
+ever! Woe be you!
+
+Let's stay calm. This is why you have backups. There's on need for
+exclamation marks. Take a deep breath, have a cup of tea, and all will
+be well.
+
+There's two different approaches for restoring data with Obnam. One
+relies on a FUSE filesystem, which is a very nice piece of technology
+that allows Obnam to let you view your backups as just another
+directory. It is the preferred way, but it is not always available, so
+Obnam also provides a more primitive, less easy to use method.
+
+Oh no! It's all FUSEd together
+------------------------------
+
+The `obnam mount` command lets you look at your backups as if they
+were just another directory. This requires that you have FUSE setup.
+See the installation chapter for details on that. Most modern Linux
+desktops have this out of the box.
+
+    mkdir ~/backups
+    obnam mount --to ~/backups
+
+Run the above command, and then look at the `~/backups` directory.
+You'll see something like this:
+
+    $ ls -l ~/backups
+    total 12
+    drwxr-xr-x 24 root root 4096 Feb 11 21:41 2
+    drwxr-xr-x 24 root root 4096 Feb 11 21:41 5
+    lrwxr-xr-x 24 root root 4096 Feb 11 21:41 latest -> 5
+    $ 
+
+Each directory in `~/backups` is a backup generation, named after the
+generation identifier Obnam invents. The `latest` symbolic link points
+at the latest generation.
+
+After this, you can restore a single file very easily:
+
+    cp ~/backups/latest/home/tomjon/Documents/iloveyou.txt ~/restored.txt
+
+You can copy any files you want from the `~/backups` directory, from
+any generation, or all of them if you want to. You can look at files
+directly, before copying them out, too.
+
+    less ~/backups/2/home/tomjon/Documents/iloveyou.txt
+    
+This is an easy way to make sure you find the right version instead of
+just the latest one.
+
+You can't delete anything in `~/backups`. That directory is read-only,
+and you can't accidentally, or on purpose, delete or modify anything
+there. This is intentional: the `obnam mount` command is meant to be a
+safe way for you to look at your backups, not something you need to be
+careful about.
+
+Once you're done looking at your backups, you can un-mount the
+repository:
+
+    fusermount -u ~/backups
+
+In addition to doing these things from the command line, you can, of
+course, use your favourite file manager (graphical or textual) to look
+at your backed up files. The mounting and un-mounting (depending on
+your desktop setup) may need to be done on the command line.
+
+Restoring without FUSE
+----------------------
+
+When `obnam mount` isn't available, you can do restores directly with
+just Obnam. Use `obnam generations` and `obnam ls` to find the right
+generation to restore, and then run a command like this:
+
+    obnam restore --to /tmp/tomjon-restored /home/tomjon/Documents
+    
+This would restore just the indicated directory. If you don't tell
+Obnam what to restore, it'll restore everything in the latest
+generation. You can choose a different generation with `--generation`:
+
+    obnam restore --to /tmp/tomjon-restored --generation 2
+
+Note that you can't restore to a directory that already exists. This
+is to prevent you from accidentally overwriting your live data with
+restored files. If you do want replace your live data with restored
+files, you should restore to a temporary location first, and then move
+the files to where you want them to be.
+
+Practice makes prestores painless
+---------------------------------
+
+You should practice doing restores. This makes you trust your backups
+more, and lets you be calmer if disaster were to strike. (In fancier
+terms, you should test your disaster recovery plan.)
+
+Do a trial restore of a few files, or all files, until you're sure you
+know how to do that. Then do it again, from time to time, to be sure
+your backups still work. It's much less frightening to do a real
+restore, when data has actually gone missing, if you've done it
+before.
+
+In extreme cases, particularly if you're an Obnam developer, you
+perhaps format your hard drive and then do complete restore, just so
+you know you can. If you're not an Obnam developer, this is perhaps a
+bit extreme: at least use a separate hard drive instead of your normal
+one.

@@ -1,0 +1,113 @@
+TL;DR: LISEZ-MOI D'ABORD : Un tour rapide de Obnam
+==========================================
+
+Vous n'aurez certainement que ce chapître à lire.
+
+Ce chapître donne un aperçu rapide des parties principales d'Obnam. 
+Le reste du manuel n'est qu'une version approfondie. Vous devriez 
+commencer par lire ce chapître puis feindre de tout avoir lu ; et 
+tout le monde vous regardera avec admiration en soirée. Je vous 
+assure, personne d'autre n'aura lu l'ensemble et il n'y aura donc 
+aucun risque de vous faire prendre.
+
+Configuration
+-------------
+
+Obnam ne nécessite pas de fichier de configuration. Vous pouvez tout faire en utilisant les options en ligne de commande. Toutefois, vous pouvez utiliser un fichier de configuration : enregistrez le sous `~/.obnam.conf` et écrivez-y ce qui suit :
+
+    [config]
+    repository = sftp://votre.serveur/home/votreutilisateur/sauvegardes/
+    log = /home/votreutilisateur/obnam.log
+
+En créant un fichier comme dans cet exemple, vous n'aurez pas à répéter les options à chaque fois.
+
+Vous souhaitez probablement activer les log. Ainsi, si Obnam rencontre un problème vous pourrez y retrouver toutes les informations disponibles pour le régler.
+
+Première sauvegarde
+--------------
+
+Votre première sauvegarde sera plutôt imposante et prendra un bon moment.
+Une longue sauvegarde peut crasher, mais ce n'est pas un problème : Obnam fait des **checkpoint** tous les 100 Mb.
+
+    obnam backup $HOME
+
+Sauvegardes incrémentales
+-------------------
+
+Lorsque vous avez fait votre première sauvegarde, complète (possiblement par étapes), vous pourrez sauvegarder tout changement en lançant encore Obnam :
+
+    obnam backup $HOME
+
+Cela sauvegardera tous les nouveaux fichiers, et ceux qu iont changé. Il enregistrera aussi la liste des fichiers supprimés depuis la dernière sauvegarde.
+
+Vous pouvez exécuter Obnam autant de fois que vous le souhaitez. Seuls les changements depuis la sauvegarde précédente sont enregistrés.
+
+Plusieurs clients dans un dépôt (ndt : repository)
+----------------------------------
+
+Vous pouvez sauvegarder plusieurs clients dans un seul dépôt en spécifiant l'option --client-name=<identifiant> lorsque vous exécutez le programme. Les ensembles de sauvegardes seront maintenus séparés, mais les donnés dupliquées seront partagées par tous.
+
+Effacer de vielles sauvegardes
+------------------------
+
+Il est possible que votre dépôt de sauvegarde occupe tant de place que vous soyez obligé de supprimer quelques vielles générations de sauvegarde. L'action Obnam correspondante est forget:
+
+    obnam forget --keep=30d
+    
+Cela maintiendrait les sauvegardes des 30 derniers jours calendaires, comptés depuis la date de la dernière sauvegarde (pas la date actuelle).
+Si vous sauvegardez plusieurs fois par jour, seule la dernière génération du jour est conservée.
+
+Toute donnée qui appartient à une génération restera sur le dépôt. Toute donnée qui est uniquement dans la génération supprimée est détruite.
+
+Restoration des données
+--------------
+
+Espérons que vous n'ayez jamais besoin de cela, mais c'est bien l'intérêt d'avoir des sauvegardes en cas de désastre.
+
+    obnam restore --to=/var/tmp/my-recovery $HOME
+    
+La commande ci-dessu va restorer tout votre home dans /var/tmp/my-recovery`, à partir de la dernière génération de sauvegarde.
+Si vous avez juste besoin de répertoires ou fichiers spécifiques, vous pouvez utiliser ceci à la place :
+
+    obnam restore --to=/var/tmp/my-recover $HOME/Archive/receipts
+    
+Si vous ne parvenez pas à vous rememorer le fichier dont vous avez besoin, utilisez `obnam ls`:
+
+    obnam ls > /var/tmp/my-recovery.list
+
+Cela redirigera les contenus des générations de sauvegarde, dans un format similaire au `ls -lAR`This will output the contents of the backup generation, in a format
+similar to `ls -lAR`. Save it into a file and browse that.
+
+(c'est une commande plutôt lente c'est pourquoi il est pluspratique de l'enregistrer dans un fichier)
+
+Utiliser le chiffrement
+----------------
+
+Obnam peut utiliser GnuPG pour chiffrer les sauvegardes. Pour activer ceci, 
+vous devez avoir ou créer une clé GPG puis configurer obnam pour l'utiliser :
+
+    [config]
+    encrypt-with = CAFEBABE
+
+Ici `CAFEBABE` est l'**identifiant de clé** (ndt : key identifier) pour votre 
+clé, telle que GPG la connaît. Vous devez avoir `gpg-agent` ou un programme équivalent
+configuré, car Obnam n'a pas la possibilité de vous demander ou configurer votre passphrase.
+
+Après cela, Obnam chiffrera et déchiffrera automatiquement les données.
+
+Notez que si vous chiffrez vos sauvegardes, vous devrez sauvegarder votre clé GPG
+d'une autre manière. Sans elle, vous ne pourrez récupérer aucun fichier 
+depuis une sauvegarde Obnam. Aussi, vous ne pouvez pas vous reposer sur la même 
+sauvegarde obnam pour la clé GPG elle-même.
+Sauvegardez votre clé GPG ailleurs et assurez-vous que votre passphrase est 
+suffisament forte pour résister à une attaque par brutforce hors-ligne.
+Rappelez-vous que si vous perdez votre clé GPG, l'ensemble de vos sauvegardes 
+chiffrées devient totalement inutile.
+
+Si vous activez le chiffrement après avoir déjà fait des sauvegardes, vous 
+devez recommencer avec un nouveau dépôt.
+Vous ne pouvez mélanger des données chiffrées et en clair dans le même dépôt.
+
+(Il existe tout un ensemble de commandes Obnam pour administrer le chiffrement.
+Vous n'aurez pas besoin d'elles, à moins que vous ne partagiez un même 
+dépôt pour plusieurs machines. Dans ce cas, vous devriez lire le manuel.)

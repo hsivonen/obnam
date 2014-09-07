@@ -1,0 +1,131 @@
+Obnam configuration files and settings
+======================================
+
+This chapter discusses Obnam configuration files: where they are, what
+they contain, and how they are used.
+
+Where is my configuration?
+--------------------------
+
+Obnam looks for its configuration files in a number of places:
+
+* `/etc/obnam.conf`
+* `/etc/obnam/*.conf`
+* `~/.obnam.conf`
+* `~/.config/obnam/*.conf`
+
+Note that in `/etc/obnam` and `~/.config/obnam`, all files that have a
+`.conf` suffix are loaded, in "asciibetical" order, which is like
+alphabetical, but based on character codes rather than what humans
+understand, but unlike alphabetical isn't dependent on the language
+being used.
+
+Any files in the list above may or may not exist. If it exists, it is
+read, and then the next file is read. A setting in one file can be
+overridden by a later file, if it is set there as well.
+For example, `/etc/obnam.conf` might set `log-level` to `INFO`,
+but `~/.obnam.conf` may then set it to `DEBUG`, if a user wants more
+detailed log files.
+
+The Obnam configuration files in `/etc` apply to everyone who runs
+Obnam on that machine. This is important: they are not just for when
+`root` runs Obnam.
+
+If you want to have several Obnam configurations, for example for
+different backup repositories, you need to name or place the files so
+they aren't on the list above. For example:
+
+* `/etc/obnam/system-backup.profile`
+* `~/.config/obnam/online.profile`
+* `~/.config/obnam/usbdrive.profile`
+
+You would then need to specify that file for Obnam to use it:
+
+    obnam --config ~/.config/obnam/usbdrive.profile`
+
+If you want to not be affected by any configuration files, except
+the ones you specify explicitly, you need to also use the
+`--no-default-config` option:
+
+    obnam --no-default-config --config ~/.obnam-is-fun.conf
+
+Command line options override values from configuration files.
+
+Configuration file syntax
+-------------------------
+
+Obnam configuration files use the [INI file] syntax, specifically
+the variant implemented by the Python [ConfigParser] library.
+They look like this:
+
+    [config]
+    log-level = debug
+    log = /var/log/obnam.log
+    encrypt-with = CAFEBEEF
+    root = /
+    one-file-system = yes
+
+[INI file]: https://en.wikipedia.org/wiki/INI_file
+[ConfigParser]: http://docs.python.org/2/library/configparser.html
+
+Names of configuration variables are the same as the corresponding
+command line options. If `--foo` is the option, then the variable in
+the file is `foo`. Any command line option `--foo=bar` can be used in
+a configuration file as `foo = bar`. There's are exceptions to this
+(`--no-default-config`, `--config`, `--help`, and a few others), but
+they're all things you wouldn't put in a configuration file anyway.
+
+Every option, or setting, has a type. Mostly this doesn't matter,
+unless you give it a value that isn't suitable. The two important
+exceptions to this are:
+
+* Boolean or yes/no or on/off settings. For example,
+  `--exclude-caches` is a setting that is either turned on (when the
+  option is used) or off (when it's not used). For every Boolean
+  setting `--foo`, there is an option `--no-foo`. In a configuration
+  files, `foo` is turned on by setting it to `yes` or `true`, and off
+  by setting it to `no` or `false`.
+
+* Some settings can be lists of values, such as `--exclude`. You can
+  use `--exclude` as many times as you want, each time a new exclusion
+  pattern is added, rather than replacing the previous patterns.
+  In a configuration file, you would write all the values at once,
+  separated by commas and optional spaces: for example,
+  `exclude = foo, bar, baz`. In a configuration file, the previous
+  list of values is replaced entirely rather than added to.
+
+For a more detailed explanation of Obnam configuration file syntax,
+see the **cliapp**(5) manual page on your system, or [cliapp man page]
+on the WWW.
+
+[cliapp man page]: http://liw.fi/cliapp/cliapp.5.txt
+
+Checking what my configuration is
+---------------------------------
+
+Obnam can read configuration files from a number of places, and it can
+be tricky to figure out what the actual configuration is. The
+`--dump-config` option helps here.
+
+    obnam --config ~/.obnam.fun --exclude-caches --dump-config
+
+The option will tell Obnam to write out (to the standard output) a
+configuration file that captures every setting, and reporting the
+value that it would have if `--dump-config` weren't used.
+
+This is a good way to see what the current settings are and also as
+a starting point if you want to make a configuration file from
+scratch.
+
+Finding out all the configuration settings
+------------------------------------------
+
+This manual does not yet have a list of all the settings, and their
+explanation. Obnam provides built-in help (run `obnam --help`) and a
+manual page automatically generated from the built-in help
+(run `man obnam` or see [obnam man page]). Some day, this chapter will
+include an automatically generated section that explains each setting.
+Until then, you're free to point fingers at Obnam's author and giggle
+at his laziness.
+
+[obnam man page]: http://obnam.org/obnam.1.txt
