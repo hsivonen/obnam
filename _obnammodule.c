@@ -54,9 +54,12 @@
 #elif defined(__APPLE__)
     #include <sys/xattr.h>
     #define NO_NANOSECONDS 1
-    #define llistxattr(path, list, size) (listxattr(path, list, size, XATTR_NOFOLLOW))
-    #define lgetxattr(path, name, value, size) (getxattr(path, name, value, size, 0, XATTR_NOFOLLOW))
-    #define lsetxattr(path, name, value, size, flags) (setxattr(path, name, value, size, 0, flags | XATTR_NOFOLLOW))
+    #define llistxattr(path, list, size) \
+        (listxattr(path, list, size, XATTR_NOFOLLOW))
+    #define lgetxattr(path, name, value, size) \
+        (getxattr(path, name, value, size, 0, XATTR_NOFOLLOW))
+    #define lsetxattr(path, name, value, size, flags) \
+        (setxattr(path, name, value, size, 0, flags | XATTR_NOFOLLOW))
 #else
     #include <sys/xattr.h>
     #define NO_NANOSECONDS 0
