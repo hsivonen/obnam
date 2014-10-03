@@ -48,6 +48,8 @@ class LocalFSTests(obnamlib.VfsTests, unittest.TestCase):
         self.assertEqual(self.fs.get_username(0), 'root')
 
     def test_get_groupname_returns_root_for_zero(self):
+        # Some Unix systems have a wheel group instead of a root
+        # group. We're fine with either.
         self.assertIn(self.fs.get_groupname(0), ['root', 'wheel'])
 
 
