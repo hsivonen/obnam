@@ -70,7 +70,7 @@ lists the contents of a given generation, similar to
 .IP \(bu
 .B verify
 compares data in the backup with actual user data,
-and makes sures they are identical.
+and makes sure they are identical.
 It is most useful to run immediately after a backup,
 to check that it actually worked.
 It can be run at any time,
@@ -196,7 +196,7 @@ These are exactly like normal generations,
 but are not guaranteed to be a complete snapshot of the live data.
 If the backup run needs to be aborted in the middle,
 the next backup run can continue from the latest checkpoint,
-avoiding the need to start completely over.
+avoiding the need to start over from scratch.
 .PP
 If one backup run drops a backup root directory,
 the older generations will still keep it:
@@ -213,12 +213,12 @@ The
 command checks that data in the backup repository matches actual user data.
 It retrieves one or more files from the repository and compares them to
 the user data.
-This is essentialy the same as doing a restore,
+This is essentially the same as doing a restore,
 then comparing restored files with the original files using
 .BR cmp (1),
 but easier to use.
 .PP
-By default verification happens on all files.
+By default, verification happens on all files.
 You can also specify the files to be verified by listing them on the
 command line.
 You should specify the full paths to the files,
@@ -351,7 +351,7 @@ but will be sorted to ascending order of time period before applied.
 (It is an error to give two rules for the same period.)
 A backup generation is kept if it matches any rule.
 .PP
-For example, assume the same backup frequence as above,
+For example, assume the same backup frequency as above,
 but a policy of
 .IR 30d,52w .
 This will keep the newest daily backup for each day for thirty days,
@@ -376,7 +376,7 @@ for 72 such backups.
 In other words, it would effectively keep the last 72 daily backups.
 .PP
 Sound confusing?
-Just wonder how confused the developer was when writing the code.
+Just think how confused the developer was when writing the code.
 .PP
 If no policy is given,
 .B forget
@@ -421,8 +421,8 @@ option.
 .B obnam
 will look for configuration files in a number of locations.
 See the FILES section for a list.
-All files are treated as if they were one with the contents of all
-files catenated.
+All these files together are treated as one big file with the contents of all
+files concatenated.
 .PP
 The files are in INI format,
 and only the
