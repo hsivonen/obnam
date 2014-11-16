@@ -68,6 +68,13 @@ This can be useful for scripting.
 lists the contents of a given generation, similar to
 .BR "ls \-lAR" .
 .IP \(bu
+.B kdirstat
+lists the contents of a given generation, in a format which is
+compatible with the
+.BR "kdirstat"
+cache file format, which can then be used to visualise the contents
+of a backup.
+.IP \(bu
 .B verify
 compares data in the backup with actual user data,
 and makes sure they are identical.

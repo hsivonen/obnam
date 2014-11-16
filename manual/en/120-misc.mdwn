@@ -3,3 +3,19 @@ Other stuff
 
 This chapter discusses topics that do not warrant a chapter of their
 own, such as compressing backups and running Obnam from cron.
+
+k4dirstat cache files
+---------------------
+
+[k4dirstat] is a utility for visualising the disk space used by a
+directory tree. Obnam's `kdirstat` command can be used to produce a
+listing of the contents of a generation in a format which can be read
+by k4dirstat using `File`, `Read Cache File` from the k4dirstat
+menu. e.g.
+
+    $ obnam kdirstat --client CLIENT --generation GENID > CLIENT.kdirstat.cache
+    $ gzip -v9 CLIENT.kdirstat.cache # OPTIONAL
+
+`CLIENT.kdirstat.cache[.gz]` can now be read by `k4dirstat`.
+
+[k4dirstat]: https://bitbucket.org/jeromerobert/k4dirstat/wiki/Home
