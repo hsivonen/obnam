@@ -129,8 +129,9 @@ class FilterHookTests(unittest.TestCase):
         self.assertEquals(self.hook.run_filter_read("base64\0AE9L"), "OK")
 
     def test_no_tag_raises_error(self):
-        with self.assertRaises(obnamlib.NoFilterTagError):
-            self.hook.run_filter_read('no NUL bytes in this string')
+        self.assertRaises(obnamlib.NoFilterTagError,
+                          self.hook.run_filter_read,
+                          'no NUL bytes in this string')
 
     def test_missing_filter_raises(self):
         self.assertRaises(obnamlib.MissingFilterError,
