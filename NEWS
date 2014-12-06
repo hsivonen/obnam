@@ -53,6 +53,10 @@ Bug fixes:
 * Lars Kruse fixed a bug with backing up of overlapping backup roots
   (e.g., / and /boot), given a test case by Adrien Clerc.
 
+* Thomas Eschenbacher fixed a bug in the format 6 repository code that
+  would crash when there is an obscure problem and a B-tree code can't
+  be found in the tree.
+
 Version 1.8, released 2014-05-13
 --------------------------------
 
