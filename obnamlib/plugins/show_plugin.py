@@ -55,7 +55,8 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         self.app.add_subcommand('generations', self.generations)
         self.app.add_subcommand('genids', self.genids)
         self.app.add_subcommand('ls', self.ls, arg_synopsis='[FILE]...')
-        self.app.add_subcommand('kdirstat', self.kdirstat, arg_synopsis='[FILE]...')
+        self.app.add_subcommand(
+            'kdirstat', self.kdirstat, arg_synopsis='[FILE]...')
         self.app.add_subcommand('diff', self.diff,
                                 arg_synopsis='[GENERATION1] GENERATION2')
         self.app.add_subcommand('nagios-last-backup-age',
