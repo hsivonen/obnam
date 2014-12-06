@@ -50,6 +50,9 @@ Bug fixes:
 * Michel Alexandre Salim fixed a Python 2.6 compatibility problem in
   the unit tests (use of `assertRaises` as a context manager).
 
+* Lars Kruse fixed a bug with backing up of overlapping backup roots
+  (e.g., / and /boot), given a test case by Adrien Clerc.
+
 Version 1.8, released 2014-05-13
 --------------------------------
 

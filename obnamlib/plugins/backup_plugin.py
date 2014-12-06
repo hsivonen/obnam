@@ -611,6 +611,12 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
             self.root_metadata = self.fs.lstat(absroot)
 
+            # Create a list of other backup roots which should be
+            # ignored while traversing the filesystem.
+            other_roots = list(absroots)
+            while other_roots.count(absroot) > 0:
+                other_roots.remove(absroot)
+
             for pathname, metadata in self.find_files(absroot):
                 logging.info('Backing up %s' % pathname)
                 if not self.pretend:
@@ -627,7 +633,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                         if self.metadata_has_changed(gen, pathname, metadata):
                             self.progress.backed_up_count += 1
 
-                        self.backup_dir_contents(pathname)
+                        self.backup_dir_contents(pathname,
+                            no_delete_paths=other_roots)
                         self.backup_metadata(pathname, metadata)
                     else:
                         # Non-directories' progress can be updated
@@ -1055,12 +1062,20 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             share(chunkid)
             return chunkid
 
-    def backup_dir_contents(self, root):
-        '''Back up the list of files in a directory.'''
+    def backup_dir_contents(self, root, no_delete_paths=None):
+        '''Back up the list of files in a directory.
+
+        'no_delete_paths' may contain an optional list of path names that
+        should be ignored. Usually these should be other backup roots that are
+        processed separately.
+        '''
 
         tracing.trace('backup_dir: %s', root)
         if self.pretend:
             return
+
+        if no_delete_paths is None:
+            no_delete_paths = []
 
         new_basenames = self.fs.listdir(root)
         new_pathnames = [os.path.join(root, x) for x in new_basenames]
@@ -1079,7 +1094,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 except OSError:
                     pass
                 else:
-                    if not self.can_be_backed_up(old, st): 
+                    # remove paths that were excluded recently
+                    if (not old in no_delete_paths) and \
+                            (not self.can_be_backed_up(old, st)): 
                         self.repo.remove_file(self.new_generation, old)
 
         # Files that are created after the previous generation will be
