@@ -21,6 +21,10 @@ New features:
 
 * A start of a French translation of the manual by pedrito2.
 
+* Ian Cambell provided a new Obnam command, `obnam kdirstat`, which
+  makes the KDE `k4dirstat` utility be able to show graphically which
+  parts of a backup generation use most space.
+
 Minor changes:
 
 * The manual page and `obnam --help` are now clearer that the `--root`
