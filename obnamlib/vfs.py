@@ -480,7 +480,7 @@ class VfsTests(object): # pragma: no cover
         self.assertEqual(len(pairs[0]), 2)
         name, st = pairs[0]
         self.assertEqual(type(name), str)
-        self.assertEqual(name, funny)
+        self.assertEqual(name.decode('utf8'), funny.decode('utf8'))
         self.assert_(hasattr(st, 'st_mode'))
         self.assertFalse(hasattr(st, 'st_mtime'))
         self.assert_(hasattr(st, 'st_mtime_sec'))
