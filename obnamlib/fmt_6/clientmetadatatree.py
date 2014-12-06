@@ -268,10 +268,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     def get_is_checkpoint(self, genid):
         tree = self.find_generation(genid)
         key = self.genkey(self.GEN_IS_CHECKPOINT)
-        try:
-            return self._lookup_int(tree, key)
-        except KeyError:
-            return 0
+        return self._lookup_int(tree, key) or 0
 
     def remove_generation(self, genid):
         tracing.trace('genid=%s', genid)
