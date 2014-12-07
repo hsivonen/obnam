@@ -19,6 +19,7 @@ import errno
 import logging
 import os
 import stat
+import unicodedata
 import urlparse
 
 import obnamlib
@@ -473,14 +474,26 @@ class VfsTests(object): # pragma: no cover
         self.assertRaises(OSError, self.fs.listdir, 'foo')
 
     def test_listdir2_returns_name_stat_pairs(self):
-        funny = u'M\u00E4kel\u00E4'.encode('utf-8')
-        self.fs.write_file(funny, 'data')
+        funny_unicode = u'M\u00E4kel\u00E4'
+        funny_utf8 = funny_unicode.encode('utf-8')
+
+        self.fs.write_file(funny_utf8, 'data')
         pairs = self.fs.listdir2('.')
         self.assertEqual(len(pairs), 1)
         self.assertEqual(len(pairs[0]), 2)
-        name, st = pairs[0]
-        self.assertEqual(type(name), str)
-        self.assertEqual(name.decode('utf8'), funny.decode('utf8'))
+        name_utf8, st = pairs[0]
+
+        self.assertEqual(type(name_utf8), str)
+        name_unicode = name_utf8.decode('utf-8')
+
+        # See https://en.wikipedia.org/wiki/Unicode_equivalence for
+        # background. The NFKD normalisation seems to be the best way
+        # to ensure things work across Linux and Mac OS X both (their
+        # default normalisation for filenames is different).
+        self.assertEqual(
+            unicodedata.normalize('NFKD', name_unicode),
+            unicodedata.normalize('NFKD', funny_unicode))
+
         self.assert_(hasattr(st, 'st_mode'))
         self.assertFalse(hasattr(st, 'st_mtime'))
         self.assert_(hasattr(st, 'st_mtime_sec'))
