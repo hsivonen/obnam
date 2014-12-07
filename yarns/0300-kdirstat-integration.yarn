@@ -1,0 +1,25 @@
+kdirstat integration: producing kdirstat cache files
+====================================================
+
+Obnam implements an ls variant whose output format is compatible with
+the kdirstat cache format.
+
+Create a simple cache file
+--------------------------
+
+Here we create a simple backup and dump the output as a kdirstat cache
+file.
+
+    SCENARIO create and do a simple check of a kdirstat cache
+    GIVEN 10kB of new data in directory L
+    WHEN user U backs up directory L to repository R
+    AND user U creates a kdirstat cache file C of repository R
+    THEN first line of C matches [kdirstat 4.0 cache file]
+    AND for each file in directory L a line in the kdircache C matches it
+
+Validating the cache file
+-------------------------
+
+Sadly there seems to be no CLI usable program to read or validate the
+produced cache files. If there were we would do a more thorough test
+of the syntax here.

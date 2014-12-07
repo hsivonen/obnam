@@ -573,6 +573,11 @@ Does any line match?
     IMPLEMENTS THEN (\S+) matches (.*)$
     grep -E -e "$MATCH_2" -- "$DATADIR/$MATCH_1"
 
+Does first line match?
+
+    IMPLEMENTS THEN first line of (\S+) matches (.*)$
+    head -n1 "$DATADIR/$MATCH_1" | grep -E -e "$MATCH_2" --
+
 Do all lines match?
 
     IMPLEMENTS THEN all lines in (\S+) match (\S+)
@@ -628,3 +633,20 @@ Run the Nagios monitoring subcommand.
     IMPLEMENTS WHEN user (\S+) attempts nagios-last-backup-age against repository (\S+)
     attempt run_obnam "$MATCH_1" nagios-last-backup-age \
         -r "$DATADIR/$MATCH_2"
+
+kdirstat
+--------
+
+Create a kdirstat cache.
+
+    IMPLEMENTS WHEN user (\S+) creates a kdirstat cache file (\S+) of repository (\S+)
+    run_obnam "$MATCH_1" -r "$DATADIR/$MATCH_3" kdirstat > "$DATADIR/$MATCH_2"
+
+Check that the cache mentions each file in the repository. Since grep
+-E cannot specifically match a tab we check only for one character of
+whitespace.
+
+    IMPLEMENTS THEN for each file in directory (\S+) a line in the kdircache (\S+) matches it
+    find "$DATADIR/$MATCH_1" -type f | while read f ; do \
+        grep -E -e "^F[[:space:]]$f" "$DATADIR/$MATCH_2" || exit 1; \
+    done
