@@ -158,6 +158,8 @@ been specified, all changes between those two generations will be listed.
 .IP \(bu
 .B mount
 makes the backup repository available via a read-only FUSE filesystem.
+Each backup generation is visible as a subdirectory,
+named after the generation id.
 This means you can look at backed up data using normal tools,
 such as your GUI file manager,
 or command line tools such as

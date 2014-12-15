@@ -38,6 +38,9 @@ Minor changes:
 * Grammar and typo fixes for the obnam.1 manual page, from Jean
   Jordaan.
 
+* Tom Chiverton suggested a clarification to the manual page for
+  "obnam mount" to say that each generation is a subdirectory.
+
 Bug fixes:
 
 * The Obnam SFTP plugin would loop infinitely if it lost the
