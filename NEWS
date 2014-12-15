@@ -57,6 +57,9 @@ Bug fixes:
   would crash when there is an obscure problem and a B-tree code can't
   be found in the tree.
 
+* Tom Chiverton pointed out that the manual page was using "obnam
+  restore" instead of "obnam mount" in an example for "obnam mount".
+
 Version 1.8, released 2014-05-13
 --------------------------------
 

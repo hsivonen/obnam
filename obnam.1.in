@@ -587,7 +587,7 @@ option is necessary):
 .IP
 .nf
 mkdir my-repo
-obnam restore \-\-repository sftp://your.server/~/backups \\
+obnam mount \-\-repository sftp://your.server/~/backups \\
 \-\-to my-repo
 cp my-repo/latest/$HOME/myfile.txt
 fusermount -u my-repo
