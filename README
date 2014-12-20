@@ -136,8 +136,7 @@ Feedback
 
 I welcome bug fixes, enhancements, bug reports, suggestions,
 requests, and other feedback. I prefer e-mail the mailing list: see
-<http://listmaster.pepperfish.net/cgi-bin/mailman/listinfo/obnam-support-obnam.org>
-for instructions.
+<http://obnam.org/contact/> for details.
 
 It would be helpful if you can run `make clean check` before submitting
 a patch, but it is not strictly required.
