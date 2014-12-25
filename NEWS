@@ -63,6 +63,12 @@ Bug fixes:
 * Tom Chiverton pointed out that the manual page was using "obnam
   restore" instead of "obnam mount" in an example for "obnam mount".
 
+* The yarn test suite now runs FUSE tests (`obnam mount`) when
+  `fusermount` is available, rather than checking for membership in
+  the group `fuse`. The latter is a Debianism (fixed in Debian
+  `jessie`). This may result in the test suite not passing in Debian
+  `wheezy`.
+
 Version 1.8, released 2014-05-13
 --------------------------------
 

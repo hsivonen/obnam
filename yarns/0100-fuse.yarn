@@ -6,7 +6,7 @@ There's a lot of potential corner cases here, but for now, this
 test suite concentrates on verifying that at least the basics work.
 
     SCENARIO Browsing backups with FUSE plugin
-    ASSUMING user is in group fuse
+    ASSUMING user can use FUSE
     AND extended attributes are allowed for users
     GIVEN directory L with interesting filesystem objects
     AND a manifest of L in M
@@ -37,7 +37,7 @@ only read the first 64 kilobytes of a file. Verify that this is no
 longer a problem.
 
     SCENARIO restoring a big file with FUSE
-    ASSUMING user is in group fuse
+    ASSUMING user can use FUSE
     GIVEN 1M of data in file L/big.dat
     AND a manifest of L in M
     WHEN user U backs up directory L to repository R

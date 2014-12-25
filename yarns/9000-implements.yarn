@@ -606,11 +606,14 @@ Some tests won't work correctly when `root` is running them.
     IMPLEMENTS ASSUMING not running as root
     test "$(id -u)" != 0
 
-Some tests, such as those for the FUSE plugin, require the user to be
-in a specific group.
+For testing FUSE stuff, we need to check that the relevant stuff is
+avaialble. Previously, we did this by checking that the user running
+the test suite was in the group `fuse`, but that turns out to have
+been a Debianism (removed in the Debian `jessie` release). A better
+check is to check that the `fusermount` command is available.
 
-    IMPLEMENTS ASSUMING user is in group (\S+)
-    groups | tr ' ' '\n' | grep -Fx "$MATCH_1"
+    IMPLEMENTS ASSUMING user can use FUSE
+    command -v fusermount
 
 
 Check on whether user extended attributes work
