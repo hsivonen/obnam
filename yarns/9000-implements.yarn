@@ -612,8 +612,49 @@ the test suite was in the group `fuse`, but that turns out to have
 been a Debianism (removed in the Debian `jessie` release). A better
 check is to check that the `fusermount` command is available.
 
+However, if we're on Debian and on a version prior to 8.0, we need to
+also be in the `fuse` group. (This can be dropped after support for
+those versions of Debian is dropped from Obnam, probably around first
+or second quarter of 2015.)
+
     IMPLEMENTS ASSUMING user can use FUSE
-    command -v fusermount
+
+    # We _must_ have fusermount in any case.
+    if ! command -v fusermount
+    then
+        echo "No fusermount found. User cannot use FUSE without it." 1>&2
+        exit 1
+    fi
+    echo "fusermount found"
+
+    # Are we on Debian? If so, /etc/debian_version exists.
+    # If it doesn't, we're done.
+    if [ ! -e /etc/debian_version ]
+    then
+        echo "We are not on Debian. User can use FUSE."
+        exit 0
+    fi
+
+    # Read /etc/debian_version, and interpret it as a floating point
+    # number, and compare it to 8.0. Prior to 8.0, we need to be in
+    # the fuse group as well.
+    if awk '($0 + 0.0) < 8.0 { exit 0 } END { exit 1 }' /etc/debian_version
+    then
+        echo "We're on Debian prior to 8.0."
+        if groups | tr ' ' '\n' | grep -Fx fuse
+        then
+            echo "User is in group fuse."
+        else
+            echo "User is NOT in group fuse. User can't use FUSE."
+            exit 1
+        fi
+    else
+        echo "We're on Debian 8.0 or later."
+    fi
+
+    # We're good.
+    echo "User can use FUSE."
+    exit 0
 
 
 Check on whether user extended attributes work
