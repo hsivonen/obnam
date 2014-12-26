@@ -21,6 +21,7 @@ import os
 import pwd
 import stat
 import struct
+import sys
 import tracing
 
 import obnamlib
@@ -253,11 +254,12 @@ def set_metadata(fs, filename, metadata,
     '''Set metadata for a filesystem entry.
 
     We only set metadata that can sensibly be set: st_atime, st_mode,
-    st_mtime. We also attempt to set ownership (st_gid, st_uid), but
-    only if we're running as root. We ignore the username, groupname
-    fields: we assume the caller will change st_uid, st_gid accordingly
-    if they want to mess with things. This makes the user take care
-    of error situations and looking up user preferences.
+    st_mtime. We also attempt to set ownership st_uid, st_gid), if
+    running as root, otherwise only st_gid is attempted ignoring failures.
+    We ignore the username, groupname fields: we assume the caller
+    will change st_uid, st_gid accordingly if they want to mess with
+    things. This makes the user take care of error situations and
+    looking up user preferences.
 
     Raise SetMetadataError if setting any metadata fails.
 
@@ -275,6 +277,14 @@ def set_metadata(fs, filename, metadata,
         _set_something(
             filename, 'uid and gid',
             lambda: fs.lchown(filename, metadata.st_uid, metadata.st_gid))
+    else:
+        # normal users can set the group if they are in the group, try to
+        # restore the group, ignoring any errors
+        try:
+            uid = -1 # no change to user
+            fs.lchown(filename, uid, metadata.st_gid)
+        except (OSError), e:
+            sys.exc_clear()
 
     # If we are not the owner, and not root, do not restore setuid/setgid,
     # unless explicitly told to do so.
