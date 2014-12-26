@@ -50,8 +50,8 @@ def get_obnam_errors(module):
     return [x for x in objs if is_obnam_error(x)]
 
 
-def get_obnam_errors_recursively(module):
-    modules = get_modules_recursively(obnamlib)
+def get_obnam_errors_recursively(root_module):
+    modules = get_modules_recursively(root_module)
     errors = set()
     for module in modules:
         for error in get_obnam_errors(module):
