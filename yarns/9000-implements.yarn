@@ -627,6 +627,17 @@ or second quarter of 2015.)
     fi
     echo "fusermount found"
 
+    # We also must be able to read from /dev/fuse. It might not exist,
+    # and if it does, the kernel module providing it might not be
+    # loaded. So we read 0 bytes from it, and if that works, it should
+    # be OK.
+    if ! dd if=/dev/fuse of=/dev/null bs=1 count=0
+    then
+        echo "Can't read from /dev/null. User can't use FUSE." 1>&2
+        exit 1
+    fi
+    echo "Can read from /dev/fuse."
+
     # Are we on Debian? If so, /etc/debian_version exists.
     # If it doesn't, we're done.
     if [ ! -e /etc/debian_version ]
