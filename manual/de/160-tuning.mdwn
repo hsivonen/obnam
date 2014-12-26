@@ -1,0 +1,9 @@
+# Performance-Tuning
+
+In diesem Kapitel werden verschiedene Möglichkeiten zur Optimierung der
+Geschwindigeit in verschiedenen Situationen aufgezeigt.
+Es behandelt verschiedene Optionen welche den Speicherverbrauch und die
+CPU-Belastung betreffen sowie Hinweise wie selbst die "richtigen"
+Einstellungen gefunden werden können.
+
+Für den Anfang lesen Sie bitte <http://obnam.org/faq/tuning/>.

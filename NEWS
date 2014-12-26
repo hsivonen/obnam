@@ -44,6 +44,9 @@ Minor changes:
 * David Fries changed restore to set the group ownership if possible
   even when not root.  No warnings are issued if the attempt fails.
 
+* Jan Niggemann added a little to the German translation of the Obnam
+  manual.
+
 Bug fixes:
 
 * The Obnam SFTP plugin would loop infinitely if it lost the
