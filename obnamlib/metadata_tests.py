@@ -171,8 +171,11 @@ class SetMetadataTests(unittest.TestCase):
         self.metadata.st_mode = 42 | stat.S_IFREG
         self.metadata.st_mtime_sec = 10**9
         self.metadata.st_mtime_nsec = 0
-        self.metadata.st_uid = 1234
+        # make sure the uid/gid magic numbers aren't the current users
+        self.metadata.st_uid = os.getuid() + 1234
         self.metadata.st_gid = 5678
+        while self.metadata.st_gid in os.getgroups():
+            self.metadata.st_gid += 1
 
         fd, self.filename = tempfile.mkstemp()
         os.close(fd)
@@ -196,8 +199,17 @@ class SetMetadataTests(unittest.TestCase):
         os.remove(self.filename)
 
     def fake_lchown(self, filename, uid, gid):
-        self.uid_set = uid
-        self.gid_set = gid
+        # lchown(2) If the owner or group is specified as -1,
+        # then that ID is not changed.
+        # fake_lchown assumes it is running as root and it succeeds
+        if uid != -1:
+            self.uid_set = uid
+        if gid != -1:
+            self.gid_set = gid
+
+    def oserror_lchown(self, filename, uid, gid):
+        self.oserror_lchown_called = True
+        raise OSError("fake permission denied")
 
     def test_sets_atime(self):
         self.assertEqual(self.st.st_atime, self.metadata.st_atime_sec)
@@ -209,10 +221,7 @@ class SetMetadataTests(unittest.TestCase):
         self.assertEqual(self.st.st_mtime, self.metadata.st_mtime_sec)
 
     def test_does_not_set_uid_when_not_running_as_root(self):
-        self.assertEqual(self.st.st_uid, os.getuid())
-
-    def test_does_not_set_gid_when_not_running_as_root(self):
-        self.assertEqual(self.st.st_gid, os.getgid())
+        self.assertEqual(self.uid_set, None)
 
     def test_sets_uid_when_running_as_root(self):
         obnamlib.set_metadata(self.fs, self.filename, self.metadata,
@@ -223,6 +232,24 @@ class SetMetadataTests(unittest.TestCase):
         obnamlib.set_metadata(self.fs, self.filename, self.metadata,
                               getuid=lambda: 0)
         self.assertEqual(self.gid_set, self.metadata.st_gid)
+
+    def test_catches_lchown_throw(self):
+        self.fs.lchown = self.oserror_lchown
+        obnamlib.set_metadata(self.fs, self.filename, self.metadata)
+        self.assert_(self.oserror_lchown_called)
+        self.fs.lchown = self.fake_lchown
+
+    def test_sets_gid_when_not_running_as_root(self):
+        # Root can set it to any group, non-root can only set it to a group
+        # they are part of.  Set it with the real lchown and check the file.
+        # Generally only meaningful if the user is in multiple groups.
+        self.fs.lchown = os.lchown
+        for gid in os.getgroups():
+            self.metadata.st_gid = gid
+            obnamlib.set_metadata(self.fs, self.filename, self.metadata)
+            self.st = os.stat(self.filename)
+            self.assertEqual(self.st.st_gid, gid)
+        self.fs.lchown = self.fake_lchown
 
     def test_sets_symlink_target(self):
         self.fs.remove(self.filename)
