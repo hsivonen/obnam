@@ -18,9 +18,14 @@
 
 
 import collections
+import imp
 import inspect
+import os
+
+import cliapp
 
 import obnamlib
+import obnamlib.plugins
 
 
 def get_modules(module):
@@ -50,22 +55,32 @@ def get_obnam_errors(module):
     return [x for x in objs if is_obnam_error(x)]
 
 
-def get_obnam_errors_recursively(root_module):
-    modules = get_modules_recursively(root_module)
-    errors = set()
-    for module in modules:
-        for error in get_obnam_errors(module):
-            errors.add(error)
-    return errors
+all_modules = get_modules_recursively(obnamlib)
+
+# This is a bit of magic to load all the modules that contain plugins.
+def find_plugin_modules(*args):
+    for module_filename in app.pluginmgr.plugin_files:
+        module_name, ext = os.path.splitext(os.path.basename(module_filename))
+        with open(module_filename) as f:
+            module = imp.load_module(module_name, f, module_filename,
+                                     ('.py', 'r', imp.PY_SOURCE))
+        all_modules.append(module)
 
 
-def dump(msg, things):
-    print msg
-    for x in things:
-        print '  ', repr(x)
+# This is a terrible kludge.
+app = obnamlib.App()
+app.process_args = find_plugin_modules
+app.run()
 
+template = '''\
+{id} ({class_name}): {msg}
+'''
 
-
-for error_class in get_obnam_errors_recursively(obnamlib):
-    e = error_class()
-    print e.id, e.msg
+for module in set(all_modules):
+    for error_class in get_obnam_errors(module):
+        e = error_class()
+        print template.format(
+            class_name=error_class.__name__,
+            id=e.id,
+            msg=e.msg,
+        ),
