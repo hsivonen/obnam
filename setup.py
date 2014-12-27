@@ -215,7 +215,7 @@ class Check(Command):
 
     def copylint_is_available(self):
         returncode, stdout, stderr = cliapp.runcmd_unchecked(
-            ['copyright-statement-lint', '--help'])
+            ['sh', '-c', 'command -v copyright-statement-lint'])
         return returncode == 0
 
     def find_all_source_files(self):
