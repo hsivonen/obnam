@@ -23,9 +23,21 @@ class StructuredError(Exception):
 
     '''A structured error exception.
 
+    A structured exception is meant to specify highly specific errors
+    in its type. Rather than getting a formatted message string as its
+    initialiser argument (e.g., "raise Exception('Something went
+    wrong')"), the message is an attribute of the StructuredError
+    subclass. Each message gets a separate sub-class: instead of a few
+    fairly generic exceptions, you're expected to create very specific
+    ones. For example, instead of, say, InputOutputError, you might
+    define FileNotFoundError, or even ConfigFileDoesNotExistError, as
+    well as ConfigFilePermissionDeniedError. More specific exceptions
+    make it easier to handle specific error cases, whether by catching
+    only specific ones, or by grepping log files for them.
+
     Structured errors get a set of keyword arguments to the
     initialiser, and use them to fill in templates in a message string
-    provided by the exception class. In addition, each structured
+    attribute of the exception class. In addition, each structured
     exception has a unique ID, computed from the class name, which can
     be used, for example, as a user-visible error code. The ID is
     prepended to the message. The ID could also be used to look up
