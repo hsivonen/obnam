@@ -54,7 +54,14 @@ class NoHostKeyOfWantedTypeError(obnamlib.ObnamError):
 
 class WrongHostKeyError(obnamlib.ObnamError):
 
-    msg = 'SSH server {hostname} offered wrong public key'
+    msg = '''SSH server {hostname} offered wrong public key
+
+    Note that this may due to an obsolete host key in your "known hosts"
+    file. If so, use "ssh-key -R" to remove it. However, it can also be
+    a sign that someone is trying to hijack your connection to your
+    server, and you should be careful.
+
+    '''
 
 
 class KeyAuthenticationError(obnamlib.ObnamError):
@@ -74,7 +81,12 @@ class InvalidPortError(obnamlib.ObnamError):
 
 class HardlinkError(obnamlib.ObnamError):
 
-    msg = 'Cannot hardlink on SFTP; sorry'
+    msg = '''Cannot hardlink on SFTP; sorry
+
+    This is due to a limitation in the Python paramiko library that
+    Obnam uses for SSH/SFTP access.
+
+    '''
 
 
 def ioerror_to_oserror(method):

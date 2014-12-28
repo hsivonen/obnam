@@ -17,23 +17,43 @@
 
 
 import hashlib
+import textwrap
 
 
 class StructuredError(Exception):
 
     '''A structured error exception.
 
+    A structured exception is meant to specify highly specific errors
+    in its type. Rather than getting a formatted message string as its
+    initialiser argument (e.g., "raise Exception('Something went
+    wrong')"), the message is an attribute of the StructuredError
+    subclass. Each message gets a separate sub-class: instead of a few
+    fairly generic exceptions, you're expected to create very specific
+    ones. For example, instead of, say, InputOutputError, you might
+    define FileNotFoundError, or even ConfigFileDoesNotExistError, as
+    well as ConfigFilePermissionDeniedError. More specific exceptions
+    make it easier to handle specific error cases, whether by catching
+    only specific ones, or by grepping log files for them.
+
     Structured errors get a set of keyword arguments to the
     initialiser, and use them to fill in templates in a message string
-    provided by the exception class. In addition, each structured
+    attribute of the exception class. In addition, each structured
     exception has a unique ID, computed from the class name, which can
     be used, for example, as a user-visible error code. The ID is
     prepended to the message. The ID could also be used to look up
     translations, though that is not currently implemented. The ID
     will also make translated log files more greppable.
 
+    The msg attribute is a format string. It can be arbitrarily long.
+    The __str__ method returns the first line only, but the full
+    message can be retrieved using the formatted() method. The
+    convention is to have the first line be a short summary of the
+    problem, and have the full message provide additional, helpful
+    information to the user.
+
     The format string uses syntax according to the str.format
-    specification (not the old % interpolation), in order to easy
+    specification (not the old % interpolation), in order to ease
     eventual migration to Python 3.
 
     To use structured error exceptions, subclass this class for each
@@ -84,17 +104,40 @@ class StructuredError(Exception):
         return 'R{0}X'.format(hash.upper())
 
     def _format_msg(self, template):
+        # In case template is a docstring, remove leading whitespace
+        # from lines.
+        lines = template.splitlines(True)
+        if len(lines) == 0:
+            dedented = ''
+        else:
+            dedented = (textwrap.dedent(lines[0]) +
+                        textwrap.dedent(''.join(lines[1:])))
+ 
         try:
-            formatted_msg = template.format(**self.kwargs)
+            formatted_msg = dedented.format(**self.kwargs)
         except KeyError as e:
             # If there were any errors in the formatting of the message,
             # report them here. We do NOT want replace the actual error
             # message, because that would hide information from the user.
             # We do want to know there was an error, though.
             formatted_msg = '{0} (PROGRAMMING ERROR: {1} {2})'.format(
-                template, repr(e), repr(self.kwargs))
+                dedented, repr(e), repr(self.kwargs))
 
-        return '{0}: {1}'.format(self.id, formatted_msg)
+        formatted = '{0}: {1}'.format(self.id, formatted_msg)
+        return formatted.rstrip()
+
+    def formatted(self):
+        '''Return the full formatted message.
+
+        Note that the returned string will NOT end in whitespace. If
+        the format string ends in, say, a newline, it is stripped
+        away.
+
+        '''
+        return self._format_msg(self.msg)
 
     def __str__(self):
-        return self._format_msg(self.msg)
+        full = self.formatted()
+        lines = full.splitlines()
+        assert lines
+        return lines[0]

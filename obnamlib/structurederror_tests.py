@@ -23,12 +23,22 @@ import obnamlib
 
 class FirstError(obnamlib.StructuredError):
 
-    msg = 'first with parameter foo set to {foo}'
+    msg = '''first with parameter foo set to {foo}
+
+    This is some explanatory text.
+
+    '''
 
 
 class SecondError(obnamlib.StructuredError):
 
     msg = 'second'
+
+
+class EmptyError(obnamlib.StructuredError):
+
+    msg = ''
+
 
 
 class StructuredErrorTests(unittest.TestCase):
@@ -49,3 +59,20 @@ class StructuredErrorTests(unittest.TestCase):
     def test_returns_error_string_even_with_lacking_keywords(self):
         first = FirstError()
         self.assertTrue(first.id in str(first))
+
+    def test_str_returns_first_line_only(self):
+        first = FirstError()
+        self.assertNotIn('\n', str(first))
+
+    def test_formatted_returns_full_message(self):
+        first = FirstError()
+        self.assertIn('\n', first.formatted())
+
+    def test_formatted_message_does_not_end_in_whitespace(self):
+        first = FirstError()
+        formatted = first.formatted()
+        self.assertFalse(formatted[-1].isspace())
+
+    def test_handles_empty_message_string(self):
+        empty = EmptyError()
+        self.assertTrue(str(empty).rstrip().endswith(':'))
