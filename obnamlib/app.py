@@ -212,7 +212,7 @@ class App(cliapp.Application):
             sys.exit(1)
         except obnamlib.StructuredError as e:
             logging.critical(str(e))
-            sys.stderr.write('ERROR: %s\n' % str(e))
+            sys.stderr.write('ERROR: %s\n' % e.formatted())
             sys.exit(1)
 
     def setup_ttystatus(self):
