@@ -17,6 +17,7 @@
 
 
 import hashlib
+import textwrap
 
 
 class StructuredError(Exception):
@@ -43,6 +44,13 @@ class StructuredError(Exception):
     prepended to the message. The ID could also be used to look up
     translations, though that is not currently implemented. The ID
     will also make translated log files more greppable.
+
+    The msg attribute is a format string. It can be arbitrarily long.
+    The __str__ method returns the first line only, but the full
+    message can be retrieved using the formatted() method. The
+    convention is to have the first line be a short summary of the
+    problem, and have the full message provide additional, helpful
+    information to the user.
 
     The format string uses syntax according to the str.format
     specification (not the old % interpolation), in order to ease
@@ -96,17 +104,33 @@ class StructuredError(Exception):
         return 'R{0}X'.format(hash.upper())
 
     def _format_msg(self, template):
+        # In case template is a docstring, remove leading whitespace
+        # from lines.
+        lines = template.splitlines(True)
+        if len(lines) == 0:
+            dedented = ''
+        else:
+            dedented = (textwrap.dedent(lines[0]) +
+                        textwrap.dedent(''.join(lines[1:])))
+ 
         try:
-            formatted_msg = template.format(**self.kwargs)
+            formatted_msg = dedented.format(**self.kwargs)
         except KeyError as e:
             # If there were any errors in the formatting of the message,
             # report them here. We do NOT want replace the actual error
             # message, because that would hide information from the user.
             # We do want to know there was an error, though.
             formatted_msg = '{0} (PROGRAMMING ERROR: {1} {2})'.format(
-                template, repr(e), repr(self.kwargs))
+                dedented, repr(e), repr(self.kwargs))
 
         return '{0}: {1}'.format(self.id, formatted_msg)
 
-    def __str__(self):
+    def formatted(self):
+        '''Return the full formatted message.'''
         return self._format_msg(self.msg)
+
+    def __str__(self):
+        full = self.formatted()
+        lines = full.splitlines()
+        assert lines
+        return lines[0]
