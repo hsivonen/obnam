@@ -22,7 +22,7 @@ import obnamlib
 
 class RepositoryAccessError(obnamlib.ObnamError):
 
-    msg = 'Repository does not exist or cannot be accessed:\n{error}'
+    msg = 'Repository does not exist or cannot be accessed: {error}'
 
 
 class ForceLockPlugin(obnamlib.ObnamPlugin):

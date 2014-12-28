@@ -31,7 +31,11 @@ class WrongNumberOfGenerationSettingsError(obnamlib.ObnamError):
 
 class RestoreErrors(obnamlib.ObnamError):
 
-    msg = 'There were errors when restoring'
+    msg = '''There were errors when restoring
+
+    See previous error messages for details.
+
+    '''
 
 
 class Hardlinks(object):
