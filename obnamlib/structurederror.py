@@ -45,7 +45,7 @@ class StructuredError(Exception):
     will also make translated log files more greppable.
 
     The format string uses syntax according to the str.format
-    specification (not the old % interpolation), in order to easy
+    specification (not the old % interpolation), in order to ease
     eventual migration to Python 3.
 
     To use structured error exceptions, subclass this class for each
