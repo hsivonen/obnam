@@ -123,10 +123,17 @@ class StructuredError(Exception):
             formatted_msg = '{0} (PROGRAMMING ERROR: {1} {2})'.format(
                 dedented, repr(e), repr(self.kwargs))
 
-        return '{0}: {1}'.format(self.id, formatted_msg)
+        formatted = '{0}: {1}'.format(self.id, formatted_msg)
+        return formatted.rstrip()
 
     def formatted(self):
-        '''Return the full formatted message.'''
+        '''Return the full formatted message.
+
+        Note that the returned string will NOT end in whitespace. If
+        the format string ends in, say, a newline, it is stripped
+        away.
+
+        '''
         return self._format_msg(self.msg)
 
     def __str__(self):

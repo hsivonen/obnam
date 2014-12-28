@@ -68,6 +68,11 @@ class StructuredErrorTests(unittest.TestCase):
         first = FirstError()
         self.assertIn('\n', first.formatted())
 
+    def test_formatted_message_does_not_end_in_whitespace(self):
+        first = FirstError()
+        formatted = first.formatted()
+        self.assertFalse(formatted[-1].isspace())
+
     def test_handles_empty_message_string(self):
         empty = EmptyError()
         self.assertTrue(str(empty).rstrip().endswith(':'))
