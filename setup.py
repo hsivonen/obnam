@@ -168,6 +168,9 @@ class Check(Command):
         if self.yarns and got_yarn:
             runcmd(
                 ['yarn', '-s', 'yarns/obnam.sh'] +
+                ['--env',
+                 'REPOSITORY_FORMAT=' +
+                 os.environ.get('REPOSITORY_FORMAT', '6')] +
                 glob.glob('yarns/*.yarn'))
 
         num_clients = '2'
