@@ -219,7 +219,7 @@ class App(cliapp.Application):
             sys.stderr.write('ERROR: %s\n' % str(e))
             sys.exit(1)
         except obnamlib.StructuredError as e:
-            logging.critical(str(e))
+            logging.critical(str(e), exc_info=True)
             sys.stderr.write('ERROR: %s\n' % e.formatted())
             sys.exit(1)
 
