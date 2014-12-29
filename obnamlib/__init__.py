@@ -160,6 +160,14 @@ from repo_interface import (
 
 from repo_dummy import RepositoryFormatDummy
 
+
+#
+# Repository format simple specific modules.
+#
+
+from fmt_simple import RepositoryFormatSimple
+
+
 #
 # Repository format 6 specific modules.
 #
