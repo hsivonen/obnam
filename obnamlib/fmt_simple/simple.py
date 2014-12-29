@@ -39,7 +39,7 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
         self._fs = fs
 
     def init_repo(self):
-        raise NotImplementedError()
+        pass
 
     def close(self):
         raise NotImplementedError()
