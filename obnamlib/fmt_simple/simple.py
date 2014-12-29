@@ -485,7 +485,7 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
 
     format = 'simple'
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         self._client_list = SimpleClientList()
         self._chunk_store = ChunkStore()
         self._chunk_indexes = ChunkIndexes()
