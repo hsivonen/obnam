@@ -30,13 +30,13 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
     format = 'simple'
 
     def __init__(self, **kwargs):
-        pass
+        self._fs = None
 
     def get_fs(self):
-        raise NotImplementedError()
+        return self._fs
 
     def set_fs(self, fs):
-        raise NotImplementedError()
+        self._fs = fs
 
     def init_repo(self):
         raise NotImplementedError()
