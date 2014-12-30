@@ -157,6 +157,24 @@ class SimpleClientList(SimpleToplevel):
         del clients[client_name]
         self._data['clients'] = clients
 
+    def rename_client(self, old_client_name, new_client_name):
+        if not self._lock.got_lock:
+            raise obnamlib.RepositoryClientListNotLocked()
+
+        clients = self._data.get('clients', {})
+
+        if old_client_name not in clients:
+            raise obnamlib.RepositoryClientDoesNotExist(
+                client_name=old_client_name)
+
+        if new_client_name in clients:
+            raise obnamlib.RepositoryClientAlreadyExists(
+                client_name=new_client_name)
+
+        clients[new_client_name] = clients[old_client_name]
+        del clients[old_client_name]
+        self._data['clients'] = clients
+
 
 class RepositoryFormatSimple(obnamlib.RepositoryInterface):
 
@@ -218,7 +236,7 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
         self._client_list.remove_client(client_name)
 
     def rename_client(self, old_client_name, new_client_name):
-        raise NotImplementedError()
+        self._client_list.rename_client(old_client_name, new_client_name)
 
     def get_client_encryption_key_id(self, client_name):
         raise NotImplementedError()
