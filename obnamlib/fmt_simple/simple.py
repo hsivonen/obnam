@@ -44,6 +44,10 @@ class SimpleLock(object):
         self._lockmgr.unlock([self._lock_name])
         self.got_lock = False
 
+    def force(self):
+        if self._lockmgr.is_locked(self._lock_name):
+            self.unchecked_unlock()
+
 
 class SimpleData(object):
 
@@ -129,6 +133,10 @@ class SimpleClientList(SimpleToplevel):
             raise obnamlib.RepositoryClientListNotLocked()
         self._data.save()
         self._lock.unchecked_unlock()
+
+    def force_lock(self):
+        self._lock.force()
+        self._data.clear()
 
     def get_client_names(self):
         return self._data.get('clients', {}).keys()
@@ -227,7 +235,7 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
         return self._client_list.got_lock
 
     def force_client_list_lock(self):
-        raise NotImplementedError()
+        return self._client_list.force_lock()
 
     def add_client(self, client_name):
         self._client_list.add_client(client_name)
