@@ -27,25 +27,25 @@ class SimpleLock(object):
 
     def __init__(self):
         self._lockmgr = None
-        self._lock_name = None
+        self._dirname = None
         self.got_lock = False
 
     def set_lock_manager(self, lockmgr):
         self._lockmgr = lockmgr
 
-    def set_lock_pathname(self, lock_name):
-        self._lock_name = lock_name
+    def set_dirname(self, dirname):
+        self._dirname = dirname
 
     def unchecked_lock(self):
-        self._lockmgr.lock([self._lock_name])
+        self._lockmgr.lock([self._dirname])
         self.got_lock = True
 
     def unchecked_unlock(self):
-        self._lockmgr.unlock([self._lock_name])
+        self._lockmgr.unlock([self._dirname])
         self.got_lock = False
 
     def force(self):
-        if self._lockmgr.is_locked(self._lock_name):
+        if self._lockmgr.is_locked(self._dirname):
             self.unchecked_unlock()
 
 
@@ -99,7 +99,7 @@ class SimpleToplevel(object):
         self._data.set_fs(fs)
 
     def set_dirname(self, dirname):
-        self._lock.set_lock_pathname(os.path.join(dirname, 'lock'))
+        self._lock.set_dirname(dirname)
         self._data.set_data_pathname(os.path.join(dirname, 'data.yaml'))
 
     def set_lock_manager(self, lockmgr):
