@@ -18,6 +18,8 @@
 
 import os
 
+import yaml
+
 import obnamlib
 
 
