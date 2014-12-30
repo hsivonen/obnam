@@ -144,6 +144,18 @@ class SimpleClientList(SimpleToplevel):
         clients[client_name] = {}
         self._data['clients'] = clients
 
+    def remove_client(self, client_name):
+        if not self._lock.got_lock:
+            raise obnamlib.RepositoryClientListNotLocked()
+
+        clients = self._data.get('clients', {})
+        if client_name not in clients:
+            raise obnamlib.RepositoryClientDoesNotExist(
+                client_name=client_name)
+
+        del clients[client_name]
+        self._data['clients'] = clients
+
 
 class RepositoryFormatSimple(obnamlib.RepositoryInterface):
 
@@ -202,7 +214,7 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
         self._client_list.add_client(client_name)
 
     def remove_client(self, client_name):
-        raise NotImplementedError()
+        self._client_list.remove_client(client_name)
 
     def rename_client(self, old_client_name, new_client_name):
         raise NotImplementedError()
