@@ -48,9 +48,9 @@ class SimpleLock(object):
 class SimpleData(object):
 
     def __init__(self):
-        self._fs = {}
+        self._fs = None
         self._data_name = None
-        self._obj = None
+        self._obj = {}
 
     def set_fs(self, fs):
         self._fs = fs
@@ -107,6 +107,10 @@ class SimpleClientList(SimpleToplevel):
     def __init__(self):
         SimpleToplevel.__init__(self)
         self.set_dirname('client-list')
+
+    @property
+    def got_lock(self):
+        return self._lock.got_lock
 
     def lock(self):
         if self._lock.got_lock:
