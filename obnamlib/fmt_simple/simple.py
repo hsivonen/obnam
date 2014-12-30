@@ -121,6 +121,7 @@ class SimpleClientList(SimpleToplevel):
     def unlock(self):
         if not self._lock.got_lock:
             raise obnamlib.RepositoryClientListNotLocked()
+        self._data.clear()
         self._lock.unchecked_unlock()
 
     def commit(self):
