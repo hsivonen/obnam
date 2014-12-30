@@ -42,7 +42,7 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
         pass
 
     def close(self):
-        raise NotImplementedError()
+        pass
 
     def get_client_names(self):
         raise NotImplementedError()
