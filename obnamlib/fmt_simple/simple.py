@@ -145,23 +145,19 @@ class SimpleClientList(SimpleToplevel):
         if not self._lock.got_lock:
             raise obnamlib.RepositoryClientListNotLocked()
 
-        clients = self._data.get('clients', {})
-        if client_name in clients:
-            raise obnamlib.RepositoryClientAlreadyExists(
-                client_name=client_name)
+        self._require_client_does_not_exist(client_name)
 
+        clients = self._data.get('clients', {})
         clients[client_name] = {}
         self._data['clients'] = clients
-
+        
     def remove_client(self, client_name):
         if not self._lock.got_lock:
             raise obnamlib.RepositoryClientListNotLocked()
 
-        clients = self._data.get('clients', {})
-        if client_name not in clients:
-            raise obnamlib.RepositoryClientDoesNotExist(
-                client_name=client_name)
+        self._require_client_exists(client_name)
 
+        clients = self._data.get('clients', {})
         del clients[client_name]
         self._data['clients'] = clients
 
@@ -169,19 +165,23 @@ class SimpleClientList(SimpleToplevel):
         if not self._lock.got_lock:
             raise obnamlib.RepositoryClientListNotLocked()
 
+        self._require_client_exists(old_client_name)
+        self._require_client_does_not_exist(new_client_name)
+
         clients = self._data.get('clients', {})
-
-        if old_client_name not in clients:
-            raise obnamlib.RepositoryClientDoesNotExist(
-                client_name=old_client_name)
-
-        if new_client_name in clients:
-            raise obnamlib.RepositoryClientAlreadyExists(
-                client_name=new_client_name)
-
         clients[new_client_name] = clients[old_client_name]
         del clients[old_client_name]
         self._data['clients'] = clients
+
+    def _require_client_exists(self, client_name):
+        if client_name not in self._data.get('clients', {}):
+            raise obnamlib.RepositoryClientDoesNotExist(
+                client_name=client_name)
+
+    def _require_client_does_not_exist(self, client_name):
+        if client_name in self._data.get('clients', {}):
+            raise obnamlib.RepositoryClientAlreadyExists(
+                client_name=client_name)
 
 
 class RepositoryFormatSimple(obnamlib.RepositoryInterface):
