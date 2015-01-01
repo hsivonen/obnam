@@ -54,6 +54,7 @@ class SimpleData(object):
     def __init__(self):
         self._fs = None
         self._data_name = None
+        self._obj_is_loaded = False
         self._obj = {}
 
     def set_fs(self, fs):
@@ -63,10 +64,15 @@ class SimpleData(object):
         self._data_name = data_name
 
     def load(self):
-        if self._obj is not None and self._fs.exists(self._data_name):
+        if not self._obj_is_loaded and self._fs.exists(self._data_name):
             f = self._fs.open(self._data_name, 'rb')
             self._obj = yaml.safe_load(f)
             f.close()
+
+        # We always mark _obj as loaded so that if the file appears
+        # later, that doesn't cause any changes to _obj to
+        # mysteriously disappear.
+        self._obj_is_loaded = True
 
     def save(self):
         f = self._fs.open(self._data_name, 'wb')
@@ -75,6 +81,7 @@ class SimpleData(object):
 
     def clear(self):
         self._obj = {}
+        self._obj_is_loaded = False
 
     def __getitem__(self, key):
         self.load()
