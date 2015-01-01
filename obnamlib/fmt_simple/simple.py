@@ -215,6 +215,9 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
     def close(self):
         pass
 
+    def get_fsck_work_items(self):
+        raise NotImplementedError()
+
     #
     # Client list methods.
     #
@@ -389,7 +392,4 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
         raise NotImplementedError()
 
     def validate_chunk_content(self, chunk_id):
-        raise NotImplementedError()
-
-    def get_fsck_work_items(self):
         raise NotImplementedError()
