@@ -230,7 +230,7 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
         pass
 
     def get_fsck_work_items(self):
-        raise NotImplementedError()
+        pass
 
     #
     # Client list methods.
