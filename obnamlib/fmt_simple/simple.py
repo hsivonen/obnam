@@ -108,13 +108,10 @@ class SimpleToplevel(object):
 
 class SimpleClientList(SimpleToplevel):
 
-    # We store the client list in JSON as follows:
+    # We store the client list in YAML as follows:
     #
-    #   {
-    #       "clients": {
-    #           "foo": {}
-    #       }
-    #   }
+    #   clients:
+    #     foo: {}
     #
     # Above, the client name is foo.
 
