@@ -219,15 +219,35 @@ class SimpleChunkStore(object):
                     continue
                 raise
             else:
-                break
+                return chunk_id
 
-        return chunk_id
+    def get_chunk_content(self, chunk_id):
+        filename = self._chunk_filename(chunk_id)
+        return self._fs.cat(filename)
+
+    def has_chunk(self, chunk_id):
+        filename = self._chunk_filename(chunk_id)
+        return self._fs.exists(filename)
+
+    def remove_chunk(self, chunk_id):
+        filename = self._chunk_filename(chunk_id)
+        self._fs.remove(filename)
+
+    def get_chunk_ids(self):
+        basenames = self._fs.listdir(self._dirname)
+        return [
+            self._parse_chunk_filename(x)
+            for x in basenames
+            if x.endswith('.chunk')]
 
     def _random_chunk_id(self):
         return random.randint(0, obnamlib.MAX_ID)
 
     def _chunk_filename(self, chunk_id):
         return os.path.join(self._dirname, '%d.chunk' % chunk_id)
+
+    def _parse_chunk_filename(self, filename):
+        return int(filename[:-len('.chunk')])
 
 
 class RepositoryFormatSimple(obnamlib.RepositoryInterface):
@@ -400,19 +420,19 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
     #
 
     def put_chunk_content(self, content):
-        self._chunk_store.put_chunk_content(content)
+        return self._chunk_store.put_chunk_content(content)
 
     def get_chunk_content(self, chunk_id):
-        raise NotImplementedError()
+        return self._chunk_store.get_chunk_content(chunk_id)
 
     def has_chunk(self, chunk_id):
-        raise NotImplementedError()
+        return self._chunk_store.has_chunk(chunk_id)
 
     def remove_chunk(self, chunk_id):
-        raise NotImplementedError()
+        return self._chunk_store.remove_chunk(chunk_id)
 
     def get_chunk_ids(self):
-        raise NotImplementedError()
+        return self._chunk_store.get_chunk_ids()
 
     #
     # Chunk indexes methods.
