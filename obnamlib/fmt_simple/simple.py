@@ -256,7 +256,7 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
         raise NotImplementedError()
 
     #
-    # Other methods
+    # Per-client methods.
     #
 
     def client_is_locked(self, client_name):
@@ -346,6 +346,10 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
     def get_file_children(self, generation_id, filename):
         raise NotImplementedError()
 
+    #
+    # Chunk storage methods.
+    #
+
     def put_chunk_content(self, content):
         raise NotImplementedError()
 
@@ -360,6 +364,10 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
 
     def get_chunk_ids(self):
         raise NotImplementedError()
+
+    #
+    # Chunk indexes methods.
+    #
 
     def lock_chunk_indexes(self):
         raise NotImplementedError()
