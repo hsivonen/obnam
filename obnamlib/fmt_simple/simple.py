@@ -108,6 +108,16 @@ class SimpleToplevel(object):
 
 class SimpleClientList(SimpleToplevel):
 
+    # We store the client list in JSON as follows:
+    #
+    #   {
+    #       "clients": {
+    #           "foo": {}
+    #       }
+    #   }
+    #
+    # Above, the client name is foo.
+
     def __init__(self):
         SimpleToplevel.__init__(self)
         self.set_dirname('client-list')
