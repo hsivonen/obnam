@@ -17,6 +17,7 @@
 
 
 import os
+import random
 
 import yaml
 
@@ -198,6 +199,37 @@ class SimpleClientList(SimpleToplevel):
                 client_name=client_name)
 
 
+class SimpleChunkStore(object):
+
+    def __init__(self):
+        self._fs = None
+        self._dirname = 'chunk-store'
+
+    def set_fs(self, fs):
+        self._fs = fs
+
+    def put_chunk_content(self, content):
+        while True:
+            chunk_id = self._random_chunk_id()
+            filename = self._chunk_filename(chunk_id)
+            try:
+                self._fs.write_file(filename, content)
+            except OSError, e: # pragma: no cover
+                if e.errno == errno.EEXIST:
+                    continue
+                raise
+            else:
+                break
+
+        return chunk_id
+
+    def _random_chunk_id(self):
+        return random.randint(0, obnamlib.MAX_ID)
+
+    def _chunk_filename(self, chunk_id):
+        return os.path.join(self._dirname, '%d.chunk' % chunk_id)
+
+
 class RepositoryFormatSimple(obnamlib.RepositoryInterface):
 
     '''Simplistic repository format as an example.
@@ -212,6 +244,7 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
         self._fs = None
         self._lock_timeout = kwargs.get('lock_timeout', 0)
         self._client_list = SimpleClientList()
+        self._chunk_store = SimpleChunkStore()
 
     def get_fs(self):
         return self._fs
@@ -222,6 +255,8 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
 
         self._client_list.set_fs(self._fs)
         self._client_list.set_lock_manager(self._lockmgr)
+
+        self._chunk_store.set_fs(fs)
 
     def init_repo(self):
         pass
@@ -365,7 +400,7 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
     #
 
     def put_chunk_content(self, content):
-        raise NotImplementedError()
+        self._chunk_store.put_chunk_content(content)
 
     def get_chunk_content(self, chunk_id):
         raise NotImplementedError()
