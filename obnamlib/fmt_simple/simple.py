@@ -49,6 +49,9 @@ class SimpleLock(object):
         if self._lockmgr.is_locked(self._dirname):
             self.unchecked_unlock()
 
+    def is_locked(self):
+        return self._lockmgr.is_locked(self._dirname)
+
 
 class SimpleData(object):
 
@@ -113,6 +116,10 @@ class SimpleToplevel(object):
     def set_lock_manager(self, lockmgr):
         self._lock.set_lock_manager(lockmgr)
 
+    @property
+    def got_lock(self):
+        return self._lock.got_lock
+
 
 class SimpleClientList(SimpleToplevel):
 
@@ -126,10 +133,6 @@ class SimpleClientList(SimpleToplevel):
     def __init__(self):
         SimpleToplevel.__init__(self)
         self.set_dirname('client-list')
-
-    @property
-    def got_lock(self):
-        return self._lock.got_lock
 
     def lock(self):
         if self._lock.got_lock:
@@ -199,6 +202,69 @@ class SimpleClientList(SimpleToplevel):
                 client_name=client_name)
 
 
+class SimpleClient(SimpleToplevel):
+
+    def __init__(self, client_name):
+        SimpleToplevel.__init__(self)
+        self.set_dirname(client_name)
+
+    def is_locked(self):
+        return self._lock.is_locked()
+
+    def lock(self):
+        if self._lock.got_lock:
+            raise obnamlib.RepositoryClientListLockingFailed()
+        self._lock.unchecked_lock()
+        self._data.clear()
+
+    def unlock(self):
+        if not self._lock.got_lock:
+            raise obnamlib.RepositoryClientListNotLocked()
+        self._data.clear()
+        self._lock.unchecked_unlock()
+
+    def commit(self):
+        if not self._lock.got_lock:
+            raise obnamlib.RepositoryClientListNotLocked()
+        self._data.save()
+        self._lock.unchecked_unlock()
+
+    def force_lock(self):
+        self._lock.force()
+        self._data.clear()
+
+
+class ClientFinder(object):
+
+    def __init__(self):
+        self._fs = None
+        self._lockmgr = None
+        self._client_list = None
+        self._clients = {}
+
+    def set_fs(self, fs):
+        self._fs = fs
+
+    def set_lock_manager(self, lockmgr):
+        self._lockmgr = lockmgr
+
+    def set_client_list(self, client_list):
+        self._client_list = client_list
+
+    def find_client(self, client_name):
+        if client_name not in self._client_list.get_client_names():
+            raise obnamlib.RepositoryClientDoesNotExist(
+                client_name=client_name)
+
+        if client_name not in self._clients:
+            client = SimpleClient(client_name)
+            client.set_fs(self._fs)
+            client.set_lock_manager(self._lockmgr)
+            self._clients[client_name] = client
+
+        return self._clients[client_name]
+
+
 class SimpleChunkStore(object):
 
     def __init__(self):
@@ -266,6 +332,9 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
         self._client_list = SimpleClientList()
         self._chunk_store = SimpleChunkStore()
 
+        self._client_finder = ClientFinder()
+        self._client_finder.set_client_list(self._client_list)
+
     def get_fs(self):
         return self._fs
 
@@ -275,6 +344,9 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
 
         self._client_list.set_fs(self._fs)
         self._client_list.set_lock_manager(self._lockmgr)
+
+        self._client_finder.set_fs(self._fs)
+        self._client_finder.set_lock_manager(self._lockmgr)
 
         self._chunk_store.set_fs(fs)
 
@@ -329,22 +401,25 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
     #
 
     def client_is_locked(self, client_name):
-        raise NotImplementedError()
+        return self._lookup_client(client_name).is_locked()
+
+    def _lookup_client(self, client_name):
+        return self._client_finder.find_client(client_name)
 
     def lock_client(self, client_name):
-        raise NotImplementedError()
+        self._lookup_client(client_name).lock()
 
     def unlock_client(self, client_name):
-        raise NotImplementedError()
+        self._lookup_client(client_name).unlock()
 
     def commit_client(self, client_name):
-        raise NotImplementedError()
+        self._lookup_client(client_name).commit()
 
     def got_client_lock(self, client_name):
-        raise NotImplementedError()
+        return self._lookup_client(client_name).got_lock
 
     def force_client_lock(self, client_name):
-        raise NotImplementedError()
+        self._lookup_client(client_name).force_lock()
 
     def get_allowed_client_keys(self):
         raise NotImplementedError()
