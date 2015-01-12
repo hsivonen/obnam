@@ -301,6 +301,8 @@ class SimpleChunkStore(object):
 
     def remove_chunk(self, chunk_id):
         filename = self._chunk_filename(chunk_id)
+        if not self._fs.exists(filename):
+            raise obnamlib.RepositoryChunkDoesNotExist(chunk_id=chunk_id)
         self._fs.remove(filename)
 
     def get_chunk_ids(self):
