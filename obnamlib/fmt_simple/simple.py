@@ -359,7 +359,7 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
         pass
 
     def get_fsck_work_items(self):
-        pass
+        return []
 
     #
     # Client list methods.
