@@ -214,13 +214,13 @@ class SimpleClient(SimpleToplevel):
 
     def lock(self):
         if self._lock.got_lock:
-            raise obnamlib.RepositoryClientListLockingFailed()
+            raise obnamlib.RepositoryClientLockingFailed()
         self._lock.unchecked_lock()
         self._data.clear()
 
     def unlock(self):
         if not self._lock.got_lock:
-            raise obnamlib.RepositoryClientListNotLocked()
+            raise obnamlib.RepositoryClientNotLocked()
         self._data.clear()
         self._lock.unchecked_unlock()
 
