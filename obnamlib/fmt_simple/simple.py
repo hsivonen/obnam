@@ -302,6 +302,8 @@ class SimpleChunkStore(object):
         self._fs.remove(filename)
 
     def get_chunk_ids(self):
+        if not self._fs.exists(self._dirname):
+            return []
         basenames = self._fs.listdir(self._dirname)
         return [
             self._parse_chunk_filename(x)
