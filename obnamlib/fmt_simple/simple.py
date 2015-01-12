@@ -207,6 +207,7 @@ class SimpleClient(SimpleToplevel):
     def __init__(self, client_name):
         SimpleToplevel.__init__(self)
         self.set_dirname(client_name)
+        self._client_name = client_name
 
     def is_locked(self):
         return self._lock.is_locked()
@@ -225,7 +226,8 @@ class SimpleClient(SimpleToplevel):
 
     def commit(self):
         if not self._lock.got_lock:
-            raise obnamlib.RepositoryClientListNotLocked()
+            raise obnamlib.RepositoryClientNotLocked(
+                client_name=self._client_name)
         self._data.save()
         self._lock.unchecked_unlock()
 
