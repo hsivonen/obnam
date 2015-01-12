@@ -1,0 +1,7 @@
+#!/usr/bin/awk -f
+
+BEGIN { para = "" }
+{ para = para $0 "\n" }
+/^NotImplemented/ { para = ""; next }
+NF == 0 { if (para != "") print para; para = ""; next }
+END { if (para != "") print para }
