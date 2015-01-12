@@ -291,6 +291,8 @@ class SimpleChunkStore(object):
 
     def get_chunk_content(self, chunk_id):
         filename = self._chunk_filename(chunk_id)
+        if not self._fs.exists(filename):
+            raise obnamlib.RepositoryChunkDoesNotExist(chunk_id=chunk_id)
         return self._fs.cat(filename)
 
     def has_chunk(self, chunk_id):
