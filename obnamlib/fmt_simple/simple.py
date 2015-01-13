@@ -430,7 +430,7 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
         self._lookup_client(client_name).force_lock()
 
     def get_allowed_client_keys(self):
-        raise NotImplementedError()
+        return []
 
     def get_client_key(self, client_name, key):
         raise NotImplementedError()
