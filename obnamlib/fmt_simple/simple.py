@@ -433,7 +433,10 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
         return []
 
     def get_client_key(self, client_name, key):
-        raise NotImplementedError()
+        raise obnamlib.RepositoryClientKeyNotAllowed(
+            format=self.format,
+            client_name=client_name,
+            key_name=obnamlib.repo_key_name(key))
 
     def set_client_key(self, client_name, key, value):
         raise NotImplementedError()
