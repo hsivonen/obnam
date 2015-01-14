@@ -16,8 +16,7 @@ als eine Verzeichnis darstellt. Es ist der bevorzugte Weg, aber nicht
 immer möglich, daher hat Obnam auch eine primitivere, weniger leicht zu
 bedienende Methode.
 
-Wiederherstellen mit FUSE^[Anm. d. Ü.: Sprachkomik zu übersetzen ist schwer, der
-Witz bleibt dabei zu oft auf der Strecke. Daher versuche ich es garnicht erst.]
+Wiederherstellen mit FUSE[^1]
 -------------------------
 
 Mittels `obnam mount` können Sie Ihre Backups ansehen, als wären sie ein
@@ -108,3 +107,6 @@ sollten Sie vielleicht mal Ihre Festplatte formatieren und dann die
 Wiederherstellung durchführen, nur um zu wissen, das Sie es können. Wenn
 Sie kein Obnam Entwickler sind, wäre das vielleicht ein bisschen extrem:
 Benutzen Sie einfach eine separate Festplatte statt der eingebauten.
+
+[^1]: Anm. d. Ü.: Sprachkomik zu übersetzen ist schwer, der Witz bleibt dabei zu oft auf der Strecke. Daher versuche ich es garnicht erst.
+
