@@ -444,10 +444,13 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
             client_name=client_name,
             key_name=obnamlib.repo_key_name(key))
 
-    def get_client_generation_ids(self, client_name):
-        raise NotImplementedError()
-
     def get_client_extra_data_directory(self, client_name):
+        if client_name not in self.get_client_names():
+            raise obnamlib.RepositoryClientDoesNotExist(
+                client_name=client_name)
+        return client_name
+
+    def get_client_generation_ids(self, client_name):
         raise NotImplementedError()
 
     def create_generation(self, client_name):
