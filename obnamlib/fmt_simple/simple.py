@@ -247,6 +247,10 @@ class SimpleClient(SimpleToplevel):
         self._lock.force()
         self._data.clear()
 
+    def get_client_generation_ids(self):
+        generations = self._data.get('generations', [])
+        return [gen['id'] for gen in generations]
+
 
 class ClientFinder(object):
 
@@ -463,7 +467,7 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
         return client_name
 
     def get_client_generation_ids(self, client_name):
-        raise NotImplementedError()
+        return self._lookup_client(client_name).get_client_generation_ids()
 
     def create_generation(self, client_name):
         raise NotImplementedError()
