@@ -204,6 +204,18 @@ class SimpleClientList(SimpleToplevel):
 
 class SimpleClient(SimpleToplevel):
 
+    # We store the client data in YAML as:
+    #
+    #   {
+    #       'generations': [
+    #           {
+    #               'id': '123',
+    #               'started': '123123123',
+    #                ...
+    #           }
+    #       ]
+    #   }
+
     def __init__(self, client_name):
         SimpleToplevel.__init__(self)
         self.set_dirname(client_name)
