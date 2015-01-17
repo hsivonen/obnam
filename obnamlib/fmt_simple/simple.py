@@ -258,28 +258,29 @@ class SimpleClient(SimpleToplevel):
     def create_generation(self):
         self._require_lock()
 
-        generations = self._data.get('generations', [])
+        self._require_previous_generation_is_finished()
 
-        if generations and generations[-1]['ended'] is None:
-            raise obnamlib.RepositoryClientGenerationUnfinished(
-                client_name=self._client_name)
+        generations = self._data.get('generations', [])
+        if generations:
+            previous = generations[-1]
+        else:
+            previous = {}
 
         now = time.time()
-        if not generations:
-            new_generation = {
-                'id': self._new_generation_id(),
-                'started': now,
-                'ended': None,
-                }
-        else:
-            new_generation = dict(generations[-1])
-            new_generation['id'] = self._new_generation_id()
-            new_generation['started'] = now
-            new_generation['ended'] = None
+        new_generation = dict(previous)
+        new_generation['id'] = self._new_generation_id()
+        new_generation['started'] = now
+        new_generation['ended'] = None
 
         self._data['generations'] = generations + [new_generation]
 
         return new_generation['id']
+
+    def _require_previous_generation_is_finished(self):
+        generations = self._data.get('generations', [])
+        if generations and generations[-1]['ended'] is None:
+            raise obnamlib.RepositoryClientGenerationUnfinished(
+                client_name=self._client_name)
 
     def _new_generation_id(self):
         ids = self.get_client_generation_ids()
