@@ -259,7 +259,8 @@ class SimpleClient(SimpleToplevel):
 
     def get_client_generation_ids(self):
         generations = self._data.get('generations', [])
-        return [(self._client_name, gen['id']) for gen in generations]
+        return [
+            GenerationId(self._client_name, gen['id']) for gen in generations]
 
     def create_generation(self):
         self._require_lock()
@@ -274,13 +275,13 @@ class SimpleClient(SimpleToplevel):
 
         now = time.time()
         new_generation = dict(previous)
-        new_generation['id'] = self._new_generation_id()
+        new_generation['id'] = self._new_generation_number()
         new_generation['started'] = now
         new_generation['ended'] = None
 
         self._data['generations'] = generations + [new_generation]
 
-        return (self._client_name, new_generation['id'])
+        return GenerationId(self._client_name, new_generation['id'])
 
     def _require_previous_generation_is_finished(self):
         generations = self._data.get('generations', [])
@@ -288,7 +289,7 @@ class SimpleClient(SimpleToplevel):
             raise obnamlib.RepositoryClientGenerationUnfinished(
                 client_name=self._client_name)
 
-    def _new_generation_id(self):
+    def _new_generation_number(self):
         generations = self._data.get('generations', [])
         ids = [int(gen['id']) for gen in generations]
         if ids:
@@ -297,6 +298,17 @@ class SimpleClient(SimpleToplevel):
         else:
             next = 1
         return str(next)
+
+
+class GenerationId(object):
+
+    def __init__(self, client_name, gen_number):
+        self.client_name = client_name
+        self.gen_number = gen_number
+
+    def __eq__(self, other):
+        return (self.client_name == other.client_name and
+                self.gen_number == other.gen_number)
 
 
 class ClientFinder(object):
@@ -558,8 +570,7 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
             client_name=client_name, gen_id=genspec)
 
     def make_generation_spec(self, generation_id):
-        client_name, gen_number = generation_id
-        return gen_number
+        return generation_id.gen_number
 
     def file_exists(self, generation_id, filename):
         raise NotImplementedError()
