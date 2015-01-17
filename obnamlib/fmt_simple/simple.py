@@ -271,7 +271,9 @@ class SimpleClient(SimpleToplevel):
         if generations:
             previous = generations[-1]
         else:
-            previous = {}
+            previous = {
+                'keys': {}
+            }
 
         now = time.time()
         new_generation = dict(previous)
@@ -298,6 +300,23 @@ class SimpleClient(SimpleToplevel):
         else:
             next = 1
         return str(next)
+
+    def get_generation_key(self, gen_number, key):
+        generation = self._lookup_generation_by_gen_number(gen_number)
+        return generation['keys'].get(key, '')
+
+    def _lookup_generation_by_gen_number(self, gen_number):
+        generations = self._data['generations']
+        for generation in generations:
+            if generation['id'] == gen_number:
+                return generation
+        raise obnamlib.RepositoryGenerationDoesNotExist(
+            gen_id=gen_number, client_name=self._client_name)
+
+    def set_generation_key(self, gen_number, key, value):
+        self._require_lock()
+        generation = self._lookup_generation_by_gen_number(gen_number)
+        generation['keys'][key] = value
 
 
 class GenerationId(object):
@@ -542,10 +561,20 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
             ]
 
     def get_generation_key(self, generation_id, key):
-        raise NotImplementedError()
+        client = self._lookup_client_by_generation(generation_id)
+        return client.get_generation_key(generation_id.gen_number, key)
+
+    def _lookup_client_by_generation(self, generation_id):
+        return self._lookup_client(generation_id.client_name)
 
     def set_generation_key(self, generation_id, key, value):
-        raise NotImplementedError()
+        if key not in self.get_allowed_generation_keys():
+            raise obnamlib.RepositoryGenerationKeyNotAllowed(
+                client_name=generation_id.client_name,
+                format=self.format,
+                key_name=obnamlib.repo_key_name(key))
+        client = self._lookup_client_by_generation(generation_id)
+        return client.set_generation_key(generation_id.gen_number, key, value)
 
     def remove_generation(self, generation_id):
         raise NotImplementedError()
