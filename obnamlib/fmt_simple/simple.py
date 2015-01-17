@@ -238,11 +238,14 @@ class SimpleClient(SimpleToplevel):
         self._lock.unchecked_unlock()
 
     def commit(self):
+        self._require_lock()
+        self._data.save()
+        self._lock.unchecked_unlock()
+
+    def _require_lock(self):
         if not self._lock.got_lock:
             raise obnamlib.RepositoryClientNotLocked(
                 client_name=self._client_name)
-        self._data.save()
-        self._lock.unchecked_unlock()
 
     def force_lock(self):
         self._lock.force()
@@ -253,9 +256,7 @@ class SimpleClient(SimpleToplevel):
         return [gen['id'] for gen in generations]
 
     def create_generation(self):
-        if not self._lock.got_lock:
-            raise obnamlib.RepositoryClientNotLocked(
-                client_name=self._client_name)
+        self._require_lock()
 
         generations = self._data.get('generations', [])
 
