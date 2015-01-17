@@ -519,7 +519,14 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
         return self._lookup_client(client_name).create_generation()
 
     def get_allowed_generation_keys(self):
-        raise NotImplementedError()
+        return [
+            obnamlib.REPO_GENERATION_TEST_KEY,
+            obnamlib.REPO_GENERATION_STARTED,
+            obnamlib.REPO_GENERATION_ENDED,
+            obnamlib.REPO_GENERATION_IS_CHECKPOINT,
+            obnamlib.REPO_GENERATION_FILE_COUNT,
+            obnamlib.REPO_GENERATION_TOTAL_DATA,
+            ]
 
     def get_generation_key(self, generation_id, key):
         raise NotImplementedError()
