@@ -18,6 +18,7 @@
 
 import os
 import random
+import time
 
 import yaml
 
@@ -251,6 +252,43 @@ class SimpleClient(SimpleToplevel):
         generations = self._data.get('generations', [])
         return [gen['id'] for gen in generations]
 
+    def create_generation(self):
+        if not self._lock.got_lock:
+            raise obnamlib.RepositoryClientNotLocked(
+                client_name=self._client_name)
+
+        generations = self._data.get('generations', [])
+
+        if generations and generations[-1]['ended'] is None:
+            raise obnamlib.RepositoryClientGenerationUnfinished(
+                client_name=self._client_name)
+
+        now = time.time()
+        if not generations:
+            new_generation = {
+                'id': self._new_generation_id(),
+                'started': now,
+                'ended': None,
+                }
+        else:
+            new_generation = dict(generations[-1])
+            new_generation['id'] = self._new_generation_id()
+            new_generation['started'] = now
+            new_generation['ended'] = None
+
+        self._data['generations'] = generations + [new_generation]
+
+        return new_generation['id']
+
+    def _new_generation_id(self):
+        ids = self.get_client_generation_ids()
+        if ids:
+            newest_as_int = int(ids[-1])
+            next_as_int = newest_as_int + 1
+        else:
+            next_as_int = 1
+        return str(next_as_int)
+
 
 class ClientFinder(object):
 
@@ -470,7 +508,7 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
         return self._lookup_client(client_name).get_client_generation_ids()
 
     def create_generation(self, client_name):
-        raise NotImplementedError()
+        return self._lookup_client(client_name).create_generation()
 
     def get_allowed_generation_keys(self):
         raise NotImplementedError()
