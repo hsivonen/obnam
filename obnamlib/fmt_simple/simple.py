@@ -259,7 +259,7 @@ class SimpleClient(SimpleToplevel):
 
     def get_client_generation_ids(self):
         generations = self._data.get('generations', [])
-        return [gen['id'] for gen in generations]
+        return [(self._client_name, gen['id']) for gen in generations]
 
     def create_generation(self):
         self._require_lock()
@@ -280,7 +280,7 @@ class SimpleClient(SimpleToplevel):
 
         self._data['generations'] = generations + [new_generation]
 
-        return new_generation['id']
+        return (self._client_name, new_generation['id'])
 
     def _require_previous_generation_is_finished(self):
         generations = self._data.get('generations', [])
@@ -289,13 +289,14 @@ class SimpleClient(SimpleToplevel):
                 client_name=self._client_name)
 
     def _new_generation_id(self):
-        ids = self.get_client_generation_ids()
+        generations = self._data.get('generations', [])
+        ids = [int(gen['id']) for gen in generations]
         if ids:
-            newest_as_int = int(ids[-1])
-            next_as_int = newest_as_int + 1
+            newest = ids[-1]
+            next = newest + 1
         else:
-            next_as_int = 1
-        return str(next_as_int)
+            next = 1
+        return str(next)
 
 
 class ClientFinder(object):
@@ -541,10 +542,24 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
         raise NotImplementedError()
 
     def interpret_generation_spec(self, client_name, genspec):
-        raise NotImplementedError()
+        ids = self.get_client_generation_ids(client_name)
+        if not ids:
+            raise obnamlib.RepositoryClientHasNoGenerations(
+                client_name=client_name)
+
+        if genspec == 'latest':
+            return ids[-1]
+
+        for gen_id in ids:
+            if self.make_generation_spec(gen_id) == genspec:
+                return gen_id
+
+        raise obnamlib.RepositoryGenerationDoesNotExist(
+            client_name=client_name, gen_id=genspec)
 
     def make_generation_spec(self, generation_id):
-        raise NotImplementedError()
+        client_name, gen_number = generation_id
+        return gen_number
 
     def file_exists(self, generation_id, filename):
         raise NotImplementedError()
