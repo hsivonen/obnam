@@ -239,8 +239,14 @@ class SimpleClient(SimpleToplevel):
 
     def commit(self):
         self._require_lock()
+        self._finish_current_generation_if_any()
         self._data.save()
         self._lock.unchecked_unlock()
+
+    def _finish_current_generation_if_any(self):
+        generations = self._data.get('generations', [])
+        if generations and generations[-1]['ended'] is None:
+            generations[-1]['ended'] = time.time()
 
     def _require_lock(self):
         if not self._lock.got_lock:
