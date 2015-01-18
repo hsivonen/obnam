@@ -212,7 +212,12 @@ class SimpleClient(SimpleToplevel):
     #           {
     #               'id': '123',
     #               'started': '123123123',
-    #                ...
+    #               ...
+    #               'files': {
+    #                   '/': { ... },
+    #                   '/home': { ... },
+    #                   '/home/liw': { ... },
+    #               }
     #           }
     #       ]
     #   }
@@ -272,7 +277,8 @@ class SimpleClient(SimpleToplevel):
             previous = generations[-1]
         else:
             previous = {
-                'keys': {}
+                'keys': {},
+                'files': {},
             }
 
         now = time.time()
@@ -317,6 +323,10 @@ class SimpleClient(SimpleToplevel):
         self._require_lock()
         generation = self._lookup_generation_by_gen_number(gen_number)
         generation['keys'][key] = value
+
+    def file_exists(self, gen_number, filename):
+        generation = self._lookup_generation_by_gen_number(gen_number)
+        return filename in generation['files']
 
 
 class GenerationId(object):
@@ -602,7 +612,8 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
         return generation_id.gen_number
 
     def file_exists(self, generation_id, filename):
-        raise NotImplementedError()
+        client = self._lookup_client_by_generation(generation_id)
+        return client.file_exists(generation_id.gen_number, filename)
 
     def add_file(self, generation_id, filename):
         raise NotImplementedError()
