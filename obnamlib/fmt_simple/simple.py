@@ -132,7 +132,7 @@ class SimpleClientList(SimpleToplevel):
     # We store the client list in YAML as follows:
     #
     #   clients:
-    #     foo: {}
+    #     foo: { 'encryption-key': ... }
     #
     # Above, the client name is foo.
 
@@ -172,7 +172,9 @@ class SimpleClientList(SimpleToplevel):
         self._require_client_does_not_exist(client_name)
 
         clients = self._data.get('clients', {})
-        clients[client_name] = {}
+        clients[client_name] = {
+            'encryption-key': None,
+        }
         self._data['clients'] = clients
         
     def remove_client(self, client_name):
@@ -206,6 +208,10 @@ class SimpleClientList(SimpleToplevel):
         if client_name in self._data.get('clients', {}):
             raise obnamlib.RepositoryClientAlreadyExists(
                 client_name=client_name)
+
+    def get_client_encryption_key(self, client_name):
+        self._require_client_exists(client_name)
+        return self._data['clients'][client_name]['encryption-key']
 
 
 class SimpleClient(SimpleToplevel):
@@ -609,7 +615,7 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
         self._client_list.rename_client(old_client_name, new_client_name)
 
     def get_client_encryption_key_id(self, client_name):
-        raise NotImplementedError()
+        return self._client_list.get_client_encryption_key(client_name)
 
     def set_client_encryption_key_id(self, client_name, key_id):
         raise NotImplementedError()
