@@ -538,6 +538,61 @@ class SimpleChunkStore(object):
         return int(filename[:-len('.chunk')])
 
 
+class SimpleChunkIndexes(SimpleToplevel):
+
+    # This doesn't actually do any indexing. This is a valid
+    # RepositoryInterface implementation, though not really useful to
+    # the user.
+
+    def __init__(self):
+        SimpleToplevel.__init__(self)
+        self.set_dirname('chunk-indexes')
+
+    def lock(self):
+        if self._lock.got_lock:
+            raise obnamlib.RepositoryChunkIndexesLockingFailed()
+        self._lock.unchecked_lock()
+        self._data.clear()
+
+    def unlock(self):
+        if not self._lock.got_lock:
+            raise obnamlib.RepositoryChunkIndexesNotLocked()
+        self._data.clear()
+        self._lock.unchecked_unlock()
+
+    def commit(self):
+        if not self._lock.got_lock:
+            raise obnamlib.RepositoryChunkIndexesNotLocked()
+        self._data.save()
+        self._lock.unchecked_unlock()
+
+    def force_lock(self):
+        self._lock.force()
+        self._data.clear()
+
+    def prepare_chunk_for_indexes(self, chunk_content):
+        return chunk_content
+
+    def put_chunk_into_indexes(self, chunk_id, token, client_id):
+        self._require_lock()
+
+    def _require_lock(self):
+        if not self._lock.got_lock:
+            raise obnamlib.RepositoryChunkIndexesNotLocked()
+
+    def find_chunk_ids_by_content(self, chunk_content):
+        return []
+
+    def remove_chunk_from_indexes(self, chunk_id, client_id):
+        self._require_lock()
+
+    def remove_chunk_from_indexes_for_all_clients(self, chunk_id):
+        self._require_lock()
+
+    def validate_chunk_content(self, chunk_id):
+        return None
+
+
 class RepositoryFormatSimple(obnamlib.RepositoryInterface):
 
     '''Simplistic repository format as an example.
@@ -553,6 +608,7 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
         self._lock_timeout = kwargs.get('lock_timeout', 0)
         self._client_list = SimpleClientList()
         self._chunk_store = SimpleChunkStore()
+        self._chunk_indexes = SimpleChunkIndexes()
 
         self._client_finder = ClientFinder()
         self._client_finder.set_client_list(self._client_list)
@@ -571,6 +627,9 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
         self._client_finder.set_lock_manager(self._lockmgr)
 
         self._chunk_store.set_fs(fs)
+
+        self._chunk_indexes.set_fs(fs)
+        self._chunk_indexes.set_lock_manager(self._lockmgr)
 
     def init_repo(self):
         pass
@@ -815,34 +874,35 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
     #
 
     def lock_chunk_indexes(self):
-        raise NotImplementedError()
+        self._chunk_indexes.lock()
 
     def unlock_chunk_indexes(self):
-        raise NotImplementedError()
+        self._chunk_indexes.unlock()
 
     def commit_chunk_indexes(self):
-        raise NotImplementedError()
+        self._chunk_indexes.commit()
 
     def got_chunk_indexes_lock(self):
-        raise NotImplementedError()
+        return self._chunk_indexes.got_lock
 
     def force_chunk_indexes_lock(self):
-        raise NotImplementedError()
+        self._chunk_indexes.force_lock()
 
     def prepare_chunk_for_indexes(self, chunk_content):
-        raise NotImplementedError()
+        return self._chunk_indexes.prepare_chunk_for_indexes(chunk_content)
 
     def put_chunk_into_indexes(self, chunk_id, token, client_id):
-        raise NotImplementedError()
+        return self._chunk_indexes.put_chunk_into_indexes(
+            chunk_id, token, client_id)
 
     def find_chunk_ids_by_content(self, chunk_content):
-        raise NotImplementedError()
+        return self._chunk_indexes.find_chunk_ids_by_content(chunk_content)
 
     def remove_chunk_from_indexes(self, chunk_id, client_id):
-        raise NotImplementedError()
+        self._chunk_indexes.remove_chunk_from_indexes(chunk_id, client_id)
 
     def remove_chunk_from_indexes_for_all_clients(self, chunk_id):
-        raise NotImplementedError()
+        self._chunk_indexes.remove_chunk_from_indexes_for_all_clients(chunk_id)
 
     def validate_chunk_content(self, chunk_id):
-        raise NotImplementedError()
+        return self._chunk_indexes.validate_chunk_content(chunk_id)
