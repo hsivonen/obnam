@@ -444,6 +444,21 @@ class SimpleClient(SimpleToplevel):
             chunk_ids = chunk_ids.union(set(file_chunk_ids))
         return list(chunk_ids)
 
+    def get_file_children(self, gen_number, filename):
+        generation = self._lookup_generation_by_gen_number(gen_number)
+        if filename not in generation['files']:
+            raise obnamlib.RepositoryFileDoesNotExistInGeneration(
+                client_name=self._client_name,
+                genspec=gen_number,
+                filename=filename)
+
+        return [
+            x for x in generation['files']
+            if self._is_direct_child_of(x, filename)]
+
+    def _is_direct_child_of(self, child, parent):
+        return os.path.dirname(child) == parent and child != parent
+
 
 class GenerationId(object):
 
@@ -794,7 +809,8 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
         return client.clear_file_chunk_ids(generation_id.gen_number, filename)
 
     def get_file_children(self, generation_id, filename):
-        raise NotImplementedError()
+        client = self._lookup_client_by_generation(generation_id)
+        return client.get_file_children(generation_id.gen_number, filename)
 
     #
     # Chunk storage methods.
