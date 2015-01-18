@@ -312,6 +312,25 @@ class SimpleClient(SimpleToplevel):
             next = 1
         return str(next)
 
+    def remove_generation(self, gen_number):
+        self._require_lock()
+        generations = self._data.get('generations', [])
+        remaining = []
+        removed = False
+
+        for generation in generations:
+            if generation['id'] == gen_number:
+                removed = True
+            else:
+                remaining.append(generation)
+
+        if not removed:
+            raise obnamlib.RepositoryGenerationDoesNotExist(
+                client_name=self._client_name,
+                gen_id=gen_number)
+
+        self._data['generations'] = remaining
+
     def get_generation_key(self, gen_number, key):
         generation = self._lookup_generation_by_gen_number(gen_number)
         return generation['keys'].get(key, '')
@@ -666,7 +685,8 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
         return client.set_generation_key(generation_id.gen_number, key, value)
 
     def remove_generation(self, generation_id):
-        raise NotImplementedError()
+        client = self._lookup_client_by_generation(generation_id)
+        return client.remove_generation(generation_id.gen_number)
 
     def get_generation_chunk_ids(self, generation_id):
         raise NotImplementedError()
