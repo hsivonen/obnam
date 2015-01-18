@@ -711,7 +711,6 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
                 obnamlib.REPO_FILE_INO,
                 obnamlib.REPO_FILE_MD5]
 
-
     def get_file_chunk_ids(self, generation_id, filename):
         raise NotImplementedError()
 
