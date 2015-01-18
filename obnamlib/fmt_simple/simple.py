@@ -556,20 +556,25 @@ class SimpleChunkIndexes(SimpleToplevel):
         self.set_dirname('chunk-indexes')
 
     def lock(self):
-        if self._lock.got_lock:
-            raise obnamlib.RepositoryChunkIndexesLockingFailed()
+        self._require_not_locked()
         self._lock.unchecked_lock()
         self._data.clear()
 
+    def _require_not_locked(self):
+        if self._lock.got_lock:
+            raise obnamlib.RepositoryChunkIndexesLockingFailed()
+
     def unlock(self):
-        if not self._lock.got_lock:
-            raise obnamlib.RepositoryChunkIndexesNotLocked()
+        self._require_lock()
         self._data.clear()
         self._lock.unchecked_unlock()
 
-    def commit(self):
+    def _require_lock(self):
         if not self._lock.got_lock:
             raise obnamlib.RepositoryChunkIndexesNotLocked()
+
+    def commit(self):
+        self._require_lock()
         self._data.save()
         self._lock.unchecked_unlock()
 
@@ -588,10 +593,6 @@ class SimpleChunkIndexes(SimpleToplevel):
             'sha512': token,
             'client-id': client_id,
         })
-
-    def _require_lock(self):
-        if not self._lock.got_lock:
-            raise obnamlib.RepositoryChunkIndexesNotLocked()
 
     def _prepare_data(self):
         if 'index' not in self._data:
