@@ -213,6 +213,10 @@ class SimpleClientList(SimpleToplevel):
         self._require_client_exists(client_name)
         return self._data['clients'][client_name]['encryption-key']
 
+    def set_client_encryption_key(self, client_name, encryption_key):
+        self._require_client_exists(client_name)
+        self._data['clients'][client_name]['encryption-key'] = encryption_key
+
 
 class SimpleClient(SimpleToplevel):
 
@@ -618,7 +622,7 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
         return self._client_list.get_client_encryption_key(client_name)
 
     def set_client_encryption_key_id(self, client_name, key_id):
-        raise NotImplementedError()
+        return self._client_list.set_client_encryption_key(client_name, key_id)
 
     #
     # Per-client methods.
