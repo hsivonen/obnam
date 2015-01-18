@@ -16,6 +16,7 @@
 # =*= License: GPL-3+ =*=
 
 
+import copy
 import os
 import random
 import time
@@ -278,7 +279,7 @@ class SimpleClient(SimpleToplevel):
 
         generations = self._data.get('generations', [])
         if generations:
-            previous = generations[-1]
+            previous = copy.deepcopy(generations[-1])
         else:
             previous = {
                 'keys': {},
@@ -339,6 +340,11 @@ class SimpleClient(SimpleToplevel):
     def add_file(self, gen_number, filename):
         generation = self._lookup_generation_by_gen_number(gen_number)
         generation['files'][filename] = {}
+
+    def remove_file(self, gen_number, filename):
+        generation = self._lookup_generation_by_gen_number(gen_number)
+        if filename in generation['files']:
+            del generation['files'][filename]
 
 
 class GenerationId(object):
@@ -632,7 +638,8 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
         return client.add_file(generation_id.gen_number, filename)
 
     def remove_file(self, generation_id, filename):
-        raise NotImplementedError()
+        client = self._lookup_client_by_generation(generation_id)
+        return client.remove_file(generation_id.gen_number, filename)
 
     def get_file_key(self, generation_id, filename, key):
         raise NotImplementedError()
