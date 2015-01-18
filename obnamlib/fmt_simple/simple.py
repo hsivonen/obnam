@@ -100,6 +100,10 @@ class SimpleData(object):
         self.load()
         return self._obj.get(key, default)
 
+    def __contains__(self, key):
+        self.load()
+        return key in self._obj
+
 
 class SimpleToplevel(object):
 
@@ -312,10 +316,11 @@ class SimpleClient(SimpleToplevel):
         return generation['keys'].get(key, '')
 
     def _lookup_generation_by_gen_number(self, gen_number):
-        generations = self._data['generations']
-        for generation in generations:
-            if generation['id'] == gen_number:
-                return generation
+        if 'generations' in self._data:
+            generations = self._data['generations']
+            for generation in generations:
+                if generation['id'] == gen_number:
+                    return generation
         raise obnamlib.RepositoryGenerationDoesNotExist(
             gen_id=gen_number, client_name=self._client_name)
 
@@ -325,8 +330,15 @@ class SimpleClient(SimpleToplevel):
         generation['keys'][key] = value
 
     def file_exists(self, gen_number, filename):
-        generation = self._lookup_generation_by_gen_number(gen_number)
+        try:
+            generation = self._lookup_generation_by_gen_number(gen_number)
+        except obnamlib.RepositoryGenerationDoesNotExist:
+            return False
         return filename in generation['files']
+
+    def add_file(self, gen_number, filename):
+        generation = self._lookup_generation_by_gen_number(gen_number)
+        generation ['files'][filename] = {}
 
 
 class GenerationId(object):
@@ -616,7 +628,8 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
         return client.file_exists(generation_id.gen_number, filename)
 
     def add_file(self, generation_id, filename):
-        raise NotImplementedError()
+        client = self._lookup_client_by_generation(generation_id)
+        return client.add_file(generation_id.gen_number, filename)
 
     def remove_file(self, generation_id, filename):
         raise NotImplementedError()
