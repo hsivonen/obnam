@@ -222,7 +222,7 @@ class SimpleClient(SimpleToplevel):
     #                   '/': { ... },
     #                   '/home': { ... },
     #                   '/home/liw': { ... },
-    #               }
+    #               },
     #           }
     #       ]
     #   }
@@ -345,6 +345,24 @@ class SimpleClient(SimpleToplevel):
         generation = self._lookup_generation_by_gen_number(gen_number)
         if filename in generation['files']:
             del generation['files'][filename]
+
+    def get_file_key(self, gen_number, filename, key):
+        generation = self._lookup_generation_by_gen_number(gen_number)
+        files = generation['files']
+        key_name = obnamlib.repo_key_name(key)
+
+        if filename not in files:
+            raise obnamlib.RepositoryFileDoesNotExistInGeneration(
+                client_name=self._client_name,
+                genspec=gen_number,
+                filename=filename)
+
+        if key_name not in files[filename]:
+            if key in obnamlib.REPO_FILE_INTEGER_KEYS:
+                return 0
+            else:
+                return ''
+        return files[filename][key_name]
 
 
 class GenerationId(object):
@@ -642,7 +660,13 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
         return client.remove_file(generation_id.gen_number, filename)
 
     def get_file_key(self, generation_id, filename, key):
-        raise NotImplementedError()
+        if key not in self.get_allowed_file_keys():
+            raise obnamlib.RepositoryFileKeyNotAllowed(
+                client_name=generation_id.client_name,
+                format=self.format)
+
+        client = self._lookup_client_by_generation(generation_id)
+        return client.get_file_key(generation_id.gen_number, filename, key)
 
     def set_file_key(self, generation_id, filename, key, value):
         raise NotImplementedError()
