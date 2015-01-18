@@ -379,16 +379,10 @@ class SimpleClient(SimpleToplevel):
             del generation['files'][filename]
 
     def get_file_key(self, gen_number, filename, key):
+        self._require_file_exists(gen_number, filename)
         generation = self._lookup_generation_by_gen_number(gen_number)
         files = generation['files']
         key_name = obnamlib.repo_key_name(key)
-
-        if filename not in files:
-            raise obnamlib.RepositoryFileDoesNotExistInGeneration(
-                client_name=self._client_name,
-                genspec=gen_number,
-                filename=filename)
-
         if key_name not in files[filename]['keys']:
             if key in obnamlib.REPO_FILE_INTEGER_KEYS:
                 return 0
@@ -396,44 +390,34 @@ class SimpleClient(SimpleToplevel):
                 return ''
         return files[filename]['keys'][key_name]
 
+    def _require_file_exists(self, gen_number, filename):
+        generation = self._lookup_generation_by_gen_number(gen_number)
+        if filename not in generation['files']:
+            raise obnamlib.RepositoryFileDoesNotExistInGeneration(
+                client_name=self._client_name,
+                genspec=gen_number,
+                filename=filename)
+
     def set_file_key(self, gen_number, filename, key, value):
+        self._require_file_exists(gen_number, filename)
         generation = self._lookup_generation_by_gen_number(gen_number)
         files = generation['files']
         key_name = obnamlib.repo_key_name(key)
-
-        if filename not in files:
-            raise obnamlib.RepositoryFileDoesNotExistInGeneration(
-                client_name=self._client_name,
-                genspec=gen_number,
-                filename=filename)
-
         files[filename]['keys'][key_name] = value
 
     def get_file_chunk_ids(self, gen_number, filename):
+        self._require_file_exists(gen_number, filename)
         generation = self._lookup_generation_by_gen_number(gen_number)
-        if filename not in generation['files']:
-            raise obnamlib.RepositoryFileDoesNotExistInGeneration(
-                client_name=self._client_name,
-                genspec=gen_number,
-                filename=filename)
         return generation['files'][filename]['chunks']
 
     def append_file_chunk_id(self, gen_number, filename, chunk_id):
+        self._require_file_exists(gen_number, filename)
         generation = self._lookup_generation_by_gen_number(gen_number)
-        if filename not in generation['files']:
-            raise obnamlib.RepositoryFileDoesNotExistInGeneration(
-                client_name=self._client_name,
-                genspec=gen_number,
-                filename=filename)
         generation['files'][filename]['chunks'].append(chunk_id)
 
     def clear_file_chunk_ids(self, gen_number, filename):
+        self._require_file_exists(gen_number, filename)
         generation = self._lookup_generation_by_gen_number(gen_number)
-        if filename not in generation['files']:
-            raise obnamlib.RepositoryFileDoesNotExistInGeneration(
-                client_name=self._client_name,
-                genspec=gen_number,
-                filename=filename)
         generation['files'][filename]['chunks'] = []
 
     def get_generation_chunk_ids(self, gen_number):
@@ -445,13 +429,8 @@ class SimpleClient(SimpleToplevel):
         return list(chunk_ids)
 
     def get_file_children(self, gen_number, filename):
+        self._require_file_exists(gen_number, filename)
         generation = self._lookup_generation_by_gen_number(gen_number)
-        if filename not in generation['files']:
-            raise obnamlib.RepositoryFileDoesNotExistInGeneration(
-                client_name=self._client_name,
-                genspec=gen_number,
-                filename=filename)
-
         return [
             x for x in generation['files']
             if self._is_direct_child_of(x, filename)]
