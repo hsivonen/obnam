@@ -389,6 +389,15 @@ class SimpleClient(SimpleToplevel):
                 filename=filename)
         return generation['files'][filename]['chunks']
 
+    def append_file_chunk_id(self, gen_number, filename, chunk_id):
+        generation = self._lookup_generation_by_gen_number(gen_number)
+        if filename not in generation['files']:
+            raise obnamlib.RepositoryFileDoesNotExistInGeneration(
+                client_name=self._client_name,
+                genspec=gen_number,
+                filename=filename)
+        generation['files'][filename]['chunks'].append(chunk_id)
+
 
 class GenerationId(object):
 
@@ -728,7 +737,9 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
         return client.get_file_chunk_ids(generation_id.gen_number, filename)
 
     def append_file_chunk_id(self, generation_id, filename, chunk_id):
-        raise NotImplementedError()
+        client = self._lookup_client_by_generation(generation_id)
+        return client.append_file_chunk_id(
+            generation_id.gen_number, filename, chunk_id)
 
     def clear_file_chunk_ids(self, generation_id, filename):
         raise NotImplementedError()
