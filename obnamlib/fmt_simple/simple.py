@@ -364,6 +364,19 @@ class SimpleClient(SimpleToplevel):
                 return ''
         return files[filename][key_name]
 
+    def set_file_key(self, gen_number, filename, key, value):
+        generation = self._lookup_generation_by_gen_number(gen_number)
+        files = generation['files']
+        key_name = obnamlib.repo_key_name(key)
+
+        if filename not in files:
+            raise obnamlib.RepositoryFileDoesNotExistInGeneration(
+                client_name=self._client_name,
+                genspec=gen_number,
+                filename=filename)
+
+        files[filename][key_name] = value
+
 
 class GenerationId(object):
 
@@ -669,7 +682,14 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
         return client.get_file_key(generation_id.gen_number, filename, key)
 
     def set_file_key(self, generation_id, filename, key, value):
-        raise NotImplementedError()
+        if key not in self.get_allowed_file_keys():
+            raise obnamlib.RepositoryFileKeyNotAllowed(
+                client_name=generation_id.client_name,
+                format=self.format)
+
+        client = self._lookup_client_by_generation(generation_id)
+        return client.set_file_key(
+            generation_id.gen_number, filename, key, value)
 
     def get_allowed_file_keys(self):
         return [obnamlib.REPO_FILE_TEST_KEY,
