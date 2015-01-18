@@ -17,6 +17,7 @@
 
 
 import copy
+import hashlib
 import os
 import random
 import time
@@ -540,9 +541,15 @@ class SimpleChunkStore(object):
 
 class SimpleChunkIndexes(SimpleToplevel):
 
-    # This doesn't actually do any indexing. This is a valid
-    # RepositoryInterface implementation, though not really useful to
-    # the user.
+    # Yaml:
+    #
+    #    index:
+    #    - chunk-id: ...
+    #      sha512: ...
+    #      client-ids:
+    #      - ...
+    #
+    # We use sha512 for the checksum.
 
     def __init__(self):
         SimpleToplevel.__init__(self)
@@ -571,23 +578,58 @@ class SimpleChunkIndexes(SimpleToplevel):
         self._data.clear()
 
     def prepare_chunk_for_indexes(self, chunk_content):
-        return chunk_content
+        return hashlib.sha512(chunk_content).hexdigest()
 
     def put_chunk_into_indexes(self, chunk_id, token, client_id):
         self._require_lock()
+        self._prepare_data()
+        self._data['index'].append({
+            'chunk-id': chunk_id,
+            'sha512': token,
+            'client-id': client_id,
+        })
 
     def _require_lock(self):
         if not self._lock.got_lock:
             raise obnamlib.RepositoryChunkIndexesNotLocked()
 
+    def _prepare_data(self):
+        if 'index' not in self._data:
+            self._data['index'] = []
+
     def find_chunk_ids_by_content(self, chunk_content):
-        return []
+        if 'index' in self._data:
+            token = self.prepare_chunk_for_indexes(chunk_content)
+            result = [
+                record['chunk-id']
+                for record in self._data['index']
+                if record['sha512'] == token]
+        else:
+            result = []
+
+        if not result:
+            raise obnamlib.RepositoryChunkContentNotInIndexes()
+        return result
 
     def remove_chunk_from_indexes(self, chunk_id, client_id):
         self._require_lock()
+        self._prepare_data()
+
+        self._data['index'] = self._filter_out(
+            self._data['index'],
+            lambda x:
+            x['chunk-id'] == chunk_id and x['client-id'] == client_id)
+
+    def _filter_out(self, records, pred):
+        return [record for record in records if not pred(record)]
 
     def remove_chunk_from_indexes_for_all_clients(self, chunk_id):
         self._require_lock()
+        self._prepare_data()
+
+        self._data['index'] = self._filter_out(
+            self._data['index'],
+            lambda x: x['chunk-id'] == chunk_id)
 
     def validate_chunk_content(self, chunk_id):
         return None
