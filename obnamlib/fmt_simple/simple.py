@@ -648,7 +648,25 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
         raise NotImplementedError()
 
     def get_allowed_file_keys(self):
-        raise NotImplementedError()
+        return [obnamlib.REPO_FILE_TEST_KEY,
+                obnamlib.REPO_FILE_MODE,
+                obnamlib.REPO_FILE_MTIME_SEC,
+                obnamlib.REPO_FILE_MTIME_NSEC,
+                obnamlib.REPO_FILE_ATIME_SEC,
+                obnamlib.REPO_FILE_ATIME_NSEC,
+                obnamlib.REPO_FILE_NLINK,
+                obnamlib.REPO_FILE_SIZE,
+                obnamlib.REPO_FILE_UID,
+                obnamlib.REPO_FILE_USERNAME,
+                obnamlib.REPO_FILE_GID,
+                obnamlib.REPO_FILE_GROUPNAME,
+                obnamlib.REPO_FILE_SYMLINK_TARGET,
+                obnamlib.REPO_FILE_XATTR_BLOB,
+                obnamlib.REPO_FILE_BLOCKS,
+                obnamlib.REPO_FILE_DEV,
+                obnamlib.REPO_FILE_INO,
+                obnamlib.REPO_FILE_MD5]
+
 
     def get_file_chunk_ids(self, generation_id, filename):
         raise NotImplementedError()
