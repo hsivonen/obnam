@@ -73,11 +73,13 @@ _integer_keys = [
 for i, name in enumerate(_string_keys + _integer_keys):
     globals()[name] = i
 
-REPO_FILE_INTEGER_KEYS = [
-    globals()[name]
-    for name in _integer_keys
-    if name.startswith('REPO_FILE_')
-    ]
+def _filter_integer_keys(prefix):
+    return [globals()[name]
+            for name in _integer_keys
+            if name.startswith(prefix)]
+
+REPO_GENERATION_INTEGER_KEYS = _filter_integer_keys('REPO_GENERATION_')
+REPO_FILE_INTEGER_KEYS = _filter_integer_keys('REPO_FILE_')
 
 
 def repo_key_name(key_value):

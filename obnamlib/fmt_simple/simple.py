@@ -267,7 +267,10 @@ class SimpleClient(SimpleToplevel):
     def _finish_current_generation_if_any(self):
         generations = self._data.get('generations', [])
         if generations and generations[-1]['ended'] is None:
-            generations[-1]['ended'] = time.time()
+            generations[-1]['ended'] = self._get_current_time()
+
+    def _get_current_time(self):
+        return int(time.time())
 
     def _require_lock(self):
         if not self._lock.got_lock:
@@ -297,10 +300,9 @@ class SimpleClient(SimpleToplevel):
                 'files': {},
             }
 
-        now = time.time()
         new_generation = dict(previous)
         new_generation['id'] = self._new_generation_number()
-        new_generation['started'] = now
+        new_generation['started'] = self._get_current_time()
         new_generation['ended'] = None
 
         self._data['generations'] = generations + [new_generation]
@@ -344,7 +346,10 @@ class SimpleClient(SimpleToplevel):
 
     def get_generation_key(self, gen_number, key):
         generation = self._lookup_generation_by_gen_number(gen_number)
-        return generation['keys'].get(key, '')
+        if key in obnamlib.REPO_GENERATION_INTEGER_KEYS:
+            return int(generation['keys'].get(key, 0))
+        else:
+            return generation['keys'].get(key, '')
 
     def _lookup_generation_by_gen_number(self, gen_number):
         if 'generations' in self._data:
