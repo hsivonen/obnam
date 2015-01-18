@@ -219,7 +219,7 @@ class SimpleClient(SimpleToplevel):
     #               'started': '123123123',
     #               ...
     #               'files': {
-    #                   '/': { ... },
+    #                   '/': { 'keys': { ...}, 'chunks': [...] },
     #                   '/home': { ... },
     #                   '/home/liw': { ... },
     #               },
@@ -339,7 +339,10 @@ class SimpleClient(SimpleToplevel):
 
     def add_file(self, gen_number, filename):
         generation = self._lookup_generation_by_gen_number(gen_number)
-        generation['files'][filename] = {}
+        generation['files'][filename] = {
+            'keys': {},
+            'chunks': [],
+            }
 
     def remove_file(self, gen_number, filename):
         generation = self._lookup_generation_by_gen_number(gen_number)
@@ -357,12 +360,12 @@ class SimpleClient(SimpleToplevel):
                 genspec=gen_number,
                 filename=filename)
 
-        if key_name not in files[filename]:
+        if key_name not in files[filename]['keys']:
             if key in obnamlib.REPO_FILE_INTEGER_KEYS:
                 return 0
             else:
                 return ''
-        return files[filename][key_name]
+        return files[filename]['keys'][key_name]
 
     def set_file_key(self, gen_number, filename, key, value):
         generation = self._lookup_generation_by_gen_number(gen_number)
@@ -375,7 +378,7 @@ class SimpleClient(SimpleToplevel):
                 genspec=gen_number,
                 filename=filename)
 
-        files[filename][key_name] = value
+        files[filename]['keys'][key_name] = value
 
 
 class GenerationId(object):
