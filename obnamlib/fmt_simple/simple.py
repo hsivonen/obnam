@@ -338,7 +338,7 @@ class SimpleClient(SimpleToplevel):
 
     def add_file(self, gen_number, filename):
         generation = self._lookup_generation_by_gen_number(gen_number)
-        generation ['files'][filename] = {}
+        generation['files'][filename] = {}
 
 
 class GenerationId(object):
