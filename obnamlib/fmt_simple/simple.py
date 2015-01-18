@@ -426,6 +426,14 @@ class SimpleClient(SimpleToplevel):
                 filename=filename)
         generation['files'][filename]['chunks'] = []
 
+    def get_generation_chunk_ids(self, gen_number):
+        chunk_ids = set()
+        generation = self._lookup_generation_by_gen_number(gen_number)
+        for filename in generation['files']:
+            file_chunk_ids = generation['files'][filename]['chunks']
+            chunk_ids = chunk_ids.union(set(file_chunk_ids))
+        return list(chunk_ids)
+
 
 class GenerationId(object):
 
@@ -689,7 +697,8 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
         return client.remove_generation(generation_id.gen_number)
 
     def get_generation_chunk_ids(self, generation_id):
-        raise NotImplementedError()
+        client = self._lookup_client_by_generation(generation_id)
+        return client.get_generation_chunk_ids(generation_id.gen_number)
 
     def interpret_generation_spec(self, client_name, genspec):
         ids = self.get_client_generation_ids(client_name)
