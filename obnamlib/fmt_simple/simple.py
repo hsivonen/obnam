@@ -27,18 +27,6 @@ import yaml
 import obnamlib
 
 
-class CurrentTime(object):
-
-    def __init__(self):
-        self.set_fake_time(None)
-
-    def set_fake_time(self, fake_time):
-        self._fake_time = fake_time
-
-    def now(self):
-        return self._fake_time or time.time()
-
-
 class SimpleLock(object):
 
     def __init__(self):
@@ -260,7 +248,7 @@ class SimpleClient(SimpleToplevel):
         SimpleToplevel.__init__(self)
         self.set_dirname(client_name)
         self._client_name = client_name
-        self._current_time = CurrentTime()
+        self._current_time = None
 
     def set_current_time(self, current_time):
         self._current_time = current_time
@@ -289,7 +277,7 @@ class SimpleClient(SimpleToplevel):
     def _finish_current_generation_if_any(self):
         generations = self._data.get('generations', [])
         if generations and generations[-1]['ended'] is None:
-            generations[-1]['ended'] = self._current_time.now()
+            generations[-1]['ended'] = self._current_time()
 
     def _require_lock(self):
         if not self._lock.got_lock:
@@ -321,7 +309,7 @@ class SimpleClient(SimpleToplevel):
 
         new_generation = dict(previous)
         new_generation['id'] = self._new_generation_number()
-        new_generation['started'] = self._current_time.now()
+        new_generation['started'] = self._current_time()
         new_generation['ended'] = None
 
         self._data['generations'] = generations + [new_generation]
@@ -482,7 +470,7 @@ class ClientFinder(object):
         self._lockmgr = None
         self._client_list = None
         self._clients = {}
-        self._current_time = CurrentTime()
+        self._current_time = None
 
     def set_fs(self, fs):
         self._fs = fs
@@ -683,12 +671,9 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
         self._chunk_store = SimpleChunkStore()
         self._chunk_indexes = SimpleChunkIndexes()
 
-        current_time = CurrentTime()
-        current_time.set_fake_time(kwargs.get('current_time', None))
-
         self._client_finder = ClientFinder()
         self._client_finder.set_client_list(self._client_list)
-        self._client_finder.set_current_time(current_time)
+        self._client_finder.set_current_time(kwargs['current_time'])
 
     def get_fs(self):
         return self._fs

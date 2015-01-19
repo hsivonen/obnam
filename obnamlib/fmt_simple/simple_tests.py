@@ -17,6 +17,7 @@
 
 
 import tempfile
+import time
 
 import obnamlib
 
@@ -31,5 +32,7 @@ class RepositoryFormatSimpleTests(obnamlib.RepositoryInterfaceTests):
         # FIXME: The following must be format 6, for now.
         obnamlib.RepositoryFormat6.setup_hooks(self.hooks)
 
-        self.repo = obnamlib.RepositoryFormatSimple(hooks=self.hooks)
+        self.repo = obnamlib.RepositoryFormatSimple(
+            hooks=self.hooks,
+            current_time=time.time)
         self.repo.set_fs(fs)
