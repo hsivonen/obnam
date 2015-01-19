@@ -276,7 +276,7 @@ class SimpleClient(SimpleToplevel):
     def _finish_current_generation_if_any(self):
         generations = self._data.get('generations', [])
         if generations and generations[-1]['ended'] is None:
-            generations[-1]['ended'] = self._current_time()
+            generations[-1]['ended'] = int(self._current_time())
 
     def _require_lock(self):
         if not self._lock.got_lock:
@@ -308,7 +308,7 @@ class SimpleClient(SimpleToplevel):
 
         new_generation = dict(previous)
         new_generation['id'] = self._new_generation_number()
-        new_generation['started'] = self._current_time()
+        new_generation['started'] = int(self._current_time())
         new_generation['ended'] = None
 
         self._data['generations'] = generations + [new_generation]
