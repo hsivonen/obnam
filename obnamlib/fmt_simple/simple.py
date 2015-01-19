@@ -404,12 +404,19 @@ class SimpleClient(SimpleToplevel):
         generation = self._lookup_generation_by_gen_number(gen_number)
         files = generation['files']
         key_name = obnamlib.repo_key_name(key)
+
+        if key in obnamlib.REPO_FILE_INTEGER_KEYS:
+            default = 0
+        else:
+            default = ''
+
         if key_name not in files[filename]['keys']:
-            if key in obnamlib.REPO_FILE_INTEGER_KEYS:
-                return 0
-            else:
-                return ''
-        return files[filename]['keys'][key_name]
+            return default
+        value = files[filename]['keys'][key_name]
+        if value is None:
+            return default
+        else:
+            return value
 
     def _require_file_exists(self, gen_number, filename):
         generation = self._lookup_generation_by_gen_number(gen_number)
