@@ -412,11 +412,7 @@ class SimpleClient(SimpleToplevel):
 
         if key_name not in files[filename]['keys']:
             return default
-        value = files[filename]['keys'][key_name]
-        if value is None:
-            return default
-        else:
-            return value
+        return files[filename]['keys'][key_name] or default
 
     def _require_file_exists(self, gen_number, filename):
         generation = self._lookup_generation_by_gen_number(gen_number)
