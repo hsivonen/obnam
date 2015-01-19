@@ -474,7 +474,8 @@ class GenerationId(object):
         self.gen_number = gen_number
 
     def __eq__(self, other):
-        return (self.client_name == other.client_name and
+        return (other is not None and
+                self.client_name == other.client_name and
                 self.gen_number == other.gen_number)
 
 
