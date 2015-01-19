@@ -49,8 +49,14 @@ class SimpleLock(object):
         self.got_lock = False
 
     def force(self):
-        if self._lockmgr.is_locked(self._dirname):
-            self.unchecked_unlock()
+        # FIXME: This is ugly using of private attributes of the lock
+        # manager. We should improve the lock manager so we don't need
+        # to use them.
+        lock_name = self._lockmgr._lockname(self._dirname)
+        fs = self._lockmgr._fs
+        if fs.exists(lock_name):
+            fs.remove(lock_name)
+        self.got_lock = False
 
     def is_locked(self):
         return self._lockmgr.is_locked(self._dirname)
