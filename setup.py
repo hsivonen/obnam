@@ -160,56 +160,81 @@ class Check(Command):
 
     def run(self):
         if self.unit_tests:
-            print "run unit tests"
-            runcmd(['python', '-m', 'CoverageTestRunner',
-                    '--ignore-missing-from=without-tests'])
-            os.remove('.coverage')
+            self.run_unit_tests()
 
         if self.yarns and got_yarn:
-            if 'REPOSITORY_FORMAT' in os.environ:
-                formats = [os.environ['REPOSITORY_FORMAT']]
-            else:
-                formats = ['6', 'simple']
-
-            for format in formats:
-                print 'run yarn for repository format %s' % format
-                runcmd(
-                    ['yarn', '-s', 'yarns/obnam.sh'] +
-                    ['--env', 'REPOSITORY_FORMAT=' + format] +
-                    glob.glob('yarns/*.yarn'))
+            self.run_yarn()
 
         num_clients = '2'
         num_generations = '16'
 
         if self.lock_tests:
-            print "run local locking tests"
-            test_repo = tempfile.mkdtemp()
-            runcmd(['./test-locking', num_clients,
-                    num_generations, test_repo, test_repo])
-            shutil.rmtree(test_repo)
+            self.run_lock_test(num_clients, num_generations)
 
         if self.crash_tests:
-            print "run crash test"
-            runcmd(['./crash-test', '200'])
+            self.run_crash_test()
 
         if self.sftp_tests:
-            print "run sftp tests"
-            runcmd(['./test-sftpfs'])
+            self.run_sftp_test()
 
         if self.network_lock_tests:
-            print "re-run locking tests using localhost networking"
-            test_repo = tempfile.mkdtemp()
-            repo_url = 'sftp://localhost/%s' % test_repo
-            runcmd(['./test-locking', num_clients,
-                    num_generations, repo_url, test_repo])
-            shutil.rmtree(test_repo)
+            self.run_network_lock_test(num_clients, num_generations)
 
         if self.nitpick:
-            sources = self.find_all_source_files()
-            self.check_sources_for_nitpicks(sources)
-            self.check_copyright_statements(sources)
+            self.run_nitpick_checks()
 
         print "setup.py check done"
+
+    def run_unit_tests(self):
+        print "run unit tests"
+        runcmd(['python', '-m', 'CoverageTestRunner',
+                '--ignore-missing-from=without-tests'])
+        os.remove('.coverage')
+
+    def run_yarn(self):
+        for format in self.get_wanted_formats():
+            self.run_yarn_for_repo_format(format)
+
+    def get_wanted_formats(self):
+        if 'REPOSITORY_FORMAT' in os.environ:
+            return [os.environ['REPOSITORY_FORMAT']]
+        else:
+            return ['6', 'simple']
+
+    def run_yarn_for_repo_format(self, format):
+        print 'run yarn for repository format %s' % format
+        runcmd(
+            ['yarn', '-s', 'yarns/obnam.sh'] +
+            ['--env', 'REPOSITORY_FORMAT=' + format] +
+            glob.glob('yarns/*.yarn'))
+
+    def run_lock_test(self, num_clients, num_generations):
+        print "run local locking tests"
+        test_repo = tempfile.mkdtemp()
+        runcmd(['./test-locking', num_clients,
+                num_generations, test_repo, test_repo])
+        shutil.rmtree(test_repo)
+
+    def run_network_lock_test(self, num_clients, num_generations):
+        print "run locking tests using localhost networking"
+        test_repo = tempfile.mkdtemp()
+        repo_url = 'sftp://localhost/%s' % test_repo
+        runcmd(['./test-locking', num_clients,
+                num_generations, repo_url, test_repo])
+        shutil.rmtree(test_repo)
+
+    def run_crash_test(self):
+        print "run crash test"
+        runcmd(['./crash-test', '200'])
+
+    def run_sftp_test(self):
+        print "run sftp tests"
+        runcmd(['./test-sftpfs'])
+
+    def run_nitpick_checks(self):
+        sources = self.find_all_source_files()
+        self.check_sources_for_nitpicks(sources)
+        self.check_copyright_statements(sources)
 
     def check_sources_for_nitpicks(self, sources):
         cliapp.runcmd(['./nitpicker'] + sources, stdout=None, stderr=None)
