@@ -20,11 +20,17 @@ import copy
 import hashlib
 import os
 import random
+import StringIO
 
 import tracing
 import yaml
 
 import obnamlib
+
+
+class ToplevelIsFileError(obnamlib.ObnamError):
+
+    msg = 'File at repository root: {filename}'
 
 
 class HookedFS(object): # pragma: no cover
@@ -43,7 +49,7 @@ class HookedFS(object): # pragma: no cover
 
     def _get_toplevel(self, filename):
         parts = filename.split(os.sep)
-        if len(parts) > 1:
+        if len(parts) >= 1:
             return parts[0]
         else: # pragma: no cover
             raise ToplevelIsFileError(filename=filename)
@@ -59,8 +65,14 @@ class HookedFS(object): # pragma: no cover
     def lock(self, filename, data):
         self.fs.lock(filename, data)
 
+    def create_and_init_toplevel(self, filename):
+        tracing.trace('filename=%s', filename)
+        toplevel = self._get_toplevel(filename)
+        if not self.fs.exists(toplevel):
+            self.fs.mkdir(toplevel)
+            self.hooks.call('repository-toplevel-init', self.repo, toplevel)
+
     def write_file(self, filename, data, runfilters=True):
-        tracing.trace('writing hooked %s' % filename)
         toplevel = self._get_toplevel(filename)
         if runfilters:
             data = self.hooks.filter_write('repository-data', data,
@@ -68,7 +80,6 @@ class HookedFS(object): # pragma: no cover
         self.fs.write_file(filename, data)
 
     def overwrite_file(self, filename, data, runfilters=True):
-        tracing.trace('overwriting hooked %s' % filename)
         toplevel = self._get_toplevel(filename)
         if runfilters:
             data = self.hooks.filter_write('repository-data', data,
@@ -80,8 +91,12 @@ class SimpleLock(object):
 
     def __init__(self):
         self._lockmgr = None
+        self._fs = None
         self._dirname = None
         self.got_lock = False
+
+    def set_fs(self, fs):
+        self._fs = fs
 
     def set_lock_manager(self, lockmgr):
         self._lockmgr = lockmgr
@@ -90,6 +105,7 @@ class SimpleLock(object):
         self._dirname = dirname
 
     def unchecked_lock(self):
+        self._fs.create_and_init_toplevel(self._dirname)
         self._lockmgr.lock([self._dirname])
         self.got_lock = True
 
@@ -127,9 +143,8 @@ class SimpleData(object):
 
     def load(self):
         if not self._obj_is_loaded and self._fs.exists(self._data_name):
-            f = self._fs.open(self._data_name, 'rb')
-            self._obj = yaml.safe_load(f)
-            f.close()
+            data = self._fs.cat(self._data_name)
+            self._obj = yaml.safe_load(StringIO.StringIO(data))
 
         # We always mark _obj as loaded so that if the file appears
         # later, that doesn't cause any changes to _obj to
@@ -137,9 +152,8 @@ class SimpleData(object):
         self._obj_is_loaded = True
 
     def save(self):
-        f = self._fs.open(self._data_name, 'wb')
-        yaml.safe_dump(self._obj, stream=f)
-        f.close()
+        data = yaml.safe_dump(self._obj)
+        self._fs.overwrite_file(self._data_name, data)
 
     def clear(self):
         self._obj = {}
@@ -169,6 +183,7 @@ class SimpleToplevel(object):
         self._data = SimpleData()
 
     def set_fs(self, fs):
+        self._lock.set_fs(fs)
         self._data.set_fs(fs)
 
     def set_dirname(self, dirname):
@@ -439,9 +454,10 @@ class SimpleClient(SimpleToplevel):
 
     def add_file(self, gen_number, filename):
         generation = self._lookup_generation_by_gen_number(gen_number)
-        generation['files'][filename] = {
-            'keys': {},
-            'chunks': [],
+        if filename not in generation['files']:
+            generation['files'][filename] = {
+                'keys': {},
+                'chunks': [],
             }
 
     def remove_file(self, gen_number, filename):
@@ -524,6 +540,12 @@ class GenerationId(object):
                 self.client_name == other.client_name and
                 self.gen_number == other.gen_number)
 
+    def __str__(self): # pragma: no cover
+        return '%s:%s' % (self.client_name, self.gen_number)
+
+    def __repr__(self): # pragma: no cover
+        return 'GenerationId(%s,%s)' % (self.client_name, self.gen_number)
+
 
 class ClientFinder(object):
 
@@ -571,6 +593,7 @@ class SimpleChunkStore(object):
         self._fs = fs
 
     def put_chunk_content(self, content):
+        self._fs.create_and_init_toplevel(self._dirname)
         while True:
             chunk_id = self._random_chunk_id()
             filename = self._chunk_filename(chunk_id)
@@ -581,6 +604,7 @@ class SimpleChunkStore(object):
                     continue
                 raise
             else:
+                tracing.trace('new chunk_id=%s', chunk_id)
                 return chunk_id
 
     def get_chunk_content(self, chunk_id):
