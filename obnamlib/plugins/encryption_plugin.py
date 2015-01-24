@@ -176,8 +176,8 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         encrypted = obnamlib.encrypt_with_keyring(symmetric_key, userkeys)
         self._overwrite_file(repo, os.path.join(toplevel, 'key'), encrypted)
 
-    def add_client(self, clientlist, client_name):
-        clientlist.set_client_keyid(client_name, self.keyid)
+    def add_client(self, repository, client_name):
+        repository.set_client_encryption_key_id(client_name, self.keyid)
 
     def quit_if_unencrypted(self):
         if self.app.settings['encrypt-with']:

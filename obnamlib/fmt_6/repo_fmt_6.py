@@ -183,7 +183,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         tracing.trace('committing client list')
         for client_name in self._added_clients:
             self.hooks.call(
-                'repository-add-client', self._client_list, client_name)
+                'repository-add-client', self, client_name)
         self._added_clients = []
         self._client_list.commit()
         self._raw_unlock_client_list()
