@@ -307,7 +307,8 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             correct_checksum = metadata.md5
             if summer.digest() != correct_checksum:
                 msg = 'File checksum restore error: %s' % filename
-                msg += '(%s vs %s)' % (summer.digest(), correct_checksum)
+                msg += ' (%s vs %s)' % (
+                    summer.hexdigest(), correct_checksum.encode('hex'))
                 logging.error(msg)
                 self.app.ts.notify(msg)
                 self.errors = True
