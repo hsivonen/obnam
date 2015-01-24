@@ -285,6 +285,8 @@ class SimpleClientList(SimpleToplevel):
         return self._data['clients'][client_name]['encryption-key']
 
     def set_client_encryption_key(self, client_name, encryption_key):
+        tracing.trace('set_client_encryption_key: client_name=%s', client_name)
+        tracing.trace('set_client_encryption_key: encryption_key=%s', encryption_key)
         self._require_client_exists(client_name)
         self._data['clients'][client_name]['encryption-key'] = encryption_key
 
