@@ -210,6 +210,11 @@ class SimpleClientList(SimpleToplevel):
     def __init__(self):
         SimpleToplevel.__init__(self)
         self.set_dirname('client-list')
+        self._added_clients = []
+        self._hooks = None
+
+    def set_hooks(self, hooks):
+        self._hooks = hooks
 
     def lock(self):
         if self._lock.got_lock:
@@ -226,7 +231,12 @@ class SimpleClientList(SimpleToplevel):
     def commit(self):
         if not self._lock.got_lock:
             raise obnamlib.RepositoryClientListNotLocked()
+        tracing.trace('client list: %r', self._data._obj)
+        for client_name in self._added_clients:
+            self._hooks.call(
+                'repository-add-client', self, client_name)
         self._data.save()
+        self._added_clients = []
         self._lock.unchecked_unlock()
 
     def force_lock(self):
@@ -247,6 +257,8 @@ class SimpleClientList(SimpleToplevel):
             'encryption-key': None,
         }
         self._data['clients'] = clients
+
+        self._added_clients.append(client_name)
         
     def remove_client(self, client_name):
         if not self._lock.got_lock:
@@ -257,6 +269,9 @@ class SimpleClientList(SimpleToplevel):
         clients = self._data.get('clients', {})
         del clients[client_name]
         self._data['clients'] = clients
+
+        if client_name in self._added_clients:
+            self._added_clients.remove(client_name)
 
     def rename_client(self, old_client_name, new_client_name):
         if not self._lock.got_lock:
@@ -270,6 +285,10 @@ class SimpleClientList(SimpleToplevel):
         del clients[old_client_name]
         self._data['clients'] = clients
 
+        if old_client_name in self._added_clients:
+            self._added_clients.remove(old_client_name)
+        self._added_clients.append(new_client_name)
+
     def _require_client_exists(self, client_name):
         if client_name not in self._data.get('clients', {}):
             raise obnamlib.RepositoryClientDoesNotExist(
@@ -280,13 +299,13 @@ class SimpleClientList(SimpleToplevel):
             raise obnamlib.RepositoryClientAlreadyExists(
                 client_name=client_name)
 
-    def get_client_encryption_key(self, client_name):
+    def get_client_encryption_key_id(self, client_name):
         self._require_client_exists(client_name)
         return self._data['clients'][client_name]['encryption-key']
 
-    def set_client_encryption_key(self, client_name, encryption_key):
-        tracing.trace('set_client_encryption_key: client_name=%s', client_name)
-        tracing.trace('set_client_encryption_key: encryption_key=%s', encryption_key)
+    def set_client_encryption_key_id(self, client_name, encryption_key):
+        tracing.trace('client_name=%s', client_name)
+        tracing.trace('encryption_key=%s', encryption_key)
         self._require_client_exists(client_name)
         self._data['clients'][client_name]['encryption-key'] = encryption_key
 
@@ -773,6 +792,7 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
 
         self._client_list.set_fs(self._fs)
         self._client_list.set_lock_manager(self._lockmgr)
+        self._client_list.set_hooks(self._hooks)
 
         self._client_finder.set_fs(self._fs)
         self._client_finder.set_lock_manager(self._lockmgr)
@@ -823,10 +843,11 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
         self._client_list.rename_client(old_client_name, new_client_name)
 
     def get_client_encryption_key_id(self, client_name):
-        return self._client_list.get_client_encryption_key(client_name)
+        return self._client_list.get_client_encryption_key_id(client_name)
 
     def set_client_encryption_key_id(self, client_name, key_id):
-        return self._client_list.set_client_encryption_key(client_name, key_id)
+        return self._client_list.set_client_encryption_key_id(
+            client_name, key_id)
 
     #
     # Per-client methods.
