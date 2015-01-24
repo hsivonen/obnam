@@ -811,6 +811,9 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
     def get_fsck_work_items(self):
         return []
 
+    def get_shared_directories(self):
+        return ['client-list', 'chunk-store', 'chunk-indexes']
+
     #
     # Client list methods.
     #

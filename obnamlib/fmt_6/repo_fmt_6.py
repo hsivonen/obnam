@@ -145,6 +145,9 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         if self._real_fs:
             self._real_fs.close()
 
+    def get_shared_directories(self):
+        return ['chunklist', 'chunks', 'chunksums', 'clientlist']
+
     # Client list handling.
 
     def _setup_client_list(self):

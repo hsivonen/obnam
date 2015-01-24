@@ -503,6 +503,9 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
     def close(self):
         pass
 
+    def get_shared_directories(self):
+        return []
+
     def get_client_names(self):
         return self._client_list.names()
 
