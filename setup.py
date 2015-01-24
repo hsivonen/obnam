@@ -166,12 +166,17 @@ class Check(Command):
             os.remove('.coverage')
 
         if self.yarns and got_yarn:
-            runcmd(
-                ['yarn', '-s', 'yarns/obnam.sh'] +
-                ['--env',
-                 'REPOSITORY_FORMAT=' +
-                 os.environ.get('REPOSITORY_FORMAT', '6')] +
-                glob.glob('yarns/*.yarn'))
+            if 'REPOSITORY_FORMAT' in os.environ:
+                formats = [os.environ['REPOSITORY_FORMAT']]
+            else:
+                formats = ['6', 'simple']
+
+            for format in formats:
+                print 'run yarn for repository format %s' % format
+                runcmd(
+                    ['yarn', '-s', 'yarns/obnam.sh'] +
+                    ['--env', 'REPOSITORY_FORMAT=' + format] +
+                    glob.glob('yarns/*.yarn'))
 
         num_clients = '2'
         num_generations = '16'
