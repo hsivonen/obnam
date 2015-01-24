@@ -249,8 +249,6 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
             for keyid in tops[toplevel]:
                 print '  %s' % self._get_key_string(keyid)
 
-    _shared = ['chunklist', 'chunks', 'chunksums', 'clientlist']
-
     def _find_clientdirs(self, repo, client_names):
         return [repo.get_client_extra_data_directory(client_name)
                 for client_name in client_names]
@@ -264,7 +262,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         keyid = self.app.settings['keyid']
         key = obnamlib.get_public_key(keyid)
         clients = self._find_clientdirs(repo, args)
-        for toplevel in self._shared + clients:
+        for toplevel in repo.get_shared_directories() + clients:
             self.add_to_userkeys(repo, toplevel, key)
             self.rewrite_symmetric_key(repo, toplevel)
 
@@ -276,7 +274,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         repo = self.app.get_repository_object()
         keyid = self.app.settings['keyid']
         clients = self._find_clientdirs(repo, args)
-        for toplevel in self._shared + clients:
+        for toplevel in repo.get_shared_directories() + clients:
             self.remove_from_userkeys(repo, toplevel, keyid)
             self.rewrite_symmetric_key(repo, toplevel)
 
