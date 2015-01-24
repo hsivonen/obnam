@@ -285,7 +285,7 @@ class SimpleClientList(SimpleToplevel):
         del clients[old_client_name]
         self._data['clients'] = clients
 
-        if old_client_name in self._added_clients:
+        if old_client_name in self._added_clients: # pragma: no cover
             self._added_clients.remove(old_client_name)
         self._added_clients.append(new_client_name)
 
