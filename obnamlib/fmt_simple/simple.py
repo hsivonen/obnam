@@ -363,9 +363,9 @@ class SimpleClient(SimpleToplevel):
         generations = self._data.get('generations', [])
         if generations:
             keys = generations[-1]['keys']
-            if keys[obnamlib.REPO_GENERATION_ENDED] is None:
-                keys[obnamlib.REPO_GENERATION_ENDED] = int(
-                    self._current_time())
+            key_name = obnamlib.repo_key_name(obnamlib.REPO_GENERATION_ENDED)
+            if keys[key_name] is None:
+                keys[key_name] = int(self._current_time())
 
     def _require_lock(self):
         if not self._lock.got_lock:
@@ -398,8 +398,9 @@ class SimpleClient(SimpleToplevel):
         new_generation = dict(previous)
         new_generation['id'] = self._new_generation_number()
         keys = new_generation['keys']
-        keys[obnamlib.REPO_GENERATION_STARTED] = int(self._current_time())
-        keys[obnamlib.REPO_GENERATION_ENDED] = None
+        keys[obnamlib.repo_key_name(obnamlib.REPO_GENERATION_STARTED)] = \
+            int(self._current_time())
+        keys[obnamlib.repo_key_name(obnamlib.REPO_GENERATION_ENDED)] = None
 
         self._data['generations'] = generations + [new_generation]
 
@@ -409,7 +410,8 @@ class SimpleClient(SimpleToplevel):
         generations = self._data.get('generations', [])
         if generations:
             keys = generations[-1]['keys']
-            if keys[obnamlib.REPO_GENERATION_ENDED] is None:
+            key_name = obnamlib.repo_key_name(obnamlib.REPO_GENERATION_ENDED)
+            if keys[key_name] is None:
                 raise obnamlib.RepositoryClientGenerationUnfinished(
                     client_name=self._client_name)
 
@@ -444,13 +446,14 @@ class SimpleClient(SimpleToplevel):
 
     def get_generation_key(self, gen_number, key):
         generation = self._lookup_generation_by_gen_number(gen_number)
+        key_name = obnamlib.repo_key_name(key)
         if key in obnamlib.REPO_GENERATION_INTEGER_KEYS:
-            value = generation['keys'].get(key, None)
+            value = generation['keys'].get(key_name, None)
             if value is None:
                 value = 0
             return int(value)
         else:
-            return generation['keys'].get(key, '')
+            return generation['keys'].get(key_name, '')
 
     def _lookup_generation_by_gen_number(self, gen_number):
         if 'generations' in self._data:
@@ -464,7 +467,7 @@ class SimpleClient(SimpleToplevel):
     def set_generation_key(self, gen_number, key, value):
         self._require_lock()
         generation = self._lookup_generation_by_gen_number(gen_number)
-        generation['keys'][key] = value
+        generation['keys'][obnamlib.repo_key_name(key)] = value
 
     def file_exists(self, gen_number, filename):
         try:
