@@ -25,6 +25,9 @@ New features:
   makes the KDE `k4dirstat` utility be able to show graphically which
   parts of a backup generation use most space.
 
+* Lars Wirzenius added the `simple` repository format, which is for
+  demonstration only. It is much too simplistic to be used for real.
+
 Minor changes:
 
 * The manual page and `obnam --help` are now clearer that the `--root`
