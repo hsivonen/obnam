@@ -1,4 +1,4 @@
-# Copyright (C) 2009-2014  Lars Wirzenius
+# Copyright (C) 2009-2015  Lars Wirzenius
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -134,6 +134,7 @@ from repo_interface import (
     REPO_GENERATION_IS_CHECKPOINT,
     REPO_GENERATION_FILE_COUNT,
     REPO_GENERATION_TOTAL_DATA,
+    REPO_GENERATION_INTEGER_KEYS,
     REPO_FILE_TEST_KEY,
     REPO_FILE_MODE,
     REPO_FILE_MTIME_SEC,
@@ -159,6 +160,14 @@ from repo_interface import (
 #
 
 from repo_dummy import RepositoryFormatDummy
+
+
+#
+# Repository format simple specific modules.
+#
+
+from fmt_simple import RepositoryFormatSimple
+
 
 #
 # Repository format 6 specific modules.

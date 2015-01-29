@@ -1,4 +1,4 @@
-# Copyright 2013-2014  Lars Wirzenius
+# Copyright 2013-2015  Lars Wirzenius
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -502,6 +502,9 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
 
     def close(self):
         pass
+
+    def get_shared_directories(self):
+        return []
 
     def get_client_names(self):
         return self._client_list.names()

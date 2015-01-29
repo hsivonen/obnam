@@ -54,6 +54,12 @@ run_obnam()
     # away, so a zero timeout is OK.
     add_to_config "$name" lock-timeout 0
 
+    # If a repository format has been specified, use it.
+    if [ -n "$REPOSITORY_FORMAT" ]
+    then
+        add_to_config "$name" repository-format "$REPOSITORY_FORMAT"
+    fi
+
     (
         if [ -e "$DATADIR/$name.env" ]
         then

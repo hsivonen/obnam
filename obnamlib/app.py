@@ -85,6 +85,14 @@ class App(cliapp.Application):
             metavar='TIMEOUT',
             default=60)
 
+        # Repositofy format selection.
+
+        self.settings.choice(
+            ['repository-format'],
+            ['6', 'simple'],
+            'what format to use for new repositories? one of "6", "simple"',
+            metavar='FORMAT')
+
         # Performance related settings.
 
         perf_group = obnamlib.option_group['perf']
@@ -211,7 +219,7 @@ class App(cliapp.Application):
             sys.stderr.write('ERROR: %s\n' % str(e))
             sys.exit(1)
         except obnamlib.StructuredError as e:
-            logging.critical(str(e))
+            logging.critical(str(e), exc_info=True)
             sys.stderr.write('ERROR: %s\n' % e.formatted())
             sys.exit(1)
 
@@ -250,9 +258,16 @@ class App(cliapp.Application):
 
         if create:
             return self.repo_factory.create_repo(
-                repofs, obnamlib.RepositoryFormat6, **kwargs)
+                repofs, self.get_default_repository_class(), **kwargs)
         else:
             return self.repo_factory.open_existing_repo(repofs, **kwargs)
+
+    def get_default_repository_class(self):
+        classes = {
+            '6': obnamlib.RepositoryFormat6,
+            'simple': obnamlib.RepositoryFormatSimple,
+            }
+        return classes[self.settings['repository-format']]
 
     def time(self):
         '''Return current time in seconds since epoch.

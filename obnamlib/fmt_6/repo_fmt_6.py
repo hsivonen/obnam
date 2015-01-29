@@ -1,4 +1,4 @@
-# Copyright (C) 2009-2014  Lars Wirzenius
+# Copyright (C) 2009-2015  Lars Wirzenius
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -145,6 +145,9 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         if self._real_fs:
             self._real_fs.close()
 
+    def get_shared_directories(self):
+        return ['chunklist', 'chunks', 'chunksums', 'clientlist']
+
     # Client list handling.
 
     def _setup_client_list(self):
@@ -183,7 +186,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         tracing.trace('committing client list')
         for client_name in self._added_clients:
             self.hooks.call(
-                'repository-add-client', self._client_list, client_name)
+                'repository-add-client', self, client_name)
         self._added_clients = []
         self._client_list.commit()
         self._raw_unlock_client_list()

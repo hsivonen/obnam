@@ -1,6 +1,6 @@
 # repo_interface.py -- interface class for repository access
 #
-# Copyright 2013-2014  Lars Wirzenius
+# Copyright 2013-2015  Lars Wirzenius
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -73,11 +73,13 @@ _integer_keys = [
 for i, name in enumerate(_string_keys + _integer_keys):
     globals()[name] = i
 
-REPO_FILE_INTEGER_KEYS = [
-    globals()[name]
-    for name in _integer_keys
-    if name.startswith('REPO_FILE_')
-    ]
+def _filter_integer_keys(prefix):
+    return [globals()[name]
+            for name in _integer_keys
+            if name.startswith(prefix)]
+
+REPO_GENERATION_INTEGER_KEYS = _filter_integer_keys('REPO_GENERATION_')
+REPO_FILE_INTEGER_KEYS = _filter_integer_keys('REPO_FILE_')
 
 
 def repo_key_name(key_value):
@@ -345,9 +347,19 @@ class RepositoryInterface(object):
         '''Close the repository and its filesystem.'''
         raise NotImplementedError()
 
+    def get_shared_directories(self):
+        '''Return list of directories for shared information in the repo.
+
+        This is useful for some plugins that need to store extra data
+        in each shared directory.
+
+        '''
+        raise NotImplementedError()
+
     # Client list.
 
     def get_client_names(self):
+
         '''Return client names currently existing in the repository.'''
         raise NotImplementedError()
 
@@ -827,6 +839,9 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
         # so just calling the method will have to do for now.
         self.repo.close()
         self.assertTrue(True)
+
+    def test_returns_list_of_shared_directories(self):
+        self.assertTrue(type(self.repo.get_shared_directories()), list)
 
     # Tests for the client list.
 
