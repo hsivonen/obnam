@@ -143,7 +143,7 @@ class BackupProgress(object):
         chunk_amount, chunk_unit = obnamlib.humanise_size(
             self.uploaded_bytes)
 
-        fs_amount, fs_unit = obnamlib.humanise_size(fs.bytes_written)
+        ul_amount, ul_unit = obnamlib.humanise_size(fs.bytes_written)
 
         dl_amount, dl_unit = obnamlib.humanise_size(fs.bytes_read)
 
@@ -152,6 +152,10 @@ class BackupProgress(object):
         overhead_bytes = max(0, overhead_bytes)
         overhead_amount, overhead_unit = obnamlib.humanise_size(
             overhead_bytes)
+        if fs.bytes_written > 0:
+            overhead_percent = 100.0 * overhead_bytes / fs.bytes_written
+        else:
+            overhead_percent = 0.0
 
         speed_amount, speed_unit = obnamlib.humanise_speed(
             self.uploaded_bytes, duration)
@@ -169,7 +173,7 @@ class BackupProgress(object):
             self.uploaded_bytes, chunk_amount, chunk_unit)
         logging.info(
             '* total uploaded data (incl. metadata): %s bytes (%s %s)',
-            fs.bytes_written, fs_amount, fs_unit)
+            fs.bytes_written, ul_amount, ul_unit)
         logging.info(
             '* total downloaded data (incl. metadata): %s bytes (%s %s)',
             fs.bytes_read, dl_amount, dl_unit)
@@ -183,12 +187,34 @@ class BackupProgress(object):
             '* average speed: %s %s',
             speed_amount, speed_unit)
 
+        scanned_amount, scanned_unit = obnamlib.humanise_size(
+            self.scanned_bytes)
+        
+
         self._ts.notify(
-            'Backed up %d files (of %d found), '
-            'uploaded %.1f %s in %s at %.1f %s average speed' %
-                (self.backed_up_count, self.file_count,
-                 chunk_amount, chunk_unit,
-                 duration_string, speed_amount, speed_unit))
+            'Backed up %d files (of %d found), containing %.1f %s.' %
+            (self.backed_up_count,
+             self.file_count,
+             scanned_amount,
+             scanned_unit))
+        self._ts.notify(
+            'Uploaded %.1f %s file data in %s at %.1f %s average speed.' %
+            (chunk_amount,
+             chunk_unit,
+             duration_string,
+             speed_amount,
+             speed_unit))
+        self._ts.notify(
+            'Total download amount %.1f %s.' %
+            (dl_amount,
+             dl_unit))
+        self._ts.notify(
+            'Total upload amount %.1f %s. Overhead was %.1f %s (%.1f %%).' %
+            (ul_amount,
+             ul_unit,
+             overhead_amount,
+             overhead_unit,
+             overhead_percent))
 
 
 class BackupPlugin(obnamlib.ObnamPlugin):

@@ -51,6 +51,9 @@ Minor changes:
 * Lars Wirzenius added the path to the error message about a missing
   chunk (R43272X).
 
+* Lars Wirzenius made the message at the end of a backup report more
+  statistics about transfers during the backup.
+
 Bug fixes:
 
 * The Obnam SFTP plugin would loop infinitely if it lost the
