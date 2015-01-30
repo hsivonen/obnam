@@ -98,4 +98,3 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
                 self.repo.make_generation_spec(genid))
         else:
             self.repo.remove_generation(genid)
-
