@@ -48,6 +48,9 @@ Minor changes:
 * Jan Niggemann added a little to the German translation of the Obnam
   manual.
 
+* Lars Wirzenius added the path to the error message about a missing
+  chunk (R43272X).
+
 Bug fixes:
 
 * The Obnam SFTP plugin would loop infinitely if it lost the

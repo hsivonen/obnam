@@ -413,7 +413,9 @@ class ChunkStore(object):
 
     def get_chunk_content(self, chunk_id):
         if chunk_id not in self.chunks:
-            raise obnamlib.RepositoryChunkDoesNotExist(chunk_id=str(chunk_id))
+            raise obnamlib.RepositoryChunkDoesNotExist(
+                chunk_id=str(chunk_id),
+                filename='(no chunk files in this format')
         return self.chunks[chunk_id]
 
     def has_chunk(self, chunk_id):
@@ -421,7 +423,9 @@ class ChunkStore(object):
 
     def remove_chunk(self, chunk_id):
         if chunk_id not in self.chunks:
-            raise obnamlib.RepositoryChunkDoesNotExist(chunk_id=str(chunk_id))
+            raise obnamlib.RepositoryChunkDoesNotExist(
+                chunk_id=str(chunk_id),
+                filename='(no chunk files in this format')
         del self.chunks[chunk_id]
 
     def get_chunk_ids(self):

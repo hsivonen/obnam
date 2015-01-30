@@ -690,12 +690,14 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             client = self._open_client(client_name)
             return client.get_file_data(gen_number, filename)
 
+        filename = self._chunk_filename(chunk_id)
         try:
-            return self._fs.cat(self._chunk_filename(chunk_id))
+            return self._fs.cat(filename)
         except IOError, e:
             if e.errno == errno.ENOENT:
                 raise obnamlib.RepositoryChunkDoesNotExist(
-                    chunk_id=str(chunk_id))
+                    chunk_id=str(chunk_id),
+                    filename=filename)
             raise # pragma: no cover
 
     def has_chunk(self, chunk_id):
@@ -721,7 +723,9 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         try:
             self._fs.remove(filename)
         except OSError:
-            raise obnamlib.RepositoryChunkDoesNotExist(chunk_id=str(chunk_id))
+            raise obnamlib.RepositoryChunkDoesNotExist(
+                chunk_id=str(chunk_id),
+                filename=filename)
 
     def get_chunk_ids(self):
         # Note: This does not cover for in-tree chunk data. We cannot
