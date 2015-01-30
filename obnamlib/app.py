@@ -57,7 +57,7 @@ class App(cliapp.Application):
             default=self.deduce_client_name())
 
         self.settings.boolean(
-            ['quiet'],
+            ['quiet', 'silent'],
             'be silent: show only error messages, no progress updates')
 
         self.settings.boolean(
