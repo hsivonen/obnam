@@ -634,7 +634,9 @@ class SimpleChunkStore(object):
     def get_chunk_content(self, chunk_id):
         filename = self._chunk_filename(chunk_id)
         if not self._fs.exists(filename):
-            raise obnamlib.RepositoryChunkDoesNotExist(chunk_id=chunk_id)
+            raise obnamlib.RepositoryChunkDoesNotExist(
+                chunk_id=chunk_id,
+                filename=filename)
         return self._fs.cat(filename)
 
     def has_chunk(self, chunk_id):
@@ -644,7 +646,9 @@ class SimpleChunkStore(object):
     def remove_chunk(self, chunk_id):
         filename = self._chunk_filename(chunk_id)
         if not self._fs.exists(filename):
-            raise obnamlib.RepositoryChunkDoesNotExist(chunk_id=chunk_id)
+            raise obnamlib.RepositoryChunkDoesNotExist(
+                chunk_id=chunk_id,
+                filename=filename)
         self._fs.remove(filename)
 
     def get_chunk_ids(self):

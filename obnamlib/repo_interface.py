@@ -178,7 +178,10 @@ class RepositoryFileKeyNotAllowed(obnamlib.ObnamError):
 
 class RepositoryChunkDoesNotExist(obnamlib.ObnamError):
 
-    msg = "Repository doesn't contain chunk {chunk_id}"
+    msg = (
+        "Repository doesn't contain chunk {chunk_id}. "
+        "It is expected at {filename}"
+    )
 
 
 class RepositoryChunkContentNotInIndexes(obnamlib.ObnamError):
