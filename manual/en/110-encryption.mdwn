@@ -113,6 +113,16 @@ them. Run the following command and pick your key from the list.
 
     gpg --list-keys
 
+The output will look something like this:
+
+    pub   4096R/5E8511F9 2009-07-22
+    uid                  Lars Wirzenius <liw@liw.fi>
+    sub   2048R/9BE35AE6 2011-08-05
+
+That's the output for one key; there may be many keys. The key
+identifier is on the line staring with `pub`, in the second column
+after the slash. Above, it's 5E8511F9.
+
 In the rest of the examples in this chapter, we'll assume your key
 identifier is CAFEFACE.
 
