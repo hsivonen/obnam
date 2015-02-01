@@ -21,7 +21,7 @@ Oder sie könnten ausschließlich an Ihnen interessiert sein.
 Statt Ihre Dateien und eMails zu lesen oder Ihre Fotos
 und Videos anzusehen könnten sie Interesse daran haben, Ihnen den Zugang
 dazu zu versperren, oder einfach Ihre Daten ganz zerstören. Sie könnten sogar
-Ihre Daten korrumpieren, indem sie Kinderpornographie in Ihr Foto-Archiv ablegen.
+Ihre Daten korrumpieren, indem sie Kinderpornographie in Ihrem Foto-Archiv ablegen.
 
 Sie schützen Ihren Computer so gut Sie können damit diese und andere
 schlimme Dinge nicht passieren. Ihre Sicherungen sollten Sie mit der gleichen Sorgfalt behandeln.
@@ -107,7 +107,7 @@ steht in der [GnuPG Dokumentation] (englisch).
 
 [GnuPG Dokumentation]: http://www.gnupg.org/documentation/
 
-Sobald Sie eine funktionierendes GnuPG-Setup und ein Schlüsselpaar
+Sobald Sie ein funktionierendes GnuPG-Setup und ein Schlüsselpaar
 (bestehend aus einem öffentlichen Schlüssel und einem geheimen
 Schlüssel) haben, müssen Sie die Schlüssel-ID finden. Führen Sie
 den folgenden Befehl aus und wählen Sie Ihren Schlüssel aus der Liste.
