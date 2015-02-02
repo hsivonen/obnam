@@ -61,3 +61,4 @@ obnam-manual.de.html: Makefile $(de_sources) ../obnam.css
 clean:
 	rm -f $(outputs) en/000.mdwn
 	rm -f $(outputs) de/000.mdwn
+	rm -f $(outputs) fr/000.mdwn
