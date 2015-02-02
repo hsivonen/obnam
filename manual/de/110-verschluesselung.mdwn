@@ -135,7 +135,7 @@ erscheinen.
 
 Obnam verschlüsselt automatisch alle Daten, die es ins Repository
 schreibt und entschlüsselt sie wenn nötig. Solange Sie nur ein Schlüssel
-für jeden Clientbenutzen, kümmert sich Obnam darum die richtigen
+für jeden Client benutzen, kümmert sich Obnam darum die richtigen
 Schlüssel an den richtigen Stellen hinzu zu fügen.
 
 Prüfen ob ein Repository Verschlüsselung nutzt

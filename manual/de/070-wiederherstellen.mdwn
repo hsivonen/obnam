@@ -38,7 +38,7 @@ Führen Sie den Befehl oben aus und schauen Sie dann in das Verzeichnis
     $
 
 Jedes Verzeichnis unter `~/backups` ist eine Generation Ihres Backups,
-bennant nach dem "generation identifier" den Obnam vergibt.
+benannt nach dem "generation identifier" den Obnam vergibt.
 Der Symlink `latest` zeigt immer auf die neueste Generation.
 
 Jetzt können Sie kinderleicht eine Datei wieder herstellen:
@@ -62,7 +62,7 @@ Wenn Sie Ihre Backups nicht mehr ansehen möchten, können Sie das Repository un
 
     fusermount -u ~/backups
 
-Neben der Kommandozeile können Sie natürlich auch den Filemanager Ihrer Wahl benutzen.
+Neben der Kommandozeile können Sie natürlich auch den Dateimanager Ihrer Wahl benutzen.
 Den mount und un-mount Vorgang müssen Sie (abhängig von der Konfiguration Ihres PCs)
 eventuell trotzdem auf der Kommandozeile durchführen.
 
@@ -70,14 +70,14 @@ Wiederherstellen ohne FUSE
 --------------------------
 
 Wenn `obnam mount` nicht verfügbar ist, können Sie direkt mit Obnam
-wiederherstellen. Verwenden `obnam generations` und ` obnam ls`, um die
+wiederherstellen. Verwenden Sie `obnam generations` und ` obnam ls`, um die
 richtige Generation zur Wiederherstellung zu finden, und führen Sie dann
 einen Befehl wie diesen aus:
 
     obnam restore --to /tmp/tomjon-restored /home/tomjon/Documents
 
 So wir das angegebene Verzeichnis wieder hergestellt. Ohne Angabe, was wieder
-herzustellen ist wird die gesamte neueste Generation wieder hersgestellt.
+herzustellen ist wird die gesamte neueste Generation wieder hergestellt.
 Eine andere Generation währen Sie mit `--generation` aus:
 
     obnam restore --to /tmp/tomjon-restored --generation 2

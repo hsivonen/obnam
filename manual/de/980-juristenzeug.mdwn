@@ -25,7 +25,7 @@ abgerufen werden.
 
 Dieses Handbuch (alle Inhalte des Verzeichnisses `manual` in den Quellen)
 steht zusätzlich unter der Creative Commons Attribution 4.0 International
-Lizenz. Sie können sich aussuchen ob Sie die GPL or die CC-Licenz 
+Lizenz. Sie können sich aussuchen ob Sie die GPL or die CC-Lizenz 
 für das Handbuch anwenden.
 
 Eine Kopie der Creative Commons Lizenz liegt in Form der Datei

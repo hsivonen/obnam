@@ -239,7 +239,7 @@ brauchbar um Backups abzulegen, Hauptsache es ist wiederbeschreibbar.
 **Optische Medien**, besonders welche die nur einmal beschrieben werden können,
 können für Backups benutzt werden. Sie eignen sich aber eher für
 Komplettsicherungen, die lange Zeit aufbewahrt werden als für aktiv
-genutzte Backup-Repositorien. Alternativ können Sie als eine Art
+genutzte Backup-Repositories. Alternativ können Sie als eine Art
 Bandsicherung verwendet werden, in der jedes Band nur einmal beschrieben wird.
 Obnam unterstützt keine optischen Medien als Backup-Speicher.
 

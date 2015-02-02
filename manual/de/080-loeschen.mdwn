@@ -2,7 +2,7 @@ Alte Backup-Generationen löschen
 ================================
 
 Jedes Mal wenn Sie ein Backup erstellen, wächst Ihr Backup-Repository in 
-der Größe. Um ein Vollaufen des verfügbaren Speichers zu vermeiden 
+der Größe. Um ein Volllaufen des verfügbaren Speichers zu vermeiden 
 müssen Sie ab und zu einige alte Backups los werden. Das ist natürlich 
 ein bisschen ein Dilemma: Sie machen Backups um keine Daten zu 
 verlieren, und jetzt müssen Sie genau das tun.

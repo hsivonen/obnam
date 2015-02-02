@@ -3,7 +3,7 @@ Siehe auch...
 
 Dieses Kapitel gibt Hinweise auf weitere Informationen über Obnam, Backups,
 und verwandte Dinge. Zur Zeit ist dies eine sehr kurze Liste, aber
-Vorschläge zu Dinden, die hinzugefügt werden könnnen akzeptieren wir gern.
+Vorschläge zu Dingen, die hinzugefügt werden können akzeptieren wir gern.
 
 * Obnam Homepage (englisch): <http://obnam.org>.
     - Kurze Tutorials, Download-Links, eine FAQ, Kontaktinformationen usw.

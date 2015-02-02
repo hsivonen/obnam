@@ -22,7 +22,7 @@ das zu jeder Zeit nur ein Client aktiv ist.
 Einen Vorbehalt müssen Sie bei der gemeinsamen Nutzung von
 Repositories beachten: Jeder Client hat Zugriff auf alle chunks und
 kann jeden anderen Client aus dem Repository löschen. Das heißt,
-Sie sollten nur ein Repository mit Clientes teilen, die in der
+Sie sollten nur ein Repository mit Clients teilen, die in der
 gleichen Sicherheitsdomäne sind: Allen Clients sollte gleichermaßen
 vertraut werden. Wenn ein Client gehackt wird, dann erhält der
 Eindringling Zugriff auf alle Daten im Repository und kann die Backups 

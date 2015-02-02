@@ -6,10 +6,10 @@ Dieses Kapitel beschreibt verschiedene Aspekte der Erstellung von Backups mit Ob
 Ihr erstes Backup
 -----------------
 
-Ok, dann lasst uns mal ein Backup machen! Um den Beispielen zu folgen
+OK, dann lasst uns mal ein Backup machen! Um den Beispielen zu folgen
 benötigen Sie Live-Daten, die Sie sichern können. Diese Beispiele benutzen
 Dateinamen, die Sie an Ihre eigenen Dateinamen anpassen müssen.
-Die Beispiele gehen davon aus, daß Ihr Home-Verzeichnis `/home/tomjon` ist und
+Die Beispiele gehen davon aus, dass Ihr Home-Verzeichnis `/home/tomjon` ist und
 Sie Dokumente in einem weiteren Verzeichnis names `Documents`
 in Ihrem Home-Verzeichnis haben. Weiterhin wird davon ausgegangen das Sie ein
 USB-Laufwerk unter `/media/backups` gemounted haben und das Sie das Verzeichnis
@@ -50,8 +50,8 @@ Beachten Sie das Sie Obnam nicht mitteilen müssen ob Sie ein Vollbackup oder
 ein inkrementelles Backup erstellen wollen. Obnam sorgt dafür das jede
 Generation ein Snapshot der Daten zur Zeit des Backups ist. Somit wird nicht 
 zwischen Vollbackup und inkrementellem Backup unterschieden.
-Jede Generation ist eine vollständige Sicherung, was aber nicht heisst,
-daß jede einzelne Generation sämtliche Daten separat vorhält.
+Jede Generation ist eine vollständige Sicherung, was aber nicht heißt,
+dass jede einzelne Generation sämtliche Daten separat vorhält.
 Obnam sorgt dafür das mit jeder neuen Generation nur die Daten gesichert
 werden, die bisher nicht im Repository waren. Obnam sucht die Daten
 in jeder Datei und jeder vorausgehenden Generation aller Clients,
@@ -108,7 +108,7 @@ auszuschließen:
   z.B. im Cache-Verzeichnis Ihre Browsers abgelegt werden. Die Daten in
   diesen Verzeichnissen sind meist nicht wichtig und brauchen nicht
   gesichert zu werden und es ist einfacher, das gesamte Verzeichnis mittels
-  der Spezialdatei für den Ausschluß zu markieren, als einen regulären Ausdruck
+  der Spezialdatei für den Ausschluss zu markieren, als einen regulären Ausdruck
   für `--exclude` zu schreiben.
 * Die `--one-file-system` Option schließt alle mount points und den Inhalt
   der gemounteten Dateisysteme aus. Das ist praktisch um z.B. virtuelle
@@ -194,7 +194,7 @@ Wenn Ihre wertvollen Daten sehr groß sind
 -----------------------------------------
 
 Wenn Ihre wertvollen Daten sehr groß ist, kann die erste Sicherung sehr
-lange dauern. Ditto, wenn Sie viele neue wertvolle Daten in eine späteres
+lange dauern. Dito, wenn Sie viele neue wertvolle Daten in eine späteres
 Backup aufnehmen. In diesen Fällen müssen Sie sehr geduldig sein und 
 dem Backup Zeit lassen. Oder Sie können klein beginnen und dann nach
 und nach Sicherungen hinzufügen.
@@ -250,7 +250,7 @@ Namen mit einem bestimmten Buchstaben beginnen:
     obnam backup -r /media/backups/tomjon-repo ~ \
         --exclude ~/Downloads/'[^b-zB-Z].*\.mp4$'
 
-Reduzieren Sie die ausschlüsse immer weiter bis alle Videos gesichert sind.
+Reduzieren Sie die Ausschlüsse immer weiter bis alle Videos gesichert sind.
 
 Deduplizierung
 --------------
@@ -273,7 +273,7 @@ Deduplizierung in Obnam ist in verschiedenen Situationen hilfreich:
   sind, müssen nur die neuen Daten gesichert werden.
 * Wenn eine Datei oder ein Verzeichnis umbenannt oder verschoben wird.
   Wenn Sie meinen das der englische Begriff `Photos` für das Verzeichnis
-  unpassen ist und Sie lieber das finnische `Valokuvat` möchteninstead,
+  unpassend ist und Sie stattdessen lieber das finnische `Valokuvat` möchten,
   können Sie das Verzeichnis einfach umbenennen. Ohne Deduplizierung
   müssen Sie dann aber alle Fotos nochmal sichern.
 * Wenn ein Team mit den gleichen Daten arbeitet und demnach jeder
@@ -400,9 +400,9 @@ Es gibt mehrere Möglichkeiten, mit diesem Problem umzugehen:
 
 * Der Logical Volume Manager (LVM) ermöglichst Snapshots. Sie können
   Ihre Backups so einrichten, das zuerst ein Snapshot von jedem logischen
-  Volume gemacht wird, das gesichert weden soll. Dann machen Sie das
+  Volume gemacht wird, das gesichert werden soll. Dann machen Sie das
   Backup und löschen danach den Snapshot wieder. Niemand kann die Daten
-  im Snapshot verändern, während trotzdem normal weiter gearbeitet weden
+  im Snapshot verändern, während trotzdem normal weiter gearbeitet werden
   kann, während das Backup läuft.
 * Ähnlich können Sie auch mit btrfs und seinen subvolumes vorgehen.
 * Sie können das System herunterfahren und im Einzelbenutzermodus
@@ -423,7 +423,7 @@ Benutzer anderswo ist und nicht aktiv mit der Maschine arbeitet.
 
 Wenn irgend möglich sollte Ihr Backup-Programm überprüfen, ob die Daten 
 einer Backup-Generation in sich konsistent sind. Ansonsten werden Sie 
-entweder darauf vertrauchen müssen das die Anwendungen, die Sie 
+entweder darauf vertrauen müssen das die Anwendungen, die Sie 
 verwenden, nicht zu buggy sind.
 
 Wenn Sie diesen Abschnitt nicht verstanden haben: Keine Sorge, seien Sie glücklich und schlafen Sie gut.

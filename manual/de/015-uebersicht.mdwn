@@ -6,7 +6,7 @@ Vermutlich müssen Sie nur dieses Kapitel lesen.
 Dieses Kapitel gibt eine kurze Einführung in die wichtigsten Teile von
 Obnam. Der Rest des Buches ist im Grunde eine ausführliche Version dieses
 Kapitels. Sie sollten dieses Kapitel zuerst lesen und dann einfach behaupten,
-Sie hätten auch den Rest gelesen -- auf Cocktailparties wird Sie jeder
+Sie hätten auch den Rest gelesen -- auf Cocktailpartys wird Sie jeder
 ehrfürchtig ansehen. Ich verspreche, dass auch niemand sonst den Rest
 des Buches gelesen haben wird, es gibt also kein Risiko erwischt zu werden.
 
@@ -27,7 +27,7 @@ Die folgenden Beispiele gehen davon aus, dass Sie eine Konfigurationsdatei erste
 so dass Sie die Optionen nicht jedes Mal wiederholen müssen.
 
 Vermutlich wollen Sie jetzt die `log` Einstellung aktivieren, damit Sie im Falle eines
-Problems alle verfügbaren Informationen zur Problembehebung in der Protokolldatei finden.
+Problems alle verfügbaren Informationen zur Problemlösung in der Protokolldatei finden.
 
 Das erste Backup
 ----------------
@@ -51,7 +51,7 @@ Dies wird alle neuen und geänderten Dateien sichern. Es wird ebenfalls
 aufgezeichnet, welche Dateien seit dem letzten Backup gelöscht wurden.
 
 Sie können Obnam so oft ausführen, wie Sie mögen. Es werden immer nur
-die Änderungen zum letzen Backup gesichert.
+die Änderungen zum letzten Backup gesichert.
 
 Mehrere Clients in einem Repository
 -----------------------------------

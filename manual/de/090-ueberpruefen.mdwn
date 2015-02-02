@@ -18,10 +18,10 @@ einzige Möglichkeit sicher zu sein.
 
 Gleichzeitig ist das auch ein guter Weg um sicherzustellen, das die Wiederherstellung
 tatsächlich funktioniert. Wenn Sie dies nicht testen, dürfen Sie -- wenn es
-darauf ankommt -- nicht erwarten, daß das Restore auch wirklich funktioniert.
+darauf ankommt -- nicht erwarten, dass das Restore auch wirklich funktioniert.
 
 Wenn Sie den Speicherplatz haben um eine komplette Wiederherstellung zu
-machhen, sollten Sie dies auch tun. Es ist eine großartige Möglichkeit, Ihre
+machen, sollten Sie dies auch tun. Es ist eine großartige Möglichkeit, Ihre
 Desaster-Recovery-Prozesse durchzuspielen.
 
 Ein Weg das mal zu tun wäre dieser:
@@ -56,7 +56,7 @@ Möglichkeiten, wie Sie Ihre Backups überprüfen können:
   benutzen, um die gesicherten Daten mit den Live-Daten zu vergleichen. 
   Das ist fast genau so wie alles wiederherzustellen, da das 
   Vergleichs-Tool alle Daten und Metadaten aus dem Backup extrahieren 
-  muss. Die Daten weden nur nicht weg geschrieben.
+  muss. Die Daten werden nur nicht weg geschrieben.
 
 Beide Ansätze haben das Problem, dass sie eine Sicherung mit Live-Daten 
 vergleichen und die Live-Daten sich nach der Sicherung geändert haben 
