@@ -4,3 +4,19 @@ Verschiedenes
 Dieses Kapitel behandelt Themen die kein eigenes Kapitel füllen,
 z.B. das Komprimieren von Backups und wie Obnam von cron ausgeführt wird.
 
+k4dirstat cache files
+---------------------
+
+[k4dirstat] ist ein Programm das die Festplattenbelegung. Obnams 
+`kdirstat` Befehl kann verwendet werden, um den Inhalt einer Generation 
+in einem Format auszugeben, das von k4dirstat mittels `File`, `Read 
+Cache File` eingelesen werden kann.
+
+Beispiel:
+    $ obnam kdirstat --client CLIENT --generation GENID > CLIENT.kdirstat.cache
+    $ gzip -v9 CLIENT.kdirstat.cache # OPTIONAL
+
+`CLIENT.kdirstat.cache[.gz]` kann nun in `k4dirstat` eingelesen werden.
+
+[k4dirstat]: https://bitbucket.org/jeromerobert/k4dirstat/wiki/Home
+
