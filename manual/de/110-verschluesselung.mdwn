@@ -114,6 +114,16 @@ den folgenden Befehl aus und wählen Sie Ihren Schlüssel aus der Liste.
 
     gpg --list-keys
 
+Die Ausgabe sieht ungefähr so aus:
+
+    pub   4096R/5E8511F9 2009-07-22
+    uid                  Lars Wirzenius <liw@liw.fi>
+    sub   2048R/9BE35AE6 2011-08-05
+
+Das ist die Ausgabe für einen einzelnen Schlüssel, es kann auch mehrere 
+geben. Die Schlüssel-ID steht in der Zeile die mit `pub` beginnt in zweiten 
+Spalte nach dem Schrägstrich. Im obigen Beispiel wäre das die 5E8511F9.
+
 Für die restlichen Beispielen dieses Kapitels gehen wir davon aus das
 Ihre Key-ID CAFEFACE ist.
 
