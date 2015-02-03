@@ -122,6 +122,82 @@ Die Option `--pretend` bewirkt das Obnam ein Backup anfertigt, das Repository
 dabei aber nicht verändert, es ist also schnell durchgelaufen. So können Sie
 sehen was gesichert würde und die excludes entsprechend anpassen.
 
+Backups "außer Haus" speichern
+------------------------------
+
+Vermutlich möchten Sie mindestens ein Backup auf einem entfernten 
+Rechner "offsite" (außer Haus) speichern. Obnam kann Backups mittels 
+SFTP (Teil von ssh) über das Netzwerk machen. Sie benötigen folgendes um 
+dies zu tun:
+
+* Ein **Server**, auf den Sie über SFTP zugreifen können. Dies könnte 
+ein eigener Server sein, ein gemieteter virtueller Server ("VPS"), oder 
+etwas Ähnliches wie z.B. der Rechner eines Freundes, der Ihnen 
+Plattenplatz auf seinem System zur Verfügung stellt (und umgekehrt!).
+
+* Ein **ssh key** ("Schlüssel"), um sich beim Server anzumelden. Das Login 
+über Passwort ist möglich, aber umständlich.
+
+* Genügend Speicherplatz auf dem Server, um Ihre Backups vorzuhalten.
+
+Um auf den Server zuzugreifen verwendet Obnam lediglich den SFTP-Teil 
+der ssh-Verbindung. Um zu prüfen ob das funktioniert können Sie diesen 
+Befehl ausführen:
+
+    sftp USER@SERVER
+
+Passen Sie `USER@SERVER` entsprechend Ihren Zugangsdaten an. Sie sollten 
+die Meldung `Connected to SERVER` sehen und in der Lage sin, `ls -la` 
+aufzurufen um den Verzeichnisinhalt der Gegenseite auszugeben.
+
+Sobald all das richtig eingerichtet ist, kann Obnam den Server über eine 
+SFTP-URL als Repository benutzen und so auf den Server sichern.
+
+     obnam -r sftp://USER@SERVER/~/mein-wertvolles-backup
+    
+Einzelheiten über SFTP-URLs finden Sie im nächsten Abschnitt.
+
+URL Syntax
+----------
+
+Wann immer Obnam eine URL akzeptiert, kann immer ein lokaler Pfadname 
+oder eine SFTP-URL angegeben werden. SFTP-URLs haben die Form:
+
+    sftp://[user@]domain[:port]/path
+
+Dabei ist `domain` ein normaler Domainname der einen Server bezeichnet, 
+`user` der Benutzername auf diesen Server, `port` ein optionaler 
+numerischer port und `path` ein gültiger Pfad auf dem Server.
+
+Entgegen dem SFTP-Standard (aber wie bei 
+[bzr](http://de.wikipedia.org/wiki/Bazaar)) ist der Pfad absolut, außer 
+wenn er mit `/~/` beginnt (dann ist er relativ zum home-Verzeichnis des 
+Benutzers auf dem Server).
+
+Beispiele:
+
+* `sftp://liw@backups.pieni.net/~/backup-repo` ist das Verzeichnis
+  `backup-repo` im home-Verzeichnis des Benutzers `liw` auf dem Server
+  `backups.pieni.net`. Beachten Sie das wir nicht den absoluten Pfad des 
+  Home-Verzeichnisses benötigen.
+
+* `sftp://root@my.server.example.com/home` ist das Verzeichnis `/home`
+  (absoluter Pfad) auf dem Server `my.server.example.com`, wobei der
+  Benutzername `root` verwendet wird, um auf den Server zuzugreifen.
+
+* `sftp://foo.example.com:12765/anti-clown-society` ist das Verzeichnis
+  `/anti-clown-society` auf dem Server `foo.example.com`, Zugriff über
+  Port 12765.
+
+Sie können SFTP URLs für das Repository und die Live-Daten 
+(`--root`)verwenden. Aufgrund von Beschränkungen im SFTP-Protokoll und 
+seiner Implementierung in der paramiko-Bibliothek funktionieren einige 
+Dinge beim Zugriff auf Live-Daten über SFTP nicht so gut.
+
+Dabei besonders hervorzuheben wäre die Handhabung von Hardlinks, 
+weswegen die URL beim Zugriff auf Live-Daten nicht mit `/~/` enden sollte.
+Fügen Sie in diesem besonderen Fall einen Punkt am Ende hinzu.
+
 Pull Backups
 ------------
 
@@ -131,7 +207,7 @@ Servers oder auf Ihrem Laptop zur Sicherung Ihres Telefons laufen lassen
 (vorausgesetzt, Sie bekommen den SSH-Server auf dem Telefon zum laufen).
 Manchmal ist es nicht möglich, Obnam auf der Maschine zu installieren, auf der die
 Live-Daten liegen. Dann ist es sinnvoll, stattdessen ein **Pull Backup** zu machen:
-Sie lassen Obnam auf einem anderen Rechner laufen und lesen Sie die Live-Daten
+Sie lassen Obnam auf einem anderen Rechner laufen und lesen die Live-Daten
 über das SFTP-Protokoll.
 
 Um dies zu tun spezifizieren Sie die Backup-Quelle (`root` im config file oder
