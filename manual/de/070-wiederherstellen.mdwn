@@ -88,6 +88,27 @@ wieder hergestellten Daten überschreiben. Wenn Sie Ihre Live-Daten
 wirklich ersetzen möchten, sollten Sie zunächst in ein temporäres Verzeichnis
 zurücksichern und dann die Daten verschieben.
 
+Konkretes Beispiel einer Wiederherstellung
+------------------------------------------
+
+Um eine korrupte Datei meines News Readers wiederherzustellen ging ich wie folgt vor:
+
+    obnam --config=/home/foobar/cron/conf/obnam.conf generations>~/cron/upload/obgen.txt
+
+Dies schreibt alle Generationen in eine Datei mit Namen "obgen.txt", hier ein Auszug:
+
+    1207586    2014-08-25 08:00:43 .. 2014-08-25 08:08:24 (385163 files, 175029819657 bytes)
+    1208367    2014-08-25 12:00:42 .. 2014-08-25 12:08:31 (385965 files, 175057598863 bytes)
+    1209313    2014-08-25 16:00:12 .. 2014-08-25 16:07:33 (386537 files, 175076976590 bytes)
+    1210254    2014-08-25 20:00:15 .. 2014-08-25 20:09:41 (386896 files, 175086483254 bytes)
+
+Ich wollte aus Generation 1208367 wiederherstellen. Das war der konkrete Befehl:
+
+    obnam --config=/home/benutzername/cron/conf/obnam.conf --generation=1208367 restore ~/News/rss/nnrss.el --to=/home/benutzername/cron/upload/
+
+Der Befehl holt die Datei 'nnrss.el' aus der angegebenen Generation und legt sie in ~/cron/upload/ ab.
+Von dort aus kopierte ich sie einfach wieder an ihren Platz.
+
 Übung macht den Meister
 -----------------------
 
