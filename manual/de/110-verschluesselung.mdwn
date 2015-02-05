@@ -51,7 +51,6 @@ Geben Sie Ihrem Partner das Verschlüsselungspasswort, oder geben Sie es einem
 Freund dem Sie vertrauen, oder einem Anwalt. Sie könnten auch so etwas wie
 [libgfshare] verwenden, um die Schlüssel auf sichere Weise treuhänderisch zu hinterlegen.
 
-[libgfshare]: http://www.digital-scurf.org/software/libgfshare
 
 Wie Obnams Verschlüsselung funktioniert
 ---------------------------------------

@@ -53,7 +53,6 @@ are various solutions. You could give your spouse the encryption passphrase,
 or give the passphrase to a trusted friend or your lawyer. You could also
 use something like [libgfshare] to escrow encryption keys more safely.
 
-[libgfshare]: http://www.digital-scurf.org/software/libgfshare
 
 How Obnam encryption works
 --------------------------
