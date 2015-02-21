@@ -6,6 +6,7 @@ Priority: optional
 Standards-Version: 3.9.5
 Build-Depends: debhelper (>= 7.3.8),
     python-all-dev (>= 2.6.3~3),
+    python-yaml,
     python-coverage-test-runner (>= 1.8~),
     python-larch (>= 1.20131130~),
     python-ttystatus (>= 0.23~),
@@ -33,6 +34,7 @@ Depends: ${shlibs:Depends}, ${python:Depends}, ${misc:Depends},
     python-paramiko,
     python-tracing (>= 0.8~),
     python-cliapp (>= 1.20130808~),
+    python-yaml,
     python-fuse
 Description: online and disk-based backup application
  Obnam makes backups. Backups can be stored on local hard disks, or online
