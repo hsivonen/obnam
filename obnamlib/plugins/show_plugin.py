@@ -467,7 +467,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         if unit is None: unit = default_unit
 
         if unit == 's':
-            None
+            pass
         elif unit == 'm':
             ticks *= 60
         elif unit == 'h':

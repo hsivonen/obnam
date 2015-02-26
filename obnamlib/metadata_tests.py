@@ -145,7 +145,7 @@ class ReadMetadataTests(unittest.TestCase):
                              field)
 
     def test_returns_symlink_fields_correctly(self):
-        self.fakefs.st_mode |= stat.S_IFLNK;
+        self.fakefs.st_mode |= stat.S_IFLNK
         metadata = obnamlib.read_metadata(self.fakefs, 'foo',
                                           getpwuid=self.fakefs.getpwuid,
                                           getgrgid=self.fakefs.getgrgid)
@@ -253,14 +253,14 @@ class SetMetadataTests(unittest.TestCase):
 
     def test_sets_symlink_target(self):
         self.fs.remove(self.filename)
-        self.metadata.st_mode = 0777 | stat.S_IFLNK;
+        self.metadata.st_mode = 0777 | stat.S_IFLNK
         self.metadata.target = 'target'
         obnamlib.set_metadata(self.fs, self.filename, self.metadata)
         self.assertEqual(self.fs.readlink(self.filename), 'target')
 
     def test_sets_symlink_mtime_perms(self):
         self.fs.remove(self.filename)
-        self.metadata.st_mode = 0777 | stat.S_IFLNK;
+        self.metadata.st_mode = 0777 | stat.S_IFLNK
         self.metadata.target = 'target'
         obnamlib.set_metadata(self.fs, self.filename, self.metadata)
         st = os.lstat(self.filename)
