@@ -1013,7 +1013,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 self.repo.append_file_chunk_id(
                     self.new_generation, filename, chunk_id)
             else:
-                self.self.update_progress_with_upload(len(data))
+                self.progress.update_progress_with_upload(len(data))
 
             if not self.pretend and self.time_for_checkpoint():
                 logging.debug('making checkpoint in the middle of a file')
