@@ -199,9 +199,9 @@ class ShowPlugin(obnamlib.ObnamPlugin):
             ended = self.format_time(ended)
             hdr('Generation %s (%s - %s)\n' %
                 (self.repo.make_generation_spec(gen_id), started, ended))
-            for file in args:
-                file = self.remove_trailing_slashes(file)
-                self.show_objects(cb, gen_id, file)
+            for filename in args:
+                filename = self.remove_trailing_slashes(filename)
+                self.show_objects(cb, gen_id, filename)
 
         self.repo.close()
 

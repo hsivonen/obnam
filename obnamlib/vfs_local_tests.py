@@ -69,13 +69,13 @@ class XAttrTests(unittest.TestCase):
         # attribute with the command line tool.
 
         try:
-            exit, out, err = cliapp.runcmd_unchecked(
+            exitcode, out, err = cliapp.runcmd_unchecked(
                 ['setfattr', '-n', 'user.foo', 'bar', self.other])
         except OSError:
             # Either xattr aren't supported, or setfattr isn't
             # installed and we can't test.
             return False
-        return exit == 0
+        return exitcode == 0
 
     def test_empty_list(self):
         '''A new file has no extended attributes.'''

@@ -192,8 +192,8 @@ class Check(Command):
         os.remove('.coverage')
 
     def run_yarn(self):
-        for format in self.get_wanted_formats():
-            self.run_yarn_for_repo_format(format)
+        for repo_format in self.get_wanted_formats():
+            self.run_yarn_for_repo_format(repo_format)
 
     def get_wanted_formats(self):
         if 'REPOSITORY_FORMAT' in os.environ:
@@ -201,11 +201,11 @@ class Check(Command):
         else:
             return ['6', 'simple']
 
-    def run_yarn_for_repo_format(self, format):
-        print 'run yarn for repository format %s' % format
+    def run_yarn_for_repo_format(self, repo_format):
+        print 'run yarn for repository format %s' % repo_format
         runcmd(
             ['yarn', '-s', 'yarns/obnam.sh'] +
-            ['--env', 'REPOSITORY_FORMAT=' + format] +
+            ['--env', 'REPOSITORY_FORMAT=' + repo_format] +
             glob.glob('yarns/*.yarn'))
 
     def run_lock_test(self, num_clients, num_generations):

@@ -100,8 +100,8 @@ class StructuredError(Exception):
         summer = hashlib.md5()
         summer.update(self.__class__.__name__)
         summer.update(self.__class__.__module__)
-        hash = summer.hexdigest()[:5]
-        return 'R{0}X'.format(hash.upper())
+        shorthash = summer.hexdigest()[:5]
+        return 'R{0}X'.format(shorthash.upper())
 
     def _format_msg(self, template):
         # In case template is a docstring, remove leading whitespace

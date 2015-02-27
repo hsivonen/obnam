@@ -88,11 +88,11 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     def default_file_id(self, filename):
         '''Return hash of filename suitable for use as main key.'''
         tracing.trace(repr(filename))
-        def hash(s):
+        def shorthash(s):
             return hashlib.md5(s).digest()[:4]
         dirname = os.path.dirname(filename)
         basename = os.path.basename(filename)
-        return hash(dirname) + hash(basename)
+        return shorthash(dirname) + shorthash(basename)
 
     def _bad_default_file_id(self, filename):
         '''For use by unit tests.'''
