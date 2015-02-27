@@ -222,7 +222,7 @@ class DummyClient(object):
         return ('file', gen_id, filename)
 
     def _is_filekey(self, key):
-        return (type(key) is tuple and len(key) == 3 and key[0] == 'file')
+        return type(key) is tuple and len(key) == 3 and key[0] == 'file'
 
     def file_exists(self, gen_id, filename):
         return self.data.get_value(self._filekey(gen_id, filename), False)
@@ -248,7 +248,7 @@ class DummyClient(object):
         return ('filekey', gen_id, filename, key)
 
     def _is_filekeykey(self, key):
-        return (type(key) is tuple and len(key) == 4 and key[0] == 'filekey')
+        return type(key) is tuple and len(key) == 4 and key[0] == 'filekey'
 
     def _require_file(self, gen_id, filename):
         if not self.file_exists(gen_id, filename):

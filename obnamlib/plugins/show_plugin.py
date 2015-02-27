@@ -159,12 +159,12 @@ class ShowPlugin(obnamlib.ObnamPlugin):
             # the repository is empty / the client does not exist
             self.app.output.write('CRITICAL: no backup found.\n')
             sys.exit(2)
-        elif (now - most_recent > critical_age):
+        elif now - most_recent > critical_age:
             self.app.output.write(
                 'CRITICAL: backup is old.  last backup was %s.\n' %
                     (self.format_time(most_recent)))
             sys.exit(2)
-        elif (now - most_recent > warn_age):
+        elif now - most_recent > warn_age:
             self.app.output.write(
                 'WARNING: backup is old.  last backup was %s.\n' %
                     self.format_time(most_recent))
@@ -291,7 +291,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         enc_filename = enc_filename.replace(" ", "%20")
         enc_filename = enc_filename.replace("\t", "%09")
 
-        if (filename == "/"): return
+        if filename == "/": return
 
         self.app.output.write("%s%s\t%d\t%#x\n" %
             (mode_str, enc_filename, size, mtime_sec))
