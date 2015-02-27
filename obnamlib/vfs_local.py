@@ -19,7 +19,6 @@ import errno
 import fcntl
 import grp
 import logging
-import math
 import os
 import pwd
 import tempfile

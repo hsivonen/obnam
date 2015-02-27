@@ -18,6 +18,7 @@
 
 import copy
 import hashlib
+import errno
 import os
 import random
 import StringIO
