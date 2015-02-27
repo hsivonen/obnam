@@ -418,7 +418,7 @@ class ObnamFuse(fuse.Fuse):
         stv = fuse.StatVfs()
         stv.f_bsize   = 65536
         stv.f_frsize  = 0
-        stv.f_blocks  = blocks/65536
+        stv.f_blocks  = total_data / 65536
         stv.f_bfree   = 0
         stv.f_bavail  = 0
         stv.f_files   = files
