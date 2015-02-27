@@ -588,8 +588,9 @@ class SftpFS(obnamlib.VirtualFileSystem):
 
     @ioerror_to_oserror
     def write_file(self, pathname, contents):
+        mode = 'wbx'
         try:
-            f = self.open(pathname, 'wbx')
+            f = self.open(pathname, mode)
         except (IOError, OSError), e:
             # When the path to the file to be written does not
             # exist, we try to create the directories below. Note that
@@ -601,7 +602,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
                 raise
             dirname = os.path.dirname(pathname)
             self.makedirs(dirname)
-            f = self.open(pathname, 'wx')
+            f = self.open(pathname, mode)
 
         self._write_helper(f, contents)
         f.close()
