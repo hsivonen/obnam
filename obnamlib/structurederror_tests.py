@@ -62,11 +62,11 @@ class StructuredErrorTests(unittest.TestCase):
 
     def test_str_returns_first_line_only(self):
         first = FirstError()
-        self.assertNotIn('\n', str(first))
+        self.assertTrue('\n' not in str(first))
 
     def test_formatted_returns_full_message(self):
         first = FirstError()
-        self.assertIn('\n', first.formatted())
+        self.assertTrue('\n' in first.formatted())
 
     def test_formatted_message_does_not_end_in_whitespace(self):
         first = FirstError()

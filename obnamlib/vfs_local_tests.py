@@ -50,7 +50,7 @@ class LocalFSTests(obnamlib.VfsTests, unittest.TestCase):
     def test_get_groupname_returns_root_for_zero(self):
         # Some Unix systems have a wheel group instead of a root
         # group. We're fine with either.
-        self.assertIn(self.fs.get_groupname(0), ['root', 'wheel'])
+        self.assertTrue(self.fs.get_groupname(0) in ['root', 'wheel'])
 
 
 class XAttrTests(unittest.TestCase):
