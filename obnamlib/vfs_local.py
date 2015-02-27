@@ -37,6 +37,11 @@ class MallocError(obnamlib.ObnamError):
     msg = 'malloc out of memory while calling {function}'
 
 
+class RootIsNotADirectory(obnamlib.ObnamError):
+
+    msg = '{baserurl} is not a directory, but a VFS root must be a directory'
+
+
 class LocalFSFile(file):
 
     def read(self, amount=-1):
@@ -94,7 +99,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
         self.cwd = os.path.abspath(baseurl)
         if os.path.exists(self.cwd): # pragma: no cover
             if not os.path.isdir(self.cwd):
-                raise obnamlib.Error('%s is not a directory' % baseurl)
+                raise RootIsNotADirectory(baseurl=baseurl)
         if not self.isdir('.'):
             if create:
                 tracing.trace('creating %s', baseurl)
