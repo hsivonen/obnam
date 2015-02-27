@@ -16,8 +16,6 @@
 
 import cliapp
 
-import obnamlib
-
 
 class ObnamPlugin(cliapp.Plugin):
 

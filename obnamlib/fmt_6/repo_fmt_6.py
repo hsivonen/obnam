@@ -22,7 +22,6 @@ import os
 import random
 import re
 import stat
-import struct
 import time
 import tracing
 

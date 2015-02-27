@@ -17,9 +17,7 @@
 import cliapp
 import larch
 import logging
-import os
 import socket
-import StringIO
 import sys
 import time
 import tracing

@@ -25,8 +25,8 @@ import socket
 import stat
 import subprocess
 import time
-import traceback
 import urlparse
+import getpass
 
 
 # As of 2010-07-10, Debian's paramiko package triggers

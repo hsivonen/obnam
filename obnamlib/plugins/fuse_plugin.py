@@ -16,7 +16,6 @@
 
 import os
 import stat
-import sys
 import logging
 import errno
 import struct

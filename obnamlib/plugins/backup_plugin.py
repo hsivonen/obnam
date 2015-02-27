@@ -15,17 +15,14 @@
 
 
 import errno
-import gc
 import hashlib
 import logging
 import os
 import re
 import stat
-import sys
 import time
 import traceback
 import tracing
-import ttystatus
 
 import obnamlib
 import larch

@@ -17,7 +17,6 @@
 # =*= License: GPL-3+ =*=
 
 
-import collections
 import imp
 import inspect
 import os
