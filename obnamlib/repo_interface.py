@@ -712,7 +712,7 @@ class RepositoryInterface(object):
         '''Have we got the chunk index lock?'''
         raise NotImplementedError()
 
-    def force_chunk_indexex_lock(self):
+    def force_chunk_indexes_lock(self):
         '''Forces a chunk index lock open.'''
         raise NotImplementedError()
 
