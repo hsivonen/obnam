@@ -308,7 +308,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
 
         if self.app.settings['verbose']:
             sys.stdout.write('%s ' % change_char)
-            self.show_item(gen_id, fullname)
+            self.show_item_ls(gen_id, fullname)
         else:
             self.app.output.write('%s %s\n' % (change_char, fullname))
 
