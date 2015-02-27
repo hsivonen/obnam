@@ -554,7 +554,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     def set_generation_key(
         self, generation_id, key, value): # pragma: no cover
-        # FIXME: This no worky for generations other than the currently
+        # FIXME: This is not working for generations other than the currently
         # started one. There should at least be an assert about it.
 
         client_name, gen_number = self._unpack_gen_id(generation_id)
@@ -881,7 +881,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         try:
             expected_checksum = self._chunklist.get_checksum(chunk_id)
         except KeyError: # pragma: no cover
-            # Chunk is not in the checksum tree, so we cannot valide
+            # Chunk is not in the checksum tree, so we cannot validate
             # its checksum. We'll just assume it's OK.
             return True
         return actual_checksum == expected_checksum

@@ -554,7 +554,7 @@ class MountPlugin(obnamlib.ObnamPlugin):
 
     '''Mount backup repository as a user-space filesystem.
 
-    At the momemnt only a specific generation can be mounted
+    At the moment only a specific generation can be mounted
 
     '''
 

@@ -278,7 +278,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
         return os.path.isdir(self.join(pathname))
 
     def mknod(self, pathname, mode):
-        tracing.trace('pathmame=%s', pathname)
+        tracing.trace('pathname=%s', pathname)
         tracing.trace('mode=%o', mode)
         os.mknod(self.join(pathname), mode)
 
@@ -406,7 +406,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
                 ino = st.st_ino
             result.append((ino, name, st))
 
-        # We sort things in inode order, for speed when doing namei lookups
+        # We sort things in inode order, for speed when doing name lookups
         # when backing up.
         result.sort()
         return [(name, st) for ino, name, st in result]

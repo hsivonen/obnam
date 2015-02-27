@@ -83,7 +83,7 @@ class App(cliapp.Application):
             metavar='TIMEOUT',
             default=60)
 
-        # Repositofy format selection.
+        # Repository format selection.
 
         self.settings.choice(
             ['repository-format'],

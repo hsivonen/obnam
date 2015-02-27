@@ -358,7 +358,7 @@ class VfsTests(object): # pragma: no cover
     * self.basepath to the path to the base of the filesystem
 
     basepath must be operable as a pathname using os.path tools. If
-    the VFS implemenation operates remotely and wants to operate on a
+    the VFS implementation operates remotely and wants to operate on a
     URL like 'http://domain/path' as the baseurl, then basepath must be
     just the path portion of the URL.
 
@@ -607,7 +607,7 @@ class VfsTests(object): # pragma: no cover
         self.assertEqual(self.fs.lstat('foo').st_atime_sec, 1)
         # not all filesystems support sub-second timestamps; those that
         # do not, return 0, so we have to accept either that or the correct
-        # value, but no other vlaues
+        # value, but no other values
         self.assert_(self.fs.lstat('foo').st_atime_nsec in [0, 2*1000])
 
         self.assertEqual(self.fs.lstat('foo').st_mtime_sec, 3)
