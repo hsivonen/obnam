@@ -36,3 +36,20 @@ Verify one file randomly
     WHEN user U backs up directory L to repository R
     AND user U attempts to verify a random file in  L against repository R
     THEN the attempt succeeded
+
+
+Verify notices when live data file has been appended to
+-------------------------------------------------------
+
+In March, 2015, Thomas Waldemann noticed that `obnam verify` would
+fail to notice if the live data file had been appened to. This
+regression test catches the problem.
+
+    SCENARIO verify file that has been appended to
+    GIVEN 0B of data in file L/foo
+    AND file L/foo has Unix timestamp 0
+    WHEN user U backs up directory L to repository R
+    GIVEN 1B of data in file L/foo
+    AND file L/foo has Unix timestamp 0
+    WHEN user U attempts to verify L against repository R
+    THEN the attempt failed with exit code 1
