@@ -117,6 +117,9 @@ If you make any changes, I welcome patches, either as plain diffs,
 `git format-patch --cover-letter` mails, or public repositories I can
 merge from.
 
+I would really appreciate if patches for new features and bug fixes
+would update the test suite and documentation as well.
+
 The code layout is roughly like this:
 
     obnamlib/               # all the real code
