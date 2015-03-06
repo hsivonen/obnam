@@ -198,6 +198,10 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         if not self.verify_chunks(f, chunkids):
             raise Fail(filename=filename, reason='data changed')
 
+        data = f.read(1)
+        if data:
+            raise Fail(filename=filename, reason='more data at end of file')
+
         f.close()
 
     def verify_chunks(self, f, chunkids):
