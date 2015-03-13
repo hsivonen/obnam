@@ -86,11 +86,12 @@ class StepInfo(object):
 
 class ObnamBenchmark(object):
 
-    def __init__(self, settings, results_dir, srctree, junk_generator):
+    def __init__(self, settings, results_dir, srctree, junk_generator, output):
         self.settings = settings
         self.results_dir = results_dir
         self.srctree = srctree
         self.junk_generator = junk_generator
+        self.output = output
 
     @classmethod
     def add_settings(self, settings):
@@ -126,7 +127,8 @@ class ObnamBenchmark(object):
             ]
 
         for label, method in steps:
-            print '  %s' % label
+            self.output.write('  %s\n' % label)
+            self.output.flush()
             with StepInfo(label) as step_info:
                 method(step_info)
             step_infos.append(step_info)
@@ -187,7 +189,7 @@ class ObnamBenchmark(object):
         try:
             cliapp.runcmd(['fusermount', '-u', mount])
         except cliapp.AppException as e:
-            print 'ERROR from fusermount: %s' % str(e)
+            sys.stderr.write('ERROR from fusermount: %s\n' % str(e))
 
     def cleanup(self, step_info):
         shutil.rmtree(self.tempdir)
@@ -350,9 +352,11 @@ class ObnamBenchmarkRunner(cliapp.Application):
         junk_generator = BinaryJunkGenerator()
         benchmark_infos = {}
         for benchmark_class in self.benchmark_classes:
-            print 'Benchmark %s' % benchmark_class.__name__
+            self.output.write('Benchmark %s\n' % benchmark_class.__name__)
+            self.output.flush()
             benchmark = benchmark_class(
-                self.settings, results_dir, srctree, junk_generator)
+                self.settings, results_dir, srctree, junk_generator,
+                self.output)
             benchmark_info = benchmark.run()
             benchmark_infos[benchmark.benchmark_name] = benchmark_info
         result_obj['benchmarks'] = benchmark_infos
