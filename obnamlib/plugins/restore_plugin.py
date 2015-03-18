@@ -336,8 +336,15 @@ class RestorePlugin(obnamlib.ObnamPlugin):
                 f.seek(-1, 1)
                 f.write('\0')
 
-    def verify_chunk_checksum(self, data, chunkid):
-        self.repo.validate_chunk_content(chunkid)
+    def verify_chunk_checksum(self, data, chunk_id):
+        # FIXME: RepositoryInterface doesn't currently seem to provide
+        # the necessary tools for implementing this method. So
+        # currently we do nothing. Later, this should be fixed.
+        #
+        # We used to call the validate_chunk_content method, but that
+        # doesn't do the right thing, but does cause the chunk data to
+        # be downloaded twice.
+        pass
 
     def restore_fifo(self, gen, filename, metadata):
         logging.debug('restoring fifo %s' % filename)
