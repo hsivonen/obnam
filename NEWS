@@ -85,6 +85,9 @@ Bug fixes:
   file had new data, when the modification time was the same. Obnam
   now notices this.
 
+* Lars Wirzenius fixed double-downloading of chunks during restores.
+
+
 Version 1.8, released 2014-05-13
 --------------------------------
 
