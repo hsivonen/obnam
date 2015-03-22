@@ -448,10 +448,6 @@ class ShowPlugin(obnamlib.ObnamPlugin):
                  timestamp,
                  name)
 
-    def format(self, fields):  # XXX broken (widths undefined) and unused?
-        return ' '. join(self.align(widths[i], fields[i], i)
-                          for i in range(len(fields)))
-
     def align(self, width, field, field_no):
         if field_no in self.leftists:
             return '%-*s' % (width, field)
