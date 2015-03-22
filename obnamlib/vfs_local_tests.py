@@ -14,8 +14,6 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-import platform
-import errno
 import os
 import shutil
 import tempfile
@@ -50,7 +48,7 @@ class LocalFSTests(obnamlib.VfsTests, unittest.TestCase):
     def test_get_groupname_returns_root_for_zero(self):
         # Some Unix systems have a wheel group instead of a root
         # group. We're fine with either.
-        self.assertIn(self.fs.get_groupname(0), ['root', 'wheel'])
+        self.assertTrue(self.fs.get_groupname(0) in ['root', 'wheel'])
 
 
 class XAttrTests(unittest.TestCase):
@@ -71,13 +69,13 @@ class XAttrTests(unittest.TestCase):
         # attribute with the command line tool.
 
         try:
-            exit, out, err = cliapp.runcmd_unchecked(
+            exitcode, out, err = cliapp.runcmd_unchecked(
                 ['setfattr', '-n', 'user.foo', 'bar', self.other])
         except OSError:
             # Either xattr aren't supported, or setfattr isn't
             # installed and we can't test.
             return False
-        return exit == 0
+        return exitcode == 0
 
     def test_empty_list(self):
         '''A new file has no extended attributes.'''

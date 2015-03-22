@@ -17,9 +17,7 @@
 import cliapp
 import larch
 import logging
-import os
 import socket
-import StringIO
 import sys
 import time
 import tracing
@@ -85,7 +83,7 @@ class App(cliapp.Application):
             metavar='TIMEOUT',
             default=60)
 
-        # Repositofy format selection.
+        # Repository format selection.
 
         self.settings.choice(
             ['repository-format'],

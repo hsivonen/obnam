@@ -17,8 +17,6 @@
 import larch
 import tracing
 
-import obnamlib
-
 
 class RepositoryTree(object):
 

@@ -38,9 +38,9 @@ def generate_symmetric_key(numbits, filename='/dev/random'):
 
     tracing.trace('numbits=%d', numbits)
 
-    bytes = (numbits + 7) / 8
+    count = (numbits + 7) / 8
     f = open(filename, 'rb')
-    key = f.read(bytes)
+    key = f.read(count)
     f.close()
 
     return key.encode('hex')

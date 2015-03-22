@@ -28,7 +28,7 @@ import obnamlib
 # The following is a canonical list of all keys that can be used with
 # the repository interface for key/value pairs. Not all formats need
 # to support all keys, but they all must support the test keys, for
-# the test suite to function. All commong file metadata keys must also
+# the test suite to function. All common file metadata keys must also
 # be supported by all formats.
 #
 # The keys may change in value from run to run. Treat them as opaque,
@@ -239,7 +239,7 @@ class RepositoryInterface(object):
     implementation with the ``set_fs`` method.
 
     It must be stressed that ALL access to the repository go via
-    an implemention of RepositoryInterface. Further, all the
+    an implementation of RepositoryInterface. Further, all the
     implementation classes must be instantiated via RepositoryFactory.
 
     The abstraction RepositoryInterface provides for repositories
@@ -479,7 +479,7 @@ class RepositoryInterface(object):
         raise NotImplementedError()
 
     def get_client_generation_ids(self, client_name):
-        '''Return a list of opague ids for generations in a client.
+        '''Return a list of opaque ids for generations in a client.
 
         The list is ordered: the first id in the list is the oldest
         generation. The ids needs not be sortable, and they may or
@@ -712,7 +712,7 @@ class RepositoryInterface(object):
         '''Have we got the chunk index lock?'''
         raise NotImplementedError()
 
-    def force_chunk_indexex_lock(self):
+    def force_chunk_indexes_lock(self):
         '''Forces a chunk index lock open.'''
         raise NotImplementedError()
 
@@ -801,7 +801,7 @@ class RepositoryInterface(object):
 
     # Fsck.
 
-    def get_fsck_work_items(self, settings):
+    def get_fsck_work_items(self):
         '''Returns fsck work items for checking this repository.
 
         This may be a generator or may return an iterable data
@@ -809,9 +809,6 @@ class RepositoryInterface(object):
 
         The returned work items are of type obnamlib.WorkItem. It may
         return further work items.
-
-        The settings argument is of type cliapp.Settings, and lets
-        the user affect what work gets done.
 
         '''
         raise NotImplementedError()
@@ -1208,7 +1205,7 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
                 'fooclient', obnamlib.REPO_CLIENT_TEST_KEY)
             self.assertEqual(value, 'bar')
 
-    def test_setting_unallowed_client_key_fails(self):
+    def test_setting_disallowed_client_key_fails(self):
         self.setup_client()
         self.repo.lock_client('fooclient')
         self.assertRaises(
@@ -1223,7 +1220,7 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
                 self.repo.set_client_key,
                 'fooclient', obnamlib.REPO_CLIENT_TEST_KEY, 'bar')
 
-    def test_committing_client_preserves_key_changs(self):
+    def test_committing_client_preserves_key_changes(self):
         if self.client_test_key_is_allowed():
             self.setup_client()
             self.repo.lock_client('fooclient')
@@ -1337,7 +1334,7 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
                 gen_id, obnamlib.REPO_GENERATION_TEST_KEY)
             self.assertEqual(value, 'bar')
 
-    def test_setting_unallowed_generation_key_fails(self):
+    def test_setting_disallowed_generation_key_fails(self):
         if self.generation_test_key_is_allowed():
             gen_id = self.create_generation()
             self.assertRaises(
@@ -1353,7 +1350,7 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
                 self.repo.set_generation_key,
                 gen_id, obnamlib.REPO_GENERATION_TEST_KEY, 'bar')
 
-    def test_committing_client_preserves_generation_key_changs(self):
+    def test_committing_client_preserves_generation_key_changes(self):
         if self.generation_test_key_is_allowed():
             gen_id = self.create_generation()
             self.repo.set_generation_key(
@@ -1589,7 +1586,7 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
             gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY)
         self.assertEqual(value, 'yoyo')
 
-    def test_setting_unallowed_file_key_fails(self):
+    def test_setting_disallowed_file_key_fails(self):
         gen_id = self.create_generation()
         self.repo.add_file(gen_id, '/foo/bar')
         self.assertRaises(
@@ -1875,7 +1872,7 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
             set(self.repo.get_chunk_ids()),
             set([chunk_id_1, chunk_id_2]))
 
-    def test_have_not_got_chunk_indexes_lock_initally(self):
+    def test_have_not_got_chunk_indexes_lock_initially(self):
         self.setup_client()
         self.assertFalse(self.repo.got_chunk_indexes_lock())
 

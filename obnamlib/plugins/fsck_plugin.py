@@ -15,12 +15,9 @@
 
 
 import hashlib
-import larch.fsck
 import logging
-import os
 import stat
 import sys
-import ttystatus
 
 import obnamlib
 from obnamlib import WorkItem

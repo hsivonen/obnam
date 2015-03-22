@@ -19,7 +19,6 @@ import errno
 import fcntl
 import grp
 import logging
-import math
 import os
 import pwd
 import tempfile
@@ -36,6 +35,11 @@ EXTRA_OPEN_FLAGS = getattr(os, "O_NOATIME", 0)
 class MallocError(obnamlib.ObnamError):
 
     msg = 'malloc out of memory while calling {function}'
+
+
+class RootIsNotADirectory(obnamlib.ObnamError):
+
+    msg = '{baserurl} is not a directory, but a VFS root must be a directory'
 
 
 class LocalFSFile(file):
@@ -95,7 +99,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
         self.cwd = os.path.abspath(baseurl)
         if os.path.exists(self.cwd): # pragma: no cover
             if not os.path.isdir(self.cwd):
-                raise obnamlib.Error('%s is not a directory' % baseurl)
+                raise RootIsNotADirectory(baseurl=baseurl)
         if not self.isdir('.'):
             if create:
                 tracing.trace('creating %s', baseurl)
@@ -274,7 +278,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
         return os.path.isdir(self.join(pathname))
 
     def mknod(self, pathname, mode):
-        tracing.trace('pathmame=%s', pathname)
+        tracing.trace('pathname=%s', pathname)
         tracing.trace('mode=%o', mode)
         os.mknod(self.join(pathname), mode)
 
@@ -402,7 +406,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
                 ino = st.st_ino
             result.append((ino, name, st))
 
-        # We sort things in inode order, for speed when doing namei lookups
+        # We sort things in inode order, for speed when doing name lookups
         # when backing up.
         result.sort()
         return [(name, st) for ino, name, st in result]

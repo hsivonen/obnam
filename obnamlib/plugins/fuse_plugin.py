@@ -16,7 +16,6 @@
 
 import os
 import stat
-import sys
 import logging
 import errno
 import struct
@@ -419,7 +418,7 @@ class ObnamFuse(fuse.Fuse):
         stv = fuse.StatVfs()
         stv.f_bsize   = 65536
         stv.f_frsize  = 0
-        stv.f_blocks  = blocks/65536
+        stv.f_blocks  = total_data / 65536
         stv.f_bfree   = 0
         stv.f_bavail  = 0
         stv.f_files   = files
@@ -555,7 +554,7 @@ class MountPlugin(obnamlib.ObnamPlugin):
 
     '''Mount backup repository as a user-space filesystem.
 
-    At the momemnt only a specific generation can be mounted
+    At the moment only a specific generation can be mounted
 
     '''
 

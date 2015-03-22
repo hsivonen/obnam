@@ -19,7 +19,6 @@ import logging
 import os
 import stat
 import time
-import ttystatus
 
 import obnamlib
 

@@ -25,8 +25,8 @@ import socket
 import stat
 import subprocess
 import time
-import traceback
 import urlparse
+import getpass
 
 
 # As of 2010-07-10, Debian's paramiko package triggers
@@ -244,12 +244,9 @@ class SftpFS(obnamlib.VirtualFileSystem):
         return True
 
     def _connect_paramiko(self):
+        remote = (self.host, self.port or 22)
         logging.debug(
-            'connect_paramiko: host=%s port=%s' % (self.host, self.port))
-        if self.port:
-            remote = (self.host, self.port)
-        else:
-            remote = (self.host)
+            'connect_paramiko: host=%s port=%s' % remote)
         self.transport = paramiko.Transport(remote)
         self.transport.connect()
         logging.debug('connect_paramiko: connected')
@@ -591,8 +588,9 @@ class SftpFS(obnamlib.VirtualFileSystem):
 
     @ioerror_to_oserror
     def write_file(self, pathname, contents):
+        mode = 'wbx'
         try:
-            f = self.open(pathname, 'wbx')
+            f = self.open(pathname, mode)
         except (IOError, OSError), e:
             # When the path to the file to be written does not
             # exist, we try to create the directories below. Note that
@@ -604,7 +602,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
                 raise
             dirname = os.path.dirname(pathname)
             self.makedirs(dirname)
-            f = self.open(pathname, 'wx')
+            f = self.open(pathname, mode)
 
         self._write_helper(f, contents)
         f.close()

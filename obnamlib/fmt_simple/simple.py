@@ -18,6 +18,7 @@
 
 import copy
 import hashlib
+import errno
 import os
 import random
 import StringIO
@@ -419,11 +420,11 @@ class SimpleClient(SimpleToplevel):
         generations = self._data.get('generations', [])
         ids = [int(gen['id']) for gen in generations]
         if ids:
-            newest = ids[-1]
-            next = newest + 1
+            newest_id = ids[-1]
+            next_id = newest_id + 1
         else:
-            next = 1
-        return str(next)
+            next_id = 1
+        return str(next_id)
 
     def remove_generation(self, gen_number):
         self._require_lock()

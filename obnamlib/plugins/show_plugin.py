@@ -14,7 +14,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import os
 import re
 import stat
 import sys
@@ -159,12 +158,12 @@ class ShowPlugin(obnamlib.ObnamPlugin):
             # the repository is empty / the client does not exist
             self.app.output.write('CRITICAL: no backup found.\n')
             sys.exit(2)
-        elif (now - most_recent > critical_age):
+        elif now - most_recent > critical_age:
             self.app.output.write(
                 'CRITICAL: backup is old.  last backup was %s.\n' %
                     (self.format_time(most_recent)))
             sys.exit(2)
-        elif (now - most_recent > warn_age):
+        elif now - most_recent > warn_age:
             self.app.output.write(
                 'WARNING: backup is old.  last backup was %s.\n' %
                     self.format_time(most_recent))
@@ -200,9 +199,9 @@ class ShowPlugin(obnamlib.ObnamPlugin):
             ended = self.format_time(ended)
             hdr('Generation %s (%s - %s)\n' %
                 (self.repo.make_generation_spec(gen_id), started, ended))
-            for file in args:
-                file = self.remove_trailing_slashes(file)
-                self.show_objects(cb, gen_id, file)
+            for filename in args:
+                filename = self.remove_trailing_slashes(filename)
+                self.show_objects(cb, gen_id, filename)
 
         self.repo.close()
 
@@ -291,7 +290,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         enc_filename = enc_filename.replace(" ", "%20")
         enc_filename = enc_filename.replace("\t", "%09")
 
-        if (filename == "/"): return
+        if filename == "/": return
 
         self.app.output.write("%s%s\t%d\t%#x\n" %
             (mode_str, enc_filename, size, mtime_sec))
@@ -309,7 +308,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
 
         if self.app.settings['verbose']:
             sys.stdout.write('%s ' % change_char)
-            self.show_item(gen_id, fullname)
+            self.show_item_ls(gen_id, fullname)
         else:
             self.app.output.write('%s %s\n' % (change_char, fullname))
 
@@ -448,10 +447,6 @@ class ShowPlugin(obnamlib.ObnamPlugin):
                  str(size),
                  timestamp,
                  name)
-
-    def format(self, fields):
-        return ' '. join(self.align(widths[i], fields[i], i)
-                          for i in range(len(fields)))
 
     def align(self, width, field, field_no):
         if field_no in self.leftists:
