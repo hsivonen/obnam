@@ -87,6 +87,9 @@ Bug fixes:
 
 * Thomas Waldmann fixed many typos and minor bugs in the source code.
 
+* Laurence Perkins reported that the Tahoe-LAFS SFTP server returned
+  some `stat` fields as None. Fixed to change those to be 0 instead.
+
 * Lars Wirzenius fixed double-downloading of chunks during restores.
 
 
