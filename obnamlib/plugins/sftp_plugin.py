@@ -411,11 +411,9 @@ class SftpFS(obnamlib.VirtualFileSystem):
         # returns "None" for st_size. We replace None values with
         # zeroes, to avoid sprinkling Obnam code with tests for None.
         st.st_atime = st.st_atime or 0
-        st.st_ctime = st.st_ctime or 0
         st.st_mtime = st.st_mtime or 0
         st.st_mode = st.st_mode or 0
         st.st_size = st.st_size or 0
-        st.st_blksize = st.st_blksize or 0
         st.st_gid = st.st_gid or 0
         st.st_uid = st.st_uid or 0
 
