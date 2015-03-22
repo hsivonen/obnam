@@ -81,9 +81,11 @@ Bug fixes:
   the group `fuse`. The latter is a Debianism (fixed in Debian
   `jessie`).
 
-* Thomas Waldemann noticed that `obnam verify` didn't notice that a
+* Thomas Waldmann noticed that `obnam verify` didn't notice that a
   file had new data, when the modification time was the same. Obnam
   now notices this.
+
+* Thomas Waldmann fixed many typos and minor bugs in the source code.
 
 * Lars Wirzenius fixed double-downloading of chunks during restores.
 
