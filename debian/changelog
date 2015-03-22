@@ -1,10 +1,10 @@
-obnam (1.9-1) UNRELEASED; urgency=low
+obnam (1.9-1) unstable; urgency=low
 
   * Update debian/copyright years. Thanks to Jan Niggemann.
   * Add build and runtime dependencies on python-yaml, since it is now
     needed by the "simple" format.
 
- -- Lars Wirzenius <liw@liw.fi>  Sun, 10 Aug 2014 17:35:58 +0300
+ -- Lars Wirzenius <liw@liw.fi>  Sun, 22 Mar 2015 16:20:31 +0200
 
 obnam (1.8-1) unstable; urgency=low
 
