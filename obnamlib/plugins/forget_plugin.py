@@ -41,7 +41,41 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
         self.app.ts.format('forgetting generations: %Index(gen,gens) done')
 
         self.repo = self.app.get_repository_object()
-        self.repo.lock_client(self.app.settings['client-name'])
+
+        # We lock everything. This is to avoid a race condition
+        # between different clients doing backup and forget at the
+        # same time. If we only lock the client we care about, plus
+        # the chunk indexes, the following scenario is possible:
+        #
+        #       1. Client A locks itself, plus chunk indexes, and
+        #          starts running forget, but slowly.
+        #       2. Client B locks itself, and starts running a backup.
+        #          It merrily uses chunks that A thinks are only used
+        #          but A itself, since B hasn't updated the chunk
+        #          indexes, and can't do that before A is done.
+        #       3. Client A finishes doing forget, and removes a number
+        #          of chunks, because nobody else was marked as using
+        #          them. However, some of these chunks are now being
+        #          used by B.
+        #       4. A commits its changes.
+        #       5. B gains lock to chunk indexes, and commits its changes.
+        #
+        # At this point, the chunk indexes indicate that B uses some chunks,
+        # but A already removed the chunks.
+        #
+        # By locking all clients during a forget, we prevent this race
+        # condition: nobody else can be running a backup while anyone is
+        # running a forget. We also lock the client list to prevent a new
+        # client from being added.
+        #
+        # This is not a great solution, as it means that during a
+        # forget (which currently can be quite slow) nobody can do a
+        # backup. However, correctness trumps speed.
+
+        self.repo.lock_client_list()
+        client_names = self.repo.get_client_names()
+        for some_client_name in client_names:
+            self.repo.lock_client(some_client_name)
         self.repo.lock_chunk_indexes()
 
         self.app.dump_memory_profile('at beginning')
@@ -85,9 +119,16 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
                     'after removing %s' % 
                     self.repo.make_generation_spec(genid))
 
-        self.repo.commit_client(client_name)
+        # Commit or unlock everything.
+        self.repo.unlock_client_list()
+        for some_client_name in client_names:
+            if some_client_name == client_name:
+                self.repo.commit_client(some_client_name)
+            else:
+                self.repo.unlock_client(some_client_name)
         self.repo.commit_chunk_indexes()
         self.app.dump_memory_profile('after committing')
+
         self.repo.close()
         self.app.ts.finish()
 
