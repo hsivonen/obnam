@@ -801,7 +801,7 @@ class RepositoryInterface(object):
 
     # Fsck.
 
-    def get_fsck_work_items(self, settings):
+    def get_fsck_work_items(self):
         '''Returns fsck work items for checking this repository.
 
         This may be a generator or may return an iterable data
@@ -809,9 +809,6 @@ class RepositoryInterface(object):
 
         The returned work items are of type obnamlib.WorkItem. It may
         return further work items.
-
-        The settings argument is of type cliapp.Settings, and lets
-        the user affect what work gets done.
 
         '''
         raise NotImplementedError()
