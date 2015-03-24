@@ -64,7 +64,6 @@ class Build(build):
     def build_manpage(self, program):
         print 'building manpage for %s' % program
         self.generate_troff(program)
-        self.format_txt(program)
 
     def generate_troff(self, program):
         with open('%s.1' % program, 'w') as f:
@@ -72,16 +71,6 @@ class Build(build):
                 ['python', program, '--generate-manpage=%s.1.in' % program,
                  '--output=%s.1' % program],
                 stdout=f)
-
-    def format_txt(self, program):
-        env = dict(os.environ)
-        env['MANWIDTH'] = '80'
-        with open('%s.1.txt' % program, 'w') as f:
-            cliapp.runcmd(
-                ['man', '-l', '%s.1' % program],
-                ['col', '-b'],
-                stdout=f,
-                env=env)
 
 
 class BuildDocs(Command):
@@ -101,6 +90,17 @@ class BuildDocs(Command):
         print 'building yarns'
         runcmd(['make', '-C', 'yarns'])
 
+        self.format_txt('obnam')
+
+    def format_txt(self, program):
+        env = dict(os.environ)
+        env['MANWIDTH'] = '80'
+        with open('%s.1.txt' % program, 'w') as f:
+            cliapp.runcmd(
+                ['man', '-l', '%s.1' % program],
+                ['col', '-b'],
+                stdout=f,
+                env=env)
 
 class CleanMore(clean):
 
