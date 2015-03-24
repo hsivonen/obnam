@@ -3,6 +3,15 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
+Version 1.10, released UNRELEASED
+--------------------------------
+
+Minor fixes:
+
+* `python setup.py build` no longer formats the manual page into plain
+  text. This is now done in `python setup.py docs` instead. The latter
+  is an optional build step, and probably only works on Debian.
+
 Version 1.9, released 2015-03-22
 --------------------------------
 
