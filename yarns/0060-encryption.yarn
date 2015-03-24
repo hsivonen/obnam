@@ -100,7 +100,7 @@ client, should not be able to access the data.
     WHEN user U3 attempts to restore their latest generation in repository R into X3
     THEN the attempt failed with exit code 1
     AND the error message matches "R0C79EX: gpg failed"
-    AND the error message matches "secret key not available"
+    AND the error message matches "secret key not available\|No secret key"
 
 (The error message above indicates that there's a bug in Obnam, which
 is that the error message, when an encryption is not provided but the
@@ -113,7 +113,7 @@ not have access to another client's data.
     GIVEN a user U2 calling themselves U1
     WHEN user U2 attempts to restore their latest generation in repository R into X4
     THEN the attempt failed with exit code 1
-    AND the error message matches "secret key not available"
+    AND the error message matches "secret key not available\|No secret key"
 
 Replace a key for a client
 --------------------------
