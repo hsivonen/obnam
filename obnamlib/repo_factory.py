@@ -52,6 +52,9 @@ class RepositoryFactory(object):
             obnamlib.RepositoryFormatSimple,
             ]
 
+    def get_implementation_classes(self):
+        return self._implementations
+
     def setup_hooks(self, hooks): # pragma: no cover
         '''Create all repository related hooks.
 
