@@ -6,6 +6,11 @@ This file summarizes changes between releases of Obnam.
 Version 1.10, released UNRELEASED
 --------------------------------
 
+Minor new features:
+
+* Lars Wirzenius added the `obnam list-formats` command to list all
+  repository formats.
+
 Minor fixes:
 
 * `python setup.py build` no longer formats the manual page into plain
