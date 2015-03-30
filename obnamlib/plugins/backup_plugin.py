@@ -572,7 +572,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         return patterns
 
     def backup_roots(self, roots):
-        self.progress.what('connecting to to repository')
+        self.progress.what('connecting to repository')
 
         if os.path.isdir(roots[0]):
             rootdir = roots[0] 
