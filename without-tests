@@ -15,6 +15,7 @@ obnamlib/plugins/force_lock_plugin.py
 obnamlib/plugins/forget_plugin.py
 obnamlib/plugins/fsck_plugin.py
 obnamlib/plugins/fuse_plugin.py
+obnamlib/plugins/list_formats_plugin.py
 obnamlib/plugins/restore_plugin.py
 obnamlib/plugins/sftp_plugin.py
 obnamlib/plugins/show_plugin.py

@@ -34,6 +34,10 @@ class RepositoryFormatTests(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.tempdir)
 
+    def test_returns_list_of_implementation_classes(self):
+        factory = obnamlib.RepositoryFactory()
+        self.assertEqual(type(factory.get_implementation_classes()), list)
+
     def test_raises_exception_for_unknown_format(self):
         fs = obnamlib.LocalFS(self.repodir)
         fs.write_file('metadata/format', 'unknown')
