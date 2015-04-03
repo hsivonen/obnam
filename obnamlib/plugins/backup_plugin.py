@@ -319,17 +319,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.client_name = self.app.settings['client-name']
         self.repo = self.open_repository()
         if not self.pretend:
-            self.progress.what('adding client')
-            self.add_client(self.client_name)
-            self.progress.what('locking client')
-            self.repo.lock_client(self.client_name)
-
-            # Need to lock the shared stuff briefly, so encryption etc
-            # gets initialized.
-            self.progress.what(
-                'initialising shared directories')
-            self.repo.lock_chunk_indexes()
-            self.repo.unlock_chunk_indexes()
+            self.prepare_repository_for_client()
 
         self.chunkid_token_map = obnamlib.ChunkIdTokenMap()
         try:
@@ -443,6 +433,19 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         else:
             return self.app.get_repository_object(create=True)
             
+    def prepare_repository_for_client(self):
+        self.progress.what('adding client')
+        self.add_client(self.client_name)
+
+        self.progress.what('locking client')
+        self.repo.lock_client(self.client_name)
+
+        # Need to lock the shared stuff briefly, so encryption etc
+        # gets initialized.
+        self.progress.what('initialising shared directories')
+        self.repo.lock_chunk_indexes()
+        self.repo.unlock_chunk_indexes()
+        
     def parse_checkpoint_size(self, value):
         p = obnamlib.ByteSizeParser()
         p.set_default_unit('MiB')
