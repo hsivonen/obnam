@@ -34,6 +34,9 @@ class ChunkIdTokenMap(object):
     def __contains__(self, token):
         return token in self._mapping
 
+    def get(self, token):
+        return self._mapping[token]
+
     def __iter__(self):
         for token in self._mapping:
             for chunk_id in self._mapping[token]:

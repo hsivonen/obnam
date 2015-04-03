@@ -48,3 +48,9 @@ class ChunkIdTokenMapTests(unittest.TestCase):
         self.assertEqual(
             sorted(self.map),
             sorted([(chunk_id_1, token), (chunk_id_2, token)]))
+
+    def test_gets_added_token(self):
+        chunk_id = '123'
+        token = 'foobar'
+        self.map.add(chunk_id, token)
+        self.assertEqual(self.map.get(token), [chunk_id])
