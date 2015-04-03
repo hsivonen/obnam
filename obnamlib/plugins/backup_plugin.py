@@ -319,7 +319,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 self.finish_generation()
                 if self.should_remove_checkpoints():
                     self.remove_checkpoints()
-            self.finish_backup()
+            self.finish_backup(args)
         except BaseException, e:
             logging.debug('Handling exception %s' % str(e))
             logging.debug(traceback.format_exc())
@@ -439,7 +439,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.progress.what(prefix + ': commiting shared B-trees')
         self.repo.commit_chunk_indexes()
 
-    def finish_backup(self):
+    def finish_backup(self, args):
         self.progress.what('closing connection to repository')
         self.repo.close()
 
