@@ -576,27 +576,22 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.fs.close()
 
     def open_fs(self, root):
-        if os.path.isdir(root):
-            rootdir = root
-        else:
-            rootdir = os.path.dirname(root)
-
-        try:
+        def func(rootdir):
             self.fs = self.app.fsf.new(rootdir)
             self.fs.connect()
-        except OSError as e:
-            if e.errno == errno.ENOENT:
-                raise BackupRootDoesNotExist(root=root)
-            raise
+        self.open_or_reopen_fs(func, root)
 
     def reopen_fs(self, root):
+        self.open_or_reopen_fs(self.fs.reinit, root)
+
+    def open_or_reopen_fs(self, func, root):
         if os.path.isdir(root):
             rootdir = root
         else:
             rootdir = os.path.dirname(root)
 
         try:
-            self.fs.reinit(rootdir)
+            func(rootdir)
         except OSError as e:
             if e.errno == errno.ENOENT:
                 raise BackupRootDoesNotExist(root=root)
