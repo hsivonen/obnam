@@ -514,35 +514,30 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             log = self.app.settings['log']
             exclude_patterns.append(log)
 
-        for regexp in exclude_patterns:
-            if not regexp:
-                logging.debug('Ignoring empty exclude pattern')
-                continue
-            logging.debug('Exclude pattern: %s', regexp)
-            try:
-                self.pathname_excluder.exclude_regexp(regexp)
-            except re.error as e:
-                msg = (
-                    'error compiling exclude regular expression "%s": %s' % 
-                    (x, e))
-                logging.error(msg)
-                self.progress.error(msg)
+        logging.debug('Compiling exclusion patterns')
+        self.compile_regexps(
+            exclude_patterns,
+            self.pathname_excluder.exclude_regexp)
 
     def compile_inclusion_patterns(self):
-        for regexp in self.app.settings['include']:
+        logging.debug('Compiling inclusion patterns')
+        self.compile_regexps(
+            self.app.settings['include'],
+            self.pathname_excluder.allow_regexp)
+
+    def compile_regexps(self, regexps, compiler):
+        for regexp in regexps:
             if not regexp:
-                logging.debug('Ignoring empty include pattern')
+                logging.debug('Ignoring empty pattern')
                 continue
-            logging.debug('Include pattern: %s', regexp)
+            logging.debug('Regular expression: %s', regexp)
             try:
-                self.pathname_excluder.include_regexp(regexp)
+                compiler(regexp)
             except re.error as e:
-                msg = (
-                    'error compiling include regular expression "%s": %s' % 
-                    (x, e))
+                msg = ('error compiling regular expression "%s": %s' % (x, e))
                 logging.error(msg)
                 self.progress.error(msg)
-
+                
     def read_exclusion_patterns_from_files(self, filenames):
         patterns = []
         for filename in filenames:
