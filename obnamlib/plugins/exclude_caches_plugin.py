@@ -41,7 +41,8 @@ class ExcludeCachesPlugin(obnamlib.ObnamPlugin):
         if self.app.settings['exclude-caches']:
             self.app.hooks.add_callback('backup-exclude', self.exclude)
 
-    def exclude(self, fs=None, pathname=None, stat_result=None, exclude=None):
+    def exclude(self, fs=None, pathname=None, stat_result=None, exclude=None,
+                **kwargs):
         if stat.S_ISDIR(stat_result.st_mode):
             tag_filename = 'CACHEDIR.TAG'
             tag_contents = 'Signature: 8a477f597d28d172789f06886806bc55'

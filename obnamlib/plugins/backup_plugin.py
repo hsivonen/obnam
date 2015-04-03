@@ -208,12 +208,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             metavar='URL',
             group=backup_group)
 
-        self.app.settings.boolean(
-            ['one-file-system'],
-            'exclude directories (and their subdirs) '
-            'that are in a different filesystem',
-            group=backup_group)
-
         self.app.settings.bytesize(
             ['checkpoint'],
             'make a checkpoint after a given SIZE',
@@ -696,17 +690,13 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         if self.just_one_file:
             return pathname == self.just_one_file
 
-        if self.app.settings['one-file-system']:
-            if st.st_dev != self.root_metadata.st_dev:
-                logging.debug('Excluding (one-file-system): %s' % pathname)
-                return False
-
         exclude = [False]
         self.app.hooks.call(
             'backup-exclude',
             fs=self.fs,
             pathname=pathname,
             stat_result=st,
+            root_metadata=self.root_metadata,
             exclude=exclude)
         if exclude[0]:
             return False

@@ -56,7 +56,7 @@ class ExcludePathnamesPlugin(obnamlib.ObnamPlugin):
         self.compile_exclusion_patterns()
         self.compile_inclusion_patterns()
 
-    def exclude(self, fs=None, pathname=None, stat_result=None, exclude=None):
+    def exclude(self, pathname=None, stat_result=None, exclude=None, **kwargs):
         is_excluded, regexp = self.pathname_excluder.exclude(pathname)
         if is_excluded:
             logging.debug('Exclude (pattern): %s', pathname)

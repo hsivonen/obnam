@@ -30,3 +30,4 @@ obnamlib/plugins/dump_repo_plugin.py
 obnamlib/fmt_simple/__init__.py
 obnamlib/plugins/exclude_pathnames_plugin.py
 obnamlib/plugins/exclude_caches_plugin.py
+obnamlib/plugins/one_file_system_plugin.py
