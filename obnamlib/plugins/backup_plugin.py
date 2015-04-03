@@ -306,12 +306,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         '''
 
         logging.info('Backup starts')
-
-        self.app.settings.require('repository')
-        self.app.settings.require('client-name')
-
-        if not self.app.settings['repository']:
-            raise RepositorySettingMissingError()
+        self.check_for_required_settings()
 
         self.configure_ttystatus_for_backup()
         self.progress.what('setting up')
@@ -438,6 +433,13 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         if self.progress.errors:
             raise BackupErrors()
+
+    def check_for_required_settings(self):
+        self.app.settings.require('repository')
+        self.app.settings.require('client-name')
+
+        if not self.app.settings['repository']:
+            raise RepositorySettingMissingError()
 
     def configure_ttystatus_for_backup(self):
         self.progress = BackupProgress(self.app.ts)
