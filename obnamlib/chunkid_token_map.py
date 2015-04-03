@@ -35,7 +35,7 @@ class ChunkIdTokenMap(object):
         return token in self._mapping
 
     def get(self, token):
-        return self._mapping[token]
+        return self._mapping.get(token, [])
 
     def clear(self):
         self._mapping.clear()
