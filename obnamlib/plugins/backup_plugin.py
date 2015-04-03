@@ -297,18 +297,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             metavar='REGEXP',
             group=devel_group)
 
-    def configure_ttystatus_for_backup(self):
-        self.progress = BackupProgress(self.app.ts)
-
-    def parse_checkpoint_size(self, value):
-        p = obnamlib.ByteSizeParser()
-        p.set_default_unit('MiB')
-        return p.parse(value)
-
-    @property
-    def pretend(self):
-        return self.app.settings['pretend']
-
     def backup(self, args):
         '''Backup data to repository.
 
@@ -452,6 +440,18 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         if self.progress.errors:
             raise BackupErrors()
+
+    def configure_ttystatus_for_backup(self):
+        self.progress = BackupProgress(self.app.ts)
+
+    def parse_checkpoint_size(self, value):
+        p = obnamlib.ByteSizeParser()
+        p.set_default_unit('MiB')
+        return p.parse(value)
+
+    @property
+    def pretend(self):
+        return self.app.settings['pretend']
 
     def unlock_when_error(self):
         try:
