@@ -317,20 +317,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         self.progress.what('connecting to repository')
         self.client_name = self.app.settings['client-name']
-        if self.pretend:
-            try:
-                self.repo = self.app.get_repository_object()
-            except Exception as e:
-                self.progress.error(
-                    'Are you using --pretend without an existing '
-                    'repository? That does not\n'
-                    'work, sorry. You can create a small repository, '
-                    'backing up just one\n'
-                    'small directory, and then use --pretend with '
-                    'the real data.')
-                raise
-        else:
-            self.repo = self.app.get_repository_object(create=True)
+        self.repo = self.open_repository()
+        if not self.pretend:
             self.progress.what('adding client')
             self.add_client(self.client_name)
             self.progress.what('locking client')
@@ -439,6 +427,22 @@ class BackupPlugin(obnamlib.ObnamPlugin):
     def configure_progress_reporting(self):
         self.progress = BackupProgress(self.app.ts)
 
+    def open_repository(self):
+        if self.pretend:
+            try:
+                return self.app.get_repository_object()
+            except Exception as e:
+                self.progress.error(
+                    'Are you using --pretend without an existing '
+                    'repository? That does not\n'
+                    'work, sorry. You can create a small repository, '
+                    'backing up just one\n'
+                    'small directory, and then use --pretend with '
+                    'the real data.')
+                raise
+        else:
+            return self.app.get_repository_object(create=True)
+            
     def parse_checkpoint_size(self, value):
         p = obnamlib.ByteSizeParser()
         p.set_default_unit('MiB')
