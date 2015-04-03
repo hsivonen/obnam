@@ -487,19 +487,13 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
     def backup_roots(self, roots):
         self.progress.what('connecting to repository')
-
         self.open_fs(roots[0])
-
         absroots = self.find_absolute_roots(roots)
-
         if not self.pretend:
             self.remove_old_roots(absroots)
-
         self.checkpoint_manager.clear()
-
         for root in roots:
             self.backup_root(root, absroots)
-
         if self.fs:
             self.fs.close()
 
