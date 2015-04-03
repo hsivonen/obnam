@@ -498,6 +498,12 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.checkpoint_manager.clear()
 
         for root in roots:
+            self.backup_root(root, absroots)
+
+        if self.fs:
+            self.fs.close()
+
+    def backup_root(self, root, absroots):
             logging.info('Backing up root %s' % root)
             self.progress.what('connecting to live data %s' % root)
 
@@ -570,10 +576,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     self.progress.what(pathname)
 
             self.backup_parents('.')
-
-
-        if self.fs:
-            self.fs.close()
 
     def open_fs(self, root):
         def func(rootdir):
