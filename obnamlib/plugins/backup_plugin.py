@@ -511,7 +511,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         # for not logging or for logging to syslog.
         log = self.app.settings['log']
         if log and log not in ('none', 'syslog'):
-            log = self.app.settings['log']
             exclude_patterns.append(log)
 
         logging.debug('Compiling exclusion patterns')
