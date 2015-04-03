@@ -575,20 +575,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     msg = 'Can\'t back up %s: %s' % (pathname, str(e2))
                     self.progress.error(msg, exc=e)
                     if not existed and not self.pretend:
-                        try:
-                            self.repo.remove_file(
-                                self.new_generation, pathname)
-                        except KeyError:
-                            # File removal failed, but ignore that.
-                            # FIXME: This is an artifact of implementation
-                            # details of the old repository class. Should
-                            # be cleaned up, someday.
-                            pass
-                        except Exception as ee:
-                            msg = (
-                                'Error removing partly backed up file %s: %s'
-                                % (pathname, repr(ee)))
-                            self.progress.error(msg, ee)
+                        self.remove_partially_backed_up_file(pathname)
                     if e.errno == errno.ENOSPC:
                         raise
 
@@ -601,6 +588,21 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         if self.fs:
             self.fs.close()
+
+    def remove_partially_backed_up_file(self, pathname):
+        try:
+            self.repo.remove_file(self.new_generation, pathname)
+        except KeyError:
+            # File removal failed, but ignore that.
+            # FIXME: This is an artifact of implementation
+            # details of the old repository class. Should
+            # be cleaned up, someday.
+            pass
+        except Exception as ee:
+            msg = (
+                'Error removing partly backed up file %s: %s'
+                % (pathname, repr(ee)))
+            self.progress.error(msg, ee)
 
     def maybe_simulate_error(self, pathname):
         '''Raise an IOError if specified by --testing-fail-matching.'''
