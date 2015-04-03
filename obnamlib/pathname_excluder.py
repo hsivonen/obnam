@@ -14,9 +14,21 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import re
+
+
 class PathnameExcluder(object):
 
     '''Decide which pathnames to exclude from a backup. '''
 
+    def __init__(self):
+        self._patterns = []
+
+    def add_regexp(self, regexp):
+        self._patterns.append(re.compile(regexp))
+
     def is_allowed(self, pathname):
+        for pattern in self._patterns:
+            if pattern.search(pathname):
+                return False
         return True
