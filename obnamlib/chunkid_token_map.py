@@ -37,6 +37,9 @@ class ChunkIdTokenMap(object):
     def get(self, token):
         return self._mapping[token]
 
+    def clear(self):
+        self._mapping.clear()
+
     def __iter__(self):
         for token in self._mapping:
             for chunk_id in self._mapping[token]:

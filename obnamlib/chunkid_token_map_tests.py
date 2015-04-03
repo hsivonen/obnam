@@ -54,3 +54,10 @@ class ChunkIdTokenMapTests(unittest.TestCase):
         token = 'foobar'
         self.map.add(chunk_id, token)
         self.assertEqual(self.map.get(token), [chunk_id])
+
+    def test_clears_itself(self):
+        chunk_id = '123'
+        token = 'foobar'
+        self.map.add(chunk_id, token)
+        self.map.clear()
+        self.assertEqual(list(self.map), [])
