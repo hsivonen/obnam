@@ -343,8 +343,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.configure_progress_reporting()
         self.progress.what('setting up')
         
-        self.compile_exclusion_patterns()
-        self.compile_inclusion_patterns()
+        self.setup_pathname_excluder()
         self.memory_dump_counter = 0
         self.chunkid_token_map = obnamlib.ChunkIdTokenMap()
         
@@ -355,6 +354,11 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
     def configure_progress_reporting(self):
         self.progress = BackupProgress(self.app.ts)
+
+    def setup_pathname_excluder(self):
+        self.pathname_excluder = obnamlib.PathnameExcluder()
+        self.compile_exclusion_patterns()
+        self.compile_inclusion_patterns()
 
     def open_repository(self):
         if self.pretend:
@@ -509,40 +513,35 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         if log and log not in ('none', 'syslog'):
             log = self.app.settings['log']
             exclude_patterns.append(log)
-        for pattern in exclude_patterns:
-            logging.debug('Exclude pattern: %s' % pattern)
 
-        self.exclude_pats = self.compile_patterns(exclude_patterns)
-
-        self.exclude_pats = []
-        for x in exclude_patterns:
-            if x != '':
-                try:
-                    self.exclude_pats.append(re.compile(x))
-                except re.error, e:
-                    msg = (
-                        'error compiling regular expression "%s": %s' % 
-                        (x, e))
-                    logging.error(msg)
-                    self.progress.error(msg)
+        for regexp in exclude_patterns:
+            if not regexp:
+                logging.debug('Ignoring empty exclude pattern')
+                continue
+            logging.debug('Exclude pattern: %s', regexp)
+            try:
+                self.pathname_excluder.exclude_regexp(regexp)
+            except re.error as e:
+                msg = (
+                    'error compiling exclude regular expression "%s": %s' % 
+                    (x, e))
+                logging.error(msg)
+                self.progress.error(msg)
 
     def compile_inclusion_patterns(self):
-        include_patterns = self.app.settings['include']
-        self.include_pats = self.compile_patterns(include_patterns)
-
-    def compile_patterns(self, patterns):
-        pats = []
-        for x in patterns:
-            if x != '':
-                try:
-                    pats.append(re.compile(x))
-                except re.error, e:
-                    msg = (
-                        'error compiling regular expression "%s": %s' % 
-                        (x, e))
-                    logging.error(msg)
-                    self.progress.error(msg)
-        return pats
+        for regexp in self.app.settings['include']:
+            if not regexp:
+                logging.debug('Ignoring empty include pattern')
+                continue
+            logging.debug('Include pattern: %s', regexp)
+            try:
+                self.pathname_excluder.include_regexp(regexp)
+            except re.error as e:
+                msg = (
+                    'error compiling include regular expression "%s": %s' % 
+                    (x, e))
+                logging.error(msg)
+                self.progress.error(msg)
 
     def read_exclusion_patterns_from_files(self, filenames):
         patterns = []
@@ -789,10 +788,12 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 logging.debug('Excluding (one-file-system): %s' % pathname)
                 return False
 
-        for pat in self.exclude_pats:
-            if pat.search(pathname) and not self.is_included(pathname):
-                logging.debug('Excluding (pattern): %s' % pathname)
-                return False
+        exclude, regexp = self.pathname_excluder.exclude(pathname)
+        if exclude:
+            logging.debug('Exclude (pattern): %s', pathname)
+            return False
+        elif regexp is not None:
+            logging.debug('Include due to regexp: %s', pathname)
 
         if stat.S_ISDIR(st.st_mode) and self.app.settings['exclude-caches']:
             tag_filename = 'CACHEDIR.TAG'
