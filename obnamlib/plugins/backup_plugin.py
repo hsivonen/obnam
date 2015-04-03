@@ -194,6 +194,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             'backup', self.backup, arg_synopsis='[DIRECTORY|URL]...')
         self.add_backup_settings()
         self.app.hooks.new('backup-finished')
+        self.app.hooks.new('backup-exclude')
 
     def add_backup_settings(self):
 
@@ -205,41 +206,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             ['root'],
             'what to backup',
             metavar='URL',
-            group=backup_group)
-
-        self.app.settings.string_list(
-            ['exclude'],
-            'regular expression for pathnames to '
-            'exclude from backup (can be used multiple '
-            'times)',
-            group=backup_group)
-
-        self.app.settings.string_list(
-            ['exclude-from'],
-            'read exclude patterns from FILE',
-            metavar='FILE',
-            group=backup_group)
-
-        self.app.settings.boolean(
-            ['exclude-caches'],
-            'exclude directories (and their subdirs) '
-            'that contain a CACHEDIR.TAG file (see '
-            'http://www.brynosaurus.com/cachedir/spec.html for what '
-            'it needs to contain, and http://liw.fi/cachedir/ for a '
-            'helper tool)',
-            group=backup_group)
-
-        self.app.settings.string_list(
-            ['include'],
-            'regular expression for pathnames to include from backup '
-            'even if it matches an exclude rule '
-            '(can be used multiple times)',
-            group=backup_group)
-
-        self.app.settings.boolean(
-            ['one-file-system'],
-            'exclude directories (and their subdirs) '
-            'that are in a different filesystem',
             group=backup_group)
 
         self.app.settings.bytesize(
@@ -343,8 +309,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.configure_progress_reporting()
         self.progress.what('setting up')
         
-        self.compile_exclusion_patterns()
-        self.compile_inclusion_patterns()
         self.memory_dump_counter = 0
         self.chunkid_token_map = obnamlib.ChunkIdTokenMap()
         
@@ -495,64 +459,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                             self.repo.get_client_names())
         self.repo.commit_client_list()
         self.repo = self.app.get_repository_object(repofs=self.repo.get_fs())
-
-    def compile_exclusion_patterns(self):
-        # read exclude list files from --exclude-from
-        exclude_patterns = self.read_exclusion_patterns_from_files(
-                                    self.app.settings['exclude-from'])
-        # add patterns passed via --exclude
-        exclude_patterns.extend(self.app.settings['exclude'])
-
-        # Ignore log file, except don't exclude the words cliapp uses
-        # for not logging or for logging to syslog.
-        log = self.app.settings['log']
-        if log and log not in ('none', 'syslog'):
-            log = self.app.settings['log']
-            exclude_patterns.append(log)
-        for pattern in exclude_patterns:
-            logging.debug('Exclude pattern: %s' % pattern)
-
-        self.exclude_pats = self.compile_patterns(exclude_patterns)
-
-        self.exclude_pats = []
-        for x in exclude_patterns:
-            if x != '':
-                try:
-                    self.exclude_pats.append(re.compile(x))
-                except re.error, e:
-                    msg = (
-                        'error compiling regular expression "%s": %s' % 
-                        (x, e))
-                    logging.error(msg)
-                    self.progress.error(msg)
-
-    def compile_inclusion_patterns(self):
-        include_patterns = self.app.settings['include']
-        self.include_pats = self.compile_patterns(include_patterns)
-
-    def compile_patterns(self, patterns):
-        pats = []
-        for x in patterns:
-            if x != '':
-                try:
-                    pats.append(re.compile(x))
-                except re.error, e:
-                    msg = (
-                        'error compiling regular expression "%s": %s' % 
-                        (x, e))
-                    logging.error(msg)
-                    self.progress.error(msg)
-        return pats
-
-    def read_exclusion_patterns_from_files(self, filenames):
-        patterns = []
-        for filename in filenames:
-            with open(filename) as f:
-                for line in f:
-                    line = line.strip()
-                    if line and not line.startswith('#'):
-                        patterns.append(line)
-        return patterns
 
     def backup_roots(self, roots):
         self.progress.what('connecting to repository')
@@ -784,28 +690,16 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         if self.just_one_file:
             return pathname == self.just_one_file
 
-        if self.app.settings['one-file-system']:
-            if st.st_dev != self.root_metadata.st_dev:
-                logging.debug('Excluding (one-file-system): %s' % pathname)
-                return False
-
-        for pat in self.exclude_pats:
-            if pat.search(pathname) and not self.is_included(pathname):
-                logging.debug('Excluding (pattern): %s' % pathname)
-                return False
-
-        if stat.S_ISDIR(st.st_mode) and self.app.settings['exclude-caches']:
-            tag_filename = 'CACHEDIR.TAG'
-            tag_contents = 'Signature: 8a477f597d28d172789f06886806bc55'
-            tag_path = os.path.join(pathname, 'CACHEDIR.TAG')
-            if self.fs.exists(tag_path):
-                # Can't use with, because Paramiko's SFTPFile does not work.
-                f = self.fs.open(tag_path, 'rb')
-                data = f.read(len(tag_contents))
-                f.close()
-                if data == tag_contents:
-                    logging.debug('Excluding (cache dir): %s' % pathname)
-                    return False
+        exclude = [False]
+        self.app.hooks.call(
+            'backup-exclude',
+            fs=self.fs,
+            pathname=pathname,
+            stat_result=st,
+            root_metadata=self.root_metadata,
+            exclude=exclude)
+        if exclude[0]:
+            return False
 
         return True
 
