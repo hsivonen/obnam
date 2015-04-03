@@ -585,10 +585,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                             # be cleaned up, someday.
                             pass
                         except Exception as ee:
-                            expl = (
-                                ee.strerror 
-                                if hasattr(ee, 'strerror') 
-                                else str(ee))
                             msg = (
                                 'Error removing partly backed up file %s: %s'
                                 % (pathname, repr(ee)))
