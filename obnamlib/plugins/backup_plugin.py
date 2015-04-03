@@ -318,7 +318,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.memory_dump_counter = 0
 
         self.progress.what('connecting to repository')
-        self.client_name = self.app.settings['client-name']
         self.repo = self.open_repository()
         if not self.pretend:
             self.prepare_repository_for_client()
@@ -455,6 +454,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
     @property
     def pretend(self):
         return self.app.settings['pretend']
+
+    @property
+    def client_name(self):
+        return self.app.settings['client-name']
 
     def unlock_when_error(self):
         try:
