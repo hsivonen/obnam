@@ -680,12 +680,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 msg = 'Cannot back up %s: %s' % (pathname, str(e))
                 self.progress.error(msg, e)
 
-    def is_included(self, pathname):
-        for pat in self.include_pats:
-            if pat.search(pathname):
-                return True
-        return False
-
     def can_be_backed_up(self, pathname, st):
         if self.just_one_file:
             return pathname == self.just_one_file
