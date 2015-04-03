@@ -1,4 +1,4 @@
-# Copyright (C) 2009-2014  Lars Wirzenius
+# Copyright (C) 2009-2015  Lars Wirzenius
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -187,6 +187,27 @@ class BackupProgress(object):
              overhead_percent))
 
 
+class CheckpointManager(object):
+
+    def __init__(self, repo, checkpoint_interval):
+        self.repo = repo
+        self.interval = checkpoint_interval
+        self.clear()
+
+    def add_checkpoint(self, generation_id):
+        self.checkpoints.append(generation_id)
+        self.last_checkpoint = self.repo.get_fs().bytes_written
+
+    def clear(self):
+        self.checkpoints = []
+        self.last_checkpoint = 0
+
+    def time_for_checkpoint(self):
+        bytes_since = (self.repo.get_fs().bytes_written - 
+                       self.last_checkpoint)
+        return bytes_since >= self.interval
+
+
 class BackupPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
@@ -317,6 +338,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         if not self.pretend:
             self.prepare_repository_for_client()
 
+        self.checkpoint_manager = CheckpointManager(
+            self.repo,
+            self.app.settings['checkpoint'])
+
     def configure_progress_reporting(self):
         self.progress = BackupProgress(self.app.ts)
 
@@ -393,7 +418,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.repo.lock_client(self.client_name)
         self.repo.lock_chunk_indexes()
 
-        for gen in self.checkpoints:
+        for gen in self.checkpoint_manager.checkpoints:
             self.progress.update_progress_with_removed_checkpoint(gen)
             self.repo.remove_generation(gen)
 
@@ -462,20 +487,114 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
     def backup_roots(self, roots):
         self.progress.what('connecting to repository')
+        self.open_fs(roots[0])
+        absroots = self.find_absolute_roots(roots)
+        if not self.pretend:
+            self.remove_old_roots(absroots)
+        self.checkpoint_manager.clear()
+        for root in roots:
+            self.backup_root(root, absroots)
+        if self.fs:
+            self.fs.close()
 
-        if os.path.isdir(roots[0]):
-            rootdir = roots[0] 
+    def backup_root(self, root, absroots):
+        logging.info('Backing up root %s' % root)
+        self.progress.what('connecting to live data %s' % root)
+
+        self.reopen_fs(root)
+
+        self.progress.what('scanning for files in %s' % root)
+        absroot = self.fs.abspath('.')
+
+        # If the root is a file, we can just back up the file.
+        if os.path.isfile(root):
+            self.just_one_file = os.path.join(absroot, os.path.split(root)[1])
         else:
-            rootdir = os.path.dirname(roots[0])
+            self.just_one_file = None
 
-        try:
+        self.root_metadata = self.fs.lstat(absroot)
+
+        for pathname, metadata in self.find_files(absroot):
+            logging.info('Backing up %s' % pathname)
+            if not self.pretend:
+                existed = self.repo.file_exists(self.new_generation, pathname)
+            try:
+                self.maybe_simulate_error(pathname)
+                if stat.S_ISDIR(metadata.st_mode):
+                    self.backup_directory(pathname, metadata, absroots)
+                else:
+                    self.backup_non_directory(pathname, metadata)
+            except (IOError, OSError) as e:
+                e2 = self.translate_enverror_to_obnamerror(pathname, e)
+                msg = 'Can\'t back up %s: %s' % (pathname, str(e2))
+                self.progress.error(msg, exc=e)
+                if not existed and not self.pretend:
+                    self.remove_partially_backed_up_file(pathname)
+                if e.errno == errno.ENOSPC:
+                    raise
+
+            if self.checkpoint_manager.time_for_checkpoint():
+                self.make_checkpoint()
+                self.progress.what(pathname)
+
+        self.backup_parents('.')
+
+    def translate_enverror_to_obnamerror(self, pathname, exc):
+        if type(exc) is IOError:
+            return obnamlib.ObnamIOError(
+                errno=exc.errno,
+                strerror=exc.strerror,
+                filename=exc.filename or pathname)
+        else:
+            return obnamlib.ObnamSystemError(
+                errno=exc.errno,
+                strerror=exc.strerror,
+                filename=exc.filename or pathname)
+
+    def backup_directory(self, pathname, metadata, absroots):
+        # Directories should only be counted in the progress their
+        # metadata has changed. This covers the case when files have
+        # been deleted from them.
+        gen = self.get_current_generation()
+        if self.metadata_has_changed(gen, pathname, metadata):
+            self.progress.backed_up_count += 1
+
+        self.backup_dir_contents(pathname, no_delete_paths=absroots)
+        self.backup_metadata(pathname, metadata)
+
+    def backup_non_directory(self, pathname, metadata):
+        # Non-directories' progress can be updated without further
+        # thinking.
+        self.progress.backed_up_count += 1
+
+        if stat.S_ISREG(metadata.st_mode):
+            assert metadata.md5 is None
+            metadata.md5 = self.backup_file_contents(pathname, metadata)
+            self.backup_metadata(pathname, metadata)
+
+    def open_fs(self, root):
+        def func(rootdir):
             self.fs = self.app.fsf.new(rootdir)
             self.fs.connect()
+        self.open_or_reopen_fs(func, root)
+
+    def reopen_fs(self, root):
+        self.open_or_reopen_fs(self.fs.reinit, root)
+
+    def open_or_reopen_fs(self, func, root):
+        if os.path.isdir(root):
+            rootdir = root
+        else:
+            rootdir = os.path.dirname(root)
+
+        try:
+            func(rootdir)
         except OSError as e:
             if e.errno == errno.ENOENT:
-                raise BackupRootDoesNotExist(root=roots[0])
+                raise BackupRootDoesNotExist(root=root)
             raise
 
+    def find_absolute_roots(self, roots):
         absroots = []
         for root in roots:
             self.progress.what('determining absolute path for %s' % root)
@@ -488,123 +607,22 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.fs.reinit(rootdir)
             absroots.append(self.fs.abspath('.'))
 
-        if not self.pretend:
-            self.remove_old_roots(absroots)
+        return absroots
 
-        self.checkpoints = []
-        self.last_checkpoint = 0
-        self.interval = self.app.settings['checkpoint']
-
-        for root in roots:
-            logging.info('Backing up root %s' % root)
-            self.progress.what('connecting to live data %s' % root)
-
-            if os.path.isdir(root):
-                rootdir = root
-            else:
-                rootdir = os.path.dirname(root)
-
-            try:
-                self.fs.reinit(rootdir)
-            except OSError as e:
-                if e.errno == errno.ENOENT:
-                    raise BackupRootDoesNotExist(root=root)
-                raise
-
-            self.progress.what('scanning for files in %s' % root)
-            absroot = self.fs.abspath('.')
-
-            # If the root is a file, we can just back up the file.
-            if os.path.isfile(root):
-                self.just_one_file = os.path.join(
-                    absroot, os.path.split(root)[1])
-            else:
-                self.just_one_file = None
-
-            self.root_metadata = self.fs.lstat(absroot)
-
-            # Create a list of other backup roots which should be
-            # ignored while traversing the filesystem.
-            other_roots = list(absroots)
-            while other_roots.count(absroot) > 0:
-                other_roots.remove(absroot)
-
-            for pathname, metadata in self.find_files(absroot):
-                logging.info('Backing up %s' % pathname)
-                if not self.pretend:
-                    existed = self.repo.file_exists(
-                        self.new_generation, pathname)
-                try:
-                    self.maybe_simulate_error(pathname)
-                    if stat.S_ISDIR(metadata.st_mode):
-                        # Directories should only be counted in the
-                        # progress their metadata has changed. This
-                        # covers the case when files have been deleted
-                        # from them.
-                        gen = self.get_current_generation()
-                        if self.metadata_has_changed(gen, pathname, metadata):
-                            self.progress.backed_up_count += 1
-
-                        self.backup_dir_contents(pathname,
-                            no_delete_paths=other_roots)
-                        self.backup_metadata(pathname, metadata)
-                    else:
-                        # Non-directories' progress can be updated
-                        # without further thinking.
-                        self.progress.backed_up_count += 1
-
-                        if stat.S_ISREG(metadata.st_mode):
-                            assert metadata.md5 is None
-                            metadata.md5 = self.backup_file_contents(
-                                pathname, metadata)
-                        self.backup_metadata(pathname, metadata)
-
-                except (IOError, OSError) as e:
-
-                    if type(e) is IOError:
-                        e2 = obnamlib.ObnamIOError(
-                            errno=e.errno,
-                            strerror=e.strerror,
-                            filename=e.filename or pathname)
-                    else:
-                        e2 = obnamlib.ObnamSystemError(
-                            errno=e.errno,
-                            strerror=e.strerror,
-                            filename=e.filename or pathname)
-
-                    msg = 'Can\'t back up %s: %s' % (pathname, str(e2))
-                    self.progress.error(msg, exc=e)
-                    if not existed and not self.pretend:
-                        try:
-                            self.repo.remove_file(
-                                self.new_generation, pathname)
-                        except KeyError:
-                            # File removal failed, but ignore that.
-                            # FIXME: This is an artifact of implementation
-                            # details of the old repository class. Should
-                            # be cleaned up, someday.
-                            pass
-                        except Exception as ee:
-                            expl = (
-                                ee.strerror 
-                                if hasattr(ee, 'strerror') 
-                                else str(ee))
-                            msg = (
-                                'Error removing partly backed up file %s: %s'
-                                % (pathname, repr(ee)))
-                            self.progress.error(msg, ee)
-                    if e.errno == errno.ENOSPC:
-                        raise
-
-                if self.time_for_checkpoint():
-                    self.make_checkpoint()
-                    self.progress.what(pathname)
-
-            self.backup_parents('.')
-
-
-        if self.fs:
-            self.fs.close()
+    def remove_partially_backed_up_file(self, pathname):
+        try:
+            self.repo.remove_file(self.new_generation, pathname)
+        except KeyError:
+            # File removal failed, but ignore that.
+            # FIXME: This is an artifact of implementation
+            # details of the old repository class. Should
+            # be cleaned up, someday.
+            pass
+        except Exception as ee:
+            msg = (
+                'Error removing partly backed up file %s: %s'
+                % (pathname, repr(ee)))
+            self.progress.error(msg, ee)
 
     def maybe_simulate_error(self, pathname):
         '''Raise an IOError if specified by --testing-fail-matching.'''
@@ -614,16 +632,11 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 e = errno.ENOENT
                 raise IOError(e, os.strerror(e), pathname)
 
-    def time_for_checkpoint(self):
-        bytes_since = (self.repo.get_fs().bytes_written - 
-                       self.last_checkpoint)
-        return bytes_since >= self.interval
-
     def make_checkpoint(self):
         logging.info('Making checkpoint')
         self.progress.what('making checkpoint')
         if not self.pretend:
-            self.checkpoints.append(self.new_generation)
+            self.checkpoint_manager.add_checkpoint(self.new_generation)
             self.progress.what('making checkpoint: backing up parents')
             self.backup_parents('.')
             self.progress.what('making checkpoint: locking shared B-trees')
@@ -679,12 +692,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             except BaseException, e:
                 msg = 'Cannot back up %s: %s' % (pathname, str(e))
                 self.progress.error(msg, e)
-
-    def is_included(self, pathname):
-        for pat in self.include_pats:
-            if pat.search(pathname):
-                return True
-        return False
 
     def can_be_backed_up(self, pathname, st):
         if self.just_one_file:
@@ -892,10 +899,11 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             else:
                 self.progress.update_progress_with_upload(len(data))
 
-            if not self.pretend and self.time_for_checkpoint():
-                logging.debug('making checkpoint in the middle of a file')
-                self.make_checkpoint()
-                self.progress.what(filename)
+            if not self.pretend:
+                if self.checkpoint_manager.time_for_checkpoint():
+                    logging.debug('making checkpoint in the middle of a file')
+                    self.make_checkpoint()
+                    self.progress.what(filename)
 
         tracing.trace('closing file')
         f.close()
