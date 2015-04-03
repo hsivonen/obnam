@@ -208,19 +208,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             metavar='URL',
             group=backup_group)
 
-        self.app.settings.string_list(
-            ['exclude'],
-            'regular expression for pathnames to '
-            'exclude from backup (can be used multiple '
-            'times)',
-            group=backup_group)
-
-        self.app.settings.string_list(
-            ['exclude-from'],
-            'read exclude patterns from FILE',
-            metavar='FILE',
-            group=backup_group)
-
         self.app.settings.boolean(
             ['exclude-caches'],
             'exclude directories (and their subdirs) '
@@ -228,13 +215,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             'http://www.brynosaurus.com/cachedir/spec.html for what '
             'it needs to contain, and http://liw.fi/cachedir/ for a '
             'helper tool)',
-            group=backup_group)
-
-        self.app.settings.string_list(
-            ['include'],
-            'regular expression for pathnames to include from backup '
-            'even if it matches an exclude rule '
-            '(can be used multiple times)',
             group=backup_group)
 
         self.app.settings.boolean(
@@ -344,7 +324,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.configure_progress_reporting()
         self.progress.what('setting up')
         
-        self.setup_pathname_excluder()
         self.memory_dump_counter = 0
         self.chunkid_token_map = obnamlib.ChunkIdTokenMap()
         
@@ -355,55 +334,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
     def configure_progress_reporting(self):
         self.progress = BackupProgress(self.app.ts)
-
-    def setup_pathname_excluder(self):
-        self.pathname_excluder = obnamlib.PathnameExcluder()
-        self.compile_exclusion_patterns()
-        self.compile_inclusion_patterns()
-
-    def compile_exclusion_patterns(self):
-        regexps = self.read_patterns_from_files(
-            self.app.settings['exclude-from'])
-
-        regexps.extend(self.app.settings['exclude'])
-
-        # Ignore log file, except don't exclude the words cliapp uses
-        # for not logging or for logging to syslog.
-        log = self.app.settings['log']
-        if log and log not in ('none', 'syslog'):
-            regexps.append(log)
-
-        logging.debug('Compiling exclusion patterns')
-        self.compile_regexps(regexps, self.pathname_excluder.exclude_regexp)
-
-    def compile_inclusion_patterns(self):
-        logging.debug('Compiling inclusion patterns')
-        self.compile_regexps(
-            self.app.settings['include'],
-            self.pathname_excluder.allow_regexp)
-
-    def compile_regexps(self, regexps, compiler):
-        for regexp in regexps:
-            if not regexp:
-                logging.debug('Ignoring empty pattern')
-                continue
-            logging.debug('Regular expression: %s', regexp)
-            try:
-                compiler(regexp)
-            except re.error as e:
-                msg = ('error compiling regular expression "%s": %s' % (x, e))
-                logging.error(msg)
-                self.progress.error(msg)
-                
-    def read_patterns_from_files(self, filenames):
-        patterns = []
-        for filename in filenames:
-            with open(filename) as f:
-                for line in f:
-                    line = line.strip()
-                    if line and not line.startswith('#'):
-                        patterns.append(line)
-        return patterns
 
     def open_repository(self):
         if self.pretend:
@@ -779,13 +709,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             if st.st_dev != self.root_metadata.st_dev:
                 logging.debug('Excluding (one-file-system): %s' % pathname)
                 return False
-
-        exclude, regexp = self.pathname_excluder.exclude(pathname)
-        if exclude:
-            logging.debug('Exclude (pattern): %s', pathname)
-            return False
-        elif regexp is not None:
-            logging.debug('Include due to regexp: %s', pathname)
 
         if stat.S_ISDIR(st.st_mode) and self.app.settings['exclude-caches']:
             tag_filename = 'CACHEDIR.TAG'

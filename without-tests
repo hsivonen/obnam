@@ -28,3 +28,4 @@ test-plugins/aaa_hello_plugin.py
 test-plugins/wrongversion_plugin.py
 obnamlib/plugins/dump_repo_plugin.py
 obnamlib/fmt_simple/__init__.py
+obnamlib/plugins/exclude_pathnames_plugin.py
