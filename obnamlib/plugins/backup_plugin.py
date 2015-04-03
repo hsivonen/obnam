@@ -523,12 +523,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
             self.root_metadata = self.fs.lstat(absroot)
 
-            # Create a list of other backup roots which should be
-            # ignored while traversing the filesystem.
-            other_roots = list(absroots)
-            while other_roots.count(absroot) > 0:
-                other_roots.remove(absroot)
-
             for pathname, metadata in self.find_files(absroot):
                 logging.info('Backing up %s' % pathname)
                 if not self.pretend:
@@ -546,7 +540,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                             self.progress.backed_up_count += 1
 
                         self.backup_dir_contents(pathname,
-                            no_delete_paths=other_roots)
+                            no_delete_paths=absroots)
                         self.backup_metadata(pathname, metadata)
                     else:
                         # Non-directories' progress can be updated
