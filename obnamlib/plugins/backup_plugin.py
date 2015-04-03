@@ -332,26 +332,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.progress.what('committing changes to repository')
             if not self.pretend:
                 self.finish_backup()
-
-                remove_checkpoints = (
-                    not self.progress.errors and
-                    not self.app.settings['leave-checkpoints'])
-                if remove_checkpoints:
-                    self.progress.what('removing checkpoints')
-                    self.repo.lock_client(self.client_name)
-                    self.repo.lock_chunk_indexes()
-                    for gen in self.checkpoints:
-                        self.progress.update_progress_with_removed_checkpoint(
-                            gen)
-                        self.repo.remove_generation(gen)
-
-                    self.progress.what('removing checkpoints: '
-                                       'committing client')
-                    self.repo.commit_client(self.client_name)
-
-                    self.progress.what('removing checkpoints: '
-                                       'commiting shared B-trees')
-                    self.repo.commit_chunk_indexes()
+                if self.should_remove_checkpoints():
+                    self.remove_checkpoints()
 
             self.progress.what('closing connection to repository')
             self.repo.close()
@@ -443,6 +425,27 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.repo.commit_client(self.client_name)
         
         self.progress.what(prefix + 'committing shared B-trees')
+        self.repo.commit_chunk_indexes()
+
+    def should_remove_checkpoints(self):
+        return (not self.progress.errors and
+                not self.app.settings['leave-checkpoints'])
+
+    def remove_checkpoints(self):
+        prefix = 'removing checkpoints'
+        self.progress.what(prefix)
+
+        self.repo.lock_client(self.client_name)
+        self.repo.lock_chunk_indexes()
+
+        for gen in self.checkpoints:
+            self.progress.update_progress_with_removed_checkpoint(gen)
+            self.repo.remove_generation(gen)
+
+        self.progress.what(prefix + ': committing client')
+        self.repo.commit_client(self.client_name)
+
+        self.progress.what(prefix + ': commiting shared B-trees')
         self.repo.commit_chunk_indexes()
 
     def parse_checkpoint_size(self, value):
