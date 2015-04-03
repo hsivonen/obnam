@@ -22,13 +22,21 @@ class PathnameExcluder(object):
     '''Decide which pathnames to exclude from a backup. '''
 
     def __init__(self):
-        self._patterns = []
+        self._exclude_patterns = []
+        self._include_patterns = []
 
-    def add_regexp(self, regexp):
-        self._patterns.append(re.compile(regexp))
+    def exclude_regexp(self, regexp):
+        self._exclude_patterns.append(re.compile(regexp))
+
+    def allow_regexp(self, regexp):
+        self._include_patterns.append(re.compile(regexp))
 
     def is_allowed(self, pathname):
-        for pattern in self._patterns:
+        return (self._matches(pathname, self._include_patterns) or
+                not self._matches(pathname, self._exclude_patterns))
+
+    def _matches(self, pathname, patterns):
+        for pattern in patterns:
             if pattern.search(pathname):
-                return False
-        return True
+                return True
+        return False

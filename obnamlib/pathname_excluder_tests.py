@@ -27,5 +27,11 @@ class PathnameExcluderTest(unittest.TestCase):
 
     def test_excludes_foo(self):
         excluder = obnamlib.PathnameExcluder()
-        excluder.add_regexp('foo')
+        excluder.exclude_regexp('foo')
         self.assertFalse(excluder.is_allowed('/foo'))
+
+    def test_allows_foo_if_included(self):
+        excluder = obnamlib.PathnameExcluder()
+        excluder.exclude_regexp('foo')
+        excluder.allow_regexp('foo')
+        self.assertTrue(excluder.is_allowed('/foo'))
