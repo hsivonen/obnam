@@ -297,18 +297,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             metavar='REGEXP',
             group=devel_group)
 
-    def configure_ttystatus_for_backup(self):
-        self.progress = BackupProgress(self.app.ts)
-
-    def parse_checkpoint_size(self, value):
-        p = obnamlib.ByteSizeParser()
-        p.set_default_unit('MiB')
-        return p.parse(value)
-
-    @property
-    def pretend(self):
-        return self.app.settings['pretend']
-
     def backup(self, args):
         '''Backup data to repository.
 
@@ -318,29 +306,60 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         '''
 
         logging.info('Backup starts')
-        logging.debug(
-            'Checkpoints every %s bytes' % self.app.settings['checkpoint'])
 
+        roots = self.app.settings['root'] + args
+        self.check_for_required_settings(roots)
+
+        self.start_backup()
+        try:
+            if not self.pretend:
+                self.start_generation()
+            self.backup_roots(roots)
+            if not self.pretend:
+                self.finish_generation()
+                if self.should_remove_checkpoints():
+                    self.remove_checkpoints()
+            self.finish_backup(args)
+        except BaseException, e:
+            logging.debug('Handling exception %s' % str(e))
+            logging.debug(traceback.format_exc())
+            self.unlock_when_error()
+            raise
+
+        if self.progress.errors:
+            raise BackupErrors()
+
+    def check_for_required_settings(self, roots):
         self.app.settings.require('repository')
         self.app.settings.require('client-name')
 
         if not self.app.settings['repository']:
             raise RepositorySettingMissingError()
 
-        self.configure_ttystatus_for_backup()
-        self.progress.what('setting up')
+        if not roots:
+            raise BackupRootMissingError()
 
+    def start_backup(self):
+        self.configure_progress_reporting()
+        self.progress.what('setting up')
+        
         self.compile_exclusion_patterns()
         self.compile_inclusion_patterns()
         self.memory_dump_counter = 0
-
+        self.chunkid_token_map = obnamlib.ChunkIdTokenMap()
+        
         self.progress.what('connecting to repository')
-        self.client_name = self.app.settings['client-name']
-        self.got_client_lock = False
-        self.got_chunk_indexes_lock = False
+        self.repo = self.open_repository()
+        if not self.pretend:
+            self.prepare_repository_for_client()
+
+    def configure_progress_reporting(self):
+        self.progress = BackupProgress(self.app.ts)
+
+    def open_repository(self):
         if self.pretend:
             try:
-                self.repo = self.app.get_repository_object()
+                return self.app.get_repository_object()
             except Exception as e:
                 self.progress.error(
                     'Are you using --pretend without an existing '
@@ -351,114 +370,105 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     'the real data.')
                 raise
         else:
-            self.repo = self.app.get_repository_object(create=True)
-            self.progress.what('adding client')
-            self.add_client(self.client_name)
-            self.progress.what('locking client')
-            self.repo.lock_client(self.client_name)
-            self.got_client_lock = True
+            return self.app.get_repository_object(create=True)
+            
+    def prepare_repository_for_client(self):
+        self.progress.what('adding client')
+        self.add_client(self.client_name)
 
-            # Need to lock the shared stuff briefly, so encryption etc
-            # gets initialized.
-            self.progress.what(
-                'initialising shared directories')
-            self.repo.lock_chunk_indexes()
-            self.got_chunk_indexes_lock = True
-            self.repo.unlock_chunk_indexes()
-            self.got_chunk_indexes_lock = False
+        self.progress.what('locking client')
+        self.repo.lock_client(self.client_name)
 
-        self.chunkid_token_map = obnamlib.ChunkIdTokenMap()
-        try:
-            if not self.pretend:
-                self.progress.what('starting new generation')
-                self.new_generation = self.repo.create_generation(
-                    self.client_name)
-            self.fs = None
-            roots = self.app.settings['root'] + args
-            if not roots:
-                raise BackupRootMissingError()
-            self.backup_roots(roots)
-            self.progress.what('committing changes to repository')
-            if not self.pretend:
-                self.progress.what(
-                    'committing changes to repository: '
-                    'locking shared B-trees')
-                self.repo.lock_chunk_indexes()
+        # Need to lock the shared stuff briefly, so encryption etc
+        # gets initialized.
+        self.progress.what('initialising shared directories')
+        self.repo.lock_chunk_indexes()
+        self.repo.unlock_chunk_indexes()
+        
+    def start_generation(self):
+        self.progress.what('starting new generation')
+        self.new_generation = self.repo.create_generation(self.client_name)
 
-                self.progress.what(
-                    'committing changes to repository: '
-                    'adding chunks to shared B-trees')
-                self.add_chunks_to_shared()
+    def finish_generation(self):
+        prefix = 'committing changes to repository: '
 
-                self.progress.what(
-                    'committing changes to repository: '
-                    'updating generation metadata')
-                self.repo.set_generation_key(
-                    self.new_generation,
-                    obnamlib.REPO_GENERATION_FILE_COUNT,
-                    self.progress.file_count)
-                self.repo.set_generation_key(
-                    self.new_generation,
-                    obnamlib.REPO_GENERATION_TOTAL_DATA,
-                    self.progress.scanned_bytes)
-                self.repo.set_generation_key(
-                    self.new_generation,
-                    obnamlib.REPO_GENERATION_IS_CHECKPOINT,
-                    False)
-                
-                self.progress.what(
-                    'committing changes to repository: '
-                    'committing client')
-                self.repo.commit_client(self.client_name)
+        self.progress.what(prefix + 'locking shared B-trees')
+        self.repo.lock_chunk_indexes()
 
-                self.progress.what(
-                    'committing changes to repository: '
-                    'committing shared B-trees')
-                self.repo.commit_chunk_indexes()
+        self.progress.what(prefix + 'adding chunks to shared B-trees')
+        self.add_chunks_to_shared()
+        
+        self.progress.what(prefix + 'updating generation metadata')
+        self.repo.set_generation_key(
+            self.new_generation,
+            obnamlib.REPO_GENERATION_FILE_COUNT,
+            self.progress.file_count)
+        self.repo.set_generation_key(
+            self.new_generation,
+            obnamlib.REPO_GENERATION_TOTAL_DATA,
+            self.progress.scanned_bytes)
+        self.repo.set_generation_key(
+            self.new_generation,
+            obnamlib.REPO_GENERATION_IS_CHECKPOINT,
+            False)
+        
+        self.progress.what(prefix + 'committing client')
+        self.repo.commit_client(self.client_name)
+        
+        self.progress.what(prefix + 'committing shared B-trees')
+        self.repo.commit_chunk_indexes()
 
-                remove_checkpoints = (
-                    not self.progress.errors and
-                    not self.app.settings['leave-checkpoints'])
-                if remove_checkpoints:
-                    self.progress.what('removing checkpoints')
-                    self.repo.lock_client(self.client_name)
-                    self.repo.lock_chunk_indexes()
-                    for gen in self.checkpoints:
-                        self.progress.update_progress_with_removed_checkpoint(
-                            gen)
-                        self.repo.remove_generation(gen)
+    def should_remove_checkpoints(self):
+        return (not self.progress.errors and
+                not self.app.settings['leave-checkpoints'])
 
-                    self.progress.what('removing checkpoints: '
-                                       'committing client')
-                    self.repo.commit_client(self.client_name)
+    def remove_checkpoints(self):
+        prefix = 'removing checkpoints'
+        self.progress.what(prefix)
 
-                    self.progress.what('removing checkpoints: '
-                                       'commiting shared B-trees')
-                    self.repo.commit_chunk_indexes()
+        self.repo.lock_client(self.client_name)
+        self.repo.lock_chunk_indexes()
 
-            self.progress.what('closing connection to repository')
-            self.repo.close()
-            self.progress.clear()
-            self.progress.report_stats(self.repo.get_fs())
+        for gen in self.checkpoints:
+            self.progress.update_progress_with_removed_checkpoint(gen)
+            self.repo.remove_generation(gen)
 
-            logging.info('Backup finished.')
-            self.app.hooks.call('backup-finished', args, self.progress)
-            self.app.dump_memory_profile('at end of backup run')
-        except BaseException, e:
-            logging.debug('Handling exception %s' % str(e))
-            logging.debug(traceback.format_exc())
-            self.unlock_when_error()
-            raise
+        self.progress.what(prefix + ': committing client')
+        self.repo.commit_client(self.client_name)
 
-        if self.progress.errors:
-            raise BackupErrors()
+        self.progress.what(prefix + ': commiting shared B-trees')
+        self.repo.commit_chunk_indexes()
+
+    def finish_backup(self, args):
+        self.progress.what('closing connection to repository')
+        self.repo.close()
+
+        self.progress.clear()
+        self.progress.report_stats(self.repo.get_fs())
+
+        logging.info('Backup finished.')
+        self.app.hooks.call('backup-finished', args, self.progress)
+        self.app.dump_memory_profile('at end of backup run')
+
+    def parse_checkpoint_size(self, value):
+        p = obnamlib.ByteSizeParser()
+        p.set_default_unit('MiB')
+        return p.parse(value)
+
+    @property
+    def pretend(self):
+        return self.app.settings['pretend']
+
+    @property
+    def client_name(self):
+        return self.app.settings['client-name']
 
     def unlock_when_error(self):
         try:
-            if self.got_client_lock:
+            if self.repo.got_client_lock():
                 logging.info('Attempting to unlock client because of error')
                 self.repo.unlock_client(self.client_name)
-            if self.got_chunk_indexes_lock:
+            if self.repo.got_chunk_indexes_lock():
                 logging.info(
                     'Attempting to unlock shared trees because of error')
                 self.repo.unlock_chunk_indexes()
