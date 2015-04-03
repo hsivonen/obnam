@@ -306,7 +306,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         '''
 
         logging.info('Backup starts')
-        self.check_for_required_settings()
+
+        roots = self.app.settings['root'] + args
+        self.check_for_required_settings(roots)
 
         self.configure_progress_reporting()
         self.progress.what('setting up')
@@ -328,9 +330,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 self.new_generation = self.repo.create_generation(
                     self.client_name)
             self.fs = None
-            roots = self.app.settings['root'] + args
-            if not roots:
-                raise BackupRootMissingError()
             self.backup_roots(roots)
             self.progress.what('committing changes to repository')
             if not self.pretend:
@@ -407,12 +406,15 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         if self.progress.errors:
             raise BackupErrors()
 
-    def check_for_required_settings(self):
+    def check_for_required_settings(self, roots):
         self.app.settings.require('repository')
         self.app.settings.require('client-name')
 
         if not self.app.settings['repository']:
             raise RepositorySettingMissingError()
+
+        if not roots:
+            raise BackupRootMissingError()
 
     def configure_progress_reporting(self):
         self.progress = BackupProgress(self.app.ts)
