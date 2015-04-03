@@ -498,78 +498,76 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.fs.close()
 
     def backup_root(self, root, absroots):
-            logging.info('Backing up root %s' % root)
-            self.progress.what('connecting to live data %s' % root)
+        logging.info('Backing up root %s' % root)
+        self.progress.what('connecting to live data %s' % root)
 
-            self.reopen_fs(root)
+        self.reopen_fs(root)
 
-            self.progress.what('scanning for files in %s' % root)
-            absroot = self.fs.abspath('.')
+        self.progress.what('scanning for files in %s' % root)
+        absroot = self.fs.abspath('.')
 
-            # If the root is a file, we can just back up the file.
-            if os.path.isfile(root):
-                self.just_one_file = os.path.join(
-                    absroot, os.path.split(root)[1])
-            else:
-                self.just_one_file = None
+        # If the root is a file, we can just back up the file.
+        if os.path.isfile(root):
+            self.just_one_file = os.path.join(absroot, os.path.split(root)[1])
+        else:
+            self.just_one_file = None
 
-            self.root_metadata = self.fs.lstat(absroot)
+        self.root_metadata = self.fs.lstat(absroot)
 
-            for pathname, metadata in self.find_files(absroot):
-                logging.info('Backing up %s' % pathname)
-                if not self.pretend:
-                    existed = self.repo.file_exists(
-                        self.new_generation, pathname)
-                try:
-                    self.maybe_simulate_error(pathname)
-                    if stat.S_ISDIR(metadata.st_mode):
-                        # Directories should only be counted in the
-                        # progress their metadata has changed. This
-                        # covers the case when files have been deleted
-                        # from them.
-                        gen = self.get_current_generation()
-                        if self.metadata_has_changed(gen, pathname, metadata):
-                            self.progress.backed_up_count += 1
-
-                        self.backup_dir_contents(pathname,
-                            no_delete_paths=absroots)
-                        self.backup_metadata(pathname, metadata)
-                    else:
-                        # Non-directories' progress can be updated
-                        # without further thinking.
+        for pathname, metadata in self.find_files(absroot):
+            logging.info('Backing up %s' % pathname)
+            if not self.pretend:
+                existed = self.repo.file_exists(self.new_generation, pathname)
+            try:
+                self.maybe_simulate_error(pathname)
+                if stat.S_ISDIR(metadata.st_mode):
+                    # Directories should only be counted in the
+                    # progress their metadata has changed. This
+                    # covers the case when files have been deleted
+                    # from them.
+                    gen = self.get_current_generation()
+                    if self.metadata_has_changed(gen, pathname, metadata):
                         self.progress.backed_up_count += 1
 
-                        if stat.S_ISREG(metadata.st_mode):
-                            assert metadata.md5 is None
-                            metadata.md5 = self.backup_file_contents(
-                                pathname, metadata)
-                        self.backup_metadata(pathname, metadata)
+                    self.backup_dir_contents(pathname,
+                        no_delete_paths=absroots)
+                    self.backup_metadata(pathname, metadata)
+                else:
+                    # Non-directories' progress can be updated
+                    # without further thinking.
+                    self.progress.backed_up_count += 1
 
-                except (IOError, OSError) as e:
+                    if stat.S_ISREG(metadata.st_mode):
+                        assert metadata.md5 is None
+                        metadata.md5 = self.backup_file_contents(
+                            pathname, metadata)
+                    self.backup_metadata(pathname, metadata)
 
-                    if type(e) is IOError:
-                        e2 = obnamlib.ObnamIOError(
-                            errno=e.errno,
-                            strerror=e.strerror,
-                            filename=e.filename or pathname)
-                    else:
-                        e2 = obnamlib.ObnamSystemError(
-                            errno=e.errno,
-                            strerror=e.strerror,
-                            filename=e.filename or pathname)
+            except (IOError, OSError) as e:
 
-                    msg = 'Can\'t back up %s: %s' % (pathname, str(e2))
-                    self.progress.error(msg, exc=e)
-                    if not existed and not self.pretend:
-                        self.remove_partially_backed_up_file(pathname)
-                    if e.errno == errno.ENOSPC:
-                        raise
+                if type(e) is IOError:
+                    e2 = obnamlib.ObnamIOError(
+                        errno=e.errno,
+                        strerror=e.strerror,
+                        filename=e.filename or pathname)
+                else:
+                    e2 = obnamlib.ObnamSystemError(
+                        errno=e.errno,
+                        strerror=e.strerror,
+                        filename=e.filename or pathname)
 
-                if self.checkpoint_manager.time_for_checkpoint():
-                    self.make_checkpoint()
-                    self.progress.what(pathname)
+                msg = 'Can\'t back up %s: %s' % (pathname, str(e2))
+                self.progress.error(msg, exc=e)
+                if not existed and not self.pretend:
+                    self.remove_partially_backed_up_file(pathname)
+                if e.errno == errno.ENOSPC:
+                    raise
 
-            self.backup_parents('.')
+            if self.checkpoint_manager.time_for_checkpoint():
+                self.make_checkpoint()
+                self.progress.what(pathname)
+
+        self.backup_parents('.')
 
     def open_fs(self, root):
         def func(rootdir):
