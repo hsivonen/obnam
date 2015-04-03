@@ -310,18 +310,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         roots = self.app.settings['root'] + args
         self.check_for_required_settings(roots)
 
-        self.configure_progress_reporting()
-        self.progress.what('setting up')
-
-        self.compile_exclusion_patterns()
-        self.compile_inclusion_patterns()
-        self.memory_dump_counter = 0
-
-        self.progress.what('connecting to repository')
-        self.repo = self.open_repository()
-        if not self.pretend:
-            self.prepare_repository_for_client()
-
+        self.start_backup()
         self.chunkid_token_map = obnamlib.ChunkIdTokenMap()
         try:
             if not self.pretend:
@@ -332,15 +321,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 self.finish_generation()
                 if self.should_remove_checkpoints():
                     self.remove_checkpoints()
-
-            self.progress.what('closing connection to repository')
-            self.repo.close()
-            self.progress.clear()
-            self.progress.report_stats(self.repo.get_fs())
-
-            logging.info('Backup finished.')
-            self.app.hooks.call('backup-finished', args, self.progress)
-            self.app.dump_memory_profile('at end of backup run')
+            self.finish_backup()
         except BaseException, e:
             logging.debug('Handling exception %s' % str(e))
             logging.debug(traceback.format_exc())
@@ -359,6 +340,19 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         if not roots:
             raise BackupRootMissingError()
+
+    def start_backup(self):
+        self.configure_progress_reporting()
+        self.progress.what('setting up')
+        
+        self.compile_exclusion_patterns()
+        self.compile_inclusion_patterns()
+        self.memory_dump_counter = 0
+        
+        self.progress.what('connecting to repository')
+        self.repo = self.open_repository()
+        if not self.pretend:
+            self.prepare_repository_for_client()
 
     def configure_progress_reporting(self):
         self.progress = BackupProgress(self.app.ts)
@@ -445,6 +439,17 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         self.progress.what(prefix + ': commiting shared B-trees')
         self.repo.commit_chunk_indexes()
+
+    def finish_backup(self):
+        self.progress.what('closing connection to repository')
+        self.repo.close()
+
+        self.progress.clear()
+        self.progress.report_stats(self.repo.get_fs())
+
+        logging.info('Backup finished.')
+        self.app.hooks.call('backup-finished', args, self.progress)
+        self.app.dump_memory_profile('at end of backup run')
 
     def parse_checkpoint_size(self, value):
         p = obnamlib.ByteSizeParser()
