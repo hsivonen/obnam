@@ -523,15 +523,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 if stat.S_ISDIR(metadata.st_mode):
                     self.backup_directory(pathname, metadata, absroots)
                 else:
-                    # Non-directories' progress can be updated
-                    # without further thinking.
-                    self.progress.backed_up_count += 1
-
-                    if stat.S_ISREG(metadata.st_mode):
-                        assert metadata.md5 is None
-                        metadata.md5 = self.backup_file_contents(
-                            pathname, metadata)
-                    self.backup_metadata(pathname, metadata)
+                    self.backup_non_directory(pathname, metadata)
 
             except (IOError, OSError) as e:
 
@@ -569,6 +561,16 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         self.backup_dir_contents(pathname, no_delete_paths=absroots)
         self.backup_metadata(pathname, metadata)
+
+    def backup_non_directory(self, pathname, metadata):
+        # Non-directories' progress can be updated without further
+        # thinking.
+        self.progress.backed_up_count += 1
+
+        if stat.S_ISREG(metadata.st_mode):
+            assert metadata.md5 is None
+            metadata.md5 = self.backup_file_contents(pathname, metadata)
+            self.backup_metadata(pathname, metadata)
 
     def open_fs(self, root):
         def func(rootdir):
