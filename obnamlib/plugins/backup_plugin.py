@@ -326,12 +326,12 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.chunkid_token_map = obnamlib.ChunkIdTokenMap()
         try:
             if not self.pretend:
-                self.start_backup()
+                self.start_generation()
             self.fs = None
             self.backup_roots(roots)
             self.progress.what('committing changes to repository')
             if not self.pretend:
-                self.finish_backup()
+                self.finish_generation()
                 if self.should_remove_checkpoints():
                     self.remove_checkpoints()
 
@@ -394,11 +394,11 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.repo.lock_chunk_indexes()
         self.repo.unlock_chunk_indexes()
         
-    def start_backup(self):
+    def start_generation(self):
         self.progress.what('starting new generation')
         self.new_generation = self.repo.create_generation(self.client_name)
 
-    def finish_backup(self):
+    def finish_generation(self):
         prefix = 'committing changes to repository: '
 
         self.progress.what(prefix + 'locking shared B-trees')
