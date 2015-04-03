@@ -308,7 +308,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         logging.info('Backup starts')
         self.check_for_required_settings()
 
-        self.configure_ttystatus_for_backup()
+        self.configure_progress_reporting()
         self.progress.what('setting up')
 
         self.compile_exclusion_patterns()
@@ -441,7 +441,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         if not self.app.settings['repository']:
             raise RepositorySettingMissingError()
 
-    def configure_ttystatus_for_backup(self):
+    def configure_progress_reporting(self):
         self.progress = BackupProgress(self.app.ts)
 
     def parse_checkpoint_size(self, value):
