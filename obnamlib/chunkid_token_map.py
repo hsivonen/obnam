@@ -29,6 +29,9 @@ class ChunkIdTokenMap(object):
     def add(self, chunk_id, token):
         self._mapping[chunk_id] = token
 
+    def __contains__(self, chunk_id):
+        return chunk_id in self._mapping
+
     def __iter__(self):
         for chunk_id in self._mapping:
             yield chunk_id, self._mapping[chunk_id]

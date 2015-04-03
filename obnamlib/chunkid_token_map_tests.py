@@ -32,3 +32,9 @@ class ChunkIdTokenMapTests(unittest.TestCase):
         token = 'foobar'
         self.map.add(chunk_id, token)
         self.assertEqual(list(self.map), [(chunk_id, token)])
+
+    def test_contains_added_chunk_id(self):
+        chunk_id = '123'
+        token = 'foobar'
+        self.map.add(chunk_id, token)
+        self.assertIn(chunk_id, self.map)
