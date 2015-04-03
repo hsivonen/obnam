@@ -311,12 +311,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.check_for_required_settings(roots)
 
         self.start_backup()
-        self.chunkid_token_map = obnamlib.ChunkIdTokenMap()
         try:
             if not self.pretend:
                 self.start_generation()
             self.backup_roots(roots)
-            self.progress.what('committing changes to repository')
             if not self.pretend:
                 self.finish_generation()
                 if self.should_remove_checkpoints():
@@ -348,6 +346,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.compile_exclusion_patterns()
         self.compile_inclusion_patterns()
         self.memory_dump_counter = 0
+        self.chunkid_token_map = obnamlib.ChunkIdTokenMap()
         
         self.progress.what('connecting to repository')
         self.repo = self.open_repository()
