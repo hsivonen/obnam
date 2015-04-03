@@ -26,17 +26,24 @@ class PathnameExcluder(object):
         self._include_patterns = []
 
     def exclude_regexp(self, regexp):
-        self._exclude_patterns.append(re.compile(regexp))
+        self._exclude_patterns.append((regexp, re.compile(regexp)))
 
     def allow_regexp(self, regexp):
-        self._include_patterns.append(re.compile(regexp))
+        self._include_patterns.append((regexp, re.compile(regexp)))
 
-    def is_allowed(self, pathname):
-        return (self._matches(pathname, self._include_patterns) or
-                not self._matches(pathname, self._exclude_patterns))
+    def exclude(self, pathname):
+        included_regexp = self._match(pathname, self._include_patterns)
+        if included_regexp:
+            return False, included_regexp
 
-    def _matches(self, pathname, patterns):
-        for pattern in patterns:
+        excluded_regexp = self._match(pathname, self._exclude_patterns)
+        if excluded_regexp:
+            return True, excluded_regexp
+
+        return False, None
+
+    def _match(self, pathname, patterns):
+        for regexp, pattern in patterns:
             if pattern.search(pathname):
-                return True
-        return False
+                return regexp
+        return None

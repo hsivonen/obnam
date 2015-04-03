@@ -21,17 +21,19 @@ import obnamlib
 
 class PathnameExcluderTest(unittest.TestCase):
 
-    def test_allows_foo(self):
+    def test_allows_everything_when_nothing_is_excluded(self):
         excluder = obnamlib.PathnameExcluder()
-        self.assertTrue(excluder.is_allowed('/foo'))
+        self.assertEqual(excluder.exclude('/foo'), (False, None))
 
-    def test_excludes_foo(self):
+    def test_excludes_pathname_matching_exclusion_pattern(self):
         excluder = obnamlib.PathnameExcluder()
         excluder.exclude_regexp('foo')
-        self.assertFalse(excluder.is_allowed('/foo'))
+        excluded, pattern = excluder.exclude('/foobar')
+        self.assertTrue(excluded)
+        self.assertEqual(pattern, 'foo')
 
-    def test_allows_foo_if_included(self):
+    def test_allows_pathname_matching_both_exclusion_and_inclusion(self):
         excluder = obnamlib.PathnameExcluder()
         excluder.exclude_regexp('foo')
-        excluder.allow_regexp('foo')
-        self.assertTrue(excluder.is_allowed('/foo'))
+        excluder.allow_regexp('oo')
+        self.assertTrue(excluder.exclude('/foo'), (False, 'oo'))
