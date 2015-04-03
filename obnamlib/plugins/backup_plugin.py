@@ -501,22 +501,19 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.repo = self.app.get_repository_object(repofs=self.repo.get_fs())
 
     def compile_exclusion_patterns(self):
-        # read exclude list files from --exclude-from
-        exclude_patterns = self.read_exclusion_patterns_from_files(
-                                    self.app.settings['exclude-from'])
-        # add patterns passed via --exclude
-        exclude_patterns.extend(self.app.settings['exclude'])
+        regexps = self.read_exclusion_patterns_from_files(
+            self.app.settings['exclude-from'])
+
+        regexps.extend(self.app.settings['exclude'])
 
         # Ignore log file, except don't exclude the words cliapp uses
         # for not logging or for logging to syslog.
         log = self.app.settings['log']
         if log and log not in ('none', 'syslog'):
-            exclude_patterns.append(log)
+            regexps.append(log)
 
         logging.debug('Compiling exclusion patterns')
-        self.compile_regexps(
-            exclude_patterns,
-            self.pathname_excluder.exclude_regexp)
+        self.compile_regexps(regexps, self.pathname_excluder.exclude_regexp)
 
     def compile_inclusion_patterns(self):
         logging.debug('Compiling inclusion patterns')
