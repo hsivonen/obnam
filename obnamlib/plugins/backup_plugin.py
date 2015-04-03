@@ -476,17 +476,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 raise BackupRootDoesNotExist(root=roots[0])
             raise
 
-        absroots = []
-        for root in roots:
-            self.progress.what('determining absolute path for %s' % root)
-
-            if os.path.isdir(root):
-                rootdir = root
-            else:
-                rootdir = os.path.dirname(root)
-
-            self.fs.reinit(rootdir)
-            absroots.append(self.fs.abspath('.'))
+        absroots = self.find_absolute_roots(roots)
 
         if not self.pretend:
             self.remove_old_roots(absroots)
@@ -582,6 +572,21 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         if self.fs:
             self.fs.close()
+
+    def find_absolute_roots(self, roots):
+        absroots = []
+        for root in roots:
+            self.progress.what('determining absolute path for %s' % root)
+
+            if os.path.isdir(root):
+                rootdir = root
+            else:
+                rootdir = os.path.dirname(root)
+
+            self.fs.reinit(rootdir)
+            absroots.append(self.fs.abspath('.'))
+
+        return absroots
 
     def remove_partially_backed_up_file(self, pathname):
         try:
