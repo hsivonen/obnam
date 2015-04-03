@@ -102,6 +102,7 @@ from forget_policy import ForgetPolicy
 from app import App, ObnamIOError, ObnamSystemError
 from humanise import humanise_duration, humanise_size, humanise_speed
 from chunkid_token_map import ChunkIdTokenMap
+from pathname_excluder import PathnameExcluder
 
 from repo_factory import (
     RepositoryFactory,
