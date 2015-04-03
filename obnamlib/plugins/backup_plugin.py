@@ -317,8 +317,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         self.progress.what('connecting to repository')
         self.client_name = self.app.settings['client-name']
-        self.got_client_lock = False
-        self.got_chunk_indexes_lock = False
         if self.pretend:
             try:
                 self.repo = self.app.get_repository_object()
@@ -337,16 +335,13 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.add_client(self.client_name)
             self.progress.what('locking client')
             self.repo.lock_client(self.client_name)
-            self.got_client_lock = True
 
             # Need to lock the shared stuff briefly, so encryption etc
             # gets initialized.
             self.progress.what(
                 'initialising shared directories')
             self.repo.lock_chunk_indexes()
-            self.got_chunk_indexes_lock = True
             self.repo.unlock_chunk_indexes()
-            self.got_chunk_indexes_lock = False
 
         self.chunkid_token_map = obnamlib.ChunkIdTokenMap()
         try:
@@ -455,10 +450,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
     def unlock_when_error(self):
         try:
-            if self.got_client_lock:
+            if self.repo.got_client_lock():
                 logging.info('Attempting to unlock client because of error')
                 self.repo.unlock_client(self.client_name)
-            if self.got_chunk_indexes_lock:
+            if self.repo.got_chunk_indexes_lock():
                 logging.info(
                     'Attempting to unlock shared trees because of error')
                 self.repo.unlock_chunk_indexes()
