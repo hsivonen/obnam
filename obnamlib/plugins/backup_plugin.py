@@ -187,6 +187,27 @@ class BackupProgress(object):
              overhead_percent))
 
 
+class CheckpointManager(object):
+
+    def __init__(self, repo, checkpoint_interval):
+        self.repo = repo
+        self.interval = checkpoint_interval
+        self.clear()
+
+    def add_checkpoint(self, generation_id):
+        self.checkpoints.append(generation_id)
+        self.last_checkpoint = self.repo.get_fs().bytes_written
+
+    def clear(self):
+        self.checkpoints = []
+        self.last_checkpoint = 0
+
+    def time_for_checkpoint(self):
+        bytes_since = (self.repo.get_fs().bytes_written - 
+                       self.last_checkpoint)
+        return bytes_since >= self.interval
+
+
 class BackupPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
@@ -317,6 +338,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         if not self.pretend:
             self.prepare_repository_for_client()
 
+        self.checkpoint_manager = CheckpointManager(
+            self.repo,
+            self.app.settings['checkpoint'])
+
     def configure_progress_reporting(self):
         self.progress = BackupProgress(self.app.ts)
 
@@ -393,7 +418,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.repo.lock_client(self.client_name)
         self.repo.lock_chunk_indexes()
 
-        for gen in self.checkpoints:
+        for gen in self.checkpoint_manager.checkpoints:
             self.progress.update_progress_with_removed_checkpoint(gen)
             self.repo.remove_generation(gen)
 
@@ -481,9 +506,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         if not self.pretend:
             self.remove_old_roots(absroots)
 
-        self.checkpoints = []
-        self.last_checkpoint = 0
-        self.interval = self.app.settings['checkpoint']
+        self.checkpoint_manager.clear()
 
         for root in roots:
             logging.info('Backing up root %s' % root)
@@ -563,7 +586,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     if e.errno == errno.ENOSPC:
                         raise
 
-                if self.time_for_checkpoint():
+                if self.checkpoint_manager.time_for_checkpoint():
                     self.make_checkpoint()
                     self.progress.what(pathname)
 
@@ -611,16 +634,11 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 e = errno.ENOENT
                 raise IOError(e, os.strerror(e), pathname)
 
-    def time_for_checkpoint(self):
-        bytes_since = (self.repo.get_fs().bytes_written - 
-                       self.last_checkpoint)
-        return bytes_since >= self.interval
-
     def make_checkpoint(self):
         logging.info('Making checkpoint')
         self.progress.what('making checkpoint')
         if not self.pretend:
-            self.checkpoints.append(self.new_generation)
+            self.checkpoint_manager.add_checkpoint(self.new_generation)
             self.progress.what('making checkpoint: backing up parents')
             self.backup_parents('.')
             self.progress.what('making checkpoint: locking shared B-trees')
@@ -883,10 +901,11 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             else:
                 self.progress.update_progress_with_upload(len(data))
 
-            if not self.pretend and self.time_for_checkpoint():
-                logging.debug('making checkpoint in the middle of a file')
-                self.make_checkpoint()
-                self.progress.what(filename)
+            if not self.pretend:
+                if self.checkpoint_manager.time_for_checkpoint():
+                    logging.debug('making checkpoint in the middle of a file')
+                    self.make_checkpoint()
+                    self.progress.what(filename)
 
         tracing.trace('closing file')
         f.close()
