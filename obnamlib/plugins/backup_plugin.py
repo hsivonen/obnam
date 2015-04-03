@@ -360,6 +360,50 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.compile_exclusion_patterns()
         self.compile_inclusion_patterns()
 
+    def compile_exclusion_patterns(self):
+        regexps = self.read_patterns_from_files(
+            self.app.settings['exclude-from'])
+
+        regexps.extend(self.app.settings['exclude'])
+
+        # Ignore log file, except don't exclude the words cliapp uses
+        # for not logging or for logging to syslog.
+        log = self.app.settings['log']
+        if log and log not in ('none', 'syslog'):
+            regexps.append(log)
+
+        logging.debug('Compiling exclusion patterns')
+        self.compile_regexps(regexps, self.pathname_excluder.exclude_regexp)
+
+    def compile_inclusion_patterns(self):
+        logging.debug('Compiling inclusion patterns')
+        self.compile_regexps(
+            self.app.settings['include'],
+            self.pathname_excluder.allow_regexp)
+
+    def compile_regexps(self, regexps, compiler):
+        for regexp in regexps:
+            if not regexp:
+                logging.debug('Ignoring empty pattern')
+                continue
+            logging.debug('Regular expression: %s', regexp)
+            try:
+                compiler(regexp)
+            except re.error as e:
+                msg = ('error compiling regular expression "%s": %s' % (x, e))
+                logging.error(msg)
+                self.progress.error(msg)
+                
+    def read_patterns_from_files(self, filenames):
+        patterns = []
+        for filename in filenames:
+            with open(filename) as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith('#'):
+                        patterns.append(line)
+        return patterns
+
     def open_repository(self):
         if self.pretend:
             try:
@@ -499,50 +543,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                             self.repo.get_client_names())
         self.repo.commit_client_list()
         self.repo = self.app.get_repository_object(repofs=self.repo.get_fs())
-
-    def compile_exclusion_patterns(self):
-        regexps = self.read_patterns_from_files(
-            self.app.settings['exclude-from'])
-
-        regexps.extend(self.app.settings['exclude'])
-
-        # Ignore log file, except don't exclude the words cliapp uses
-        # for not logging or for logging to syslog.
-        log = self.app.settings['log']
-        if log and log not in ('none', 'syslog'):
-            regexps.append(log)
-
-        logging.debug('Compiling exclusion patterns')
-        self.compile_regexps(regexps, self.pathname_excluder.exclude_regexp)
-
-    def compile_inclusion_patterns(self):
-        logging.debug('Compiling inclusion patterns')
-        self.compile_regexps(
-            self.app.settings['include'],
-            self.pathname_excluder.allow_regexp)
-
-    def compile_regexps(self, regexps, compiler):
-        for regexp in regexps:
-            if not regexp:
-                logging.debug('Ignoring empty pattern')
-                continue
-            logging.debug('Regular expression: %s', regexp)
-            try:
-                compiler(regexp)
-            except re.error as e:
-                msg = ('error compiling regular expression "%s": %s' % (x, e))
-                logging.error(msg)
-                self.progress.error(msg)
-                
-    def read_patterns_from_files(self, filenames):
-        patterns = []
-        for filename in filenames:
-            with open(filename) as f:
-                for line in f:
-                    line = line.strip()
-                    if line and not line.startswith('#'):
-                        patterns.append(line)
-        return patterns
 
     def backup_roots(self, roots):
         self.progress.what('connecting to repository')
