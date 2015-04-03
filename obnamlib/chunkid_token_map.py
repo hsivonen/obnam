@@ -16,6 +16,13 @@
 
 class ChunkIdTokenMap(object):
 
+    '''Map chunk ids to repository tokens.
+
+    This mapping is used to store the (chunk_id, token) pairs, until
+    they can be added to the chunk indexes.
+
+    '''
+
     def __iter__(self):
         for x in []:
             yield None
