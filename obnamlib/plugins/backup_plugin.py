@@ -50,33 +50,6 @@ class BackupErrors(obnamlib.ObnamError):
     msg = 'There were errors during the backup'
 
 
-class ChunkidPool(object):
-
-    '''Data/chunkid mappings that are pending an upload to shared trees.'''
-
-    def __init__(self):
-        self.clear()
-
-    def add(self, chunkid, token):
-        if token not in self._mapping:
-            self._mapping[token] = []
-        self._mapping[token].append(chunkid)
-
-    def __contains__(self, token):
-        return token in self._mapping
-
-    def get(self, token):
-        return self._mapping.get(token, [])
-
-    def clear(self):
-        self._mapping = {}
-
-    def __iter__(self):
-        for token in self._mapping.keys():
-            for chunkid in self._mapping[token]:
-                yield chunkid, token
-
-
 class BackupProgress(object):
 
     def __init__(self, ts):
@@ -394,7 +367,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.repo.unlock_chunk_indexes()
             self.got_chunk_indexes_lock = False
 
-        self.chunkid_pool = ChunkidPool()
+        self.chunkid_token_map = obnamlib.ChunkIdTokenMap()
         try:
             if not self.pretend:
                 self.progress.what('starting new generation')
@@ -497,9 +470,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             logging.info('Successfully unlocked')
 
     def add_chunks_to_shared(self):
-        for chunkid, token in self.chunkid_pool:
+        for chunkid, token in self.chunkid_token_map:
             self.repo.put_chunk_into_indexes(chunkid, token, self.client_name)
-        self.chunkid_pool.clear()
+        self.chunkid_token_map.clear()
 
     def add_client(self, client_name):
         self.repo.lock_client_list()
@@ -1042,7 +1015,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 in_tree = []
             except obnamlib.RepositoryChunkContentNotInIndexes:
                 in_tree = []
-            return in_tree + self.chunkid_pool.get(token)
+            return in_tree + self.chunkid_token_map.get(token)
 
         def get(chunkid):
             return self.repo.get_chunk_content(chunkid)
@@ -1052,7 +1025,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             return self.repo.put_chunk_content(data)
 
         def share(chunkid):
-            self.chunkid_pool.add(chunkid, token)
+            self.chunkid_token_map.add(chunkid, token)
 
         token = self.repo.prepare_chunk_for_indexes(data)
 
