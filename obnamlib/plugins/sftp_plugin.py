@@ -1,4 +1,4 @@
-# Copyright (C) 2009-2014  Lars Wirzenius <liw@liw.fi>
+# Copyright (C) 2009-2015  Lars Wirzenius <liw@liw.fi>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
