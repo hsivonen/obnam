@@ -417,19 +417,15 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.new_generation = self.repo.create_generation(self.client_name)
 
     def finish_backup(self):
-        self.progress.what(
-            'committing changes to repository: '
-            'locking shared B-trees')
+        prefix = 'committing changes to repository: '
+
+        self.progress.what(prefix + 'locking shared B-trees')
         self.repo.lock_chunk_indexes()
 
-        self.progress.what(
-            'committing changes to repository: '
-            'adding chunks to shared B-trees')
+        self.progress.what(prefix + 'adding chunks to shared B-trees')
         self.add_chunks_to_shared()
         
-        self.progress.what(
-            'committing changes to repository: '
-            'updating generation metadata')
+        self.progress.what(prefix + 'updating generation metadata')
         self.repo.set_generation_key(
             self.new_generation,
             obnamlib.REPO_GENERATION_FILE_COUNT,
@@ -443,14 +439,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             obnamlib.REPO_GENERATION_IS_CHECKPOINT,
             False)
         
-        self.progress.what(
-            'committing changes to repository: '
-            'committing client')
+        self.progress.what(prefix + 'committing client')
         self.repo.commit_client(self.client_name)
         
-        self.progress.what(
-            'committing changes to repository: '
-            'committing shared B-trees')
+        self.progress.what(prefix + 'committing shared B-trees')
         self.repo.commit_chunk_indexes()
 
     def parse_checkpoint_size(self, value):
