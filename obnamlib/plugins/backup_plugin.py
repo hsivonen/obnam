@@ -194,6 +194,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             'backup', self.backup, arg_synopsis='[DIRECTORY|URL]...')
         self.add_backup_settings()
         self.app.hooks.new('backup-finished')
+        self.app.hooks.new('backup-exclude')
 
     def add_backup_settings(self):
 
@@ -771,6 +772,15 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         return False
 
     def can_be_backed_up(self, pathname, st):
+        exclude = [False]
+        self.app.hooks.call(
+            'backup-exclude',
+            pathname=pathname,
+            stat_result=st,
+            exclude=exclude)
+        if exclude[0]:
+            return False
+
         if self.just_one_file:
             return pathname == self.just_one_file
 
