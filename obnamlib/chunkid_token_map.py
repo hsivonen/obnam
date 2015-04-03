@@ -23,6 +23,12 @@ class ChunkIdTokenMap(object):
 
     '''
 
+    def __init__(self):
+        self._mapping = {}
+
+    def add(self, chunk_id, token):
+        self._mapping[chunk_id] = token
+
     def __iter__(self):
-        for x in []:
-            yield None
+        for chunk_id in self._mapping:
+            yield chunk_id, self._mapping[chunk_id]

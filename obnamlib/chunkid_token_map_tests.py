@@ -26,3 +26,9 @@ class ChunkIdTokenMapTests(unittest.TestCase):
 
     def test_is_empty_initially(self):
         self.assertEqual(list(self.map), [])
+
+    def test_adds_a_pair(self):
+        chunk_id = '123'
+        token = 'foobar'
+        self.map.add(chunk_id, token)
+        self.assertEqual(list(self.map), [(chunk_id, token)])
