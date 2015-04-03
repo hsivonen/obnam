@@ -501,17 +501,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             logging.info('Backing up root %s' % root)
             self.progress.what('connecting to live data %s' % root)
 
-            if os.path.isdir(root):
-                rootdir = root
-            else:
-                rootdir = os.path.dirname(root)
-
-            try:
-                self.fs.reinit(rootdir)
-            except OSError as e:
-                if e.errno == errno.ENOENT:
-                    raise BackupRootDoesNotExist(root=root)
-                raise
+            self.reopen_fs(root)
 
             self.progress.what('scanning for files in %s' % root)
             absroot = self.fs.abspath('.')
@@ -594,6 +584,19 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         try:
             self.fs = self.app.fsf.new(rootdir)
             self.fs.connect()
+        except OSError as e:
+            if e.errno == errno.ENOENT:
+                raise BackupRootDoesNotExist(root=root)
+            raise
+
+    def reopen_fs(self, root):
+        if os.path.isdir(root):
+            rootdir = root
+        else:
+            rootdir = os.path.dirname(root)
+
+        try:
+            self.fs.reinit(rootdir)
         except OSError as e:
             if e.errno == errno.ENOENT:
                 raise BackupRootDoesNotExist(root=root)
