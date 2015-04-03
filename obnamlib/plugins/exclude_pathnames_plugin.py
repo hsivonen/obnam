@@ -48,17 +48,15 @@ class ExcludePathnamesPlugin(obnamlib.ObnamPlugin):
             '(can be used multiple times)',
             group=backup_group)
 
+        self.app.hooks.add_callback('config-loaded', self.config_loaded)
+
+    def config_loaded(self):
         self.app.hooks.add_callback('backup-exclude', self.exclude)
-
         self.pathname_excluder = obnamlib.PathnameExcluder()
-        self.init_done = False
+        self.compile_exclusion_patterns()
+        self.compile_inclusion_patterns()
 
-    def exclude(self, pathname=None, stat_result=None, exclude=None):
-        if not self.init_done:
-            self.compile_exclusion_patterns()
-            self.compile_inclusion_patterns()
-            self.init_done = True
-
+    def exclude(self, fs=None, pathname=None, stat_result=None, exclude=None):
         is_excluded, regexp = self.pathname_excluder.exclude(pathname)
         if is_excluded:
             logging.debug('Exclude (pattern): %s', pathname)

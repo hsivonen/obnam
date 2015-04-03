@@ -209,15 +209,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             group=backup_group)
 
         self.app.settings.boolean(
-            ['exclude-caches'],
-            'exclude directories (and their subdirs) '
-            'that contain a CACHEDIR.TAG file (see '
-            'http://www.brynosaurus.com/cachedir/spec.html for what '
-            'it needs to contain, and http://liw.fi/cachedir/ for a '
-            'helper tool)',
-            group=backup_group)
-
-        self.app.settings.boolean(
             ['one-file-system'],
             'exclude directories (and their subdirs) '
             'that are in a different filesystem',
@@ -710,22 +701,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 logging.debug('Excluding (one-file-system): %s' % pathname)
                 return False
 
-        if stat.S_ISDIR(st.st_mode) and self.app.settings['exclude-caches']:
-            tag_filename = 'CACHEDIR.TAG'
-            tag_contents = 'Signature: 8a477f597d28d172789f06886806bc55'
-            tag_path = os.path.join(pathname, 'CACHEDIR.TAG')
-            if self.fs.exists(tag_path):
-                # Can't use with, because Paramiko's SFTPFile does not work.
-                f = self.fs.open(tag_path, 'rb')
-                data = f.read(len(tag_contents))
-                f.close()
-                if data == tag_contents:
-                    logging.debug('Excluding (cache dir): %s' % pathname)
-                    return False
-
         exclude = [False]
         self.app.hooks.call(
             'backup-exclude',
+            fs=self.fs,
             pathname=pathname,
             stat_result=st,
             exclude=exclude)
