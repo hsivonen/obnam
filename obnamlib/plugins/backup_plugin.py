@@ -327,7 +327,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         try:
             if not self.pretend:
                 self.start_generation()
-            self.fs = None
             self.backup_roots(roots)
             self.progress.what('committing changes to repository')
             if not self.pretend:
