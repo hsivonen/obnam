@@ -524,20 +524,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     self.backup_directory(pathname, metadata, absroots)
                 else:
                     self.backup_non_directory(pathname, metadata)
-
             except (IOError, OSError) as e:
-
-                if type(e) is IOError:
-                    e2 = obnamlib.ObnamIOError(
-                        errno=e.errno,
-                        strerror=e.strerror,
-                        filename=e.filename or pathname)
-                else:
-                    e2 = obnamlib.ObnamSystemError(
-                        errno=e.errno,
-                        strerror=e.strerror,
-                        filename=e.filename or pathname)
-
+                e2 = self.translate_enverror_to_obnamerror(pathname, e)
                 msg = 'Can\'t back up %s: %s' % (pathname, str(e2))
                 self.progress.error(msg, exc=e)
                 if not existed and not self.pretend:
@@ -550,6 +538,18 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 self.progress.what(pathname)
 
         self.backup_parents('.')
+
+    def translate_enverror_to_obnamerror(self, pathname, exc):
+        if type(exc) is IOError:
+            return obnamlib.ObnamIOError(
+                errno=exc.errno,
+                strerror=exc.strerror,
+                filename=exc.filename or pathname)
+        else:
+            return obnamlib.ObnamSystemError(
+                errno=exc.errno,
+                strerror=exc.strerror,
+                filename=exc.filename or pathname)
 
     def backup_directory(self, pathname, metadata, absroots):
         # Directories should only be counted in the progress their
