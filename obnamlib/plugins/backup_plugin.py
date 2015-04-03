@@ -521,17 +521,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             try:
                 self.maybe_simulate_error(pathname)
                 if stat.S_ISDIR(metadata.st_mode):
-                    # Directories should only be counted in the
-                    # progress their metadata has changed. This
-                    # covers the case when files have been deleted
-                    # from them.
-                    gen = self.get_current_generation()
-                    if self.metadata_has_changed(gen, pathname, metadata):
-                        self.progress.backed_up_count += 1
-
-                    self.backup_dir_contents(pathname,
-                        no_delete_paths=absroots)
-                    self.backup_metadata(pathname, metadata)
+                    self.backup_directory(pathname, metadata, absroots)
                 else:
                     # Non-directories' progress can be updated
                     # without further thinking.
@@ -568,6 +558,17 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 self.progress.what(pathname)
 
         self.backup_parents('.')
+
+    def backup_directory(self, pathname, metadata, absroots):
+        # Directories should only be counted in the progress their
+        # metadata has changed. This covers the case when files have
+        # been deleted from them.
+        gen = self.get_current_generation()
+        if self.metadata_has_changed(gen, pathname, metadata):
+            self.progress.backed_up_count += 1
+
+        self.backup_dir_contents(pathname, no_delete_paths=absroots)
+        self.backup_metadata(pathname, metadata)
 
     def open_fs(self, root):
         def func(rootdir):
