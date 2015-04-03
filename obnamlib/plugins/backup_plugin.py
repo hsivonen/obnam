@@ -501,7 +501,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.repo = self.app.get_repository_object(repofs=self.repo.get_fs())
 
     def compile_exclusion_patterns(self):
-        regexps = self.read_exclusion_patterns_from_files(
+        regexps = self.read_patterns_from_files(
             self.app.settings['exclude-from'])
 
         regexps.extend(self.app.settings['exclude'])
@@ -534,7 +534,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 logging.error(msg)
                 self.progress.error(msg)
                 
-    def read_exclusion_patterns_from_files(self, filenames):
+    def read_patterns_from_files(self, filenames):
         patterns = []
         for filename in filenames:
             with open(filename) as f:
