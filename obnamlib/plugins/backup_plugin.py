@@ -488,18 +488,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
     def backup_roots(self, roots):
         self.progress.what('connecting to repository')
 
-        if os.path.isdir(roots[0]):
-            rootdir = roots[0] 
-        else:
-            rootdir = os.path.dirname(roots[0])
-
-        try:
-            self.fs = self.app.fsf.new(rootdir)
-            self.fs.connect()
-        except OSError as e:
-            if e.errno == errno.ENOENT:
-                raise BackupRootDoesNotExist(root=roots[0])
-            raise
+        self.open_fs(roots[0])
 
         absroots = self.find_absolute_roots(roots)
 
@@ -595,6 +584,20 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         if self.fs:
             self.fs.close()
+
+    def open_fs(self, root):
+        if os.path.isdir(root):
+            rootdir = root
+        else:
+            rootdir = os.path.dirname(root)
+
+        try:
+            self.fs = self.app.fsf.new(rootdir)
+            self.fs.connect()
+        except OSError as e:
+            if e.errno == errno.ENOENT:
+                raise BackupRootDoesNotExist(root=root)
+            raise
 
     def find_absolute_roots(self, roots):
         absroots = []
