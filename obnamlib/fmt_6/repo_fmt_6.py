@@ -33,53 +33,6 @@ class ToplevelIsFileError(obnamlib.ObnamError):
     msg = 'File at repository root: {filename}'
 
 
-class HookedFS(object):
-
-    '''A class to filter read/written data through hooks.'''
-
-    def __init__(self, repo, fs, hooks):
-        self.repo = repo
-        self.fs = fs
-        self.hooks = hooks
-
-    def __getattr__(self, name):
-        return getattr(self.fs, name)
-
-    def _get_toplevel(self, filename):
-        parts = filename.split(os.sep)
-        if len(parts) > 1:
-            return parts[0]
-        else: # pragma: no cover
-            raise ToplevelIsFileError(filename=filename)
-
-    def cat(self, filename, runfilters=True):
-        data = self.fs.cat(filename)
-        if not runfilters: # pragma: no cover
-            return data
-        toplevel = self._get_toplevel(filename)
-        return self.hooks.filter_read('repository-data', data,
-                                      repo=self.repo, toplevel=toplevel)
-
-    def lock(self, filename, data):
-        self.fs.lock(filename, data)
-
-    def write_file(self, filename, data, runfilters=True):
-        tracing.trace('writing hooked %s' % filename)
-        toplevel = self._get_toplevel(filename)
-        if runfilters:
-            data = self.hooks.filter_write('repository-data', data,
-                                           repo=self.repo, toplevel=toplevel)
-        self.fs.write_file(filename, data)
-
-    def overwrite_file(self, filename, data, runfilters=True):
-        tracing.trace('overwriting hooked %s' % filename)
-        toplevel = self._get_toplevel(filename)
-        if runfilters:
-            data = self.hooks.filter_write('repository-data', data,
-                                           repo=self.repo, toplevel=toplevel)
-        self.fs.overwrite_file(filename, data)
-
-
 class _OpenClientInfo(object):
 
     def __init__(self, client):
@@ -130,7 +83,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     def set_fs(self, fs):
         self._real_fs = fs
-        self._fs = HookedFS(self, fs, self.hooks)
+        self._fs = obnamlib.RepositoryFS(self, fs, self.hooks)
         self._lockmgr = obnamlib.LockManager(self._fs, self._lock_timeout, '')
         self._setup_client_list()
         self._setup_client()

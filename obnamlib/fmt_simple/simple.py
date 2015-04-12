@@ -34,60 +34,6 @@ class ToplevelIsFileError(obnamlib.ObnamError):
     msg = 'File at repository root: {filename}'
 
 
-class HookedFS(object): # pragma: no cover
-
-    '''A class to filter read/written data through hooks.'''
-
-    # FIXME: This is a temporary replica of the one for format 6.
-
-    def __init__(self, repo, fs, hooks):
-        self.repo = repo
-        self.fs = fs
-        self.hooks = hooks
-
-    def __getattr__(self, name):
-        return getattr(self.fs, name)
-
-    def _get_toplevel(self, filename):
-        parts = filename.split(os.sep)
-        if len(parts) >= 1:
-            return parts[0]
-        else: # pragma: no cover
-            raise ToplevelIsFileError(filename=filename)
-
-    def cat(self, filename, runfilters=True):
-        data = self.fs.cat(filename)
-        if not runfilters: # pragma: no cover
-            return data
-        toplevel = self._get_toplevel(filename)
-        return self.hooks.filter_read('repository-data', data,
-                                      repo=self.repo, toplevel=toplevel)
-
-    def lock(self, filename, data):
-        self.fs.lock(filename, data)
-
-    def create_and_init_toplevel(self, filename):
-        tracing.trace('filename=%s', filename)
-        toplevel = self._get_toplevel(filename)
-        if not self.fs.exists(toplevel):
-            self.fs.mkdir(toplevel)
-            self.hooks.call('repository-toplevel-init', self.repo, toplevel)
-
-    def write_file(self, filename, data, runfilters=True):
-        toplevel = self._get_toplevel(filename)
-        if runfilters:
-            data = self.hooks.filter_write('repository-data', data,
-                                           repo=self.repo, toplevel=toplevel)
-        self.fs.write_file(filename, data)
-
-    def overwrite_file(self, filename, data, runfilters=True):
-        toplevel = self._get_toplevel(filename)
-        if runfilters:
-            data = self.hooks.filter_write('repository-data', data,
-                                           repo=self.repo, toplevel=toplevel)
-        self.fs.overwrite_file(filename, data)
-
-
 class SimpleLock(object):
 
     def __init__(self):
@@ -795,7 +741,7 @@ class RepositoryFormatSimple(obnamlib.RepositoryInterface):
         return self._fs.fs
 
     def set_fs(self, fs):
-        self._fs = HookedFS(self, fs, self._hooks)
+        self._fs = obnamlib.RepositoryFS(self, fs, self._hooks)
         self._lockmgr = obnamlib.LockManager(self._fs, self._lock_timeout, '')
 
         self._client_list.set_fs(self._fs)
