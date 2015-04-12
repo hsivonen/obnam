@@ -97,6 +97,7 @@ from vfs import (
     NEW_FILE_MODE)
 from vfs_local import LocalFS
 from fsck_work_item import WorkItem
+from repo_fs import RepositoryFS
 from lockmgr import LockManager
 from forget_policy import ForgetPolicy
 from app import App, ObnamIOError, ObnamSystemError

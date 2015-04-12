@@ -5,6 +5,7 @@ obnamlib/humanise.py
 obnamlib/fsck_work_item.py
 obnamlib/repo_interface.py
 obnamlib/vfs.py
+obnamlib/repo_fs.py
 obnamlib/fmt_6/__init__.py
 obnamlib/fmt_6/repo_tree.py
 obnamlib/plugins/__init__.py
