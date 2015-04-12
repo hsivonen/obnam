@@ -45,6 +45,9 @@ class LockManagerTests(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.tempdir)
 
+    def test_returns_a_lock_name(self):
+        self.assertEqual(type(self.lm.get_lock_name('.')), str)
+
     def test_has_nothing_locked_initially(self):
         for dirname in self.dirnames:
             self.assertFalse(self.lm.is_locked(dirname))
@@ -67,7 +70,7 @@ class LockManagerTests(unittest.TestCase):
     def test_notices_when_preexisting_lock_goes_away(self):
         self.lm.lock([self.dirnames[0]])
         self.lm._sleep = lambda: os.remove(
-            self.lm._lockname(self.dirnames[0]))
+            self.lm.get_lock_name(self.dirnames[0]))
         self.lm.lock([self.dirnames[0]])
         self.assertTrue(True)
 

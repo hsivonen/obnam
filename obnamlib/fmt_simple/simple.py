@@ -61,10 +61,7 @@ class SimpleLock(object):
         self.got_lock = False
 
     def force(self):
-        # FIXME: This is ugly using of private attributes of the lock
-        # manager. We should improve the lock manager so we don't need
-        # to use them.
-        lock_name = self._lockmgr._lockname(self._dirname)
+        lock_name = self._lockmgr.get_lock_name(self._dirname)
         fs = self._lockmgr._fs
         if fs.exists(lock_name):
             fs.remove(lock_name)

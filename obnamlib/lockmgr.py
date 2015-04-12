@@ -53,14 +53,13 @@ class LockManager(object):
             return [ord(s) for s in str(s)]
         return sorted(dirnames, key=bytelist)
 
-    def _lockname(self, dirname):
+    def get_lock_name(self, dirname):
         return os.path.join(dirname, 'lock')
-
 
     def _lock_one(self, dirname):
         started = self._time()
         while True:
-            lock_name = self._lockname(dirname)
+            lock_name = self.get_lock_name(dirname)
             try:
                 self._fs.lock(lock_name, self.data)
             except obnamlib.LockFail:
@@ -73,7 +72,7 @@ class LockManager(object):
             self._sleep()
 
     def _unlock_one(self, dirname):
-        self._fs.unlock(self._lockname(dirname))
+        self._fs.unlock(self.get_lock_name(dirname))
 
     def is_locked(self, dirname):
         '''Is the given directory locked?
@@ -82,7 +81,7 @@ class LockManager(object):
 
         '''
 
-        return self._fs.exists(self._lockname(dirname))
+        return self._fs.exists(self.get_lock_name(dirname))
 
     def lock(self, dirnames):
         '''Lock ALL the directories.'''
