@@ -11,6 +11,10 @@ Minor new features:
 * Lars Wirzenius added the `obnam list-formats` command to list all
   repository formats.
 
+* The default value for the `upload-queue-size` setting is now 1024,
+  chosen based on some benchmarking made by Lars Wirzenius to balance
+  speed and memory use.
+
 Minor fixes:
 
 * `python setup.py build` no longer formats the manual page into plain
