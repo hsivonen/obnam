@@ -38,6 +38,10 @@ class RepositoryDelegator(obnamlib.RepositoryInterface):
         self._hooks = kwargs['hooks']
         self._lock_timeout = kwargs.get('lock_timeout', 0)
 
+        self._client_list = None
+        self._chunk_store = None
+        self._chunk_indexes = None
+
         self._client_finder = ClientFinder()
         self._client_finder.set_current_time(kwargs['current_time'])
 
