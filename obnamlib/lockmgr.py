@@ -32,6 +32,7 @@ class LockManager(object):
         data = data + ["pid=%d" % os.getpid()]
         data = data + self._read_boot_id()
         self.data = '\r\n'.join(data)
+        self._got_locks = []
 
     def _read_boot_id(self): # pragma: no cover
         try:
@@ -68,11 +69,14 @@ class LockManager(object):
                         lock_name=lock_name,
                         reason='timeout')
             else:
+                self._got_locks.append(dirname)
                 return
             self._sleep()
 
     def _unlock_one(self, dirname):
         self._fs.unlock(self.get_lock_name(dirname))
+        if dirname in self._got_locks:
+            self._got_locks.remove(dirname)
 
     def is_locked(self, dirname):
         '''Is the given directory locked?
@@ -82,6 +86,10 @@ class LockManager(object):
         '''
 
         return self._fs.exists(self.get_lock_name(dirname))
+
+    def got_lock(self, dirname):
+        '''Does this lock manager hold the lock for a directory?'''
+        return dirname in self._got_locks
 
     def lock(self, dirnames):
         '''Lock ALL the directories.'''
