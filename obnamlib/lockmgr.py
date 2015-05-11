@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import errno
 import os
 import time
 
@@ -108,3 +109,19 @@ class LockManager(object):
         for dirname in self.sort(dirnames):
             self._unlock_one(dirname)
 
+    def force(self, dirnames):
+        '''Force all the directories to be unlocked.
+
+        This works even if they weren't locked already.
+
+        '''
+
+        for dirname in self.sort(dirnames):
+            self._force_one(dirname)
+
+    def _force_one(self, dirname):
+        lock_name = self.get_lock_name(dirname)
+        if self._fs.exists(lock_name):
+            self._fs.remove(lock_name)
+        if dirname in self._got_locks:
+            self._got_locks.remove(dirname)
