@@ -34,43 +34,6 @@ class ToplevelIsFileError(obnamlib.ObnamError):
     msg = 'File at repository root: {filename}'
 
 
-class SimpleLock(object):
-
-    def __init__(self):
-        self._lockmgr = None
-        self._fs = None
-        self._dirname = None
-        self.got_lock = False
-
-    def set_fs(self, fs):
-        self._fs = fs
-
-    def set_lock_manager(self, lockmgr):
-        self._lockmgr = lockmgr
-
-    def set_dirname(self, dirname):
-        self._dirname = dirname
-
-    def unchecked_lock(self):
-        self._fs.create_and_init_toplevel(self._dirname)
-        self._lockmgr.lock([self._dirname])
-        self.got_lock = True
-
-    def unchecked_unlock(self):
-        self._lockmgr.unlock([self._dirname])
-        self.got_lock = False
-
-    def force(self):
-        lock_name = self._lockmgr.get_lock_name(self._dirname)
-        fs = self._lockmgr._fs
-        if fs.exists(lock_name):
-            fs.remove(lock_name)
-        self.got_lock = False
-
-    def is_locked(self):
-        return self._lockmgr.is_locked(self._dirname)
-
-
 class SimpleData(object):
 
     def __init__(self):
@@ -123,23 +86,21 @@ class SimpleData(object):
 class SimpleToplevel(object):
 
     def __init__(self):
-        self._lock = SimpleLock()
         self._data = SimpleData()
+        self._dirname = None
 
     def set_fs(self, fs):
-        self._lock.set_fs(fs)
         self._data.set_fs(fs)
 
     def set_dirname(self, dirname):
-        self._lock.set_dirname(dirname)
+        self._dirname = dirname
         self._data.set_data_pathname(os.path.join(dirname, 'data.yaml'))
 
-    def set_lock_manager(self, lockmgr):
-        self._lock.set_lock_manager(lockmgr)
+    def get_dirname(self):
+        return self._dirname
 
-    @property
-    def got_lock(self):
-        return self._lock.got_lock
+    def clear(self):
+        self._data.clear()
 
 
 class SimpleClientList(SimpleToplevel):
@@ -160,40 +121,17 @@ class SimpleClientList(SimpleToplevel):
     def set_hooks(self, hooks):
         self._hooks = hooks
 
-    def lock(self):
-        if self._lock.got_lock:
-            raise obnamlib.RepositoryClientListLockingFailed()
-        self._lock.unchecked_lock()
-        self._data.clear()
-
-    def unlock(self):
-        if not self._lock.got_lock:
-            raise obnamlib.RepositoryClientListNotLocked()
-        self._data.clear()
-        self._lock.unchecked_unlock()
-
     def commit(self):
-        if not self._lock.got_lock:
-            raise obnamlib.RepositoryClientListNotLocked()
         tracing.trace('client list: %r', self._data._obj)
         for client_name in self._added_clients:
-            self._hooks.call(
-                'repository-add-client', self, client_name)
+            self._hooks.call('repository-add-client', self, client_name)
         self._data.save()
         self._added_clients = []
-        self._lock.unchecked_unlock()
-
-    def force_lock(self):
-        self._lock.force()
-        self._data.clear()
-
+        
     def get_client_names(self):
         return self._data.get('clients', {}).keys()
 
     def add_client(self, client_name):
-        if not self._lock.got_lock:
-            raise obnamlib.RepositoryClientListNotLocked()
-
         self._require_client_does_not_exist(client_name)
 
         clients = self._data.get('clients', {})
@@ -205,9 +143,6 @@ class SimpleClientList(SimpleToplevel):
         self._added_clients.append(client_name)
         
     def remove_client(self, client_name):
-        if not self._lock.got_lock:
-            raise obnamlib.RepositoryClientListNotLocked()
-
         self._require_client_exists(client_name)
 
         clients = self._data.get('clients', {})
@@ -218,9 +153,6 @@ class SimpleClientList(SimpleToplevel):
             self._added_clients.remove(client_name)
 
     def rename_client(self, old_client_name, new_client_name):
-        if not self._lock.got_lock:
-            raise obnamlib.RepositoryClientListNotLocked()
-
         self._require_client_exists(old_client_name)
         self._require_client_does_not_exist(new_client_name)
 
@@ -282,26 +214,9 @@ class SimpleClient(SimpleToplevel):
     def set_current_time(self, current_time):
         self._current_time = current_time
 
-    def is_locked(self):
-        return self._lock.is_locked()
-
-    def lock(self):
-        if self._lock.got_lock:
-            raise obnamlib.RepositoryClientLockingFailed()
-        self._lock.unchecked_lock()
-        self._data.clear()
-
-    def unlock(self):
-        if not self._lock.got_lock:
-            raise obnamlib.RepositoryClientNotLocked()
-        self._data.clear()
-        self._lock.unchecked_unlock()
-
     def commit(self):
-        self._require_lock()
         self._finish_current_generation_if_any()
         self._data.save()
-        self._lock.unchecked_unlock()
 
     def _finish_current_generation_if_any(self):
         generations = self._data.get('generations', [])
@@ -311,23 +226,12 @@ class SimpleClient(SimpleToplevel):
             if keys[key_name] is None:
                 keys[key_name] = int(self._current_time())
 
-    def _require_lock(self):
-        if not self._lock.got_lock:
-            raise obnamlib.RepositoryClientNotLocked(
-                client_name=self._client_name)
-
-    def force_lock(self):
-        self._lock.force()
-        self._data.clear()
-
     def get_client_generation_ids(self):
         generations = self._data.get('generations', [])
         return [
             GenerationId(self._client_name, gen['id']) for gen in generations]
 
     def create_generation(self):
-        self._require_lock()
-
         self._require_previous_generation_is_finished()
 
         generations = self._data.get('generations', [])
@@ -370,7 +274,6 @@ class SimpleClient(SimpleToplevel):
         return str(next_id)
 
     def remove_generation(self, gen_number):
-        self._require_lock()
         generations = self._data.get('generations', [])
         remaining = []
         removed = False
@@ -409,7 +312,6 @@ class SimpleClient(SimpleToplevel):
             gen_id=gen_number, client_name=self._client_name)
 
     def set_generation_key(self, gen_number, key, value):
-        self._require_lock()
         generation = self._lookup_generation_by_gen_number(gen_number)
         generation['keys'][obnamlib.repo_key_name(key)] = value
 
@@ -594,38 +496,13 @@ class SimpleChunkIndexes(SimpleToplevel):
         SimpleToplevel.__init__(self)
         self.set_dirname('chunk-indexes')
 
-    def lock(self):
-        self._require_not_locked()
-        self._lock.unchecked_lock()
-        self._data.clear()
-
-    def _require_not_locked(self):
-        if self._lock.got_lock:
-            raise obnamlib.RepositoryChunkIndexesLockingFailed()
-
-    def unlock(self):
-        self._require_lock()
-        self._data.clear()
-        self._lock.unchecked_unlock()
-
-    def _require_lock(self):
-        if not self._lock.got_lock:
-            raise obnamlib.RepositoryChunkIndexesNotLocked()
-
     def commit(self):
-        self._require_lock()
         self._data.save()
-        self._lock.unchecked_unlock()
-
-    def force_lock(self):
-        self._lock.force()
-        self._data.clear()
 
     def prepare_chunk_for_indexes(self, chunk_content):
         return hashlib.sha512(chunk_content).hexdigest()
 
     def put_chunk_into_indexes(self, chunk_id, token, client_id):
-        self._require_lock()
         self._prepare_data()
         self._data['index'].append({
             'chunk-id': chunk_id,
@@ -652,7 +529,6 @@ class SimpleChunkIndexes(SimpleToplevel):
         return result
 
     def remove_chunk_from_indexes(self, chunk_id, client_id):
-        self._require_lock()
         self._prepare_data()
 
         self._data['index'] = self._filter_out(
@@ -664,7 +540,6 @@ class SimpleChunkIndexes(SimpleToplevel):
         return [record for record in records if not pred(record)]
 
     def remove_chunk_from_indexes_for_all_clients(self, chunk_id):
-        self._require_lock()
         self._prepare_data()
 
         self._data['index'] = self._filter_out(

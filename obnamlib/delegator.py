@@ -16,16 +16,6 @@
 # =*= License: GPL-3+ =*=
 
 
-import copy
-import hashlib
-import errno
-import os
-import random
-import StringIO
-
-import tracing
-import yaml
-
 import obnamlib
 
 
@@ -37,7 +27,7 @@ class RepositoryDelegator(obnamlib.RepositoryInterface):
         self._fs = None
         self._hooks = kwargs['hooks']
         self._lock_timeout = kwargs.get('lock_timeout', 0)
-        self._lock_manager = None
+        self._lockmgr = None
 
         self._client_list = None
         self._chunk_store = None
@@ -67,16 +57,10 @@ class RepositoryDelegator(obnamlib.RepositoryInterface):
         self._lockmgr = obnamlib.LockManager(self._fs, self._lock_timeout, '')
 
         self._client_list.set_fs(self._fs)
-        self._client_list.set_lock_manager(self._lockmgr)
         self._client_list.set_hooks(self._hooks)
-
         self._client_finder.set_fs(self._fs)
-        self._client_finder.set_lock_manager(self._lockmgr)
-
         self._chunk_store.set_fs(self._fs)
-
         self._chunk_indexes.set_fs(self._fs)
-        self._chunk_indexes.set_lock_manager(self._lockmgr)
 
 
     #
@@ -87,33 +71,58 @@ class RepositoryDelegator(obnamlib.RepositoryInterface):
         return self._client_list.get_client_names()
 
     def lock_client_list(self):
-        self._client_list.lock()
+        self._require_we_have_not_locked_client_list()
+        dirname = self._client_list.get_dirname()
+        self._fs.create_and_init_toplevel(dirname)
+        self._lockmgr.lock([dirname])
+        self._client_list.clear()
+
+    def _require_we_have_not_locked_client_list(self):
+        dirname = self._client_list.get_dirname()
+        if self._lockmgr.got_lock(dirname):
+            raise obnamlib.RepositoryClientListLockingFailed()
 
     def unlock_client_list(self):
-        self._client_list.unlock()
+        self._require_we_got_client_list_lock()
+        self._client_list.clear()
+        dirname = self._client_list.get_dirname()
+        self._lockmgr.unlock([dirname])
+
+    def _require_we_got_client_list_lock(self):
+        if not self.got_client_list_lock():
+            raise obnamlib.RepositoryClientListNotLocked()
 
     def commit_client_list(self):
+        self._require_we_got_client_list_lock()
         self._client_list.commit()
+        self.unlock_client_list()
 
     def got_client_list_lock(self):
-        return self._client_list.got_lock
+        dirname = self._client_list.get_dirname()
+        return self._lockmgr.got_lock(dirname)
 
     def force_client_list_lock(self):
-        return self._client_list.force_lock()
+        dirname = self._client_list.get_dirname()
+        self._lockmgr.force([dirname])
+        self._client_list.clear()
 
     def add_client(self, client_name):
+        self._require_we_got_client_list_lock()
         self._client_list.add_client(client_name)
 
     def remove_client(self, client_name):
+        self._require_we_got_client_list_lock()
         self._client_list.remove_client(client_name)
 
     def rename_client(self, old_client_name, new_client_name):
+        self._require_we_got_client_list_lock()
         self._client_list.rename_client(old_client_name, new_client_name)
 
     def get_client_encryption_key_id(self, client_name):
         return self._client_list.get_client_encryption_key_id(client_name)
 
     def set_client_encryption_key_id(self, client_name, key_id):
+        self._require_we_got_client_list_lock()
         return self._client_list.set_client_encryption_key_id(
             client_name, key_id)
 
@@ -122,30 +131,55 @@ class RepositoryDelegator(obnamlib.RepositoryInterface):
     #
 
     def client_is_locked(self, client_name):
-        return self._lookup_client(client_name).is_locked()
+        client = self._lookup_client(client_name)
+        return self._lockmgr.is_locked(client.get_dirname())
 
     def _lookup_client(self, client_name):
         return self._client_finder.find_client(client_name)
 
     def lock_client(self, client_name):
-        self._lookup_client(client_name).lock()
+        self._require_we_have_not_locked_client(client_name)
+        client = self._lookup_client(client_name)
+        dirname = client.get_dirname()
+        self._fs.create_and_init_toplevel(dirname)
+        self._lockmgr.lock([dirname])
+        client.clear()
+
+    def _require_we_have_not_locked_client(self, client_name):
+        client = self._lookup_client(client_name)
+        if self._lockmgr.got_lock(client.get_dirname()):
+            raise obnamlib.RepositoryClientLockingFailed()
 
     def unlock_client(self, client_name):
-        self._lookup_client(client_name).unlock()
+        self._require_got_client_lock(client_name)
+        client = self._lookup_client(client_name)
+        client.clear()
+        self._lockmgr.unlock([client.get_dirname()])
+
+    def _require_got_client_lock(self, client_name):
+        if not self.got_client_lock(client_name):
+            raise obnamlib.RepositoryClientNotLocked()
 
     def commit_client(self, client_name):
-        self._lookup_client(client_name).commit()
+        self._require_got_client_lock(client_name)
+        client = self._lookup_client(client_name)
+        client.commit()
+        self.unlock_client(client_name)
 
     def got_client_lock(self, client_name):
-        return self._lookup_client(client_name).got_lock
+        client = self._lookup_client(client_name)
+        return self._lockmgr.got_lock(client.get_dirname())
 
     def force_client_lock(self, client_name):
-        self._lookup_client(client_name).force_lock()
+        client = self._lookup_client(client_name)
+        self._lockmgr.force([client.get_dirname()])
+        client.clear()
 
     def get_client_generation_ids(self, client_name):
         return self._lookup_client(client_name).get_client_generation_ids()
 
     def create_generation(self, client_name):
+        self._require_got_client_lock(client_name)
         return self._lookup_client(client_name).create_generation()
 
     def get_generation_key(self, generation_id, key):
@@ -161,10 +195,12 @@ class RepositoryDelegator(obnamlib.RepositoryInterface):
                 client_name=generation_id.client_name,
                 format=self.format,
                 key_name=obnamlib.repo_key_name(key))
+        self._require_got_client_lock(generation_id.client_name)
         client = self._lookup_client_by_generation(generation_id)
         return client.set_generation_key(generation_id.gen_number, key, value)
 
     def remove_generation(self, generation_id):
+        self._require_got_client_lock(generation_id.client_name)
         client = self._lookup_client_by_generation(generation_id)
         return client.remove_generation(generation_id.gen_number)
 
@@ -177,10 +213,12 @@ class RepositoryDelegator(obnamlib.RepositoryInterface):
         return client.file_exists(generation_id.gen_number, filename)
 
     def add_file(self, generation_id, filename):
+        self._require_got_client_lock(generation_id.client_name)
         client = self._lookup_client_by_generation(generation_id)
         return client.add_file(generation_id.gen_number, filename)
 
     def remove_file(self, generation_id, filename):
+        self._require_got_client_lock(generation_id.client_name)
         client = self._lookup_client_by_generation(generation_id)
         return client.remove_file(generation_id.gen_number, filename)
 
@@ -199,6 +237,7 @@ class RepositoryDelegator(obnamlib.RepositoryInterface):
                 client_name=generation_id.client_name,
                 format=self.format)
 
+        self._require_got_client_lock(generation_id.client_name)
         client = self._lookup_client_by_generation(generation_id)
         return client.set_file_key(
             generation_id.gen_number, filename, key, value)
@@ -208,11 +247,13 @@ class RepositoryDelegator(obnamlib.RepositoryInterface):
         return client.get_file_chunk_ids(generation_id.gen_number, filename)
 
     def append_file_chunk_id(self, generation_id, filename, chunk_id):
+        self._require_got_client_lock(generation_id.client_name)
         client = self._lookup_client_by_generation(generation_id)
         return client.append_file_chunk_id(
             generation_id.gen_number, filename, chunk_id)
 
     def clear_file_chunk_ids(self, generation_id, filename):
+        self._require_got_client_lock(generation_id.client_name)
         client = self._lookup_client_by_generation(generation_id)
         return client.clear_file_chunk_ids(generation_id.gen_number, filename)
 
@@ -244,24 +285,45 @@ class RepositoryDelegator(obnamlib.RepositoryInterface):
     #
 
     def lock_chunk_indexes(self):
-        self._chunk_indexes.lock()
+        self._require_we_have_not_locked_chunk_indexes()
+        dirname = self._chunk_indexes.get_dirname()
+        self._fs.create_and_init_toplevel(dirname)
+        self._lockmgr.lock([dirname])
+        self._chunk_indexes.clear()
+
+    def _require_we_have_not_locked_chunk_indexes(self):
+        if self.got_chunk_indexes_lock():
+            raise obnamlib.RepositoryChunkIndexesLockingFailed()
 
     def unlock_chunk_indexes(self):
-        self._chunk_indexes.unlock()
+        self._require_we_got_chunk_indexes_lock()
+        self._chunk_indexes.clear()
+        dirname = self._chunk_indexes.get_dirname()
+        self._lockmgr.unlock([dirname])
+
+    def _require_we_got_chunk_indexes_lock(self):
+        if not self.got_chunk_indexes_lock():
+            raise obnamlib.RepositoryChunkIndexesNotLocked()
 
     def commit_chunk_indexes(self):
+        self._require_we_got_chunk_indexes_lock()
         self._chunk_indexes.commit()
+        self.unlock_chunk_indexes()
 
     def got_chunk_indexes_lock(self):
-        return self._chunk_indexes.got_lock
+        dirname = self._chunk_indexes.get_dirname()
+        return self._lockmgr.got_lock(dirname)
 
     def force_chunk_indexes_lock(self):
-        self._chunk_indexes.force_lock()
+        dirname = self._chunk_indexes.get_dirname()
+        self._lockmgr.force([dirname])
+        self._chunk_indexes.clear()
 
     def prepare_chunk_for_indexes(self, chunk_content):
         return self._chunk_indexes.prepare_chunk_for_indexes(chunk_content)
 
     def put_chunk_into_indexes(self, chunk_id, token, client_id):
+        self._require_we_got_chunk_indexes_lock()
         return self._chunk_indexes.put_chunk_into_indexes(
             chunk_id, token, client_id)
 
@@ -269,9 +331,11 @@ class RepositoryDelegator(obnamlib.RepositoryInterface):
         return self._chunk_indexes.find_chunk_ids_by_content(chunk_content)
 
     def remove_chunk_from_indexes(self, chunk_id, client_id):
+        self._require_we_got_chunk_indexes_lock()
         self._chunk_indexes.remove_chunk_from_indexes(chunk_id, client_id)
 
     def remove_chunk_from_indexes_for_all_clients(self, chunk_id):
+        self._require_we_got_chunk_indexes_lock()
         self._chunk_indexes.remove_chunk_from_indexes_for_all_clients(chunk_id)
 
     def validate_chunk_content(self, chunk_id):
@@ -283,7 +347,6 @@ class ClientFinder(object):
     def __init__(self):
         self._client_factory = None
         self._fs = None
-        self._lockmgr = None
         self._client_list = None
         self._clients = {}
         self._current_time = None
@@ -293,9 +356,6 @@ class ClientFinder(object):
 
     def set_fs(self, fs):
         self._fs = fs
-
-    def set_lock_manager(self, lockmgr):
-        self._lockmgr = lockmgr
 
     def set_client_list(self, client_list):
         self._client_list = client_list
@@ -311,7 +371,6 @@ class ClientFinder(object):
         if client_name not in self._clients:
             client = self._client_factory(client_name)
             client.set_fs(self._fs)
-            client.set_lock_manager(self._lockmgr)
             client.set_current_time(self._current_time)
             self._clients[client_name] = client
 
