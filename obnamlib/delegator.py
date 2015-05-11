@@ -37,6 +37,7 @@ class RepositoryDelegator(obnamlib.RepositoryInterface):
         self._fs = None
         self._hooks = kwargs['hooks']
         self._lock_timeout = kwargs.get('lock_timeout', 0)
+        self._lock_manager = None
 
         self._client_list = None
         self._chunk_store = None
