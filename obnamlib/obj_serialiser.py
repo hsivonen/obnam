@@ -92,7 +92,8 @@ _bool_fmt = '!c'
 _bool_size_serialised = _serialise_length(struct.calcsize(_bool_fmt))
 
 def _serialise_bool(obj):
-    return _BOOL + _bool_size_serialised + struct.pack(_bool_fmt, chr(int(obj)))
+    return (_BOOL + _bool_size_serialised +
+            struct.pack(_bool_fmt, chr(int(obj))))
 
 def _deserialise_bool(obj):
     return bool(ord(struct.unpack(_bool_fmt, obj)[0]))
