@@ -106,6 +106,7 @@ from chunkid_token_map import ChunkIdTokenMap
 from pathname_excluder import PathnameExcluder
 
 from obj_serialiser import serialise_object, deserialise_object
+from bag import Bag, BagIdNotSetError, make_object_id, parse_object_id
 
 from repo_factory import (
     RepositoryFactory,
