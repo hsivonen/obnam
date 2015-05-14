@@ -107,6 +107,7 @@ from pathname_excluder import PathnameExcluder
 
 from obj_serialiser import serialise_object, deserialise_object
 from bag import Bag, BagIdNotSetError, make_object_id, parse_object_id
+from bag_store import BagStore
 
 from repo_factory import (
     RepositoryFactory,
