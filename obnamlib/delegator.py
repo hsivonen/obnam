@@ -375,3 +375,21 @@ class ClientFinder(object):
             self._clients[client_name] = client
 
         return self._clients[client_name]
+
+
+class GenerationId(object):
+
+    def __init__(self, client_name, gen_number):
+        self.client_name = client_name
+        self.gen_number = gen_number
+
+    def __eq__(self, other):
+        return (other is not None and
+                self.client_name == other.client_name and
+                self.gen_number == other.gen_number)
+
+    def __str__(self): # pragma: no cover
+        return '%s:%s' % (self.client_name, self.gen_number)
+
+    def __repr__(self): # pragma: no cover
+        return 'GenerationId(%s,%s)' % (self.client_name, self.gen_number)

@@ -229,7 +229,8 @@ class SimpleClient(SimpleToplevel):
     def get_client_generation_ids(self):
         generations = self._data.get('generations', [])
         return [
-            GenerationId(self._client_name, gen['id']) for gen in generations]
+            obnamlib.GenerationId(self._client_name, gen['id'])
+            for gen in generations]
 
     def create_generation(self):
         self._require_previous_generation_is_finished()
@@ -252,7 +253,7 @@ class SimpleClient(SimpleToplevel):
 
         self._data['generations'] = generations + [new_generation]
 
-        return GenerationId(self._client_name, new_generation['id'])
+        return obnamlib.GenerationId(self._client_name, new_generation['id'])
 
     def _require_previous_generation_is_finished(self):
         generations = self._data.get('generations', [])
@@ -397,24 +398,6 @@ class SimpleClient(SimpleToplevel):
 
     def _is_direct_child_of(self, child, parent):
         return os.path.dirname(child) == parent and child != parent
-
-
-class GenerationId(object):
-
-    def __init__(self, client_name, gen_number):
-        self.client_name = client_name
-        self.gen_number = gen_number
-
-    def __eq__(self, other):
-        return (other is not None and
-                self.client_name == other.client_name and
-                self.gen_number == other.gen_number)
-
-    def __str__(self): # pragma: no cover
-        return '%s:%s' % (self.client_name, self.gen_number)
-
-    def __repr__(self): # pragma: no cover
-        return 'GenerationId(%s,%s)' % (self.client_name, self.gen_number)
 
 
 class SimpleChunkStore(object):

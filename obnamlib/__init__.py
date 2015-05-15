@@ -162,7 +162,7 @@ from repo_interface import (
     REPO_FILE_MD5,
     REPO_FILE_INTEGER_KEYS)
 
-from .delegator import RepositoryDelegator
+from .delegator import RepositoryDelegator, GenerationId
 
 
 #
