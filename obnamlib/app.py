@@ -87,7 +87,7 @@ class App(cliapp.Application):
 
         self.settings.choice(
             ['repository-format'],
-            ['6', 'simple'],
+            ['6', 'simple', 'green-albatross'],
             'what format to use for new repositories? one of "6", "simple"',
             metavar='FORMAT')
 
@@ -264,6 +264,7 @@ class App(cliapp.Application):
         classes = {
             '6': obnamlib.RepositoryFormat6,
             'simple': obnamlib.RepositoryFormatSimple,
+            'green-albatross': obnamlib.RepositoryFormatGA,
             }
         return classes[self.settings['repository-format']]
 

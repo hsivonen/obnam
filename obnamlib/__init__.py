@@ -180,6 +180,18 @@ from fmt_simple import RepositoryFormatSimple
 
 
 #
+# Repository format green-albatross specific modules.
+#
+
+from fmt_ga import (
+    RepositoryFormatGA,
+    GAClientList,
+    GAClient,
+    GAChunkStore,
+    GAChunkIndexes)
+
+
+#
 # Repository format 6 specific modules.
 #
 

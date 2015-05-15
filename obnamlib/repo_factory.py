@@ -50,6 +50,7 @@ class RepositoryFactory(object):
         self._implementations = [
             obnamlib.RepositoryFormat6,
             obnamlib.RepositoryFormatSimple,
+            obnamlib.RepositoryFormatGA,
             ]
 
     def get_implementation_classes(self):
