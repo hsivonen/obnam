@@ -16,7 +16,9 @@
 # =*= License: GPL-3+ =*=
 
 
+import errno
 import os
+import random
 
 import obnamlib
 
@@ -84,7 +86,12 @@ class GAClientList(object):
             self._data_is_loaded = True
 
     def get_client_dirname(self, client_name):
-        return client_name
+        self._load_data()
+        return self._get_dirname_for_client_id(
+            self._data['clients'][client_name]['client-id'])
+
+    def _get_dirname_for_client_id(self, client_id):
+        return 'clientdir-%s' % client_id
 
     def add_client(self, client_name):
         self._load_data()
@@ -93,10 +100,23 @@ class GAClientList(object):
         clients = self._data.get('clients', {})
         clients[client_name] = {
             'encryption-key': None,
+            'client-id': self._pick_client_id(),
         }
         self._data['clients'] = clients
 
         self._added_clients.append(client_name)
+
+    def _pick_client_id(self):
+        while True:
+            candidate_id = random.randint(0, obnamlib.MAX_ID)
+            dirname = self._get_dirname_for_client_id(candidate_id)
+            try:
+                self._fs.create_and_init_toplevel(dirname)
+            except OSError as e:
+                if e.errno == e.EEXIST:
+                    continue
+                raise
+            return candidate_id
 
     def remove_client(self, client_name):
         self._load_data()

@@ -65,7 +65,7 @@ class RepositoryFormatGA(obnamlib.RepositoryDelegator):
         if client_name not in self.get_client_names():
             raise obnamlib.RepositoryClientDoesNotExist(
                 client_name=client_name)
-        return client_name
+        return self._client_list.get_client_dirname(client_name)
 
     def get_allowed_generation_keys(self):
         return [
