@@ -26,7 +26,7 @@ class GAClient(object):
 
     def __init__(self, client_name):
         self._fs = None
-        self.set_dirname(client_name)
+        self._dirname = None
         self._client_name = client_name
         self._current_time = None
         self.clear()

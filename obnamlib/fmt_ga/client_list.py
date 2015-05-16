@@ -83,6 +83,9 @@ class GAClientList(object):
                 }
             self._data_is_loaded = True
 
+    def get_client_dirname(self, client_name):
+        return client_name
+
     def add_client(self, client_name):
         self._load_data()
         self._require_client_does_not_exist(client_name)

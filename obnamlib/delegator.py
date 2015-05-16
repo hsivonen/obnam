@@ -371,6 +371,8 @@ class ClientFinder(object):
         if client_name not in self._clients:
             client = self._client_factory(client_name)
             client.set_fs(self._fs)
+            dirname = self._client_list.get_client_dirname(client_name)
+            client.set_dirname(dirname)
             client.set_current_time(self._current_time)
             self._clients[client_name] = client
 

@@ -131,6 +131,9 @@ class SimpleClientList(SimpleToplevel):
     def get_client_names(self):
         return self._data.get('clients', {}).keys()
 
+    def get_client_dirname(self, client_name):
+        return client_name
+
     def add_client(self, client_name):
         self._require_client_does_not_exist(client_name)
 
@@ -207,7 +210,6 @@ class SimpleClient(SimpleToplevel):
 
     def __init__(self, client_name):
         SimpleToplevel.__init__(self)
-        self.set_dirname(client_name)
         self._client_name = client_name
         self._current_time = None
 
