@@ -52,6 +52,14 @@ class BagStore(object):
         serialised = self._fs.cat(filename)
         return deserialise_bag(serialised)
 
+    def has_bag(self, bag_id):
+        filename = self._make_bag_filename(bag_id)
+        try:
+            st = self._fs.lstat(filename)
+        except (IOError, OSError) as e:  # pragma: no cover
+            return False
+        return st.st_size > 0
+
     def get_bag_ids(self):
         for pathname, st in self._fs.scan_tree(self._dirname):
             if self._is_bag_filename(pathname):

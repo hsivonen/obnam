@@ -59,6 +59,15 @@ class BagStoreTests(unittest.TestCase):
         store.set_location(self.fs, 'empty')
         self.assertEqual(list(store.get_bag_ids()), [])
 
+    def test_has_a_put_bag(self):
+        self.store.put_bag(self.bag)
+        self.assertTrue(self.store.has_bag(self.bag.get_id()))
+
+    def test_does_not_have_a_removed_bag(self):
+        self.store.put_bag(self.bag)
+        self.store.remove_bag(self.bag.get_id())
+        self.assertFalse(self.store.has_bag(self.bag.get_id()))
+
     def test_lists_bag_that_has_been_put(self):
         self.store.put_bag(self.bag)
         self.assertEqual(list(self.store.get_bag_ids()), [self.bag.get_id()])
