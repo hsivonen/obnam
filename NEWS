@@ -15,6 +15,10 @@ Minor new features:
   chosen based on some benchmarking made by Lars Wirzenius to balance
   speed and memory use.
 
+* An EXPERIMENTAL new repository format, `green-albatross`, as been
+  introduced. It is not ready for actual use, and is only added so
+  that its code doesn't diverge far from the main line of development.
+
 Minor fixes:
 
 * `python setup.py build` no longer formats the manual page into plain
