@@ -74,16 +74,14 @@ def _deserialise_none(serialised):
     return None
 
 
-# Integers. They are 64-bit values.
-
-_int_fmt = '!Q'
-_int_size_serialised = _serialise_length(struct.calcsize(_int_fmt))
+# Integers. They are arbitrarily large and signed.
 
 def _serialise_integer(obj):
-    return _INT + _int_size_serialised + struct.pack(_int_fmt, obj)
+    s = str(obj)
+    return _INT + _serialise_length(len(s)) + s
 
 def _deserialise_integer(serialised):
-    return struct.unpack(_int_fmt, serialised)[0]
+    return int(serialised)
 
 
 # Booleans.
