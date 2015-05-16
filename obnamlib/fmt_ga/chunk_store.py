@@ -16,6 +16,7 @@
 # =*= License: GPL-3+ =*=
 
 
+import errno
 import os
 import random
 
@@ -27,61 +28,81 @@ class GAChunkStore(object):
     def __init__(self):
         self._fs = None
         self._dirname = 'chunk-store'
+        self._bag = None
+        self._bag_store = obnamlib.BagStore()
+        self._max_bag_size = None
 
     def set_fs(self, fs):
         self._fs = fs
+        self._bag_store.set_location(fs, self._dirname)
+
+    def set_max_chunk_size(self, max_chunk_size):
+        self._max_bag_size = max_chunk_size
 
     def put_chunk_content(self, content):
         self._fs.create_and_init_toplevel(self._dirname)
-        while True:
-            chunk_id = self._random_chunk_id()
-            filename = self._chunk_filename(chunk_id)
-            try:
-                self._fs.write_file(filename, content)
-            except OSError, e: # pragma: no cover
-                if e.errno == errno.EEXIST:
-                    continue
-                raise
-            else:
-                return chunk_id
+        if self._bag is None:
+            self._bag = self._new_bag()
+        chunk_id = self._bag.append(content)
+        if self._bag_is_big_enough(self._bag):
+            self.flush_chunks()
+        return chunk_id
 
-    def get_chunk_content(self, chunk_id):
-        filename = self._chunk_filename(chunk_id)
-        if not self._fs.exists(filename):
-            raise obnamlib.RepositoryChunkDoesNotExist(
-                chunk_id=chunk_id,
-                filename=filename)
-        return self._fs.cat(filename)
+    def _new_bag(self):
+        bag = obnamlib.Bag()
+        bag.set_id(self._bag_store.reserve_bag_id())
+        return bag
 
-    def has_chunk(self, chunk_id):
-        filename = self._chunk_filename(chunk_id)
-        return self._fs.exists(filename)
-
-    def remove_chunk(self, chunk_id):
-        filename = self._chunk_filename(chunk_id)
-        if not self._fs.exists(filename):
-            raise obnamlib.RepositoryChunkDoesNotExist(
-                chunk_id=chunk_id,
-                filename=filename)
-        self._fs.remove(filename)
+    def _bag_is_big_enough(self, bag):
+        approx_size = sum(len(bag[i]) for i in range(len(bag)))
+        return self._max_bag_size is None or approx_size >= self._max_bag_size
 
     def flush_chunks(self):
-        pass
+        if self._bag:
+            self._bag_store.put_bag(self._bag)
+            self._bag = None
+
+    def get_chunk_content(self, chunk_id):
+        bag_id, index = obnamlib.parse_object_id(chunk_id)
+        try:
+            bag = self._bag_store.get_bag(bag_id)
+        except (IOError, OSError) as e:
+            if e.errno == errno.ENOENT:
+                raise obnamlib.RepositoryChunkDoesNotExist(
+                    chunk_id=chunk_id,
+                    filename=None)
+            raise
+        return bag[index]
+
+    def has_chunk(self, chunk_id):
+        bag_id, _ = obnamlib.parse_object_id(chunk_id)
+        return self._bag_store.has_bag(bag_id)
+
+    def remove_chunk(self, chunk_id):
+        bag_id, _ = obnamlib.parse_object_id(chunk_id)
+        if self._bag is not None and bag_id == self._bag.get_id():
+            self._bag = None
+        else:
+            try:
+                self._bag_store.remove_bag(bag_id)
+            except (IOError, OSError) as e:
+                if e.errno == errno.ENOENT:
+                    raise obnamlib.RepositoryChunkDoesNotExist(
+                        chunk_id=chunk_id,
+                        filename=None)
+                raise
 
     def get_chunk_ids(self):
-        if not self._fs.exists(self._dirname):
-            return []
-        basenames = self._fs.listdir(self._dirname)
-        return [
-            self._parse_chunk_filename(x)
-            for x in basenames
-            if x.endswith('.chunk')]
+        result = []
+        if self._bag:
+            result += self._get_chunk_ids_from_bag(self._bag)
 
-    def _random_chunk_id(self):
-        return random.randint(0, obnamlib.MAX_ID)
+        for bag_id in self._bag_store.get_bag_ids():
+            bag = self._bag_store.get_bag(bag_id)
+            result += self._get_chunk_ids_from_bag(bag)
 
-    def _chunk_filename(self, chunk_id):
-        return os.path.join(self._dirname, '%d.chunk' % chunk_id)
+        return result
 
-    def _parse_chunk_filename(self, filename):
-        return int(filename[:-len('.chunk')])
+    def _get_chunk_ids_from_bag(self, bag):
+        return [obnamlib.make_object_id(bag.get_id(), i)
+                for i in range(len(bag))]
