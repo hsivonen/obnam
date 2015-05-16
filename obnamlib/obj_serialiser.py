@@ -79,10 +79,10 @@ def _deserialise_none(serialised):
 _int_fmt = '!Q'
 _int_size_serialised = _serialise_length(struct.calcsize(_int_fmt))
 
-def _serialise_int(obj):
+def _serialise_integer(obj):
     return _INT + _int_size_serialised + struct.pack(_int_fmt, obj)
 
-def _deserialise_int(serialised):
+def _deserialise_integer(serialised):
     return struct.unpack(_int_fmt, serialised)[0]
 
 
@@ -160,7 +160,8 @@ def _deserialise_prefix(serialised, pos):
 
 _serialisers = {
     type(None): _serialise_none,
-    int: _serialise_int,
+    int: _serialise_integer,
+    long: _serialise_integer,
     bool: _serialise_bool,
     str: _serialise_str,
     list: _serialise_list,
@@ -172,7 +173,7 @@ _serialisers = {
 
 _deserialisers = {
     _NONE: _deserialise_none,
-    _INT: _deserialise_int,
+    _INT: _deserialise_integer,
     _BOOL: _deserialise_bool,
     _STR: _deserialise_str,
     _LIST: _deserialise_list,
