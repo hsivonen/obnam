@@ -454,7 +454,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
     def unlock_when_error(self):
         try:
-            if self.repo.got_client_lock():
+            if self.repo.got_client_lock(self.client_name):
                 logging.info('Attempting to unlock client because of error')
                 self.repo.unlock_client(self.client_name)
             if self.repo.got_chunk_indexes_lock():
