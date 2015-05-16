@@ -700,6 +700,10 @@ class RepositoryInterface(object):
         '''Generate all chunk ids in repository.'''
         raise NotImplementedError()
 
+    def flush_chunks(self):
+        '''Flush any pending chunks.'''
+        raise NotImplementedError()
+
     def lock_chunk_indexes(self):
         '''Locks chunk indexes for updates.'''
         raise NotImplementedError()
@@ -1839,6 +1843,12 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
     # Chunk and chunk indexes.
 
     def test_puts_chunk_into_repository(self):
+        chunk_id = self.repo.put_chunk_content('foochunk')
+        self.repo.flush_chunks()
+        self.assertTrue(self.repo.has_chunk(chunk_id))
+        self.assertEqual(self.repo.get_chunk_content(chunk_id), 'foochunk')
+
+    def test_finds_put_chunk_in_unflushed_repository(self):
         chunk_id = self.repo.put_chunk_content('foochunk')
         self.assertTrue(self.repo.has_chunk(chunk_id))
         self.assertEqual(self.repo.get_chunk_content(chunk_id), 'foochunk')

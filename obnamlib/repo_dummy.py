@@ -700,6 +700,9 @@ class RepositoryFormatDummy(obnamlib.RepositoryInterface):
     def remove_chunk(self, chunk_id):
         self._chunk_store.remove_chunk(chunk_id)
 
+    def flush_chunks(self):
+        pass
+
     def get_chunk_ids(self):
         return self._chunk_store.get_chunk_ids()
 

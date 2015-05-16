@@ -277,6 +277,9 @@ class RepositoryDelegator(obnamlib.RepositoryInterface):
     def remove_chunk(self, chunk_id):
         return self._chunk_store.remove_chunk(chunk_id)
 
+    def flush_chunks(self):
+        self._chunk_store.flush_chunks()
+
     def get_chunk_ids(self):
         return self._chunk_store.get_chunk_ids()
 

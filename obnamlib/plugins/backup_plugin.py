@@ -402,6 +402,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             False)
         
         self.progress.what(prefix + 'committing client')
+        self.repo.flush_chunks()
         self.repo.commit_client(self.client_name)
         
         self.progress.what(prefix + 'committing shared B-trees')
@@ -423,6 +424,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.repo.remove_generation(gen)
 
         self.progress.what(prefix + ': committing client')
+        self.repo.flush_chunks()
         self.repo.commit_client(self.client_name)
 
         self.progress.what(prefix + ': commiting shared B-trees')
@@ -649,6 +651,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.repo.set_generation_key(
                 self.new_generation,
                 obnamlib.REPO_GENERATION_IS_CHECKPOINT, 1)
+            self.repo.flush_chunks()
             self.repo.commit_client(self.client_name)
             self.progress.what('making checkpoint: committing shared B-trees')
             self.repo.commit_chunk_indexes()

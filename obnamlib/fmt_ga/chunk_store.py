@@ -65,6 +65,9 @@ class GAChunkStore(object):
                 filename=filename)
         self._fs.remove(filename)
 
+    def flush_chunks(self):
+        pass
+
     def get_chunk_ids(self):
         if not self._fs.exists(self._dirname):
             return []

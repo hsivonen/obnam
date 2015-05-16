@@ -123,6 +123,7 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
         self.repo.unlock_client_list()
         for some_client_name in client_names:
             if some_client_name == client_name:
+                self.repo.flush_chunks()
                 self.repo.commit_client(some_client_name)
             else:
                 self.repo.unlock_client(some_client_name)
