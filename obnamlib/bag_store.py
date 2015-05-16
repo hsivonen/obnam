@@ -91,7 +91,7 @@ class IdInventor(object):
 
     def _next_id(self):
         if self._prev_id is None:
-            self._prev_id = random.randint(0, 1024)
+            self._prev_id = random.randint(0, obnamlib.MAX_ID)
         else:
             self.prev_id += 1  # pragma: no cover
 
