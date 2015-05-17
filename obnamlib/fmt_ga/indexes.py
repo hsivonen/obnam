@@ -52,7 +52,7 @@ class GAChunkIndexes(object):
         self._fs.overwrite_file(filename, blob)
 
     def _get_filename(self):
-        return os.path.join(self.get_dirname(), 'data.bag')
+        return os.path.join(self.get_dirname(), 'data.dat')
 
     def prepare_chunk_for_indexes(self, chunk_content):
         return hashlib.sha512(chunk_content).hexdigest()

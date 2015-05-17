@@ -66,7 +66,7 @@ class GAClient(object):
         self._fs.overwrite_file(filename, blob)
 
     def _get_filename(self):
-        return os.path.join(self.get_dirname(), 'data.bag')
+        return os.path.join(self.get_dirname(), 'data.dat')
 
     def get_client_generation_ids(self):
         self._load_data()
