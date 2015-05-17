@@ -25,10 +25,15 @@ class RepositoryFormatGA(obnamlib.RepositoryDelegator):
 
     def __init__(self, **kwargs):
         obnamlib.RepositoryDelegator.__init__(self, **kwargs)
+
         self.set_client_list_object(obnamlib.GAClientList())
-        self.set_chunk_store_object(obnamlib.GAChunkStore())
         self.set_chunk_indexes_object(obnamlib.GAChunkIndexes())
         self.set_client_factory(obnamlib.GAClient)
+
+        chunk_store = obnamlib.GAChunkStore()
+        if 'chunk_size' in kwargs:  # pragma: no cover
+            chunk_store.set_max_chunk_size(kwargs['chunk_size'])
+        self.set_chunk_store_object(chunk_store)
 
     def init_repo(self):
         pass

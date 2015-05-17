@@ -56,7 +56,8 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
                  idpath_bits=obnamlib.IDPATH_BITS,
                  idpath_skip=obnamlib.IDPATH_SKIP,
                  hooks=None,
-                 current_time=None):
+                 current_time=None,
+                 **kwargs):
 
         self._real_fs = None
         self._lock_timeout = lock_timeout
