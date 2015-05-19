@@ -166,13 +166,6 @@ from .delegator import RepositoryDelegator, GenerationId
 
 
 #
-# Repository format dummy specific modules.
-#
-
-from repo_dummy import RepositoryFormatDummy
-
-
-#
 # Repository format simple specific modules.
 #
 
