@@ -72,11 +72,7 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
         # forget (which currently can be quite slow) nobody can do a
         # backup. However, correctness trumps speed.
 
-        self.repo.lock_client_list()
-        client_names = self.repo.get_client_names()
-        for some_client_name in client_names:
-            self.repo.lock_client(some_client_name)
-        self.repo.lock_chunk_indexes()
+        self.repo.lock_everything()
 
         self.app.dump_memory_profile('at beginning')
         client_name = self.app.settings['client-name']
@@ -120,14 +116,9 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
                     self.repo.make_generation_spec(genid))
 
         # Commit or unlock everything.
-        self.repo.unlock_client_list()
-        for some_client_name in client_names:
-            if some_client_name == client_name:
-                self.repo.flush_chunks()
-                self.repo.commit_client(some_client_name)
-            else:
-                self.repo.unlock_client(some_client_name)
-        self.repo.commit_chunk_indexes()
+        self.repo.flush_chunks()
+        self.repo.commit_client(client_name)
+        self.repo.unlock_everything()
         self.app.dump_memory_profile('after committing')
 
         self.repo.close()
