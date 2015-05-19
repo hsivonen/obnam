@@ -359,10 +359,50 @@ class RepositoryInterface(object):
         '''
         raise NotImplementedError()
 
+    # Global.
+
+    def lock_everything(self):
+        '''Lock every part of the repository.
+
+        If the caller already holds a lock, that is kept. If anyone
+        else holds a lock, the operation will fail. Ideally, the
+        caller shouldn't hold a lock, since that may lead to a
+        deadlock.
+
+        '''
+        unlockers = []
+        try:
+            if not self.got_client_list_lock():
+                self.lock_client_list()
+                unlockers.append((self.unlock_client_list, []))
+
+            for client_name in self.get_client_names():
+                if not self.got_client_lock(client_name):
+                    self.lock_client(client_name)
+                    unlockers.append((self.unlock_client, [client_name]))
+
+            if not self.got_chunk_indexes_lock():
+                self.lock_chunk_indexes()
+        except obnamlib.LockFail:
+            for unlocker, args in unlockers:
+                unlocker(*args)
+            raise
+
+    def unlock_everything(self):
+        '''Unock every part of the repository to which we hold a lock.'''
+        if self.got_client_list_lock():
+            self.unlock_client_list()
+
+        for client_name in self.get_client_names():
+            if self.got_client_lock(client_name):
+                self.unlock_client(client_name)
+
+        if self.got_chunk_indexes_lock():
+            self.unlock_chunk_indexes()
+
     # Client list.
 
     def get_client_names(self):
-
         '''Return client names currently existing in the repository.'''
         raise NotImplementedError()
 
@@ -846,6 +886,29 @@ class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
 
     def test_returns_list_of_shared_directories(self):
         self.assertTrue(type(self.repo.get_shared_directories()), list)
+
+    # Global locking.
+
+    def test_has_no_client_lock_initially(self):
+        self.setup_client()
+        self.assertFalse(self.repo.client_is_locked('fooclient'))
+
+    def test_locks_everything(self):
+        self.setup_client()
+        self.repo.lock_everything()
+        self.assertTrue(self.repo.got_client_list_lock())
+        self.assertTrue(self.repo.client_is_locked('fooclient'))
+        self.assertTrue(self.repo.got_client_lock('fooclient'))
+        self.assertTrue(self.repo.got_chunk_indexes_lock())
+
+    def test_unlocks_everything(self):
+        self.setup_client()
+        self.repo.lock_everything()
+        self.repo.unlock_everything()
+        self.assertFalse(self.repo.got_client_list_lock())
+        self.assertFalse(self.repo.client_is_locked('fooclient'))
+        self.assertFalse(self.repo.got_client_lock('fooclient'))
+        self.assertFalse(self.repo.got_chunk_indexes_lock())
 
     # Tests for the client list.
 

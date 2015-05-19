@@ -62,7 +62,6 @@ class RepositoryDelegator(obnamlib.RepositoryInterface):
         self._chunk_store.set_fs(self._fs)
         self._chunk_indexes.set_fs(self._fs)
 
-
     #
     # Client list methods.
     #
