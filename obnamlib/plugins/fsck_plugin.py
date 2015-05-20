@@ -302,11 +302,7 @@ class FsckPlugin(obnamlib.ObnamPlugin):
 
         self.repo = self.app.get_repository_object()
 
-        self.repo.lock_client_list()
-        client_names = self.repo.get_client_names()
-        for client_name in client_names:
-            self.repo.lock_client(client_name)
-        self.repo.lock_chunk_indexes()
+        self.repo.lock_everything()
 
         self.errors = 0
         self.chunkids_seen = set()
@@ -336,11 +332,7 @@ class FsckPlugin(obnamlib.ObnamPlugin):
 
         if rm_unused_chunks:
             self.repo.commit_chunk_indexes()
-        else:
-            self.repo.unlock_chunk_indexes()
-        for client_name in client_names:
-            self.repo.unlock_client(client_name)
-        self.repo.unlock_client_list()
+        self.repo.unlock_everything()
 
         self.repo.close()
         self.app.ts.finish()
