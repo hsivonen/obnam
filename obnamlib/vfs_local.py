@@ -124,10 +124,11 @@ class LocalFS(obnamlib.VirtualFileSystem):
             raise OSError('%s is not a directory' % newcwd)
         self.cwd = newcwd
 
-    def lock(self, lockname, data):
+    def lock(self, lockname):
         tracing.trace('attempting lockname=%s', lockname)
         try:
-            self.write_file(lockname, data)
+            tempname = self._create_tempfile(lockname)
+            self._rename_temp_to_real(tempname, lockname)
         except OSError, e:
             if e.errno == errno.EEXIST:
                 raise obnamlib.LockFail(
@@ -137,6 +138,70 @@ class LocalFS(obnamlib.VirtualFileSystem):
         tracing.trace('got lockname=%s', lockname)
         tracing.trace('time=%f' % time.time())
         self.our_locks.add(lockname)
+
+    def _create_tempfile(self, pathname):  # pragma: no cover
+        path = self.join(pathname)
+        dirname = os.path.dirname(path)
+        if not os.path.exists(dirname):
+            tracing.trace('os.makedirs(%s)' % dirname)
+            try:
+                os.makedirs(dirname, mode=obnamlib.NEW_DIR_MODE)
+            except OSError as e: # pragma: no cover
+                # This avoids a race condition: another Obnam process
+                # may have created the directory between our check and
+                # creation attempt. If so, we ignore it. As long as
+                # the directory exists, all's good.
+                if e.errno != errno.EEXIST:
+                    raise
+
+        fd, tempname = tempfile.mkstemp(dir=dirname)
+        os.fchmod(fd, obnamlib.NEW_FILE_MODE)
+        os.close(fd)
+        f = self.open(tempname, 'wb')
+        f.close()
+        return tempname
+
+    def _rename_temp_to_real(self, tempname, pathname):  # pragma: no cover
+        # This is tricky. We need to at least try to support NFS, and
+        # various filesystems that do not support hardlinks. On NFS,
+        # creating a file with O_EXCL is not guaranteed to be atomic,
+        # but adding a link with link(2) is. However, that doesn't work
+        # on VFAT, for example. So we try do both: first create a
+        # temporary file with a name guaranteed to not be a name we
+        # want to use, and then we rename it using link(2) and remove(2).
+        # If that fails, we try to create the target file with O_EXCL
+        # and rename the temporary file to that. This is still not 100%
+        # reliable: someone could be mounting VFAT across NFS, for
+        # example, but it's the best we can do. If this paragraph is
+        # wrong, tell the authors.
+
+        tracing.trace('tempname=%r', tempname)
+        tracing.trace('pathname=%r', pathname)
+        path = self.join(pathname)
+        tracing.trace('path=%r', path)
+
+        # Try link(2) for creating target file.
+        try:
+            os.link(tempname, path)
+        except OSError, e:
+            pass
+        else:
+            os.remove(tempname)
+            tracing.trace('link+remove worked')
+            return
+
+        # Nope, didn't work. Now try with O_EXCL instead.
+        try:
+            fd = os.open(
+                path, os.O_CREAT | os.O_EXCL | os.O_WRONLY,
+                obnamlib.NEW_FILE_MODE)
+            os.close(fd)
+            os.rename(tempname, path)
+        except OSError, e:
+            # Give up.
+            os.remove(tempname)
+            raise
+        tracing.trace('O_EXCL+rename worked')
 
     def unlock(self, lockname):
         tracing.trace('lockname=%s', lockname)
@@ -313,83 +378,28 @@ class LocalFS(obnamlib.VirtualFileSystem):
         return data
 
     def write_file(self, pathname, contents): # pragma: no cover
-        # This is tricky. We need to at least try to support NFS, and
-        # various filesystems that do not support hardlinks. On NFS,
-        # creating a file with O_EXCL is not guaranteed to be atomic,
-        # but adding a link with link(2) is. However, that doesn't work
-        # on VFAT, for example. So we try do both: first create a
-        # temporary file with a name guaranteed to not be a name we
-        # want to use, and then we rename it using link(2) and remove(2).
-        # If that fails, we try to create the target file with O_EXCL
-        # and rename the temporary file to that. This is still not 100%
-        # reliable: someone could be mounting VFAT across NFS, for
-        # example, but it's the best we can do. If this paragraph is
-        # wrong, tell the authors.
+        tempname = self._create_tempfile(pathname)
+        f = self.open(tempname, 'wb')
+        f.write(contents)
+        f.close()
+        self.bytes_written += len(contents)
 
-        tracing.trace('write_file %s', pathname)
-        tempname = self._write_to_tempfile(pathname, contents)
         path = self.join(pathname)
-
-        # Try link(2) for creating target file.
-        try:
-            os.link(tempname, path)
-        except OSError, e:
-            pass
-        else:
-            os.remove(tempname)
-            tracing.trace('link+remove worked')
-            return
-
-        # Nope, didn't work. Now try with O_EXCL instead.
-        try:
-            fd = os.open(
-                path, os.O_CREAT | os.O_EXCL | os.O_WRONLY,
-                obnamlib.NEW_FILE_MODE)
-            os.close(fd)
-            os.rename(tempname, path)
-        except OSError, e:
-            # Give up.
-            os.remove(tempname)
-            raise
-        tracing.trace('O_EXCL+rename worked')
-
+        self._rename_temp_to_real(tempname, path)
         self.maybe_crash()
 
     def overwrite_file(self, pathname, contents):
         tracing.trace('overwrite_file %s', pathname)
-        tempname = self._write_to_tempfile(pathname, contents)
+
+        tempname = self._create_tempfile(pathname)
+        f = self.open(tempname, 'wb')
+        f.write(contents)
+        f.close()
+        self.bytes_written += len(contents)
+
         path = self.join(pathname)
         os.rename(tempname, path)
         self.maybe_crash()
-
-    def _write_to_tempfile(self, pathname, contents):
-        path = self.join(pathname)
-        dirname = os.path.dirname(path)
-        if not os.path.exists(dirname):
-            tracing.trace('os.makedirs(%s)' % dirname)
-            try:
-                os.makedirs(dirname, mode=obnamlib.NEW_DIR_MODE)
-            except OSError as e: # pragma: no cover
-                # This avoids a race condition: another Obnam process
-                # may have created the directory between our check and
-                # creation attempt. If so, we ignore it. As long as
-                # the directory exists, all's good.
-                if e.errno != errno.EEXIST:
-                    raise
-
-        fd, tempname = tempfile.mkstemp(dir=dirname)
-        os.fchmod(fd, obnamlib.NEW_FILE_MODE)
-        os.close(fd)
-        f = self.open(tempname, 'wb')
-
-        pos = 0
-        while pos < len(contents):
-            chunk = contents[pos:pos+self.chunk_size]
-            f.write(chunk)
-            pos += len(chunk)
-            self.bytes_written += len(chunk)
-        f.close()
-        return tempname
 
     def listdir(self, dirname):
         return os.listdir(self.join(dirname))

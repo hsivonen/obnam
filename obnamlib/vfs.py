@@ -132,7 +132,7 @@ class VirtualFileSystem(object):
 
         '''
 
-    def lock(self, lockname, data):
+    def lock(self, lockname):
         '''Create a lock file with the given name.'''
 
     def unlock(self, lockname):
@@ -431,17 +431,15 @@ class VfsTests(object): # pragma: no cover
         self.assertEqual(self.fs.getcwd(), self.basepath)
 
     def test_creates_lock_file(self):
-        self.fs.lock('lock', 'lock data')
+        self.fs.lock('lock')
         self.assertTrue(self.fs.exists('lock'))
-        self.assertEqual(self.fs.cat('lock'), 'lock data')
 
     def test_second_lock_fails(self):
-        self.fs.lock('lock', 'lock data')
-        self.assertRaises(Exception, self.fs.lock, 'lock', 'second lock')
-        self.assertEqual(self.fs.cat('lock'), 'lock data')
+        self.fs.lock('lock')
+        self.assertRaises(Exception, self.fs.lock, 'lock')
 
     def test_unlock_removes_lock(self):
-        self.fs.lock('lock', 'lock data')
+        self.fs.lock('lock')
         self.fs.unlock('lock')
         self.assertFalse(self.fs.exists('lock'))
 

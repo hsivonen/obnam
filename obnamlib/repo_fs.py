@@ -60,8 +60,8 @@ class RepositoryFS(object):
         return self.hooks.filter_read('repository-data', data,
                                       repo=self.repo, toplevel=toplevel)
 
-    def lock(self, filename, data):
-        self.fs.lock(filename, data)
+    def lock(self, filename):
+        self.fs.lock(filename)
 
     def create_and_init_toplevel(self, filename):
         tracing.trace('filename=%s', filename)

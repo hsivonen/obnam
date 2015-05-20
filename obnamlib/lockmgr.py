@@ -28,21 +28,7 @@ class LockManager(object):
     def __init__(self, fs, timeout, client):
         self._fs = fs
         self.timeout = timeout
-        data = ["[lockfile]"]
-        data = data + ["client=" + client]
-        data = data + ["pid=%d" % os.getpid()]
-        data = data + self._read_boot_id()
-        self.data = '\r\n'.join(data)
         self._got_locks = []
-
-    def _read_boot_id(self): # pragma: no cover
-        try:
-            with open("/proc/sys/kernel/random/boot_id", "r") as f:
-                boot_id = f.read().strip()
-        except:
-            return []
-        else:
-            return ["boot_id=%s" % boot_id]
 
     def _time(self): # pragma: no cover
         return time.time()
@@ -63,7 +49,7 @@ class LockManager(object):
         while True:
             lock_name = self.get_lock_name(dirname)
             try:
-                self._fs.lock(lock_name, self.data)
+                self._fs.lock(lock_name)
             except obnamlib.LockFail:
                 if self._time() - started >= self.timeout:
                     raise obnamlib.LockFail(
