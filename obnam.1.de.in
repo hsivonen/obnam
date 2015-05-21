@@ -1,0 +1,535 @@
+.\" Copyright 2010-2014  Lars Wirzenius
+.\"
+.\" This program is free software: you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation, either version 3 of the License, or
+.\" (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program.  If not, see <http://www.gnu.org/licenses/>.
+.TH OBNAM 1
+.SH BEZEICHNUNG
+obnam \- Backups anlegen, wiederherstellen bzw. verändern
+.SH ÜBERSICHT
+.B obnam
+erzeugt und verwaltet Backups, die entweder lokal oder remote über sftp abgelegt werden können. Mit obnam brauchen Sie nicht 
+zwischen Full-Backup und inkrementellem Backup unterscheiden: Jedes Backup verhält sich wie ein vollständiger
+.I Snapshot,
+ist in Wirklichkeit aber inkrementell. Es werden nur Daten gesichert, die seit dem letzen Backup geändert wurden. Wenn ein Teil 
+der Daten bereits in einem anderen File gesichert wurde, wird dieser Teil erneut benutzt. Dies wird
+.I Deduplizierung
+genannt.
+.SH BESCHREIBUNG
+Der Ort an dem die Daten gesichert werden wird als "backup repository" bezeichnet. Ein Repository kann zum Beispiel ein Verzeichnis auf 
+einem sftp-Server oder auf einer USB-Festplatte sein. Ein einzelnes Repository kann Backups von mehreren Clients enthalten, so 
+können die Daten mehrerer Clients für die Deduplizierung benutzt werden. Trotzdem kann ein Client nur "seine" Daten einsehen,
+also z.B. Wiederherstellen.
+.PP
+Das erste Argument für
+.B obnam
+sollte eine
+.I Funktion
+sein, gefolgt von optionalen Parametern.
+Hier die Liste der Funktionen:
+.IP \(bu
+.B backup
+erzeugt ein neues Backup.
+Beim ersten Aufruf wird ein vollständiges Backup angelegt, bei nachfolgenden Aufrufen ein inkrementelles.
+.IP \(bu
+.B restore
+Das Gegenteil von "backup".
+Es extrahiert gesicherte Daten aus dem Repository in ein Verzeichnis.
+Sie können eine vollständige Generation oder einzelne Dateien wiederherstellen.
+.IP \(bu
+.B clients
+zeigt eine Liste der Clients, die im Repository gesichert sind.
+.IP \(bu
+.B generations
+zeigt eine Liste aller Generationen (Backups) eines Clients und einige Metadaten der Generationen.
+.IP \(bu
+.B genids
+zeigt eine Liste aller Generations-IDs eines Clients.
+Keine anderen Daten werden angezeigt. Sinnvoll für Scripte.
+.IP \(bu
+.B ls
+zeigt den Inhalt einer Generation an, ähnlich wie
+.BR "ls \-lAR" .
+.IP \(bu
+.B kdirstat
+zeigt den Inhalt einer Generation an. Die Ausgabe erfolgt in einem
+.BR "kdirstat"
+kompatiblen Format, das dann benutzt werden kann um den Inhalt eines Backups zu visualisieren.
+.IP \(bu
+.B verify
+vergleicht Backup-Daten mit Echtdaten und stellt sicher, das sie identisch sind. Sinnvollerweise wird verify sofort nach einem 
+Backup-Lauf aufgerufen um zu prüfen das auch alles geklappt hat.
+.B verify
+kann jederzeit aufgerufen werden, allerdings schlägt die Überprüfung fehl wenn die Echtdaten verändert sind, auch wenn das Backup 
+fehlerfrei ist.
+.IP \(bu
+.B forget
+entfernt nicht mehr benötigte Generationen und gibt wenn möglich Speicherplatz frei. Wenn eine Generation gelöscht wurde, können
+deren Daten nicht mehr zurückgesichert werden. Sie können die Generation(en) entweder beim Aufruf mitgeben, oder die Option
+.B \-\-keep
+verwenden um anzugeben, was behalten werden soll (alles andere wird entfernt).
+.IP \(bu
+.B fsck
+überprüft und repariert (optional) ein Repository. Es verifiziert das sämtliche Clients, Generationen, Verzeichnisse, Dateien und
+Dateiinhalte konsistent im Repository gespeichert sind. Der Aufruf kann sehr lange dauern.
+.IP \(bu
+.B force\-lock
+entfernt die Sperre eines Clients im Repository.
+Sie sollten dies nur tun, wenn Sie sicher sind das nichts anderes auf die Daten des Clients im Repository zugreift.
+Die Sperre kann zum Beispiel hängen bleiben, wenn obnam während einer Operation die Netzwerkverbindung zum Repository verliert.
+.IP \(bu
+.B client\-keys
+zeigt eine Liste der Verschlüsselungs-Schlüssel jedes Clients.
+.IP \(bu
+.B list\-keys
+zeigt eine Liste aller Schlüssel die auf das Repository zugreifen können und auf welche Top-Level Verzeichnisse jeder Schlüssel Zugriff
+hat. Manche Top-Level Verzeichnisse sind von mehreren Clients "geshared", andere sind auf einen Client beschränkt.
+.IP \(bu
+.B list\-toplevels
+ähnlich wie
+.BR list\-keys ,
+zeigt aber Top-Level Verzeichnisse und welche Schlüssel Zugriff haben.
+.IP \(bu
+.B add\-key
+fügt einen Schlüssel zum Repository hinzu.
+Standardmäßig wird der Schlüssel nur zu gemeinsam genutzen Top-Level Verzeichnissen hinzugefügt, er kann aber auch zu einzelnen Clients
+hinzugefügt werden (Client-Namen als Argument angeben).
+Der Schlüssel wird durch die 
+.B \-\-keyid
+spezifiziert. Wer auch immer Zugriff zum privaten Schlüssel der zugehörigen Key-ID hat, kann auf das Repository zugreifen.
+(gemeinsam genutze Top-Level Verzeichnisse plus angegebene Clients).
+.IP \(bu
+.B remove\-key
+entfernt einen Schlüssel aus den gemeinsam genutzen Top-Level Verzeichnissen und allen angegebenen Clients.
+.IP \(bu
+.B nagios\-last\-backup\-age
+gibt einen Wert ungleich Null zurück wenn das letzte Backup eine konfigurierbare Anzahl Tage als ist. Dies erlaubt die Einbindung in
+Nagios, Schwellenwerte werden über
+.B \-\-warn-age
+und
+.B \-\-critical-age
+eingestellt.
+.IP \(bu
+.B diff
+vergleicht zwei Generationen und gibt eine Liste der Unterschiede aus, das erste Zeichen zeigt den Unterschied an:
+.br
+ + Datei neu hinzugekommen
+.br
+ - Datei entfernt
+.br
+ * Datei geändert
+.br
+Wenn nur eine Genearion angegeben wurde, dann wird diese Generation mit dem direkten Vorgänger verglichen.
+Werden zwei Generationen angegeben, werden die Unterschiede dieser beiden Generationen angezeigt.
+.IP \(bu
+.B mount
+mounted das Repository als FUSE filesystem (read-only). Jede Generation wird als eigenes Unterverzeichnis dargestellt, das nach der
+Generations-ID benannt ist. Sie können so mit den normalen Werkzeuge auf die gesicherten Daten zugreifen, zum Beispiel GUI File Manager
+oder auch Kommandozeilen-Werkzeuge wie
+.BR ls (1),
+.BR diff (1),
+und
+.BR cp (1).
+Sie können keine Daten hinzufügen, aber ganz einfach Daten wieder herstellen.
+.IP
+Sie benötigen die FUSE utilities und die entsprechende Berechtigung um FUSE zu benutzen, damit dies funktioniert.
+Details sind je Betriebssystem unterschiedlich,  in Debian benötigen Sie das Paket
+.I fuse
+und müssen Sich zur Gruppe
+.I fuse
+hinzufügen (evtl. müssen Sie Sich neu anmelden).
+.SS "Backups anlegen"
+Wenn Sie ein Backup machen, speichert
+.B obnam
+die Daten in das Repository. Die Daten werden in Teile (engl. chunk) aufgeteilt,
+wenn ein chunk schon im Repository enthalten ist, wird er nicht noch einmal gespeichert.
+So kann
+.B obnam
+leicht mit nur teilweise geänderten oder umbenannten Dateien umgehen. Außerdem wird so vermieden das mehrere Clients die selben 
+Daten sichern. Wenn zum Beispiel jeder im Büro eine Kopie des Verkaufsprospektes gespeichert hat, werden die Daten im Repository
+trotzdem nur einmal abgelegt.
+.PP
+Jedes Backup ist eine
+.IR Generation .
+Zusätzlich legt
+.B obnam
+während eines Backup-Laufs 
+.I checkpoints
+an, die sich genau wie normale Generationen verhalten, aber noch nicht die gesamten Echtdaten enthalten.
+Sollte ein Backup-Lauf unterbrochen werden, kann der folgende Lauf beim letzten Checkpoint weiter machen und muss nicht komplett
+von vorn beginnen.
+.PP
+Sollte ein Backup-Lauf ein Verzeichnis entfernen, so behalten die älteren Genrationen die Daten trotzdem:
+Neue Generationen haben keinen Einfluß auf die älteren Generationen. Wurde das Verzeichnis unabsichtlich entfernt, kann es
+wieder hinzugefügt werden und beim nächsten Backup-Lauf werden die bereits im Repository befindlichen Daten wiederverwendet.
+Es werden dann lediglich Metadaten (Dateinamen, Berechtigungen, ...) erneut gesichert.
+.SS "Backups überprüfen"
+Was nützt ein Backup-System, dem Sie nicht vertrauen können? Wie können Sie etwas vertrauen, das Sie nicht testen können?
+Der Befehl
+.B "obnam verify"
+prüft das die Daten im Repository und die Echtdaten übereinstimmen. Es holt eine oder mehrere Dateien aus dem Repository und vergleicht
+sie mit den Echtdaten. Im Wesentlichen ist dies das gleiche wie ein Restore und ein Vergleich mittels
+.BR cmp (1),
+aber es ist einfacher.
+.PP
+Standardmäßig werden alle Daten verglichen, Sie können aber auch einzelte Dateien als Parameter mitgeben.
+Dabei müssen Sie den vollständigen Pfad zu den Dateien angeben, keinen relativen Pfad.
+.PP
+Die Ausgabe zeigt Dateien, bei denen es Unterschiede zwischen Echtdaten und Repository gibt.
+Wenn Sie sämtliche Dateien überprüfen ist es sehr wahtscheinlich, das einige Dateien geändert sind, ohne das dies ein Problem darstellt.
+Bitte beachten Sie das Pfadangaben absolut sein müssen und nicht relativ zum Backup root.
+Sie müssen mindestens ein Backup root auf der Kommandozeie older mittels
+.B \-\-root
+angeben, damit obnam das Filesystem findet, falls es remote ist.
+.SS "URL syntax"
+Jedes Mal wenn obnam eine URL akzeptiert kann das entweder ein lokaler Pfadname oder eine 
+.B sftp
+URL sein.
+Eine sftp URL hat die folgende Form:
+.IP
+\fBsftp://\fR[\fIuser\fR@]\fIdomain\fR[:\fIport\fR]\fB/path
+.PP
+wobei
+.I domain
+ein normaler Internet domain name eines Servers ist,
+.I user
+der Benutzername auf dem Server,
+.I port
+eine (optionale) Portnummer,
+und
+.I path
+Wie in 
+.BR bzr (1),
+aber im Gegensatz zum sftp URL standard, ist der Pfadname absolut, außer wenn er mit
+.B /~/
+beginnt. In diesem Fall ist er relativ zum home directory des Benutzers auf dem Server.
+.PP
+Im Abschnitt BEISPIELE finden Sie einige Beispiele für sftp URLs.
+.PP
+Sie können
+.B sftp
+URLs sowohl für das Repository als auch die Echtdaten (backup root) benutzen.
+Bitte beachten Sie, das sich
+.B sftp
+durch Beschränkungen des Protokolls und seiner Implementierung in der
+.B paramiko
+Bibliothek weniger gut eignet, um darübe rauf Echtdaten zuzugreifen.
+So werden zum Beispiel Hardlinks nicht optimal verarbeitet.
+Beim Zugriff auf Echtdaten sollte die URL daher nicht mit
+.B /~/
+enden und es sollte in diesem Fall ein Punkt am Ende stehen.
+.SS "Mit Generationen arbeiten"
+Wenn Sie nicht mit der neuesten Generation arbeiten, müssen Sie mittels
+.B \-\-generation
+eine Generation spezifizieren.
+Sie können entweder das Wort
+.IR latest ,
+angeben (neueste Generation, default),
+oder einge Nummer. Benutzen Sie die Funktion
+.B generations
+um zu sehen, welche Generationen zur Verfügung stehen und welche Nummern (IDs) sie haben.
+.SS "Vorgaben zum behalten und entfernen von Generationen"
+Die Funktion
+.B forget
+kann optional Vorgaben enthalten, auf deren Basis Generationen automatisch gelöscht oder behalten werden.
+Diese Vorgaben (engl. policy) werden mit
+.BR \-\-keep =\fIPOLICY
+gesetzt.
+.PP
+.I POLICY
+ist dabei eine komma-getrennte Liste von Regeln.
+Jede Regel besteht aus einer Anzahl und einem Zeitraum.
+Die Zeiträume sind:
+.BR h ,
+.BR d ,
+.BR w ,
+.BR m ,
+und
+.BR y ,
+für Stunde (engl. hour), Tag (engl. day), Woche (engl. week), Monath (engl. month), und Jahr (engl. year).
+.PP
+Die Vorgabe 
+.I 30d
+bedeutet: Behalte das neueste Backup (Generation) für jeden Tag an dem eines erstellt wurde und
+behalte die letzten 30 dieser Backups (Generationen).
+Jede Generation die zu einer Vorgabe passt wird behalten, alle anderen dazwischen werden entfernt. Backups die älter als das älteste
+zu behaltende Backup sind, werden ebenfalls entfernt.
+.PP
+Stellen Sie Sich zum Beispiel vor, dass Backups jede volle Stunde gemacht werden, also um 00:00, 01:00, 02:00, und so weiter, bis 23:00.
+Wenn die
+.B forget
+Dunktion um 23:15 mit der oben erwähnten Policy aufgerufen wird, werden die Backups von 23:00 jedes Tags behalten und die anderen
+werden entfernt. Es werden auch alle Backups entfernt, die älter als 30 Tage sind.
+.PP
+Wenn Backups jeden zweiten Tag um 12:00 erstellt werden, dann behält
+.B forget
+mit der oben angegebenen Policy ebenfalls die letzten 30 Backups, die sich in diesem Fall allerdings auf einen Zeitraum
+von 60 Tagen erstrecken.
+.PP
+Beachten Sie das obnam nur die Zeitstempel im Backup repository prüft und sich um die aktuelle Systemzeit nicht kümmert.
+Das bedeutet auch, das wenn Sie aufhören Backups zu machen, die bereits bestehenden nicht automatisch irgendwann gelöscht werden.
+Im Prinzip benutzt obnam für den forget-Lauf die Uhrzeit direkt nach dem neuesten Backup.
+.PP
+Die Vorgaben könnne in beliebiger Reihenfolge gegeben werden, sie werden aufsteigend nach Zeitraum geordnet, bevor sie angewendet weden.
+(Zwei Angaben für den gleichen Zeitraum führen zu einem Fehler).
+Ein Backup (= eine Generation) wird behalten, wenn eine Vorgabe darauf passt.
+.PP
+Ein anderen Beispiel. Stellen Sie Sich wieder stündliche Backups wie oben vor, aber eine Vorgabe wie
+.IR 30d,52w .
+Diese Vorgabe wird 30x die letzten Backups des Tages behalten
+.I und
+52x das neueste Wochen-Backup.
+Weil die stündlichen Backups täglich von der 30d-Vorgabe gelöscht werden, noch bevor die 52w Regel sie erfassen kann, werden die
+letzten 30 Tages-Backups von je 23:00 behalten, und das 23:00 Uhr Backup eines jeden Sonntags für 52 Wochen.
+.PP
+Geben Sie stattdessen eine Vorgabe wie
+.IR 72h,30d,52w ,
+behält
+.B obnam
+die letzten 72 stündlichen Backups, die letzten Backups jedes Kalendertages der letzten 30 Tage, und das letzte Backup jeder Kalenderwoche
+für 52 Wochen.
+Bei nur einem Backup am Tag behält
+.B obnam
+dann also effektiv die Backups der letzen 72 Tage...
+.PP
+Klingt verwirrend? Überlegen Sie mal, wie verwirrt der Entwickler beim Schreiben des Codes wohl war...
+.PP
+Wenn keine Vorgabe gemacht wird, behält
+.B forget
+alles.
+.PP
+Eine typische Vorgabe wäre 
+.IR 72h,7d,5w,12m ,
+was soviel bedeudet wie: Behalte
+die letzten 72 stündlichen Backups,
+die letzten 7 täglichen Backups,
+die letzten 5 wöchentlichen Backups,
+die letzten 12 monatlichen Backups.
+Werden Backups systematisch stündlich erstellt,
+bedeutet das: Es werden
+die stündlichen Backups der letzten 3 Tage,
+die täglichen Backups für eine Woche,
+die wöchentlichen Backups für einen Monat
+und die monatlichen Backups für ein Jahr behalten.
+.PP
+Die Vorgaben sind in der Tat etwas kompleiziert, führen Sie
+.B forget
+daher bitte mit
+.B \-\-pretend
+aus um sicherzustellen, das die richtigen Backups entfernt würden.
+.\"
+.SS "Verschlüsselung benutzen"
+.B obnam
+kann sämtliche Daten im Repository verschlüsseln.
+Es nutzt dabei
+.BR gpg (1)
+um die Verschlüsselung durchzuführen.
+Sie benötigen ein Schlüsselpaar, das Sie mittels
+.B "gpg --gen-key"
+erzeugen können, oder ein bestehendes Schlüsselpaar.
+Dann müssen Sie
+.B obnam
+mittels
+.B \-\-encrypt\-with
+konfigurieren, den Schlüssel zu benutzen.
+.SS "Konfigurationsdateien"
+.B obnam
+sucht Konfigurationsdateien an mehreren Stellen, im Abschnitt DATEIEN finden Sie eine Auflistung.
+Alle diese Konfigurationsdateien werden gemeinsam als eine große Konfigurationsdatei behandelt, so
+als wären alle concatenated.
+.PP
+Konfigurationsdateien sind im INI format, es wird ausschließlich der Abschnitt
+.I [config]
+benutzt (alle anderen Abschnitte werden ignoriert).
+.PP
+Die Langnamen der Optionen werden als Schlüssel für Variablen in den Konfigurationsdateien verwendet.
+Jede Option, die auf der Kommandozeile gesetzt werden kann, kann auch in einer Konfigurationsdatei im Abschnitt
+.I [config]
+stehen.
+.PP
+So können zum Beispiel die Optionen des folgenden Befehls
+.sp 1
+.RS
+obnam --repository=/backup --exclude='\.wav$' backup
+.RE
+.sp 1
+durch die folgende Konfigurationsdatei ersetzt werden:
+.sp 1
+.nf
+.RS
+[config]
+repository: /backup
+exclude: \.wav$
+.RE
+.fi
+.sp 1
+(Sie können sowohl
+.I foo=value
+als auch
+.I foo: value
+verwenden.)
+.PP
+Das einzig ungewöhnliche in den Konfigurationsdateien ist, wie Optionen die mehrmals auftreten können behandelt werden.
+Alle Werte werden durch Komma getrennt in eine einzige logische Zeile geschrieben (optional auch durch Leerzeichen).
+Ein Beispiel:
+.sp 1
+.RS
+.nf
+[config]
+exclude = foo, bar, \\.mp3$
+.fi
+.RE
+.sp 1
+Im Bespiel gibt es drei Werte für die
+.B exclude
+Option, alle Dateien welche
+.I foo
+oder
+.I bar
+irgendwo im fully qualified pathname enthalten oder Dateien die mit einem Punkt und
+.I mp3
+enden (exclusions sind reguläre Ausdrücke).
+.PP
+Eine lange logische Zeile kann in mehrere physische aufgespalten werden, indem mit Whitespace begonnen wird und die Folgezeilen
+dann genau so eingerückt sind:
+.sp 1
+.RS
+.nf
+[config]
+exclude = foo,
+    bar,
+    \\.mp3$
+.fi
+.RE
+.sp 1
+Das Beispiel enthält, wie das Beispiel vorher, 3 Ausschluss-Muster.
+.SS "Locking mit mehreren Clients"
+.B obnam
+unterstützt gemeinsam benutzte Repositores, die Clients können Dateiinhalte (chunks) gemeinsam nutzen.
+Wenn Client A also eine große datei sichert, und Client B die gleiche Datei hat, muss B sie nicht erneut ins Repository hochladen.
+Damit dies funktioniert, benutzen die Clients einen einfachen Locking-Mechanismus. Es kann immer nur ein einziger Client
+gemeinsam genutzte Daten im Repository verändern. Sperren (locks) verhindern keinen lesenden Zugriff, Sie können also gleichzeitig
+ein Restore durchführen, während ein anderer Client ein Backup macht.
+.PP
+Manchmal kann eine Leseoperation zur Gleichen Zeit auf die Datenstrukturen zugreifen, die gerade neu geschrieben werden.
+Dies kann zu einem Absturz führen, der allerdings weder Daten korrumpiert, noch die Wiederherstellung verfälscht.
+Eventuell müssen Sie nach einem Absturz die lesende Operation wiederholen.
+.\"---------------------------------------------------------------------
+.SH OPTIONEN
+.SS "Optionswerte"
+Der Wert
+.I SIZE
+gibt eine Größe in Byte an, wobei optionale Suffixe folgendes bedeuten:
+Kilobyte (k), Kibibyte (Ki), Megabyte (M), Mebibyte (Mi), Gigabyte (G), Gibibyte (Gi),
+Terabyte (T), Tibibyte (Ti).
+Die Suffixe sind nicht case-sensitive.
+.\" ------------------------------------------------------------------
+.SH "EXIT STATUS"
+Falls keine Fehler passierten, endet
+.B obnam
+mit einem Status von 0. Ansonsten ist der Wert ungleich Null.
+.SH UMGEBUNGSVARIABLEN
+.B obnam
+gibt die Umgebungsvariablen seines Elternprozesses ohne Änderung weiter.
+Es hört nicht auf ungewöhnliche Umgebungsvariablen, beachtet aber die üblichen wenn externe Programme ausgeführt werden,
+z.B. temporäre Dateien erzugt werden usw.
+.SH FILES
+.I /etc/obnam.conf
+.br
+.I /etc/obnam/*.conf
+.br
+.I ~/.obnam.conf
+.br
+.I ~/.config/obnam/*.conf
+.RS
+Konfigurationsdateien für
+.BR obnam .
+Es ist kein Fehler, wenn eine der Dateien oder sogar alle fehlen.
+.RE
+.SH BEISPIELE
+Ihr Home-Verzeichnis auf einen Server sichern:
+.IP
+.nf
+obnam backup \-\-repository sftp://your.server/~/backups $HOME
+.PP
+Das neueste Backup vom Server wieder herstellen:
+.IP
+.nf
+obnam restore \-\-repository sftp://your.server/~/backups \\
+\-\-to /var/tmp/my.home.dir
+.PP
+Nur eine Datei wiederherstellen (bzw. ein Verzeichnis):
+.IP
+.nf
+obnam restore \-\-repository sftp://your.server/~/backups \\
+\-\-to /var/tmp/my.home.dir $HOME/myfile.txt
+.fi
+.PP
+Alternativ dazu können Sie auch das Repository mittels FUSE mounten.
+(Dazu benötigen Sie die
+.B \-\-to
+):
+.IP
+.nf
+mkdir my-repo
+obnam mount \-\-repository sftp://your.server/~/backups \\
+\-\-to my-repo
+cp my-repo/latest/$HOME/myfile.txt
+fusermount -u my-repo
+.PP
+Prüfen ob das Backup funktioniert hat:
+.IP
+.nf
+obnam verify \-\-repository sftp://your.server/~/backups \\
+/path/to/file
+.PP
+Alte Backups löschen, das jeweils neueste Backup eines Tages behalten (10 Jahre lang):
+.IP
+.nf
+obnam forget \-\-repository sftp://your.server/~/backups \\
+\-\-keep 3650d
+.PP
+Das Repository überprüfen:
+.IP
+.nf
+obnam fsck \-\-repository sftp://your.server/~/backups
+.fi
+.PP
+Mittels FUSE die gesicherten Dateien betrachten:
+.IP
+.nf
+obnam mount \-\-to my-fuse
+ls -lh my-fuse
+fusermount -u my-fuse
+.fi
+.SH "SIEHE AUCH"
+.B obnam
+wird mit Handbüchern in den Formaten HTML und PDF geliefert.
+Schauen Sie in 
+.I /usr/share/doc/obnam
+wenn Sie obnam systemweit installiert haben, oder in das Unterverzeichnis
+.I
+manual
+im Verzeichnis mit dem Quellcode.
+.SH ÜBERSETZUNG
+Die deutsche Übersetzung dieser Handbuchseite wurde von Jan Niggemann <jn@hz6.de> erstellt.
+
+Dieses Werk steht unter der GNU General Public License Version 3
+oder,je nach Vorliebe, einer beliebigen neueren Version.
+
+Es wird KEINE HAFTUNG übernommen.
+
+Wenn Sie Fehler in der Übersetzung dieser Handbuchseite finden, schicken 
+Sie bitte eine E-Mail an <obnam-dev@obnam.org>.
+
+.TP
+.BR cliapp (5)
