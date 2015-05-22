@@ -36,7 +36,6 @@ class ToplevelIsFileError(obnamlib.ObnamError):
 class _OpenClientInfo(object):
 
     def __init__(self, client):
-        self.locked = False
         self.client = client
         self.current_generation_number = None
         self.generations_removed = False
@@ -278,8 +277,6 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
         # Remember that we have the lock.
         self._open_client(client_name) # Ensure client is open
-        open_client_info = self._open_client_infos[client_name]
-        open_client_info.locked = True
 
     def _raw_unlock_client(self, client_name):
         tracing.trace('client_name=%s', client_name)
@@ -289,8 +286,9 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     def client_is_locked(self, client_name):
         logging.info('Checking if %s is locked' % client_name)
-        client = self._open_client(client_name)
-        return self._lockmgr.is_locked(client.dirname)
+        client_id = self._get_client_id(client_name)
+        client_dir = self._get_client_dir(client_id)
+        return self._lockmgr.is_locked(client_dir)
 
     def lock_client(self, client_name):
         logging.info('Locking client %s' % client_name)
@@ -306,18 +304,18 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     def got_client_lock(self, client_name):
         tracing.trace('client_name=%s', client_name)
-        if client_name not in self._open_client_infos:
-            return False
-        open_client_info = self._open_client_infos[client_name]
-        return open_client_info.locked
+        client_id = self._get_client_id(client_name)
+        client_dir = self._get_client_dir(client_id)
+        return self._lockmgr.got_lock(client_dir)
 
     def force_client_lock(self, client_name):
         logging.info('Forcing client lock open for %s', client_name)
+
+        client_id = self._get_client_id(client_name)
+        client_dir = self._get_client_dir(client_id)
+        self._lockmgr.force([client_dir])
+
         self._open_client(client_name)
-        open_client_info = self._open_client_infos[client_name]
-        lock_name = os.path.join(open_client_info.client.dirname, 'lock')
-        if self._real_fs.exists(lock_name):
-            self._real_fs.remove(lock_name)
         del self._open_client_infos[client_name]
         self._setup_file_key_cache()
 
