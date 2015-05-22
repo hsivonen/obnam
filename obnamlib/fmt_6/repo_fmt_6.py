@@ -104,27 +104,25 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
     # Client list handling.
 
     def _setup_client_list(self):
-        self._got_client_list_lock = False
         self._added_clients = []
         self._client_list = obnamlib.ClientList(
             self._fs, self._node_size, self._upload_queue_size,
             self._lru_size, self)
 
     def _raw_lock_client_list(self):
-        if self._got_client_list_lock:
+        if self.got_client_list_lock():
             raise obnamlib.RepositoryClientListLockingFailed()
         self._lockmgr.lock(['.'])
-        self._got_client_list_lock = True
         self._client_list.start_changes()
 
     def _raw_unlock_client_list(self):
-        if not self._got_client_list_lock:
+        if not self.got_client_list_lock():
             raise obnamlib.RepositoryClientListNotLocked()
         self._lockmgr.unlock(['.'])
         self._setup_client_list()
 
     def _require_client_list_lock(self):
-        if not self._got_client_list_lock:
+        if not self.got_client_list_lock():
             raise obnamlib.RepositoryClientListNotLocked()
 
     def lock_client_list(self):
@@ -145,13 +143,11 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._raw_unlock_client_list()
 
     def got_client_list_lock(self):
-        return self._got_client_list_lock
+        return self._lockmgr.got_lock('.')
 
     def force_client_list_lock(self):
         tracing.trace('forcing client list lock')
-        lock_name = os.path.join('lock')
-        if self._real_fs.exists(lock_name):
-            self._real_fs.remove(lock_name)
+        self._lockmgr.force(['.'])
         self._setup_client_list()
 
     def get_client_names(self):
