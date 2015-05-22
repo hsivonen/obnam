@@ -275,14 +275,13 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         # Actually lock the directory.
         self._lockmgr.lock([client_dir])
 
-        # Remember that we have the lock.
-        self._open_client(client_name) # Ensure client is open
-
     def _raw_unlock_client(self, client_name):
         tracing.trace('client_name=%s', client_name)
-        open_client_info = self._open_client_infos[client_name]
-        self._lockmgr.unlock([open_client_info.client.dirname])
-        del self._open_client_infos[client_name]
+        client_id = self._get_client_id(client_name)
+        client_dir = self._get_client_dir(client_id)
+        self._lockmgr.unlock([client_dir])
+        if client_name in self._open_client_infos:
+            del self._open_client_infos[client_name]
 
     def client_is_locked(self, client_name):
         logging.info('Checking if %s is locked' % client_name)
@@ -326,6 +325,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
         self._flush_file_key_cache()
 
+        self._open_client(client_name) # Ensure client is open
         open_client_info = self._open_client_infos[client_name]
 
         if open_client_info.current_generation_number:
@@ -391,6 +391,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             key_name=obnamlib.repo_key_name(key))
 
     def get_client_generation_ids(self, client_name):
+        self._open_client(client_name) # Ensure client is open
         client_info = self._get_open_client_info(client_name)
         self._refresh_open_client_info_cached_generation_ids(
             client_name, client_info)
@@ -424,6 +425,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._require_existing_client(client_name)
         self._require_client_lock(client_name)
 
+        self._open_client(client_name) # Ensure client is open
         open_client_info = self._open_client_infos[client_name]
         if open_client_info.current_generation_number is not None:
             raise obnamlib.RepositoryClientGenerationUnfinished(
@@ -550,6 +552,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._require_client_lock(client_name)
         self._require_existing_generation(gen_id)
 
+        self._open_client(client_name) # Ensure client is open
         open_client_info = self._open_client_infos[client_name]
         if gen_number == open_client_info.current_generation_number:
             open_client_info.current_generation_number = None
