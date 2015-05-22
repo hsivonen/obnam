@@ -102,7 +102,9 @@ class LockManagerTests(unittest.TestCase):
         self.lm.lock([self.dirnames[-1]])
         self.lm.force([self.dirnames[-1]])
         self.assertFalse(self.lm.is_locked(self.dirnames[-1]))
+        self.assertFalse(self.lm.got_lock(self.dirnames[-1]))
 
     def test_forces_missng_lock(self):
         self.lm.force([self.dirnames[-1]])
         self.assertFalse(self.lm.is_locked(self.dirnames[-1]))
+        self.assertFalse(self.lm.got_lock(self.dirnames[-1]))
