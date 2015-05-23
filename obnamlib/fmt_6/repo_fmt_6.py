@@ -697,7 +697,6 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         return hashlib.md5(data).hexdigest()
 
     def _setup_chunk_indexes(self):
-        self._got_chunk_indexes_lock = False
         self._chunklist = obnamlib.ChunkList(
             self._fs, self._node_size, self._upload_queue_size,
             self._lru_size, self)
@@ -712,15 +711,14 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             self._chunk_idpath.dirname]
 
     def _require_chunk_indexes_lock(self):
-        if not self._got_chunk_indexes_lock:
+        if not self.got_chunk_indexes_lock():
             raise obnamlib.RepositoryChunkIndexesNotLocked()
 
     def _raw_lock_chunk_indexes(self):
-        if self._got_chunk_indexes_lock:
+        if self.got_chunk_indexes_lock():
             raise obnamlib.RepositoryChunkIndexesLockingFailed()
 
         self._lockmgr.lock(self._chunk_index_dirs_to_lock())
-        self._got_chunk_indexes_lock = True
 
         tracing.trace('starting changes in chunksums and chunklist')
         self._chunksums.start_changes()
@@ -747,15 +745,13 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._raw_unlock_chunk_indexes()
 
     def got_chunk_indexes_lock(self):
-        return self._got_chunk_indexes_lock
+        return all(
+            self._lockmgr.got_lock(x)
+            for x in self._chunk_index_dirs_to_lock())
 
     def force_chunk_indexes_lock(self):
         tracing.trace('forcing chunk indexes lock')
-        lock_name = os.path.join('lock')
-        for dirname in self._chunk_index_dirs_to_lock():
-            lock_name = os.path.join(dirname, 'lock')
-            if self._real_fs.exists(lock_name):
-                self._real_fs.remove(lock_name)
+        self._lockmgr.force(self._chunk_index_dirs_to_lock())
         self._setup_chunk_indexes()
 
     def commit_chunk_indexes(self):
