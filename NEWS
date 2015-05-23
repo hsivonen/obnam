@@ -6,6 +6,15 @@ This file summarizes changes between releases of Obnam.
 Version 1.10, released UNRELEASED
 --------------------------------
 
+Major bug fixes:
+
+* Lars Wirzenius fixed the `obnam backup` command to lock the whole
+  repository, the same way as `obnam forget` does, when it removes
+  checkpoint generations. This means that during checkpoint removal,
+  no other client can make a backup, which is unfortunate. To avoid
+  that, set `leave-checkpoints = yes` in the configuration. That will
+  prevent `obnam backup` from removing checkpoints.
+
 Minor new features:
 
 * Lars Wirzenius added the `obnam list-formats` command to list all
