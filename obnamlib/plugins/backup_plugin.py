@@ -416,8 +416,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         prefix = 'removing checkpoints'
         self.progress.what(prefix)
 
-        self.repo.lock_client(self.client_name)
-        self.repo.lock_chunk_indexes()
+        self.repo.lock_everything()
 
         for gen in self.checkpoint_manager.checkpoints:
             self.progress.update_progress_with_removed_checkpoint(gen)
@@ -429,6 +428,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         self.progress.what(prefix + ': commiting shared B-trees')
         self.repo.commit_chunk_indexes()
+
+        self.repo.unlock_everything()
 
     def finish_backup(self, args):
         self.progress.what('closing connection to repository')
