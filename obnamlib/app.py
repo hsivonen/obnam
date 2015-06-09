@@ -207,13 +207,15 @@ class App(cliapp.Application):
                 cliapp.Application.process_args(self, args)
                 self.hooks.call('shutdown')
             except IOError as e:
+                logging.critical('Caught IOError: %s', str(e), exc_info=True)
                 raise ObnamIOError(
                     errno=e.errno, strerror=e.strerror, filename=e.filename)
             except OSError as e:
+                logging.critical('Caught OSError: %s', str(e), exc_info=True)
                 raise ObnamSystemError(
                     errno=e.errno, strerror=e.strerror, filename=e.filename)
         except larch.Error as e:
-            logging.critical(str(e))
+            logging.critical(str(e), exc_info=True)
             sys.stderr.write('ERROR: %s\n' % str(e))
             sys.exit(1)
         except obnamlib.StructuredError as e:
