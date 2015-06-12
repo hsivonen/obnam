@@ -516,7 +516,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
         try:
             self.remove(pathname)
         except OSError, e:
-            if e.errno != errno.ENOENT:
+            if e.errno not in (errno.ENOENT, errno.EACCES):
                 raise
 
     @ioerror_to_oserror

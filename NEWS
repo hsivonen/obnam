@@ -28,6 +28,10 @@ Minor new features:
   introduced. It is not ready for actual use, and is only added so
   that its code doesn't diverge far from the main line of development.
 
+* Teemu Hukkanen reported that the Synology NAS device returns EACCES
+  instead of ENOENT when user tries to remove a non-existent file.
+  Obnam now copes with either error code.
+
 Minor fixes:
 
 * `python setup.py build` no longer formats the manual page into plain
