@@ -38,6 +38,10 @@ Minor fixes:
   text. This is now done in `python setup.py docs` instead. The latter
   is an optional build step, and probably only works on Debian.
 
+* `obnam restore --to=DIR` now requires that the directory `DIR`
+  either doesn't exist, or it is empty when the restore starts. This
+  is to prevent users from restore on top of a running system.
+
 Version 1.9, released 2015-03-22
 --------------------------------
 

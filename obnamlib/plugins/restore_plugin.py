@@ -37,6 +37,11 @@ class RestoreErrors(obnamlib.ObnamError):
     '''
 
 
+class RestoreTargetNotEmpty(obnamlib.ObnamError):
+
+    msg = '''The restore --to directory ({to}) is not empty.'''
+
+
 class Hardlinks(object):
 
     '''Keep track of inodes with unrestored hardlinks.'''
@@ -82,7 +87,8 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             arg_synopsis='[DIRECTORY]...')
         self.app.settings.string(
             ['to'],
-            'where to restore or FUSE mount')
+            'where to restore or FUSE mount; '
+            'for restores, must be empty or must not exist')
         self.app.settings.string_list(
             ['generation'],
             'which generation to restore',
@@ -137,6 +143,11 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         if self.write_ok:
             self.fs = self.app.fsf.new(self.app.settings['to'], create=True)
             self.fs.connect()
+
+            # The --to directory MUST be empty, to prevent users from
+            # accidentally restoring over /.
+            if self.fs.listdir('.') != []:
+                raise RestoreTargetNotEmpty(to=self.app.settings['to'])
 
             # Set permissions on this directory to be quite
             # restrictive, so that nobody else can access the files

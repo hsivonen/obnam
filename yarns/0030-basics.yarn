@@ -200,6 +200,31 @@ the manifest to avoid getting an error.
     AND user U restores file L/F to X from their latest generation in repository R
     THEN L/F, restored to X, matches manifest M
 
+Restores must happen to a non-existent or an empty directory
+------------------------------------------------------------
+
+To avoid people doing unfortunate things such as `obnam restore
+--to=/` we make sure the target directory of restore either does not
+exist, or it's empty.
+
+    SCENARIO restore only to empty or new target
+    GIVEN 1kB of new data in directory L
+    AND a manifest of L in M
+    AND 0kB of new data in directory EMPTY
+    AND 2kB of new data in directory NOTEMPTY
+
+    WHEN user U backs up directory L to repository R
+    AND user U restores their latest generation in repository R into EMPTY
+    THEN L, restored to EMPTY, matches manifest M
+
+    WHEN user U restores their latest generation in repository R into NOTEXIST
+    THEN L, restored to NOTEXIST, matches manifest M
+
+    WHEN user U attempts to restore their latest generation 
+    ... in repository R into NOTEMPTY
+    THEN the attempt failed with exit code 1
+
+
 Pretend backing up: the `--pretend` setting
 -------------------------------------------
 
