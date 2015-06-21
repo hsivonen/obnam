@@ -232,9 +232,12 @@ class Check(Command):
         runcmd(['./test-sftpfs'])
 
     def run_nitpick_checks(self):
-        sources = self.find_all_source_files()
-        self.check_sources_for_nitpicks(sources)
-        self.check_copyright_statements(sources)
+        if os.path.exists('.git'):
+            sources = self.find_all_source_files()
+            self.check_sources_for_nitpicks(sources)
+            self.check_copyright_statements(sources)
+        else:
+            print "no .git, no nitpick for you"
 
     def check_sources_for_nitpicks(self, sources):
         cliapp.runcmd(['./nitpicker'] + sources, stdout=None, stderr=None)
