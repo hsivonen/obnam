@@ -21,7 +21,8 @@ Build-Depends: debhelper (>= 7.3.8),
     pandoc,
     texlive,
     texlive-lang-german,
-    lmodern
+    lmodern,
+    git
 Homepage: http://obnam.org/
 X-Python-Version: >= 2.6
 

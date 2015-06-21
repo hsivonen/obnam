@@ -3,6 +3,7 @@ obnam (1.10-1) UNRELEASED; urgency=medium
   * New upstream version.
     * Fix "restore to /tmp messes up directory perms" by preventing
       restores to a non-empty directory. (Closes: #760492)
+  * Add build-dependency on git.
 
  -- Lars Wirzenius <liw@liw.fi>  Sat, 13 Jun 2015 09:34:51 +0300
 
