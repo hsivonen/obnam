@@ -26,15 +26,20 @@ VERSION = Version $(shell git describe || python ../setup.py --version)
 en_sources = $(shell ls en/*.mdwn)
 fr_sources = $(shell ls fr/*.mdwn)
 de_sources = $(shell ls de/*.mdwn)
-outputs = \
+pdfs = \
         obnam-manual.en.pdf \
-        obnam-manual.en.html \
 	obnam-manual.fr.pdf \
+        obnam-manual.de.pdf
+htmls = \
+        obnam-manual.en.html \
 	obnam-manual.fr.html \
-        obnam-manual.de.pdf \
         obnam-manual.de.html
 
-all: $(outputs)
+all: html pdf
+
+html: $(htmls)
+
+pdf: $(pdfs)
 
 obnam-manual.en.pdf: Makefile $(en_sources)
 	./format-pdf $@ "$(TITLE_EN)" "$(AUTHOR)" "$(VERSION)" $(en_sources)

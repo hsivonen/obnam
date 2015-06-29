@@ -4,6 +4,8 @@ obnam (1.10-1) UNRELEASED; urgency=medium
     * Fix "restore to /tmp messes up directory perms" by preventing
       restores to a non-empty directory. (Closes: #760492)
   * Add build-dependency on git.
+  * Drop build-dependency on texlive and building of PDF form of manual.
+    Texlive is an insanely large build dependency.
 
  -- Lars Wirzenius <liw@liw.fi>  Sat, 13 Jun 2015 09:34:51 +0300
 
