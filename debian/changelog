@@ -1,4 +1,4 @@
-obnam (1.10.1) unstable; urgency=medium
+obnam (1.11) unstable; urgency=medium
 
   * New upstream version. Fixes the "import fmt_ga" failure.
   * Change source package format to 3.0 (quilt).
