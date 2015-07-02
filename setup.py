@@ -288,7 +288,7 @@ class Check(Command):
 
 
 setup(name='obnam',
-      version='1.10',
+      version='1.10.1',
       description='Backup software',
       author='Lars Wirzenius',
       author_email='liw@liw.fi',
@@ -298,6 +298,7 @@ setup(name='obnam',
           'obnamlib',
           'obnamlib.plugins',
           'obnamlib.fmt_6',
+          'obnamlib.fmt_ga',
           'obnamlib.fmt_simple'
       ],
       ext_modules=[Extension('obnamlib._obnam', sources=['_obnammodule.c'])],

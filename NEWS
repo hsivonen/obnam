@@ -3,6 +3,12 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
+Version 1.10.1, released 2015-07-02
+-----------------------------------
+
+* The 1.10 release failed to correctly include the Green Albatross
+  code, due to a missing line in `setup.py`. This has been fixed.
+
 Version 1.10, released 2015-07-01
 ---------------------------------
 
