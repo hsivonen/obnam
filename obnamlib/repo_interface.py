@@ -73,6 +73,7 @@ _integer_keys = [
 for i, name in enumerate(_string_keys + _integer_keys):
     globals()[name] = i
 
+
 def _filter_integer_keys(prefix):
     return [globals()[name]
             for name in _integer_keys
@@ -311,7 +312,7 @@ class RepositoryInterface(object):
     # Operations on the repository itself.
 
     @classmethod
-    def setup_hooks(self, hooks): # pragma: no cover
+    def setup_hooks(self, hooks):  # pragma: no cover
         '''Create any hooks for this repository format.
 
         Note that this is a class method.
@@ -692,7 +693,7 @@ class RepositoryInterface(object):
         '''
         raise NotImplementedError()
 
-    def walk_generation(self, gen_id, dirname): # pragma: no cover
+    def walk_generation(self, gen_id, dirname):  # pragma: no cover
         '''Like os.walk, but for a generation.
 
         This is a generator. Each return value is a pathname.
@@ -858,7 +859,7 @@ class RepositoryInterface(object):
         raise NotImplementedError()
 
 
-class RepositoryInterfaceTests(unittest.TestCase): # pragma: no cover
+class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
 
     '''Tests for implementations of RepositoryInterface.
 

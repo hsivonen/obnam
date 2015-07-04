@@ -38,20 +38,26 @@ class ForgetPolicyParseTests(unittest.TestCase):
         self.assertRaises(obnamlib.ObnamError, self.fp.parse, '1h 2d')
 
     def test_parses_single_rule(self):
-        self.assertEqual(self.fp.parse('7d'),
-                         { 'hourly': 0,
-                           'daily': 7,
-                           'weekly': 0,
-                           'monthly': 0,
-                           'yearly': 0 })
+        self.assertEqual(
+            self.fp.parse('7d'),
+            {
+                'hourly': 0,
+                'daily': 7,
+                'weekly': 0,
+                'monthly': 0,
+                'yearly': 0
+            })
 
     def test_parses_multiple_rules(self):
-        self.assertEqual(self.fp.parse('1h,2d,3w,4m,255y'),
-                         { 'hourly': 1,
-                           'daily': 2,
-                           'weekly': 3,
-                           'monthly': 4,
-                           'yearly': 255 })
+        self.assertEqual(
+            self.fp.parse('1h,2d,3w,4m,255y'),
+            {
+                'hourly': 1,
+                'daily': 2,
+                'weekly': 3,
+                'monthly': 4,
+                'yearly': 255
+            })
 
 
 class ForgetPolicyMatchTests(unittest.TestCase):
@@ -64,25 +70,25 @@ class ForgetPolicyMatchTests(unittest.TestCase):
         return [dt for i, dt in self.fp.match(rules, list(enumerate(times)))]
 
     def test_hourly_matches(self):
-        h0m0 =  datetime.datetime(2000, 1, 1, 0, 0)
+        h0m0 = datetime.datetime(2000, 1, 1, 0, 0)
         h0m59 = datetime.datetime(2000, 1, 1, 0, 59)
-        h1m0 =  datetime.datetime(2000, 1, 1, 1, 0)
+        h1m0 = datetime.datetime(2000, 1, 1, 1, 0)
         h1m59 = datetime.datetime(2000, 1, 1, 1, 59)
         self.assertEqual(self.match2('1h', [h0m0, h0m59, h1m0, h1m59]),
                          [h1m59])
 
     def test_two_hourly_matches(self):
-        h0m0 =  datetime.datetime(2000, 1, 1, 0, 0)
+        h0m0 = datetime.datetime(2000, 1, 1, 0, 0)
         h0m59 = datetime.datetime(2000, 1, 1, 0, 59)
-        h1m0 =  datetime.datetime(2000, 1, 1, 1, 0)
+        h1m0 = datetime.datetime(2000, 1, 1, 1, 0)
         h1m59 = datetime.datetime(2000, 1, 1, 1, 59)
         self.assertEqual(self.match2('2h', [h0m0, h0m59, h1m0, h1m59]),
                          [h0m59, h1m59])
 
     def test_daily_matches(self):
-        d1h0 =  datetime.datetime(2000, 1, 1, 0, 0)
+        d1h0 = datetime.datetime(2000, 1, 1, 0, 0)
         d1h23 = datetime.datetime(2000, 1, 1, 23, 0)
-        d2h0 =  datetime.datetime(2000, 1, 2, 0, 0)
+        d2h0 = datetime.datetime(2000, 1, 2, 0, 0)
         d2h23 = datetime.datetime(2000, 1, 2, 23, 0)
         self.assertEqual(self.match2('1d', [d1h0, d1h23, d2h0, d2h23]),
                          [d2h23])
@@ -91,17 +97,17 @@ class ForgetPolicyMatchTests(unittest.TestCase):
     # a sensible test case right now.
 
     def test_monthly_matches(self):
-        m1d1 =  datetime.datetime(2000, 1, 1, 0, 0)
+        m1d1 = datetime.datetime(2000, 1, 1, 0, 0)
         m1d28 = datetime.datetime(2000, 1, 28, 0, 0)
-        m2d1 =  datetime.datetime(2000, 2, 1, 0, 0)
+        m2d1 = datetime.datetime(2000, 2, 1, 0, 0)
         m2d28 = datetime.datetime(2000, 2, 28, 0, 0)
         self.assertEqual(self.match2('1m', [m1d1, m1d28, m2d1, m2d28]),
                          [m2d28])
 
     def test_yearly_matches(self):
-        y1m1 =  datetime.datetime(2000, 1, 1, 0, 0)
+        y1m1 = datetime.datetime(2000, 1, 1, 0, 0)
         y1m12 = datetime.datetime(2000, 12, 1, 0, 0)
-        y2m1 =  datetime.datetime(2001, 1, 1, 0, 0)
+        y2m1 = datetime.datetime(2001, 1, 1, 0, 0)
         y2m12 = datetime.datetime(2001, 12, 1, 0, 0)
         self.assertEqual(self.match2('1y', [y1m1, y1m12, y2m1, y2m12]),
                          [y2m12])
@@ -125,4 +131,3 @@ class ForgetPolicyMatchTests(unittest.TestCase):
         d3 = datetime.datetime(2000, 1, 3, 0, 0)
         self.assertEqual(self.match2('10h,1d', [d1, d2, d3]),
                          [d1, d2, d3])
-

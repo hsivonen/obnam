@@ -78,8 +78,8 @@ class ClientList(obnamlib.RepositoryTree):
         if self.init_forest() and self.forest.trees:
             t = self.forest.trees[-1]
             return [v
-                     for k, v in t.lookup_range(self.minkey, self.maxkey)
-                     if self.unkey(k)[2] == self.CLIENT_NAME]
+                    for k, v in t.lookup_range(self.minkey, self.maxkey)
+                    if self.unkey(k)[2] == self.CLIENT_NAME]
         else:
             return []
 
@@ -140,4 +140,3 @@ class ClientList(obnamlib.RepositoryTree):
             self.tree.remove_range(key, key)
         else:
             self.tree.insert(key, keyid)
-

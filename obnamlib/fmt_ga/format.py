@@ -54,7 +54,7 @@ class RepositoryFormatGA(obnamlib.RepositoryDelegator):
     def get_allowed_client_keys(self):
         return []
 
-    def get_client_key(self, client_name, key): # pragma: no cover
+    def get_client_key(self, client_name, key):  # pragma: no cover
         raise obnamlib.RepositoryClientKeyNotAllowed(
             format=self.format,
             client_name=client_name,
@@ -66,7 +66,7 @@ class RepositoryFormatGA(obnamlib.RepositoryDelegator):
             client_name=client_name,
             key_name=obnamlib.repo_key_name(key))
 
-    def get_client_extra_data_directory(self, client_name): # pragma: no cover
+    def get_client_extra_data_directory(self, client_name):  # pragma: no cover
         if client_name not in self.get_client_names():
             raise obnamlib.RepositoryClientDoesNotExist(
                 client_name=client_name)

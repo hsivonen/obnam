@@ -125,7 +125,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         self.app.settings.require('to')
 
         logging.debug('restoring generation %s' %
-                        self.app.settings['generation'])
+                      self.app.settings['generation'])
         logging.debug('restoring to %s' % self.app.settings['to'])
 
         logging.debug('restoring what: %s' % repr(args))
@@ -157,7 +157,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             # the permissions will eventually be correct.
             self.fs.chmod_not_symlink('.', 0700)
         else:
-            self.fs = None # this will trigger error if we try to really write
+            self.fs = None  # this will trigger error if we try to really write
 
         self.hardlinks = Hardlinks()
 
@@ -200,6 +200,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
 
     def construct_metadata_object(self, gen, filename):
         allowed = set(self.repo.get_allowed_file_keys())
+
         def K(key):
             if key in allowed:
                 return self.repo.get_file_key(gen, filename, key)
@@ -384,7 +385,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             if self.downloaded_bytes >= size_base:
                 if size_base > 0:
                     size_amount = (float(self.downloaded_bytes) /
-                                    float(size_base))
+                                   float(size_base))
                 else:
                     size_amount = float(self.downloaded_bytes)
                 break
@@ -419,12 +420,12 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         logging.info('Restore performance statistics:')
         logging.info('* files restored: %s' % self.file_count)
         logging.info('* downloaded data: %s bytes (%s %s)' %
-                        (self.downloaded_bytes, size_amount, size_unit))
+                     (self.downloaded_bytes, size_amount, size_unit))
         logging.info('* duration: %s s' % duration)
         logging.info('* average speed: %s %s' % (speed_amount, speed_unit))
         self.app.ts.notify(
             'Restored %d files, '
             'downloaded %.1f %s in %s at %.1f %s average speed' %
-                (self.file_count,
-                 size_amount, size_unit,
-                 duration_string, speed_amount, speed_unit))
+            (self.file_count,
+             size_amount, size_unit,
+             duration_string, speed_amount, speed_unit))

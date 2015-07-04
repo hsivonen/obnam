@@ -24,8 +24,8 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
     '''Forget generations.'''
 
     def enable(self):
-        self.app.add_subcommand('forget', self.forget,
-            arg_synopsis='[GENERATION]...')
+        self.app.add_subcommand(
+            'forget', self.forget, arg_synopsis='[GENERATION]...')
         self.app.settings.string(
             ['keep'],
             'policy for what generations to keep '
@@ -83,11 +83,11 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
                 genid = self.repo.interpret_generation_spec(
                     client_name, genspec)
                 self.app.ts.notify(
-                    'Forgetting generation %s' % 
+                    'Forgetting generation %s' %
                     self.repo.make_generation_spec(genid))
                 self.remove(genid)
                 self.app.dump_memory_profile(
-                    'after removing %s' % 
+                    'after removing %s' %
                     self.repo.make_generation_spec(genid))
         elif self.app.settings['keep']:
             genlist = []
@@ -112,7 +112,7 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
                 self.app.ts['gen'] = genid
                 self.remove(genid)
                 self.app.dump_memory_profile(
-                    'after removing %s' % 
+                    'after removing %s' %
                     self.repo.make_generation_spec(genid))
 
         # Commit or unlock everything.
@@ -127,7 +127,7 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
     def remove(self, genid):
         if self.app.settings['pretend']:
             self.app.ts.notify(
-                'Pretending to remove generation %s' % 
+                'Pretending to remove generation %s' %
                 self.repo.make_generation_spec(genid))
         else:
             self.repo.remove_generation(genid)

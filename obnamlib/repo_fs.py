@@ -49,12 +49,12 @@ class RepositoryFS(object):
         parts = filename.split(os.sep)
         if len(parts) >= 1:
             return parts[0]
-        else: # pragma: no cover
+        else:  # pragma: no cover
             raise ToplevelIsFileError(filename=filename)
 
     def cat(self, filename, runfilters=True):
         data = self.fs.cat(filename)
-        if not runfilters: # pragma: no cover
+        if not runfilters:  # pragma: no cover
             return data
         toplevel = self._get_toplevel(filename)
         return self.hooks.filter_read('repository-data', data,

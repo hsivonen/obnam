@@ -20,11 +20,12 @@ import cliapp
 __version__ = '1.11'
 
 
-
 # Import _obnam if it is there. We need to be able to do things without
 # it, especially at build time, while we're generating manual pages.
 # If _obnam is not there, substitute a dummy that throws an exception
 # if used.
+
+
 class DummyExtension(object):
     def __getattr__(self, name):
         raise Exception('Trying to use _obnam, but that was not found.')
@@ -38,6 +39,7 @@ except ImportError:
 # of obnamlib.ObnamError.
 
 from structurederror import StructuredError
+
 
 class ObnamError(StructuredError):
 

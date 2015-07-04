@@ -70,7 +70,7 @@ class CheckFile(WorkItem):
 
     def do(self):
         logging.debug('Checking client=%s genid=%s filename=%s' %
-                        (self.client_name, self.genid, self.filename))
+                      (self.client_name, self.genid, self.filename))
         mode = self.repo.get_file_key(
             self.genid, self.filename, obnamlib.REPO_FILE_MODE)
         if stat.S_ISREG(mode) and not self.settings['fsck-ignore-chunks']:
@@ -94,7 +94,7 @@ class CheckDirectory(WorkItem):
 
     def do(self):
         logging.debug('Checking client=%s genid=%s dirname=%s' %
-                        (self.client_name, self.genid, self.dirname))
+                      (self.client_name, self.genid, self.dirname))
         for pathname in self.repo.get_file_children(self.genid, self.dirname):
             mode = self.repo.get_file_key(
                 self.genid, pathname, obnamlib.REPO_FILE_MODE)
@@ -113,7 +113,7 @@ class CheckGeneration(WorkItem):
 
     def do(self):
         logging.debug('Checking client=%s genid=%s' %
-                        (self.client_name, self.genid))
+                      (self.client_name, self.genid))
 
         started = self.repo.get_generation_key(
             self.genid, obnamlib.REPO_GENERATION_STARTED)
@@ -121,10 +121,10 @@ class CheckGeneration(WorkItem):
             self.genid, obnamlib.REPO_GENERATION_ENDED)
         if started is None:
             self.error('%s:%s: no generation start time' %
-                        (self.client_name, self.genid))
+                       (self.client_name, self.genid))
         if ended is None:
             self.error('%s:%s: no generation end time' %
-                        (self.client_name, self.genid))
+                       (self.client_name, self.genid))
 
         n = self.repo.get_generation_key(
             self.genid, obnamlib.REPO_GENERATION_FILE_COUNT)
@@ -152,7 +152,7 @@ class CheckGenerationIdsAreDifferent(WorkItem):
 
     def do(self):
         logging.debug('Checking genid uniqueness for client=%s' %
-                        self.client_name)
+                      self.client_name)
         done = set()
         while self.genids:
             genid = self.genids.pop()
@@ -244,7 +244,7 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         self.app.settings.boolean(
             ['fsck-ignore-chunks'],
             'ignore chunks when checking repository integrity (assume all '
-                'chunks exist and are correct)',
+            'chunks exist and are correct)',
             group=group)
 
         self.app.settings.string_list(
@@ -296,7 +296,7 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         logging.debug('fsck on %s' % self.app.settings['repository'])
 
         rm_unused_chunks = self.app.settings['fsck-rm-unused'] \
-                or self.app.settings['fsck-fix']
+            or self.app.settings['fsck-fix']
 
         self.configure_ttystatus()
 
@@ -361,4 +361,3 @@ class FsckPlugin(obnamlib.ObnamPlugin):
     def warning(self, msg):
         logging.warning(msg)
         self.app.ts.notify(msg)
-

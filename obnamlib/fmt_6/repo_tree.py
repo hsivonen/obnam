@@ -90,8 +90,10 @@ class RepositoryTree(object):
         if self.tree is None and create_tree:
             if self.forest.trees:
                 self.tree = self.forest.new_tree(self.forest.trees[-1])
-                tracing.trace('use newest tree %s (of %d)', self.tree.root.id,
-                                len(self.forest.trees))
+                tracing.trace(
+                    'use newest tree %s (of %d)',
+                    self.tree.root.id,
+                    len(self.forest.trees))
             else:
                 self.tree = self.forest.new_tree()
                 tracing.trace('new tree root id %s', self.tree.root.id)
@@ -106,4 +108,3 @@ class RepositoryTree(object):
                     self.forest.remove_tree(self.forest.trees[0])
             self.forest.commit()
             self.tree = None
-

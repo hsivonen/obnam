@@ -97,7 +97,7 @@ class ExcludePathnamesPlugin(obnamlib.ObnamPlugin):
                 msg = ('error compiling regular expression "%s": %s' % (x, e))
                 logging.error(msg)
                 self.progress.error(msg)
-                
+
     def read_patterns_from_files(self, filenames):
         patterns = []
         for filename in filenames:

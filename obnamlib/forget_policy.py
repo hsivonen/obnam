@@ -35,8 +35,6 @@ class SeparatorError(obnamlib.ObnamError):
            'see position {position}: {policy}')
 
 
-
-
 class ForgetPolicy(object):
 
     '''Parse and interpret a policy for what to forget and what to keep.
@@ -133,4 +131,3 @@ class ForgetPolicy(object):
 
         return [(genid, dt) for genid, dt in genlist
                 if genid in result_ids]
-

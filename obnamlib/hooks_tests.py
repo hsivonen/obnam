@@ -20,6 +20,7 @@ import obnamlib
 
 import base64
 
+
 class HookTests(unittest.TestCase):
 
     def setUp(self):
@@ -63,12 +64,13 @@ class HookTests(unittest.TestCase):
         self.hook.add_callback(self.callback)
         self.hook.call_callbacks('bar', kwarg='foobar')
         self.assertEqual(self.args, ('bar',))
-        self.assertEqual(self.kwargs, { 'kwarg': 'foobar' })
+        self.assertEqual(self.kwargs, {'kwarg': 'foobar'})
 
     def test_removes_callback(self):
         cb_id = self.hook.add_callback(self.callback)
         self.hook.remove_callback(cb_id)
         self.assertEqual(self.hook.callbacks, [])
+
 
 class NeverAddsFilter(object):
 
@@ -87,6 +89,7 @@ class NeverAddsFilter(object):
         self.wasread = False
         return data
 
+
 class Base64Filter(object):
 
     def __init__(self):
@@ -103,6 +106,7 @@ class Base64Filter(object):
         self.kwargs = kwargs
         self.wasread = False
         return base64.b64encode(data)
+
 
 class FilterHookTests(unittest.TestCase):
 
@@ -146,6 +150,7 @@ class FilterHookTests(unittest.TestCase):
     def test_call_callbacks_raises(self):
         self.assertRaises(NotImplementedError, self.hook.call_callbacks, "")
 
+
 class HookManagerTests(unittest.TestCase):
 
     def setUp(self):
@@ -161,7 +166,7 @@ class HookManagerTests(unittest.TestCase):
         self.assertEqual(hooks.hooks, {})
 
     def test_adds_new_hook(self):
-        self.assert_(self.hooks.hooks.has_key('foo'))
+        self.assertIn('foo', self.hooks.hooks)
 
     def test_adds_new_filter_hook(self):
         self.hooks.new_filter('bar')
@@ -180,7 +185,7 @@ class HookManagerTests(unittest.TestCase):
         self.hooks.add_callback('foo', self.callback)
         self.hooks.call('foo', 'bar', kwarg='foobar')
         self.assertEqual(self.args, ('bar',))
-        self.assertEqual(self.kwargs, { 'kwarg': 'foobar' })
+        self.assertEqual(self.kwargs, {'kwarg': 'foobar'})
 
     def test_filter_write_returns_value_of_callbacks(self):
         self.hooks.new_filter('bar')

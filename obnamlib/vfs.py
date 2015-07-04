@@ -60,7 +60,6 @@ class LockFail(obnamlib.ObnamError):
     msg = "Couldn't create lock {lock_name}: {reason}"
 
 
-
 class VirtualFileSystem(object):
 
     '''A virtual filesystem interface.
@@ -93,7 +92,7 @@ class VirtualFileSystem(object):
     def log_stats(self):
         logging.debug(
             'VFS: baseurl=%s read=%d written=%d' %
-                (self.baseurl, self.bytes_read, self.bytes_written))
+            (self.baseurl, self.bytes_read, self.bytes_written))
 
     def connect(self):
         '''Connect to filesystem.'''
@@ -340,7 +339,7 @@ class VfsFactory:
         raise UnknownVFSError(url=url)
 
 
-class VfsTests(object): # pragma: no cover
+class VfsTests(object):  # pragma: no cover
 
     '''Re-useable tests for VirtualFileSystem implementations.
 
@@ -709,10 +708,13 @@ class VfsTests(object): # pragma: no cover
 
     def test_scan_tree_returns_nothing_if_listdir_fails(self):
         self.set_up_scan_tree()
+
         def raiser(dirname):
             raise OSError(123, 'oops', dirname)
+
         def logerror(msg):
             pass
+
         self.fs.listdir2 = raiser
         result = list(self.fs.scan_tree(self.basepath, log=logerror))
         self.assertEqual(len(result), 1)
@@ -732,4 +734,3 @@ class VfsTests(object): # pragma: no cover
         result = list(self.fs.scan_tree(self.basepath, ok=ok))
         pathnames = [pathname for pathname, st in result]
         self.assertEqual(sorted(pathnames), sorted(self.dirs))
-

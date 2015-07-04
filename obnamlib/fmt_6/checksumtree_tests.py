@@ -77,4 +77,3 @@ class ChecksumTreeTests(unittest.TestCase):
     def test_known_chunk_is_used(self):
         self.tree.add(self.checksum, 0, 1)
         self.assertTrue(self.tree.chunk_is_used(self.checksum, 0))
-

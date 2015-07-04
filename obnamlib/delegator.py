@@ -392,8 +392,8 @@ class GenerationId(object):
                 self.client_name == other.client_name and
                 self.gen_number == other.gen_number)
 
-    def __str__(self): # pragma: no cover
+    def __str__(self):  # pragma: no cover
         return '%s:%s' % (self.client_name, self.gen_number)
 
-    def __repr__(self): # pragma: no cover
+    def __repr__(self):  # pragma: no cover
         return 'GenerationId(%s,%s)' % (self.client_name, self.gen_number)

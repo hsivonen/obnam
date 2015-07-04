@@ -83,12 +83,13 @@ class LocalFS(obnamlib.VirtualFileSystem):
         # Do we have lchmod?
         self.got_lchmod = hasattr(os, 'lchmod')
 
-    def maybe_crash(self): # pragma: no cover
+    def maybe_crash(self):  # pragma: no cover
         if self.crash_limit is not None:
             self.crash_counter += 1
             if self.crash_counter >= self.crash_limit:
-                raise Exception('Crashing as requested after %d writes' %
-                                    self.crash_counter)
+                raise Exception(
+                    'Crashing as requested after %d writes' %
+                    self.crash_counter)
 
     def reinit(self, baseurl, create=False):
         # We fake chdir so that it doesn't mess with the caller's
@@ -97,7 +98,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
         tracing.trace('baseurl=%s', baseurl)
         tracing.trace('create=%s', create)
         self.cwd = os.path.abspath(baseurl)
-        if os.path.exists(self.cwd): # pragma: no cover
+        if os.path.exists(self.cwd):  # pragma: no cover
             if not os.path.isdir(self.cwd):
                 raise RootIsNotADirectory(baseurl=baseurl)
         if not self.isdir('.'):
@@ -105,7 +106,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
                 tracing.trace('creating %s', baseurl)
                 try:
                     os.mkdir(baseurl)
-                except OSError, e: # pragma: no cover
+                except OSError, e:  # pragma: no cover
                     # The directory might have been created concurrently
                     # by someone else!
                     if e.errno != errno.EEXIST:
@@ -134,7 +135,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
                 raise obnamlib.LockFail(
                     lock_name=lockname, reason='already exists')
             else:
-                raise # pragma: no cover
+                raise  # pragma: no cover
         tracing.trace('got lockname=%s', lockname)
         tracing.trace('time=%f' % time.time())
         self.our_locks.add(lockname)
@@ -146,7 +147,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
             tracing.trace('os.makedirs(%s)' % dirname)
             try:
                 os.makedirs(dirname, mode=obnamlib.NEW_DIR_MODE)
-            except OSError as e: # pragma: no cover
+            except OSError as e:  # pragma: no cover
                 # This avoids a race condition: another Obnam process
                 # may have created the directory between our check and
                 # creation attempt. If so, we ignore it. As long as
@@ -230,23 +231,23 @@ class LocalFS(obnamlib.VirtualFileSystem):
         if ret != 0:
             raise OSError(ret, os.strerror(ret), pathname)
         return obnamlib.Metadata(
-                    st_dev=dev,
-                    st_ino=ino,
-                    st_mode=mode,
-                    st_nlink=nlink,
-                    st_uid=uid,
-                    st_gid=gid,
-                    st_rdev=rdev,
-                    st_size=size,
-                    st_blksize=blksize,
-                    st_blocks=blocks,
-                    st_atime_sec=atime_sec,
-                    st_atime_nsec=atime_nsec,
-                    st_mtime_sec=mtime_sec,
-                    st_mtime_nsec=mtime_nsec,
-                    st_ctime_sec=ctime_sec,
-                    st_ctime_nsec=ctime_nsec
-                )
+            st_dev=dev,
+            st_ino=ino,
+            st_mode=mode,
+            st_nlink=nlink,
+            st_uid=uid,
+            st_gid=gid,
+            st_rdev=rdev,
+            st_size=size,
+            st_blksize=blksize,
+            st_blocks=blocks,
+            st_atime_sec=atime_sec,
+            st_atime_nsec=atime_nsec,
+            st_mtime_sec=mtime_sec,
+            st_mtime_nsec=mtime_nsec,
+            st_ctime_sec=ctime_sec,
+            st_ctime_nsec=ctime_nsec
+        )
 
     def get_username(self, uid):
         return pwd.getpwuid(uid)[0]
@@ -254,7 +255,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
     def get_groupname(self, gid):
         return grp.getgrgid(gid)[0]
 
-    def llistxattr(self, filename): # pragma: no cover
+    def llistxattr(self, filename):  # pragma: no cover
         ret = obnamlib._obnam.llistxattr(self.join(filename))
         if ret is None:
             raise MallocError(function='llistxattr')
@@ -262,7 +263,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
             raise OSError(ret, os.strerror(ret), filename)
         return [s for s in ret.split('\0') if s]
 
-    def lgetxattr(self, filename, attrname): # pragma: no cover
+    def lgetxattr(self, filename, attrname):  # pragma: no cover
         ret = obnamlib._obnam.lgetxattr(self.join(filename), attrname)
         if ret is None:
             raise MallocError(function='llistxattr')
@@ -270,13 +271,13 @@ class LocalFS(obnamlib.VirtualFileSystem):
             raise OSError(ret, os.strerror(ret), filename)
         return ret
 
-    def lsetxattr(self, filename, attrname, attrvalue): # pragma: no cover
+    def lsetxattr(self, filename, attrname, attrvalue):  # pragma: no cover
         ret = obnamlib._obnam.lsetxattr(self.join(filename),
                                         attrname, attrvalue)
         if ret != 0:
             raise OSError(ret, os.strerror(ret), filename)
 
-    def lchown(self, pathname, uid, gid): # pragma: no cover
+    def lchown(self, pathname, uid, gid):  # pragma: no cover
         tracing.trace('lchown %s %d %d', pathname, uid, gid)
         os.lchown(self.join(pathname), uid, gid)
 
@@ -284,7 +285,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
     # either has lchmod or doesn't, and accordingly either branch of
     # the if statement is taken, and the other branch shows up as not
     # being tested by the unit tests.
-    def chmod_symlink(self, pathname, mode): # pragma: no cover
+    def chmod_symlink(self, pathname, mode):  # pragma: no cover
         tracing.trace('chmod_symlink %s %o', pathname, mode)
         if self.got_lchmod:
             os.lchmod(self.join(pathname), mode)
@@ -330,9 +331,9 @@ class LocalFS(obnamlib.VirtualFileSystem):
             flags = fcntl.fcntl(f.fileno(), fcntl.F_GETFL)
             flags |= EXTRA_OPEN_FLAGS
             fcntl.fcntl(f.fileno(), fcntl.F_SETFL, flags)
-        except IOError, e: # pragma: no cover
+        except IOError, e:  # pragma: no cover
             tracing.trace('fcntl F_SETFL failed: %s', repr(e))
-            return f # ignore any problems setting flags
+            return f  # ignore any problems setting flags
         tracing.trace('returning ok')
         return f
 
@@ -377,7 +378,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
         data = ''.join(chunks)
         return data
 
-    def write_file(self, pathname, contents): # pragma: no cover
+    def write_file(self, pathname, contents):  # pragma: no cover
         tempname = self._create_tempfile(pathname)
         f = self.open(tempname, 'wb')
         f.write(contents)
@@ -409,7 +410,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
         for name in self.listdir(dirname):
             try:
                 st = self.lstat(os.path.join(dirname, name))
-            except OSError, e: # pragma: no cover
+            except OSError, e:  # pragma: no cover
                 st = e
                 ino = -1
             else:
@@ -420,4 +421,3 @@ class LocalFS(obnamlib.VirtualFileSystem):
         # when backing up.
         result.sort()
         return [(name, st) for ino, name, st in result]
-

@@ -43,7 +43,7 @@ class ChecksumTree(obnamlib.RepositoryTree):
 
     def key_range(self, checksum, chunk_id):
         return self.key(checksum, chunk_id, 0), \
-                self.key(checksum, chunk_id, obnamlib.MAX_ID)
+            self.key(checksum, chunk_id, obnamlib.MAX_ID)
 
     def unkey(self, key):
         return struct.unpack(self.fmt, key)

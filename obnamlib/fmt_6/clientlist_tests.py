@@ -104,4 +104,3 @@ class ClientListTests(unittest.TestCase):
         self.list.set_client_keyid('foo', 'cafebeef')
         self.list.set_client_keyid('foo', None)
         self.assertEqual(self.list.get_client_keyid('foo'), None)
-

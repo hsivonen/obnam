@@ -102,7 +102,7 @@ def _gpg_pipe(args, data, passphrase):
     os.close(keypipe[0])
 
     # Return output data, or deal with errors.
-    if p.returncode: # pragma: no cover
+    if p.returncode:  # pragma: no cover
         raise GpgError(returncode=p.returncode, stderr=err)
 
     return out
@@ -134,7 +134,7 @@ def _gpg(args, stdin='', gpghome=None):
     out, err = p.communicate(stdin)
 
     # Return output data, or deal with errors.
-    if p.returncode: # pragma: no cover
+    if p.returncode:  # pragma: no cover
         raise GpgError(returncode=p.returncode, stderr=err)
 
     return out
@@ -145,7 +145,7 @@ def get_public_key(keyid, gpghome=None):
     return _gpg(['--export', '--armor', keyid], gpghome=gpghome)
 
 
-def get_public_key_user_ids(keyid, gpghome=None): # pragma: no cover
+def get_public_key_user_ids(keyid, gpghome=None):  # pragma: no cover
     '''Return the ASCII armored export form of a given public key.'''
     user_ids = []
     output = _gpg(['--with-colons', '--list-keys', keyid], gpghome=gpghome)
@@ -229,7 +229,7 @@ class Keyring(object):
         kwargs['gpghome'] = self._gpghome
         try:
             result = _gpg(*args, **kwargs)
-        except BaseException: # pragma: no cover
+        except BaseException:  # pragma: no cover
             self._cleanup()
             raise
         else:
@@ -261,16 +261,16 @@ def encrypt_with_keyring(cleartext, keyring):
     recipients = []
     for keyid in keyring.keyids():
         recipients += ['-r', keyid]
-    return keyring.gpg(False,
-                        ['-e',
-                         '--trust-model', 'always',
-                         '--no-encrypt-to',
-                         '--no-default-recipient',
-                            ] + recipients,
-                       stdin=cleartext)
+
+    opts = [
+        '-e',
+        '--trust-model', 'always',
+        '--no-encrypt-to',
+        '--no-default-recipient',
+    ]
+    return keyring.gpg(False, opts + recipients, stdin=cleartext)
 
 
 def decrypt_with_secret_keys(encrypted, gpghome=None):
     '''Decrypt data using secret keys GnuPG finds on its own.'''
     return _gpg(['-d'], stdin=encrypted, gpghome=gpghome)
-

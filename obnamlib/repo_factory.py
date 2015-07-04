@@ -56,7 +56,7 @@ class RepositoryFactory(object):
     def get_implementation_classes(self):
         return self._implementations
 
-    def setup_hooks(self, hooks): # pragma: no cover
+    def setup_hooks(self, hooks):  # pragma: no cover
         '''Create all repository related hooks.
 
         The factory instantiates all supported repository format classes.
@@ -78,7 +78,7 @@ class RepositoryFactory(object):
 
         try:
             existing_format = self._read_existing_format(fs)
-        except EnvironmentError as e: # pragma: no cover
+        except EnvironmentError as e:  # pragma: no cover
             if e.errno == errno.ENOENT:
                 raise NotARepository(url=fs.baseurl)
             raise
@@ -125,7 +125,7 @@ class RepositoryFactory(object):
             # set it to EEXIST. Life is wonderful.
             if e.errno in (errno.EEXIST, None):
                 return self.open_existing_repo(fs, **kwargs)
-            raise # pragma: no cover
+            raise  # pragma: no cover
         else:
             logging.debug('create_repo: metadata/format created ok')
             repo = self._open_repo(wanted_format, fs, kwargs)

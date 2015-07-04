@@ -95,7 +95,7 @@ class Metadata(object):
     def isfile(self):
         return self.st_mode is not None and stat.S_ISREG(self.st_mode)
 
-    def __repr__(self): # pragma: no cover
+    def __repr__(self):  # pragma: no cover
         fields = ', '.join('%s=%s' % (k, getattr(self, k))
                            for k in metadata_fields)
         return 'Metadata(%s)' % fields
@@ -118,19 +118,24 @@ class Metadata(object):
 # change during the runtime of the backup.
 
 _uid_to_username = {}
-def _cached_getpwuid(uid): # pragma: no cover
+
+
+def _cached_getpwuid(uid):  # pragma: no cover
     if uid not in _uid_to_username:
         _uid_to_username[uid] = pwd.getpwuid(uid)
     return _uid_to_username[uid]
 
+
 _gid_to_groupname = {}
-def _cached_getgrgid(gid): # pragma: no cover
+
+
+def _cached_getgrgid(gid):  # pragma: no cover
     if gid not in _gid_to_groupname:
         _gid_to_groupname[gid] = grp.getgrgid(gid)
     return _gid_to_groupname[gid]
 
 
-def get_xattrs_as_blob(fs, filename): # pragma: no cover
+def get_xattrs_as_blob(fs, filename):  # pragma: no cover
     tracing.trace('filename=%s' % filename)
 
     try:
@@ -179,11 +184,11 @@ def get_xattrs_as_blob(fs, filename): # pragma: no cover
              value_blob))
 
 
-def set_xattrs_from_blob(fs, filename, blob, user_only): # pragma: no cover
+def set_xattrs_from_blob(fs, filename, blob, user_only):  # pragma: no cover
     sizesize = struct.calcsize('!Q')
     name_blob_size = struct.unpack('!Q', blob[:sizesize])[0]
-    name_blob = blob[sizesize : sizesize + name_blob_size]
-    value_blob = blob[sizesize + name_blob_size : ]
+    name_blob = blob[sizesize:sizesize + name_blob_size]
+    value_blob = blob[sizesize + name_blob_size:]
 
     names = [s for s in name_blob.split('\0')[:-1]]
     fmt = '!' + 'Q' * len(names)
@@ -237,7 +242,7 @@ class SetMetadataError(obnamlib.ObnamError):
     msg = "{filename}: Couldn't set metadata {metadata}: {errno}: {strerror}"
 
 
-def _set_something(filename, what, func): # pragma: no cover
+def _set_something(filename, what, func):  # pragma: no cover
     try:
         func()
     except OSError as e:
@@ -249,7 +254,7 @@ def _set_something(filename, what, func): # pragma: no cover
             strerror=e.strerror)
 
 
-def set_metadata(fs, filename, metadata, 
+def set_metadata(fs, filename, metadata,
                  getuid=None, always_set_id_bits=False):
     '''Set metadata for a filesystem entry.
 
@@ -281,7 +286,7 @@ def set_metadata(fs, filename, metadata,
         # normal users can set the group if they are in the group, try to
         # restore the group, ignoring any errors
         try:
-            uid = -1 # no change to user
+            uid = -1  # no change to user
             fs.lchown(filename, uid, metadata.st_gid)
         except (OSError), e:
             sys.exc_clear()
@@ -290,7 +295,7 @@ def set_metadata(fs, filename, metadata,
     # unless explicitly told to do so.
     mode = metadata.st_mode
     set_id_bits = always_set_id_bits or (getuid() in (0, metadata.st_uid))
-    if not set_id_bits: # pragma: no cover
+    if not set_id_bits:  # pragma: no cover
         mode = mode & (~stat.S_ISUID)
         mode = mode & (~stat.S_ISGID)
     if symlink:
@@ -302,7 +307,7 @@ def set_metadata(fs, filename, metadata,
             filename, 'chmod',
             lambda: fs.chmod_not_symlink(filename, mode))
 
-    if metadata.xattr: # pragma: no cover
+    if metadata.xattr:  # pragma: no cover
         user_only = getuid() != 0
         _set_something(
             filename, 'xattrs',
@@ -311,7 +316,7 @@ def set_metadata(fs, filename, metadata,
 
     _set_something(
         filename, 'timestamps',
-        lambda: 
+        lambda:
         fs.lutimes(
             filename, metadata.st_atime_sec, metadata.st_atime_nsec,
             metadata.st_mtime_sec, metadata.st_mtime_nsec))

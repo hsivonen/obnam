@@ -60,4 +60,3 @@ class ChunkList(obnamlib.RepositoryTree):
         self.start_changes()
         key = self.key(chunk_id)
         self.tree.remove_range(key, key)
-

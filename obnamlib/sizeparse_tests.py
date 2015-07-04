@@ -92,4 +92,3 @@ class ByteSizeParserTests(unittest.TestCase):
         text = 'asdf asdf'
         e = obnamlib.UnitNameError(unit=text)
         self.assert_(text in str(e), str(e))
-

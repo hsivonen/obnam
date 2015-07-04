@@ -52,4 +52,3 @@ class ChunkListTests(unittest.TestCase):
         self.list.add(0, 'checksum')
         self.list.remove(0)
         self.assertRaises(KeyError, self.list.get_checksum, 0)
-

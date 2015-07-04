@@ -38,6 +38,7 @@ metadata_format = struct.Struct('!Q' +  # flags
                                 'Q' +   # len of xattr
                                 '')
 
+
 def encode_metadata(metadata):
     flags = 0
     for i, name in enumerate(obnamlib.metadata_fields):
@@ -63,7 +64,7 @@ def encode_metadata(metadata):
                                       len(metadata.target or ''),
                                       len(metadata.md5 or ''),
                                       len(metadata.xattr or ''))
-    except TypeError, e: # pragma: no cover
+    except TypeError, e:  # pragma: no cover
         logging.error('ERROR: Packing error due to %s' % str(e))
         logging.error('ERROR: st_mode=%s' % repr(metadata.st_mode))
         logging.error('ERROR: st_mtime_sec=%s' % repr(metadata.st_mtime_sec))
@@ -86,11 +87,11 @@ def encode_metadata(metadata):
         logging.error('ERROR: xattr=%s' % repr(metadata.xattr))
         raise
     return (packed +
-             (metadata.groupname or '') +
-             (metadata.username or '') +
-             (metadata.target or '') +
-             (metadata.md5 or '') +
-             (metadata.xattr or ''))
+            (metadata.groupname or '') +
+            (metadata.username or '') +
+            (metadata.target or '') +
+            (metadata.md5 or '') +
+            (metadata.xattr or ''))
 
 
 def decode_metadata(encoded):

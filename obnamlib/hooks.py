@@ -54,8 +54,8 @@ class Hook(object):
         if callback not in self.callbacks:
             self.priorities[callback] = priority
             self.callbacks.append(callback)
-            self.callbacks.sort(lambda x,y: cmp(self.priorities[x],
-                                                self.priorities[y]))
+            self.callbacks.sort(
+                lambda x, y: cmp(self.priorities[x], self.priorities[y]))
 
         return callback
 
@@ -138,7 +138,7 @@ class FilterHook(Hook):
             tracing.trace('calling %s' % filt)
             new_data = filt.filter_write(data, *args, **kwargs)
             assert new_data is not None, \
-                   filt.tag + ": Returned None from filter_write()"
+                filt.tag + ": Returned None from filter_write()"
             if data != new_data:
                 tracing.trace('filt.tag=%s' % filt.tag)
                 data = filt.tag + "\0" + new_data

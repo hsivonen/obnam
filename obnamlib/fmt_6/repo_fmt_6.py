@@ -223,14 +223,14 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         if client_name not in self._open_client_infos:
             tracing.trace('client_name=%s', client_name)
             client_id = self._get_client_id(client_name)
-            if client_id is None: # pragma: no cover
+            if client_id is None:  # pragma: no cover
                 raise obnamlib.RepositoryClientDoesNotExist(
                     client_name=client_name)
 
             client_dir = self._get_client_dir(client_id)
             client = obnamlib.ClientMetadataTree(
                 self._fs, client_dir, self._node_size,
-                    self._upload_queue_size, self._lru_size, self)
+                self._upload_queue_size, self._lru_size, self)
             client.init_forest()
 
             self._open_client_infos[client_name] = _OpenClientInfo(client)
@@ -262,7 +262,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
                 client_name=client_name)
 
         client_id = self._get_client_id(client_name)
-        if client_id is None: # pragma: no cover
+        if client_id is None:  # pragma: no cover
             raise obnamlib.RepositoryClientDoesNotExist(
                 client_name=client_name)
 
@@ -325,20 +325,22 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
         self._flush_file_key_cache()
 
-        self._open_client(client_name) # Ensure client is open
+        self._open_client(client_name)  # Ensure client is open
         open_client_info = self._open_client_infos[client_name]
 
         if open_client_info.current_generation_number:
             open_client_info.client.set_generation_ended(self._current_time())
 
-        if (open_client_info.current_generation_number or
-            open_client_info.generations_removed):
+        need_to_commit = (
+            open_client_info.current_generation_number or
+            open_client_info.generations_removed)
+        if need_to_commit:
             open_client_info.client.commit()
 
         self._raw_unlock_client(client_name)
 
     def _remove_chunks_from_removed_generations(
-        self, client_name, remove_gen_nos):
+            self, client_name, remove_gen_nos):
 
         def find_chunkids_in_gens(gen_nos):
             chunkids = set()
@@ -356,7 +358,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
                     keep.append(gen_number)
             return keep
 
-        def remove_chunks(chunk_ids): # pragma: no cover
+        def remove_chunks(chunk_ids):  # pragma: no cover
             for chunk_id in chunk_ids:
                 try:
                     checksum = self._chunklist.get_checksum(chunk_id)
@@ -378,7 +380,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
     def get_allowed_client_keys(self):
         return []
 
-    def get_client_key(self, client_name, key): # pragma: no cover
+    def get_client_key(self, client_name, key):  # pragma: no cover
         raise obnamlib.RepositoryClientKeyNotAllowed(
             format=self.format,
             client_name=client_name,
@@ -391,15 +393,14 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             key_name=obnamlib.repo_key_name(key))
 
     def get_client_generation_ids(self, client_name):
-        self._open_client(client_name) # Ensure client is open
+        self._open_client(client_name)  # Ensure client is open
         client_info = self._get_open_client_info(client_name)
         self._refresh_open_client_info_cached_generation_ids(
             client_name, client_info)
         return client_info.cached_generation_ids
 
-    def _refresh_open_client_info_cached_generation_ids(self, 
-                                                        client_name,
-                                                        client_info):
+    def _refresh_open_client_info_cached_generation_ids(
+            self, client_name, client_info):
         if client_info.cached_generation_ids is None:
             client_info.cached_generation_ids = [
                 self._construct_gen_id(client_name, gen_number)
@@ -410,11 +411,11 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
                                                        gen_id):
         ids = client_info.cached_generation_ids
         assert ids is not None
-        if gen_id not in ids: # pragma: no cover
+        if gen_id not in ids:  # pragma: no cover
             ids.append(gen_id)
 
-    def _forget_open_client_info_cached_generation(self, 
-                                                   client_info, gen_id):
+    def _forget_open_client_info_cached_generation(
+            self, client_info, gen_id):
         ids = client_info.cached_generation_ids
         if ids is not None:
             if gen_id in ids:
@@ -425,7 +426,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._require_existing_client(client_name)
         self._require_client_lock(client_name)
 
-        self._open_client(client_name) # Ensure client is open
+        self._open_client(client_name)  # Ensure client is open
         open_client_info = self._open_client_infos[client_name]
         if open_client_info.current_generation_number is not None:
             raise obnamlib.RepositoryClientGenerationUnfinished(
@@ -478,7 +479,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             obnamlib.REPO_GENERATION_TOTAL_DATA,
             ]
 
-    def get_generation_key(self, generation_id, key): # pragma: no cover
+    def get_generation_key(self, generation_id, key):  # pragma: no cover
         client_name, gen_number = self._unpack_gen_id(generation_id)
         client = self._open_client(client_name)
 
@@ -503,7 +504,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
                 key_name=obnamlib.repo_key_name(key))
 
     def set_generation_key(
-        self, generation_id, key, value): # pragma: no cover
+            self, generation_id, key, value):  # pragma: no cover
         # FIXME: This is not working for generations other than the currently
         # started one. There should at least be an assert about it.
 
@@ -552,7 +553,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._require_client_lock(client_name)
         self._require_existing_generation(gen_id)
 
-        self._open_client(client_name) # Ensure client is open
+        self._open_client(client_name)  # Ensure client is open
         open_client_info = self._open_client_infos[client_name]
         if gen_number == open_client_info.current_generation_number:
             open_client_info.current_generation_number = None
@@ -592,13 +593,13 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             self._idpath_skip)
 
     def _construct_in_tree_chunk_id(
-        self, gen_id, filename): # pragma: no cover
+            self, gen_id, filename):  # pragma: no cover
         # This constructs a synthetic chunk id for in-tree data for a
         # file. The file is expected to have in-tree data.
 
         return (gen_id, filename)
 
-    def _unpack_in_tree_chunk_id(self, chunk_id): # pragma: no cover
+    def _unpack_in_tree_chunk_id(self, chunk_id):  # pragma: no cover
         # Return gen_id and filename for in-tree chunk.
         return chunk_id
 
@@ -621,7 +622,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             filename = self._chunk_filename(chunk_id)
             try:
                 self._fs.write_file(filename, data)
-            except OSError, e: # pragma: no cover
+            except OSError, e:  # pragma: no cover
                 if e.errno == errno.EEXIST:
                     self._prev_chunk_id = self._random_chunk_id()
                     continue
@@ -634,7 +635,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         return chunk_id
 
     def get_chunk_content(self, chunk_id):
-        if self._is_in_tree_chunk_id(chunk_id): # pragma: no cover
+        if self._is_in_tree_chunk_id(chunk_id):  # pragma: no cover
             gen_id, filename = self._unpack_in_tree_chunk_id(chunk_id)
             client_name, gen_number = self._unpack_gen_id(gen_id)
             client = self._open_client(client_name)
@@ -648,10 +649,10 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
                 raise obnamlib.RepositoryChunkDoesNotExist(
                     chunk_id=str(chunk_id),
                     filename=filename)
-            raise # pragma: no cover
+            raise  # pragma: no cover
 
     def has_chunk(self, chunk_id):
-        if self._is_in_tree_chunk_id(chunk_id): # pragma: no cover
+        if self._is_in_tree_chunk_id(chunk_id):  # pragma: no cover
             gen_id, filename = self._unpack_in_tree_chunk_id(chunk_id)
             client_name, gen_number = gen_id
             client = self._open_client(client_name)
@@ -666,7 +667,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         # Note: we ignore in-tree data, on the assumption that if
         # it gets removed, the whole file gets removed from the
         # generation anyway. This should probably be fixed some day.
-        if self._is_in_tree_chunk_id(chunk_id): # pragma: no cover
+        if self._is_in_tree_chunk_id(chunk_id):  # pragma: no cover
             return
 
         filename = self._chunk_filename(chunk_id)
@@ -684,7 +685,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         # Note: This does not cover for in-tree chunk data. We cannot
         # realistically iterate over all per-client B-trees to find
         # such data.
-        
+
         pat = re.compile(r'^.*/.*/[0-9a-fA-F]+$')
         if self._fs.exists('chunks'):
             for pathname, st in self._fs.scan_tree('chunks'):
@@ -796,7 +797,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._require_chunk_indexes_lock()
         try:
             checksum = self._chunklist.get_checksum(chunk_id)
-        except KeyError: # pragma: no cover
+        except KeyError:  # pragma: no cover
             tracing.trace('chunk does not exist in chunklist tree')
             # Because commit_chunk_indexes commits _chunklist before
             # _chunksums, at this point we know the chunk isn't going
@@ -813,7 +814,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         raise obnamlib.RepositoryChunkContentNotInIndexes()
 
     def validate_chunk_content(self, chunk_id):
-        if self._is_in_tree_chunk_id(chunk_id): # pragma: no cover
+        if self._is_in_tree_chunk_id(chunk_id):  # pragma: no cover
             gen_id, filename = self._unpack_in_tree_chunk_id(chunk_id)
             client_name, gen_number = self._unpack_gen_id(gen_id)
             client = self._open_client(client_name)
@@ -830,7 +831,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         actual_checksum = self._checksum(content)
         try:
             expected_checksum = self._chunklist.get_checksum(chunk_id)
-        except KeyError: # pragma: no cover
+        except KeyError:  # pragma: no cover
             # Chunk is not in the checksum tree, so we cannot validate
             # its checksum. We'll just assume it's OK.
             return True
@@ -861,7 +862,6 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             obnamlib.REPO_FILE_DEV: 'st_dev',
             obnamlib.REPO_FILE_INO: 'st_ino',
             obnamlib.REPO_FILE_MD5: 'md5',
-            
             }
 
         self._setup_file_key_cache()
@@ -901,7 +901,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._require_client_lock(client_name)
         self._flush_file_key_cache()
         client = self._open_client(client_name)
-        client.remove(filename) # FIXME: Only removes from unfinished gen!
+        client.remove(filename)  # FIXME: Only removes from unfinished gen!
 
     def get_allowed_file_keys(self):
         return self._file_keys.keys()
@@ -992,7 +992,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         client_name, gen_number = self._unpack_gen_id(generation_id)
         client = self._open_client(client_name)
         in_tree_data = client.get_file_data(gen_number, filename)
-        if in_tree_data is not None: # pragma: no cover
+        if in_tree_data is not None:  # pragma: no cover
             return [self._construct_in_tree_chunk_id(generation_id, filename)]
         return client.get_file_chunks(gen_number, filename)
 
@@ -1003,7 +1003,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         client_name, gen_number = self._unpack_gen_id(generation_id)
         self._require_client_lock(client_name)
         client = self._open_client(client_name)
-        client.set_file_chunks(filename, []) # FIXME: current gen only
+        client.set_file_chunks(filename, [])  # FIXME: current gen only
 
     def append_file_chunk_id(self, generation_id, filename, chunk_id):
         assert not self._is_in_tree_chunk_id(chunk_id)
@@ -1011,7 +1011,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         client_name, gen_number = self._unpack_gen_id(generation_id)
         self._require_client_lock(client_name)
         client = self._open_client(client_name)
-        client.append_file_chunks(filename, [chunk_id]) # FIXME: curgen only
+        client.append_file_chunks(filename, [chunk_id])  # FIXME: curgen only
 
     def get_file_children(self, generation_id, filename):
         self._require_existing_file(generation_id, filename)
@@ -1022,7 +1022,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     # Fsck.
 
-    def get_fsck_work_items(self): # pragma: no cover
+    def get_fsck_work_items(self):  # pragma: no cover
         yield CheckBTree(self._fs, 'clientlist', 'fsck-skip-shared-b-trees')
         for client_name in self.get_client_names():
             client_id = self._get_client_id(client_name)
@@ -1032,8 +1032,8 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         yield CheckBTree(self._fs, 'chunksums', 'fsck-skip-shared-b-trees')
 
 
-class CheckBTree(obnamlib.WorkItem): # pragma: no cover
- 
+class CheckBTree(obnamlib.WorkItem):  # pragma: no cover
+
     def __init__(self, fs, dirname, skip_setting):
         self.fs = fs
         self.dirname = dirname

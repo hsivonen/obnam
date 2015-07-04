@@ -40,7 +40,6 @@ class EmptyError(obnamlib.StructuredError):
     msg = ''
 
 
-
 class StructuredErrorTests(unittest.TestCase):
 
     def test_ids_differ_between_classes(self):

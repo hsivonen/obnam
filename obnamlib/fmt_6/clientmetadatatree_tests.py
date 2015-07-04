@@ -34,10 +34,13 @@ class ClientMetadataTreeTests(unittest.TestCase):
         fs = obnamlib.LocalFS(self.tempdir)
         self.hooks = obnamlib.HookManager()
         self.hooks.new('repository-toplevel-init')
-        self.client = obnamlib.ClientMetadataTree(fs, 'clientid',
-                                   obnamlib.DEFAULT_NODE_SIZE,
-                                   obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
-                                   obnamlib.DEFAULT_LRU_SIZE, self)
+        self.client = obnamlib.ClientMetadataTree(
+            fs,
+            'clientid',
+            obnamlib.DEFAULT_NODE_SIZE,
+            obnamlib.DEFAULT_UPLOAD_QUEUE_SIZE,
+            obnamlib.DEFAULT_LRU_SIZE,
+            self)
         self.file_size = 123
         self.file_metadata = obnamlib.Metadata(st_mode=stat.S_IFREG | 0666,
                                                st_size=self.file_size)
@@ -321,4 +324,3 @@ class ClientMetadataTreeFileOpsTests(unittest.TestCase):
         self.client.set_file_chunks('/foo', [0])
         self.client.set_file_chunks('/bar', [0])
         self.assertEqual(self.client.list_chunks_in_generation(gen_id), [0])
-

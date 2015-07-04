@@ -56,8 +56,10 @@ def deserialise_object(serialised):
 _length_fmt = '!Q'
 _length_size = struct.calcsize(_length_fmt)
 
+
 def _serialise_length(num_bytes):
     return struct.pack(_length_fmt, num_bytes)
+
 
 def _deserialise_length(serialised):
     return struct.unpack(_length_fmt, serialised)[0]
@@ -67,8 +69,10 @@ def _deserialise_length(serialised):
 
 _none_size_encoded = _serialise_length(0)
 
+
 def _serialise_none(obj):
     return _NONE + _none_size_encoded
+
 
 def _deserialise_none(serialised):
     return None
@@ -80,6 +84,7 @@ def _serialise_integer(obj):
     s = str(obj)
     return _INT + _serialise_length(len(s)) + s
 
+
 def _deserialise_integer(serialised):
     return int(serialised)
 
@@ -89,9 +94,11 @@ def _deserialise_integer(serialised):
 _bool_fmt = '!c'
 _bool_size_serialised = _serialise_length(struct.calcsize(_bool_fmt))
 
+
 def _serialise_bool(obj):
     return (_BOOL + _bool_size_serialised +
             struct.pack(_bool_fmt, chr(int(obj))))
+
 
 def _deserialise_bool(obj):
     return bool(ord(struct.unpack(_bool_fmt, obj)[0]))
@@ -101,6 +108,7 @@ def _deserialise_bool(obj):
 
 def _serialise_str(obj):
     return _STR + _serialise_length(len(obj)) + obj
+
 
 def _deserialise_str(obj):
     return obj
@@ -112,6 +120,7 @@ def _serialise_list(obj):
     items = ''.join(serialise_object(item) for item in obj)
     return _LIST + _serialise_length(len(items)) + items
 
+
 def _deserialise_list(serialised):
     items = []
     pos = 0
@@ -122,10 +131,12 @@ def _deserialise_list(serialised):
         pos = end
     return items
 
+
 def _extract_length(serialised, pos):
     start = pos + 1
     end = start + _length_size
     return _deserialise_length(serialised[start:end])
+
 
 def _next_object(pos, length):
     return pos + 1 + _length_size + length
@@ -139,6 +150,7 @@ def _serialise_dict(obj):
         for key, value in obj.iteritems())
     return _DICT + _serialise_length(len(pairs)) + pairs
 
+
 def _deserialise_dict(serialised):
     result = {}
     pos = 0
@@ -147,6 +159,7 @@ def _deserialise_dict(serialised):
         value, pos = _deserialise_prefix(serialised, pos)
         result[key] = value
     return result
+
 
 def _deserialise_prefix(serialised, pos):
     length = _extract_length(serialised, pos)

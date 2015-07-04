@@ -177,7 +177,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
     def log_stats(self):
         obnamlib.VirtualFileSystem.log_stats(self)
         logging.info('VFS: baseurl=%s roundtrips=%s' %
-                         (self.baseurl, self._roundtrips))
+                     (self.baseurl, self._roundtrips))
 
     def _to_string(self, str_or_unicode):
         if type(str_or_unicode) is unicode:
@@ -192,7 +192,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
             # sftp/paramiko does not give us a useful errno so we hope
             # for the best
             pass
-        self.create_path_if_missing = False # only create once
+        self.create_path_if_missing = False  # only create once
 
     def connect(self):
         try_openssh = not self.settings or not self.settings['pure-paramiko']
@@ -218,14 +218,14 @@ class SftpFS(obnamlib.VirtualFileSystem):
             args += ['-l', self.user]
         if self.settings and self.settings['ssh-key']:
             args += ['-i', self.settings['ssh-key']]
-        if (self.settings and
-            self.settings['ssh-host-keys-check'] != "ssh-config"):
-            value = self.settings['ssh-host-keys-check']
-            args += ['-o', 'StrictHostKeyChecking=%s' % (value,)]
+        if self.settings:
+            if self.settings['ssh-host-keys-check'] != "ssh-config":
+                value = self.settings['ssh-host-keys-check']
+                args += ['-o', 'StrictHostKeyChecking=%s' % (value,)]
         if self.settings and self.settings['ssh-known-hosts']:
             args += ['-o',
                      'UserKnownHostsFile=%s' %
-                        self.settings['ssh-known-hosts']]
+                     self.settings['ssh-known-hosts']]
         args += [self.host, 'sftp']
 
         # prepend the executable to the argument list
@@ -279,7 +279,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
             return
 
         offered_type = offered_key.get_name()
-        if not known_keys.has_key(offered_type):
+        if offered_type not in known_keys:
             if self.settings['ssh-host-keys-check'] == 'yes':
                 raise NoHostKeyOfWantedTypeError(
                     key_type=offered_type, hostname=hostname)
@@ -314,7 +314,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
             key = paramiko.RSAKey.from_private_key_file(filename)
         except paramiko.PasswordRequiredException:
             password = getpass.getpass('RSA key password for %s: ' %
-                                        filename)
+                                       filename)
             key = paramiko.RSAKey.from_private_key_file(filename, password)
         return key
 
@@ -399,11 +399,11 @@ class SftpFS(obnamlib.VirtualFileSystem):
         if timestamp is None:
             return None
 
-        max_int32 = 2**31 - 1 # max positive 32 signed integer value
+        max_int32 = 2**31 - 1  # max positive 32 signed integer value
         if timestamp > max_int32:
             timestamp -= 2**32
             if timestamp > max_int32:
-                timestamp = max_int32 # it's too large, need to lose info
+                timestamp = max_int32  # it's too large, need to lose info
         return timestamp
 
     def _fix_stat(self, pathname, st):

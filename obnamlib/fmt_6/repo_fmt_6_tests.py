@@ -32,4 +32,3 @@ class RepositoryFormat6Tests(obnamlib.RepositoryInterfaceTests):
 
     def tearDown(self):
         shutil.rmtree(self.tempdir)
-

@@ -66,7 +66,7 @@ class RepositoryFormatTests(unittest.TestCase):
         fs = obnamlib.LocalFS(self.repodir)
         factory = obnamlib.RepositoryFactory()
         self.assertRaises(
-            obnamlib.UnknownRepositoryFormatWanted, 
+            obnamlib.UnknownRepositoryFormatWanted,
             factory.create_repo, fs, int)
 
     def test_create_repo_is_ok_with_existing_repo(self):

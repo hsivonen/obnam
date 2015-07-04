@@ -45,7 +45,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     DIR_CONTENTS = 4        # subkey type for list of directory contents
     FILE_DATA = 5           # subkey type for file data (instead of chunk)
 
-    FILE_METADATA_ENCODED = 0 # subkey value for encoded obnamlib.Metadata().
+    FILE_METADATA_ENCODED = 0  # subkey value for encoded obnamlib.Metadata().
 
     # References to chunks in this generation.
     # Main key is the chunk id, subkey type is always 0, subkey is file id
@@ -88,8 +88,10 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     def default_file_id(self, filename):
         '''Return hash of filename suitable for use as main key.'''
         tracing.trace(repr(filename))
+
         def shorthash(s):
             return hashlib.md5(s).digest()[:4]
+
         dirname = os.path.dirname(filename)
         basename = os.path.basename(filename)
         return shorthash(dirname) + shorthash(basename)
@@ -283,46 +285,46 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     def _get_generation_id_or_None(self, tree):
         try:
             return self.get_generation_id(tree)
-        except KeyError: # pragma: no cover
+        except KeyError:  # pragma: no cover
             return None
 
-    def _lookup_time(self, tree, what): # pragma: no cover
+    def _lookup_time(self, tree, what):  # pragma: no cover
         try:
             return self._lookup_int(tree, self.genkey(what))
         except KeyError:
             return None
 
-    def _lookup_string(self, tree, what): # pragma: no cover
+    def _lookup_string(self, tree, what):  # pragma: no cover
         try:
             return tree.lookup(self.genkey(what))
         except KeyError:
             return None
 
-    def get_generation_times(self, genid): # pragma: no cover
+    def get_generation_times(self, genid):  # pragma: no cover
         tree = self.find_generation(genid)
         return (self._lookup_time(tree, self.GEN_STARTED),
                 self._lookup_time(tree, self.GEN_ENDED))
 
-    def set_generation_started(self, timestamp): # pragma: no cover
+    def set_generation_started(self, timestamp):  # pragma: no cover
         self._insert_int(self.tree, self.genkey(self.GEN_STARTED), timestamp)
 
-    def set_generation_ended(self, timestamp): # pragma: no cover
+    def set_generation_ended(self, timestamp):  # pragma: no cover
         self._insert_int(self.tree, self.genkey(self.GEN_ENDED), timestamp)
 
-    def get_generation_test_data(self): # pragma: no cover
+    def get_generation_test_data(self):  # pragma: no cover
         return self._lookup_string(self.tree, self.GEN_TEST_DATA)
 
-    def set_generation_test_data(self, value): # pragma: no cover
+    def set_generation_test_data(self, value):  # pragma: no cover
         key = self.genkey(self.GEN_TEST_DATA)
         self.tree.insert(key, value)
 
-    def get_generation_data(self, genid): # pragma: no cover
+    def get_generation_data(self, genid):  # pragma: no cover
         return self._lookup_count(genid, self.GEN_TOTAL_DATA)
 
-    def set_generation_data(self, gen_id, num_bytes): # pragma: no cover
+    def set_generation_data(self, gen_id, num_bytes):  # pragma: no cover
         self._insert_count(gen_id, self.GEN_TOTAL_DATA, num_bytes)
 
-    def _lookup_count(self, genid, count_type): # pragma: no cover
+    def _lookup_count(self, genid, count_type):  # pragma: no cover
         tree = self.find_generation(genid)
         key = self.genkey(count_type)
         try:
@@ -330,21 +332,21 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         except KeyError:
             return None
 
-    def _insert_count(self, genid, count_type, count): # pragma: no cover
+    def _insert_count(self, genid, count_type, count):  # pragma: no cover
         tree = self.find_generation(genid)
         key = self.genkey(count_type)
         return self._insert_int(tree, key, count)
 
-    def get_generation_file_count(self, genid): # pragma: no cover
+    def get_generation_file_count(self, genid):  # pragma: no cover
         return self._lookup_count(genid, self.GEN_FILE_COUNT)
 
-    def set_generation_file_count(self, gen_id, count): # pragma: no cover
+    def set_generation_file_count(self, gen_id, count):  # pragma: no cover
         self._insert_count(gen_id, self.GEN_FILE_COUNT, count)
 
-    def get_generation_total_data(self, genid): # pragma: no cover
+    def get_generation_total_data(self, genid):  # pragma: no cover
         return self._lookup_count(genid, self.GEN_TOTAL_DATA)
 
-    def set_generation_total_data(self, gen_id, count): # pragma: no cover
+    def set_generation_total_data(self, gen_id, count):  # pragma: no cover
         self._insert_count(gen_id, self.GEN_TOTAL_DATA, count)
 
     def create(self, filename, encoded_metadata):
@@ -355,7 +357,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
             old_metadata = self.get_metadata(gen_id, filename)
         except KeyError:
             old_metadata = None
-        else: # pragma: no cover
+        else:  # pragma: no cover
             old = obnamlib.fmt_6.metadata_codec.decode_metadata(old_metadata)
 
         metadata = obnamlib.fmt_6.metadata_codec.decode_metadata(
@@ -368,7 +370,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         # Add to parent's contents, unless already there.
         parent = os.path.dirname(filename)
         tracing.trace('parent=%s', parent)
-        if parent != filename: # root dir is its own parent
+        if parent != filename:  # root dir is its own parent
             basename = os.path.basename(filename)
             parent_id = self.set_file_id(parent)
             key = self.fskey(parent_id, self.DIR_CONTENTS, file_id)
@@ -376,7 +378,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
             # churn in the tree if nothing changes.
             try:
                 self.tree.lookup(key)
-                tracing.trace('was already in parent') # pragma: no cover
+                tracing.trace('was already in parent')  # pragma: no cover
             except KeyError:
                 self.tree.insert(key, basename)
                 tracing.trace('added to parent')
@@ -436,7 +438,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
 
         # Also remove from parent's contents.
         parent = os.path.dirname(filename)
-        if parent != filename: # root dir is its own parent
+        if parent != filename:  # root dir is its own parent
             parent_id = self.set_file_id(parent)
             key = self.fskey(parent_id, self.DIR_CONTENTS, file_id)
             # The range removal will work even if the key does not exist.
@@ -536,7 +538,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         return list(set(self.chunk_unkey(key)[0]
                         for key, value in t.lookup_range(minkey, maxkey)))
 
-    def set_file_data(self, filename, contents): # pragma: no cover
+    def set_file_data(self, filename, contents):  # pragma: no cover
         '''Store contents of file, if small, in B-tree instead of chunk.
 
         The length of the contents should be small enough to fit in a
@@ -550,7 +552,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         key = self.fskey(file_id, self.FILE_DATA, 0)
         self.tree.insert(key, contents)
 
-    def get_file_data(self, gen_id, filename): # pragma: no cover
+    def get_file_data(self, gen_id, filename):  # pragma: no cover
         '''Return contents of file, if set, or None.'''
         tree = self.find_generation(gen_id)
         file_id = self.get_file_id(tree, filename)
@@ -559,4 +561,3 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
             return tree.lookup(key)
         except KeyError:
             return None
-

@@ -117,8 +117,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         pubkeys.add(self.pubkey)
 
         symmetric_key = obnamlib.generate_symmetric_key(
-                                self.symmetric_key_bits,
-                                filename=self.devrandom)
+            self.symmetric_key_bits, filename=self.devrandom)
         encrypted = obnamlib.encrypt_with_keyring(symmetric_key, pubkeys)
         self._write_file(repo, os.path.join(toplevel, 'key'), encrypted)
 
@@ -288,4 +287,3 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
             logging.info('removing client %s' % client_name)
             repo.remove_client(client_name)
         repo.commit_client_list()
-

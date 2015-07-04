@@ -19,6 +19,7 @@ import zlib
 
 import obnamlib
 
+
 class DeflateCompressionFilter(object):
 
     def __init__(self, app):

@@ -161,16 +161,16 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         elif now - most_recent > critical_age:
             self.app.output.write(
                 'CRITICAL: backup is old.  last backup was %s.\n' %
-                    (self.format_time(most_recent)))
+                (self.format_time(most_recent)))
             sys.exit(2)
         elif now - most_recent > warn_age:
             self.app.output.write(
                 'WARNING: backup is old.  last backup was %s.\n' %
-                    self.format_time(most_recent))
+                self.format_time(most_recent))
             sys.exit(1)
         self.app.output.write(
             'OK: backup is recent.  last backup was %s.\n' %
-                self.format_time(most_recent))
+            self.format_time(most_recent))
 
     def genids(self, args):
         '''List generation ids for client.'''
@@ -240,13 +240,13 @@ class ShowPlugin(obnamlib.ObnamPlugin):
     def show_item_ls(self, gen_id, filename):
         fields = self.fields(gen_id, filename)
         widths = [
-            1, # mode
-            5, # nlink
-            -8, # owner
-            -8, # group
-            10, # size
-            1, # mtime
-            -1, # name
+            1,   # mode
+            5,   # nlink
+            -8,  # owner
+            -8,  # group
+            10,  # size
+            1,   # mtime
+            -1,  # name
         ]
 
         result = []
@@ -279,20 +279,28 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         mtime_sec = self.repo.get_file_key(
             gen_id, filename, obnamlib.REPO_FILE_MTIME_SEC)
 
-        if   stat.S_ISREG(mode):  mode_str = "F\t"
-        elif stat.S_ISDIR(mode):  mode_str = "D "
-        elif stat.S_ISLNK(mode):  mode_str = "L\t"
-        elif stat.S_ISBLK(mode):  mode_str = "BlockDev\t"
-        elif stat.S_ISCHR(mode):  mode_str = "CharDev\t"
-        elif stat.S_ISSOCK(mode): mode_str = "Socket\t"
+        if stat.S_ISREG(mode):
+            mode_str = "F\t"
+        elif stat.S_ISDIR(mode):
+            mode_str = "D "
+        elif stat.S_ISLNK(mode):
+            mode_str = "L\t"
+        elif stat.S_ISBLK(mode):
+            mode_str = "BlockDev\t"
+        elif stat.S_ISCHR(mode):
+            mode_str = "CharDev\t"
+        elif stat.S_ISSOCK(mode):
+            mode_str = "Socket\t"
 
         enc_filename = filename.replace("%", "%25")
         enc_filename = enc_filename.replace(" ", "%20")
         enc_filename = enc_filename.replace("\t", "%09")
 
-        if filename == "/": return
+        if filename == "/":
+            return
 
-        self.app.output.write("%s%s\t%d\t%#x\n" %
+        self.app.output.write(
+            "%s%s\t%d\t%#x\n" %
             (mode_str, enc_filename, size, mtime_sec))
 
     def show_diff_for_file(self, gen_id, fullname, change_char):
@@ -398,12 +406,12 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         perms = ['?'] + ['-'] * 9
         tab = [
             (stat.S_IFDIR, 0, 'd'),
-            (stat.S_IFCHR, 0, 'c'), # character device
-            (stat.S_IFBLK, 0, 'b'), # block device
+            (stat.S_IFCHR, 0, 'c'),  # character device
+            (stat.S_IFBLK, 0, 'b'),  # block device
             (stat.S_IFREG, 0, '-'),
             (stat.S_IFIFO, 0, 'p'),
             (stat.S_IFLNK, 0, 'l'),
-            #(stat.S_IFSOCK, 0, 's'), # not stored, listed for completeness
+            # (stat.S_IFSOCK, 0, 's'),  # not stored, listed for completeness
             (stat.S_IRUSR, 1, 'r'),
             (stat.S_IWUSR, 2, 'w'),
             (stat.S_IXUSR, 3, 'x'),
@@ -441,12 +449,12 @@ class ShowPlugin(obnamlib.ObnamPlugin):
             name = filename
 
         return (perms,
-                 str(nlink),
-                 username,
-                 groupname,
-                 str(size),
-                 timestamp,
-                 name)
+                str(nlink),
+                username,
+                groupname,
+                str(size),
+                timestamp,
+                name)
 
     def align(self, width, field, field_no):
         if field_no in self.leftists:
@@ -456,10 +464,12 @@ class ShowPlugin(obnamlib.ObnamPlugin):
 
     def _convert_time(self, s, default_unit='h'):
         m = re.match('([0-9]+)([smhdw])?$', s)
-        if m is None: raise ValueError
+        if m is None:
+            raise ValueError
         ticks = int(m.group(1))
         unit = m.group(2)
-        if unit is None: unit = default_unit
+        if unit is None:
+            unit = default_unit
 
         if unit == 's':
             pass
@@ -474,4 +484,3 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         else:
             raise ValueError
         return ticks
-

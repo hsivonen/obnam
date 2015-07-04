@@ -30,10 +30,10 @@ class LockManager(object):
         self.timeout = timeout
         self._got_locks = []
 
-    def _time(self): # pragma: no cover
+    def _time(self):  # pragma: no cover
         return time.time()
 
-    def _sleep(self): # pragma: no cover
+    def _sleep(self):  # pragma: no cover
         time.sleep(1)
 
     def sort(self, dirnames):

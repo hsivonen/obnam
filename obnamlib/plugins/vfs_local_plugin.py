@@ -23,4 +23,3 @@ class VfsLocalPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
         self.app.fsf.register('', obnamlib.LocalFS)
-

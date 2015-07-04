@@ -37,8 +37,8 @@ class Fail(obnamlib.ObnamError):
 class VerifyPlugin(obnamlib.ObnamPlugin):
 
     def enable(self):
-        self.app.add_subcommand('verify', self.verify,
-            arg_synopsis='[DIRECTORY]...')
+        self.app.add_subcommand(
+            'verify', self.verify, arg_synopsis='[DIRECTORY]...')
         self.app.settings.integer(
             ['verify-randomly'],
             'verify N files randomly from the backup '
@@ -53,8 +53,8 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         if len(self.app.settings['generation']) != 1:
             raise WrongNumberOfGenerationsForVerify()
 
-        logging.debug('verifying generation %s' %
-                        self.app.settings['generation'])
+        logging.debug(
+            'verifying generation %s' % self.app.settings['generation'])
         if not args:
             self.app.settings.require('root')
             args = self.app.settings['root']
@@ -178,7 +178,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
             if v1 != v2:
                 raise Fail(
                     filename=filename,
-                    reason='metadata change: %s (%s vs %s)' % 
+                    reason='metadata change: %s (%s vs %s)' %
                     (field_name, repr(v1), repr(v2)))
 
         X(obnamlib.REPO_FILE_MODE, 'st_mode')

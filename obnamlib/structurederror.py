@@ -112,7 +112,7 @@ class StructuredError(Exception):
         else:
             dedented = (textwrap.dedent(lines[0]) +
                         textwrap.dedent(''.join(lines[1:])))
- 
+
         try:
             formatted_msg = dedented.format(**self.kwargs)
         except KeyError as e:

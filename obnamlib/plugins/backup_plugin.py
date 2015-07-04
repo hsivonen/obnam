@@ -159,7 +159,6 @@ class BackupProgress(object):
 
         scanned_amount, scanned_unit = obnamlib.humanise_size(
             self.scanned_bytes)
-        
 
         self._ts.notify(
             'Backed up %d files (of %d found), containing %.1f %s.' %
@@ -203,7 +202,7 @@ class CheckpointManager(object):
         self.last_checkpoint = 0
 
     def time_for_checkpoint(self):
-        bytes_since = (self.repo.get_fs().bytes_written - 
+        bytes_since = (self.repo.get_fs().bytes_written -
                        self.last_checkpoint)
         return bytes_since >= self.interval
 
@@ -329,10 +328,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
     def start_backup(self):
         self.configure_progress_reporting()
         self.progress.what('setting up')
-        
+
         self.memory_dump_counter = 0
         self.chunkid_token_map = obnamlib.ChunkIdTokenMap()
-        
+
         self.progress.what('connecting to repository')
         self.repo = self.open_repository()
         if not self.pretend:
@@ -360,7 +359,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 raise
         else:
             return self.app.get_repository_object(create=True)
-            
+
     def prepare_repository_for_client(self):
         self.progress.what('adding client')
         self.add_client(self.client_name)
@@ -373,7 +372,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.progress.what('initialising shared directories')
         self.repo.lock_chunk_indexes()
         self.repo.unlock_chunk_indexes()
-        
+
     def start_generation(self):
         self.progress.what('starting new generation')
         self.new_generation = self.repo.create_generation(self.client_name)
@@ -386,7 +385,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         self.progress.what(prefix + 'adding chunks to shared B-trees')
         self.add_chunks_to_shared()
-        
+
         self.progress.what(prefix + 'updating generation metadata')
         self.repo.set_generation_key(
             self.new_generation,
@@ -400,11 +399,11 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.new_generation,
             obnamlib.REPO_GENERATION_IS_CHECKPOINT,
             False)
-        
+
         self.progress.what(prefix + 'committing client')
         self.repo.flush_chunks()
         self.repo.commit_client(self.client_name)
-        
+
         self.progress.what(prefix + 'committing shared B-trees')
         self.repo.commit_chunk_indexes()
 
@@ -481,10 +480,10 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         if client_name not in self.repo.get_client_names():
             tracing.trace('adding new client %s' % client_name)
             tracing.trace('client list before adding: %s' %
-                            self.repo.get_client_names())
+                          self.repo.get_client_names())
             self.repo.add_client(client_name)
             tracing.trace('client list after adding: %s' %
-                            self.repo.get_client_names())
+                          self.repo.get_client_names())
         self.repo.commit_client_list()
         self.repo = self.app.get_repository_object(repofs=self.repo.get_fs())
 
@@ -826,7 +825,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         for field, key in things:
             self.repo.set_file_key(
-                self.new_generation, filename, key, 
+                self.new_generation, filename, key,
                 getattr(metadata, field))
 
     def backup_parents(self, root):
@@ -843,7 +842,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             except OSError, e:
                 logging.warning(
                     'Failed to get metadata for %s: %s: %s' %
-                        (root, e.errno or 0, e.strerror))
+                    (root, e.errno or 0, e.strerror))
                 logging.warning('Using fake metadata instead for %s' % root)
                 metadata = dummy_metadata
             if not self.pretend:
@@ -993,7 +992,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         new_pathnames = [os.path.join(root, x) for x in new_basenames]
         if self.repo.file_exists(self.new_generation, root):
             old_pathnames = self.repo.get_file_children(
-                    self.new_generation, root)
+                self.new_generation, root)
         else:
             old_pathnames = []
 
@@ -1007,8 +1006,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     pass
                 else:
                     # remove paths that were excluded recently
-                    if (not old in no_delete_paths) and \
-                            (not self.can_be_backed_up(old, st)): 
+                    if (old not in no_delete_paths) and \
+                            (not self.can_be_backed_up(old, st)):
                         self.repo.remove_file(self.new_generation, old)
 
         # Files that are created after the previous generation will be

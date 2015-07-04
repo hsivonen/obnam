@@ -30,7 +30,7 @@ class MetadataCodingTests(unittest.TestCase):
                     value1,
                     value2,
                     'attribute %s must be equal (%s vs %s)' %
-                        (name, value1, value2))
+                    (name, value1, value2))
 
     def test_round_trip(self):
         metadata = obnamlib.Metadata(
@@ -82,4 +82,3 @@ class MetadataCodingTests(unittest.TestCase):
         encoded = obnamlib.fmt_6.metadata_codec.encode_metadata(metadata)
         decoded = obnamlib.fmt_6.metadata_codec.decode_metadata(encoded)
         self.equal(metadata, decoded)
-

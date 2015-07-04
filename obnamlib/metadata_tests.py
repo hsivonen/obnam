@@ -134,7 +134,7 @@ class ReadMetadataTests(unittest.TestCase):
         metadata = obnamlib.read_metadata(self.fakefs, 'foo',
                                           getpwuid=self.fakefs.getpwuid,
                                           getgrgid=self.fakefs.getgrgid)
-        fields = ['st_atime_sec','st_atime_nsec', 'st_blocks', 'st_dev',
+        fields = ['st_atime_sec', 'st_atime_nsec', 'st_blocks', 'st_dev',
                   'st_gid', 'st_ino', 'st_mode', 'st_mtime_sec',
                   'st_mtime_nsec', 'st_nlink', 'st_size', 'st_uid',
                   'groupname', 'username']

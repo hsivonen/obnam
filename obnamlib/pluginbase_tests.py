@@ -24,6 +24,7 @@ class FakeApp(object):
     def __init__(self):
         self.hooks = self
 
+
 class ObnamPluginTests(unittest.TestCase):
 
     def setUp(self):

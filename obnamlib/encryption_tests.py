@@ -40,12 +40,12 @@ class SymmetricEncryptionTests(unittest.TestCase):
     def test_generates_key_of_correct_length(self):
         numbits = 16
         key = obnamlib.generate_symmetric_key(numbits, filename='/dev/zero')
-        self.assertEqual(len(key) * 8 / 2, numbits) # /2 for hex encoding
+        self.assertEqual(len(key) * 8 / 2, numbits)  # /2 for hex encoding
 
     def test_generates_key_with_size_rounded_up(self):
         numbits = 15
         key = obnamlib.generate_symmetric_key(numbits, filename='/dev/zero')
-        self.assertEqual(len(key)/2, 2) # /2 for hex encoding
+        self.assertEqual(len(key)/2, 2)  # /2 for hex encoding
 
     def test_encrypts_into_different_string_than_cleartext(self):
         cleartext = 'hello world'
@@ -196,4 +196,3 @@ class PublicKeyEncryptionTests(unittest.TestCase):
             encrypted, gpghome=self.gpghome)
 
         self.assertEqual(decrypted, cleartext)
-

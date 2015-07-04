@@ -35,7 +35,7 @@ except ImportError:
     class Bunch:
         def __init__(self, **kwds):
             self.__dict__.update(kwds)
-    fuse = Bunch(Fuse = object)
+    fuse = Bunch(Fuse=object)
 
 
 class FileNotFoundError(obnamlib.ObnamError):
@@ -85,9 +85,9 @@ class ObnamFuseFile(object):
     # Flags that indicate the caller wants to write to the file.
     # Since we're read-only, we'll have to fail the request.
     write_flags = (
-        os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_EXCL | os.O_TRUNC | 
+        os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_EXCL | os.O_TRUNC |
         os.O_APPEND)
-    
+
     def __init__(self, path, flags, *mode):
         tracing.trace('path=%r', path)
         tracing.trace('flags=%r', flags)
@@ -112,7 +112,7 @@ class ObnamFuseFile(object):
         # if not a regular file return EINVAL
         if not stat.S_ISREG(self.metadata.st_mode):
             raise IOError(errno.EINVAL, 'Invalid argument')
-        
+
     def read_pid(self, length, offset):
         tracing.trace('length=%r', length)
         tracing.trace('offset=%r', offset)
@@ -176,7 +176,7 @@ class ObnamFuseFile(object):
                 if contents is None:
                     contents = self.fuse_fs.obnam.repo.get_chunk_content(
                         chunkid)
-                output.append(contents[start : start+n])
+                output.append(contents[start:start+n])
                 output_length += n
                 assert output_length <= length
                 if output_length == length:
@@ -295,6 +295,7 @@ class ObnamFuse(fuse.Fuse):
 
     def construct_metadata_object(self, repo, gen, filename):
         allowed = set(repo.get_allowed_file_keys())
+
         def K(key):
             if key in allowed:
                 return repo.get_file_key(gen, filename, key)
@@ -416,24 +417,24 @@ class ObnamFuse(fuse.Fuse):
             for gen in self.obnam.repo.get_client_generation_ids(client_name))
 
         stv = fuse.StatVfs()
-        stv.f_bsize   = 65536
-        stv.f_frsize  = 0
-        stv.f_blocks  = total_data / 65536
-        stv.f_bfree   = 0
-        stv.f_bavail  = 0
-        stv.f_files   = files
-        stv.f_ffree   = 0
-        stv.f_favail  = 0
-        stv.f_flag    = 0
+        stv.f_bsize = 65536
+        stv.f_frsize = 0
+        stv.f_blocks = total_data / 65536
+        stv.f_bfree = 0
+        stv.f_bavail = 0
+        stv.f_files = files
+        stv.f_ffree = 0
+        stv.f_favail = 0
+        stv.f_flag = 0
         stv.f_namemax = 255
-        #raise OSError(errno.ENOSYS, 'Unimplemented')
+        # raise OSError(errno.ENOSYS, 'Unimplemented')
         return stv
 
     def getxattr(self, path, name, size):
         tracing.trace('path=%r', path)
         tracing.trace('name=%r', name)
         tracing.trace('size=%r', size)
-        
+
         try:
             gen_id, repopath = self.get_gen_path(path)
         except obnamlib.RepositoryClientHasNoGenerations:
@@ -454,10 +455,10 @@ class ObnamFuse(fuse.Fuse):
             blob = metadata.xattr
             sizesize = struct.calcsize('!Q')
             name_blob_size = struct.unpack('!Q', blob[:sizesize])[0]
-            name_blob = blob[sizesize : sizesize + name_blob_size]
+            name_blob = blob[sizesize:sizesize + name_blob_size]
             name_list = name_blob.split('\0')[:-1]
             if name in name_list:
-                value_blob = blob[sizesize + name_blob_size : ]
+                value_blob = blob[sizesize + name_blob_size:]
                 idx = name_list.index(name)
                 fmt = '!' + 'Q' * len(name_list)
                 lengths_size = sizesize * len(name_list)
@@ -496,7 +497,7 @@ class ObnamFuse(fuse.Fuse):
             name_blob_size = struct.unpack('!Q', blob[:sizesize])[0]
             if size == 0:
                 return name_blob_size
-            name_blob = blob[sizesize : sizesize + name_blob_size]
+            name_blob = blob[sizesize:sizesize + name_blob_size]
             return name_blob.split('\0')[:-1]
         except obnamlib.ObnamError:
             raise IOError(errno.ENOENT, 'No such file or directory')
@@ -585,7 +586,7 @@ class MountPlugin(obnamlib.ObnamPlugin):
         ls -l my-fuse
         ls -l my-fuse/latest
         diff -u my-fuse/latest/home/liw/README ~/README
-        
+
         You can also restore files by copying them from the
         my-fuse directory:
 
