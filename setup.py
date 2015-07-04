@@ -234,7 +234,7 @@ class Check(Command):
         runcmd(['./test-sftpfs'])
 
     def run_nitpick_checks(self):
-        self.check_with_pep8(sources)
+        self.check_with_pep8()
         if os.path.exists('.git'):
             sources = self.find_all_source_files()
             self.check_sources_for_nitpicks(sources)

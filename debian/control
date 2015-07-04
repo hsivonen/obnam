@@ -20,6 +20,7 @@ Build-Depends: debhelper (>= 7.3.8),
     python-fuse,
     pandoc,
     git
+    pep8
 Homepage: http://obnam.org/
 X-Python-Version: >= 2.6
 
