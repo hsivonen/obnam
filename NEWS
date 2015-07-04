@@ -3,6 +3,14 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
+Version 1.12, released UNRELEASED
+---------------------------------
+
+Bug fixes:
+
+* Steven Monai reported that using `--one-file-system` would crash,
+  and it turned out to be a missing import.
+
 Version 1.11, released 2015-07-02
 ---------------------------------
 
