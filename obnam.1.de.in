@@ -503,10 +503,10 @@ Absturz die lesende Operation wiederholen.
 .SS "Optionswerte"
 Der Wert
 .I SIZE
-gibt eine Größe in Byte an, wobei optionale Suffixe folgendes bedeuten:
-Kilobyte (k), Kibibyte (Ki), Megabyte (M), Mebibyte (Mi), Gigabyte (G), Gibibyte (Gi),
-Terabyte (T), Tibibyte (Ti).
-Die Suffixe sind nicht case-sensitive.
+gibt eine Größe in Byte an, wobei optionale Suffixe folgendes
+bedeuten: Kilobyte (k), Kibibyte (Ki), Megabyte (M), Mebibyte (Mi),
+Gigabyte (G), Gibibyte (Gi), Terabyte (T), Tibibyte (Ti). Die Suffixe
+sind nicht case-sensitive.
 .\" ------------------------------------------------------------------
 .SH "EXIT STATUS"
 Falls keine Fehler passierten, endet
