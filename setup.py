@@ -59,16 +59,18 @@ class Build(build):
 
     def run(self):
         build.run(self)
-        self.build_manpage('obnam')
+        self.build_manpage('obnam', '')
+        self.build_manpage('obnam', '.de')
 
-    def build_manpage(self, program):
-        print 'building manpage for %s' % program
-        self.generate_troff(program)
+    def build_manpage(self, program, lang):
+        print 'building manpage for %s (lang=%s)' % (program, lang)
+        self.generate_troff(program, lang)
 
-    def generate_troff(self, program):
-        with open('%s.1' % program, 'w') as f:
+    def generate_troff(self, program, lang):
+        with open('%s.1%s' % (program, lang), 'w') as f:
             cliapp.runcmd(
-                ['python', program, '--generate-manpage=%s.1.in' % program,
+                ['python', program,
+                 '--generate-manpage=%s.1%s.in' % (program, lang),
                  '--output=%s.1' % program],
                 stdout=f)
 
