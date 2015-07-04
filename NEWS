@@ -11,6 +11,12 @@ Bug fixes:
 * Steven Monai reported that using `--one-file-system` would crash,
   and it turned out to be a missing import.
 
+Improvements:
+
+* Jan Niggemann translated the Obnam manpage to German. Due to cliapp
+  not supporting other languages than English yet, the manual page
+  lacks option descriptions.
+
 Version 1.11, released 2015-07-02
 ---------------------------------
 
