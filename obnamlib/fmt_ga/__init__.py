@@ -19,5 +19,6 @@
 from .client_list import GAClientList
 from .chunk_store import GAChunkStore
 from .indexes import GAChunkIndexes
+from .dirobj import GADirectory, create_gadirectory_from_dict
 from .client import GAClient
 from .format import RepositoryFormatGA
