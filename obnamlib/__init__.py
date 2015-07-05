@@ -186,6 +186,7 @@ from fmt_ga import (
     GAClient,
     GADirectory,
     create_gadirectory_from_dict,
+    GATree,
     GAChunkStore,
     GAChunkIndexes)
 
