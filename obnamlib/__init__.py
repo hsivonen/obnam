@@ -106,6 +106,7 @@ from app import App, ObnamIOError, ObnamSystemError
 from humanise import humanise_duration, humanise_size, humanise_speed
 from chunkid_token_map import ChunkIdTokenMap
 from pathname_excluder import PathnameExcluder
+from splitpath import split_pathname
 
 from obj_serialiser import serialise_object, deserialise_object
 from bag import Bag, BagIdNotSetError, make_object_id, parse_object_id
