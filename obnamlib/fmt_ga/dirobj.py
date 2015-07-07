@@ -37,6 +37,10 @@ class GADirectory(object):
     def add_file(self, basename):
         self._dict['metadata'][basename] = {}
 
+    def remove_file(self, basename):
+        if basename in self._dict['metadata']:
+            del self._dict['metadata'][basename]
+
     def get_file_basenames(self):
         return self._dict['metadata'].keys()
 

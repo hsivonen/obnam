@@ -46,6 +46,17 @@ class GADirectoryTests(unittest.TestCase):
         dir_obj.add_file('README')
         self.assertEqual(dir_obj.get_file_basenames(), ['README'])
 
+    def test_removes_file(self):
+        dir_obj = obnamlib.GADirectory()
+        dir_obj.add_file('README')
+        dir_obj.remove_file('README')
+        self.assertEqual(dir_obj.get_file_basenames(), [])
+
+    def test_removes_nonexistent_file(self):
+        dir_obj = obnamlib.GADirectory()
+        dir_obj.remove_file('README')
+        self.assertEqual(dir_obj.get_file_basenames(), [])
+
     def test_gets_file_key_when_unset(self):
         dir_obj = obnamlib.GADirectory()
         dir_obj.add_file('README')
