@@ -81,6 +81,17 @@ class GADirectoryTests(unittest.TestCase):
         dir_obj.add_subdir('.git', 'obj-id')
         self.assertEqual(dir_obj.get_subdir_basenames(), ['.git'])
 
+    def test_removes_subdir(self):
+        dir_obj = obnamlib.GADirectory()
+        dir_obj.add_subdir('.git', 'obj-id')
+        dir_obj.remove_subdir('.git')
+        self.assertEqual(dir_obj.get_subdir_basenames(), [])
+
+    def test_removes_nonexistent_subdir(self):
+        dir_obj = obnamlib.GADirectory()
+        dir_obj.remove_subdir('.git')
+        self.assertEqual(dir_obj.get_subdir_basenames(), [])
+
     def test_returns_subdir_object_id(self):
         dir_obj = obnamlib.GADirectory()
         dir_obj.add_subdir('.git', 'obj-id')

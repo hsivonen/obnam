@@ -56,6 +56,10 @@ class GADirectory(object):
     def add_subdir(self, basename, obj_id):
         self._dict['subdirs'][basename] = obj_id
 
+    def remove_subdir(self, basename):
+        if basename in self._dict['subdirs']:
+            del self._dict['subdirs'][basename]
+
     def get_subdir_object_id(self, basename):
         return self._dict['subdirs'][basename]
 
