@@ -83,18 +83,18 @@ class GATree(object):
     def set_directory(self, pathname, dir_obj):
         self._cache.set(pathname, dir_obj)
         if pathname != '/':
-            parent_obj = self._get_containing_dir_obj(pathname)
+            basename = os.path.basename(pathname)
+            parent_path = os.path.dirname(pathname)
+            parent_obj = self._cache.get(parent_path)
             if not parent_obj:
-                self._create_fake_parent(pathname, dir_obj)
-
-    def _create_fake_parent(self, subdir_path, subdir_obj):
-        parent_path = os.path.dirname(subdir_path)
-        parent_obj = obnamlib.GADirectory()
-
-        subdir_basename = os.path.basename(subdir_path)
-        parent_obj.add_subdir(subdir_basename, None)
-
-        self.set_directory(parent_path, parent_obj)
+                parent_obj = self.get_directory(parent_path)
+                if parent_obj:
+                    parent_obj = obnamlib.create_gadirectory_from_dict(
+                        parent_obj.as_dict())
+                else:
+                    parent_obj = obnamlib.GADirectory()
+            parent_obj.add_subdir(basename, None)
+            self.set_directory(parent_path, parent_obj)
 
     def flush(self):
         self._root_dir_id = self._fixup_subdir_refs('/')
@@ -103,6 +103,7 @@ class GATree(object):
 
     def _fixup_subdir_refs(self, pathname):
         dir_obj = self._cache.get(pathname)
+        assert dir_obj is not None, 'expected %s in cache' % pathname
         for basename in dir_obj.get_subdir_basenames():
             if dir_obj.get_subdir_object_id(basename) is None:
                 subdir_path = os.path.join(pathname, basename)

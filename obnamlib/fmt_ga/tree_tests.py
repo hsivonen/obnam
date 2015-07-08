@@ -56,6 +56,27 @@ class GATreeTests(unittest.TestCase):
         retrieved = tree2.get_directory('/foo/bar')
         self.assertEqual(orig.as_dict(), retrieved.as_dict())
 
+    def test_updates_subdirectory_of_persistent_directory(self):
+        # Create original subdir.
+        self.tree.set_directory('/foo/bar', obnamlib.GADirectory())
+        self.tree.flush()
+
+        # Load new tree, so no cached objects. Update a subdir with a file.
+        tree2 = obnamlib.GATree()
+        tree2.set_blob_store(self.blob_store)
+        tree2.set_root_directory_id(self.tree.get_root_directory_id())
+        new_subdir = obnamlib.GADirectory()
+        new_subdir.add_file('README')
+        tree2.set_directory('/foo/bar', new_subdir)
+        tree2.flush()
+
+        # Another new tree. The added file should be visible.
+        tree3 = obnamlib.GATree()
+        tree3.set_blob_store(self.blob_store)
+        tree3.set_root_directory_id(tree2.get_root_directory_id())
+        subdir = tree3.get_directory('/foo/bar')
+        self.assertIn('README', subdir.get_file_basenames())
+
 
 class DummyBagStore(object):
 
