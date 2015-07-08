@@ -112,6 +112,7 @@ second generation.
     GIVEN a file F in L, with data
     AND a manifest of L in M
     WHEN user U backs up directory L to repository R
+    AND user U restores their latest generation in repository R into X
     THEN L, restored to X, matches manifest M
 
 Remove the Obnam log file, so we only have the log from the next
