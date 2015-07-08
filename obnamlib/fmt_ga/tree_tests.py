@@ -38,6 +38,13 @@ class GATreeTests(unittest.TestCase):
         self.tree.set_directory('/', dir_obj)
         self.assertEqual(self.tree.get_directory('/'), dir_obj)
 
+    def test_sets_subdir_and_creates_all_parents(self):
+        dir_obj = obnamlib.GADirectory()
+        self.tree.set_directory('/foo/bar', dir_obj)
+        self.assertEqual(self.tree.get_directory('/foo/bar'), dir_obj)
+        self.assertNotEqual(self.tree.get_directory('/foo'), None)
+        self.assertNotEqual(self.tree.get_directory('/'), None)
+
     def test_stores_objects_persistently(self):
         orig = obnamlib.GADirectory()
         self.tree.set_directory('/foo/bar', orig)
