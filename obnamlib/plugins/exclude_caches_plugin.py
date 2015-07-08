@@ -54,4 +54,4 @@ class ExcludeCachesPlugin(obnamlib.ObnamPlugin):
                 f.close()
                 if data == tag_contents:
                     logging.debug('Excluding (cache dir): %s' % pathname)
-                    return False
+                    exclude[0] = True

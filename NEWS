@@ -11,6 +11,11 @@ Bug fixes:
 * Steven Monai reported that using `--one-file-system` would crash,
   and it turned out to be a missing import.
 
+* Jan Niggemann reported that `--exclude-caches` no longer worked.
+  This was due to a bug introduced when the option was moved to its
+  own plugin (for cleaner code). The bug was masked by another bug, in
+  the Yarn test suite. Both bugs have now been fixed.
+
 Improvements:
 
 * Jan Niggemann translated the Obnam manpage to German. Due to cliapp
