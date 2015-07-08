@@ -23,10 +23,22 @@ import obnamlib
 
 class GATree(object):
 
+    '''Manage a tree of directory objects.
+
+    This class manages a tree of directory objects in such a way that
+    the caller may refer to directories using full pathnames. It will
+    allow referring to any directory, and will create any missing
+    parent directory objects as needed. Existing directory objects
+    will be updated in a copy-on-write manner. The class maintains a
+    reference to the root directory objects, and updates the reference
+    if it needs to be changed.
+
+    '''
+
     def __init__(self):
         self._blob_store = None
-        self._dir_objs = {}
         self._root_dir_id = None
+        self._cache = DirectoryObjectCache()
 
     def set_blob_store(self, blob_store):
         self._blob_store = blob_store
@@ -38,8 +50,8 @@ class GATree(object):
         return self._root_dir_id
 
     def get_directory(self, pathname):
-        if pathname in self._dir_objs:
-            return self._dir_objs[pathname]
+        if pathname in self._cache:
+            return self._cache.get(pathname)
 
         if self._root_dir_id is None:
             return None
@@ -66,7 +78,7 @@ class GATree(object):
         return dir_obj
 
     def set_directory(self, pathname, dir_obj):
-        self._dir_objs[pathname] = dir_obj
+        self._cache.set(pathname, dir_obj)
         if pathname != '/':
             parent_path = os.path.dirname(pathname)
             parent_obj = self.get_directory(parent_path)
@@ -83,13 +95,12 @@ class GATree(object):
     def flush(self):
         self._root_dir_id = self._fixup_subdir_refs('/')
         self._blob_store.flush()
-        self._dir_objs = {}
+        self._cache.clear()
 
     def _fixup_subdir_refs(self, pathname):
-        dir_obj = self._dir_objs[pathname]
+        dir_obj = self._cache.get(pathname)
         for basename in dir_obj.get_subdir_basenames():
             if dir_obj.get_subdir_object_id(basename) is None:
-                assert dir_obj.is_mutable()
                 subdir_path = os.path.join(pathname, basename)
                 subdir_id = self._fixup_subdir_refs(subdir_path)
                 dir_obj.add_subdir(basename, subdir_id)
@@ -99,3 +110,21 @@ class GATree(object):
         dir_obj.set_immutable()
         blob = obnamlib.serialise_object(dir_obj.as_dict())
         return self._blob_store.put_blob(blob)
+
+
+class DirectoryObjectCache(object):
+
+    def __init__(self):
+        self.clear()
+
+    def clear(self):
+        self._objs = {}
+
+    def set(self, pathname, dir_obj):
+        self._objs[pathname] = dir_obj
+
+    def get(self, pathname):
+        return self._objs.get(pathname)
+
+    def __contains__(self, pathname):
+        return pathname in self._objs
