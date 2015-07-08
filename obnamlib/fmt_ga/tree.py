@@ -83,17 +83,18 @@ class GATree(object):
     def set_directory(self, pathname, dir_obj):
         self._cache.set(pathname, dir_obj)
         if pathname != '/':
-            parent_path = os.path.dirname(pathname)
-            parent_obj = self.get_directory(parent_path)
+            parent_obj = self._get_containing_dir_obj(pathname)
             if not parent_obj:
-                parent_obj = self._create_fake_parent(
-                    os.path.basename(pathname), dir_obj)
-                self.set_directory(parent_path, parent_obj)
+                self._create_fake_parent(pathname, dir_obj)
 
-    def _create_fake_parent(self, subdir_basename, subdir_obj):
+    def _create_fake_parent(self, subdir_path, subdir_obj):
+        parent_path = os.path.dirname(subdir_path)
         parent_obj = obnamlib.GADirectory()
+
+        subdir_basename = os.path.basename(subdir_path)
         parent_obj.add_subdir(subdir_basename, None)
-        return parent_obj
+
+        self.set_directory(parent_path, parent_obj)
 
     def flush(self):
         self._root_dir_id = self._fixup_subdir_refs('/')
