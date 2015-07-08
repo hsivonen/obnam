@@ -49,7 +49,9 @@ class GADirectoryTests(unittest.TestCase):
     def test_raises_error_if_immutable_and_file_is_added(self):
         dir_obj = obnamlib.GADirectory()
         dir_obj.set_immutable()
-        self.assertRaises(obnamlib.GAImmutableError, dir_obj.add_file, 'README')
+        self.assertRaises(
+            obnamlib.GAImmutableError,
+            dir_obj.add_file, 'README')
 
     def test_removes_file(self):
         dir_obj = obnamlib.GADirectory()
@@ -65,7 +67,9 @@ class GADirectoryTests(unittest.TestCase):
     def test_raises_error_if_immutable_and_file_is_removed(self):
         dir_obj = obnamlib.GADirectory()
         dir_obj.set_immutable()
-        self.assertRaises(obnamlib.GAImmutableError, dir_obj.remove_file, 'README')
+        self.assertRaises(
+            obnamlib.GAImmutableError,
+            dir_obj.remove_file, 'README')
 
     def test_gets_file_key_when_unset(self):
         dir_obj = obnamlib.GADirectory()
