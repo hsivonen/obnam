@@ -58,15 +58,14 @@ class GATree(object):
 
         if pathname == '/':
             return self._get_dir_obj(self._root_dir_id)
-
-        parent_path = os.path.dirname(pathname)
-        parent_obj = self.get_directory(parent_path)
-        if parent_obj is None:  # pragma: no cover
-            return None
-        obj_id = parent_obj.get_subdir_object_id(os.path.basename(pathname))
-        if obj_id is None:  # pragma: no cover
-            return None
-        return self._get_dir_obj(obj_id)
+        else:
+            parent_obj = self._get_containing_dir_obj(pathname)
+            if parent_obj is not None:
+                basename = os.path.basename(pathname)
+                obj_id = parent_obj.get_subdir_object_id(basename)
+                if obj_id is not None:
+                    return self._get_dir_obj(obj_id)
+            return None  # pragma: no cover
 
     def _get_dir_obj(self, dir_id):
         blob = self._blob_store.get_blob(dir_id)
@@ -76,6 +75,10 @@ class GATree(object):
         dir_obj = obnamlib.create_gadirectory_from_dict(as_dict)
         dir_obj.set_immutable()
         return dir_obj
+
+    def _get_containing_dir_obj(self, pathname):
+        parent_path = os.path.dirname(pathname)
+        return self.get_directory(parent_path)
 
     def set_directory(self, pathname, dir_obj):
         self._cache.set(pathname, dir_obj)
