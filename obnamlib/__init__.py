@@ -185,6 +185,7 @@ from fmt_ga import (
     GAClientList,
     GAClient,
     GADirectory,
+    GAImmutableError,
     create_gadirectory_from_dict,
     GATree,
     GAChunkStore,

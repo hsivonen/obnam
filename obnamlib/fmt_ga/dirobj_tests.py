@@ -46,6 +46,11 @@ class GADirectoryTests(unittest.TestCase):
         dir_obj.add_file('README')
         self.assertEqual(dir_obj.get_file_basenames(), ['README'])
 
+    def test_raises_error_if_immutable_and_file_is_added(self):
+        dir_obj = obnamlib.GADirectory()
+        dir_obj.set_immutable()
+        self.assertRaises(obnamlib.GAImmutableError, dir_obj.add_file, 'README')
+
     def test_removes_file(self):
         dir_obj = obnamlib.GADirectory()
         dir_obj.add_file('README')
@@ -56,6 +61,11 @@ class GADirectoryTests(unittest.TestCase):
         dir_obj = obnamlib.GADirectory()
         dir_obj.remove_file('README')
         self.assertEqual(dir_obj.get_file_basenames(), [])
+
+    def test_raises_error_if_immutable_and_file_is_removed(self):
+        dir_obj = obnamlib.GADirectory()
+        dir_obj.set_immutable()
+        self.assertRaises(obnamlib.GAImmutableError, dir_obj.remove_file, 'README')
 
     def test_gets_file_key_when_unset(self):
         dir_obj = obnamlib.GADirectory()
@@ -72,6 +82,14 @@ class GADirectoryTests(unittest.TestCase):
             dir_obj.get_file_key('README', obnamlib.REPO_FILE_MODE),
             0123)
 
+    def test_raises_error_if_muutable_and_file_key_is_set(self):
+        dir_obj = obnamlib.GADirectory()
+        dir_obj.add_file('README')
+        dir_obj.set_immutable()
+        self.assertRaises(
+            obnamlib.GAImmutableError,
+            dir_obj.set_file_key, 'README', obnamlib.REPO_FILE_MODE, 0123)
+
     def test_has_no_subdirs_initially(self):
         dir_obj = obnamlib.GADirectory()
         self.assertEqual(dir_obj.get_subdir_basenames(), [])
@@ -80,6 +98,13 @@ class GADirectoryTests(unittest.TestCase):
         dir_obj = obnamlib.GADirectory()
         dir_obj.add_subdir('.git', 'obj-id')
         self.assertEqual(dir_obj.get_subdir_basenames(), ['.git'])
+
+    def test_raises_error_if_mutable_and_subdir_is_added(self):
+        dir_obj = obnamlib.GADirectory()
+        dir_obj.set_immutable()
+        self.assertRaises(
+            obnamlib.GAImmutableError,
+            dir_obj.add_subdir, '.git', 'obj-id')
 
     def test_removes_subdir(self):
         dir_obj = obnamlib.GADirectory()
@@ -91,6 +116,13 @@ class GADirectoryTests(unittest.TestCase):
         dir_obj = obnamlib.GADirectory()
         dir_obj.remove_subdir('.git')
         self.assertEqual(dir_obj.get_subdir_basenames(), [])
+
+    def test_raises_error_if_mutable_and_subdir_is_removed(self):
+        dir_obj = obnamlib.GADirectory()
+        dir_obj.set_immutable()
+        self.assertRaises(
+            obnamlib.GAImmutableError,
+            dir_obj.remove_subdir, '.git')
 
     def test_returns_subdir_object_id(self):
         dir_obj = obnamlib.GADirectory()

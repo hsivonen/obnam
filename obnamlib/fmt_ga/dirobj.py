@@ -16,6 +16,9 @@
 # =*= License: GPL-3+ =*=
 
 
+import obnamlib
+
+
 class GADirectory(object):
 
     def __init__(self):
@@ -35,9 +38,15 @@ class GADirectory(object):
         return self._dict
 
     def add_file(self, basename):
+        self._require_mutable()
         self._dict['metadata'][basename] = {}
 
+    def _require_mutable(self):
+        if not self._mutable:
+            raise GAImmutableError()
+
     def remove_file(self, basename):
+        self._require_mutable()
         if basename in self._dict['metadata']:
             del self._dict['metadata'][basename]
 
@@ -48,20 +57,28 @@ class GADirectory(object):
         return self._dict['metadata'][basename].get(key)
 
     def set_file_key(self, basename, key, value):
+        self._require_mutable()
         self._dict['metadata'][basename][key] = value
 
     def get_subdir_basenames(self):
         return self._dict['subdirs'].keys()
 
     def add_subdir(self, basename, obj_id):
+        self._require_mutable()
         self._dict['subdirs'][basename] = obj_id
 
     def remove_subdir(self, basename):
+        self._require_mutable()
         if basename in self._dict['subdirs']:
             del self._dict['subdirs'][basename]
 
     def get_subdir_object_id(self, basename):
         return self._dict['subdirs'][basename]
+
+
+class GAImmutableError(obnamlib.ObnamError):
+
+    msg = 'Attempt to modify an immutable GADirectory'
 
 
 def create_gadirectory_from_dict(a_dict):
