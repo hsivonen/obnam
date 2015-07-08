@@ -77,6 +77,66 @@ class GATreeTests(unittest.TestCase):
         subdir = tree3.get_directory('/foo/bar')
         self.assertIn('README', subdir.get_file_basenames())
 
+    def test_removes_root_directory(self):
+        dir_obj = obnamlib.GADirectory()
+        self.tree.set_directory('/', dir_obj)
+        self.tree.remove_directory('/')
+        self.assertEqual(self.tree.get_directory('/'), None)
+        self.assertEqual(self.tree.get_root_directory_id(), None)
+
+    def test_removes_directory(self):
+        dir_obj = obnamlib.GADirectory()
+        self.tree.set_directory('/foo/bar', dir_obj)
+        self.tree.remove_directory('/foo/bar')
+        self.assertEqual(self.tree.get_directory('/foo/bar'), None)
+
+    def test_removes_persistent_directory(self):
+        dir_obj = obnamlib.GADirectory()
+        self.tree.set_directory('/foo/bar', dir_obj)
+        self.tree.flush()
+
+        tree2 = obnamlib.GATree()
+        tree2.set_blob_store(self.blob_store)
+        tree2.set_root_directory_id(self.tree.get_root_directory_id())
+        tree2.remove_directory('/foo/bar')
+        self.assertEqual(tree2.get_directory('/foo/bar'), None)
+
+    def test_removes_persistent_directory_persistently(self):
+        dir_obj = obnamlib.GADirectory()
+        self.tree.set_directory('/foo/bar', dir_obj)
+        self.tree.flush()
+
+        tree2 = obnamlib.GATree()
+        tree2.set_blob_store(self.blob_store)
+        tree2.set_root_directory_id(self.tree.get_root_directory_id())
+        tree2.remove_directory('/foo/bar')
+        tree2.flush()
+
+        tree3 = obnamlib.GATree()
+        tree3.set_blob_store(self.blob_store)
+        tree3.set_root_directory_id(tree2.get_root_directory_id())
+        self.assertEqual(tree3.get_directory('/foo/bar'), None)
+
+    def test_removes_nonexistent_directory(self):
+        dir_obj = obnamlib.GADirectory()
+        self.tree.remove_directory('/foo/bar')
+        self.assertEqual(self.tree.get_directory('/foo/bar'), None)
+
+    def test_removes_nonexistent_directory_when_tree_is_not_empty(self):
+        dir_obj = obnamlib.GADirectory()
+        self.tree.set_directory('/foo/bar', dir_obj)
+        self.tree.flush()
+
+        tree2 = obnamlib.GATree()
+        tree2.set_blob_store(self.blob_store)
+        tree2.set_root_directory_id(self.tree.get_root_directory_id())
+        tree2.remove_directory('/some/other/path')
+
+        self.assertEqual(tree2.get_directory('/some/other/path'), None)
+        self.assertEqual(
+            self.tree.get_root_directory_id(),
+            tree2.get_root_directory_id())
+
 
 class DummyBagStore(object):
 

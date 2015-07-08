@@ -171,6 +171,10 @@ class GADirectoryTests(unittest.TestCase):
         dir_obj.add_subdir('.git', 'obj-id')
         self.assertEqual(dir_obj.get_subdir_object_id('.git'), 'obj-id')
 
+    def test_returns_None_for_subdir_object_id_if_subdir_does_not_exist(self):
+        dir_obj = obnamlib.GADirectory()
+        self.assertEqual(dir_obj.get_subdir_object_id('.git'), None)
+
 
 class GADirectoryCreationTests(unittest.TestCase):
 

@@ -86,7 +86,7 @@ class GADirectory(object):
             del self._dict['subdirs'][basename]
 
     def get_subdir_object_id(self, basename):
-        return self._dict['subdirs'][basename]
+        return self._dict['subdirs'].get(basename)
 
 
 class GAImmutableError(obnamlib.ObnamError):

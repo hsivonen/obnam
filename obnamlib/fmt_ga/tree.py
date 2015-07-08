@@ -96,6 +96,30 @@ class GATree(object):
             parent_obj.add_subdir(basename, None)
             self.set_directory(parent_path, parent_obj)
 
+    def remove_directory(self, pathname):
+        if pathname == '/':
+            self._remove_root_dir()
+        else:
+            self._remove_from_parent(pathname)
+
+    def _remove_root_dir(self):
+        self._root_dir_id = None
+        self._cache.clear()
+
+    def _remove_from_parent(self, pathname):
+        self._cache.remove(pathname)
+        basename = os.path.basename(pathname)
+        parent_path = os.path.dirname(pathname)
+        parent_obj = self._cache.get(parent_path)
+        if not parent_obj:
+            parent_obj = self.get_directory(parent_path)
+            if parent_obj:
+                parent_obj = obnamlib.create_gadirectory_from_dict(
+                    parent_obj.as_dict())
+        if parent_obj:
+            parent_obj.remove_subdir(basename)
+            self.set_directory(parent_path, parent_obj)
+
     def flush(self):
         self._root_dir_id = self._fixup_subdir_refs('/')
         self._blob_store.flush()
@@ -133,3 +157,7 @@ class DirectoryObjectCache(object):
 
     def __contains__(self, pathname):
         return pathname in self._objs
+
+    def remove(self, pathname):
+        if pathname in self._objs:
+            del self._objs[pathname]
