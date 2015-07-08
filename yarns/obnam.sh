@@ -153,11 +153,11 @@ normalise_manifest_times()
 
 remove_nlink_for_directories()
 {
-    # This assumes tat Mode comes before Nlink, which is does in
+    # This assumes Mode comes before Nlink, which is does in
     # summain output.
     awk '
         $1 == "Mode:" && $2 ~ /^40/ { isdir = 1 }
-        $1 == "Nlink:" && isdir { skip }
+        $1 == "Nlink:" && isdir { next }
         NF > 0 { paragraph = paragraph $0 "\n" }
         NF == 0 && paragraph {
             printf "%s\n", paragraph
@@ -165,7 +165,7 @@ remove_nlink_for_directories()
             isdir = 0
         }
         END { if (paragraph) printf "%s", paragraph }
-    ' "$DATADIR/$MATCH_2" > "$DATADIR/$MATCH_2.new"
+    ' "$@"
 }
 
 
