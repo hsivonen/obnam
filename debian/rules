@@ -7,8 +7,12 @@ override_dh_auto_build:
 	make -C manual html
 
 override_dh_auto_test:
+ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
 	python setup.py build_ext -i
 	rm -rf build
 	cp -a test-gpghome temp.gpghome
 	env GNUPGHOME=temp.gpghome python setup.py check -uy
 	rm -rf temp.gpghome
+else
+	echo NOT RUNNING TESTS DUE TO DEB_BUILD_OPTIONS
+endif
