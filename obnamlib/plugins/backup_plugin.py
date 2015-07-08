@@ -572,7 +572,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         if stat.S_ISREG(metadata.st_mode):
             assert metadata.md5 is None
             metadata.md5 = self.backup_file_contents(pathname, metadata)
-            self.backup_metadata(pathname, metadata)
+        self.backup_metadata(pathname, metadata)
 
     def open_fs(self, root):
         def func(rootdir):
