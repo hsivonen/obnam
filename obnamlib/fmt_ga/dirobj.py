@@ -39,7 +39,9 @@ class GADirectory(object):
 
     def add_file(self, basename):
         self._require_mutable()
-        self._dict['metadata'][basename] = {}
+        self._dict['metadata'][basename] = {
+            'chunk-ids': [],
+        }
 
     def _require_mutable(self):
         if not self._mutable:
@@ -59,6 +61,17 @@ class GADirectory(object):
     def set_file_key(self, basename, key, value):
         self._require_mutable()
         self._dict['metadata'][basename][key] = value
+
+    def get_file_chunk_ids(self, basename):
+        return self._dict['metadata'][basename]['chunk-ids']
+
+    def append_file_chunk_id(self, basename, chunk_id):
+        self._require_mutable()
+        self._dict['metadata'][basename]['chunk-ids'].append(chunk_id)
+
+    def clear_file_chunk_ids(self, basename):
+        self._require_mutable()
+        self._dict['metadata'][basename]['chunk-ids'] = []
 
     def get_subdir_basenames(self):
         return self._dict['subdirs'].keys()

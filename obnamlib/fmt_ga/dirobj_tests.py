@@ -90,6 +90,44 @@ class GADirectoryTests(unittest.TestCase):
             obnamlib.GAImmutableError,
             dir_obj.set_file_key, 'README', obnamlib.REPO_FILE_MODE, 0123)
 
+    def test_file_has_no_chunk_ids_initially(self):
+        dir_obj = obnamlib.GADirectory()
+        dir_obj.add_file('README')
+        self.assertEqual(dir_obj.get_file_chunk_ids('README'), [])
+
+    def test_appends_file_chunk_ids(self):
+        dir_obj = obnamlib.GADirectory()
+        dir_obj.add_file('README')
+        dir_obj.append_file_chunk_id('README', 'chunk-1')
+        dir_obj.append_file_chunk_id('README', 'chunk-2')
+        self.assertEqual(
+            dir_obj.get_file_chunk_ids('README'),
+            ['chunk-1', 'chunk-2'])
+
+    def test_clears_file_chunk_ids(self):
+        dir_obj = obnamlib.GADirectory()
+        dir_obj.add_file('README')
+        dir_obj.append_file_chunk_id('README', 'chunk-1')
+        dir_obj.append_file_chunk_id('README', 'chunk-2')
+        dir_obj.clear_file_chunk_ids('README')
+        self.assertEqual(dir_obj.get_file_chunk_ids('README'), [])
+
+    def test_raises_error_if_mutable_and_file_chunk_id_is_appended(self):
+        dir_obj = obnamlib.GADirectory()
+        dir_obj.add_file('README')
+        dir_obj.set_immutable()
+        self.assertRaises(
+            obnamlib.GAImmutableError,
+            dir_obj.append_file_chunk_id, 'README', 'chunk-1')
+
+    def test_raises_error_if_mutable_and_file_chunk_ids_are_cleared(self):
+        dir_obj = obnamlib.GADirectory()
+        dir_obj.add_file('README')
+        dir_obj.set_immutable()
+        self.assertRaises(
+            obnamlib.GAImmutableError,
+            dir_obj.clear_file_chunk_ids, 'README')
+
     def test_has_no_subdirs_initially(self):
         dir_obj = obnamlib.GADirectory()
         self.assertEqual(dir_obj.get_subdir_basenames(), [])
