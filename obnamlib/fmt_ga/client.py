@@ -166,9 +166,9 @@ class GAClient(object):
     def _new_generation_number(self):
         if self._generations:
             ids = [gen.get_number() for gen in self._generations]
-            return ids[-1] + 1
+            return str(int(ids[-1]) + 1)
         else:
-            return 1
+            return str(1)
 
     def remove_generation(self, gen_number):
         self._load_data()
