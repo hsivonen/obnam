@@ -63,6 +63,9 @@ class GAClient(object):
     def _get_generations(self):
         return self._data.get('generations', [])
 
+    def _set_generations(self, generations):
+        self._data['generations'] = generations
+
     def _save_data(self):
         blob = obnamlib.serialise_object(self._data)
         filename = self._get_filename()
@@ -109,7 +112,7 @@ class GAClient(object):
             int(self._current_time())
         keys[obnamlib.repo_key_name(obnamlib.REPO_GENERATION_ENDED)] = None
 
-        self._data['generations'] = generations + [new_generation]
+        self._set_generations(generations + [new_generation])
 
         return obnamlib.GenerationId(self._client_name, new_generation['id'])
 
@@ -149,7 +152,7 @@ class GAClient(object):
                 client_name=self._client_name,
                 gen_id=gen_number)
 
-        self._data['generations'] = remaining
+        self._set_generations(remaining)
 
     def get_generation_key(self, gen_number, key):
         self._load_data()
