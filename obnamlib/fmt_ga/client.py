@@ -104,12 +104,7 @@ class GAClient(object):
                     gen.set_from_dict(gen_dict)
                     self._generations.append(gen)
 
-            bag_store = obnamlib.BagStore()
-            bag_store.set_location(self._fs, self._dirname)
-
-            blob_store = obnamlib.BlobStore()
-            blob_store.set_bag_store(bag_store)
-
+            blob_store = self._get_blob_store()
             for gen in self._generations:
                 blob_id = gen.get_file_metadata_id()
                 blob = blob_store.get_blob(blob_id)
