@@ -44,7 +44,8 @@ class GAClient(object):
         return self._dirname
 
     def clear(self):
-        self._data = {}
+        self._client_keys = GAClientKeys()
+        self._generations = []
         self._data_is_loaded = False
 
     def commit(self):
@@ -55,19 +56,23 @@ class GAClient(object):
     def _finish_current_generation_if_any(self):
         generations = self._get_generations()
         if generations:
-            keys = generations[-1]['keys']
+            latest = generations[-1]
             key_name = obnamlib.repo_key_name(obnamlib.REPO_GENERATION_ENDED)
-            if keys[key_name] is None:
-                keys[key_name] = int(self._current_time())
+            if latest.get_key(key_name) is None:
+                latest.set_key(key_name, int(self._current_time()))
 
     def _get_generations(self):
-        return self._data.get('generations', [])
+        return self._generations
 
     def _set_generations(self, generations):
-        self._data['generations'] = generations
+        self._generations = generations
 
     def _save_data(self):
-        blob = obnamlib.serialise_object(self._data)
+        data = {
+            'keys': self._client_keys.as_dict(),
+            'generations': [g.as_dict() for g in self._generations],
+        }
+        blob = obnamlib.serialise_object(data)
         filename = self._get_filename()
         self._fs.overwrite_file(filename, blob)
 
@@ -78,62 +83,67 @@ class GAClient(object):
         self._load_data()
         generations = self._get_generations()
         return [
-            obnamlib.GenerationId(self._client_name, gen['id'])
+            obnamlib.GenerationId(self._client_name, gen.get_number())
             for gen in generations]
 
     def _load_data(self):
         if not self._data_is_loaded:
+            self.clear()
             filename = self._get_filename()
             if self._fs.exists(filename):
                 blob = self._fs.cat(filename)
-                self._data = obnamlib.deserialise_object(blob)
-                assert self._data is not None
-            else:
-                self._data = {}
+                data = obnamlib.deserialise_object(blob)
+                self._client_keys.set_from_dict(data['keys'])
+                gens = []
+                for gen_dict in data['generations']:
+                    gen = GAGeneration()
+                    gen.set_from_dict(gen_dict)
+                    gens.append(gen)
+                self._set_generations(gens)
             self._data_is_loaded = True
 
     def create_generation(self):
         self._load_data()
         self._require_previous_generation_is_finished()
 
+        new_generation = GAGeneration()
         generations = self._get_generations()
         if generations:
-            previous = copy.deepcopy(generations[-1])
-        else:
-            previous = {
-                'keys': {},
-                'files': {},
-            }
+            old_dict = generations[-1].as_dict()
+            new_dict = copy.deepcopy(old_dict)
+            new_generation.set_from_dict(new_dict)
 
-        new_generation = dict(previous)
-        new_generation['id'] = self._new_generation_number()
-        keys = new_generation['keys']
-        keys[obnamlib.repo_key_name(obnamlib.REPO_GENERATION_STARTED)] = \
-            int(self._current_time())
-        keys[obnamlib.repo_key_name(obnamlib.REPO_GENERATION_ENDED)] = None
+        new_generation.set_number(self._new_generation_number())
+        new_generation.set_key(
+            obnamlib.repo_key_name(obnamlib.REPO_GENERATION_STARTED),
+            int(self._current_time()))
+        new_generation.set_key(
+            obnamlib.repo_key_name(obnamlib.REPO_GENERATION_ENDED),
+            None)
 
         self._set_generations(generations + [new_generation])
 
-        return obnamlib.GenerationId(self._client_name, new_generation['id'])
+        return obnamlib.GenerationId(
+            self._client_name, new_generation.get_number())
 
     def _require_previous_generation_is_finished(self):
         generations = self._get_generations()
         if generations:
-            keys = generations[-1]['keys']
+            latest = generations[-1]
             key_name = obnamlib.repo_key_name(obnamlib.REPO_GENERATION_ENDED)
-            if keys[key_name] is None:
+            if latest.get_key(key_name) is None:
                 raise obnamlib.RepositoryClientGenerationUnfinished(
                     client_name=self._client_name)
 
     def _new_generation_number(self):
         generations = self._get_generations()
-        ids = [int(gen['id']) for gen in generations]
+        ids = [gen.get_number() for gen in generations]
         if ids:
             newest_id = ids[-1]
             next_id = newest_id + 1
         else:
             next_id = 1
-        return str(next_id)
+        return next_id
 
     def remove_generation(self, gen_number):
         self._load_data()
@@ -142,7 +152,7 @@ class GAClient(object):
         removed = False
 
         for generation in generations:
-            if generation['id'] == gen_number:
+            if generation.get_number() == gen_number:
                 removed = True
             else:
                 remaining.append(generation)
@@ -159,17 +169,17 @@ class GAClient(object):
         generation = self._lookup_generation_by_gen_number(gen_number)
         key_name = obnamlib.repo_key_name(key)
         if key in obnamlib.REPO_GENERATION_INTEGER_KEYS:
-            value = generation['keys'].get(key_name, None)
+            value = generation.get_key(key_name)
             if value is None:
                 value = 0
             return int(value)
         else:
-            return generation['keys'].get(key_name, '')
+            return generation.get_key(key_name, default='')
 
     def _lookup_generation_by_gen_number(self, gen_number):
         generations = self._get_generations()
         for generation in generations:
-            if generation['id'] == gen_number:
+            if generation.get_number() == gen_number:
                 return generation
         raise obnamlib.RepositoryGenerationDoesNotExist(
             gen_id=gen_number, client_name=self._client_name)
@@ -177,7 +187,7 @@ class GAClient(object):
     def set_generation_key(self, gen_number, key, value):
         self._load_data()
         generation = self._lookup_generation_by_gen_number(gen_number)
-        generation['keys'][obnamlib.repo_key_name(key)] = value
+        generation.set_key(obnamlib.repo_key_name(key), value)
 
     def file_exists(self, gen_number, filename):
         self._load_data()
@@ -185,13 +195,14 @@ class GAClient(object):
             generation = self._lookup_generation_by_gen_number(gen_number)
         except obnamlib.RepositoryGenerationDoesNotExist:
             return False
-        return filename in generation['files']
+        return filename in generation.get_files_dict()
 
     def add_file(self, gen_number, filename):
         self._load_data()
         generation = self._lookup_generation_by_gen_number(gen_number)
-        if filename not in generation['files']:
-            generation['files'][filename] = {
+        files_dict = generation.get_files_dict()
+        if filename not in files_dict:
+            files_dict[filename] = {
                 'keys': {},
                 'chunks': [],
             }
@@ -199,14 +210,15 @@ class GAClient(object):
     def remove_file(self, gen_number, filename):
         self._load_data()
         generation = self._lookup_generation_by_gen_number(gen_number)
-        if filename in generation['files']:
-            del generation['files'][filename]
+        files_dict = generation.get_files_dict()
+        if filename in files_dict:
+            del files_dict[filename]
 
     def get_file_key(self, gen_number, filename, key):
         self._load_data()
         self._require_file_exists(gen_number, filename)
         generation = self._lookup_generation_by_gen_number(gen_number)
-        files = generation['files']
+        files = generation.get_files_dict()
         key_name = obnamlib.repo_key_name(key)
 
         if key in obnamlib.REPO_FILE_INTEGER_KEYS:
@@ -220,7 +232,7 @@ class GAClient(object):
 
     def _require_file_exists(self, gen_number, filename):
         generation = self._lookup_generation_by_gen_number(gen_number)
-        if filename not in generation['files']:
+        if filename not in generation.get_files_dict():
             raise obnamlib.RepositoryFileDoesNotExistInGeneration(
                 client_name=self._client_name,
                 genspec=gen_number,
@@ -230,7 +242,7 @@ class GAClient(object):
         self._load_data()
         self._require_file_exists(gen_number, filename)
         generation = self._lookup_generation_by_gen_number(gen_number)
-        files = generation['files']
+        files = generation.get_files_dict()
         key_name = obnamlib.repo_key_name(key)
         files[filename]['keys'][key_name] = value
 
@@ -238,26 +250,30 @@ class GAClient(object):
         self._load_data()
         self._require_file_exists(gen_number, filename)
         generation = self._lookup_generation_by_gen_number(gen_number)
-        return generation['files'][filename]['chunks']
+        files = generation.get_files_dict()
+        return files[filename]['chunks']
 
     def append_file_chunk_id(self, gen_number, filename, chunk_id):
         self._load_data()
         self._require_file_exists(gen_number, filename)
         generation = self._lookup_generation_by_gen_number(gen_number)
-        generation['files'][filename]['chunks'].append(chunk_id)
+        files = generation.get_files_dict()
+        files[filename]['chunks'].append(chunk_id)
 
     def clear_file_chunk_ids(self, gen_number, filename):
         self._load_data()
         self._require_file_exists(gen_number, filename)
         generation = self._lookup_generation_by_gen_number(gen_number)
-        generation['files'][filename]['chunks'] = []
+        files = generation.get_files_dict()
+        files[filename]['chunks'] = []
 
     def get_generation_chunk_ids(self, gen_number):
         self._load_data()
         chunk_ids = set()
         generation = self._lookup_generation_by_gen_number(gen_number)
-        for filename in generation['files']:
-            file_chunk_ids = generation['files'][filename]['chunks']
+        files = generation.get_files_dict()
+        for filename in files:
+            file_chunk_ids = files[filename]['chunks']
             chunk_ids = chunk_ids.union(set(file_chunk_ids))
         return list(chunk_ids)
 
@@ -265,9 +281,61 @@ class GAClient(object):
         self._load_data()
         self._require_file_exists(gen_number, filename)
         generation = self._lookup_generation_by_gen_number(gen_number)
+        files = generation.get_files_dict()
         return [
-            x for x in generation['files']
+            x for x in files
             if self._is_direct_child_of(x, filename)]
 
     def _is_direct_child_of(self, child, parent):
         return os.path.dirname(child) == parent and child != parent
+
+
+class GAClientKeys(object):
+
+    def __init__(self):
+        self._dict = {}
+
+    def as_dict(self):
+        return self._dict
+
+    def set_from_dict(self, keys_dict):
+        self._dict = keys_dict
+
+    def get_key(self, key):
+        return self._dict.get(key)
+
+    def set_key(self, key, value):
+        self._dict[key] = value
+
+
+class GAGeneration(object):
+
+    def __init__(self):
+        self._data = {
+            'keys': {},
+            'files': {},
+        }
+
+    def as_dict(self):
+        return self._data
+
+    def set_from_dict(self, data):
+        self._data = data
+
+    def get_number(self):
+        return self._data['id']
+
+    def set_number(self, new_id):
+        self._data['id'] = new_id
+
+    def keys(self):
+        return self._data['keys'].keys()
+
+    def get_key(self, key, default=None):
+        return self._data['keys'].get(key, default)
+
+    def set_key(self, key, value):
+        self._data['keys'][key] = value
+
+    def get_files_dict(self):
+        return self._data['files']
