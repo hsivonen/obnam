@@ -61,6 +61,19 @@ class GAClient(object):
                 latest.set_key(key_name, int(self._current_time()))
 
     def _save_data(self):
+        bag_store = obnamlib.BagStore()
+        bag_store.set_location(self._fs, self._dirname)
+
+        blob_store = obnamlib.BlobStore()
+        blob_store.set_bag_store(bag_store)
+
+        for gen in self._generations:
+            metadata = gen.get_file_metadata()
+            blob = obnamlib.serialise_object(metadata.as_dict())
+            blob_id = blob_store.put_blob(blob)
+            gen.set_file_metadata_id(blob_id)
+        blob_store.flush()
+
         data = {
             'keys': self._client_keys.as_dict(),
             'generations': [g.as_dict() for g in self._generations],
@@ -81,6 +94,20 @@ class GAClient(object):
                     gen = GAGeneration()
                     gen.set_from_dict(gen_dict)
                     self._generations.append(gen)
+
+            bag_store = obnamlib.BagStore()
+            bag_store.set_location(self._fs, self._dirname)
+
+            blob_store = obnamlib.BlobStore()
+            blob_store.set_bag_store(bag_store)
+
+            for gen in self._generations:
+                blob_id = gen.get_file_metadata_id()
+                blob = blob_store.get_blob(blob_id)
+                data = obnamlib.deserialise_object(blob)
+                metadata = gen.get_file_metadata()
+                metadata.set_from_dict(data)
+
             self._data_is_loaded = True
 
     def _get_filename(self):
@@ -98,9 +125,14 @@ class GAClient(object):
 
         new_generation = GAGeneration()
         if self._generations:
-            old_dict = self._generations.get_latest().as_dict()
-            new_dict = copy.deepcopy(old_dict)
+            latest = self._generations.get_latest()
+            new_dict = copy.deepcopy(latest.as_dict())
             new_generation.set_from_dict(new_dict)
+
+            latest_metadata = latest.get_file_metadata()
+            new_metadata_dict = copy.deepcopy(latest_metadata.as_dict())
+            new_metadata = new_generation.get_file_metadata()
+            new_metadata.set_from_dict(new_metadata_dict)
 
         new_generation.set_number(self._new_generation_number())
         new_generation.set_key(
@@ -317,12 +349,13 @@ class GAGeneration(object):
         self._id = None
         self._keys = GAKeys()
         self._file_metadata = GAFileMetadata()
+        self._file_metadata_id = None
 
     def as_dict(self):
         return {
             'id': self._id,
             'keys': self._keys.as_dict(),
-            'files': self._file_metadata.as_dict(),
+            'file_metadata_id': self._file_metadata_id,
         }
 
     def set_from_dict(self, data):
@@ -330,7 +363,7 @@ class GAGeneration(object):
         self._keys = GAKeys()
         self._keys.set_from_dict(data['keys'])
         self._file_metadata = GAFileMetadata()
-        self._file_metadata.set_from_dict(data['files'])
+        self._file_metadata_id = data['file_metadata_id']
 
     def get_number(self):
         return self._id
@@ -346,6 +379,12 @@ class GAGeneration(object):
 
     def set_key(self, key, value):
         self._keys.set_key(key, value)
+
+    def get_file_metadata_id(self):
+        return self._file_metadata_id
+
+    def set_file_metadata_id(self, metadata_id):
+        self._file_metadata_id = metadata_id
 
     def get_file_metadata(self):
         return self._file_metadata
