@@ -53,12 +53,15 @@ class GAClient(object):
         self._save_data()
 
     def _finish_current_generation_if_any(self):
-        generations = self._data.get('generations', [])
+        generations = self._get_generations()
         if generations:
             keys = generations[-1]['keys']
             key_name = obnamlib.repo_key_name(obnamlib.REPO_GENERATION_ENDED)
             if keys[key_name] is None:
                 keys[key_name] = int(self._current_time())
+
+    def _get_generations(self):
+        return self._data.get('generations', [])
 
     def _save_data(self):
         blob = obnamlib.serialise_object(self._data)
@@ -70,7 +73,7 @@ class GAClient(object):
 
     def get_client_generation_ids(self):
         self._load_data()
-        generations = self._data.get('generations', [])
+        generations = self._get_generations()
         return [
             obnamlib.GenerationId(self._client_name, gen['id'])
             for gen in generations]
@@ -90,7 +93,7 @@ class GAClient(object):
         self._load_data()
         self._require_previous_generation_is_finished()
 
-        generations = self._data.get('generations', [])
+        generations = self._get_generations()
         if generations:
             previous = copy.deepcopy(generations[-1])
         else:
@@ -111,7 +114,7 @@ class GAClient(object):
         return obnamlib.GenerationId(self._client_name, new_generation['id'])
 
     def _require_previous_generation_is_finished(self):
-        generations = self._data.get('generations', [])
+        generations = self._get_generations()
         if generations:
             keys = generations[-1]['keys']
             key_name = obnamlib.repo_key_name(obnamlib.REPO_GENERATION_ENDED)
@@ -120,7 +123,7 @@ class GAClient(object):
                     client_name=self._client_name)
 
     def _new_generation_number(self):
-        generations = self._data.get('generations', [])
+        generations = self._get_generations()
         ids = [int(gen['id']) for gen in generations]
         if ids:
             newest_id = ids[-1]
@@ -131,7 +134,7 @@ class GAClient(object):
 
     def remove_generation(self, gen_number):
         self._load_data()
-        generations = self._data.get('generations', [])
+        generations = self._get_generations()
         remaining = []
         removed = False
 
@@ -161,11 +164,10 @@ class GAClient(object):
             return generation['keys'].get(key_name, '')
 
     def _lookup_generation_by_gen_number(self, gen_number):
-        if 'generations' in self._data:
-            generations = self._data['generations']
-            for generation in generations:
-                if generation['id'] == gen_number:
-                    return generation
+        generations = self._get_generations()
+        for generation in generations:
+            if generation['id'] == gen_number:
+                return generation
         raise obnamlib.RepositoryGenerationDoesNotExist(
             gen_id=gen_number, client_name=self._client_name)
 
