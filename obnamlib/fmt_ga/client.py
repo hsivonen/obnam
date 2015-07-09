@@ -69,15 +69,6 @@ class GAClient(object):
         filename = self._get_filename()
         self._fs.overwrite_file(filename, blob)
 
-    def _get_filename(self):
-        return os.path.join(self.get_dirname(), 'data.dat')
-
-    def get_client_generation_ids(self):
-        self._load_data()
-        return [
-            obnamlib.GenerationId(self._client_name, gen.get_number())
-            for gen in self._generations]
-
     def _load_data(self):
         if not self._data_is_loaded:
             self.clear()
@@ -91,6 +82,15 @@ class GAClient(object):
                     gen.set_from_dict(gen_dict)
                     self._generations.append(gen)
             self._data_is_loaded = True
+
+    def _get_filename(self):
+        return os.path.join(self.get_dirname(), 'data.dat')
+
+    def get_client_generation_ids(self):
+        self._load_data()
+        return [
+            obnamlib.GenerationId(self._client_name, gen.get_number())
+            for gen in self._generations]
 
     def create_generation(self):
         self._load_data()
