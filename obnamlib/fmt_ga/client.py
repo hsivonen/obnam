@@ -65,18 +65,22 @@ class GAClient(object):
         self._save_per_client_data()
 
     def _save_file_metadata(self):
-        bag_store = obnamlib.BagStore()
-        bag_store.set_location(self._fs, self._dirname)
-
-        blob_store = obnamlib.BlobStore()
-        blob_store.set_bag_store(bag_store)
-
+        blob_store = self._get_blob_store()
         for gen in self._generations:
             metadata = gen.get_file_metadata()
             blob = obnamlib.serialise_object(metadata.as_dict())
             blob_id = blob_store.put_blob(blob)
             gen.set_file_metadata_id(blob_id)
         blob_store.flush()
+
+    def _get_blob_store(self):
+        bag_store = obnamlib.BagStore()
+        bag_store.set_location(self._fs, self._dirname)
+
+        blob_store = obnamlib.BlobStore()
+        blob_store.set_bag_store(bag_store)
+
+        return blob_store
 
     def _save_per_client_data(self):
         data = {
