@@ -55,7 +55,7 @@ class GAClient(object):
 
     def _finish_current_generation_if_any(self):
         if self._generations:
-            latest = self._generations[-1]
+            latest = self._generations.get_latest()
             key_name = obnamlib.repo_key_name(obnamlib.REPO_GENERATION_ENDED)
             if latest.get_key(key_name) is None:
                 latest.set_key(key_name, int(self._current_time()))
@@ -98,7 +98,7 @@ class GAClient(object):
 
         new_generation = GAGeneration()
         if self._generations:
-            old_dict = self._generations[-1].as_dict()
+            old_dict = self._generations.get_latest().as_dict()
             new_dict = copy.deepcopy(old_dict)
             new_generation.set_from_dict(new_dict)
 
@@ -117,7 +117,7 @@ class GAClient(object):
 
     def _require_previous_generation_is_finished(self):
         if self._generations:
-            latest = self._generations[-1]
+            latest = self._generations.get_latest()
             key_name = obnamlib.repo_key_name(obnamlib.REPO_GENERATION_ENDED)
             if latest.get_key(key_name) is None:
                 raise obnamlib.RepositoryClientGenerationUnfinished(
@@ -305,8 +305,8 @@ class GAGenerationList(object):
         for gen in self._generations[:]:
             yield gen
 
-    def __getitem__(self, index):
-        return self._generations[index]
+    def get_latest(self):
+        return self._generations[-1]
 
     def append(self, gen):
         self._generations.append(gen)
