@@ -61,6 +61,10 @@ class GAClient(object):
                 latest.set_key(key_name, int(self._current_time()))
 
     def _save_data(self):
+        self._save_file_metadata()
+        self._save_per_client_data()
+
+    def _save_file_metadata(self):
         bag_store = obnamlib.BagStore()
         bag_store.set_location(self._fs, self._dirname)
 
@@ -74,6 +78,7 @@ class GAClient(object):
             gen.set_file_metadata_id(blob_id)
         blob_store.flush()
 
+    def _save_per_client_data(self):
         data = {
             'keys': self._client_keys.as_dict(),
             'generations': [g.as_dict() for g in self._generations],
