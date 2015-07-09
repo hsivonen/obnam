@@ -417,10 +417,11 @@ class GAFileMetadata(object):
         return filename in self._files
 
     def add_file(self, filename):
-        self._files[filename] = {
-            'keys': {},
-            'chunks': [],
-        }
+        if filename not in self._files:
+            self._files[filename] = {
+                'keys': {},
+                'chunks': [],
+            }
 
     def remove_file(self, filename):
         if filename in self._files:
