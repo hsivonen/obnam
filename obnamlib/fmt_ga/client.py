@@ -65,13 +65,9 @@ class GAClient(object):
         self._save_per_client_data()
 
     def _save_file_metadata(self):
-        blob_store = self._get_blob_store()
         for gen in self._generations:
             metadata = gen.get_file_metadata()
-            blob = obnamlib.serialise_object(metadata.as_dict())
-            blob_id = blob_store.put_blob(blob)
-            gen.set_file_metadata_id(blob_id)
-        blob_store.flush()
+            gen.set_file_metadata_id(metadata.get_blob_id())
 
     def _get_blob_store(self):
         bag_store = obnamlib.BagStore()
@@ -115,11 +111,9 @@ class GAClient(object):
     def _load_file_metadata(self):
         blob_store = self._get_blob_store()
         for gen in self._generations:
-            blob_id = gen.get_file_metadata_id()
-            blob = blob_store.get_blob(blob_id)
-            data = obnamlib.deserialise_object(blob)
             metadata = gen.get_file_metadata()
-            metadata.set_from_dict(data)
+            metadata.set_blob_store(blob_store)
+            metadata.set_blob_id(gen.get_file_metadata_id())
 
     def get_client_generation_ids(self):
         self._load_data()
@@ -132,15 +126,16 @@ class GAClient(object):
         self._require_previous_generation_is_finished()
 
         new_generation = GAGeneration()
+        new_metadata = new_generation.get_file_metadata()
+        new_metadata.set_blob_store(self._get_blob_store())
+
         if self._generations:
             latest = self._generations.get_latest()
             new_dict = copy.deepcopy(latest.as_dict())
             new_generation.set_from_dict(new_dict)
 
             latest_metadata = latest.get_file_metadata()
-            new_metadata_dict = copy.deepcopy(latest_metadata.as_dict())
-            new_metadata = new_generation.get_file_metadata()
-            new_metadata.set_from_dict(new_metadata_dict)
+            new_metadata.set_blob_id(latest_metadata.get_blob_id())
 
         new_generation.set_number(self._new_generation_number())
         new_generation.set_key(
@@ -370,7 +365,6 @@ class GAGeneration(object):
         self._id = data['id']
         self._keys = GAKeys()
         self._keys.set_from_dict(data['keys'])
-        self._file_metadata = GAFileMetadata()
         self._file_metadata_id = data['file_metadata_id']
 
     def get_number(self):
@@ -401,43 +395,70 @@ class GAGeneration(object):
 class GAFileMetadata(object):
 
     def __init__(self):
-        self._files = {}
+        self._blob_store = None
+        self._blob_id = None
 
-    def as_dict(self):
-        return self._files
+    def set_blob_store(self, blob_store):
+        self._blob_store = blob_store
 
-    def set_from_dict(self, data):
-        self._files = data
+    def set_blob_id(self, blob_id):
+        self._blob_id = blob_id
+
+    def get_blob_id(self):
+        return self._blob_id
+
+    def _load(self):
+        if self._blob_id is None:
+            return {}
+
+        blob = self._blob_store.get_blob(self._blob_id)
+        return obnamlib.deserialise_object(blob)
+
+    def _save(self, files):
+        blob = obnamlib.serialise_object(files)
+        self._blob_id = self._blob_store.put_blob(blob)
 
     def __iter__(self):
-        for filename in self._files:
+        for filename in self._load():
             yield filename
 
     def file_exists(self, filename):
-        return filename in self._files
+        return filename in self._load()
 
     def add_file(self, filename):
-        if filename not in self._files:
-            self._files[filename] = {
+        files = self._load()
+        if filename not in files:
+            files[filename] = {
                 'keys': {},
                 'chunks': [],
             }
+            self._save(files)
 
     def remove_file(self, filename):
-        if filename in self._files:
-            del self._files[filename]
+        files = self._load()
+        if filename in files:
+            del files[filename]
+            self._save(files)
 
     def get_file_key(self, filename, key):
-        return self._files[filename]['keys'].get(key)
+        files = self._load()
+        return files[filename]['keys'].get(key)
 
     def set_file_key(self, filename, key, value):
-        self._files[filename]['keys'][key] = value
+        files = self._load()
+        files[filename]['keys'][key] = value
+        self._save(files)
 
     def get_file_chunk_ids(self, filename):
-        return self._files[filename]['chunks']
+        files = self._load()
+        return files[filename]['chunks']
 
     def append_file_chunk_id(self, filename, chunk_id):
-        self._files[filename]['chunks'].append(chunk_id)
+        files = self._load()
+        files[filename]['chunks'].append(chunk_id)
+        self._save(files)
 
     def clear_file_chunk_ids(self, filename):
-        self._files[filename]['chunks'] = []
+        files = self._load()
+        files[filename]['chunks'] = []
+        self._save(files)
