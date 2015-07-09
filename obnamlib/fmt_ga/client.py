@@ -104,18 +104,21 @@ class GAClient(object):
                     gen.set_from_dict(gen_dict)
                     self._generations.append(gen)
 
-            blob_store = self._get_blob_store()
-            for gen in self._generations:
-                blob_id = gen.get_file_metadata_id()
-                blob = blob_store.get_blob(blob_id)
-                data = obnamlib.deserialise_object(blob)
-                metadata = gen.get_file_metadata()
-                metadata.set_from_dict(data)
+            self._load_file_metadata()
 
             self._data_is_loaded = True
 
     def _get_filename(self):
         return os.path.join(self.get_dirname(), 'data.dat')
+
+    def _load_file_metadata(self):
+        blob_store = self._get_blob_store()
+        for gen in self._generations:
+            blob_id = gen.get_file_metadata_id()
+            blob = blob_store.get_blob(blob_id)
+            data = obnamlib.deserialise_object(blob)
+            metadata = gen.get_file_metadata()
+            metadata.set_from_dict(data)
 
     def get_client_generation_ids(self):
         self._load_data()
