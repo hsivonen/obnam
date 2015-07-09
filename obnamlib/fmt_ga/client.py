@@ -94,19 +94,20 @@ class GAClient(object):
     def _load_data(self):
         if not self._data_is_loaded:
             self.clear()
-            filename = self._get_filename()
-            if self._fs.exists(filename):
-                blob = self._fs.cat(filename)
-                data = obnamlib.deserialise_object(blob)
-                self._client_keys.set_from_dict(data['keys'])
-                for gen_dict in data['generations']:
-                    gen = GAGeneration()
-                    gen.set_from_dict(gen_dict)
-                    self._generations.append(gen)
-
+            self._load_per_client_data()
             self._load_file_metadata()
-
             self._data_is_loaded = True
+
+    def _load_per_client_data(self):
+        filename = self._get_filename()
+        if self._fs.exists(filename):
+            blob = self._fs.cat(filename)
+            data = obnamlib.deserialise_object(blob)
+            self._client_keys.set_from_dict(data['keys'])
+            for gen_dict in data['generations']:
+                gen = GAGeneration()
+                gen.set_from_dict(gen_dict)
+                self._generations.append(gen)
 
     def _get_filename(self):
         return os.path.join(self.get_dirname(), 'data.dat')
