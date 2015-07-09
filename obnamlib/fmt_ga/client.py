@@ -44,7 +44,7 @@ class GAClient(object):
         return self._dirname
 
     def clear(self):
-        self._client_keys = GAClientKeys()
+        self._client_keys = GAKeys()
         self._generations = GAGenerationList()
         self._data_is_loaded = False
 
@@ -178,30 +178,26 @@ class GAClient(object):
             generation = self._lookup_generation_by_gen_number(gen_number)
         except obnamlib.RepositoryGenerationDoesNotExist:
             return False
-        return filename in generation.get_files_dict()
+        metadata = generation.get_file_metadata()
+        return metadata.file_exists(filename)
 
     def add_file(self, gen_number, filename):
         self._load_data()
         generation = self._lookup_generation_by_gen_number(gen_number)
-        files_dict = generation.get_files_dict()
-        if filename not in files_dict:
-            files_dict[filename] = {
-                'keys': {},
-                'chunks': [],
-            }
+        metadata = generation.get_file_metadata()
+        metadata.add_file(filename)
 
     def remove_file(self, gen_number, filename):
         self._load_data()
         generation = self._lookup_generation_by_gen_number(gen_number)
-        files_dict = generation.get_files_dict()
-        if filename in files_dict:
-            del files_dict[filename]
+        metadata = generation.get_file_metadata()
+        metadata.remove_file(filename)
 
     def get_file_key(self, gen_number, filename, key):
         self._load_data()
         self._require_file_exists(gen_number, filename)
         generation = self._lookup_generation_by_gen_number(gen_number)
-        files = generation.get_files_dict()
+        metadata = generation.get_file_metadata()
         key_name = obnamlib.repo_key_name(key)
 
         if key in obnamlib.REPO_FILE_INTEGER_KEYS:
@@ -209,13 +205,15 @@ class GAClient(object):
         else:
             default = ''
 
-        if key_name not in files[filename]['keys']:
+        value = metadata.get_file_key(filename, key_name)
+        if value is None:
             return default
-        return files[filename]['keys'][key_name] or default
+        return value
 
     def _require_file_exists(self, gen_number, filename):
         generation = self._lookup_generation_by_gen_number(gen_number)
-        if filename not in generation.get_files_dict():
+        metadata = generation.get_file_metadata()
+        if not metadata.file_exists(filename):
             raise obnamlib.RepositoryFileDoesNotExistInGeneration(
                 client_name=self._client_name,
                 genspec=gen_number,
@@ -225,38 +223,38 @@ class GAClient(object):
         self._load_data()
         self._require_file_exists(gen_number, filename)
         generation = self._lookup_generation_by_gen_number(gen_number)
-        files = generation.get_files_dict()
+        metadata = generation.get_file_metadata()
         key_name = obnamlib.repo_key_name(key)
-        files[filename]['keys'][key_name] = value
+        metadata.set_file_key(filename, key_name, value)
 
     def get_file_chunk_ids(self, gen_number, filename):
         self._load_data()
         self._require_file_exists(gen_number, filename)
         generation = self._lookup_generation_by_gen_number(gen_number)
-        files = generation.get_files_dict()
-        return files[filename]['chunks']
+        metadata = generation.get_file_metadata()
+        return metadata.get_file_chunk_ids(filename)
 
     def append_file_chunk_id(self, gen_number, filename, chunk_id):
         self._load_data()
         self._require_file_exists(gen_number, filename)
         generation = self._lookup_generation_by_gen_number(gen_number)
-        files = generation.get_files_dict()
-        files[filename]['chunks'].append(chunk_id)
+        metadata = generation.get_file_metadata()
+        metadata.append_file_chunk_id(filename, chunk_id)
 
     def clear_file_chunk_ids(self, gen_number, filename):
         self._load_data()
         self._require_file_exists(gen_number, filename)
         generation = self._lookup_generation_by_gen_number(gen_number)
-        files = generation.get_files_dict()
-        files[filename]['chunks'] = []
+        metadata = generation.get_file_metadata()
+        metadata.clear_file_chunk_ids(filename)
 
     def get_generation_chunk_ids(self, gen_number):
         self._load_data()
         chunk_ids = set()
         generation = self._lookup_generation_by_gen_number(gen_number)
-        files = generation.get_files_dict()
-        for filename in files:
-            file_chunk_ids = files[filename]['chunks']
+        metadata = generation.get_file_metadata()
+        for filename in metadata:
+            file_chunk_ids = metadata.get_file_chunk_ids(filename)
             chunk_ids = chunk_ids.union(set(file_chunk_ids))
         return list(chunk_ids)
 
@@ -264,16 +262,16 @@ class GAClient(object):
         self._load_data()
         self._require_file_exists(gen_number, filename)
         generation = self._lookup_generation_by_gen_number(gen_number)
-        files = generation.get_files_dict()
+        metadata = generation.get_file_metadata()
         return [
-            x for x in files
+            x for x in metadata
             if self._is_direct_child_of(x, filename)]
 
     def _is_direct_child_of(self, child, parent):
         return os.path.dirname(child) == parent and child != parent
 
 
-class GAClientKeys(object):
+class GAKeys(object):
 
     def __init__(self):
         self._dict = {}
@@ -284,8 +282,8 @@ class GAClientKeys(object):
     def set_from_dict(self, keys_dict):
         self._dict = keys_dict
 
-    def get_key(self, key):
-        return self._dict.get(key)
+    def get_key(self, key, default=None):
+        return self._dict.get(key, default)
 
     def set_key(self, key, value):
         self._dict[key] = value
@@ -316,31 +314,82 @@ class GAGenerationList(object):
 class GAGeneration(object):
 
     def __init__(self):
-        self._data = {
-            'keys': {},
-            'files': {},
-        }
+        self._id = None
+        self._keys = GAKeys()
+        self._file_metadata = GAFileMetadata()
 
     def as_dict(self):
-        return self._data
+        return {
+            'id': self._id,
+            'keys': self._keys.as_dict(),
+            'files': self._file_metadata.as_dict(),
+        }
 
     def set_from_dict(self, data):
-        self._data = data
+        self._id = data['id']
+        self._keys = GAKeys()
+        self._keys.set_from_dict(data['keys'])
+        self._file_metadata = GAFileMetadata()
+        self._file_metadata.set_from_dict(data['files'])
 
     def get_number(self):
-        return self._data['id']
+        return self._id
 
     def set_number(self, new_id):
-        self._data['id'] = new_id
+        self._id = new_id
 
     def keys(self):
-        return self._data['keys'].keys()
+        return self._keys.keys()
 
     def get_key(self, key, default=None):
-        return self._data['keys'].get(key, default)
+        return self._keys.get_key(key, default=default)
 
     def set_key(self, key, value):
-        self._data['keys'][key] = value
+        self._keys.set_key(key, value)
 
-    def get_files_dict(self):
-        return self._data['files']
+    def get_file_metadata(self):
+        return self._file_metadata
+
+
+class GAFileMetadata(object):
+
+    def __init__(self):
+        self._files = {}
+
+    def as_dict(self):
+        return self._files
+
+    def set_from_dict(self, data):
+        self._files = data
+
+    def __iter__(self):
+        for filename in self._files:
+            yield filename
+
+    def file_exists(self, filename):
+        return filename in self._files
+
+    def add_file(self, filename):
+        self._files[filename] = {
+            'keys': {},
+            'chunks': [],
+        }
+
+    def remove_file(self, filename):
+        if filename in self._files:
+            del self._files[filename]
+
+    def get_file_key(self, filename, key):
+        return self._files[filename]['keys'].get(key)
+
+    def set_file_key(self, filename, key, value):
+        self._files[filename]['keys'][key] = value
+
+    def get_file_chunk_ids(self, filename):
+        return self._files[filename]['chunks']
+
+    def append_file_chunk_id(self, filename, chunk_id):
+        self._files[filename]['chunks'].append(chunk_id)
+
+    def clear_file_chunk_ids(self, filename):
+        self._files[filename]['chunks'] = []
