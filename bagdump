@@ -1,0 +1,43 @@
+#!/usr/bin/env python
+# Copyright 2015  Lars Wirzenius
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# =*= License: GPL-3+ =*=
+
+
+import sys
+
+import yaml
+
+import obnamlib
+
+
+def strip_filtering(blob):
+    # Dummy version, does not actually work if any compression or
+    # encryption has been used.
+    tag, remaining = blob.split('\0', 1)
+    return remaining
+
+
+for filename in sys.argv[1:]:
+    with open(filename) as f:
+        blob = f.read()
+        blob = strip_filtering(blob)
+    bag = obnamlib.deserialise_bag(blob)
+
+    decoded = []
+    for obj_blob in bag:
+        obj = obnamlib.deserialise_object(obj_blob)
+        yaml.safe_dump(obj, stream=sys.stdout)
