@@ -67,6 +67,8 @@ class GAClient(object):
     def _save_file_metadata(self):
         for gen in self._generations:
             metadata = gen.get_file_metadata()
+            assert not metadata.has_unflushed_added_files(), \
+                repr(metadata._added_files._files)
             gen.set_file_metadata_id(metadata.get_blob_id())
 
     def _get_blob_store(self):
@@ -397,6 +399,10 @@ class GAFileMetadata(object):
     def __init__(self):
         self._blob_store = None
         self._blob_id = None
+        self._added_files = AddedFiles()
+
+    def has_unflushed_added_files(self):
+        return len(self._added_files) > 0
 
     def set_blob_store(self, blob_store):
         self._blob_store = blob_store
@@ -419,46 +425,112 @@ class GAFileMetadata(object):
         self._blob_id = self._blob_store.put_blob(blob)
 
     def __iter__(self):
+        for filename in self._added_files:
+            yield filename
         for filename in self._load():
             yield filename
 
     def file_exists(self, filename):
-        return filename in self._load()
+        return filename in self._added_files or filename in self._load()
 
     def add_file(self, filename):
-        files = self._load()
-        if filename not in files:
-            files[filename] = {
-                'keys': {},
-                'chunks': [],
-            }
-            self._save(files)
+        if filename not in self._added_files and filename not in self._load():
+            self._added_files.add_file(filename)
 
     def remove_file(self, filename):
+        if filename in self._added_files:
+            self._added_files.remove_file(filename)
         files = self._load()
         if filename in files:
             del files[filename]
             self._save(files)
 
     def get_file_key(self, filename, key):
+        if filename in self._added_files:
+            return self._added_files.get_file_key(filename, key)
         files = self._load()
         return files[filename]['keys'].get(key)
 
     def set_file_key(self, filename, key, value):
-        files = self._load()
-        files[filename]['keys'][key] = value
-        self._save(files)
+        if filename in self._added_files:
+            self._added_files.set_file_key(filename, key, value)
+            mode_key_name = obnamlib.repo_key_name(obnamlib.REPO_FILE_MODE)
+            if key == mode_key_name:
+                files = self._load()
+                files[filename] = self._added_files.get_file_dict(filename)
+                self._save(files)
+                self._added_files.remove_file(filename)
+        else:
+            files = self._load()
+            files[filename]['keys'][key] = value
+            self._save(files)
 
     def get_file_chunk_ids(self, filename):
+        if filename in self._added_files:
+            return self._added_files.get_file_chunk_ids(filename)
         files = self._load()
         return files[filename]['chunks']
 
     def append_file_chunk_id(self, filename, chunk_id):
+        if filename in self._added_files:
+            self._added_files.append_file_chunk_id(filename, chunk_id)
+            return
         files = self._load()
         files[filename]['chunks'].append(chunk_id)
         self._save(files)
 
     def clear_file_chunk_ids(self, filename):
+        if filename in self._added_files:
+            self._added_files.clear_file_chunk_ids(filename)
+            return
         files = self._load()
         files[filename]['chunks'] = []
         self._save(files)
+
+
+class AddedFiles(object):
+
+    def __init__(self):
+        self.clear()
+
+    def clear(self):
+        self._files = {}
+
+    def __contains__(self, filename):
+        return filename in self._files
+
+    def __iter__(self):
+        for filename in self._files:
+            yield filename
+
+    def __len__(self):
+        return len(self._files)
+
+    def get_file_dict(self, filename):
+        return self._files[filename]
+
+    def add_file(self, filename):
+        assert filename not in self._files
+        self._files[filename] = {
+            'keys': {},
+            'chunks': [],
+        }
+
+    def remove_file(self, filename):
+        assert filename in self._files
+        del self._files[filename]
+
+    def get_file_key(self, filename, key):
+        return self._files[filename]['keys'].get(key)
+
+    def set_file_key(self, filename, key, value):
+        self._files[filename]['keys'][key] = value
+
+    def get_file_chunk_ids(self, filename):
+        return self._files[filename]['chunks']
+
+    def append_file_chunk_id(self, filename, chunk_id):
+        self._files[filename]['chunks'].append(chunk_id)
+
+    def clear_file_chunk_ids(self, filename):
+        self._files[filename]['chunks'] = []
