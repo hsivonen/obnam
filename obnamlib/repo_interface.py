@@ -1526,12 +1526,16 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
     def test_committing_remembers_file_add(self):
         gen_id = self.create_generation()
         self.repo.add_file(gen_id, '/foo/bar')
+        self.repo.set_file_key(
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_MODE, stat.S_IFREG)
         self.repo.commit_client('fooclient')
         self.assertTrue(self.repo.file_exists(gen_id, '/foo/bar'))
 
     def test_creating_generation_clones_previous_one(self):
         gen_id = self.create_generation()
         self.repo.add_file(gen_id, '/foo/bar')
+        self.repo.set_file_key(
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_MODE, stat.S_IFREG)
         self.repo.commit_client('fooclient')
 
         self.repo.lock_client('fooclient')
@@ -1547,6 +1551,8 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
     def test_unlocking_forgets_file_removal(self):
         gen_id = self.create_generation()
         self.repo.add_file(gen_id, '/foo/bar')
+        self.repo.set_file_key(
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_MODE, stat.S_IFREG)
         self.repo.commit_client('fooclient')
 
         self.repo.lock_client('fooclient')
@@ -1559,6 +1565,8 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
     def test_committing_remembers_file_removal(self):
         gen_id = self.create_generation()
         self.repo.add_file(gen_id, '/foo/bar')
+        self.repo.set_file_key(
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_MODE, stat.S_IFREG)
         self.repo.commit_client('fooclient')
 
         self.repo.lock_client('fooclient')
@@ -1742,6 +1750,8 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
         gen_id = self.create_generation()
         self.repo.add_file(gen_id, '/foo/bar')
         self.repo.set_file_key(
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_MODE, stat.S_IFREG)
+        self.repo.set_file_key(
             gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY, 'yoyo')
         self.repo.commit_client('fooclient')
         value = self.repo.get_file_key(
@@ -1751,6 +1761,8 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
     def test_setting_file_key_does_not_affect_previous_generation(self):
         gen_id = self.create_generation()
         self.repo.add_file(gen_id, '/foo/bar')
+        self.repo.set_file_key(
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_MODE, stat.S_IFREG)
         self.repo.set_file_key(
             gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY, 'first')
         self.repo.commit_client('fooclient')
@@ -1846,6 +1858,8 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
     def test_unlocking_client_forgets_modified_file_chunk_ids(self):
         gen_id = self.create_generation()
         self.repo.add_file(gen_id, '/foo/bar')
+        self.repo.set_file_key(
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_MODE, stat.S_IFREG)
         self.repo.append_file_chunk_id(gen_id, '/foo/bar', 1)
         self.repo.commit_client('fooclient')
 
@@ -1864,6 +1878,8 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
     def test_committing_child_remembers_modified_file_chunk_ids(self):
         gen_id = self.create_generation()
         self.repo.add_file(gen_id, '/foo/bar')
+        self.repo.set_file_key(
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_MODE, stat.S_IFREG)
         self.repo.append_file_chunk_id(gen_id, '/foo/bar', 1)
         self.repo.commit_client('fooclient')
 

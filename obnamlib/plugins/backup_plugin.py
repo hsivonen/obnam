@@ -569,6 +569,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         # thinking.
         self.progress.backed_up_count += 1
 
+        self.backup_metadata(pathname, metadata)
         if stat.S_ISREG(metadata.st_mode):
             assert metadata.md5 is None
             metadata.md5 = self.backup_file_contents(pathname, metadata)

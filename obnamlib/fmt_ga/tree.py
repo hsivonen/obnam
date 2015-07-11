@@ -18,6 +18,8 @@
 
 import os
 
+import tracing
+
 import obnamlib
 
 
@@ -51,21 +53,29 @@ class GATree(object):
 
     def get_directory(self, pathname):
         if pathname in self._cache:
+            tracing.trace('cache hit: pathname=%r', pathname)
             return self._cache.get(pathname)
+
+        tracing.trace('cache miss: pathname=%r', pathname)
 
         if self._root_dir_id is None:
             return None
 
+        dir_obj = None
         if pathname == '/':
-            return self._get_dir_obj(self._root_dir_id)
+            dir_obj = self._get_dir_obj(self._root_dir_id)
         else:
             parent_obj = self._get_containing_dir_obj(pathname)
             if parent_obj is not None:
                 basename = os.path.basename(pathname)
                 obj_id = parent_obj.get_subdir_object_id(basename)
                 if obj_id is not None:
-                    return self._get_dir_obj(obj_id)
-            return None  # pragma: no cover
+                    dir_obj = self._get_dir_obj(obj_id)
+
+        if dir_obj is not None:
+            self._cache.set(pathname, dir_obj)
+
+        return dir_obj
 
     def _get_dir_obj(self, dir_id):
         blob = self._blob_store.get_blob(dir_id)
@@ -93,6 +103,10 @@ class GATree(object):
                         parent_obj.as_dict())
                 else:
                     parent_obj = obnamlib.GADirectory()
+                    parent_obj.add_file('.')
+            if not parent_obj.is_mutable():
+                parent_obj = obnamlib.create_gadirectory_from_dict(
+                    parent_obj.as_dict())
             parent_obj.add_subdir(basename, None)
             self.set_directory(parent_path, parent_obj)
 
@@ -121,7 +135,8 @@ class GATree(object):
             self.set_directory(parent_path, parent_obj)
 
     def flush(self):
-        self._root_dir_id = self._fixup_subdir_refs('/')
+        if '/' in self._cache:
+            self._root_dir_id = self._fixup_subdir_refs('/')
         self._blob_store.flush()
         self._cache.clear()
 

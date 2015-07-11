@@ -18,6 +18,7 @@
 
 import copy
 import os
+import stat
 
 import obnamlib
 
@@ -44,7 +45,8 @@ class GAClient(object):
         return self._dirname
 
     def clear(self):
-        self._data = {}
+        self._client_keys = GAKeys()
+        self._generations = GAGenerationList()
         self._data_is_loaded = False
 
     def commit(self):
@@ -53,90 +55,128 @@ class GAClient(object):
         self._save_data()
 
     def _finish_current_generation_if_any(self):
-        generations = self._data.get('generations', [])
-        if generations:
-            keys = generations[-1]['keys']
+        if self._generations:
+            latest = self._generations.get_latest()
             key_name = obnamlib.repo_key_name(obnamlib.REPO_GENERATION_ENDED)
-            if keys[key_name] is None:
-                keys[key_name] = int(self._current_time())
+            if latest.get_key(key_name) is None:
+                latest.set_key(key_name, int(self._current_time()))
 
     def _save_data(self):
-        blob = obnamlib.serialise_object(self._data)
+        self._save_file_metadata()
+        self._save_per_client_data()
+
+    def _save_file_metadata(self):
+        for gen in self._generations:
+            metadata = gen.get_file_metadata()
+            metadata.flush()
+            gen.set_root_object_id(metadata.get_root_object_id())
+
+    def _get_blob_store(self):
+        bag_store = obnamlib.BagStore()
+        bag_store.set_location(self._fs, self._dirname)
+
+        blob_store = obnamlib.BlobStore()
+        blob_store.set_bag_store(bag_store)
+
+        return blob_store
+
+    def _save_per_client_data(self):
+        data = {
+            'keys': self._client_keys.as_dict(),
+            'generations': [g.as_dict() for g in self._generations],
+        }
+        blob = obnamlib.serialise_object(data)
         filename = self._get_filename()
         self._fs.overwrite_file(filename, blob)
+
+    def _load_data(self):
+        if not self._data_is_loaded:
+            self.clear()
+            self._load_per_client_data()
+            self._load_file_metadata()
+            self._data_is_loaded = True
+
+    def _load_per_client_data(self):
+        filename = self._get_filename()
+        if self._fs.exists(filename):
+            blob = self._fs.cat(filename)
+            data = obnamlib.deserialise_object(blob)
+            self._client_keys.set_from_dict(data['keys'])
+            for gen_dict in data['generations']:
+                gen = GAGeneration()
+                gen.set_from_dict(gen_dict)
+                self._generations.append(gen)
 
     def _get_filename(self):
         return os.path.join(self.get_dirname(), 'data.dat')
 
+    def _load_file_metadata(self):
+        blob_store = self._get_blob_store()
+        for gen in self._generations:
+            metadata = gen.get_file_metadata()
+            metadata.set_blob_store(blob_store)
+            metadata.set_root_object_id(gen.get_root_object_id())
+
     def get_client_generation_ids(self):
         self._load_data()
-        generations = self._data.get('generations', [])
         return [
-            obnamlib.GenerationId(self._client_name, gen['id'])
-            for gen in generations]
-
-    def _load_data(self):
-        if not self._data_is_loaded:
-            filename = self._get_filename()
-            if self._fs.exists(filename):
-                blob = self._fs.cat(filename)
-                self._data = obnamlib.deserialise_object(blob)
-                assert self._data is not None
-            else:
-                self._data = {}
-            self._data_is_loaded = True
+            obnamlib.GenerationId(self._client_name, gen.get_number())
+            for gen in self._generations]
 
     def create_generation(self):
         self._load_data()
         self._require_previous_generation_is_finished()
 
-        generations = self._data.get('generations', [])
-        if generations:
-            previous = copy.deepcopy(generations[-1])
+        new_generation = GAGeneration()
+        new_metadata = new_generation.get_file_metadata()
+        new_metadata.set_blob_store(self._get_blob_store())
+
+        if self._generations:
+            latest = self._generations.get_latest()
+            new_dict = copy.deepcopy(latest.as_dict())
+            new_generation.set_from_dict(new_dict)
+
+            latest_metadata = latest.get_file_metadata()
+            new_metadata.set_root_object_id(
+                latest_metadata.get_root_object_id())
         else:
-            previous = {
-                'keys': {},
-                'files': {},
-            }
+            new_metadata.set_root_object_id(None)
 
-        new_generation = dict(previous)
-        new_generation['id'] = self._new_generation_number()
-        keys = new_generation['keys']
-        keys[obnamlib.repo_key_name(obnamlib.REPO_GENERATION_STARTED)] = \
-            int(self._current_time())
-        keys[obnamlib.repo_key_name(obnamlib.REPO_GENERATION_ENDED)] = None
+        new_generation.set_number(self._new_generation_number())
+        new_generation.set_key(
+            obnamlib.repo_key_name(obnamlib.REPO_GENERATION_STARTED),
+            int(self._current_time()))
+        new_generation.set_key(
+            obnamlib.repo_key_name(obnamlib.REPO_GENERATION_ENDED),
+            None)
 
-        self._data['generations'] = generations + [new_generation]
+        self._generations.append(new_generation)
 
-        return obnamlib.GenerationId(self._client_name, new_generation['id'])
+        return obnamlib.GenerationId(
+            self._client_name, new_generation.get_number())
 
     def _require_previous_generation_is_finished(self):
-        generations = self._data.get('generations', [])
-        if generations:
-            keys = generations[-1]['keys']
+        if self._generations:
+            latest = self._generations.get_latest()
             key_name = obnamlib.repo_key_name(obnamlib.REPO_GENERATION_ENDED)
-            if keys[key_name] is None:
+            if latest.get_key(key_name) is None:
                 raise obnamlib.RepositoryClientGenerationUnfinished(
                     client_name=self._client_name)
 
     def _new_generation_number(self):
-        generations = self._data.get('generations', [])
-        ids = [int(gen['id']) for gen in generations]
-        if ids:
-            newest_id = ids[-1]
-            next_id = newest_id + 1
+        if self._generations:
+            ids = [gen.get_number() for gen in self._generations]
+            return str(int(ids[-1]) + 1)
         else:
-            next_id = 1
-        return str(next_id)
+            return str(1)
 
     def remove_generation(self, gen_number):
         self._load_data()
-        generations = self._data.get('generations', [])
         remaining = []
         removed = False
 
-        for generation in generations:
-            if generation['id'] == gen_number:
+        for generation in self._generations:
+            if generation.get_number() == gen_number:
                 removed = True
             else:
                 remaining.append(generation)
@@ -146,33 +186,31 @@ class GAClient(object):
                 client_name=self._client_name,
                 gen_id=gen_number)
 
-        self._data['generations'] = remaining
+        self._generations.set_generations(remaining)
 
     def get_generation_key(self, gen_number, key):
         self._load_data()
         generation = self._lookup_generation_by_gen_number(gen_number)
         key_name = obnamlib.repo_key_name(key)
         if key in obnamlib.REPO_GENERATION_INTEGER_KEYS:
-            value = generation['keys'].get(key_name, None)
+            value = generation.get_key(key_name)
             if value is None:
                 value = 0
             return int(value)
         else:
-            return generation['keys'].get(key_name, '')
+            return generation.get_key(key_name, default='')
 
     def _lookup_generation_by_gen_number(self, gen_number):
-        if 'generations' in self._data:
-            generations = self._data['generations']
-            for generation in generations:
-                if generation['id'] == gen_number:
-                    return generation
+        for generation in self._generations:
+            if generation.get_number() == gen_number:
+                return generation
         raise obnamlib.RepositoryGenerationDoesNotExist(
             gen_id=gen_number, client_name=self._client_name)
 
     def set_generation_key(self, gen_number, key, value):
         self._load_data()
         generation = self._lookup_generation_by_gen_number(gen_number)
-        generation['keys'][obnamlib.repo_key_name(key)] = value
+        generation.set_key(obnamlib.repo_key_name(key), value)
 
     def file_exists(self, gen_number, filename):
         self._load_data()
@@ -180,42 +218,41 @@ class GAClient(object):
             generation = self._lookup_generation_by_gen_number(gen_number)
         except obnamlib.RepositoryGenerationDoesNotExist:
             return False
-        return filename in generation['files']
+        metadata = generation.get_file_metadata()
+        return metadata.file_exists(filename)
 
     def add_file(self, gen_number, filename):
         self._load_data()
         generation = self._lookup_generation_by_gen_number(gen_number)
-        if filename not in generation['files']:
-            generation['files'][filename] = {
-                'keys': {},
-                'chunks': [],
-            }
+        metadata = generation.get_file_metadata()
+        metadata.add_file(filename)
 
     def remove_file(self, gen_number, filename):
         self._load_data()
         generation = self._lookup_generation_by_gen_number(gen_number)
-        if filename in generation['files']:
-            del generation['files'][filename]
+        metadata = generation.get_file_metadata()
+        metadata.remove_file(filename)
 
     def get_file_key(self, gen_number, filename, key):
         self._load_data()
         self._require_file_exists(gen_number, filename)
         generation = self._lookup_generation_by_gen_number(gen_number)
-        files = generation['files']
-        key_name = obnamlib.repo_key_name(key)
+        metadata = generation.get_file_metadata()
 
         if key in obnamlib.REPO_FILE_INTEGER_KEYS:
             default = 0
         else:
             default = ''
 
-        if key_name not in files[filename]['keys']:
+        value = metadata.get_file_key(filename, key)
+        if value is None:
             return default
-        return files[filename]['keys'][key_name] or default
+        return value
 
     def _require_file_exists(self, gen_number, filename):
         generation = self._lookup_generation_by_gen_number(gen_number)
-        if filename not in generation['files']:
+        metadata = generation.get_file_metadata()
+        if not metadata.file_exists(filename):
             raise obnamlib.RepositoryFileDoesNotExistInGeneration(
                 client_name=self._client_name,
                 genspec=gen_number,
@@ -225,34 +262,37 @@ class GAClient(object):
         self._load_data()
         self._require_file_exists(gen_number, filename)
         generation = self._lookup_generation_by_gen_number(gen_number)
-        files = generation['files']
-        key_name = obnamlib.repo_key_name(key)
-        files[filename]['keys'][key_name] = value
+        metadata = generation.get_file_metadata()
+        metadata.set_file_key(filename, key, value)
 
     def get_file_chunk_ids(self, gen_number, filename):
         self._load_data()
         self._require_file_exists(gen_number, filename)
         generation = self._lookup_generation_by_gen_number(gen_number)
-        return generation['files'][filename]['chunks']
+        metadata = generation.get_file_metadata()
+        return metadata.get_file_chunk_ids(filename)
 
     def append_file_chunk_id(self, gen_number, filename, chunk_id):
         self._load_data()
         self._require_file_exists(gen_number, filename)
         generation = self._lookup_generation_by_gen_number(gen_number)
-        generation['files'][filename]['chunks'].append(chunk_id)
+        metadata = generation.get_file_metadata()
+        metadata.append_file_chunk_id(filename, chunk_id)
 
     def clear_file_chunk_ids(self, gen_number, filename):
         self._load_data()
         self._require_file_exists(gen_number, filename)
         generation = self._lookup_generation_by_gen_number(gen_number)
-        generation['files'][filename]['chunks'] = []
+        metadata = generation.get_file_metadata()
+        metadata.clear_file_chunk_ids(filename)
 
     def get_generation_chunk_ids(self, gen_number):
         self._load_data()
         chunk_ids = set()
         generation = self._lookup_generation_by_gen_number(gen_number)
-        for filename in generation['files']:
-            file_chunk_ids = generation['files'][filename]['chunks']
+        metadata = generation.get_file_metadata()
+        for filename in metadata:
+            file_chunk_ids = metadata.get_file_chunk_ids(filename)
             chunk_ids = chunk_ids.union(set(file_chunk_ids))
         return list(chunk_ids)
 
@@ -260,9 +300,338 @@ class GAClient(object):
         self._load_data()
         self._require_file_exists(gen_number, filename)
         generation = self._lookup_generation_by_gen_number(gen_number)
+        metadata = generation.get_file_metadata()
         return [
-            x for x in generation['files']
+            x for x in metadata
             if self._is_direct_child_of(x, filename)]
 
     def _is_direct_child_of(self, child, parent):
         return os.path.dirname(child) == parent and child != parent
+
+
+class GAKeys(object):
+
+    def __init__(self):
+        self._dict = {}
+
+    def as_dict(self):
+        return self._dict
+
+    def set_from_dict(self, keys_dict):
+        self._dict = keys_dict
+
+    def get_key(self, key, default=None):
+        return self._dict.get(key, default)
+
+    def set_key(self, key, value):
+        self._dict[key] = value
+
+
+class GAGenerationList(object):
+
+    def __init__(self):
+        self._generations = []
+
+    def __len__(self):
+        return len(self._generations)
+
+    def __iter__(self):
+        for gen in self._generations[:]:
+            yield gen
+
+    def get_latest(self):
+        return self._generations[-1]
+
+    def append(self, gen):
+        self._generations.append(gen)
+
+    def set_generations(self, generations):
+        self._generations = generations
+
+
+class GAGeneration(object):
+
+    def __init__(self):
+        self._id = None
+        self._keys = GAKeys()
+        self._file_metadata = GAFileMetadata()
+        self._root_object_id = None
+
+    def as_dict(self):
+        return {
+            'id': self._id,
+            'keys': self._keys.as_dict(),
+            'root_object_id': self._root_object_id,
+        }
+
+    def set_from_dict(self, data):
+        self._id = data['id']
+        self._keys = GAKeys()
+        self._keys.set_from_dict(data['keys'])
+        self._root_object_id = data['root_object_id']
+
+    def get_number(self):
+        return self._id
+
+    def set_number(self, new_id):
+        self._id = new_id
+
+    def keys(self):
+        return self._keys.keys()
+
+    def get_key(self, key, default=None):
+        return self._keys.get_key(key, default=default)
+
+    def set_key(self, key, value):
+        self._keys.set_key(key, value)
+
+    def get_root_object_id(self):
+        return self._root_object_id
+
+    def set_root_object_id(self, root_object_id):
+        self._root_object_id = root_object_id
+
+    def get_file_metadata(self):
+        return self._file_metadata
+
+
+class GAFileMetadata(object):
+
+    def __init__(self):
+        self._blob_store = None
+        self._tree = None
+        self._added_files = AddedFiles()
+
+    def set_blob_store(self, blob_store):
+        assert self._blob_store is None
+        assert self._tree is None
+        self._blob_store = blob_store
+
+    def set_root_object_id(self, root_object_id):
+        assert self._blob_store is not None
+        assert self._tree is None
+        self._tree = obnamlib.GATree()
+        self._tree.set_blob_store(self._blob_store)
+        self._tree.set_root_directory_id(root_object_id)
+
+    def get_root_object_id(self):
+        return self._tree.get_root_directory_id()
+
+    def flush(self):
+        assert len(self._added_files) == 0
+        self._tree.flush()
+
+    def __iter__(self):
+        for filename in self._added_files:
+            yield filename
+
+        stack = ['/']
+        while stack:
+            dir_path = stack.pop()
+            dir_obj = self._tree.get_directory(dir_path)
+            if dir_obj is None:
+                continue
+            yield dir_path
+            for basename in dir_obj.get_file_basenames():
+                if basename != '.':
+                    pathname = os.path.join(dir_path, basename)
+                    yield pathname
+            for basename in dir_obj.get_subdir_basenames():
+                stack.append(os.path.join(dir_path, basename))
+
+    def file_exists(self, filename):
+        if filename in self._added_files:
+            return True
+        dir_obj, dir_path, basename = self._get_dir_obj(filename)
+        return dir_obj and basename in dir_obj.get_file_basenames()
+
+    def _get_dir_obj(self, filename):
+        '''Return GADirectory and basename for filename.
+
+        If filename refers to an existing directory, the GADirectory
+        for the directory, the path to the directory, and the basename
+        "." are returned.
+
+        If filename refers to a file in an existing directory, the
+        GADirectory, the path to the directory, and the basename of
+        the file are returned. Note that in this case it is always a
+        file, never a subdirectory. The file need not exist yet.
+
+        Otherwise, (None, None, None) is returned.
+
+        '''
+
+        dir_obj = self._tree.get_directory(filename)
+        if dir_obj:
+            return dir_obj, filename, '.'
+
+        parent_path = os.path.dirname(filename)
+        dir_obj = self._tree.get_directory(parent_path)
+        if dir_obj:
+            return dir_obj, parent_path, os.path.basename(filename)
+
+        return None, None, None
+
+    def add_file(self, filename):
+        if not self.file_exists(filename):
+            self._added_files.add_file(filename)
+
+    def remove_file(self, filename):
+        if filename in self._added_files:
+            self._added_files.remove_file(filename)
+
+        if filename == '/':
+            self._tree.remove_directory('/')
+        else:
+            parent_path = os.path.dirname(filename)
+            parent_obj = self._tree.get_directory(parent_path)
+            if parent_obj:
+                basename = os.path.basename(filename)
+                parent_obj = self._make_mutable(parent_obj)
+                parent_obj.remove_file(basename)
+                parent_obj.remove_subdir(basename)
+                self._tree.set_directory(parent_path, parent_obj)
+
+    def get_file_key(self, filename, key):
+        if filename in self._added_files:
+            return self._added_files.get_file_key(filename, key)
+        dir_obj, dir_path, basename = self._get_dir_obj(filename)
+        if dir_obj:
+            return dir_obj.get_file_key(basename, key)
+        else:
+            return None
+
+    def set_file_key(self, filename, key, value):
+        if filename in self._added_files:
+            self._added_files.set_file_key(filename, key, value)
+            if key == obnamlib.REPO_FILE_MODE:
+                self._flush_added_file(filename)
+        else:
+            dir_obj, basename = self._get_mutable_dir_obj(filename)
+            if dir_obj:
+                dir_obj.set_file_key(basename, key, value)
+
+    def _get_mutable_dir_obj(self, filename):
+        dir_obj, dir_path, basename = self._get_dir_obj(filename)
+        if dir_obj:
+            if dir_obj.is_mutable():
+                return dir_obj, basename
+            else:
+                new_obj = self._make_mutable(dir_obj)
+                self._tree.set_directory(dir_path, new_obj)
+                return new_obj, basename
+        else:
+            return dir_obj, basename
+
+    def _make_mutable(self, dir_obj):
+        if dir_obj.is_mutable():
+            return dir_obj
+        else:
+            return obnamlib.create_gadirectory_from_dict(dir_obj.as_dict())
+
+    def _flush_added_file(self, filename):
+        mode = self._added_files.get_file_key(
+            filename, obnamlib.REPO_FILE_MODE)
+        assert mode is not None
+        file_dict = self._added_files.get_file_dict(filename)
+        if stat.S_ISDIR(mode):
+            dir_obj = obnamlib.GADirectory()
+            dir_obj.add_file('.')
+            for key, value in file_dict['keys'].items():
+                dir_obj.set_file_key('.', key, value)
+            self._tree.set_directory(filename, dir_obj)
+        else:
+            basename = os.path.basename(filename)
+            parent_path = os.path.dirname(filename)
+            parent_obj = self._tree.get_directory(parent_path)
+            if parent_obj is None:
+                parent_obj = obnamlib.GADirectory()
+                parent_obj.add_file('.')
+            else:
+                parent_obj = self._make_mutable(parent_obj)
+
+            parent_obj.add_file(basename)
+            for key, value in file_dict['keys'].items():
+                parent_obj.set_file_key(basename, key, value)
+            for chunk_id in file_dict['chunks']:
+                parent_obj.append_file_chunk_id(basename, chunk_id)
+            self._tree.set_directory(parent_path, parent_obj)
+
+        self._added_files.remove_file(filename)
+
+    def get_file_chunk_ids(self, filename):
+        if filename in self._added_files:
+            chunk_ids = self._added_files.get_file_chunk_ids(filename)
+            return chunk_ids
+
+        dir_obj, dir_path, basename = self._get_dir_obj(filename)
+        if dir_obj:
+            chunk_ids = dir_obj.get_file_chunk_ids(basename)
+            return chunk_ids
+        else:
+            return []
+
+    def append_file_chunk_id(self, filename, chunk_id):
+        if filename in self._added_files:
+            self._added_files.append_file_chunk_id(filename, chunk_id)
+            return
+        dir_obj, basename = self._get_mutable_dir_obj(filename)
+        if dir_obj:
+            dir_obj.append_file_chunk_id(basename, chunk_id)
+
+    def clear_file_chunk_ids(self, filename):
+        if filename in self._added_files:
+            self._added_files.clear_file_chunk_ids(filename)
+            return
+        dir_obj, basename = self._get_mutable_dir_obj(filename)
+        assert basename != '.'
+        if dir_obj:
+            dir_obj.clear_file_chunk_ids(basename)
+
+
+class AddedFiles(object):
+
+    def __init__(self):
+        self.clear()
+
+    def clear(self):
+        self._files = {}
+
+    def __contains__(self, filename):
+        return filename in self._files
+
+    def __iter__(self):
+        for filename in self._files:
+            yield filename
+
+    def __len__(self):
+        return len(self._files)
+
+    def get_file_dict(self, filename):
+        return self._files[filename]
+
+    def add_file(self, filename):
+        assert filename not in self._files
+        self._files[filename] = {
+            'keys': {},
+            'chunks': [],
+        }
+
+    def remove_file(self, filename):
+        assert filename in self._files
+        del self._files[filename]
+
+    def get_file_key(self, filename, key):
+        return self._files[filename]['keys'].get(key)
+
+    def set_file_key(self, filename, key, value):
+        self._files[filename]['keys'][key] = value
+
+    def get_file_chunk_ids(self, filename):
+        return self._files[filename]['chunks']
+
+    def append_file_chunk_id(self, filename, chunk_id):
+        self._files[filename]['chunks'].append(chunk_id)
+
+    def clear_file_chunk_ids(self, filename):
+        self._files[filename]['chunks'] = []
