@@ -433,7 +433,9 @@ class GAFileMetadata(object):
                 continue
             yield dir_path
             for basename in dir_obj.get_file_basenames():
-                yield os.path.join(dir_path, basename)
+                if basename != '.':
+                    pathname = os.path.join(dir_path, basename)
+                    yield pathname
             for basename in dir_obj.get_subdir_basenames():
                 stack.append(os.path.join(dir_path, basename))
 
