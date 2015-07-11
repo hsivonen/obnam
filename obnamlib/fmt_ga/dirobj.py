@@ -56,11 +56,13 @@ class GADirectory(object):
         return self._dict['metadata'].keys()
 
     def get_file_key(self, basename, key):
-        return self._dict['metadata'][basename].get(key)
+        key_name = obnamlib.repo_key_name(key)
+        return self._dict['metadata'][basename].get(key_name)
 
     def set_file_key(self, basename, key, value):
         self._require_mutable()
-        self._dict['metadata'][basename][key] = value
+        key_name = obnamlib.repo_key_name(key)
+        self._dict['metadata'][basename][key_name] = value
 
     def get_file_chunk_ids(self, basename):
         return self._dict['metadata'][basename]['chunk-ids']
