@@ -93,6 +93,7 @@ class GATree(object):
                         parent_obj.as_dict())
                 else:
                     parent_obj = obnamlib.GADirectory()
+                    parent_obj.add_file('.')
             parent_obj.add_subdir(basename, None)
             self.set_directory(parent_path, parent_obj)
 
