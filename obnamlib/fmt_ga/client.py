@@ -534,6 +534,7 @@ class GAFileMetadata(object):
         file_dict = self._added_files.get_file_dict(filename)
         if stat.S_ISDIR(mode):
             dir_obj = obnamlib.GADirectory()
+            dir_obj.add_file('.')
             for key, value in file_dict['keys'].items():
                 dir_obj.set_file_key('.', key, value)
             self._tree.set_directory(filename, dir_obj)
@@ -584,7 +585,7 @@ class GAFileMetadata(object):
         dir_obj, basename = self._get_mutable_dir_obj(filename)
         assert basename != '.'
         if dir_obj:
-            dir_obj.clear_file_chunk_ids(filename)
+            dir_obj.clear_file_chunk_ids(basename)
 
 
 class AddedFiles(object):
