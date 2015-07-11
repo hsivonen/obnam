@@ -18,6 +18,7 @@
 
 import copy
 import os
+import stat
 
 import obnamlib
 
@@ -67,8 +68,7 @@ class GAClient(object):
     def _save_file_metadata(self):
         for gen in self._generations:
             metadata = gen.get_file_metadata()
-            assert not metadata.has_unflushed_added_files(), \
-                repr(metadata._added_files._files)
+            metadata.flush()
             gen.set_root_object_id(metadata.get_root_object_id())
 
     def _get_blob_store(self):
@@ -139,6 +139,8 @@ class GAClient(object):
             latest_metadata = latest.get_file_metadata()
             new_metadata.set_root_object_id(
                 latest_metadata.get_root_object_id())
+        else:
+            new_metadata.set_root_object_id(None)
 
         new_generation.set_number(self._new_generation_number())
         new_generation.set_key(
@@ -236,14 +238,13 @@ class GAClient(object):
         self._require_file_exists(gen_number, filename)
         generation = self._lookup_generation_by_gen_number(gen_number)
         metadata = generation.get_file_metadata()
-        key_name = obnamlib.repo_key_name(key)
 
         if key in obnamlib.REPO_FILE_INTEGER_KEYS:
             default = 0
         else:
             default = ''
 
-        value = metadata.get_file_key(filename, key_name)
+        value = metadata.get_file_key(filename, key)
         if value is None:
             return default
         return value
@@ -262,8 +263,7 @@ class GAClient(object):
         self._require_file_exists(gen_number, filename)
         generation = self._lookup_generation_by_gen_number(gen_number)
         metadata = generation.get_file_metadata()
-        key_name = obnamlib.repo_key_name(key)
-        metadata.set_file_key(filename, key_name, value)
+        metadata.set_file_key(filename, key, value)
 
     def get_file_chunk_ids(self, gen_number, filename):
         self._load_data()
@@ -399,94 +399,192 @@ class GAFileMetadata(object):
 
     def __init__(self):
         self._blob_store = None
-        self._root_object_id = None
+        self._tree = None
         self._added_files = AddedFiles()
 
-    def has_unflushed_added_files(self):
-        return len(self._added_files) > 0
-
     def set_blob_store(self, blob_store):
+        assert self._blob_store is None
+        assert self._tree is None
         self._blob_store = blob_store
 
     def set_root_object_id(self, root_object_id):
-        self._root_object_id = root_object_id
+        assert self._blob_store is not None
+        assert self._tree is None
+        self._tree = obnamlib.GATree()
+        self._tree.set_blob_store(self._blob_store)
+        self._tree.set_root_directory_id(root_object_id)
 
     def get_root_object_id(self):
-        return self._root_object_id
+        return self._tree.get_root_directory_id()
 
-    def _load(self):
-        if self._root_object_id is None:
-            return {}
-
-        blob = self._blob_store.get_blob(self._root_object_id)
-        return obnamlib.deserialise_object(blob)
-
-    def _save(self, files):
-        blob = obnamlib.serialise_object(files)
-        self._root_object_id = self._blob_store.put_blob(blob)
+    def flush(self):
+        assert len(self._added_files) == 0
+        self._tree.flush()
 
     def __iter__(self):
         for filename in self._added_files:
             yield filename
-        for filename in self._load():
-            yield filename
+
+        stack = ['/']
+        while stack:
+            dir_path = stack.pop()
+            dir_obj = self._tree.get_directory(dir_path)
+            if dir_obj is None:
+                continue
+            yield dir_path
+            for basename in dir_obj.get_file_basenames():
+                yield os.path.join(dir_path, basename)
+            for basename in dir_obj.get_subdir_basenames():
+                stack.append(os.path.join(dir_path, basename))
 
     def file_exists(self, filename):
-        return filename in self._added_files or filename in self._load()
+        if filename in self._added_files:
+            return True
+        dir_obj, dir_path, basename = self._get_dir_obj(filename)
+        return dir_obj and basename in dir_obj.get_file_basenames()
+
+    def _get_dir_obj(self, filename):
+        '''Return GADirectory and basename for filename.
+
+        If filename refers to an existing directory, the GADirectory
+        for the directory, the path to the directory, and the basename
+        "." are returned.
+
+        If filename refers to a file in an existing directory, the
+        GADirectory, the path to the directory, and the basename of
+        the file are returned. Note that in this case it is always a
+        file, never a subdirectory. The file need not exist yet.
+
+        Otherwise, (None, None, None) is returned.
+
+        '''
+
+        dir_obj = self._tree.get_directory(filename)
+        if dir_obj:
+            return dir_obj, filename, '.'
+
+        parent_path = os.path.dirname(filename)
+        dir_obj = self._tree.get_directory(parent_path)
+        if dir_obj:
+            return dir_obj, parent_path, os.path.basename(filename)
+
+        return None, None, None
 
     def add_file(self, filename):
-        if filename not in self._added_files and filename not in self._load():
+        if not self.file_exists(filename):
             self._added_files.add_file(filename)
 
     def remove_file(self, filename):
         if filename in self._added_files:
             self._added_files.remove_file(filename)
-        files = self._load()
-        if filename in files:
-            del files[filename]
-            self._save(files)
+
+        if filename == '/':
+            self._tree.remove_directory('/')
+        else:
+            parent_path = os.path.dirname(filename)
+            parent_obj = self._tree.get_directory(parent_path)
+            if parent_obj:
+                basename = os.path.basename(filename)
+                parent_obj = self._make_mutable(parent_obj)
+                parent_obj.remove_file(basename)
+                parent_obj.remove_subdir(basename)
+                self._tree.set_directory(parent_path, parent_obj)
 
     def get_file_key(self, filename, key):
         if filename in self._added_files:
             return self._added_files.get_file_key(filename, key)
-        files = self._load()
-        return files[filename]['keys'].get(key)
+        dir_obj, dir_path, basename = self._get_dir_obj(filename)
+        if dir_obj:
+            return dir_obj.get_file_key(basename, key)
+        else:
+            return None
 
     def set_file_key(self, filename, key, value):
         if filename in self._added_files:
             self._added_files.set_file_key(filename, key, value)
-            mode_key_name = obnamlib.repo_key_name(obnamlib.REPO_FILE_MODE)
-            if key == mode_key_name:
-                files = self._load()
-                files[filename] = self._added_files.get_file_dict(filename)
-                self._save(files)
-                self._added_files.remove_file(filename)
+            if key == obnamlib.REPO_FILE_MODE:
+                self._flush_added_file(filename)
         else:
-            files = self._load()
-            files[filename]['keys'][key] = value
-            self._save(files)
+            dir_obj, basename = self._get_mutable_dir_obj(filename)
+            if dir_obj:
+                dir_obj.set_file_key(basename, key, value)
+
+    def _get_mutable_dir_obj(self, filename):
+        dir_obj, dir_path, basename = self._get_dir_obj(filename)
+        if dir_obj:
+            if dir_obj.is_mutable():
+                return dir_obj, basename
+            else:
+                new_obj = self._make_mutable(dir_obj)
+                self._tree.set_directory(dir_path, new_obj)
+                return new_obj, basename
+        else:
+            return dir_obj, basename
+
+    def _make_mutable(self, dir_obj):
+        if dir_obj.is_mutable():
+            return dir_obj
+        else:
+            return obnamlib.create_gadirectory_from_dict(dir_obj.as_dict())
+
+    def _flush_added_file(self, filename):
+        mode = self._added_files.get_file_key(
+            filename, obnamlib.REPO_FILE_MODE)
+        assert mode is not None
+        file_dict = self._added_files.get_file_dict(filename)
+        if stat.S_ISDIR(mode):
+            dir_obj = obnamlib.GADirectory()
+            for key, value in file_dict['keys'].items():
+                dir_obj.set_file_key('.', key, value)
+            self._tree.set_directory(filename, dir_obj)
+        else:
+            basename = os.path.basename(filename)
+            parent_path = os.path.dirname(filename)
+            parent_obj = self._tree.get_directory(parent_path)
+            if parent_obj is None:
+                parent_obj = obnamlib.GADirectory()
+                parent_obj.add_file('.')
+            else:
+                parent_obj = self._make_mutable(parent_obj)
+
+            parent_obj.remove_file(basename)
+            parent_obj.add_file(basename)
+            for key, value in file_dict['keys'].items():
+                parent_obj.set_file_key(basename, key, value)
+            for chunk_id in file_dict['chunks']:
+                parent_obj.append_file_chunk_id(basename, chunk_id)
+            self._tree.set_directory(parent_path, parent_obj)
+
+        self._added_files.remove_file(filename)
 
     def get_file_chunk_ids(self, filename):
         if filename in self._added_files:
-            return self._added_files.get_file_chunk_ids(filename)
-        files = self._load()
-        return files[filename]['chunks']
+            chunk_ids = self._added_files.get_file_chunk_ids(filename)
+            return chunk_ids
+
+        dir_obj, dir_path, basename = self._get_dir_obj(filename)
+        if dir_obj:
+            chunk_ids = dir_obj.get_file_chunk_ids(basename)
+            return chunk_ids
+        else:
+            return []
 
     def append_file_chunk_id(self, filename, chunk_id):
         if filename in self._added_files:
             self._added_files.append_file_chunk_id(filename, chunk_id)
             return
-        files = self._load()
-        files[filename]['chunks'].append(chunk_id)
-        self._save(files)
+        dir_obj, basename = self._get_mutable_dir_obj(filename)
+        if dir_obj:
+            dir_obj.append_file_chunk_id(basename, chunk_id)
 
     def clear_file_chunk_ids(self, filename):
         if filename in self._added_files:
             self._added_files.clear_file_chunk_ids(filename)
             return
-        files = self._load()
-        files[filename]['chunks'] = []
-        self._save(files)
+        dir_obj, basename = self._get_mutable_dir_obj(filename)
+        assert basename != '.'
+        if dir_obj:
+            dir_obj.clear_file_chunk_ids(filename)
 
 
 class AddedFiles(object):
