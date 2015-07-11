@@ -548,7 +548,6 @@ class GAFileMetadata(object):
             else:
                 parent_obj = self._make_mutable(parent_obj)
 
-            parent_obj.remove_file(basename)
             parent_obj.add_file(basename)
             for key, value in file_dict['keys'].items():
                 parent_obj.set_file_key(basename, key, value)
