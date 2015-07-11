@@ -69,7 +69,7 @@ class GAClient(object):
             metadata = gen.get_file_metadata()
             assert not metadata.has_unflushed_added_files(), \
                 repr(metadata._added_files._files)
-            gen.set_file_metadata_id(metadata.get_blob_id())
+            gen.set_root_object_id(metadata.get_root_object_id())
 
     def _get_blob_store(self):
         bag_store = obnamlib.BagStore()
@@ -115,7 +115,7 @@ class GAClient(object):
         for gen in self._generations:
             metadata = gen.get_file_metadata()
             metadata.set_blob_store(blob_store)
-            metadata.set_blob_id(gen.get_file_metadata_id())
+            metadata.set_root_object_id(gen.get_root_object_id())
 
     def get_client_generation_ids(self):
         self._load_data()
@@ -137,7 +137,8 @@ class GAClient(object):
             new_generation.set_from_dict(new_dict)
 
             latest_metadata = latest.get_file_metadata()
-            new_metadata.set_blob_id(latest_metadata.get_blob_id())
+            new_metadata.set_root_object_id(
+                latest_metadata.get_root_object_id())
 
         new_generation.set_number(self._new_generation_number())
         new_generation.set_key(
@@ -354,20 +355,20 @@ class GAGeneration(object):
         self._id = None
         self._keys = GAKeys()
         self._file_metadata = GAFileMetadata()
-        self._file_metadata_id = None
+        self._root_object_id = None
 
     def as_dict(self):
         return {
             'id': self._id,
             'keys': self._keys.as_dict(),
-            'file_metadata_id': self._file_metadata_id,
+            'root_object_id': self._root_object_id,
         }
 
     def set_from_dict(self, data):
         self._id = data['id']
         self._keys = GAKeys()
         self._keys.set_from_dict(data['keys'])
-        self._file_metadata_id = data['file_metadata_id']
+        self._root_object_id = data['root_object_id']
 
     def get_number(self):
         return self._id
@@ -384,11 +385,11 @@ class GAGeneration(object):
     def set_key(self, key, value):
         self._keys.set_key(key, value)
 
-    def get_file_metadata_id(self):
-        return self._file_metadata_id
+    def get_root_object_id(self):
+        return self._root_object_id
 
-    def set_file_metadata_id(self, metadata_id):
-        self._file_metadata_id = metadata_id
+    def set_root_object_id(self, root_object_id):
+        self._root_object_id = root_object_id
 
     def get_file_metadata(self):
         return self._file_metadata
@@ -398,7 +399,7 @@ class GAFileMetadata(object):
 
     def __init__(self):
         self._blob_store = None
-        self._blob_id = None
+        self._root_object_id = None
         self._added_files = AddedFiles()
 
     def has_unflushed_added_files(self):
@@ -407,22 +408,22 @@ class GAFileMetadata(object):
     def set_blob_store(self, blob_store):
         self._blob_store = blob_store
 
-    def set_blob_id(self, blob_id):
-        self._blob_id = blob_id
+    def set_root_object_id(self, root_object_id):
+        self._root_object_id = root_object_id
 
-    def get_blob_id(self):
-        return self._blob_id
+    def get_root_object_id(self):
+        return self._root_object_id
 
     def _load(self):
-        if self._blob_id is None:
+        if self._root_object_id is None:
             return {}
 
-        blob = self._blob_store.get_blob(self._blob_id)
+        blob = self._blob_store.get_blob(self._root_object_id)
         return obnamlib.deserialise_object(blob)
 
     def _save(self, files):
         blob = obnamlib.serialise_object(files)
-        self._blob_id = self._blob_store.put_blob(blob)
+        self._root_object_id = self._blob_store.put_blob(blob)
 
     def __iter__(self):
         for filename in self._added_files:
