@@ -121,7 +121,8 @@ class GATree(object):
             self.set_directory(parent_path, parent_obj)
 
     def flush(self):
-        self._root_dir_id = self._fixup_subdir_refs('/')
+        if '/' in self._cache:
+            self._root_dir_id = self._fixup_subdir_refs('/')
         self._blob_store.flush()
         self._cache.clear()
 
