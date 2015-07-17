@@ -70,8 +70,10 @@ _integer_keys = [
     "REPO_FILE_INO",
 ]
 
+_repo_key_names = {}
 for i, name in enumerate(_string_keys + _integer_keys):
     globals()[name] = i
+    _repo_key_names[i] = name
 
 
 def _filter_integer_keys(prefix):
@@ -84,10 +86,7 @@ REPO_FILE_INTEGER_KEYS = _filter_integer_keys('REPO_FILE_')
 
 
 def repo_key_name(key_value):
-    for key_name in _integer_keys + _string_keys:
-        if globals()[key_name] == key_value:
-            return key_name
-    return key_value
+    return _repo_key_names.get(key_value, key_value)
 
 
 # The following is a key that is NOT allowed for any repository format.
