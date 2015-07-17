@@ -77,7 +77,7 @@ class GAClient(object):
 
         blob_store = obnamlib.BlobStore()
         blob_store.set_bag_store(bag_store)
-
+        blob_store.set_max_bag_size(obnamlib.DEFAULT_NODE_SIZE)
         return blob_store
 
     def _save_per_client_data(self):
