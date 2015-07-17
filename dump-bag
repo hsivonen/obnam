@@ -40,4 +40,4 @@ for filename in sys.argv[1:]:
     decoded = []
     for obj_blob in bag:
         obj = obnamlib.deserialise_object(obj_blob)
-        yaml.safe_dump(obj, stream=sys.stdout)
+        yaml.safe_dump(obj, stream=sys.stdout, default_flow_style=False)

@@ -36,4 +36,4 @@ for filename in sys.argv[1:]:
         blob = f.read()
         blob = strip_filtering(blob)
     obj = obnamlib.deserialise_object(blob)
-    yaml.safe_dump(obj, stream=sys.stdout)
+    yaml.safe_dump(obj, stream=sys.stdout, default_flow_style=False)
