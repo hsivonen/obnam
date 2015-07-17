@@ -301,9 +301,7 @@ class GAClient(object):
         self._require_file_exists(gen_number, filename)
         generation = self._lookup_generation_by_gen_number(gen_number)
         metadata = generation.get_file_metadata()
-        return [
-            x for x in metadata
-            if self._is_direct_child_of(x, filename)]
+        return metadata.get_file_children(filename)
 
     def _is_direct_child_of(self, child, parent):
         return os.path.dirname(child) == parent and child != parent
@@ -587,6 +585,17 @@ class GAFileMetadata(object):
         assert basename != '.'
         if dir_obj:
             dir_obj.clear_file_chunk_ids(basename)
+
+    def get_file_children(self, filename):
+        assert filename not in self._added_files
+        dir_obj, dirname, basename = self._get_dir_obj(filename)
+        if basename != '.':
+            return []
+        if dir_obj:
+            files = [x for x in dir_obj.get_file_basenames() if x != '.']
+            subdirs = dir_obj.get_subdir_basenames()
+            return [os.path.join(dirname, x) for x in files + subdirs]
+        return []
 
 
 class AddedFiles(object):

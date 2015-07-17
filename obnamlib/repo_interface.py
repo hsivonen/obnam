@@ -1901,12 +1901,21 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
     def test_new_file_has_no_children(self):
         gen_id = self.create_generation()
         self.repo.add_file(gen_id, '/foo/bar')
+        self.repo.set_file_key(
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_MODE, stat.S_IFREG | 0700)
         self.assertEqual(self.repo.get_file_children(gen_id, '/foo/bar'), [])
 
     def test_gets_file_child(self):
         gen_id = self.create_generation()
+
         self.repo.add_file(gen_id, '/foo')
+        self.repo.set_file_key(
+            gen_id, '/foo', obnamlib.REPO_FILE_MODE, stat.S_IFDIR | 0700)
+
         self.repo.add_file(gen_id, '/foo/bar')
+        self.repo.set_file_key(
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_MODE, stat.S_IFREG | 0700)
+
         self.assertEqual(
             self.repo.get_file_children(gen_id, '/foo'),
             ['/foo/bar'])
@@ -1914,8 +1923,14 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
     def test_gets_only_immediate_child_for_file(self):
         gen_id = self.create_generation()
         self.repo.add_file(gen_id, '/')
+        self.repo.set_file_key(
+            gen_id, '/', obnamlib.REPO_FILE_MODE, stat.S_IFDIR | 0700)
         self.repo.add_file(gen_id, '/foo')
+        self.repo.set_file_key(
+            gen_id, '/foo', obnamlib.REPO_FILE_MODE, stat.S_IFDIR | 0700)
         self.repo.add_file(gen_id, '/foo/bar')
+        self.repo.set_file_key(
+            gen_id, '/foo/bar', obnamlib.REPO_FILE_MODE, stat.S_IFDIR | 0700)
         self.assertEqual(
             self.repo.get_file_children(gen_id, '/'),
             ['/foo'])
