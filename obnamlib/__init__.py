@@ -53,6 +53,7 @@ DEFAULT_LRU_SIZE = 256
 DEFAULT_CHUNKIDS_PER_GROUP = 1024
 DEFAULT_NAGIOS_WARN_AGE = '27h'
 DEFAULT_NAGIOS_CRIT_AGE = '8d'
+DEFAULT_BAG_CACHE_BYTES = 256 * 1024**2
 
 # The following values have been determined empirically on a laptop
 # with an encrypted ext4 filesystem. Other values might be better for

@@ -25,6 +25,8 @@ class BlobStore(object):
         self._bag_store = None
         self._bag = None
         self._max_bag_size = 0
+        self._cached_blobs = BlobCache()
+        self._cached_blobs.set_max_bytes(obnamlib.DEFAULT_BAG_CACHE_BYTES)
 
     def set_bag_store(self, bag_store):
         self._bag_store = bag_store
@@ -36,8 +38,14 @@ class BlobStore(object):
         bag_id, index = obnamlib.parse_object_id(blob_id)
         if self._bag and bag_id == self._bag.get_id():
             return self._bag[index]
+        if blob_id in self._cached_blobs:
+            return self._cached_blobs.get(blob_id)
         if self._bag_store.has_bag(bag_id):
             bag = self._bag_store.get_bag(bag_id)
+            for i in range(len(bag)):
+                this_blob = bag[i]
+                this_id = obnamlib.make_object_id(bag_id, i)
+                self._cached_blobs.put(this_id, this_blob)
             return bag[index]
         return None
 
@@ -58,3 +66,29 @@ class BlobStore(object):
         if self._bag is not None:
             self._bag_store.put_bag(self._bag)
             self._bag = None
+
+
+class BlobCache(object):
+
+    def __init__(self):
+        self._max_bytes = None
+        self._clear()
+
+    def _clear(self):
+        self._cache = {}
+        self._cache_size = 0
+
+    def set_max_bytes(self, max_bytes):
+        self._max_bytes = max_bytes
+
+    def put(self, blob_id, blob):
+        if self._cache_size + len(blob) > self._max_bytes:  # pragma: no cover
+            self._clear()
+        self._cache[blob_id] = blob
+        self._cache_size += len(blob)
+
+    def get(self, blob_id):
+        return self._cache[blob_id]
+
+    def __contains__(self, blob_id):
+        return blob_id in self._cache

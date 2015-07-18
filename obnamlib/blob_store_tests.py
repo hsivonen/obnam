@@ -55,6 +55,21 @@ class BlobStoreTests(unittest.TestCase):
         retrieved = blob_store_2.get_blob(blob_id)
         self.assertEqual(blob, retrieved)
 
+    def test_gets_persistent_blob_twice(self):
+        bag_store = DummyBagStore()
+        blob = 'this is a blob, yes it is'
+
+        blob_store = obnamlib.BlobStore()
+        blob_store.set_bag_store(bag_store)
+        blob_id = blob_store.put_blob(blob)
+        blob_store.flush()
+
+        blob_store_2 = obnamlib.BlobStore()
+        blob_store_2.set_bag_store(bag_store)
+        retrieved_1 = blob_store_2.get_blob(blob_id)
+        retrieved_2 = blob_store_2.get_blob(blob_id)
+        self.assertEqual(retrieved_1, retrieved_2)
+
     def test_obeys_max_bag_size(self):
         bag_store = DummyBagStore()
         blob = 'this is a blob, yes it is'
