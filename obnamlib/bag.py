@@ -24,6 +24,7 @@ class Bag(object):
     def __init__(self):
         self._bag_id = None
         self._blobs = []
+        self._blobs_bytes = 0
 
     def get_id(self):
         return self._bag_id
@@ -35,10 +36,14 @@ class Bag(object):
         if self.get_id() is None:
             raise BagIdNotSetError()
         self._blobs.append(blob)
+        self._blobs_bytes += len(blob)
         return obnamlib.make_object_id(self.get_id(), len(self) - 1)
 
     def __len__(self):
         return len(self._blobs)
+
+    def get_bytes(self):
+        return self._blobs_bytes
 
     def __getitem__(self, index):
         return self._blobs[index]

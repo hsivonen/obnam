@@ -36,6 +36,10 @@ class BagTests(unittest.TestCase):
         bag = obnamlib.Bag()
         self.assertEqual(len(bag), 0)
 
+    def test_has_no_bytes_initially(self):
+        bag = obnamlib.Bag()
+        self.assertEqual(bag.get_bytes(), 0)
+
     def test_raises_error_if_appending_blob_without_id_being_set(self):
         bag = obnamlib.Bag()
         self.assertRaises(
@@ -43,11 +47,13 @@ class BagTests(unittest.TestCase):
             bag.append, 'blob')
 
     def test_appends_a_blob(self):
+        blob = 'foo'
         bag = obnamlib.Bag()
         bag.set_id(1)
-        bag.append('foo')
+        bag.append(blob)
         self.assertEqual(len(bag), 1)
-        self.assertEqual(bag[0], 'foo')
+        self.assertEqual(bag.get_bytes(), len(blob))
+        self.assertEqual(bag[0], blob)
 
     def test_appending_returns_object_id(self):
         bag = obnamlib.Bag()
