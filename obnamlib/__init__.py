@@ -174,13 +174,6 @@ from .delegator import RepositoryDelegator, GenerationId
 
 
 #
-# Repository format simple specific modules.
-#
-
-from fmt_simple import RepositoryFormatSimple
-
-
-#
 # Repository format green-albatross specific modules.
 #
 

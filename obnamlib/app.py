@@ -87,8 +87,8 @@ class App(cliapp.Application):
 
         self.settings.choice(
             ['repository-format'],
-            ['6', 'simple', 'green-albatross'],
-            'what format to use for new repositories? one of "6", "simple"',
+            ['6', 'green-albatross'],
+            'use FORMAT for new repositories; one of "6", "green-albatross"',
             metavar='FORMAT')
 
         # Performance related settings.
@@ -266,7 +266,6 @@ class App(cliapp.Application):
     def get_default_repository_class(self):
         classes = {
             '6': obnamlib.RepositoryFormat6,
-            'simple': obnamlib.RepositoryFormatSimple,
             'green-albatross': obnamlib.RepositoryFormatGA,
             }
         return classes[self.settings['repository-format']]

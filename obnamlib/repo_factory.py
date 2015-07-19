@@ -49,7 +49,6 @@ class RepositoryFactory(object):
         # So we create it when the factory object is initialised instead.
         self._implementations = [
             obnamlib.RepositoryFormat6,
-            obnamlib.RepositoryFormatSimple,
             obnamlib.RepositoryFormatGA,
             ]
 
