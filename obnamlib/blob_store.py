@@ -56,7 +56,7 @@ class BlobStore(object):
         if self._bag is None:
             self._bag = self._new_bag()
         blob_id = self._bag.append(blob)
-        if len(self._bag) >= self._max_bag_size:
+        if self._bag.get_bytes() >= self._max_bag_size:
             self.flush()
         return blob_id
 

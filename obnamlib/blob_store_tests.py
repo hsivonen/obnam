@@ -77,7 +77,7 @@ class BlobStoreTests(unittest.TestCase):
         blob_store = obnamlib.BlobStore()
         blob_store.set_bag_store(bag_store)
 
-        blob_store.set_max_bag_size(len(blob))
+        blob_store.set_max_bag_size(len(blob) + 1)
         blob_store.put_blob(blob)
         self.assertTrue(bag_store.is_empty())
 
@@ -91,7 +91,7 @@ class BlobStoreTests(unittest.TestCase):
 
         blob_store = obnamlib.BlobStore()
         blob_store.set_bag_store(bag_store)
-        blob_store.set_max_bag_size(len(blob))
+        blob_store.set_max_bag_size(len(blob) + 1)
         blob_id = blob_store.put_blob(blob)
         self.assertTrue(bag_store.is_empty())
 
