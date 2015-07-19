@@ -207,7 +207,13 @@ class CheckForExtraChunks(WorkItem):
                                  % chunkid)
                     self.repo.remove_chunk_from_indexes_for_all_clients(
                         chunkid)
-                    self.repo.remove_chunk(chunkid)
+                    # FIXME: Due to FORMAT GREEN ALBATROSS, we can't
+                    # assume we can remove individual chunks anymore.
+                    # Thus RepositoryInterface.remove_chunk has been
+                    # removed. However, some day fsck needs to be able
+                    # to drop stuff, so leaving the commented-out call
+                    # to remove_chunk here, as a marker.
+                    # self.repo.remove_chunk(chunkid)
                 else:
                     self.error('chunk %s not used by anyone' % chunkid)
 

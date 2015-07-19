@@ -78,20 +78,6 @@ class GAChunkStore(object):
         bag_id, _ = obnamlib.parse_object_id(chunk_id)
         return self._bag_store.has_bag(bag_id)
 
-    def remove_chunk(self, chunk_id):
-        bag_id, _ = obnamlib.parse_object_id(chunk_id)
-        if self._bag is not None and bag_id == self._bag.get_id():
-            self._bag = None
-        else:
-            try:
-                self._bag_store.remove_bag(bag_id)
-            except (IOError, OSError) as e:
-                if e.errno == errno.ENOENT:
-                    raise obnamlib.RepositoryChunkDoesNotExist(
-                        chunk_id=chunk_id,
-                        filename=None)
-                raise
-
     def get_chunk_ids(self):
         result = []
         if self._bag:

@@ -365,11 +365,11 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
                 except KeyError:
                     # No checksum, therefore it can't be shared, therefore
                     # we can remove it.
-                    self.remove_chunk(chunk_id)
+                    self._remove_chunk(chunk_id)
                 else:
                     self.remove_chunk_from_indexes(chunk_id, client_name)
                     if not self._chunksums.chunk_is_used(checksum, chunk_id):
-                        self.remove_chunk(chunk_id)
+                        self._remove_chunk(chunk_id)
 
         keep_gen_nos = find_gens_to_keep()
         keep_chunkids = find_chunkids_in_gens(keep_gen_nos)
@@ -644,7 +644,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         filename = self._chunk_filename(chunk_id)
         try:
             return self._fs.cat(filename)
-        except IOError, e:
+        except IOError, e:  # pragma: no cover
             if e.errno == errno.ENOENT:
                 raise obnamlib.RepositoryChunkDoesNotExist(
                     chunk_id=str(chunk_id),
@@ -661,7 +661,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
         return self._fs.exists(self._chunk_filename(chunk_id))
 
-    def remove_chunk(self, chunk_id):
+    def _remove_chunk(self, chunk_id):  # pragma: no cover
         tracing.trace('chunk_id=%s', chunk_id)
 
         # Note: we ignore in-tree data, on the assumption that if
@@ -826,7 +826,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
         try:
             content = self.get_chunk_content(chunk_id)
-        except obnamlib.RepositoryChunkDoesNotExist:
+        except obnamlib.RepositoryChunkDoesNotExist:  # pragma: no cover
             return False
         actual_checksum = self._checksum(content)
         try:

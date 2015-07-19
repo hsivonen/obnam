@@ -732,10 +732,6 @@ class RepositoryInterface(object):
         '''Does a chunk (still) exist in the repository?'''
         raise NotImplementedError()
 
-    def remove_chunk(self, chunk_id):
-        '''Remove chunk from repository, but not chunk indexes.'''
-        raise NotImplementedError()
-
     def get_chunk_ids(self):
         '''Generate all chunk ids in repository.'''
         raise NotImplementedError()
@@ -1947,21 +1943,6 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
         self.assertTrue(self.repo.has_chunk(chunk_id))
         self.assertEqual(self.repo.get_chunk_content(chunk_id), 'foochunk')
 
-    def test_removes_chunk(self):
-        chunk_id = self.repo.put_chunk_content('foochunk')
-        self.repo.remove_chunk(chunk_id)
-        self.assertFalse(self.repo.has_chunk(chunk_id))
-        self.assertRaises(
-            obnamlib.RepositoryChunkDoesNotExist,
-            self.repo.get_chunk_content, chunk_id)
-
-    def test_removing_nonexistent_chunk_fails(self):
-        chunk_id = self.repo.put_chunk_content('foochunk')
-        self.repo.remove_chunk(chunk_id)
-        self.assertRaises(
-            obnamlib.RepositoryChunkDoesNotExist,
-            self.repo.remove_chunk, chunk_id)
-
     def test_get_chunk_ids_returns_nothing_initially(self):
         self.assertEqual(list(self.repo.get_chunk_ids()), [])
 
@@ -2114,17 +2095,6 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
         self.repo.commit_chunk_indexes()
         ret = self.repo.validate_chunk_content(chunk_id)
         self.assertTrue(ret is True or ret is None)
-
-    def test_validate_chunk_content_returns_False_or_None_if_corrupted(self):
-        self.setup_client()
-        chunk_id = self.repo.put_chunk_content('foochunk')
-        self.repo.lock_chunk_indexes()
-        token = self.repo.prepare_chunk_for_indexes('foochunk')
-        self.repo.put_chunk_into_indexes(chunk_id, token, 'fooclient')
-        self.repo.commit_chunk_indexes()
-        self.repo.remove_chunk(chunk_id)
-        ret = self.repo.validate_chunk_content(chunk_id)
-        self.assertTrue(ret is False or ret is None)
 
     # Fsck.
 
