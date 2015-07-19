@@ -144,6 +144,13 @@ requests, and other feedback. I prefer e-mail the mailing list: see
 It would be helpful if you can run `make clean check` before submitting
 a patch, but it is not strictly required.
 
+Note that to run the test suite you will need the following installed:
+
+* pep8
+* coverage
+* CoverageTestRunner ( http://liw.fi/coverage-test-runner/ )
+  (python-coverage-test-runner on Debian)
+
 
 Legal stuff
 -----------
