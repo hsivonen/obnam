@@ -45,6 +45,7 @@ class GAClient(object):
         return self._dirname
 
     def clear(self):
+        self._blob_store = None
         self._client_keys = GAKeys()
         self._generations = GAGenerationList()
         self._data_is_loaded = False
@@ -72,14 +73,16 @@ class GAClient(object):
             gen.set_root_object_id(metadata.get_root_object_id())
 
     def _get_blob_store(self):
-        bag_store = obnamlib.BagStore()
-        bag_store.set_location(self._fs, self._dirname)
+        if self._blob_store is None:
+            bag_store = obnamlib.BagStore()
+            bag_store.set_location(self._fs, self._dirname)
 
-        blob_store = obnamlib.BlobStore()
-        blob_store.set_bag_store(bag_store)
-        blob_store.set_max_bag_size(obnamlib.DEFAULT_NODE_SIZE)
-        blob_store.set_max_cache_bytes(obnamlib.DEFAULT_DIR_OBJECT_CACHE_BYTES)
-        return blob_store
+            self._blob_store = obnamlib.BlobStore()
+            self._blob_store.set_bag_store(bag_store)
+            self._blob_store.set_max_bag_size(obnamlib.DEFAULT_NODE_SIZE)
+            self._blob_store.set_max_cache_bytes(
+                obnamlib.DEFAULT_DIR_OBJECT_CACHE_BYTES)
+        return self._blob_store
 
     def _save_per_client_data(self):
         data = {
