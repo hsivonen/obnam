@@ -305,7 +305,6 @@ setup(name='obnam',
           'obnamlib.plugins',
           'obnamlib.fmt_6',
           'obnamlib.fmt_ga',
-          'obnamlib.fmt_simple'
       ],
       ext_modules=[Extension('obnamlib._obnam', sources=['_obnammodule.c'])],
       data_files=[('share/man/man1', glob.glob('*.1'))],
