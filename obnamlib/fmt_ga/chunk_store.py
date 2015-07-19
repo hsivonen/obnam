@@ -39,6 +39,8 @@ class GAChunkStore(object):
         self._bag_store.set_location(fs, self._dirname)
         self._blob_store = obnamlib.BlobStore()
         self._blob_store.set_bag_store(self._bag_store)
+        self._blob_store.set_max_cache_bytes(
+            obnamlib.DEFAULT_CHUNK_CACHE_BYTES)
         if self._max_chunk_size is not None:
             self._blob_store.set_max_bag_size(self._max_chunk_size)
 

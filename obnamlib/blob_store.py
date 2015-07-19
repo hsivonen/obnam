@@ -26,13 +26,16 @@ class BlobStore(object):
         self._bag = None
         self._max_bag_size = 0
         self._cached_blobs = BlobCache()
-        self._cached_blobs.set_max_bytes(obnamlib.DEFAULT_BAG_CACHE_BYTES)
+        self._cached_blobs.set_max_bytes(0)
 
     def set_bag_store(self, bag_store):
         self._bag_store = bag_store
 
     def set_max_bag_size(self, max_bag_size):
         self._max_bag_size = max_bag_size
+
+    def set_max_cache_bytes(self, max_bytes):  # pragma: no cover
+        self._cached_blobs.set_max_bytes(max_bytes)
 
     def get_blob(self, blob_id):
         bag_id, index = obnamlib.parse_object_id(blob_id)
