@@ -28,65 +28,62 @@ class GAChunkStore(object):
     def __init__(self):
         self._fs = None
         self._dirname = 'chunk-store'
-        self._bag = None
-        self._bag_store = obnamlib.BagStore()
-        self._max_bag_size = None
+        self._max_chunk_size = None
+        self._bag_store = None
+        self._blob_store = None
 
     def set_fs(self, fs):
         self._fs = fs
+
+        self._bag_store = obnamlib.BagStore()
         self._bag_store.set_location(fs, self._dirname)
+        self._blob_store = obnamlib.BlobStore()
+        self._blob_store.set_bag_store(self._bag_store)
+        if self._max_chunk_size is not None:
+            self._blob_store.set_max_bag_size(self._max_chunk_size)
 
     def set_max_chunk_size(self, max_chunk_size):
-        self._max_bag_size = max_chunk_size
+        self._max_chunk_size = max_chunk_size
+        if self._blob_store:
+            self._blob_store.set_max_bag_size(max_chunk_size)
 
     def put_chunk_content(self, content):
         self._fs.create_and_init_toplevel(self._dirname)
-        if self._bag is None:
-            self._bag = self._new_bag()
-        chunk_id = self._bag.append(content)
-        if self._bag_is_big_enough(self._bag):
-            self.flush_chunks()
-        return chunk_id
-
-    def _new_bag(self):
-        bag = obnamlib.Bag()
-        bag.set_id(self._bag_store.reserve_bag_id())
-        return bag
-
-    def _bag_is_big_enough(self, bag):
-        approx_size = sum(len(bag[i]) for i in range(len(bag)))
-        return self._max_bag_size is None or approx_size >= self._max_bag_size
+        return self._blob_store.put_blob(content)
 
     def flush_chunks(self):
-        if self._bag:
-            self._bag_store.put_bag(self._bag)
-            self._bag = None
+        self._blob_store.flush()
 
     def get_chunk_content(self, chunk_id):
-        bag_id, index = obnamlib.parse_object_id(chunk_id)
-        try:
-            bag = self._bag_store.get_bag(bag_id)
-        except (IOError, OSError) as e:
-            if e.errno == errno.ENOENT:
-                raise obnamlib.RepositoryChunkDoesNotExist(
-                    chunk_id=chunk_id,
-                    filename=None)
-            raise
-        return bag[index]
+        content = self._blob_store.get_blob(chunk_id)
+        if content is None:
+            raise obnamlib.RepositoryChunkDoesNotExist(
+                chunk_id=chunk_id,
+                filename=None)
+        return content
 
     def has_chunk(self, chunk_id):
-        bag_id, _ = obnamlib.parse_object_id(chunk_id)
-        return self._bag_store.has_bag(bag_id)
+        # This is ugly, 'cause it requires reading in the whole bag.
+        # We could easily check if the bag exists, but not whether it
+        # contains the actual chunk.
+        try:
+            return self.get_chunk_content(chunk_id)
+        except obnamlib.RepositoryChunkDoesNotExist:
+            return False
+        else:
+            return True
 
     def get_chunk_ids(self):
-        result = []
-        if self._bag:
-            result += self._get_chunk_ids_from_bag(self._bag)
+        # This is slow as hell, as it needs to read in all the bags to
+        # get all the chunk ids. We're going to need to either drop
+        # get_chunk_ids or have a way to get the blob identifiers for
+        # a bag without reading it in and parsing it.
 
+        self.flush_chunks()
+        result = []
         for bag_id in self._bag_store.get_bag_ids():
             bag = self._bag_store.get_bag(bag_id)
             result += self._get_chunk_ids_from_bag(bag)
-
         return result
 
     def _get_chunk_ids_from_bag(self, bag):
