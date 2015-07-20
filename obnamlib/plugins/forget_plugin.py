@@ -24,12 +24,19 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
     '''Forget generations.'''
 
     def enable(self):
+        forget_group = obnamlib.option_group['forget'] = 'Forgetting generations (forget)'
+
         self.app.add_subcommand(
             'forget', self.forget, arg_synopsis='[GENERATION]...')
         self.app.settings.string(
             ['keep'],
             'policy for what generations to keep '
             'when forgetting')
+
+        self.app.settings.boolean(
+            ['ignore-missing-chunks'],
+            'ignore missing chunks when forgetting generations',
+            group=forget_group)
 
     def forget(self, args):
         '''Forget (remove) specified backup generations.'''
@@ -130,4 +137,4 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
                 'Pretending to remove generation %s' %
                 self.repo.make_generation_spec(genid))
         else:
-            self.repo.remove_generation(genid)
+            self.repo.remove_generation(genid, self.app.settings['ignore-missing-chunks'])

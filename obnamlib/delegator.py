@@ -198,10 +198,10 @@ class RepositoryDelegator(obnamlib.RepositoryInterface):
         client = self._lookup_client_by_generation(generation_id)
         return client.set_generation_key(generation_id.gen_number, key, value)
 
-    def remove_generation(self, generation_id):
+    def remove_generation(self, generation_id, ignore_missing_chunks=False):
         self._require_got_client_lock(generation_id.client_name)
         client = self._lookup_client_by_generation(generation_id)
-        return client.remove_generation(generation_id.gen_number)
+        return client.remove_generation(generation_id.gen_number, ignore_missing_chunks)
 
     def get_generation_chunk_ids(self, generation_id):
         client = self._lookup_client_by_generation(generation_id)
