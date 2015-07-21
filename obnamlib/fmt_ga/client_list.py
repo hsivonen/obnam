@@ -47,6 +47,10 @@ class GAClientList(object):
         self._data = None
         self._data_is_loaded = False
         self._added_clients = []
+        self._clear_client_names_cache()
+
+    def _clear_client_names_cache(self):
+        self._client_names = None
 
     def commit(self):
         self._load_data()
@@ -66,7 +70,9 @@ class GAClientList(object):
 
     def get_client_names(self):
         self._load_data()
-        return self._data.get('clients', {}).keys()
+        if self._client_names is None:
+            self._client_names = self._data.get('clients', {}).keys()
+        return self._client_names
 
     def _load_data(self):
         if self._data_is_loaded:
@@ -103,6 +109,7 @@ class GAClientList(object):
             'client-id': self._pick_client_id(),
         }
         self._data['clients'] = clients
+        self._clear_client_names_cache()
 
         self._added_clients.append(client_name)
 
@@ -129,6 +136,8 @@ class GAClientList(object):
         if client_name in self._added_clients:
             self._added_clients.remove(client_name)
 
+        self._clear_client_names_cache()
+
     def rename_client(self, old_client_name, new_client_name):
         self._load_data()
         self._require_client_exists(old_client_name)
@@ -142,6 +151,8 @@ class GAClientList(object):
         if old_client_name in self._added_clients:  # pragma: no cover
             self._added_clients.remove(old_client_name)
         self._added_clients.append(new_client_name)
+
+        self._clear_client_names_cache()
 
     def _require_client_exists(self, client_name):
         if client_name not in self._data.get('clients', {}):
