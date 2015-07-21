@@ -71,7 +71,7 @@ class GAClientList(object):
     def get_client_names(self):
         self._load_data()
         if self._client_names is None:
-            self._client_names = self._data.get('clients', {}).keys()
+            self._client_names = set(self._data.get('clients', {}).keys())
         return self._client_names
 
     def _load_data(self):

@@ -67,7 +67,7 @@ class RepositoryDelegator(obnamlib.RepositoryInterface):
     #
 
     def get_client_names(self):
-        return self._client_list.get_client_names()
+        return list(self._client_list.get_client_names())
 
     def lock_client_list(self):
         self._require_we_have_not_locked_client_list()
