@@ -482,7 +482,12 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.chunkid_token_map.clear()
 
     def add_client(self, client_name):
-        self.repo.lock_client_list()
+        try:
+            self.repo.lock_client_list()
+        except obnamlib.GpgError:
+            self.repo.unlock_client_list()
+            raise
+
         if client_name not in self.repo.get_client_names():
             tracing.trace('adding new client %s' % client_name)
             tracing.trace('client list before adding: %s' %

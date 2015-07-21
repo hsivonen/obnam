@@ -89,7 +89,8 @@ from encryption import (generate_symmetric_key,
                         encrypt_with_keyring,
                         decrypt_with_secret_keys,
                         SymmetricKeyCache,
-                        EncryptionError)
+                        EncryptionError,
+                        GpgError)
 
 from hooks import (
     Hook, MissingFilterError, NoFilterTagError, FilterHook, HookManager)

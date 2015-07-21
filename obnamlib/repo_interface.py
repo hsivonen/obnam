@@ -371,20 +371,28 @@ class RepositoryInterface(object):
 
         '''
         unlockers = []
+        gpg_unlockers = []
         try:
             if not self.got_client_list_lock():
+                gpg_unlockers.append((self.unlock_client_list, []))
                 self.lock_client_list()
                 unlockers.append((self.unlock_client_list, []))
 
             for client_name in self.get_client_names():
                 if not self.got_client_lock(client_name):
+                    gpg_unlockers.append((self.unlock_client, [client_name]))
                     self.lock_client(client_name)
                     unlockers.append((self.unlock_client, [client_name]))
 
             if not self.got_chunk_indexes_lock():
+                gpg_unlockers.append((self.unlock_chunk_indexes, []))
                 self.lock_chunk_indexes()
         except obnamlib.LockFail:
             for unlocker, args in unlockers:
+                unlocker(*args)
+            raise
+        except obnamlib.GpgError:
+            for unlocker, args in gpg_unlockers:
                 unlocker(*args)
             raise
 
