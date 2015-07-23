@@ -114,6 +114,28 @@ Sometimes we need to remove a file.
     IMPLEMENTS WHEN user (\S+) removes file (\S+)
     rm -f "$DATADIR/$MATCH_2"
 
+Copy a file.
+
+    IMPLEMENTS GIVEN a copy of (.+) in (.+)
+    mkdir -p "$DATADIR/$(dirname "$MATCH_2")"
+    cp -a "$DATADIR/$MATCH_1" "$DATADIR/$MATCH_2"
+
+Reset a repository's chunk files.
+
+    IMPLEMENTS WHEN repository (.+) resets its chunks to those in (.+)
+    r1="$DATADIR/$MATCH_1"
+    r2="$DATADIR/$MATCH_2"
+    if [ -e "$r1/chunks" ]
+    then
+        # format 6
+        rm -rf "$r1/chunks"
+        cp -a "$r2/chunks" "$r1/."
+    else
+        rm -rf "$r1/chunk-store"
+        cp -a "$r2/chunk-store" "$r1/."
+    fi
+
+
 Manifest creation and checking
 ------------------------------
 
@@ -325,6 +347,15 @@ Remove the oldest generation.
     # the pipeline fails if there were no generations.
     id=$(run_obnam "$MATCH_1" -r "$DATADIR/$MATCH_2" genids | 
         head -n1 | grep .)
+    run_obnam "$MATCH_1" forget -r "$DATADIR/$MATCH_2" "$id"
+
+Remove the newest generation.
+
+    IMPLEMENTS WHEN user (\S+) forgets their latest generation in repository (\S+)
+    # The grep below at the end of pipeline is there to make sure
+    # the pipeline fails if there were no generations.
+    id=$(run_obnam "$MATCH_1" -r "$DATADIR/$MATCH_2" genids |
+        tail -n1 | grep .)
     run_obnam "$MATCH_1" forget -r "$DATADIR/$MATCH_2" "$id"
 
 Remove according to a `--keep` schedule.
@@ -597,6 +628,12 @@ by the user.
 
     IMPLEMENTS WHEN user (\S+) reads file (\S+)
     cat "$DATADIR/$MATCH_2"
+
+Does a restored file match what's in live data?
+
+    IMPLEMENTS THEN file (.+), restored to (.+), matches live data
+    cmp "$DATADIR/$MATCH_1" "$DATADIR/$MATCH_2/$DATADIR/$MATCH_1"
+
 
 Check on user running test suite
 --------------------------------

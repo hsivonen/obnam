@@ -1,0 +1,65 @@
+Robustness: dealing with repository corruption
+==============================================
+
+A repository may be corrupted in various ways, including due to bugs
+in Obnam itself. Obnam needs to be robust against this, and do as well
+as it can, even when the repository isn't quite as good as it might
+be. For example, it should be able to restore data that is still in
+the repository.
+
+The scenario in this chapter handles a specific class of repository
+corruption: file data ("chunks") that have gone missing. As of
+Obnam 1.12, there are known to be bugs that cause that to happen.
+Hopefully, once these scenarios pass, the bugs will either be fixed,
+or at least are handled without crashing by later Obnam operations.
+
+    SCENARIO handle missing file chunks
+
+First, let's create a repository that's OK. We'll make two backup
+generations, with some changes to live data in between.
+
+    GIVEN 10k of data in file L/foo
+    AND a manifest of L in M
+    WHEN user U backs up directory L to repository R
+    GIVEN a manifest of R in MR
+    AND a copy of R in R1
+
+    GIVEN 20k of data in file L/bar
+    AND a copy of L/foo in L/foocopy
+    WHEN user U backs up directory L to repository R
+
+We now have the first generation that has just the file `L/foo`, and
+the second generation that has `L/bar` and `L/foocopy`, and the latter
+is identical to the `L/foo`. Because it is identical, it will re-use
+the file chunks of `L/foo`.
+
+If we now remove the chunks that were created by the second backup,
+the first generation is intact, but the second generation's `L/bar`
+file is corrupt (it's chunks are missing).
+
+    WHEN repository R resets its chunks to those in R1
+
+We should now be able to restore the first generation without
+problems.
+
+    WHEN user U restores generation 1 to X1 from repository R
+    THEN L, restored to X1, matches manifest M
+
+Restoring the second generation should fail, partially.
+
+    WHEN user U attempts to restore their latest generation
+    ... in repository R into X2
+    THEN the attempt failed with exit code 1
+    AND the error message matches "L/bar: R43272X"
+    AND file L/foo, restored to X2, matches live data
+    AND file L/foocopy, restored to X2, matches live data
+
+We should be able to remove the second generation, despite the missing
+chunk.
+
+    WHEN user U forgets their latest generation in repository R
+    THEN user U sees 1 generation in repository R
+
+    WHEN user U restores their latest generation in repository R
+    ... into X3
+    THEN L, restored to X3, matches manifest M
