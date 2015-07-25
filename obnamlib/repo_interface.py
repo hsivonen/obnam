@@ -572,13 +572,10 @@ class RepositoryInterface(object):
         '''Set a key/value pair for a given generation.'''
         raise NotImplementedError()
 
-    def remove_generation(self, generation_id, ignore_missing_chunks=False):
+    def remove_generation(self, generation_id):
         '''Remove an existing generation.
 
         The removed generation may be the currently unfinished one.
-
-        When removing chunks, don't try to remove those that are missing
-        if ignore_missing_chunks is set to True.
 
         '''
         raise NotImplementedError()

@@ -340,7 +340,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._raw_unlock_client(client_name)
 
     def _remove_chunks_from_removed_generations(
-            self, client_name, remove_gen_nos, ignore_missing_chunks=False):
+            self, client_name, remove_gen_nos):
 
         def find_chunkids_in_gens(gen_nos):
             chunkids = set()
@@ -358,7 +358,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
                     keep.append(gen_number)
             return keep
 
-        def remove_chunks(chunk_ids, ignore_missing_chunks=False):  # pragma: no cover
+        def remove_chunks(chunk_ids):  # pragma: no cover
             for chunk_id in chunk_ids:
                 try:
                     checksum = self._chunklist.get_checksum(chunk_id)
@@ -368,16 +368,17 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
                     self._remove_chunk(chunk_id)
                 else:
                     self.remove_chunk_from_indexes(chunk_id, client_name)
-                    # We can skip removal if the chunk doesn't exist
-                    skip_removal = ignore_missing_chunks and not self.has_chunk(chunk_id)
-                    if not skip_removal and not self._chunksums.chunk_is_used(checksum, chunk_id):
+                    can_be_removed = (
+                        self.has_chunk(chunk_id) and
+                        not self._chunksums.chunk_is_used(checksum, chunk_id))
+                    if can_be_removed:
                         self._remove_chunk(chunk_id)
 
         keep_gen_nos = find_gens_to_keep()
         keep_chunkids = find_chunkids_in_gens(keep_gen_nos)
         maybe_remove_chunkids = find_chunkids_in_gens(remove_gen_nos)
         remove_chunkids = maybe_remove_chunkids.difference(keep_chunkids)
-        remove_chunks(remove_chunkids, ignore_missing_chunks)
+        remove_chunks(remove_chunkids)
 
     def get_allowed_client_keys(self):
         return []
@@ -549,7 +550,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         client_name, gen_number = self._unpack_gen_id(gen_id)
         return str(gen_number)
 
-    def remove_generation(self, gen_id, ignore_missing_chunks=False):
+    def remove_generation(self, gen_id):
         tracing.trace('gen_id=%s' % repr(gen_id))
         client_name, gen_number = self._unpack_gen_id(gen_id)
         self._require_client_lock(client_name)
@@ -563,8 +564,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._forget_open_client_info_cached_generation(
             open_client_info, gen_id)
 
-        self._remove_chunks_from_removed_generations(client_name, [gen_number],
-                ignore_missing_chunks)
+        self._remove_chunks_from_removed_generations(client_name, [gen_number])
         open_client_info.client.start_changes(create_tree=False)
         open_client_info.client.remove_generation(gen_number)
 

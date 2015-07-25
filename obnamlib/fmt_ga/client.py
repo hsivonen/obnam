@@ -174,7 +174,7 @@ class GAClient(object):
         else:
             return str(1)
 
-    def remove_generation(self, gen_number, ignore_missing_chunks=False):
+    def remove_generation(self, gen_number):
         self._load_data()
         remaining = []
         removed = False
