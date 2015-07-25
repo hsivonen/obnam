@@ -3,6 +3,18 @@ Obnam NEWS
 
 This file summarizes changes between releases of Obnam.
 
+Version 1.13, released UNRELEASED
+---------------------------------
+
+Bug fixes:
+
+* Lukáš Poláček found and fixed a repository corruption problem: if
+  `obnam forget` was interrupted at the wrong moment, it might remove
+  a chunk, but not the reference to it. This would case a future run
+  of `obnam forget` to crash due to a missing chunk (error code
+  R43272X). `obnam forget` will now ignore such a missing chunk, since
+  it would've deleted it anyway.
+
 Version 1.12, released 2015-07-08
 ---------------------------------
 
