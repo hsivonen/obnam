@@ -36,6 +36,7 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
         self.app.settings.boolean(
             ['ignore-missing-chunks'],
             'ignore missing chunks when forgetting generations',
+            default=True,
             group=forget_group)
 
     def forget(self, args):
