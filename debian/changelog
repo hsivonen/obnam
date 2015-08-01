@@ -1,10 +1,10 @@
-obnam (1.13-1) UNRELEASED; urgency=medium
+obnam (1.13-1) unstable; urgency=medium
 
   * New upstream version.
     * Fix "R43272X: Repository doesn't contain chunk" (Closes:
       #793792)
 
- -- Lars Wirzenius <liw@liw.fi>  Sat, 01 Aug 2015 18:32:22 +0300
+ -- Lars Wirzenius <liw@liw.fi>  Sat, 01 Aug 2015 19:24:46 +0300
 
 obnam (1.12-1) unstable; urgency=medium
 
