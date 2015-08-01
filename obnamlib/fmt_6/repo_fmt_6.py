@@ -70,6 +70,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self.hooks = hooks
 
         self._setup_chunks()
+        self._reset_unused_chunks()
         self._setup_file_keys()
 
     @classmethod
@@ -298,6 +299,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         logging.info('Unlocking client %s' % client_name)
         self._require_existing_client(client_name)
         self._require_client_lock(client_name)
+        self._reset_unused_chunks()
         self._raw_unlock_client(client_name)
         self._setup_file_key_cache()
 
@@ -365,14 +367,14 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
                 except KeyError:
                     # No checksum, therefore it can't be shared, therefore
                     # we can remove it.
-                    self._remove_chunk(chunk_id)
+                    self._unused_chunks.append(chunk_id)
                 else:
                     self.remove_chunk_from_indexes(chunk_id, client_name)
                     can_be_removed = (
                         self.has_chunk(chunk_id) and
                         not self._chunksums.chunk_is_used(checksum, chunk_id))
                     if can_be_removed:
-                        self._remove_chunk(chunk_id)
+                        self._unused_chunks.append(chunk_id)
 
         keep_gen_nos = find_gens_to_keep()
         keep_chunkids = find_chunkids_in_gens(keep_gen_nos)
@@ -595,6 +597,9 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             'chunks', self._idpath_depth, self._idpath_bits,
             self._idpath_skip)
 
+    def _reset_unused_chunks(self):
+        self._unused_chunks = []
+
     def _construct_in_tree_chunk_id(
             self, gen_id, filename):  # pragma: no cover
         # This constructs a synthetic chunk id for in-tree data for a
@@ -664,6 +669,14 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
         return self._fs.exists(self._chunk_filename(chunk_id))
 
+    def flush_chunks(self):
+        pass
+
+    def remove_unused_chunks(self):  # pragma: no cover
+        for chunk_id in self._unused_chunks:
+            self._remove_chunk(chunk_id)
+        self._reset_unused_chunks()
+
     def _remove_chunk(self, chunk_id):  # pragma: no cover
         tracing.trace('chunk_id=%s', chunk_id)
 
@@ -680,12 +693,6 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             raise obnamlib.RepositoryChunkDoesNotExist(
                 chunk_id=str(chunk_id),
                 filename=filename)
-
-    def flush_chunks(self):
-        pass
-
-    def remove_unused_chunks(self):
-        pass
 
     def get_chunk_ids(self):
         # Note: This does not cover for in-tree chunk data. We cannot
@@ -743,6 +750,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._require_chunk_indexes_lock()
         self._lockmgr.unlock(self._chunk_index_dirs_to_lock())
         self._setup_chunk_indexes()
+        self._reset_unused_chunks()
 
     def lock_chunk_indexes(self):
         tracing.trace('locking chunk indexes')

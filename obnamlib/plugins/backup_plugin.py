@@ -422,11 +422,13 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.repo.remove_generation(gen)
 
         self.progress.what(prefix + ': committing client')
-        self.repo.flush_chunks()
         self.repo.commit_client(self.client_name)
 
         self.progress.what(prefix + ': commiting shared B-trees')
         self.repo.commit_chunk_indexes()
+
+        self.progress.what(prefix + ': removing unused chunks')
+        self.repo.remove_unused_chunks()
 
         self.repo.unlock_everything()
 
