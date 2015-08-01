@@ -647,13 +647,17 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.progress.what('making checkpoint')
         if not self.pretend:
             self.checkpoint_manager.add_checkpoint(self.new_generation)
+
             self.progress.what('making checkpoint: backing up parents')
             self.backup_parents('.')
+
             self.progress.what('making checkpoint: locking shared B-trees')
             self.repo.lock_chunk_indexes()
+
             self.progress.what(
                 'making checkpoint: adding chunks to shared B-trees')
             self.add_chunks_to_shared()
+
             self.progress.what(
                 'making checkpoint: committing per-client B-tree')
             self.repo.set_generation_key(
@@ -662,18 +666,22 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.repo.flush_chunks()
             self.repo.commit_client(self.client_name)
             self.repo.unlock_client(self.client_name)
+
             self.progress.what('making checkpoint: committing shared B-trees')
             self.repo.commit_chunk_indexes()
             self.repo.unlock_chunk_indexes()
             self.last_checkpoint = self.repo.get_fs().bytes_written
+
             self.progress.what('making checkpoint: re-opening repository')
             self.repo = self.app.get_repository_object(
                 repofs=self.repo.get_fs())
+
             self.progress.what('making checkpoint: starting a new generation')
             self.repo.lock_client(self.client_name)
             self.new_generation = self.repo.create_generation(
                 self.client_name)
             self.app.dump_memory_profile('at end of checkpoint')
+
             self.progress.what('making checkpoint: continuing backup')
 
     def find_files(self, root):
