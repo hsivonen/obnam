@@ -737,7 +737,7 @@ class RepositoryInterface(object):
         raise NotImplementedError()
 
     def flush_chunks(self):
-        '''Flush any pending chunks.'''
+        '''Write any pending new chunks to repository.'''
         raise NotImplementedError()
 
     def lock_chunk_indexes(self):
