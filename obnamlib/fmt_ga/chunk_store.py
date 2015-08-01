@@ -56,6 +56,10 @@ class GAChunkStore(object):
     def flush_chunks(self):
         self._blob_store.flush()
 
+    def remove_unused_chunks(self):
+        # FIXME: This is a no-op operation, for now.
+        pass
+
     def get_chunk_content(self, chunk_id):
         content = self._blob_store.get_blob(chunk_id)
         if content is None:

@@ -684,6 +684,9 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
     def flush_chunks(self):
         pass
 
+    def remove_unused_chunks(self):
+        pass
+
     def get_chunk_ids(self):
         # Note: This does not cover for in-tree chunk data. We cannot
         # realistically iterate over all per-client B-trees to find
