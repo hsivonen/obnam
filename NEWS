@@ -18,6 +18,12 @@ Bug fixes:
   Lars Wirzenius then changed things so that chunk files are only
   removed once references to the chunks have been committed.
 
+Improvements:
+
+* `obnam forget` now commits changes after each generation it has
+  removed. This means that if the operation is committed, less work is
+  lost. Suggested by Lukáš Poláček, re-implemented by Lars Wirzenius.
+
 Version 1.12, released 2015-07-08
 ---------------------------------
 
