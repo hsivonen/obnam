@@ -135,12 +135,12 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     def commit_client_list(self):
         tracing.trace('committing client list')
+        self._require_client_list_lock()
         for client_name in self._added_clients:
             self.hooks.call(
                 'repository-add-client', self, client_name)
         self._added_clients = []
         self._client_list.commit()
-        self._raw_unlock_client_list()
 
     def got_client_list_lock(self):
         return self._lockmgr.got_lock('.')
@@ -338,8 +338,6 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             open_client_info.generations_removed)
         if need_to_commit:
             open_client_info.client.commit()
-
-        self._raw_unlock_client(client_name)
 
     def _remove_chunks_from_removed_generations(
             self, client_name, remove_gen_nos):
@@ -750,7 +748,6 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._require_chunk_indexes_lock()
         self._lockmgr.unlock(self._chunk_index_dirs_to_lock())
         self._setup_chunk_indexes()
-        self._reset_unused_chunks()
 
     def lock_chunk_indexes(self):
         tracing.trace('locking chunk indexes')
@@ -759,6 +756,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
     def unlock_chunk_indexes(self):
         tracing.trace('unlocking chunk indexes')
         self._raw_unlock_chunk_indexes()
+        self._reset_unused_chunks()
 
     def got_chunk_indexes_lock(self):
         return all(
@@ -775,7 +773,6 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._require_chunk_indexes_lock()
         self._chunklist.commit()
         self._chunksums.commit()
-        self._raw_unlock_chunk_indexes()
 
     def prepare_chunk_for_indexes(self, data):
         return self._checksum(data)

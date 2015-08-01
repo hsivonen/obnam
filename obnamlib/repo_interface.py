@@ -389,7 +389,13 @@ class RepositoryInterface(object):
             raise
 
     def unlock_everything(self):
-        '''Unock every part of the repository to which we hold a lock.'''
+        '''Unock every part of the repository to which we hold a lock.
+
+        This also discards any changes made to each part made after
+        the latest lock or commit of that part.
+
+        '''
+
         if self.got_client_list_lock():
             self.unlock_client_list()
 
@@ -411,11 +417,21 @@ class RepositoryInterface(object):
         raise NotImplementedError()
 
     def commit_client_list(self):
-        '''Commit changes to client list and unlock it.'''
+        '''Commit changes to client list and DO NOT unlock it.
+
+        Note that the caller MUST also call unlock_client_list.
+        Otherwise the client list remains locked.
+
+        '''
         raise NotImplementedError()
 
     def unlock_client_list(self):
-        '''Forget changes to client list and unlock it.'''
+        '''Forget changes to client list and unlock it.
+
+        The changes that are forgotten are those made after the latest
+        lock_client_list or commit_client_list.
+
+        '''
         raise NotImplementedError()
 
     def got_client_list_lock(self):
@@ -479,11 +495,21 @@ class RepositoryInterface(object):
         raise NotImplementedError()
 
     def commit_client(self, client_name):
-        '''Commit changes to client and unlock it.'''
+        '''Commit changes to client and DO NOT unlock it.
+
+        Note that the caller MUST also call unlock_client. Otherwise
+        the client list remains locked.
+
+        '''
         raise NotImplementedError()
 
     def unlock_client(self, client_name):
-        '''Forget changes to client and unlock it.'''
+        '''Forget changes to client and unlock it.
+
+        The changes that are forgotten are those made after the latest
+        lock_client or commit_client.
+
+        '''
         raise NotImplementedError()
 
     def got_client_lock(self, client_name):
@@ -754,7 +780,12 @@ class RepositoryInterface(object):
         raise NotImplementedError()
 
     def unlock_chunk_indexes(self):
-        '''Unlocks chunk indexes without committing them.'''
+        '''Forget any changes to and and unlock chunk indexes.
+
+        The changes that are forgotten are those made after the latest
+        lock_chunk_indexes or commit_chunk_indexes.
+
+        '''
         raise NotImplementedError()
 
     def got_chunk_indexes_lock(self):
@@ -766,7 +797,12 @@ class RepositoryInterface(object):
         raise NotImplementedError()
 
     def commit_chunk_indexes(self):
-        '''Commit changes to chunk indexes.'''
+        '''Commit changes to chunk indexes and DO NOT unlock it.
+
+        Note that the caller MUST also call unlock_chunk_indexes.
+        Otherwise the client list remains locked.
+
+        '''
         raise NotImplementedError()
 
     def prepare_chunk_for_indexes(self, data):
@@ -948,6 +984,7 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
         self.repo.lock_client_list()
         self.repo.add_client('foo')
         self.repo.commit_client_list()
+        self.repo.unlock_client_list()
 
         self.repo.lock_client_list()
         self.repo.rename_client('foo', 'bar')
@@ -982,6 +1019,7 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
         self.repo.add_client('foo')
         self.repo.add_client('bar')
         self.repo.commit_client_list()
+        self.repo.unlock_client_list()
 
         self.repo.lock_client_list()
         self.assertRaises(
@@ -1006,6 +1044,7 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
         self.repo.lock_client_list()
         self.repo.add_client('foo')
         self.repo.commit_client_list()
+        self.repo.unlock_client_list()
         self.assertRaises(
             obnamlib.RepositoryClientListNotLocked,
             self.repo.rename_client, 'foo', 'bar')
@@ -1029,6 +1068,7 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
         self.repo.lock_client_list()
         self.repo.add_client('foo')
         self.repo.commit_client_list()
+        self.repo.unlock_client_list()
 
         self.repo.lock_client_list()
         self.repo.rename_client('foo', 'bar')
@@ -1042,6 +1082,7 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
         self.repo.lock_client_list()
         self.repo.add_client('foo')
         self.repo.commit_client_list()
+        self.repo.unlock_client_list()
 
         self.repo.lock_client_list()
         self.repo.remove_client('foo')
@@ -1054,6 +1095,7 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
         self.repo.lock_client_list()
         self.repo.add_client('foo')
         self.repo.commit_client_list()
+        self.repo.unlock_client_list()
         self.assertEqual(self.repo.get_client_names(), ['foo'])
 
     def test_committing_client_list_renames_client(self):
@@ -1062,10 +1104,12 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
         self.repo.lock_client_list()
         self.repo.add_client('foo')
         self.repo.commit_client_list()
+        self.repo.unlock_client_list()
 
         self.repo.lock_client_list()
         self.repo.rename_client('foo', 'bar')
         self.repo.commit_client_list()
+        self.repo.unlock_client_list()
 
         self.assertEqual(self.repo.get_client_names(), ['bar'])
 
@@ -1075,30 +1119,26 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
         self.repo.lock_client_list()
         self.repo.add_client('foo')
         self.repo.commit_client_list()
+        self.repo.unlock_client_list()
 
         self.repo.lock_client_list()
         self.repo.remove_client('foo')
         self.repo.commit_client_list()
+        self.repo.unlock_client_list()
 
         self.assertEqual(self.repo.get_client_names(), [])
 
-    def test_commiting_client_list_removes_lock(self):
+    def test_commiting_client_list_does_NOT_remove_lock(self):
         self.repo.init_repo()
-
         self.repo.lock_client_list()
         self.repo.commit_client_list()
-
-        self.repo.lock_client_list()
-        self.assertEqual(self.repo.get_client_names(), [])
+        self.assertTrue(self.repo.got_client_list_lock())
 
     def test_unlocking_client_list_removes_lock(self):
         self.repo.init_repo()
-
         self.repo.lock_client_list()
         self.repo.unlock_client_list()
-
-        self.repo.lock_client_list()
-        self.assertEqual(self.repo.get_client_names(), [])
+        self.assertFalse(self.repo.got_client_list_lock())
 
     def test_locking_client_list_twice_fails(self):
         self.repo.init_repo()
@@ -1167,12 +1207,14 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
         self.repo.lock_client_list()
         self.repo.add_client('fooclient')
         self.repo.commit_client_list()
+        self.repo.unlock_client_list()
 
     def setup_two_clients(self):
         self.repo.lock_client_list()
         self.repo.add_client('fooclient')
         self.repo.add_client('barclient')
         self.repo.commit_client_list()
+        self.repo.unlock_client_list()
 
     def test_have_not_got_client_lock_initially(self):
         self.setup_client()
@@ -1235,17 +1277,17 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
             obnamlib.RepositoryClientDoesNotExist,
             self.repo.commit_client, 'notexist')
 
+    def test_committing_client_does_NOT_remove_lock(self):
+        self.setup_client()
+        self.repo.lock_client('fooclient')
+        self.repo.commit_client('fooclient')
+        self.assertTrue(self.repo.got_client_lock('fooclient'))
+
     def test_unlocking_client_removes_lock(self):
         self.setup_client()
         self.repo.lock_client('fooclient')
         self.repo.unlock_client('fooclient')
-        self.assertEqual(self.repo.lock_client('fooclient'), None)
-
-    def test_committing_client_removes_lock(self):
-        self.setup_client()
-        self.repo.lock_client('fooclient')
-        self.repo.commit_client('fooclient')
-        self.assertEqual(self.repo.lock_client('fooclient'), None)
+        self.assertFalse(self.repo.got_client_lock('fooclient'))
 
     def test_has_list_of_allowed_client_keys(self):
         self.assertEqual(type(self.repo.get_allowed_client_keys()), list)
@@ -1301,6 +1343,7 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
             value = self.repo.get_client_key(
                 'fooclient', obnamlib.REPO_CLIENT_TEST_KEY)
             self.repo.commit_client('fooclient')
+            self.repo.unlock_client('fooclient')
             self.assertEqual(value, 'bar')
 
     def test_unlocking_client_undoes_key_changes(self):
@@ -1360,6 +1403,7 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
         self.repo.lock_client('fooclient')
         new_id = self.repo.create_generation('fooclient')
         self.repo.commit_client('fooclient')
+        self.repo.unlock_client('fooclient')
         self.assertEqual(
             self.repo.get_client_generation_ids('fooclient'),
             [new_id])
@@ -1417,6 +1461,7 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
         if self.generation_test_key_is_allowed():
             gen_id = self.create_generation()
             self.repo.commit_client('fooclient')
+            self.repo.unlock_client('fooclient')
             self.assertRaises(
                 obnamlib.RepositoryClientNotLocked,
                 self.repo.set_generation_key,
@@ -1430,6 +1475,7 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
             value = self.repo.get_generation_key(
                 gen_id, obnamlib.REPO_GENERATION_TEST_KEY)
             self.repo.commit_client('fooclient')
+            self.repo.unlock_client('fooclient')
             self.assertEqual(value, 'bar')
 
     def test_removes_unfinished_generation(self):
@@ -1440,6 +1486,7 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
     def test_removes_finished_generation(self):
         gen_id = self.create_generation()
         self.repo.commit_client('fooclient')
+        self.repo.unlock_client('fooclient')
         self.repo.lock_client('fooclient')
         self.repo.remove_generation(gen_id)
         self.assertEqual(self.repo.get_client_generation_ids('fooclient'), [])
@@ -1454,6 +1501,7 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
     def test_removing_generation_without_client_lock_fails(self):
         gen_id = self.create_generation()
         self.repo.commit_client('fooclient')
+        self.repo.unlock_client('fooclient')
         self.assertRaises(
             obnamlib.RepositoryClientNotLocked,
             self.repo.remove_generation, gen_id)
@@ -1461,6 +1509,7 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
     def test_unlocking_client_forgets_generation_removal(self):
         gen_id = self.create_generation()
         self.repo.commit_client('fooclient')
+        self.repo.unlock_client('fooclient')
         self.repo.lock_client('fooclient')
         self.repo.remove_generation(gen_id)
         self.repo.unlock_client('fooclient')
@@ -1472,6 +1521,7 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
         gen_id = self.create_generation()
         self.repo.remove_generation(gen_id)
         self.repo.commit_client('fooclient')
+        self.repo.unlock_client('fooclient')
         self.assertEqual(self.repo.get_client_generation_ids('fooclient'), [])
 
     def test_empty_generation_uses_no_chunk_ids(self):
@@ -1502,6 +1552,7 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
         # one.
         gen_id = self.create_generation()
         self.repo.commit_client('fooclient')
+        self.repo.unlock_client('fooclient')
         self.repo.lock_client('fooclient')
         gen_id_2 = self.repo.create_generation('fooclient')
         genspec = self.repo.make_generation_spec(gen_id)
@@ -1533,6 +1584,7 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
         self.repo.set_file_key(
             gen_id, '/foo/bar', obnamlib.REPO_FILE_MODE, stat.S_IFREG)
         self.repo.commit_client('fooclient')
+        self.repo.unlock_client('fooclient')
         self.assertTrue(self.repo.file_exists(gen_id, '/foo/bar'))
 
     def test_creating_generation_clones_previous_one(self):
@@ -1541,6 +1593,7 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
         self.repo.set_file_key(
             gen_id, '/foo/bar', obnamlib.REPO_FILE_MODE, stat.S_IFREG)
         self.repo.commit_client('fooclient')
+        self.repo.unlock_client('fooclient')
 
         self.repo.lock_client('fooclient')
         gen_id_2 = self.repo.create_generation('fooclient')
@@ -1558,6 +1611,7 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
         self.repo.set_file_key(
             gen_id, '/foo/bar', obnamlib.REPO_FILE_MODE, stat.S_IFREG)
         self.repo.commit_client('fooclient')
+        self.repo.unlock_client('fooclient')
 
         self.repo.lock_client('fooclient')
         gen_id_2 = self.repo.create_generation('fooclient')
@@ -1572,12 +1626,14 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
         self.repo.set_file_key(
             gen_id, '/foo/bar', obnamlib.REPO_FILE_MODE, stat.S_IFREG)
         self.repo.commit_client('fooclient')
+        self.repo.unlock_client('fooclient')
 
         self.repo.lock_client('fooclient')
         gen_id_2 = self.repo.create_generation('fooclient')
         self.assertTrue(self.repo.file_exists(gen_id_2, '/foo/bar'))
         self.repo.remove_file(gen_id_2, '/foo/bar')
         self.repo.commit_client('fooclient')
+        self.repo.unlock_client('fooclient')
 
         self.assertTrue(self.repo.file_exists(gen_id, '/foo/bar'))
         self.assertFalse(self.repo.file_exists(gen_id_2, '/foo/bar'))
@@ -1758,6 +1814,7 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
         self.repo.set_file_key(
             gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY, 'yoyo')
         self.repo.commit_client('fooclient')
+        self.repo.unlock_client('fooclient')
         value = self.repo.get_file_key(
             gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY)
         self.assertEqual(value, 'yoyo')
@@ -1770,12 +1827,14 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
         self.repo.set_file_key(
             gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY, 'first')
         self.repo.commit_client('fooclient')
+        self.repo.unlock_client('fooclient')
 
         self.repo.lock_client('fooclient')
         gen_id_2 = self.repo.create_generation('fooclient')
         self.repo.set_file_key(
             gen_id_2, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY, 'second')
         self.repo.commit_client('fooclient')
+        self.repo.unlock_client('fooclient')
 
         value = self.repo.get_file_key(
             gen_id, '/foo/bar', obnamlib.REPO_FILE_TEST_KEY)
@@ -1866,6 +1925,7 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
             gen_id, '/foo/bar', obnamlib.REPO_FILE_MODE, stat.S_IFREG)
         self.repo.append_file_chunk_id(gen_id, '/foo/bar', 1)
         self.repo.commit_client('fooclient')
+        self.repo.unlock_client('fooclient')
 
         self.repo.lock_client('fooclient')
         gen_id_2 = self.repo.create_generation('fooclient')
@@ -1886,6 +1946,7 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
             gen_id, '/foo/bar', obnamlib.REPO_FILE_MODE, stat.S_IFREG)
         self.repo.append_file_chunk_id(gen_id, '/foo/bar', 1)
         self.repo.commit_client('fooclient')
+        self.repo.unlock_client('fooclient')
 
         self.repo.lock_client('fooclient')
         gen_id_2 = self.repo.create_generation('fooclient')
@@ -1895,6 +1956,7 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
             [1, 2])
 
         self.repo.commit_client('fooclient')
+        self.repo.unlock_client('fooclient')
         self.assertEqual(
             self.repo.get_file_chunk_ids(gen_id, '/foo/bar'),
             [1])
@@ -2043,6 +2105,7 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
         token = self.repo.prepare_chunk_for_indexes('foochunk')
         self.repo.put_chunk_into_indexes(chunk_id, token, 'fooclient')
         self.repo.commit_chunk_indexes()
+        self.repo.unlock_chunk_indexes()
         self.assertRaises(
             obnamlib.RepositoryChunkIndexesNotLocked,
             self.repo.remove_chunk_from_indexes, chunk_id, 'fooclient')
@@ -2054,6 +2117,7 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
         token = self.repo.prepare_chunk_for_indexes('foochunk')
         self.repo.put_chunk_into_indexes(chunk_id, token, 'fooclient')
         self.repo.commit_chunk_indexes()
+        self.repo.unlock_chunk_indexes()
         self.assertRaises(
             obnamlib.RepositoryChunkIndexesNotLocked,
             self.repo.remove_chunk_from_indexes_for_all_clients, chunk_id)
@@ -2076,8 +2140,14 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
         token = self.repo.prepare_chunk_for_indexes('foochunk')
         self.repo.put_chunk_into_indexes(chunk_id, token, 'fooclient')
         self.repo.commit_chunk_indexes()
+        self.repo.unlock_chunk_indexes()
         self.assertEqual(
             self.repo.find_chunk_ids_by_content('foochunk'), [chunk_id])
+
+    def test_committing_does_NOT_remove_chunk_indexes_lock(self):
+        self.repo.lock_chunk_indexes()
+        self.repo.commit_chunk_indexes()
+        self.assertTrue(self.repo.got_chunk_indexes_lock())
 
     def test_locking_chunk_indexes_twice_fails(self):
         self.repo.lock_chunk_indexes()
@@ -2102,6 +2172,7 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
         token = self.repo.prepare_chunk_for_indexes('foochunk')
         self.repo.put_chunk_into_indexes(chunk_id, token, 'fooclient')
         self.repo.commit_chunk_indexes()
+        self.repo.unlock_chunk_indexes()
         ret = self.repo.validate_chunk_content(chunk_id)
         self.assertTrue(ret is True or ret is None)
 

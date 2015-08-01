@@ -403,9 +403,11 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.progress.what(prefix + 'committing client')
         self.repo.flush_chunks()
         self.repo.commit_client(self.client_name)
+        self.repo.unlock_client(self.client_name)
 
         self.progress.what(prefix + 'committing shared B-trees')
         self.repo.commit_chunk_indexes()
+        self.repo.unlock_chunk_indexes()
 
     def should_remove_checkpoints(self):
         return (not self.progress.errors and
@@ -423,9 +425,11 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         self.progress.what(prefix + ': committing client')
         self.repo.commit_client(self.client_name)
+        self.repo.unlock_client(self.client_name)
 
         self.progress.what(prefix + ': commiting shared B-trees')
         self.repo.commit_chunk_indexes()
+        self.repo.unlock_chunk_indexes()
 
         self.progress.what(prefix + ': removing unused chunks')
         self.repo.remove_unused_chunks()
@@ -487,6 +491,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             tracing.trace('client list after adding: %s' %
                           self.repo.get_client_names())
         self.repo.commit_client_list()
+        self.repo.unlock_client_list()
         self.repo = self.app.get_repository_object(repofs=self.repo.get_fs())
 
     def backup_roots(self, roots):
@@ -656,15 +661,16 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 obnamlib.REPO_GENERATION_IS_CHECKPOINT, 1)
             self.repo.flush_chunks()
             self.repo.commit_client(self.client_name)
+            self.repo.unlock_client(self.client_name)
             self.progress.what('making checkpoint: committing shared B-trees')
             self.repo.commit_chunk_indexes()
+            self.repo.unlock_chunk_indexes()
             self.last_checkpoint = self.repo.get_fs().bytes_written
             self.progress.what('making checkpoint: re-opening repository')
             self.repo = self.app.get_repository_object(
                 repofs=self.repo.get_fs())
-            self.progress.what('making checkpoint: locking client')
-            self.repo.lock_client(self.client_name)
             self.progress.what('making checkpoint: starting a new generation')
+            self.repo.lock_client(self.client_name)
             self.new_generation = self.repo.create_generation(
                 self.client_name)
             self.app.dump_memory_profile('at end of checkpoint')

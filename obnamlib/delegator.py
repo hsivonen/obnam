@@ -94,7 +94,6 @@ class RepositoryDelegator(obnamlib.RepositoryInterface):
     def commit_client_list(self):
         self._require_we_got_client_list_lock()
         self._client_list.commit()
-        self.unlock_client_list()
 
     def got_client_list_lock(self):
         dirname = self._client_list.get_dirname()
@@ -163,7 +162,6 @@ class RepositoryDelegator(obnamlib.RepositoryInterface):
         self._require_got_client_lock(client_name)
         client = self._lookup_client(client_name)
         client.commit()
-        self.unlock_client(client_name)
 
     def got_client_lock(self, client_name):
         client = self._lookup_client(client_name)
@@ -310,7 +308,6 @@ class RepositoryDelegator(obnamlib.RepositoryInterface):
     def commit_chunk_indexes(self):
         self._require_we_got_chunk_indexes_lock()
         self._chunk_indexes.commit()
-        self.unlock_chunk_indexes()
 
     def got_chunk_indexes_lock(self):
         dirname = self._chunk_indexes.get_dirname()

@@ -287,3 +287,4 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
             logging.info('removing client %s' % client_name)
             repo.remove_client(client_name)
         repo.commit_client_list()
+        repo.unlock_client_list()
