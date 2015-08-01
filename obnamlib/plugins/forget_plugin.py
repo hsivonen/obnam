@@ -82,7 +82,16 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
         else:
             removeids = []
 
-        self.remove_generations(removeids)
+        self.app.ts['gens'] = removeids
+        for genid in removeids:
+            self.app.ts['gen'] = genid
+            self.remove(genid)
+            self.repo.commit_client(client_name)
+            self.repo.commit_chunk_indexes()
+            self.repo.remove_unused_chunks()
+            self.app.dump_memory_profile(
+                'after removing %s' %
+                self.repo.make_generation_spec(genid))
 
         # Commit or unlock everything.
         self.repo.commit_client(client_name)
@@ -119,15 +128,6 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
         keeplist = fp.match(rules, genlist)
         keepids = set(genid for genid, dt in keeplist)
         return [genid for genid, dt in genlist if genid not in keepids]
-
-    def remove_generations(self, removeids):
-        self.app.ts['gens'] = removeids
-        for genid in removeids:
-            self.app.ts['gen'] = genid
-            self.remove(genid)
-            self.app.dump_memory_profile(
-                'after removing %s' %
-                self.repo.make_generation_spec(genid))
 
     def remove(self, genid):
         if self.app.settings['pretend']:
