@@ -36,9 +36,7 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
         self.app.settings.require('repository')
         self.app.settings.require('client-name')
 
-        self.app.ts['gen'] = None
-        self.app.ts['gens'] = []
-        self.app.ts.format('forgetting generations: %Index(gen,gens) done')
+        self.setup_progress_reporting()
 
         self.repo = self.app.get_repository_object()
 
@@ -77,43 +75,14 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
         self.app.dump_memory_profile('at beginning')
         client_name = self.app.settings['client-name']
         if args:
-            self.app.ts['gens'] = args
-            for genspec in args:
-                self.app.ts['gen'] = genspec
-                genid = self.repo.interpret_generation_spec(
-                    client_name, genspec)
-                self.app.ts.notify(
-                    'Forgetting generation %s' %
-                    self.repo.make_generation_spec(genid))
-                self.remove(genid)
-                self.app.dump_memory_profile(
-                    'after removing %s' %
-                    self.repo.make_generation_spec(genid))
+            removeids = self.get_genids_to_remove_from_args(client_name, args)
         elif self.app.settings['keep']:
-            genlist = []
-            dt = datetime.datetime(1970, 1, 1, 0, 0, 0)
-            for genid in self.repo.get_client_generation_ids(client_name):
-                start = self.repo.get_generation_key(
-                    genid, obnamlib.REPO_GENERATION_STARTED)
-                end = self.repo.get_generation_key(
-                    genid, obnamlib.REPO_GENERATION_ENDED)
-                genlist.append((genid, dt.fromtimestamp(end)))
+            genlist = self.get_all_generations(client_name)
+            removeids = self.choose_genids_to_remove_using_keep_policy(genlist)
+        else:
+            removeids = []
 
-            fp = obnamlib.ForgetPolicy()
-            rules = fp.parse(self.app.settings['keep'])
-            keeplist = fp.match(rules, genlist)
-            keepids = set(genid for genid, dt in keeplist)
-            removeids = [genid
-                         for genid, dt in genlist
-                         if genid not in keepids]
-
-            self.app.ts['gens'] = removeids
-            for genid in removeids:
-                self.app.ts['gen'] = genid
-                self.remove(genid)
-                self.app.dump_memory_profile(
-                    'after removing %s' %
-                    self.repo.make_generation_spec(genid))
+        self.remove_generations(removeids)
 
         # Commit or unlock everything.
         self.repo.flush_chunks()
@@ -123,6 +92,41 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
 
         self.repo.close()
         self.app.ts.finish()
+
+    def setup_progress_reporting(self):
+        self.app.ts['gen'] = None
+        self.app.ts['gens'] = []
+        self.app.ts.format('forgetting generations: %Index(gen,gens) done')
+
+    def get_genids_to_remove_from_args(self, client_name, args):
+        return [
+            self.repo.interpret_generation_spec(client_name, genspec)
+            for genspec in args]
+
+    def get_all_generations(self, client_name):
+        genlist = []
+        dt = datetime.datetime(1970, 1, 1, 0, 0, 0)
+        for genid in self.repo.get_client_generation_ids(client_name):
+            end = self.repo.get_generation_key(
+                genid, obnamlib.REPO_GENERATION_ENDED)
+            genlist.append((genid, dt.fromtimestamp(end)))
+        return genlist
+
+    def choose_genids_to_remove_using_keep_policy(self, genlist):
+        fp = obnamlib.ForgetPolicy()
+        rules = fp.parse(self.app.settings['keep'])
+        keeplist = fp.match(rules, genlist)
+        keepids = set(genid for genid, dt in keeplist)
+        return [genid for genid, dt in genlist if genid not in keepids]
+
+    def remove_generations(self, removeids):
+        self.app.ts['gens'] = removeids
+        for genid in removeids:
+            self.app.ts['gen'] = genid
+            self.remove(genid)
+            self.app.dump_memory_profile(
+                'after removing %s' %
+                self.repo.make_generation_spec(genid))
 
     def remove(self, genid):
         if self.app.settings['pretend']:
