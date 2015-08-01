@@ -15,6 +15,9 @@ Bug fixes:
   R43272X). `obnam forget` will now ignore such a missing chunk, since
   it would've deleted it anyway.
 
+  Lars Wirzenius then changed things so that chunk files are only
+  removed once references to the chunks have been committed.
+
 Version 1.12, released 2015-07-08
 ---------------------------------
 
