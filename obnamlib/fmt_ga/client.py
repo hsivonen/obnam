@@ -32,6 +32,12 @@ class GAClient(object):
         self._current_time = None
         self.clear()
 
+    def clear(self):
+        self._blob_store = None
+        self._client_keys = GAKeys()
+        self._generations = GAGenerationList()
+        self._data_is_loaded = False
+
     def set_current_time(self, current_time):
         self._current_time = current_time
 
@@ -43,12 +49,6 @@ class GAClient(object):
 
     def get_dirname(self):
         return self._dirname
-
-    def clear(self):
-        self._blob_store = None
-        self._client_keys = GAKeys()
-        self._generations = GAGenerationList()
-        self._data_is_loaded = False
 
     def commit(self):
         self._load_data()
