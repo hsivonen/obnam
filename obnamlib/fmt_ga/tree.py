@@ -53,10 +53,7 @@ class GATree(object):
 
     def get_directory(self, pathname):
         if pathname in self._cache:
-            tracing.trace('cache hit: pathname=%r', pathname)
             return self._cache.get(pathname)
-
-        tracing.trace('cache miss: pathname=%r', pathname)
 
         if self._root_dir_id is None:
             return None
