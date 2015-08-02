@@ -111,6 +111,7 @@ class RepositoryDelegator(obnamlib.RepositoryInterface):
     def remove_client(self, client_name):
         self._require_we_got_client_list_lock()
         self._client_list.remove_client(client_name)
+        self._client_finder.remove_client(client_name)
 
     def rename_client(self, old_client_name, new_client_name):
         self._require_we_got_client_list_lock()
@@ -363,11 +364,11 @@ class ClientFinder(object):
         self._current_time = current_time
 
     def find_client(self, client_name):
-        if client_name not in self._client_list.get_client_names():
-            raise obnamlib.RepositoryClientDoesNotExist(
-                client_name=client_name)
-
         if client_name not in self._clients:
+            if client_name not in self._client_list.get_client_names():
+                raise obnamlib.RepositoryClientDoesNotExist(
+                    client_name=client_name)
+
             client = self._client_factory(client_name)
             client.set_fs(self._fs)
             dirname = self._client_list.get_client_dirname(client_name)
@@ -376,6 +377,10 @@ class ClientFinder(object):
             self._clients[client_name] = client
 
         return self._clients[client_name]
+
+    def remove_client(self, client_name):
+        if client_name in self._clients:
+            del self._clients[client_name]
 
 
 class GenerationId(object):
