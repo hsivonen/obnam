@@ -264,16 +264,13 @@ class GAClient(object):
 
     def set_file_key(self, gen_number, filename, key, value):
         self._load_data()
-
         generation = self._lookup_generation_by_gen_number(gen_number)
         metadata = generation.get_file_metadata()
-        if not metadata.file_exists(filename):
+        if not metadata.set_file_key(filename, key, value):
             raise obnamlib.RepositoryFileDoesNotExistInGeneration(
                 client_name=self._client_name,
                 genspec=gen_number,
                 filename=filename)
-
-        metadata.set_file_key(filename, key, value)
 
     def get_file_chunk_ids(self, gen_number, filename):
         self._load_data()
@@ -514,10 +511,13 @@ class GAFileMetadata(object):
             self._added_files.set_file_key(filename, key, value)
             if key == obnamlib.REPO_FILE_MODE:
                 self._flush_added_file(filename)
+            return True
         else:
             dir_obj, basename = self._get_mutable_dir_obj(filename)
-            if dir_obj:
-                dir_obj.set_file_key(basename, key, value)
+            if not dir_obj:
+                return False
+            dir_obj.set_file_key(basename, key, value)
+        return True
 
     def _get_mutable_dir_obj(self, filename):
         dir_obj, dir_path, basename = self._get_dir_obj(filename)
