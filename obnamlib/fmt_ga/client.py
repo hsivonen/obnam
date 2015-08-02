@@ -264,9 +264,15 @@ class GAClient(object):
 
     def set_file_key(self, gen_number, filename, key, value):
         self._load_data()
-        self._require_file_exists(gen_number, filename)
+
         generation = self._lookup_generation_by_gen_number(gen_number)
         metadata = generation.get_file_metadata()
+        if not metadata.file_exists(filename):
+            raise obnamlib.RepositoryFileDoesNotExistInGeneration(
+                client_name=self._client_name,
+                genspec=gen_number,
+                filename=filename)
+
         metadata.set_file_key(filename, key, value)
 
     def get_file_chunk_ids(self, gen_number, filename):
