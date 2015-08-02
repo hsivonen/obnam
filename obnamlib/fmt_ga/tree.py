@@ -52,8 +52,9 @@ class GATree(object):
         return self._root_dir_id
 
     def get_directory(self, pathname):
-        if pathname in self._cache:
-            return self._cache.get(pathname)
+        dir_obj = self._cache.get(pathname)
+        if dir_obj is not None:
+            return dir_obj
 
         if self._root_dir_id is None:
             return None
