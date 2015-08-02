@@ -205,11 +205,11 @@ class GAClient(object):
             return generation.get_key(key_name, default='')
 
     def _lookup_generation_by_gen_number(self, gen_number):
-        for generation in self._generations:
-            if generation.get_number() == gen_number:
-                return generation
-        raise obnamlib.RepositoryGenerationDoesNotExist(
-            gen_id=gen_number, client_name=self._client_name)
+        generation = self._generations.get_generation(gen_number)
+        if generation is None:
+            raise obnamlib.RepositoryGenerationDoesNotExist(
+                gen_id=gen_number, client_name=self._client_name)
+        return generation
 
     def set_generation_key(self, gen_number, key, value):
         self._load_data()
@@ -336,6 +336,7 @@ class GAGenerationList(object):
 
     def __init__(self):
         self._generations = []
+        self._by_number = {}
 
     def __len__(self):
         return len(self._generations)
@@ -344,14 +345,19 @@ class GAGenerationList(object):
         for gen in self._generations[:]:
             yield gen
 
+    def get_generation(self, gen_number):
+        return self._by_number.get(gen_number)
+
     def get_latest(self):
         return self._generations[-1]
 
     def append(self, gen):
         self._generations.append(gen)
+        self._by_number[gen.get_number()] = gen
 
     def set_generations(self, generations):
         self._generations = generations
+        self._by_number = dict((gen.get_number, gen) for gen in generations)
 
 
 class GAGeneration(object):
