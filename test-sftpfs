@@ -61,7 +61,7 @@ class SftpTests(unittest.TestCase, obnamlib.VfsTests):
         shutil.rmtree(self.basepath)
 
     def test_sets_path_to_absolute_path(self):
-        self.assert_(self.fs.path.startswith('/'))
+        self.assertTrue(self.fs.path.startswith('/'))
 
     def test_resolves_magic_homedir_prefix(self):
         baseurl = 'sftp://localhost/~/'
