@@ -8,6 +8,16 @@ development, called `green-albatross`. It is **NOT** meant for real
 use. It is likely to change in incompatible ways without warning. Do
 not use it unless you're willing to lose your backup.
 
+Version 1.14, released UNRELEASED
+---------------------------------
+
+Bug fixes:
+
+* Since 1.9, Obnam has had trouble with sftp URLs for backup roots,
+  particularly for URLs specifying the server's root directory. Dennis
+  Jacobfeuerborn found the reason: the backup plugin was treating URLs
+  as filenames. This should now be fixed.
+
 Version 1.13, released 2015-08-01
 ---------------------------------
 

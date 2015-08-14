@@ -23,6 +23,7 @@ import stat
 import time
 import traceback
 import tracing
+import urlparse
 
 import obnamlib
 import larch
@@ -293,14 +294,14 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         logging.info('Backup starts')
 
-        roots = self.app.settings['root'] + args
-        self.check_for_required_settings(roots)
+        root_urls = self.app.settings['root'] + args
+        self.check_for_required_settings(root_urls)
 
         self.start_backup()
         try:
             if not self.pretend:
                 self.start_generation()
-            self.backup_roots(roots)
+            self.backup_roots(root_urls)
             if not self.pretend:
                 self.finish_generation()
                 if self.should_remove_checkpoints():
@@ -494,15 +495,15 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.repo.unlock_client_list()
         self.repo = self.app.get_repository_object(repofs=self.repo.get_fs())
 
-    def backup_roots(self, roots):
+    def backup_roots(self, root_urls):
         self.progress.what('connecting to repository')
-        self.open_fs(roots[0])
-        absroots = self.find_absolute_roots(roots)
+        self.open_fs(root_urls[0])
+        absroots = self.find_absolute_roots(root_urls)
         if not self.pretend:
             self.remove_old_roots(absroots)
         self.checkpoint_manager.clear()
-        for root in roots:
-            self.backup_root(root, absroots)
+        for root_url in root_urls:
+            self.backup_root(root_url, absroots)
         if self.fs:
             self.fs.close()
 
@@ -582,39 +583,47 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             metadata.md5 = self.backup_file_contents(pathname, metadata)
         self.backup_metadata(pathname, metadata)
 
-    def open_fs(self, root):
-        def func(rootdir):
-            self.fs = self.app.fsf.new(rootdir)
+    def open_fs(self, root_url):
+        def func(url):
+            self.fs = self.app.fsf.new(url)
             self.fs.connect()
-        self.open_or_reopen_fs(func, root)
+        self.open_or_reopen_fs(func, root_url)
 
-    def reopen_fs(self, root):
-        self.open_or_reopen_fs(self.fs.reinit, root)
+    def reopen_fs(self, root_url):
+        self.open_or_reopen_fs(self.fs.reinit, root_url)
 
-    def open_or_reopen_fs(self, func, root):
-        if os.path.isdir(root):
-            rootdir = root
-        else:
-            rootdir = os.path.dirname(root)
+    def open_or_reopen_fs(self, func, root_url):
+        scheme, neloc, path, params, query, fragment = \
+            urlparse.urlparse(root_url)
 
         try:
-            func(rootdir)
+            func(root_url)
+            if not self.fs.isdir(path):
+                parent_path = os.path.dirname(path)
+                parent_url = urlparse.urlunparse(
+                    (scheme, netloc, parent_path, params, query, fragment))
+                self.fs.reinit(parent_url)
         except OSError as e:
             if e.errno == errno.ENOENT:
-                raise BackupRootDoesNotExist(root=root)
+                raise BackupRootDoesNotExist(root=root_url)
             raise
 
-    def find_absolute_roots(self, roots):
+    def find_absolute_roots(self, root_urls):
         absroots = []
-        for root in roots:
-            self.progress.what('determining absolute path for %s' % root)
+        for root_url in root_urls:
+            self.progress.what('determining absolute path for %s' % root_url)
 
-            if os.path.isdir(root):
-                rootdir = root
+            scheme, neloc, path, params, query, fragment = \
+                urlparse.urlparse(root_url)
+
+            if self.fs.isdir(path):
+                new_url = root_url
             else:
-                rootdir = os.path.dirname(root)
+                parent_path = os.path.dirname(path)
+                new_url = urlparse.urlunparse(
+                    (scheme, netloc, parent_path, params, query, fragment))
 
-            self.fs.reinit(rootdir)
+            self.fs.reinit(new_url)
             absroots.append(self.fs.abspath('.'))
 
         return absroots
