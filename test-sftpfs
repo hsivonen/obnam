@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright 2010-2014  Lars Wirzenius
+# Copyright 2010-2015  Lars Wirzenius
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -52,8 +52,8 @@ class SftpTests(unittest.TestCase, obnamlib.VfsTests):
             'ssh-command': None,
             'ssh-host-keys-check': 'no',
         }
-        self.fs = obnamlib.plugins.sftp_plugin.SftpFS(baseurl,
-                                                      settings=settings)
+        self.fs = obnamlib.plugins.sftp_plugin.SftpFS(
+            baseurl, settings=settings)
         self.fs.connect()
 
     def tearDown(self):
