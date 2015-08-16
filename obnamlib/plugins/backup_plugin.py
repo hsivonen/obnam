@@ -593,7 +593,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.open_or_reopen_fs(self.fs.reinit, root_url)
 
     def open_or_reopen_fs(self, func, root_url):
-        scheme, neloc, path, params, query, fragment = \
+        scheme, netloc, path, params, query, fragment = \
             urlparse.urlparse(root_url)
 
         try:
