@@ -32,7 +32,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     metadata about files: names, inode info, and what chunks of
     data they use.
 
-    See http://braawi.org/obnam/ondisk/ for a description of how
+    See http://obnam.org/ondisk/ for a description of how
     this works.
 
     '''
