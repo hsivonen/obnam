@@ -828,31 +828,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
     def add_file_to_generation(self, filename, metadata):
         self.repo.add_file(self.new_generation, filename)
-
-        things = [
-            ('st_mtime_sec', obnamlib.REPO_FILE_MTIME_SEC),
-            ('st_mtime_nsec', obnamlib.REPO_FILE_MTIME_NSEC),
-            ('st_atime_sec', obnamlib.REPO_FILE_ATIME_SEC),
-            ('st_atime_nsec', obnamlib.REPO_FILE_ATIME_NSEC),
-            ('st_mode', obnamlib.REPO_FILE_MODE),
-            ('st_nlink', obnamlib.REPO_FILE_NLINK),
-            ('st_size', obnamlib.REPO_FILE_SIZE),
-            ('st_uid', obnamlib.REPO_FILE_UID),
-            ('st_gid', obnamlib.REPO_FILE_GID),
-            ('st_blocks', obnamlib.REPO_FILE_BLOCKS),
-            ('st_dev', obnamlib.REPO_FILE_DEV),
-            ('st_ino', obnamlib.REPO_FILE_INO),
-            ('username', obnamlib.REPO_FILE_USERNAME),
-            ('groupname', obnamlib.REPO_FILE_GROUPNAME),
-            ('target', obnamlib.REPO_FILE_SYMLINK_TARGET),
-            ('xattr', obnamlib.REPO_FILE_XATTR_BLOB),
-            ('md5', obnamlib.REPO_FILE_MD5),
-            ]
-
-        for field, key in things:
-            self.repo.set_file_key(
-                self.new_generation, filename, key,
-                getattr(metadata, field))
+        self.repo.set_file_keys_from_metadata(
+            self.new_generation, filename, metadata)
 
     def backup_parents(self, root):
         '''Back up parents of root, non-recursively.'''

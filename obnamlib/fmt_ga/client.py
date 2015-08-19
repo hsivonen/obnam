@@ -272,6 +272,40 @@ class GAClient(object):
                 genspec=gen_number,
                 filename=filename)
 
+    def set_file_keys_from_metadata(self, gen_number, filename, file_metadata):
+        self._load_data()
+
+        generation = self._lookup_generation_by_gen_number(gen_number)
+        metadata = generation.get_file_metadata()
+
+        mapping = [
+            (obnamlib.REPO_FILE_MODE, 'st_mode'),
+            (obnamlib.REPO_FILE_MTIME_SEC, 'st_mtime_sec'),
+            (obnamlib.REPO_FILE_MTIME_NSEC, 'st_mtime_nsec'),
+            (obnamlib.REPO_FILE_ATIME_SEC, 'st_atime_sec'),
+            (obnamlib.REPO_FILE_ATIME_NSEC, 'st_atime_nsec'),
+            (obnamlib.REPO_FILE_NLINK, 'st_nlink'),
+            (obnamlib.REPO_FILE_SIZE, 'st_size'),
+            (obnamlib.REPO_FILE_UID, 'st_uid'),
+            (obnamlib.REPO_FILE_USERNAME, 'username'),
+            (obnamlib.REPO_FILE_GID, 'st_gid'),
+            (obnamlib.REPO_FILE_GROUPNAME, 'groupname'),
+            (obnamlib.REPO_FILE_SYMLINK_TARGET, 'target'),
+            (obnamlib.REPO_FILE_XATTR_BLOB, 'xattr'),
+            (obnamlib.REPO_FILE_BLOCKS, 'st_blocks'),
+            (obnamlib.REPO_FILE_DEV, 'st_dev'),
+            (obnamlib.REPO_FILE_INO, 'st_ino'),
+            (obnamlib.REPO_FILE_MD5, 'md5'),
+        ]
+
+        for key, field in mapping:
+            value = getattr(file_metadata, field)
+            if not metadata.set_file_key(filename, key, value):
+                raise obnamlib.RepositoryFileDoesNotExistInGeneration(
+                    client_name=self._client_name,
+                    genspec=gen_number,
+                    filename=filename)
+
     def get_file_chunk_ids(self, gen_number, filename):
         self._load_data()
         self._require_file_exists(gen_number, filename)

@@ -690,7 +690,42 @@ class RepositoryInterface(object):
         '''
         raise NotImplementedError()
 
+    def set_file_keys_from_metadata(self, generation_id, filename, metadata):
+        '''Set all allowed file keys from obnamlib.Metadata.
+
+        This is the same as calling set_file_key for each allowed key,
+        but hopefully faster.
+
+        '''
+
+        mapping = [
+            (REPO_FILE_MODE, 'st_mode'),
+            (REPO_FILE_MTIME_SEC, 'st_mtime_sec'),
+            (REPO_FILE_MTIME_NSEC, 'st_mtime_nsec'),
+            (REPO_FILE_ATIME_SEC, 'st_atime_sec'),
+            (REPO_FILE_ATIME_NSEC, 'st_atime_nsec'),
+            (REPO_FILE_NLINK, 'st_nlink'),
+            (REPO_FILE_SIZE, 'st_size'),
+            (REPO_FILE_UID, 'st_uid'),
+            (REPO_FILE_USERNAME, 'username'),
+            (REPO_FILE_GID, 'st_gid'),
+            (REPO_FILE_GROUPNAME, 'groupname'),
+            (REPO_FILE_SYMLINK_TARGET, 'target'),
+            (REPO_FILE_XATTR_BLOB, 'xattr'),
+            (REPO_FILE_BLOCKS, 'st_blocks'),
+            (REPO_FILE_DEV, 'st_dev'),
+            (REPO_FILE_INO, 'st_ino'),
+            (REPO_FILE_MD5, 'md5'),
+        ]
+
+        allowed = set(self.get_allowed_file_keys())
+        for key, field in mapping:
+            if key in allowed:
+                self.set_file_key(
+                    generation_id, filename, key, getattr(metadata, field))
+
     def get_file_chunk_ids(self, generation_id, filename):
+
         '''Get the list of chunk ids for a file.'''
         raise NotImplementedError()
 
