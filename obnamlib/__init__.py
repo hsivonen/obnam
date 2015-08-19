@@ -17,7 +17,7 @@
 import cliapp
 
 
-__version__ = '1.14'
+__version__ = '1.15'
 
 
 # Import _obnam if it is there. We need to be able to do things without

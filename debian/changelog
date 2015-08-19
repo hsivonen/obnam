@@ -1,3 +1,11 @@
+obnam (1.15-1) unstable; urgency=medium
+
+  * Fix "obnam backup fails with NameError: global name 'netloc' is not
+    defined" <explain what you changed and why> (Closes: #796139)
+  * New upstream version.
+
+ -- Lars Wirzenius <liw@liw.fi>  Wed, 19 Aug 2015 21:37:55 +0200
+
 obnam (1.14-1) unstable; urgency=medium
 
   * New upstream version.

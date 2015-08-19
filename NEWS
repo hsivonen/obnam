@@ -8,6 +8,11 @@ development, called `green-albatross`. It is **NOT** meant for real
 use. It is likely to change in incompatible ways without warning. Do
 not use it unless you're willing to lose your backup.
 
+Version 1.15, released 2015-08-19
+---------------------------------
+
+* Fixed a typo in a variable name ("netloc"), found by Dirk.
+
 Version 1.14, released 2015-08-14
 ---------------------------------
 
