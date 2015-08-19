@@ -277,34 +277,11 @@ class GAClient(object):
 
         generation = self._lookup_generation_by_gen_number(gen_number)
         metadata = generation.get_file_metadata()
-
-        mapping = [
-            (obnamlib.REPO_FILE_MODE, 'st_mode'),
-            (obnamlib.REPO_FILE_MTIME_SEC, 'st_mtime_sec'),
-            (obnamlib.REPO_FILE_MTIME_NSEC, 'st_mtime_nsec'),
-            (obnamlib.REPO_FILE_ATIME_SEC, 'st_atime_sec'),
-            (obnamlib.REPO_FILE_ATIME_NSEC, 'st_atime_nsec'),
-            (obnamlib.REPO_FILE_NLINK, 'st_nlink'),
-            (obnamlib.REPO_FILE_SIZE, 'st_size'),
-            (obnamlib.REPO_FILE_UID, 'st_uid'),
-            (obnamlib.REPO_FILE_USERNAME, 'username'),
-            (obnamlib.REPO_FILE_GID, 'st_gid'),
-            (obnamlib.REPO_FILE_GROUPNAME, 'groupname'),
-            (obnamlib.REPO_FILE_SYMLINK_TARGET, 'target'),
-            (obnamlib.REPO_FILE_XATTR_BLOB, 'xattr'),
-            (obnamlib.REPO_FILE_BLOCKS, 'st_blocks'),
-            (obnamlib.REPO_FILE_DEV, 'st_dev'),
-            (obnamlib.REPO_FILE_INO, 'st_ino'),
-            (obnamlib.REPO_FILE_MD5, 'md5'),
-        ]
-
-        for key, field in mapping:
-            value = getattr(file_metadata, field)
-            if not metadata.set_file_key(filename, key, value):
-                raise obnamlib.RepositoryFileDoesNotExistInGeneration(
-                    client_name=self._client_name,
-                    genspec=gen_number,
-                    filename=filename)
+        if not metadata.set_file_keys_from_metadata(filename, file_metadata):
+            raise obnamlib.RepositoryFileDoesNotExistInGeneration(
+                client_name=self._client_name,
+                genspec=gen_number,
+                filename=filename)
 
     def get_file_chunk_ids(self, gen_number, filename):
         self._load_data()
@@ -545,6 +522,42 @@ class GAFileMetadata(object):
             return dir_obj.get_file_key(basename, key)
         else:
             return None
+
+    def set_file_keys_from_metadata(self, filename, file_metadata):
+        mapping = [
+            (obnamlib.REPO_FILE_MODE, 'st_mode'),
+            (obnamlib.REPO_FILE_MTIME_SEC, 'st_mtime_sec'),
+            (obnamlib.REPO_FILE_MTIME_NSEC, 'st_mtime_nsec'),
+            (obnamlib.REPO_FILE_ATIME_SEC, 'st_atime_sec'),
+            (obnamlib.REPO_FILE_ATIME_NSEC, 'st_atime_nsec'),
+            (obnamlib.REPO_FILE_NLINK, 'st_nlink'),
+            (obnamlib.REPO_FILE_SIZE, 'st_size'),
+            (obnamlib.REPO_FILE_UID, 'st_uid'),
+            (obnamlib.REPO_FILE_USERNAME, 'username'),
+            (obnamlib.REPO_FILE_GID, 'st_gid'),
+            (obnamlib.REPO_FILE_GROUPNAME, 'groupname'),
+            (obnamlib.REPO_FILE_SYMLINK_TARGET, 'target'),
+            (obnamlib.REPO_FILE_XATTR_BLOB, 'xattr'),
+            (obnamlib.REPO_FILE_BLOCKS, 'st_blocks'),
+            (obnamlib.REPO_FILE_DEV, 'st_dev'),
+            (obnamlib.REPO_FILE_INO, 'st_ino'),
+            (obnamlib.REPO_FILE_MD5, 'md5'),
+        ]
+
+        if filename in self._added_files:
+            self._added_files.set_file_key(
+                filename, obnamlib.REPO_FILE_MODE, file_metadata.st_mode)
+            self._flush_added_file(filename)
+
+        dir_obj, basename = self._get_mutable_dir_obj(filename)
+        if not dir_obj:
+            return False
+
+        for key, field in mapping:
+            value = getattr(file_metadata, field)
+            dir_obj.set_file_key(basename, key, value)
+
+        return True
 
     def set_file_key(self, filename, key, value):
         if filename in self._added_files:
