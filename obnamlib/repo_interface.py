@@ -94,6 +94,28 @@ def repo_key_name(key_value):
 WRONG_KEY = -1
 
 
+# A mapping between file keys and obnamlib.Metadata object fields.
+metadata_file_key_mapping = [
+    (REPO_FILE_MODE, 'st_mode'),
+    (REPO_FILE_MTIME_SEC, 'st_mtime_sec'),
+    (REPO_FILE_MTIME_NSEC, 'st_mtime_nsec'),
+    (REPO_FILE_ATIME_SEC, 'st_atime_sec'),
+    (REPO_FILE_ATIME_NSEC, 'st_atime_nsec'),
+    (REPO_FILE_NLINK, 'st_nlink'),
+    (REPO_FILE_SIZE, 'st_size'),
+    (REPO_FILE_UID, 'st_uid'),
+    (REPO_FILE_USERNAME, 'username'),
+    (REPO_FILE_GID, 'st_gid'),
+    (REPO_FILE_GROUPNAME, 'groupname'),
+    (REPO_FILE_SYMLINK_TARGET, 'target'),
+    (REPO_FILE_XATTR_BLOB, 'xattr'),
+    (REPO_FILE_BLOCKS, 'st_blocks'),
+    (REPO_FILE_DEV, 'st_dev'),
+    (REPO_FILE_INO, 'st_ino'),
+    (REPO_FILE_MD5, 'md5'),
+]
+
+
 class RepositoryClientListLockingFailed(obnamlib.ObnamError):
 
     msg = 'Repository client list could not be locked'
@@ -681,7 +703,28 @@ class RepositoryInterface(object):
         '''
         raise NotImplementedError()
 
+    def get_metadata_from_file_keys(self, generation_id, filename):
+        '''Return a Metadata constructed from the file's keys.
+
+        This is equivalent to creating the Metadata object and calling
+        get_file_key for every allowed key and setting the
+        corresponding field in the Metadata object. It may be faster
+        on some repository formats, however.
+
+        '''
+
+        metadata = obnamlib.Metadata()
+
+        allowed = set(self.get_allowed_file_keys())
+        for key, field in obnamlib.metadata_file_key_mapping:
+            if key in allowed:
+                value = self.get_file_key(generation_id, filename, key)
+                setattr(metadata, field, value)
+
+        return metadata
+
     def set_file_key(self, generation_id, filename, key, value):
+
         '''Set value for a file key.
 
         It is an error to set the value for a file key if the file does
@@ -698,28 +741,8 @@ class RepositoryInterface(object):
 
         '''
 
-        mapping = [
-            (REPO_FILE_MODE, 'st_mode'),
-            (REPO_FILE_MTIME_SEC, 'st_mtime_sec'),
-            (REPO_FILE_MTIME_NSEC, 'st_mtime_nsec'),
-            (REPO_FILE_ATIME_SEC, 'st_atime_sec'),
-            (REPO_FILE_ATIME_NSEC, 'st_atime_nsec'),
-            (REPO_FILE_NLINK, 'st_nlink'),
-            (REPO_FILE_SIZE, 'st_size'),
-            (REPO_FILE_UID, 'st_uid'),
-            (REPO_FILE_USERNAME, 'username'),
-            (REPO_FILE_GID, 'st_gid'),
-            (REPO_FILE_GROUPNAME, 'groupname'),
-            (REPO_FILE_SYMLINK_TARGET, 'target'),
-            (REPO_FILE_XATTR_BLOB, 'xattr'),
-            (REPO_FILE_BLOCKS, 'st_blocks'),
-            (REPO_FILE_DEV, 'st_dev'),
-            (REPO_FILE_INO, 'st_ino'),
-            (REPO_FILE_MD5, 'md5'),
-        ]
-
         allowed = set(self.get_allowed_file_keys())
-        for key, field in mapping:
+        for key, field in obnamlib.metadata_file_key_mapping:
             if key in allowed:
                 self.set_file_key(
                     generation_id, filename, key, getattr(metadata, field))

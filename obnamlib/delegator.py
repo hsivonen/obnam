@@ -220,6 +220,11 @@ class RepositoryDelegator(obnamlib.RepositoryInterface):
         client = self._lookup_client_by_generation(generation_id)
         return client.remove_file(generation_id.gen_number, filename)
 
+    def get_metadata_from_file_keys(self, generation_id, filename):
+        client = self._lookup_client_by_generation(generation_id)
+        return client.get_metadata_from_file_keys(
+            generation_id.gen_number, filename)
+
     def get_file_key(self, generation_id, filename, key):
         if key not in self.get_allowed_file_keys():
             raise obnamlib.RepositoryFileKeyNotAllowed(

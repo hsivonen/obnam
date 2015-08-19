@@ -262,6 +262,14 @@ class GAClient(object):
                 genspec=gen_number,
                 filename=filename)
 
+    def get_metadata_from_file_keys(self, gen_number, filename):
+        self._load_data()
+        self._require_file_exists(gen_number, filename)
+
+        generation = self._lookup_generation_by_gen_number(gen_number)
+        metadata_obj = generation.get_file_metadata()
+        return metadata_obj.get_metadata_from_file_keys(filename)
+
     def set_file_key(self, gen_number, filename, key, value):
         self._load_data()
         generation = self._lookup_generation_by_gen_number(gen_number)
@@ -523,27 +531,34 @@ class GAFileMetadata(object):
         else:
             return None
 
-    def set_file_keys_from_metadata(self, filename, file_metadata):
-        mapping = [
-            (obnamlib.REPO_FILE_MODE, 'st_mode'),
-            (obnamlib.REPO_FILE_MTIME_SEC, 'st_mtime_sec'),
-            (obnamlib.REPO_FILE_MTIME_NSEC, 'st_mtime_nsec'),
-            (obnamlib.REPO_FILE_ATIME_SEC, 'st_atime_sec'),
-            (obnamlib.REPO_FILE_ATIME_NSEC, 'st_atime_nsec'),
-            (obnamlib.REPO_FILE_NLINK, 'st_nlink'),
-            (obnamlib.REPO_FILE_SIZE, 'st_size'),
-            (obnamlib.REPO_FILE_UID, 'st_uid'),
-            (obnamlib.REPO_FILE_USERNAME, 'username'),
-            (obnamlib.REPO_FILE_GID, 'st_gid'),
-            (obnamlib.REPO_FILE_GROUPNAME, 'groupname'),
-            (obnamlib.REPO_FILE_SYMLINK_TARGET, 'target'),
-            (obnamlib.REPO_FILE_XATTR_BLOB, 'xattr'),
-            (obnamlib.REPO_FILE_BLOCKS, 'st_blocks'),
-            (obnamlib.REPO_FILE_DEV, 'st_dev'),
-            (obnamlib.REPO_FILE_INO, 'st_ino'),
-            (obnamlib.REPO_FILE_MD5, 'md5'),
-        ]
+    def get_metadata_from_file_keys(self, filename):
+        if filename in self._added_files:
+            return self._make_metadata(
+                lambda key: self._added_files.get_file_key(filename, key))
+        else:
+            dir_obj, dir_path, basename = self._get_dir_obj(filename)
+            # We've already verifed the file exists, so we don't need
+            # to handle the case where dir_obj is None.
+            assert dir_obj is not None
 
+            return self._make_metadata(
+                lambda key: dir_obj.get_file_key(basename, key))
+
+    def _make_metadata(self, get_value):
+        metadata = obnamlib.Metadata()
+
+        for key, field in obnamlib.metadata_file_key_mapping:
+            value = get_value(key)
+            if value is None:
+                if key in obnamlib.REPO_FILE_INTEGER_KEYS:
+                    value = 0
+                else:
+                    value = ''
+            setattr(metadata, field, value)
+
+        return metadata
+
+    def set_file_keys_from_metadata(self, filename, file_metadata):
         if filename in self._added_files:
             self._added_files.set_file_key(
                 filename, obnamlib.REPO_FILE_MODE, file_metadata.st_mode)
@@ -553,7 +568,7 @@ class GAFileMetadata(object):
         if not dir_obj:
             return False
 
-        for key, field in mapping:
+        for key, field in obnamlib.metadata_file_key_mapping:
             value = getattr(file_metadata, field)
             dir_obj.set_file_key(basename, key, value)
 

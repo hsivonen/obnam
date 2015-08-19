@@ -808,23 +808,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         return False
 
     def get_metadata_from_generation(self, gen, pathname):
-        return obnamlib.Metadata(
-            st_mtime_sec=self.repo.get_file_key(
-                gen, pathname, obnamlib.REPO_FILE_MTIME_SEC),
-            st_mtime_nsec=self.repo.get_file_key(
-                gen, pathname, obnamlib.REPO_FILE_MTIME_NSEC),
-            st_mode=self.repo.get_file_key(
-                gen, pathname, obnamlib.REPO_FILE_MODE),
-            st_nlink=self.repo.get_file_key(
-                gen, pathname, obnamlib.REPO_FILE_NLINK),
-            st_size=self.repo.get_file_key(
-                gen, pathname, obnamlib.REPO_FILE_SIZE),
-            st_uid=self.repo.get_file_key(
-                gen, pathname, obnamlib.REPO_FILE_UID),
-            st_gid=self.repo.get_file_key(
-                gen, pathname, obnamlib.REPO_FILE_GID),
-            xattr=self.repo.get_file_key(
-                gen, pathname, obnamlib.REPO_FILE_XATTR_BLOB))
+        return self.repo.get_metadata_from_file_keys(gen, pathname)
 
     def add_file_to_generation(self, filename, metadata):
         self.repo.add_file(self.new_generation, filename)

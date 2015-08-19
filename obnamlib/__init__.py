@@ -168,7 +168,8 @@ from repo_interface import (
     REPO_FILE_DEV,
     REPO_FILE_INO,
     REPO_FILE_MD5,
-    REPO_FILE_INTEGER_KEYS)
+    REPO_FILE_INTEGER_KEYS,
+    metadata_file_key_mapping)
 
 from .delegator import RepositoryDelegator, GenerationId
 
