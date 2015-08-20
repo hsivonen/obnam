@@ -335,10 +335,15 @@ class GAClient(object):
 
     def get_file_children(self, gen_number, filename):
         self._load_data()
-        self._require_file_exists(gen_number, filename)
         generation = self._lookup_generation_by_gen_number(gen_number)
         metadata = generation.get_file_metadata()
-        return metadata.get_file_children(filename)
+        result = metadata.get_file_children(filename)
+        if result is None:
+            raise obnamlib.RepositoryFileDoesNotExistInGeneration(
+                client_name=self._client_name,
+                genspec=gen_number,
+                filename=filename)
+        return result
 
     def _is_direct_child_of(self, child, parent):
         return os.path.dirname(child) == parent and child != parent
@@ -688,7 +693,7 @@ class GAFileMetadata(object):
             files = [x for x in dir_obj.get_file_basenames() if x != '.']
             subdirs = dir_obj.get_subdir_basenames()
             return [os.path.join(dirname, x) for x in files + subdirs]
-        return []
+        return None
 
 
 class AddedFiles(object):
