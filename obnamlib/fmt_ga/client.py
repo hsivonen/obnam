@@ -293,10 +293,15 @@ class GAClient(object):
 
     def get_file_chunk_ids(self, gen_number, filename):
         self._load_data()
-        self._require_file_exists(gen_number, filename)
         generation = self._lookup_generation_by_gen_number(gen_number)
         metadata = generation.get_file_metadata()
-        return metadata.get_file_chunk_ids(filename)
+        result = metadata.get_file_chunk_ids(filename)
+        if result is None:
+            raise obnamlib.RepositoryFileDoesNotExistInGeneration(
+                client_name=self._client_name,
+                genspec=gen_number,
+                filename=filename)
+        return result
 
     def append_file_chunk_id(self, gen_number, filename, chunk_id):
         self._load_data()
@@ -648,7 +653,7 @@ class GAFileMetadata(object):
             chunk_ids = dir_obj.get_file_chunk_ids(basename)
             return chunk_ids
         else:
-            return []
+            return None
 
     def append_file_chunk_id(self, filename, chunk_id):
         if filename in self._added_files:
