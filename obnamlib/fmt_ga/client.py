@@ -300,10 +300,13 @@ class GAClient(object):
 
     def append_file_chunk_id(self, gen_number, filename, chunk_id):
         self._load_data()
-        self._require_file_exists(gen_number, filename)
         generation = self._lookup_generation_by_gen_number(gen_number)
         metadata = generation.get_file_metadata()
-        metadata.append_file_chunk_id(filename, chunk_id)
+        if not metadata.append_file_chunk_id(filename, chunk_id):
+            raise obnamlib.RepositoryFileDoesNotExistInGeneration(
+                client_name=self._client_name,
+                genspec=gen_number,
+                filename=filename)
 
     def clear_file_chunk_ids(self, gen_number, filename):
         self._load_data()
@@ -650,10 +653,12 @@ class GAFileMetadata(object):
     def append_file_chunk_id(self, filename, chunk_id):
         if filename in self._added_files:
             self._added_files.append_file_chunk_id(filename, chunk_id)
-            return
+            return True
         dir_obj, basename = self._get_mutable_dir_obj(filename)
         if dir_obj:
             dir_obj.append_file_chunk_id(basename, chunk_id)
+            return True
+        return False
 
     def clear_file_chunk_ids(self, filename):
         if filename in self._added_files:
