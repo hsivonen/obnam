@@ -315,10 +315,13 @@ class GAClient(object):
 
     def clear_file_chunk_ids(self, gen_number, filename):
         self._load_data()
-        self._require_file_exists(gen_number, filename)
         generation = self._lookup_generation_by_gen_number(gen_number)
         metadata = generation.get_file_metadata()
-        metadata.clear_file_chunk_ids(filename)
+        if not metadata.clear_file_chunk_ids(filename):
+            raise obnamlib.RepositoryFileDoesNotExistInGeneration(
+                client_name=self._client_name,
+                genspec=gen_number,
+                filename=filename)
 
     def get_generation_chunk_ids(self, gen_number):
         self._load_data()
@@ -668,11 +671,13 @@ class GAFileMetadata(object):
     def clear_file_chunk_ids(self, filename):
         if filename in self._added_files:
             self._added_files.clear_file_chunk_ids(filename)
-            return
+            return True
         dir_obj, basename = self._get_mutable_dir_obj(filename)
         assert basename != '.'
         if dir_obj:
             dir_obj.clear_file_chunk_ids(basename)
+            return True
+        return False
 
     def get_file_children(self, filename):
         assert filename not in self._added_files
