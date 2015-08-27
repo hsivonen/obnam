@@ -28,11 +28,6 @@ import tracing
 import obnamlib
 
 
-class ToplevelIsFileError(obnamlib.ObnamError):
-
-    msg = 'File at repository root: {filename}'
-
-
 class _OpenClientInfo(object):
 
     def __init__(self, client):
