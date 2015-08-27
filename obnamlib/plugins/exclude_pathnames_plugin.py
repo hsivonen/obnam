@@ -17,6 +17,7 @@
 import hashlib
 import logging
 import os
+import re
 import stat
 import time
 
@@ -94,7 +95,8 @@ class ExcludePathnamesPlugin(obnamlib.ObnamPlugin):
             try:
                 compiler(regexp)
             except re.error as e:
-                msg = ('error compiling regular expression "%s": %s' % (x, e))
+                msg = ('error compiling regular expression "%s": %s' %
+                       (regexp, e))
                 logging.error(msg)
                 self.progress.error(msg)
 
