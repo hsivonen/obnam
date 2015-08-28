@@ -23,6 +23,8 @@ class RepositoryDelegator(obnamlib.RepositoryInterface):
 
     '''Implement RepositoryInterface by delegating to other objects.'''
 
+    format = None
+
     def __init__(self, **kwargs):
         self._fs = None
         self._hooks = kwargs['hooks']
