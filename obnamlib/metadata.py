@@ -82,6 +82,7 @@ class Metadata(object):
 
     def __init__(self, **kwargs):
         self.md5 = None  # Silence pylint.
+        self.st_size = None  # Silence pylint.
         for field in metadata_fields:
             setattr(self, field, None)
         for field, value in kwargs.iteritems():
