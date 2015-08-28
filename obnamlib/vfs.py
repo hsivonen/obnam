@@ -450,7 +450,7 @@ class VfsTests(object):  # pragma: no cover
 
     def test_exists_returns_true_for_existing_file(self):
         self.fs.write_file('foo', '')
-        self.assert_(self.fs.exists('foo'))
+        self.assertTrue(self.fs.exists('foo'))
 
     def test_isdir_returns_false_for_nonexistent_file(self):
         self.assertFalse(self.fs.isdir('foo'))
@@ -461,7 +461,7 @@ class VfsTests(object):  # pragma: no cover
 
     def test_isdir_returns_true_for_existing_dir(self):
         self.fs.mkdir('foo')
-        self.assert_(self.fs.isdir('foo'))
+        self.assertTrue(self.fs.isdir('foo'))
 
     def test_listdir_returns_plain_strings_only(self):
         self.fs.write_file(u'M\u00E4kel\u00E4'.encode('utf-8'), 'data')
@@ -493,10 +493,10 @@ class VfsTests(object):  # pragma: no cover
             unicodedata.normalize('NFKD', name_unicode),
             unicodedata.normalize('NFKD', funny_unicode))
 
-        self.assert_(hasattr(st, 'st_mode'))
+        self.assertTrue(hasattr(st, 'st_mode'))
         self.assertFalse(hasattr(st, 'st_mtime'))
-        self.assert_(hasattr(st, 'st_mtime_sec'))
-        self.assert_(hasattr(st, 'st_mtime_nsec'))
+        self.assertTrue(hasattr(st, 'st_mtime_sec'))
+        self.assertTrue(hasattr(st, 'st_mtime_nsec'))
 
     def test_listdir2_returns_plain_strings_only(self):
         self.fs.write_file(u'M\u00E4kel\u00E4'.encode('utf-8'), 'data')
@@ -523,11 +523,11 @@ class VfsTests(object):  # pragma: no cover
 
     def test_makedirs_creates_directory_when_parent_exists(self):
         self.fs.makedirs('foo')
-        self.assert_(self.fs.isdir('foo'))
+        self.assertTrue(self.fs.isdir('foo'))
 
     def test_makedirs_creates_directory_when_parent_does_not_exist(self):
         self.fs.makedirs('foo/bar')
-        self.assert_(self.fs.isdir('foo/bar'))
+        self.assertTrue(self.fs.isdir('foo/bar'))
 
     def test_rmdir_removes_directory(self):
         self.fs.mkdir('foo')
@@ -583,7 +583,7 @@ class VfsTests(object):  # pragma: no cover
 
     def test_lstat_returns_right_filetype_for_directory(self):
         st = self.fs.lstat('.')
-        self.assert_(stat.S_ISDIR(st.st_mode))
+        self.assertTrue(stat.S_ISDIR(st.st_mode))
 
     def test_lstat_raises_oserror_for_nonexistent_entry(self):
         self.assertRaises(OSError, self.fs.lstat, 'notexists')
@@ -608,10 +608,10 @@ class VfsTests(object):  # pragma: no cover
         # not all filesystems support sub-second timestamps; those that
         # do not, return 0, so we have to accept either that or the correct
         # value, but no other values
-        self.assert_(self.fs.lstat('foo').st_atime_nsec in [0, 2*1000])
+        self.assertTrue(self.fs.lstat('foo').st_atime_nsec in [0, 2*1000])
 
         self.assertEqual(self.fs.lstat('foo').st_mtime_sec, 3)
-        self.assert_(self.fs.lstat('foo').st_mtime_nsec in [0, 4*1000])
+        self.assertTrue(self.fs.lstat('foo').st_mtime_nsec in [0, 4*1000])
 
     def test_lutimes_raises_oserror_for_nonexistent_entry(self):
         self.assertRaises(OSError, self.fs.lutimes, 'notexists', 1, 2, 3, 4)
@@ -640,11 +640,11 @@ class VfsTests(object):  # pragma: no cover
 
     def test_opens_existing_file_ok_for_reading(self):
         self.fs.write_file('foo', '')
-        self.assert_(self.fs.open('foo', 'r'))
+        self.assertTrue(self.fs.open('foo', 'r'))
 
     def test_opens_existing_file_ok_for_writing(self):
         self.fs.write_file('foo', '')
-        self.assert_(self.fs.open('foo', 'w'))
+        self.assertTrue(self.fs.open('foo', 'w'))
 
     def test_open_fails_for_nonexistent_file(self):
         self.assertRaises(IOError, self.fs.open, 'foo', 'r')
