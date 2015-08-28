@@ -422,9 +422,6 @@ class GAGeneration(object):
     def set_number(self, new_id):
         self._id = new_id
 
-    def keys(self):
-        return self._keys.keys()
-
     def get_key(self, key, default=None):
         return self._keys.get_key(key, default=default)
 
