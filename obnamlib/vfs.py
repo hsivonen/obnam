@@ -368,6 +368,9 @@ class VfsTests(object):  # pragma: no cover
 
     non_ascii_name = u'm\u00e4kel\u00e4'.encode('utf-8')
 
+    fs = None
+    basepath = None
+
     def test_abspath_returns_input_for_absolute_path(self):
         self.assertEqual(self.fs.abspath('/foo/bar'), '/foo/bar')
 
