@@ -38,48 +38,49 @@ import obnamlib
 # little magic to get a) automatic enumeration b) mapping between
 # values and names.
 
-_string_keys = [
-    "REPO_CLIENT_TEST_KEY",
-    "REPO_GENERATION_TEST_KEY",
-    "REPO_FILE_TEST_KEY",
-    "REPO_FILE_USERNAME",
-    "REPO_FILE_GROUPNAME",
-    "REPO_FILE_SYMLINK_TARGET",
-    "REPO_FILE_XATTR_BLOB",
-    "REPO_FILE_MD5",
-]
+REPO_CLIENT_TEST_KEY = 0
+REPO_GENERATION_TEST_KEY = 1
+REPO_FILE_TEST_KEY = 2
+REPO_FILE_USERNAME = 3
+REPO_FILE_GROUPNAME = 4
+REPO_FILE_SYMLINK_TARGET = 5
+REPO_FILE_XATTR_BLOB = 6
+REPO_FILE_MD5 = 7
 
-_integer_keys = [
-    "REPO_GENERATION_STARTED",
-    "REPO_GENERATION_ENDED",
-    "REPO_GENERATION_IS_CHECKPOINT",
-    "REPO_GENERATION_FILE_COUNT",
-    "REPO_GENERATION_TOTAL_DATA",
+_MAX_STRING_KEY = REPO_FILE_MD5
 
-    "REPO_FILE_MODE",
-    "REPO_FILE_MTIME_SEC",
-    "REPO_FILE_MTIME_NSEC",
-    "REPO_FILE_ATIME_SEC",
-    "REPO_FILE_ATIME_NSEC",
-    "REPO_FILE_NLINK",
-    "REPO_FILE_SIZE",
-    "REPO_FILE_UID",
-    "REPO_FILE_GID",
-    "REPO_FILE_BLOCKS",
-    "REPO_FILE_DEV",
-    "REPO_FILE_INO",
-]
+REPO_GENERATION_STARTED = 8
+REPO_GENERATION_ENDED = 9
+REPO_GENERATION_IS_CHECKPOINT = 10
+REPO_GENERATION_FILE_COUNT = 11
+REPO_GENERATION_TOTAL_DATA = 12
+REPO_FILE_MODE = 13
+REPO_FILE_MTIME_SEC = 14
+REPO_FILE_MTIME_NSEC = 15
+REPO_FILE_ATIME_SEC = 16
+REPO_FILE_ATIME_NSEC = 17
+REPO_FILE_NLINK = 18
+REPO_FILE_SIZE = 19
+REPO_FILE_UID = 20
+REPO_FILE_GID = 21
+REPO_FILE_BLOCKS = 22
+REPO_FILE_DEV = 23
+REPO_FILE_INO = 24
 
-_repo_key_names = {}
-for i, name in enumerate(_string_keys + _integer_keys):
-    globals()[name] = i
-    _repo_key_names[i] = name
+
+_repo_key_names = dict(
+    (globals()[name], name)
+    for name in globals()
+    if name.startswith('REPO_'))
 
 
 def _filter_integer_keys(prefix):
-    return [globals()[name]
-            for name in _integer_keys
-            if name.startswith(prefix)]
+    return [
+        globals()[name]
+        for name in globals()
+        if name.startswith(prefix) and globals()[name] > _MAX_STRING_KEY
+    ]
+
 
 REPO_GENERATION_INTEGER_KEYS = _filter_integer_keys('REPO_GENERATION_')
 REPO_FILE_INTEGER_KEYS = _filter_integer_keys('REPO_FILE_')
