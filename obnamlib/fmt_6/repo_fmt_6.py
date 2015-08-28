@@ -1040,6 +1040,8 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
 class CheckBTree(obnamlib.WorkItem):  # pragma: no cover
 
+    settings = None
+
     def __init__(self, fs, dirname, skip_setting):
         self.fs = fs
         self.dirname = dirname
