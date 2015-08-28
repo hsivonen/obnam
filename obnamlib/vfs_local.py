@@ -288,7 +288,8 @@ class LocalFS(obnamlib.VirtualFileSystem):
     def chmod_symlink(self, pathname, mode):  # pragma: no cover
         tracing.trace('chmod_symlink %s %o', pathname, mode)
         if self.got_lchmod:
-            os.lchmod(self.join(pathname), mode)
+            lchmod = getattr(os, 'lchmod')
+            lchmod(self.join(pathname), mode)
         else:
             self.lstat(pathname)
 
