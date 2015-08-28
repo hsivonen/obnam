@@ -1829,19 +1829,19 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
             gen_id = self.create_generation()
             self.repo.add_file(gen_id, '/foo/bar')
             self.repo.set_file_key(
-                gen_id, '/foo/bar', obnamlib.REPO_FILE_MTIME, 123)
+                gen_id, '/foo/bar', obnamlib.REPO_FILE_MTIME_SEC, 123)
 
             # Remove the file. Key should be removed.
             self.repo.remove_file(gen_id, '/foo/bar')
             self.assertRaises(
                 obnamlib.RepositoryFileDoesNotExistInGeneration,
                 self.repo.get_file_key,
-                gen_id, '/foo/bar', obnamlib.REPO_FILE_MTIME)
+                gen_id, '/foo/bar', obnamlib.REPO_FILE_MTIME_SEC)
 
             # Add the file back. Key should still be removed.
             self.repo.add_file(gen_id, '/foo/bar')
             value = self.repo.get_file_key(
-                gen_id, '/foo/bar', obnamlib.REPO_FILE_MTIME)
+                gen_id, '/foo/bar', obnamlib.REPO_FILE_MTIME_SEC)
             self.assertEqual(value, 0)
 
         def test_can_add_a_file_then_remove_then_add_it_again(self):
