@@ -28,3 +28,7 @@ class WorkItem(larch.fsck.WorkItem):
     implementations) can provide work items.
 
     '''
+
+    repo = None
+    chunkids_seen = None
+    settings = None
