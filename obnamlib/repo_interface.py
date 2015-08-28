@@ -971,6 +971,8 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
 
     # Tests for repository level things.
 
+    repo = None
+
     def test_has_format_attribute(self):
         self.assertEqual(type(self.repo.format), str)
 
