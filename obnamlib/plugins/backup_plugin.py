@@ -729,6 +729,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         exclude = [False]
         self.app.hooks.call(
             'backup-exclude',
+            progress=self.progress,
             fs=self.fs,
             pathname=pathname,
             stat_result=st,
