@@ -20,6 +20,8 @@ import os
 
 import tracing
 
+import obnamlib
+
 
 class RepositoryFS(object):
 
