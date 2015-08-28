@@ -380,7 +380,7 @@ class ObnamFuse(fuse.Fuse):
         total_data = sum(
             self.obnam.repo.get_generation_key(
                 gen, obnamlib.REPO_GENERATION_TOTAL_DATA)
-            for gen in obnamlib.repo.get_clientgeneration_ids(client_name))
+            for gen in self.obnam.repo.get_clientgeneration_ids(client_name))
 
         files = sum(
             self.obnam.repo.get_generation_key(
