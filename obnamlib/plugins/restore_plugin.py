@@ -230,7 +230,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
                 except obnamlib.SetMetadataError as e:
                     self.app.ts.error(str(e))
                     self.errors = True
-        except Exception, e:
+        except Exception, e:  # pylint: disable=broad-except
             # Reaching this code path means we've hit a bug, so we log
             # a full traceback.
             msg = "Failed to restore %s:" % (pathname,)
