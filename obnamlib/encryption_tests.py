@@ -184,12 +184,9 @@ class PublicKeyEncryptionTests(unittest.TestCase):
 
     def test_roundtrip_works(self):
         cleartext = 'hello, world'
-        passphrase = 'password1'
-        pubring = os.path.join(self.gpghome, 'pubring.gpg')
-        secring = os.path.join(self.gpghome, 'secring.gpg')
 
+        pubring = os.path.join(self.gpghome, 'pubring.gpg')
         keyring = obnamlib.Keyring(cat(pubring))
-        seckeys = obnamlib.SecretKeyring(cat(secring))
 
         encrypted = obnamlib.encrypt_with_keyring(cleartext, keyring)
         decrypted = obnamlib.decrypt_with_secret_keys(
