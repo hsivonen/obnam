@@ -65,6 +65,16 @@ class RepositoryDelegator(obnamlib.RepositoryInterface):
         self._chunk_indexes.set_fs(self._fs)
 
     #
+    # Repository methods.
+    #
+
+    def init_repo(self):
+        raise NotImplementedError()
+
+    def close(self):
+        raise NotImplementedError()
+
+    #
     # Client list methods.
     #
 
