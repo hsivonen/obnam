@@ -235,7 +235,7 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         self.traverse(self.show_hdr_ls, self.show_item_ls, args)
 
     def show_hdr_ls(self, comment):
-            self.app.output.write(comment)
+        self.app.output.write(comment)
 
     def show_item_ls(self, gen_id, filename):
         fields = self.fields(gen_id, filename)
