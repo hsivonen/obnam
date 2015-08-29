@@ -15,7 +15,6 @@
 
 
 import hashlib
-import logging
 import os
 import random
 import struct
@@ -440,7 +439,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         minkey = self.fskey(dir_id, self.DIR_CONTENTS, 0)
         maxkey = self.fskey(dir_id, self.DIR_CONTENTS, self.SUBKEY_MAX)
         basenames = []
-        for key, value in tree.lookup_range(minkey, maxkey):
+        for _, value in tree.lookup_range(minkey, maxkey):
             basenames.append(value)
         return basenames
 
@@ -454,7 +453,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         maxkey = self.fskey(file_id, self.FILE_CHUNKS, self.SUBKEY_MAX)
         pairs = tree.lookup_range(minkey, maxkey)
         chunkids = []
-        for key, value in pairs:
+        for _, value in pairs:
             chunkids.extend(self._decode_chunks(value))
         return chunkids
 
@@ -481,7 +480,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         minkey = self.fskey(file_id, self.FILE_CHUNKS, 0)
         maxkey = self.fskey(file_id, self.FILE_CHUNKS, self.SUBKEY_MAX)
 
-        for key, value in self.tree.lookup_range(minkey, maxkey):
+        for _, value in self.tree.lookup_range(minkey, maxkey):
             for chunkid in self._decode_chunks(value):
                 k = self.chunk_key(chunkid, file_id)
                 self.tree.remove_range(k, k)
