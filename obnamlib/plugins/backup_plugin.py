@@ -940,10 +940,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 if data == data2:
                     share(chunkid)
                     return chunkid
-            else:
-                chunkid = put()
-                share(chunkid)
-                return chunkid
+            chunkid = put()
+            share(chunkid)
+            return chunkid
         elif mode == 'fatalist':
             existing = find()
             if existing:
