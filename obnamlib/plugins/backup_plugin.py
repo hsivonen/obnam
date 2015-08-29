@@ -776,7 +776,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         try:
             old = self.get_metadata_from_generation(gen, pathname)
-        except obnamlib.ObnamError as e:
+        except obnamlib.ObnamError:
             # File does not exist in the previous generation, so it
             # does need to be backed up.
             return True
