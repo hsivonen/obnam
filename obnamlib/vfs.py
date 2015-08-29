@@ -332,7 +332,7 @@ class VfsFactory(object):
 
     def new(self, url, create=False):
         '''Create a new VFS appropriate for a given URL.'''
-        (scheme, _) = urlparse.urlparse(url)
+        scheme, _, _, _, _, _ = urlparse.urlparse(url)
         if scheme in self.implementations:
             klass, kwargs = self.implementations[scheme]
             return klass(url, create=create, **kwargs)
