@@ -147,8 +147,6 @@ class ShowPlugin(obnamlib.ObnamPlugin):
         for gen_id in self.repo.get_client_generation_ids(client_name):
             start = self.repo.get_generation_key(
                 gen_id, obnamlib.REPO_GENERATION_STARTED)
-            end = self.repo.get_generation_key(
-                gen_id, obnamlib.REPO_GENERATION_ENDED)
             if most_recent is None or start > most_recent:
                 most_recent = start
         self.repo.close()
