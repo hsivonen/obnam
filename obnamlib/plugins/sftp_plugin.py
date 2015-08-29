@@ -188,7 +188,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
     def _create_root_if_missing(self):
         try:
             self.mkdir(self.path)
-        except OSError, e:
+        except OSError:
             # sftp/paramiko does not give us a useful errno so we hope
             # for the best
             pass
@@ -251,7 +251,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
         logging.debug('connect_paramiko: connected')
         try:
             self._check_host_key(self.host)
-        except BaseException, e:
+        except BaseException:
             self.transport.close()
             self.transport = None
             raise
@@ -334,7 +334,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
 
     @ioerror_to_oserror
     def reinit(self, baseurl, create=False):
-        scheme, netloc, path, query, fragment = urlparse.urlsplit(baseurl)
+        scheme, netloc, path, _, _ = urlparse.urlsplit(baseurl)
 
         if scheme != 'sftp':
             raise WrongURLSchemeError(url=baseurl)
@@ -653,7 +653,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
                 # on creation, so we set it separately. This leaves a
                 # short window where the file is possible to open.
                 self.chmod_not_symlink(pathname, obnamlib.NEW_FILE_MODE)
-            except (IOError, OSError) as e:
+            except (IOError, OSError):
                 if try_number == max_tries - 1:
                     raise
             else:
