@@ -26,7 +26,6 @@ application) will register callbacks.
 '''
 
 
-import logging
 import tracing
 
 import obnamlib
@@ -99,9 +98,9 @@ class FilterHook(Hook):
         self.bytag = {}
 
     def add_callback(self, callback, priority=Hook.DEFAULT_PRIORITY):
-        assert(hasattr(callback, "tag"))
-        assert(hasattr(callback, "filter_read"))
-        assert(hasattr(callback, "filter_write"))
+        assert hasattr(callback, "tag")
+        assert hasattr(callback, "filter_read")
+        assert hasattr(callback, "filter_write")
         self.bytag[callback.tag] = callback
         return Hook.add_callback(self, callback, priority)
 
