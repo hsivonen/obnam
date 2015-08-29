@@ -28,6 +28,12 @@ import tracing
 import obnamlib
 
 
+# Pylint doesn't see the function defined in _obnam. We silence, for
+# this module only, the no-member warning.
+#
+# pylint: disable=no-member
+
+
 # O_NOATIME is Linux specific:
 EXTRA_OPEN_FLAGS = getattr(os, "O_NOATIME", 0)
 

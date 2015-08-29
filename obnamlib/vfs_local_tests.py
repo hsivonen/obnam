@@ -25,6 +25,12 @@ import obnamlib
 from obnamlib import _obnam
 
 
+# Pylint doesn't see the function defined in _obnam. We silence, for
+# this module only, the no-member warning.
+#
+# pylint: disable=no-member
+
+
 class LocalFSTests(unittest.TestCase, obnamlib.VfsTests):
 
     def setUp(self):
