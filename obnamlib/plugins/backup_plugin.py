@@ -636,7 +636,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             # details of the old repository class. Should
             # be cleaned up, someday.
             pass
-        except Exception as ee:
+        except (OSError, IOError, obnamlib.ObnamError) as ee:
             msg = (
                 'Error removing partly backed up file %s: %s'
                 % (pathname, repr(ee)))
