@@ -825,7 +825,7 @@ class RepositoryInterface(object):
         '''Write any pending new chunks to repository.'''
         raise NotImplementedError()
 
-    def remove_unused_chunk(self):
+    def remove_unused_chunks(self):
         '''Remove chunks that are no longer used by any client.
 
         The caller MUST commit any changes to clients or chunk indexes
