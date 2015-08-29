@@ -471,8 +471,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     'Attempting to unlock shared trees because of error')
                 self.repo.unlock_chunk_indexes()
         except BaseException, e2:
-            logging.warning(
-                'Error while unlocking due to error: %s' % str(e2))
+            logging.warning('Error while unlocking due to error: %s', str(e2))
             logging.debug(traceback.format_exc())
         else:
             logging.info('Successfully unlocked')
@@ -508,7 +507,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.fs.close()
 
     def backup_root(self, root, absroots):
-        logging.info('Backing up root %s' % root)
+        logging.info('Backing up root %s', root)
         self.progress.what('connecting to live data %s' % root)
 
         self.reopen_fs(root)
@@ -525,7 +524,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.root_metadata = self.fs.lstat(absroot)
 
         for pathname, metadata in self.find_files(absroot):
-            logging.info('Backing up %s' % pathname)
+            logging.info('Backing up %s', pathname)
             if not self.pretend:
                 existed = self.repo.file_exists(self.new_generation, pathname)
             try:
@@ -829,9 +828,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 metadata = obnamlib.read_metadata(self.fs, root)
             except OSError, e:
                 logging.warning(
-                    'Failed to get metadata for %s: %s: %s' %
-                    (root, e.errno or 0, e.strerror))
-                logging.warning('Using fake metadata instead for %s' % root)
+                    'Failed to get metadata for %s: %s: %s',
+                    root, e.errno or 0, e.strerror)
+                logging.warning('Using fake metadata instead for %s', root)
                 metadata = dummy_metadata
             if not self.pretend:
                 self.add_file_to_generation(root, metadata)
