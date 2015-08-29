@@ -87,7 +87,7 @@ class ClientList(obnamlib.RepositoryTree):
         minkey = self.key(client_name, 0, 0)
         maxkey = self.key(client_name, obnamlib.MAX_ID, self.SUBKEY_MAX)
         for k, v in t.lookup_range(minkey, maxkey):
-            checksum, client_id, subkey = self.unkey(k)
+            _, client_id, subkey = self.unkey(k)
             if subkey == self.CLIENT_NAME and v == client_name:
                 return client_id
         return None
@@ -127,7 +127,7 @@ class ClientList(obnamlib.RepositoryTree):
             client_id = self.find_client_id(t, client_name)
             if client_id is not None:
                 key = self.key(client_name, client_id, self.KEYID)
-                for k, v in t.lookup_range(key, key):
+                for _, v in t.lookup_range(key, key):
                     return v
         return None
 
