@@ -25,7 +25,7 @@ import obnamlib
 from obnamlib import _obnam
 
 
-class LocalFSTests(obnamlib.VfsTests, unittest.TestCase):
+class LocalFSTests(unittest.TestCase, obnamlib.VfsTests):
 
     def setUp(self):
         self.basepath = tempfile.mkdtemp()

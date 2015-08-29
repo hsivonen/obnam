@@ -371,6 +371,22 @@ class VfsTests(object):  # pragma: no cover
     fs = None
     basepath = None
 
+    # Add some dummy methods to silence pylint.
+
+    def assertTrue(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    def assertFalse(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    def assertEqual(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    def assertRaises(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    # Actual tests.
+
     def test_abspath_returns_input_for_absolute_path(self):
         self.assertEqual(self.fs.abspath('/foo/bar'), '/foo/bar')
 
