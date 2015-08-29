@@ -118,7 +118,6 @@ class GATreeTests(unittest.TestCase):
         self.assertEqual(tree3.get_directory('/foo/bar'), None)
 
     def test_removes_nonexistent_directory(self):
-        dir_obj = obnamlib.GADirectory()
         self.tree.remove_directory('/foo/bar')
         self.assertEqual(self.tree.get_directory('/foo/bar'), None)
 

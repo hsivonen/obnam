@@ -14,12 +14,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import hashlib
-import logging
-import os
-import stat
-import time
-
 import obnamlib
 
 
@@ -34,5 +28,5 @@ class ListFormatsPlugin(obnamlib.ObnamPlugin):
     def list_formats(self, args):
         factory = obnamlib.RepositoryFactory()
         formats = factory.get_implementation_classes()
-        for format in formats:
-            self.app.output.write('%s\n' % format.format)
+        for format_class in formats:
+            self.app.output.write('%s\n' % format_class.format)

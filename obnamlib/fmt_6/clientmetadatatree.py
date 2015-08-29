@@ -15,7 +15,6 @@
 
 
 import hashlib
-import logging
 import os
 import random
 import struct
@@ -208,7 +207,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     def _lookup_int(self, tree, key):
         try:
             return struct.unpack('!Q', tree.lookup(key))[0]
-        except:
+        except KeyError:
             return None
 
     def _insert_int(self, tree, key, value):
@@ -357,11 +356,6 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
             old_metadata = self.get_metadata(gen_id, filename)
         except KeyError:
             old_metadata = None
-        else:  # pragma: no cover
-            old = obnamlib.fmt_6.metadata_codec.decode_metadata(old_metadata)
-
-        metadata = obnamlib.fmt_6.metadata_codec.decode_metadata(
-            encoded_metadata)
 
         if encoded_metadata != old_metadata:
             tracing.trace('new or changed metadata')
@@ -407,14 +401,6 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         file_id = self.get_file_id(self.tree, filename)
         genid = self.get_generation_id(self.tree)
 
-        try:
-            encoded_metadata = self.get_metadata(genid, filename)
-        except KeyError:
-            pass
-        else:
-            metadata = obnamlib.fmt_6.metadata_codec.decode_metadata(
-                encoded_metadata)
-
         # Remove any children.
         minkey = self.fskey(file_id, self.DIR_CONTENTS, 0)
         maxkey = self.fskey(file_id, self.DIR_CONTENTS, obnamlib.MAX_ID)
@@ -453,7 +439,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         minkey = self.fskey(dir_id, self.DIR_CONTENTS, 0)
         maxkey = self.fskey(dir_id, self.DIR_CONTENTS, self.SUBKEY_MAX)
         basenames = []
-        for key, value in tree.lookup_range(minkey, maxkey):
+        for _, value in tree.lookup_range(minkey, maxkey):
             basenames.append(value)
         return basenames
 
@@ -467,7 +453,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         maxkey = self.fskey(file_id, self.FILE_CHUNKS, self.SUBKEY_MAX)
         pairs = tree.lookup_range(minkey, maxkey)
         chunkids = []
-        for key, value in pairs:
+        for _, value in pairs:
             chunkids.extend(self._decode_chunks(value))
         return chunkids
 
@@ -494,7 +480,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         minkey = self.fskey(file_id, self.FILE_CHUNKS, 0)
         maxkey = self.fskey(file_id, self.FILE_CHUNKS, self.SUBKEY_MAX)
 
-        for key, value in self.tree.lookup_range(minkey, maxkey):
+        for _, value in self.tree.lookup_range(minkey, maxkey):
             for chunkid in self._decode_chunks(value):
                 k = self.chunk_key(chunkid, file_id)
                 self.tree.remove_range(k, k)

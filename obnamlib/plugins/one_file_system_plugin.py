@@ -43,5 +43,5 @@ class OneFileSystemPlugin(obnamlib.ObnamPlugin):
         exclude = kwargs['exclude']
 
         if st.st_dev != root_metadata.st_dev:
-            logging.debug('Excluding (one-file-system): %s' % pathname)
+            logging.debug('Excluding (one-file-system): %s', pathname)
             exclude[0] = True

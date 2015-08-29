@@ -87,12 +87,12 @@ class VirtualFileSystem(object):
         self.baseurl = baseurl
         self.bytes_read = 0
         self.bytes_written = 0
-        logging.debug('VFS: __init__: baseurl=%s' % self.baseurl)
+        logging.debug('VFS: __init__: baseurl=%s', self.baseurl)
 
     def log_stats(self):
         logging.debug(
-            'VFS: baseurl=%s read=%d written=%d' %
-            (self.baseurl, self.bytes_read, self.bytes_written))
+            'VFS: baseurl=%s read=%d written=%d',
+            self.baseurl, self.bytes_read, self.bytes_written)
 
     def connect(self):
         '''Connect to filesystem.'''
@@ -146,7 +146,7 @@ class VirtualFileSystem(object):
     def isdir(self, pathname):
         '''Is it a directory?'''
 
-    def mkdir(self, pathname):
+    def mkdir(self, pathname, mode=NEW_DIR_MODE):
         '''Create a directory.
 
         Parent directories must already exist.
@@ -231,7 +231,7 @@ class VirtualFileSystem(object):
     def symlink(self, source, destination):
         '''Like os.symlink.'''
 
-    def open(self, pathname, mode):
+    def open(self, pathname, mode, bufsize=None):
         '''Open a file, like the builtin open() or file() function.
 
         The return value is a file object like the ones returned
@@ -318,7 +318,7 @@ class VirtualFileSystem(object):
         yield dirname, dirst
 
 
-class VfsFactory:
+class VfsFactory(object):
 
     '''Create new instances of VirtualFileSystem.'''
 
@@ -332,7 +332,7 @@ class VfsFactory:
 
     def new(self, url, create=False):
         '''Create a new VFS appropriate for a given URL.'''
-        scheme, netloc, path, params, query, fragment = urlparse.urlparse(url)
+        scheme, _, _, _, _, _ = urlparse.urlparse(url)
         if scheme in self.implementations:
             klass, kwargs = self.implementations[scheme]
             return klass(url, create=create, **kwargs)
@@ -367,6 +367,25 @@ class VfsTests(object):  # pragma: no cover
     '''
 
     non_ascii_name = u'm\u00e4kel\u00e4'.encode('utf-8')
+
+    fs = None
+    basepath = None
+
+    # Add some dummy methods to silence pylint.
+
+    def assertTrue(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    def assertFalse(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    def assertEqual(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    def assertRaises(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    # Actual tests.
 
     def test_abspath_returns_input_for_absolute_path(self):
         self.assertEqual(self.fs.abspath('/foo/bar'), '/foo/bar')
@@ -447,7 +466,7 @@ class VfsTests(object):  # pragma: no cover
 
     def test_exists_returns_true_for_existing_file(self):
         self.fs.write_file('foo', '')
-        self.assert_(self.fs.exists('foo'))
+        self.assertTrue(self.fs.exists('foo'))
 
     def test_isdir_returns_false_for_nonexistent_file(self):
         self.assertFalse(self.fs.isdir('foo'))
@@ -458,7 +477,7 @@ class VfsTests(object):  # pragma: no cover
 
     def test_isdir_returns_true_for_existing_dir(self):
         self.fs.mkdir('foo')
-        self.assert_(self.fs.isdir('foo'))
+        self.assertTrue(self.fs.isdir('foo'))
 
     def test_listdir_returns_plain_strings_only(self):
         self.fs.write_file(u'M\u00E4kel\u00E4'.encode('utf-8'), 'data')
@@ -490,14 +509,14 @@ class VfsTests(object):  # pragma: no cover
             unicodedata.normalize('NFKD', name_unicode),
             unicodedata.normalize('NFKD', funny_unicode))
 
-        self.assert_(hasattr(st, 'st_mode'))
+        self.assertTrue(hasattr(st, 'st_mode'))
         self.assertFalse(hasattr(st, 'st_mtime'))
-        self.assert_(hasattr(st, 'st_mtime_sec'))
-        self.assert_(hasattr(st, 'st_mtime_nsec'))
+        self.assertTrue(hasattr(st, 'st_mtime_sec'))
+        self.assertTrue(hasattr(st, 'st_mtime_nsec'))
 
     def test_listdir2_returns_plain_strings_only(self):
         self.fs.write_file(u'M\u00E4kel\u00E4'.encode('utf-8'), 'data')
-        names = [name for name, st in self.fs.listdir2('.')]
+        names = [name for name, _ in self.fs.listdir2('.')]
         types = [type(x) for x in names]
         self.assertEqual(types, [str])
 
@@ -520,11 +539,11 @@ class VfsTests(object):  # pragma: no cover
 
     def test_makedirs_creates_directory_when_parent_exists(self):
         self.fs.makedirs('foo')
-        self.assert_(self.fs.isdir('foo'))
+        self.assertTrue(self.fs.isdir('foo'))
 
     def test_makedirs_creates_directory_when_parent_does_not_exist(self):
         self.fs.makedirs('foo/bar')
-        self.assert_(self.fs.isdir('foo/bar'))
+        self.assertTrue(self.fs.isdir('foo/bar'))
 
     def test_rmdir_removes_directory(self):
         self.fs.mkdir('foo')
@@ -580,7 +599,7 @@ class VfsTests(object):  # pragma: no cover
 
     def test_lstat_returns_right_filetype_for_directory(self):
         st = self.fs.lstat('.')
-        self.assert_(stat.S_ISDIR(st.st_mode))
+        self.assertTrue(stat.S_ISDIR(st.st_mode))
 
     def test_lstat_raises_oserror_for_nonexistent_entry(self):
         self.assertRaises(OSError, self.fs.lstat, 'notexists')
@@ -605,10 +624,10 @@ class VfsTests(object):  # pragma: no cover
         # not all filesystems support sub-second timestamps; those that
         # do not, return 0, so we have to accept either that or the correct
         # value, but no other values
-        self.assert_(self.fs.lstat('foo').st_atime_nsec in [0, 2*1000])
+        self.assertTrue(self.fs.lstat('foo').st_atime_nsec in [0, 2*1000])
 
         self.assertEqual(self.fs.lstat('foo').st_mtime_sec, 3)
-        self.assert_(self.fs.lstat('foo').st_mtime_nsec in [0, 4*1000])
+        self.assertTrue(self.fs.lstat('foo').st_mtime_nsec in [0, 4*1000])
 
     def test_lutimes_raises_oserror_for_nonexistent_entry(self):
         self.assertRaises(OSError, self.fs.lutimes, 'notexists', 1, 2, 3, 4)
@@ -637,11 +656,11 @@ class VfsTests(object):  # pragma: no cover
 
     def test_opens_existing_file_ok_for_reading(self):
         self.fs.write_file('foo', '')
-        self.assert_(self.fs.open('foo', 'r'))
+        self.assertTrue(self.fs.open('foo', 'r'))
 
     def test_opens_existing_file_ok_for_writing(self):
         self.fs.write_file('foo', '')
-        self.assert_(self.fs.open('foo', 'w'))
+        self.assertTrue(self.fs.open('foo', 'w'))
 
     def test_open_fails_for_nonexistent_file(self):
         self.assertRaises(IOError, self.fs.open, 'foo', 'r')
@@ -718,13 +737,13 @@ class VfsTests(object):  # pragma: no cover
         self.fs.listdir2 = raiser
         result = list(self.fs.scan_tree(self.basepath, log=logerror))
         self.assertEqual(len(result), 1)
-        pathname, st = result[0]
+        pathname, _ = result[0]
         self.assertEqual(pathname, self.basepath)
 
     def test_scan_tree_returns_the_right_stuff(self):
         self.set_up_scan_tree()
         result = list(self.fs.scan_tree(self.basepath))
-        pathnames = [pathname for pathname, st in result]
+        pathnames = [pathname for pathname, _ in result]
         self.assertEqual(sorted(pathnames), sorted(self.pathnames))
 
     def test_scan_tree_filters_away_unwanted(self):
@@ -732,5 +751,5 @@ class VfsTests(object):  # pragma: no cover
             return stat.S_ISDIR(st.st_mode)
         self.set_up_scan_tree()
         result = list(self.fs.scan_tree(self.basepath, ok=ok))
-        pathnames = [pathname for pathname, st in result]
+        pathnames = [pathname for pathname, _ in result]
         self.assertEqual(sorted(pathnames), sorted(self.dirs))

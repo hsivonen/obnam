@@ -28,11 +28,6 @@ import tracing
 import obnamlib
 
 
-class ToplevelIsFileError(obnamlib.ObnamError):
-
-    msg = 'File at repository root: {filename}'
-
-
 class _OpenClientInfo(object):
 
     def __init__(self, client):
@@ -74,7 +69,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._setup_file_keys()
 
     @classmethod
-    def setup_hooks(self, hooks):
+    def setup_hooks(cls, hooks):
         hooks.new('repository-toplevel-init')
         hooks.new_filter('repository-data')
         hooks.new('repository-add-client')
@@ -285,18 +280,18 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             del self._open_client_infos[client_name]
 
     def client_is_locked(self, client_name):
-        logging.info('Checking if %s is locked' % client_name)
+        logging.info('Checking if %s is locked', client_name)
         client_id = self._get_client_id(client_name)
         client_dir = self._get_client_dir(client_id)
         return self._lockmgr.is_locked(client_dir)
 
     def lock_client(self, client_name):
-        logging.info('Locking client %s' % client_name)
+        logging.info('Locking client %s', client_name)
         self._setup_file_key_cache()
         self._raw_lock_client(client_name)
 
     def unlock_client(self, client_name):
-        logging.info('Unlocking client %s' % client_name)
+        logging.info('Unlocking client %s', client_name)
         self._require_existing_client(client_name)
         self._require_client_lock(client_name)
         self._reset_unused_chunks()
@@ -353,7 +348,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         def find_gens_to_keep():
             keep = []
             for gen_id in self.get_client_generation_ids(client_name):
-                a, gen_number = self._unpack_gen_id(gen_id)
+                _, gen_number = self._unpack_gen_id(gen_id)
                 if gen_number not in remove_gen_nos:
                     keep.append(gen_number)
             return keep
@@ -714,7 +709,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             self._fs, self._node_size, self._upload_queue_size,
             self._lru_size, self)
         self._chunksums = obnamlib.ChecksumTree(
-            self._fs, 'chunksums',  len(self._checksum('')), self._node_size,
+            self._fs, 'chunksums', len(self._checksum('')), self._node_size,
             self._upload_queue_size, self._lru_size, self)
 
     def _chunk_index_dirs_to_lock(self):
@@ -1045,6 +1040,8 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
 class CheckBTree(obnamlib.WorkItem):  # pragma: no cover
 
+    settings = None
+
     def __init__(self, fs, dirname, skip_setting):
         self.fs = fs
         self.dirname = dirname
@@ -1056,10 +1053,10 @@ class CheckBTree(obnamlib.WorkItem):  # pragma: no cover
             return
 
         if not self.fs.exists(self.dirname):
-            logging.debug('B-tree %s does not exist, skipping' % self.dirname)
+            logging.debug('B-tree %s does not exist, skipping', self.dirname)
             return
 
-        logging.debug('Checking B-tree %s' % self.dirname)
+        logging.debug('Checking B-tree %s', self.dirname)
         fix = self.settings['fsck-fix']
 
         forest = larch.open_forest(

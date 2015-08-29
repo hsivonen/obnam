@@ -46,12 +46,12 @@ class ExcludeCachesPlugin(obnamlib.ObnamPlugin):
         if stat.S_ISDIR(stat_result.st_mode):
             tag_filename = 'CACHEDIR.TAG'
             tag_contents = 'Signature: 8a477f597d28d172789f06886806bc55'
-            tag_path = os.path.join(pathname, 'CACHEDIR.TAG')
+            tag_path = os.path.join(pathname, tag_filename)
             if fs.exists(tag_path):
                 # Can't use with, because Paramiko's SFTPFile does not work.
                 f = fs.open(tag_path, 'rb')
                 data = f.read(len(tag_contents))
                 f.close()
                 if data == tag_contents:
-                    logging.debug('Excluding (cache dir): %s' % pathname)
+                    logging.debug('Excluding (cache dir): %s', pathname)
                     exclude[0] = True

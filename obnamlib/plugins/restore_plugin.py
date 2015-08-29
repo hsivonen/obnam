@@ -124,11 +124,11 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         self.app.settings.require('generation')
         self.app.settings.require('to')
 
-        logging.debug('restoring generation %s' %
-                      self.app.settings['generation'])
-        logging.debug('restoring to %s' % self.app.settings['to'])
+        logging.debug(
+            'restoring generation %s', self.app.settings['generation'])
+        logging.debug('restoring to %s', self.app.settings['to'])
 
-        logging.debug('restoring what: %s' % repr(args))
+        logging.debug('restoring what: %s', repr(args))
         if not args:
             logging.debug('no args given, so restoring everything')
             args = ['/']
@@ -230,7 +230,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
                 except obnamlib.SetMetadataError as e:
                     self.app.ts.error(str(e))
                     self.errors = True
-        except Exception, e:
+        except Exception, e:  # pylint: disable=broad-except
             # Reaching this code path means we've hit a bug, so we log
             # a full traceback.
             msg = "Failed to restore %s:" % (pathname,)
@@ -239,7 +239,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             self.errors = True
 
     def restore_dir(self, gen, root, metadata):
-        logging.debug('restoring dir %s' % root)
+        logging.debug('restoring dir %s', root)
         if self.write_ok:
             if not self.fs.exists('./' + root):
                 self.fs.mkdir('./' + root)
@@ -247,13 +247,13 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             'after recursing through %s' % repr(root))
 
     def restore_hardlink(self, filename, link, metadata):
-        logging.debug('restoring hardlink %s to %s' % (filename, link))
+        logging.debug('restoring hardlink %s to %s', filename, link)
         if self.write_ok:
             self.fs.link('./' + link, './' + filename)
             self.hardlinks.forget(metadata)
 
     def restore_symlink(self, gen, filename, metadata):
-        logging.debug('restoring symlink %s' % filename)
+        logging.debug('restoring symlink %s', filename)
 
     def restore_first_link(self, gen, filename, metadata):
         if stat.S_ISREG(metadata.st_mode):
@@ -271,7 +271,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             self.app.ts.notify(msg)
 
     def restore_regular_file(self, gen, filename, metadata):
-        logging.debug('restoring regular %s' % filename)
+        logging.debug('restoring regular %s', filename)
         if self.write_ok:
             f = self.fs.open('./' + filename, 'wb')
             summer = hashlib.md5()
@@ -329,71 +329,35 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         pass
 
     def restore_fifo(self, gen, filename, metadata):
-        logging.debug('restoring fifo %s' % filename)
+        logging.debug('restoring fifo %s', filename)
         if self.write_ok:
             self.fs.mknod('./' + filename, metadata.st_mode)
 
     def restore_socket(self, gen, filename, metadata):
-        logging.debug('restoring socket %s' % filename)
+        logging.debug('restoring socket %s', filename)
         if self.write_ok:
             self.fs.mknod('./' + filename, metadata.st_mode)
 
     def restore_device(self, gen, filename, metadata):
-        logging.debug('restoring device %s' % filename)
+        logging.debug('restoring device %s', filename)
         if self.write_ok:
             self.fs.mknod('./' + filename, metadata.st_mode)
 
     def report_stats(self):
-        size_table = [
-            (1024**4, 'TiB'),
-            (1024**3, 'GiB'),
-            (1024**2, 'MiB'),
-            (1024**1, 'KiB'),
-            (0, 'B')
-        ]
-
-        for size_base, size_unit in size_table:
-            if self.downloaded_bytes >= size_base:
-                if size_base > 0:
-                    size_amount = (float(self.downloaded_bytes) /
-                                   float(size_base))
-                else:
-                    size_amount = float(self.downloaded_bytes)
-                break
-
-        speed_table = [
-            (1024**3, 'GiB/s'),
-            (1024**2, 'MiB/s'),
-            (1024**1, 'KiB/s'),
-            (0, 'B/s')
-        ]
         duration = time.time() - self.started
-        speed = float(self.downloaded_bytes) / duration
-        for speed_base, speed_unit in speed_table:
-            if speed >= speed_base:
-                if speed_base > 0:
-                    speed_amount = speed / speed_base
-                else:
-                    speed_amount = speed
-                break
-
-        duration_string = ''
-        seconds = duration
-        if seconds >= 3600:
-            duration_string += '%dh' % int(seconds/3600)
-            seconds %= 3600
-        if seconds >= 60:
-            duration_string += '%dm' % int(seconds/60)
-            seconds %= 60
-        if seconds > 0:
-            duration_string += '%ds' % round(seconds)
+        size_amount, size_unit = obnamlib.humanise_size(
+            self.downloaded_bytes)
+        speed_amount, speed_unit = obnamlib.humanise_speed(
+            self.downloaded_bytes, duration)
+        duration_string = obnamlib.humanise_duration(duration)
 
         logging.info('Restore performance statistics:')
-        logging.info('* files restored: %s' % self.file_count)
-        logging.info('* downloaded data: %s bytes (%s %s)' %
-                     (self.downloaded_bytes, size_amount, size_unit))
-        logging.info('* duration: %s s' % duration)
-        logging.info('* average speed: %s %s' % (speed_amount, speed_unit))
+        logging.info('* files restored: %s', self.file_count)
+        logging.info(
+            '* downloaded data: %s bytes (%s %s)',
+            self.downloaded_bytes, size_amount, size_unit)
+        logging.info('* duration: %s s', duration)
+        logging.info('* average speed: %s %s', speed_amount, speed_unit)
         self.app.ts.notify(
             'Restored %d files, '
             'downloaded %.1f %s in %s at %.1f %s average speed' %

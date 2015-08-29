@@ -1,4 +1,4 @@
-# Copyright 2013  Lars Wirzenius
+# Copyright 2013,2015  Lars Wirzenius
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,3 +28,7 @@ class WorkItem(larch.fsck.WorkItem):
     implementations) can provide work items.
 
     '''
+
+    repo = None
+    chunkids_seen = None
+    settings = None

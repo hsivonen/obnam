@@ -33,7 +33,7 @@ metadata_verify_fields = (
     'xattr',
 )
 metadata_fields = metadata_verify_fields + (
-    'st_blocks', 'st_dev', 'st_gid', 'st_ino',  'st_atime_sec',
+    'st_blocks', 'st_dev', 'st_gid', 'st_ino', 'st_atime_sec',
     'st_atime_nsec', 'md5',
 )
 
@@ -81,6 +81,8 @@ class Metadata(object):
     '''
 
     def __init__(self, **kwargs):
+        self.md5 = None  # Silence pylint.
+        self.st_size = None  # Silence pylint.
         for field in metadata_fields:
             setattr(self, field, None)
         for field, value in kwargs.iteritems():
@@ -164,7 +166,8 @@ def get_xattrs_as_blob(fs, filename):  # pragma: no cover
                 names.remove(name)
                 logging.warning(
                     '%s has extended attribute named %s without value, '
-                    'ignoring attribute' % (filename, name))
+                    'ignoring attribute',
+                    filename, name)
             else:
                 raise
         else:
@@ -288,7 +291,7 @@ def set_metadata(fs, filename, metadata,
         try:
             uid = -1  # no change to user
             fs.lchown(filename, uid, metadata.st_gid)
-        except (OSError), e:
+        except OSError:
             sys.exc_clear()
 
     # If we are not the owner, and not root, do not restore setuid/setgid,
@@ -312,7 +315,7 @@ def set_metadata(fs, filename, metadata,
         _set_something(
             filename, 'xattrs',
             lambda:
-                set_xattrs_from_blob(fs, filename, metadata.xattr, user_only))
+            set_xattrs_from_blob(fs, filename, metadata.xattr, user_only))
 
     _set_something(
         filename, 'timestamps',

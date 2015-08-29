@@ -25,7 +25,13 @@ import obnamlib
 from obnamlib import _obnam
 
 
-class LocalFSTests(obnamlib.VfsTests, unittest.TestCase):
+# Pylint doesn't see the function defined in _obnam. We silence, for
+# this module only, the no-member warning.
+#
+# pylint: disable=no-member
+
+
+class LocalFSTests(unittest.TestCase, obnamlib.VfsTests):
 
     def setUp(self):
         self.basepath = tempfile.mkdtemp()
@@ -69,7 +75,7 @@ class XAttrTests(unittest.TestCase):
         # attribute with the command line tool.
 
         try:
-            exitcode, out, err = cliapp.runcmd_unchecked(
+            exitcode, _, _ = cliapp.runcmd_unchecked(
                 ['setfattr', '-n', 'user.foo', 'bar', self.other])
         except OSError:
             # Either xattr aren't supported, or setfattr isn't

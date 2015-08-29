@@ -62,7 +62,7 @@ class ChecksumTree(obnamlib.RepositoryTree):
             maxkey = self.key(checksum, obnamlib.MAX_ID, obnamlib.MAX_ID)
             t = self.forest.trees[-1]
             pairs = t.lookup_range(minkey, maxkey)
-            return [self.unkey(key)[1] for key, value in pairs]
+            return [self.unkey(key)[1] for key, _ in pairs]
         else:
             return []
 

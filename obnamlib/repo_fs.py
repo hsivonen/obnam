@@ -20,6 +20,8 @@ import os
 
 import tracing
 
+import obnamlib
+
 
 class RepositoryFS(object):
 
@@ -83,3 +85,8 @@ class RepositoryFS(object):
             data = self.hooks.filter_write('repository-data', data,
                                            repo=self.repo, toplevel=toplevel)
         self.fs.overwrite_file(filename, data)
+
+
+class ToplevelIsFileError(obnamlib.ObnamError):
+
+    msg = 'File at repository root: {filename}'

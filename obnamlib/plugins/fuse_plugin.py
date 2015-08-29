@@ -32,7 +32,7 @@ except ImportError:
     # this plugin file can be imported. If the module isn't there, the
     # plugin won't work, and it will tell the user it won't work, but
     # at least Obnam won't crash at startup.
-    class Bunch:
+    class Bunch(object):
         def __init__(self, **kwds):
             self.__dict__.update(kwds)
     fuse = Bunch(Fuse=object)
@@ -98,9 +98,8 @@ class ObnamFuseFile(object):
         if flags & self.write_flags:
             raise IOError(errno.EROFS, 'Read only filesystem')
 
-        if path == '/.pid':
-            self.read = self.read_pid
-            self.release = self.release_pid
+        self.reading_pid = path == '/.pid'
+        if self.reading_pid:
             return
 
         try:
@@ -112,6 +111,18 @@ class ObnamFuseFile(object):
         # if not a regular file return EINVAL
         if not stat.S_ISREG(self.metadata.st_mode):
             raise IOError(errno.EINVAL, 'Invalid argument')
+
+    def read(self, length, offset):
+        if self.reading_pid:
+            return self.read_pid(length, offset)
+        else:
+            return self.read_data(length, offset)
+
+    def release(self, flags):
+        if self.reading_pid:
+            return self.release_pid(flags)
+        else:
+            return self.release_data(flags)
 
     def read_pid(self, length, offset):
         tracing.trace('length=%r', length)
@@ -130,7 +141,7 @@ class ObnamFuseFile(object):
         tracing.trace('called')
         return self.fuse_fs.getattr(self.path)
 
-    def read(self, length, offset):
+    def read_data(self, length, offset):
         tracing.trace('self.path=%r', self.path)
         tracing.trace('length=%r', length)
         tracing.trace('offset=%r', offset)
@@ -185,7 +196,7 @@ class ObnamFuseFile(object):
 
         return ''.join(output)
 
-    def release(self, flags):
+    def release_data(self, flags):
         tracing.trace('flags=%r', flags)
         return 0
 
@@ -239,16 +250,13 @@ class ObnamFuse(fuse.Fuse):
             path = '/' + genspec
             try:
                 genstat = self.get_stat_in_generation(path)
-                start = self.obnam.repo.get_generation_key(
-                    gen, obnamlib.REPO_GENERATION_STARTED)
                 end = self.obnam.repo.get_generation_key(
                     gen, obnamlib.REPO_GENERATION_ENDED)
                 genstat.st_ctime = genstat.st_mtime = end
                 self.rootlist[path] = genstat
                 used_generations.append(gen)
             except obnamlib.ObnamError as e:
-                logging.warning('Ignoring error %s' % str(e))
-                pass
+                logging.warning('Ignoring error %s', str(e))
 
         assert used_generations
 
@@ -380,7 +388,7 @@ class ObnamFuse(fuse.Fuse):
         total_data = sum(
             self.obnam.repo.get_generation_key(
                 gen, obnamlib.REPO_GENERATION_TOTAL_DATA)
-            for gen in obnamlib.repo.get_clientgeneration_ids(client_name))
+            for gen in self.obnam.repo.get_clientgeneration_ids(client_name))
 
         files = sum(
             self.obnam.repo.get_generation_key(

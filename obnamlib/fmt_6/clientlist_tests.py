@@ -42,7 +42,7 @@ class ClientListTests(unittest.TestCase):
 
     def test_unkey_unpacks_key_correctly(self):
         key = self.list.key('client name', 12765, 42)
-        client_hash, client_id, subkey = self.list.unkey(key)
+        _, client_id, subkey = self.list.unkey(key)
         self.assertEqual(client_id, 12765)
         self.assertEqual(subkey, 42)
 

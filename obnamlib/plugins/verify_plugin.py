@@ -54,14 +54,14 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
             raise WrongNumberOfGenerationsForVerify()
 
         logging.debug(
-            'verifying generation %s' % self.app.settings['generation'])
+            'verifying generation %s', self.app.settings['generation'])
         if not args:
             self.app.settings.require('root')
             args = self.app.settings['root']
         if not args:
             logging.debug('no roots/args given, so verifying everything')
             args = ['/']
-        logging.debug('verifying what: %s' % repr(args))
+        logging.debug('verifying what: %s', repr(args))
 
         self.repo = self.app.get_repository_object()
         client_name = self.app.settings['client-name']
@@ -69,8 +69,8 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         self.fs.connect()
         t = urlparse.urlparse(args[0])
         root_url = urlparse.urlunparse((t[0], t[1], '/', t[3], t[4], t[5]))
-        logging.debug('t: %s' % repr(t))
-        logging.debug('root_url: %s' % repr(root_url))
+        logging.debug('t: %s', repr(t))
+        logging.debug('root_url: %s', repr(root_url))
         self.fs.reinit(root_url)
 
         self.failed = False
@@ -95,10 +95,10 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         if num_randomly == 0:
             self.app.ts['total'] = \
                 self.repo.get_generation_key(
-                gen_id, obnamlib.REPO_GENERATION_FILE_COUNT)
+                    gen_id, obnamlib.REPO_GENERATION_FILE_COUNT)
             self.app.ts['total_bytes'] = \
                 self.repo.get_generation_key(
-                gen_id, obnamlib.REPO_GENERATION_TOTAL_DATA)
+                    gen_id, obnamlib.REPO_GENERATION_TOTAL_DATA)
             for filename in self.walk(gen_id, args):
                 self.app.ts['filename'] = filename
                 try:
@@ -115,7 +115,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
                             self.log_fail(e)
                 self.app.ts['done'] += 1
         else:
-            logging.debug('verifying %d files randomly' % num_randomly)
+            logging.debug('verifying %d files randomly', num_randomly)
             self.app.ts['total'] = num_randomly
             self.app.ts.notify('finding all files to choose randomly')
 
@@ -127,7 +127,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
                     filenames.append(filename)
 
             chosen = []
-            for i in range(min(num_randomly, len(filenames))):
+            for _ in range(min(num_randomly, len(filenames))):
                 filename = random.choice(filenames)
                 filenames.remove(filename)
                 chosen.append(filename)
@@ -191,7 +191,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         X(obnamlib.REPO_FILE_XATTR_BLOB, 'xattr')
 
     def verify_regular_file(self, gen_id, filename):
-        logging.debug('verifying regular %s' % filename)
+        logging.debug('verifying regular %s', filename)
         f = self.fs.open(filename, 'r')
 
         chunkids = self.repo.get_file_chunk_ids(gen_id, filename)
@@ -221,7 +221,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         '''
 
         for arg in args:
-            scheme, netloc, path, query, fragment = urlparse.urlsplit(arg)
+            _, _, path, _, _ = urlparse.urlsplit(arg)
             arg = os.path.normpath(path)
             for x in self.repo.walk_generation(gen_id, arg):
                 yield x

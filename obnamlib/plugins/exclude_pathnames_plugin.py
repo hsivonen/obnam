@@ -14,11 +14,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import hashlib
 import logging
-import os
-import stat
-import time
+import re
 
 import obnamlib
 
@@ -53,10 +50,16 @@ class ExcludePathnamesPlugin(obnamlib.ObnamPlugin):
     def config_loaded(self):
         self.app.hooks.add_callback('backup-exclude', self.exclude)
         self.pathname_excluder = obnamlib.PathnameExcluder()
-        self.compile_exclusion_patterns()
-        self.compile_inclusion_patterns()
+        self.patterns_have_been_compiled = False
 
-    def exclude(self, pathname=None, stat_result=None, exclude=None, **kwargs):
+    def exclude(self, pathname=None, stat_result=None, exclude=None,
+                progress=None, **kwargs):
+
+        if not self.patterns_have_been_compiled:
+            self.compile_exclusion_patterns(progress)
+            self.compile_inclusion_patterns(progress)
+            self.patterns_have_been_compiled = True
+
         is_excluded, regexp = self.pathname_excluder.exclude(pathname)
         if is_excluded:
             logging.debug('Exclude (pattern): %s', pathname)
@@ -64,7 +67,7 @@ class ExcludePathnamesPlugin(obnamlib.ObnamPlugin):
         elif regexp is not None:
             logging.debug('Include due to regexp: %s', pathname)
 
-    def compile_exclusion_patterns(self):
+    def compile_exclusion_patterns(self, progress):
         regexps = self.read_patterns_from_files(
             self.app.settings['exclude-from'])
 
@@ -77,15 +80,17 @@ class ExcludePathnamesPlugin(obnamlib.ObnamPlugin):
             regexps.append(log)
 
         logging.debug('Compiling exclusion patterns')
-        self.compile_regexps(regexps, self.pathname_excluder.exclude_regexp)
+        self.compile_regexps(
+            regexps, self.pathname_excluder.exclude_regexp, progress)
 
-    def compile_inclusion_patterns(self):
+    def compile_inclusion_patterns(self, progress):
         logging.debug('Compiling inclusion patterns')
         self.compile_regexps(
             self.app.settings['include'],
-            self.pathname_excluder.allow_regexp)
+            self.pathname_excluder.allow_regexp,
+            progress)
 
-    def compile_regexps(self, regexps, compiler):
+    def compile_regexps(self, regexps, compiler, progress):
         for regexp in regexps:
             if not regexp:
                 logging.debug('Ignoring empty pattern')
@@ -94,9 +99,10 @@ class ExcludePathnamesPlugin(obnamlib.ObnamPlugin):
             try:
                 compiler(regexp)
             except re.error as e:
-                msg = ('error compiling regular expression "%s": %s' % (x, e))
+                msg = ('error compiling regular expression "%s": %s' %
+                       (regexp, e))
                 logging.error(msg)
-                self.progress.error(msg)
+                progress.error(msg)
 
     def read_patterns_from_files(self, filenames):
         patterns = []

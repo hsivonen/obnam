@@ -235,6 +235,7 @@ class Check(Command):
 
     def run_nitpick_checks(self):
         self.check_with_pep8()
+        self.check_with_pylint()
         if os.path.exists('.git'):
             sources = self.find_all_source_files()
             self.check_sources_for_nitpicks(sources)
@@ -244,6 +245,11 @@ class Check(Command):
 
     def check_with_pep8(self):
         cliapp.runcmd(['pep8', 'obnamlib'], stdout=None, stderr=None)
+
+    def check_with_pylint(self):
+        cliapp.runcmd(
+            ['pylint', '--rcfile=pylint.conf', 'obnamlib'],
+            stdout=None, stderr=None)
 
     def check_sources_for_nitpicks(self, sources):
         cliapp.runcmd(['./nitpicker'] + sources, stdout=None, stderr=None)

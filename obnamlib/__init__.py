@@ -30,7 +30,7 @@ class DummyExtension(object):
     def __getattr__(self, name):
         raise Exception('Trying to use _obnam, but that was not found.')
 try:
-    import _obnam
+    import obnamlib._obnam
 except ImportError:
     _obnam = DummyExtension()
 
@@ -38,7 +38,7 @@ except ImportError:
 # Exceptions defined by Obnam itself. They should all be a subclass
 # of obnamlib.ObnamError.
 
-from structurederror import StructuredError
+from .structurederror import StructuredError
 
 
 class ObnamError(StructuredError):
@@ -77,51 +77,52 @@ option_group = {
 }
 
 
-from sizeparse import SizeSyntaxError, UnitNameError, ByteSizeParser
+from .sizeparse import SizeSyntaxError, UnitNameError, ByteSizeParser
 
-from encryption import (generate_symmetric_key,
-                        encrypt_symmetric,
-                        decrypt_symmetric,
-                        get_public_key,
-                        get_public_key_user_ids,
-                        Keyring,
-                        SecretKeyring,
-                        encrypt_with_keyring,
-                        decrypt_with_secret_keys,
-                        SymmetricKeyCache,
-                        EncryptionError)
+from .encryption import (
+    generate_symmetric_key,
+    encrypt_symmetric,
+    decrypt_symmetric,
+    get_public_key,
+    get_public_key_user_ids,
+    Keyring,
+    SecretKeyring,
+    encrypt_with_keyring,
+    decrypt_with_secret_keys,
+    SymmetricKeyCache,
+    EncryptionError)
 
-from hooks import (
+from .hooks import (
     Hook, MissingFilterError, NoFilterTagError, FilterHook, HookManager)
-from pluginbase import ObnamPlugin
-from vfs import (
+from .pluginbase import ObnamPlugin
+from .vfs import (
     VirtualFileSystem,
     VfsFactory,
     VfsTests,
     LockFail,
     NEW_DIR_MODE,
     NEW_FILE_MODE)
-from vfs_local import LocalFS
-from fsck_work_item import WorkItem
-from repo_fs import RepositoryFS
-from lockmgr import LockManager
-from forget_policy import ForgetPolicy
-from app import App, ObnamIOError, ObnamSystemError
-from humanise import humanise_duration, humanise_size, humanise_speed
-from chunkid_token_map import ChunkIdTokenMap
-from pathname_excluder import PathnameExcluder
-from splitpath import split_pathname
+from .vfs_local import LocalFS
+from .fsck_work_item import WorkItem
+from .repo_fs import RepositoryFS
+from .lockmgr import LockManager
+from .forget_policy import ForgetPolicy
+from .app import App, ObnamIOError, ObnamSystemError
+from .humanise import humanise_duration, humanise_size, humanise_speed
+from .chunkid_token_map import ChunkIdTokenMap
+from .pathname_excluder import PathnameExcluder
+from .splitpath import split_pathname
 
-from obj_serialiser import serialise_object, deserialise_object
-from bag import Bag, BagIdNotSetError, make_object_id, parse_object_id
-from bag_store import BagStore, serialise_bag, deserialise_bag
-from blob_store import BlobStore
+from .obj_serialiser import serialise_object, deserialise_object
+from .bag import Bag, BagIdNotSetError, make_object_id, parse_object_id
+from .bag_store import BagStore, serialise_bag, deserialise_bag
+from .blob_store import BlobStore
 
-from repo_factory import (
+from .repo_factory import (
     RepositoryFactory,
     UnknownRepositoryFormat,
     UnknownRepositoryFormatWanted)
-from repo_interface import (
+from .repo_interface import (
     RepositoryInterface,
     RepositoryInterfaceTests,
     RepositoryClientAlreadyExists,
@@ -178,7 +179,7 @@ from .delegator import RepositoryDelegator, GenerationId
 # Repository format green-albatross specific modules.
 #
 
-from fmt_ga import (
+from .fmt_ga import (
     RepositoryFormatGA,
     GAClientList,
     GAClient,
@@ -194,17 +195,17 @@ from fmt_ga import (
 # Repository format 6 specific modules.
 #
 
-from metadata import (
+from .metadata import (
     Metadata,
     read_metadata,
     set_metadata,
     SetMetadataError,
     metadata_fields)
-from fmt_6.repo_fmt_6 import RepositoryFormat6
-from fmt_6.repo_tree import RepositoryTree
-from fmt_6.chunklist import ChunkList
-from fmt_6.clientlist import ClientList
-from fmt_6.checksumtree import ChecksumTree
-from fmt_6.clientmetadatatree import ClientMetadataTree
+from .fmt_6.repo_fmt_6 import RepositoryFormat6
+from .fmt_6.repo_tree import RepositoryTree
+from .fmt_6.chunklist import ChunkList
+from .fmt_6.clientlist import ClientList
+from .fmt_6.checksumtree import ChecksumTree
+from .fmt_6.clientmetadatatree import ClientMetadataTree
 
 __all__ = locals()

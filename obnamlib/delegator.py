@@ -23,6 +23,8 @@ class RepositoryDelegator(obnamlib.RepositoryInterface):
 
     '''Implement RepositoryInterface by delegating to other objects.'''
 
+    format = None
+
     def __init__(self, **kwargs):
         self._fs = None
         self._hooks = kwargs['hooks']
@@ -61,6 +63,16 @@ class RepositoryDelegator(obnamlib.RepositoryInterface):
         self._client_finder.set_fs(self._fs)
         self._chunk_store.set_fs(self._fs)
         self._chunk_indexes.set_fs(self._fs)
+
+    #
+    # Repository methods.
+    #
+
+    def init_repo(self):
+        raise NotImplementedError()
+
+    def close(self):
+        raise NotImplementedError()
 
     #
     # Client list methods.

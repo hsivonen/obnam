@@ -1,4 +1,4 @@
-# Copyright 2014  Lars Wirzenius
+# Copyright 2014-2015  Lars Wirzenius
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,4 +16,4 @@
 # =*= License: GPL-3+ =*=
 
 
-import metadata_codec
+import obnamlib.fmt_6.metadata_codec

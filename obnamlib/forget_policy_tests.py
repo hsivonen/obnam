@@ -67,7 +67,7 @@ class ForgetPolicyMatchTests(unittest.TestCase):
 
     def match2(self, spec, times):
         rules = self.fp.parse(spec)
-        return [dt for i, dt in self.fp.match(rules, list(enumerate(times)))]
+        return [dt for _, dt in self.fp.match(rules, list(enumerate(times)))]
 
     def test_hourly_matches(self):
         h0m0 = datetime.datetime(2000, 1, 1, 0, 0)
@@ -122,7 +122,7 @@ class ForgetPolicyMatchTests(unittest.TestCase):
         genlist = list(enumerate([d1h0m0, d1h0m1, d2h0m0, d2h0m1,
                                   d3h0m0, d3h0m1]))
         rules = self.fp.parse('1h,2d')
-        self.assertEqual([dt for genid, dt in self.fp.match(rules, genlist)],
+        self.assertEqual([dt for _, dt in self.fp.match(rules, genlist)],
                          [d2h0m1, d3h0m1])
 
     def test_hourly_and_daily_together_when_only_daily_backups(self):

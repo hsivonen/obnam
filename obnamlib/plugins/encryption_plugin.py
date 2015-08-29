@@ -162,12 +162,13 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
     def remove_from_userkeys(self, repo, toplevel, keyid):
         userkeys = self.read_keyring(repo, toplevel)
         if keyid in userkeys:
-            logging.debug('removing key %s from %s' % (keyid, toplevel))
+            logging.debug('removing key %s from %s', keyid, toplevel)
             userkeys.remove(keyid)
             self.write_keyring(repo, toplevel, userkeys)
         else:
-            logging.debug('unable to remove key %s from %s (not there)' %
-                          (keyid, toplevel))
+            logging.debug(
+                'unable to remove key %s from %s (not there)',
+                keyid, toplevel)
 
     def rewrite_symmetric_key(self, repo, toplevel):
         symmetric_key = self.get_symmetric_key(repo, toplevel)
@@ -231,7 +232,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         if self.quit_if_unencrypted():
             return
         repo = self.app.get_repository_object()
-        keys, tops = self._find_keys_and_toplevels(repo)
+        keys, _ = self._find_keys_and_toplevels(repo)
         for keyid in keys:
             print 'key: %s' % self._get_key_string(keyid)
             for toplevel in keys[keyid]:
@@ -242,7 +243,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         if self.quit_if_unencrypted():
             return
         repo = self.app.get_repository_object()
-        keys, tops = self._find_keys_and_toplevels(repo)
+        _, tops = self._find_keys_and_toplevels(repo)
         for toplevel in tops:
             print 'toplevel: %s' % toplevel
             for keyid in tops[toplevel]:
@@ -284,7 +285,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         repo = self.app.get_repository_object()
         repo.lock_client_list()
         for client_name in args:
-            logging.info('removing client %s' % client_name)
+            logging.info('removing client %s', client_name)
             repo.remove_client(client_name)
         repo.commit_client_list()
         repo.unlock_client_list()

@@ -308,7 +308,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     self.remove_checkpoints()
             self.finish_backup(args)
         except BaseException, e:
-            logging.debug('Handling exception %s' % str(e))
+            logging.debug('Handling exception %s', str(e))
             logging.debug(traceback.format_exc())
             self.unlock_when_error()
             raise
@@ -349,7 +349,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         if self.pretend:
             try:
                 return self.app.get_repository_object()
-            except Exception as e:
+            except Exception:
                 self.progress.error(
                     'Are you using --pretend without an existing '
                     'repository? That does not\n'
@@ -471,8 +471,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     'Attempting to unlock shared trees because of error')
                 self.repo.unlock_chunk_indexes()
         except BaseException, e2:
-            logging.warning(
-                'Error while unlocking due to error: %s' % str(e2))
+            logging.warning('Error while unlocking due to error: %s', str(e2))
             logging.debug(traceback.format_exc())
         else:
             logging.info('Successfully unlocked')
@@ -508,7 +507,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             self.fs.close()
 
     def backup_root(self, root, absroots):
-        logging.info('Backing up root %s' % root)
+        logging.info('Backing up root %s', root)
         self.progress.what('connecting to live data %s' % root)
 
         self.reopen_fs(root)
@@ -525,7 +524,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.root_metadata = self.fs.lstat(absroot)
 
         for pathname, metadata in self.find_files(absroot):
-            logging.info('Backing up %s' % pathname)
+            logging.info('Backing up %s', pathname)
             if not self.pretend:
                 existed = self.repo.file_exists(self.new_generation, pathname)
             try:
@@ -637,7 +636,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
             # details of the old repository class. Should
             # be cleaned up, someday.
             pass
-        except Exception as ee:
+        except (OSError, IOError, obnamlib.ObnamError) as ee:
             msg = (
                 'Error removing partly backed up file %s: %s'
                 % (pathname, repr(ee)))
@@ -729,6 +728,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         exclude = [False]
         self.app.hooks.call(
             'backup-exclude',
+            progress=self.progress,
             fs=self.fs,
             pathname=pathname,
             stat_result=st,
@@ -776,7 +776,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         try:
             old = self.get_metadata_from_generation(gen, pathname)
-        except obnamlib.ObnamError as e:
+        except obnamlib.ObnamError:
             # File does not exist in the previous generation, so it
             # does need to be backed up.
             return True
@@ -828,9 +828,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 metadata = obnamlib.read_metadata(self.fs, root)
             except OSError, e:
                 logging.warning(
-                    'Failed to get metadata for %s: %s: %s' %
-                    (root, e.errno or 0, e.strerror))
-                logging.warning('Using fake metadata instead for %s' % root)
+                    'Failed to get metadata for %s: %s: %s',
+                    root, e.errno or 0, e.strerror)
+                logging.warning('Using fake metadata instead for %s', root)
                 metadata = dummy_metadata
             if not self.pretend:
                 self.add_file_to_generation(root, metadata)
@@ -940,10 +940,9 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                 if data == data2:
                     share(chunkid)
                     return chunkid
-            else:
-                chunkid = put()
-                share(chunkid)
-                return chunkid
+            chunkid = put()
+            share(chunkid)
+            return chunkid
         elif mode == 'fatalist':
             existing = find()
             if existing:

@@ -18,7 +18,6 @@
 import errno
 import fcntl
 import grp
-import logging
 import os
 import pwd
 import tempfile
@@ -26,6 +25,12 @@ import time
 import tracing
 
 import obnamlib
+
+
+# Pylint doesn't see the function defined in _obnam. We silence, for
+# this module only, the no-member warning.
+#
+# pylint: disable=no-member
 
 
 # O_NOATIME is Linux specific:
@@ -184,7 +189,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
         # Try link(2) for creating target file.
         try:
             os.link(tempname, path)
-        except OSError, e:
+        except OSError:
             pass
         else:
             os.remove(tempname)
@@ -198,7 +203,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
                 obnamlib.NEW_FILE_MODE)
             os.close(fd)
             os.rename(tempname, path)
-        except OSError, e:
+        except OSError:
             # Give up.
             os.remove(tempname)
             raise
@@ -288,7 +293,8 @@ class LocalFS(obnamlib.VirtualFileSystem):
     def chmod_symlink(self, pathname, mode):  # pragma: no cover
         tracing.trace('chmod_symlink %s %o', pathname, mode)
         if self.got_lchmod:
-            os.lchmod(self.join(pathname), mode)
+            lchmod = getattr(os, 'lchmod')
+            lchmod(self.join(pathname), mode)
         else:
             self.lstat(pathname)
 
@@ -322,7 +328,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
         os.symlink(existing, self.join(new))
         self.maybe_crash()
 
-    def open(self, pathname, mode):
+    def open(self, pathname, mode, bufsize=None):
         tracing.trace('pathname=%s', pathname)
         tracing.trace('mode=%s', mode)
         f = LocalFSFile(self.join(pathname), mode)
@@ -348,7 +354,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
         tracing.trace('mode=%o', mode)
         os.mknod(self.join(pathname), mode)
 
-    def mkdir(self, pathname):
+    def mkdir(self, pathname, mode=obnamlib.NEW_DIR_MODE):
         tracing.trace('mkdir %s', pathname)
         os.mkdir(self.join(pathname), obnamlib.NEW_DIR_MODE)
         self.maybe_crash()
