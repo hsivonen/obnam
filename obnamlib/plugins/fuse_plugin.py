@@ -32,7 +32,7 @@ except ImportError:
     # this plugin file can be imported. If the module isn't there, the
     # plugin won't work, and it will tell the user it won't work, but
     # at least Obnam won't crash at startup.
-    class Bunch:
+    class Bunch(object):
         def __init__(self, **kwds):
             self.__dict__.update(kwds)
     fuse = Bunch(Fuse=object)
