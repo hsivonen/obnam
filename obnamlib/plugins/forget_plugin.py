@@ -127,7 +127,7 @@ class ForgetPlugin(obnamlib.ObnamPlugin):
         rules = fp.parse(self.app.settings['keep'])
         keeplist = fp.match(rules, genlist)
         keepids = set(genid for genid, dt in keeplist)
-        return [genid for genid, dt in genlist if genid not in keepids]
+        return [genid for genid, _ in genlist if genid not in keepids]
 
     def remove(self, genid):
         if self.app.settings['pretend']:
