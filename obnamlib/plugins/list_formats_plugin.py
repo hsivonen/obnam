@@ -14,12 +14,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import hashlib
-import logging
-import os
-import stat
-import time
-
 import obnamlib
 
 
