@@ -354,7 +354,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
         tracing.trace('mode=%o', mode)
         os.mknod(self.join(pathname), mode)
 
-    def mkdir(self, pathname):
+    def mkdir(self, pathname, mode=obnamlib.NEW_DIR_MODE):
         tracing.trace('mkdir %s', pathname)
         os.mkdir(self.join(pathname), obnamlib.NEW_DIR_MODE)
         self.maybe_crash()

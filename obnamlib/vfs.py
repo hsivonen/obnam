@@ -146,7 +146,7 @@ class VirtualFileSystem(object):
     def isdir(self, pathname):
         '''Is it a directory?'''
 
-    def mkdir(self, pathname):
+    def mkdir(self, pathname, mode=NEW_DIR_MODE):
         '''Create a directory.
 
         Parent directories must already exist.
