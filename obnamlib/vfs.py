@@ -87,12 +87,12 @@ class VirtualFileSystem(object):
         self.baseurl = baseurl
         self.bytes_read = 0
         self.bytes_written = 0
-        logging.debug('VFS: __init__: baseurl=%s' % self.baseurl)
+        logging.debug('VFS: __init__: baseurl=%s', self.baseurl)
 
     def log_stats(self):
         logging.debug(
-            'VFS: baseurl=%s read=%d written=%d' %
-            (self.baseurl, self.bytes_read, self.bytes_written))
+            'VFS: baseurl=%s read=%d written=%d',
+            self.baseurl, self.bytes_read, self.bytes_written)
 
     def connect(self):
         '''Connect to filesystem.'''
@@ -318,7 +318,7 @@ class VirtualFileSystem(object):
         yield dirname, dirst
 
 
-class VfsFactory:
+class VfsFactory(object):
 
     '''Create new instances of VirtualFileSystem.'''
 
@@ -332,7 +332,7 @@ class VfsFactory:
 
     def new(self, url, create=False):
         '''Create a new VFS appropriate for a given URL.'''
-        scheme, netloc, path, params, query, fragment = urlparse.urlparse(url)
+        (scheme, _) = urlparse.urlparse(url)
         if scheme in self.implementations:
             klass, kwargs = self.implementations[scheme]
             return klass(url, create=create, **kwargs)
@@ -516,7 +516,7 @@ class VfsTests(object):  # pragma: no cover
 
     def test_listdir2_returns_plain_strings_only(self):
         self.fs.write_file(u'M\u00E4kel\u00E4'.encode('utf-8'), 'data')
-        names = [name for name, st in self.fs.listdir2('.')]
+        names = [name for name, _ in self.fs.listdir2('.')]
         types = [type(x) for x in names]
         self.assertEqual(types, [str])
 
@@ -737,13 +737,13 @@ class VfsTests(object):  # pragma: no cover
         self.fs.listdir2 = raiser
         result = list(self.fs.scan_tree(self.basepath, log=logerror))
         self.assertEqual(len(result), 1)
-        pathname, st = result[0]
+        pathname, _ = result[0]
         self.assertEqual(pathname, self.basepath)
 
     def test_scan_tree_returns_the_right_stuff(self):
         self.set_up_scan_tree()
         result = list(self.fs.scan_tree(self.basepath))
-        pathnames = [pathname for pathname, st in result]
+        pathnames = [pathname for pathname, _ in result]
         self.assertEqual(sorted(pathnames), sorted(self.pathnames))
 
     def test_scan_tree_filters_away_unwanted(self):
@@ -751,5 +751,5 @@ class VfsTests(object):  # pragma: no cover
             return stat.S_ISDIR(st.st_mode)
         self.set_up_scan_tree()
         result = list(self.fs.scan_tree(self.basepath, ok=ok))
-        pathnames = [pathname for pathname, st in result]
+        pathnames = [pathname for pathname, _ in result]
         self.assertEqual(sorted(pathnames), sorted(self.dirs))
