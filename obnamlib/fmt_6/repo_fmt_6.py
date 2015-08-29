@@ -69,7 +69,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         self._setup_file_keys()
 
     @classmethod
-    def setup_hooks(self, hooks):
+    def setup_hooks(cls, hooks):
         hooks.new('repository-toplevel-init')
         hooks.new_filter('repository-data')
         hooks.new('repository-add-client')
