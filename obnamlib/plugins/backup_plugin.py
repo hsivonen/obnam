@@ -308,7 +308,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
                     self.remove_checkpoints()
             self.finish_backup(args)
         except BaseException, e:
-            logging.debug('Handling exception %s' % str(e))
+            logging.debug('Handling exception %s', str(e))
             logging.debug(traceback.format_exc())
             self.unlock_when_error()
             raise
@@ -349,7 +349,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         if self.pretend:
             try:
                 return self.app.get_repository_object()
-            except Exception as e:
+            except Exception:
                 self.progress.error(
                     'Are you using --pretend without an existing '
                     'repository? That does not\n'
