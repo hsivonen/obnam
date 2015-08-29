@@ -43,11 +43,12 @@ def serialise_object(obj):
 
 def deserialise_object(serialised):
     type_byte = serialised[0]
+
     # We skip decoding of the value length, since we can assume all of
     # the rest of the value is to be decoded.
     value = serialised[1 + _length_size:]
 
-    func = _deserialisers[serialised[0]]
+    func = _deserialisers[type_byte]
     return func(value)
 
 
