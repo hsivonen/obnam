@@ -259,7 +259,6 @@ class ObnamFuse(fuse.Fuse):
                 used_generations.append(gen)
             except obnamlib.ObnamError as e:
                 logging.warning('Ignoring error %s', str(e))
-                pass
 
         assert used_generations
 
