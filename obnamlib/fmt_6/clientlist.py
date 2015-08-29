@@ -99,7 +99,7 @@ class ClientList(obnamlib.RepositoryTree):
         return self.find_client_id(t, client_name)
 
     def add_client(self, client_name):
-        logging.info('Adding client %s' % client_name)
+        logging.info('Adding client %s', client_name)
         self.start_changes()
         if self.find_client_id(self.tree, client_name) is None:
             while True:
@@ -111,10 +111,10 @@ class ClientList(obnamlib.RepositoryTree):
                     break
             key = self.key(client_name, candidate_id, self.CLIENT_NAME)
             self.tree.insert(key, client_name)
-            logging.debug('Client %s has id %s' % (client_name, candidate_id))
+            logging.debug('Client %s has id %s', client_name, candidate_id)
 
     def remove_client(self, client_name):
-        logging.info('Removing client %s' % client_name)
+        logging.info('Removing client %s', client_name)
         self.start_changes()
         client_id = self.find_client_id(self.tree, client_name)
         if client_id is not None:
@@ -132,7 +132,7 @@ class ClientList(obnamlib.RepositoryTree):
         return None
 
     def set_client_keyid(self, client_name, keyid):
-        logging.info('Setting client %s to use key %s' % (client_name, keyid))
+        logging.info('Setting client %s to use key %s', client_name, keyid)
         self.start_changes()
         client_id = self.find_client_id(self.tree, client_name)
         key = self.key(client_name, client_id, self.KEYID)
