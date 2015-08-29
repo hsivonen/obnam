@@ -78,6 +78,7 @@ class StructuredError(Exception):
     '''
 
     def __init__(self, **kwargs):
+        Exception.__init__(self)
         self.kwargs = kwargs
 
     @property
