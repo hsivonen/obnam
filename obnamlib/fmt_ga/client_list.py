@@ -16,7 +16,6 @@
 # =*= License: GPL-3+ =*=
 
 
-import errno
 import os
 import random
 
