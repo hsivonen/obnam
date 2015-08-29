@@ -22,6 +22,8 @@ Version 1.16, released UNRELEASED
   import and fix variable namaes, by Diane Trout. A similar fix was
   also contributed by Mesar Hameed.
 
+* Lukáš Poláček fixed an unlocking problem when GnuPG fails during an
+  Obnam run. The lock should now be removed rather than left behind.
 
 Version 1.15, released 2015-08-19
 ---------------------------------
