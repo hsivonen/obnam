@@ -485,7 +485,7 @@ class GAFileMetadata(object):
     def file_exists(self, filename):
         if filename in self._added_files:
             return True
-        dir_obj, dir_path, basename = self._get_dir_obj(filename)
+        dir_obj, _, basename = self._get_dir_obj(filename)
         return dir_obj and basename in dir_obj.get_file_basenames()
 
     def _get_dir_obj(self, filename):
@@ -538,7 +538,7 @@ class GAFileMetadata(object):
     def get_file_key(self, filename, key):
         if filename in self._added_files:
             return self._added_files.get_file_key(filename, key)
-        dir_obj, dir_path, basename = self._get_dir_obj(filename)
+        dir_obj, _, basename = self._get_dir_obj(filename)
         if dir_obj:
             return dir_obj.get_file_key(basename, key)
         else:
@@ -549,7 +549,7 @@ class GAFileMetadata(object):
             return self._make_metadata(
                 lambda key: self._added_files.get_file_key(filename, key))
         else:
-            dir_obj, dir_path, basename = self._get_dir_obj(filename)
+            dir_obj, _, basename = self._get_dir_obj(filename)
             # We've already verifed the file exists, so we don't need
             # to handle the case where dir_obj is None.
             assert dir_obj is not None
@@ -653,7 +653,7 @@ class GAFileMetadata(object):
             chunk_ids = self._added_files.get_file_chunk_ids(filename)
             return chunk_ids
 
-        dir_obj, dir_path, basename = self._get_dir_obj(filename)
+        dir_obj, _, basename = self._get_dir_obj(filename)
         if dir_obj:
             chunk_ids = dir_obj.get_file_chunk_ids(basename)
             return chunk_ids
