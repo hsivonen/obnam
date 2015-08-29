@@ -1,3 +1,10 @@
+obnam (1.16-1) UNRELEASED; urgency=medium
+
+  * New upstream release.
+    * Fix "NameError: global name 're' is not defined" (Closes: #796950)
+
+ -- Lars Wirzenius <liw@liw.fi>  Sat, 29 Aug 2015 14:36:02 +0300
+
 obnam (1.15-1) unstable; urgency=medium
 
   * Fix "obnam backup fails with NameError: global name 'netloc' is not
