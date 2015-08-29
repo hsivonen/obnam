@@ -357,8 +357,6 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
             old_metadata = self.get_metadata(gen_id, filename)
         except KeyError:
             old_metadata = None
-        else:  # pragma: no cover
-            old = obnamlib.fmt_6.metadata_codec.decode_metadata(old_metadata)
 
         metadata = obnamlib.fmt_6.metadata_codec.decode_metadata(
             encoded_metadata)
