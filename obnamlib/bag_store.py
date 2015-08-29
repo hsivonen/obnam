@@ -16,7 +16,6 @@
 # =*= License: GPL-3+ =*=
 
 
-import errno
 import os
 import random
 
@@ -56,12 +55,12 @@ class BagStore(object):
         filename = self._make_bag_filename(bag_id)
         try:
             st = self._fs.lstat(filename)
-        except (IOError, OSError) as e:  # pragma: no cover
+        except (IOError, OSError):  # pragma: no cover
             return False
         return st.st_size > 0
 
     def get_bag_ids(self):
-        for pathname, st in self._fs.scan_tree(self._dirname):
+        for pathname, _ in self._fs.scan_tree(self._dirname):
             if self._is_bag_filename(pathname):
                 yield self._get_bag_id_from_filename(pathname)
 
