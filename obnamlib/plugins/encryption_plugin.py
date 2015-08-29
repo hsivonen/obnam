@@ -232,7 +232,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         if self.quit_if_unencrypted():
             return
         repo = self.app.get_repository_object()
-        keys, tops = self._find_keys_and_toplevels(repo)
+        keys, _ = self._find_keys_and_toplevels(repo)
         for keyid in keys:
             print 'key: %s' % self._get_key_string(keyid)
             for toplevel in keys[keyid]:
@@ -243,7 +243,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         if self.quit_if_unencrypted():
             return
         repo = self.app.get_repository_object()
-        keys, tops = self._find_keys_and_toplevels(repo)
+        _, tops = self._find_keys_and_toplevels(repo)
         for toplevel in tops:
             print 'toplevel: %s' % toplevel
             for keyid in tops[toplevel]:
