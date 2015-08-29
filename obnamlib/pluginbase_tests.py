@@ -34,5 +34,8 @@ class ObnamPluginTests(unittest.TestCase):
     def test_has_an_app(self):
         self.assertEqual(self.plugin.app, self.fakeapp)
 
+    def test_enable_is_not_implemented(self):
+        self.assertRaises(NotImplementedError, self.plugin.enable)
+
     def test_disable_is_implemented(self):
         self.plugin.disable()

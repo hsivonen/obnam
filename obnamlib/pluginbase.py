@@ -24,5 +24,8 @@ class ObnamPlugin(cliapp.Plugin):
     def __init__(self, app):
         self.app = app
 
+    def enable(self):
+        raise NotImplementedError()
+
     def disable(self):
         pass
