@@ -95,10 +95,10 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         if num_randomly == 0:
             self.app.ts['total'] = \
                 self.repo.get_generation_key(
-                gen_id, obnamlib.REPO_GENERATION_FILE_COUNT)
+                    gen_id, obnamlib.REPO_GENERATION_FILE_COUNT)
             self.app.ts['total_bytes'] = \
                 self.repo.get_generation_key(
-                gen_id, obnamlib.REPO_GENERATION_TOTAL_DATA)
+                    gen_id, obnamlib.REPO_GENERATION_TOTAL_DATA)
             for filename in self.walk(gen_id, args):
                 self.app.ts['filename'] = filename
                 try:
