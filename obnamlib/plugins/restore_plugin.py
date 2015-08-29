@@ -344,49 +344,12 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             self.fs.mknod('./' + filename, metadata.st_mode)
 
     def report_stats(self):
-        size_table = [
-            (1024**4, 'TiB'),
-            (1024**3, 'GiB'),
-            (1024**2, 'MiB'),
-            (1024**1, 'KiB'),
-            (0, 'B')
-        ]
-
-        for size_base, size_unit in size_table:
-            if self.downloaded_bytes >= size_base:
-                if size_base > 0:
-                    size_amount = (float(self.downloaded_bytes) /
-                                   float(size_base))
-                else:
-                    size_amount = float(self.downloaded_bytes)
-                break
-
-        speed_table = [
-            (1024**3, 'GiB/s'),
-            (1024**2, 'MiB/s'),
-            (1024**1, 'KiB/s'),
-            (0, 'B/s')
-        ]
         duration = time.time() - self.started
-        speed = float(self.downloaded_bytes) / duration
-        for speed_base, speed_unit in speed_table:
-            if speed >= speed_base:
-                if speed_base > 0:
-                    speed_amount = speed / speed_base
-                else:
-                    speed_amount = speed
-                break
-
-        duration_string = ''
-        seconds = duration
-        if seconds >= 3600:
-            duration_string += '%dh' % int(seconds/3600)
-            seconds %= 3600
-        if seconds >= 60:
-            duration_string += '%dm' % int(seconds/60)
-            seconds %= 60
-        if seconds > 0:
-            duration_string += '%ds' % round(seconds)
+        size_amount, size_unit = obnamlib.humanise_size(
+            self.downloaded_bytes)
+        speed_amount, speed_unit = obnamlib.humanise_speed(
+            self.downloaded_bytes, duration)
+        duration_string = obnamlib.humanise_duration(duration)
 
         logging.info('Restore performance statistics:')
         logging.info('* files restored: %s', self.file_count)
