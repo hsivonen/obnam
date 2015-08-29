@@ -348,7 +348,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
         def find_gens_to_keep():
             keep = []
             for gen_id in self.get_client_generation_ids(client_name):
-                a, gen_number = self._unpack_gen_id(gen_id)
+                _, gen_number = self._unpack_gen_id(gen_id)
                 if gen_number not in remove_gen_nos:
                     keep.append(gen_number)
             return keep
