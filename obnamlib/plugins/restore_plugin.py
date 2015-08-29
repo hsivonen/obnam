@@ -389,11 +389,12 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             duration_string += '%ds' % round(seconds)
 
         logging.info('Restore performance statistics:')
-        logging.info('* files restored: %s' % self.file_count)
-        logging.info('* downloaded data: %s bytes (%s %s)' %
-                     (self.downloaded_bytes, size_amount, size_unit))
-        logging.info('* duration: %s s' % duration)
-        logging.info('* average speed: %s %s' % (speed_amount, speed_unit))
+        logging.info('* files restored: %s', self.file_count)
+        logging.info(
+            '* downloaded data: %s bytes (%s %s)',
+            self.downloaded_bytes, size_amount, size_unit)
+        logging.info('* duration: %s s', duration)
+        logging.info('* average speed: %s %s', speed_amount, speed_unit)
         self.app.ts.notify(
             'Restored %d files, '
             'downloaded %.1f %s in %s at %.1f %s average speed' %
