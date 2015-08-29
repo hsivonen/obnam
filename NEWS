@@ -19,7 +19,8 @@ Version 1.16, released UNRELEASED
   gets run automatically by the test suite.
 
   This includes a fix in `exclude_pathnames_plugin.py` to add a missing
-  import and fix variable namaes, by Diane Trout.
+  import and fix variable namaes, by Diane Trout. A similar fix was
+  also contributed by Mesar Hameed.
 
 
 Version 1.15, released 2015-08-19
