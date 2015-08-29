@@ -402,14 +402,6 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         file_id = self.get_file_id(self.tree, filename)
         genid = self.get_generation_id(self.tree)
 
-        try:
-            encoded_metadata = self.get_metadata(genid, filename)
-        except KeyError:
-            pass
-        else:
-            metadata = obnamlib.fmt_6.metadata_codec.decode_metadata(
-                encoded_metadata)
-
         # Remove any children.
         minkey = self.fskey(file_id, self.DIR_CONTENTS, 0)
         maxkey = self.fskey(file_id, self.DIR_CONTENTS, obnamlib.MAX_ID)
