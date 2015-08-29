@@ -245,7 +245,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
 
     def _connect_paramiko(self):
         remote = (self.host, self.port or 22)
-        logging.debug('connect_paramiko: host=%s port=%s', remote)
+        logging.debug('connect_paramiko: host=%s port=%s', *remote)
         self.transport = paramiko.Transport(remote)
         self.transport.connect()
         logging.debug('connect_paramiko: connected')
