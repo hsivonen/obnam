@@ -231,7 +231,7 @@ class VirtualFileSystem(object):
     def symlink(self, source, destination):
         '''Like os.symlink.'''
 
-    def open(self, pathname, mode):
+    def open(self, pathname, mode, bufsize=None):
         '''Open a file, like the builtin open() or file() function.
 
         The return value is a file object like the ones returned

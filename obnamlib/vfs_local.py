@@ -328,7 +328,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
         os.symlink(existing, self.join(new))
         self.maybe_crash()
 
-    def open(self, pathname, mode):
+    def open(self, pathname, mode, bufsize=None):
         tracing.trace('pathname=%s', pathname)
         tracing.trace('mode=%s', mode)
         f = LocalFSFile(self.join(pathname), mode)
