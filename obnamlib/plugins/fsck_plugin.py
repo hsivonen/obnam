@@ -31,7 +31,7 @@ class CheckChunk(WorkItem):
         self.name = 'chunk %s' % chunkid
 
     def do(self):
-        logging.debug('Checking chunk %s' % self.chunkid)
+        logging.debug('Checking chunk %s', self.chunkid)
         if not self.repo.has_chunk(self.chunkid):
             self.error('chunk %s does not exist' % self.chunkid)
         else:
@@ -55,7 +55,7 @@ class CheckFileChecksum(WorkItem):
         self.checksummer = checksummer
 
     def do(self):
-        logging.debug('Checking whole-file checksum for %s' % self.filename)
+        logging.debug('Checking whole-file checksum for %s', self.filename)
         if self.correct != self.checksummer.digest():
             self.error('%s whole-file checksum mismatch' % self.name)
 
@@ -69,8 +69,9 @@ class CheckFile(WorkItem):
         self.name = 'file %s:%s:%s' % (client_name, genid, filename)
 
     def do(self):
-        logging.debug('Checking client=%s genid=%s filename=%s' %
-                      (self.client_name, self.genid, self.filename))
+        logging.debug(
+            'Checking client=%s genid=%s filename=%s',
+            self.client_name, self.genid, self.filename)
         mode = self.repo.get_file_key(
             self.genid, self.filename, obnamlib.REPO_FILE_MODE)
         if stat.S_ISREG(mode) and not self.settings['fsck-ignore-chunks']:
@@ -93,8 +94,9 @@ class CheckDirectory(WorkItem):
         self.name = 'dir %s:%s:%s' % (client_name, genid, dirname)
 
     def do(self):
-        logging.debug('Checking client=%s genid=%s dirname=%s' %
-                      (self.client_name, self.genid, self.dirname))
+        logging.debug(
+            'Checking client=%s genid=%s dirname=%s',
+            self.client_name, self.genid, self.dirname)
         for pathname in self.repo.get_file_children(self.genid, self.dirname):
             mode = self.repo.get_file_key(
                 self.genid, pathname, obnamlib.REPO_FILE_MODE)
@@ -112,8 +114,8 @@ class CheckGeneration(WorkItem):
         self.name = 'generation %s:%s' % (client_name, genid)
 
     def do(self):
-        logging.debug('Checking client=%s genid=%s' %
-                      (self.client_name, self.genid))
+        logging.debug(
+            'Checking client=%s genid=%s', self.client_name, self.genid)
 
         started = self.repo.get_generation_key(
             self.genid, obnamlib.REPO_GENERATION_STARTED)
@@ -151,8 +153,8 @@ class CheckGenerationIdsAreDifferent(WorkItem):
         self.genids = list(genids)
 
     def do(self):
-        logging.debug('Checking genid uniqueness for client=%s' %
-                      self.client_name)
+        logging.debug(
+            'Checking genid uniqueness for client=%s', self.client_name)
         done = set()
         while self.genids:
             genid = self.genids.pop()
@@ -169,7 +171,7 @@ class CheckClient(WorkItem):
         self.name = 'client %s' % client_name
 
     def do(self):
-        logging.debug('Checking client=%s' % self.client_name)
+        logging.debug('Checking client=%s', self.client_name)
         genids = self.repo.get_client_generation_ids(self.client_name)
         yield CheckGenerationIdsAreDifferent(self.client_name, genids)
         if self.settings['fsck-skip-generations']:
@@ -299,7 +301,7 @@ class FsckPlugin(obnamlib.ObnamPlugin):
     def fsck(self, args):
         '''Verify internal consistency of backup repository.'''
         self.app.settings.require('repository')
-        logging.debug('fsck on %s' % self.app.settings['repository'])
+        logging.debug('fsck on %s', self.app.settings['repository'])
 
         rm_unused_chunks = self.app.settings['fsck-rm-unused'] \
             or self.app.settings['fsck-fix']
@@ -324,7 +326,7 @@ class FsckPlugin(obnamlib.ObnamPlugin):
 
         while self.work_items:
             work = self.work_items.pop(0)
-            logging.debug('doing: %s' % str(work))
+            logging.debug('doing: %s', str(work))
             self.app.ts['item'] = work
             self.app.ts.increase('this_item', 1)
             pos = 0
@@ -347,7 +349,7 @@ class FsckPlugin(obnamlib.ObnamPlugin):
             sys.exit(1)
 
     def add_item(self, work, append=False, pos=0):
-        logging.debug('adding: %s' % str(work))
+        logging.debug('adding: %s', str(work))
         work.warning = self.warning
         work.error = self.error
         work.repo = self.repo
