@@ -250,8 +250,6 @@ class ObnamFuse(fuse.Fuse):
             path = '/' + genspec
             try:
                 genstat = self.get_stat_in_generation(path)
-                start = self.obnam.repo.get_generation_key(
-                    gen, obnamlib.REPO_GENERATION_STARTED)
                 end = self.obnam.repo.get_generation_key(
                     gen, obnamlib.REPO_GENERATION_ENDED)
                 genstat.st_ctime = genstat.st_mtime = end
