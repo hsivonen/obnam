@@ -16,4 +16,4 @@
 # =*= License: GPL-3+ =*=
 
 
-import metadata_codec
+import obnamlib.fmt_6.metadata_codec
