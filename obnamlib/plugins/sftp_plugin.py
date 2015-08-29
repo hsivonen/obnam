@@ -176,8 +176,8 @@ class SftpFS(obnamlib.VirtualFileSystem):
 
     def log_stats(self):
         obnamlib.VirtualFileSystem.log_stats(self)
-        logging.info('VFS: baseurl=%s roundtrips=%s' %
-                     (self.baseurl, self._roundtrips))
+        logging.info(
+            'VFS: baseurl=%s roundtrips=%s', self.baseurl, self._roundtrips)
 
     def _to_string(self, str_or_unicode):
         if type(str_or_unicode) is unicode:
@@ -230,7 +230,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
 
         # prepend the executable to the argument list
         args.insert(0, executable)
-        logging.debug('executing openssh: %s' % args)
+        logging.debug('executing openssh: %s', args)
         try:
             proc = subprocess.Popen(args,
                                     stdin=subprocess.PIPE,
@@ -245,8 +245,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
 
     def _connect_paramiko(self):
         remote = (self.host, self.port or 22)
-        logging.debug(
-            'connect_paramiko: host=%s port=%s' % remote)
+        logging.debug('connect_paramiko: host=%s port=%s', remote)
         self.transport = paramiko.Transport(remote)
         self.transport.connect()
         logging.debug('connect_paramiko: connected')
@@ -263,7 +262,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
         logging.debug('connect_paramiko: end')
 
     def _check_host_key(self, hostname):
-        logging.debug('checking ssh host key for %s' % hostname)
+        logging.debug('checking ssh host key for %s', hostname)
 
         offered_key = self.transport.get_remote_server_key()
 
@@ -274,8 +273,8 @@ class SftpFS(obnamlib.VirtualFileSystem):
         if known_keys is None:
             if self.settings['ssh-host-keys-check'] == 'yes':
                 raise NoHostKeyError(hostname=hostname)
-            logging.warning('No known host keys for %s; accepting offered key'
-                            % hostname)
+            logging.warning(
+                'No known host keys for %s; accepting offered key', hostname)
             return
 
         offered_type = offered_key.get_name()
@@ -283,14 +282,15 @@ class SftpFS(obnamlib.VirtualFileSystem):
             if self.settings['ssh-host-keys-check'] == 'yes':
                 raise NoHostKeyOfWantedTypeError(
                     key_type=offered_type, hostname=hostname)
-            logging.warning('No known host key of type %s for %s; accepting '
-                            'offered key' % (offered_type, hostname))
+            logging.warning(
+                'No known host key of type %s for %s; accepting offered key',
+                offered_type, hostname)
 
         known_key = known_keys[offered_type]
         if offered_key != known_key:
             raise WrongHostKeyError(hostname=hostname)
 
-        logging.debug('Host key for %s OK' % hostname)
+        logging.debug('Host key for %s OK', hostname)
 
     def _authenticate(self, username):
         if not username:
@@ -374,7 +374,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
         if self.sftp:
             if create:
                 self._create_root_if_missing()
-            logging.debug('chdir to %s' % path)
+            logging.debug('chdir to %s', path)
             self.sftp.chdir(self._initial_dir)
             self.sftp.chdir(path)
 
@@ -536,7 +536,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
     def lchown(self, pathname, uid, gid):
         self._delay()
         if stat.S_ISLNK(self.lstat(pathname).st_mode):
-            logging.warning('NOT changing ownership of symlink %s' % pathname)
+            logging.warning('NOT changing ownership of symlink %s', pathname)
         else:
             self.sftp.chown(pathname, uid, gid)
 
