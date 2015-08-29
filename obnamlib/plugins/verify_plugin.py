@@ -127,7 +127,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
                     filenames.append(filename)
 
             chosen = []
-            for i in range(min(num_randomly, len(filenames))):
+            for _ in range(min(num_randomly, len(filenames))):
                 filename = random.choice(filenames)
                 filenames.remove(filename)
                 chosen.append(filename)
@@ -221,7 +221,7 @@ class VerifyPlugin(obnamlib.ObnamPlugin):
         '''
 
         for arg in args:
-            scheme, netloc, path, query, fragment = urlparse.urlsplit(arg)
+            _, _, path, _, _ = urlparse.urlsplit(arg)
             arg = os.path.normpath(path)
             for x in self.repo.walk_generation(gen_id, arg):
                 yield x
