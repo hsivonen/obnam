@@ -18,8 +18,6 @@
 
 import os
 
-import tracing
-
 import obnamlib
 
 
