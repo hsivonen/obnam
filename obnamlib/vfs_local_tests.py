@@ -75,7 +75,7 @@ class XAttrTests(unittest.TestCase):
         # attribute with the command line tool.
 
         try:
-            exitcode, out, err = cliapp.runcmd_unchecked(
+            exitcode, _, _ = cliapp.runcmd_unchecked(
                 ['setfattr', '-n', 'user.foo', 'bar', self.other])
         except OSError:
             # Either xattr aren't supported, or setfattr isn't
