@@ -334,7 +334,7 @@ class RepositoryInterface(object):
     # Operations on the repository itself.
 
     @classmethod
-    def setup_hooks(self, hooks):  # pragma: no cover
+    def setup_hooks(cls, hooks):  # pragma: no cover
         '''Create any hooks for this repository format.
 
         Note that this is a class method.
@@ -1455,7 +1455,7 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
     def test_unlocking_client_removes_created_generation(self):
         self.setup_client()
         self.repo.lock_client('fooclient')
-        new_id = self.repo.create_generation('fooclient')
+        self.repo.create_generation('fooclient')
         self.repo.unlock_client('fooclient')
         self.assertEqual(self.repo.get_client_generation_ids('fooclient'), [])
 
@@ -1615,7 +1615,7 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
         self.repo.commit_client('fooclient')
         self.repo.unlock_client('fooclient')
         self.repo.lock_client('fooclient')
-        gen_id_2 = self.repo.create_generation('fooclient')
+        self.repo.create_generation('fooclient')
         genspec = self.repo.make_generation_spec(gen_id)
         self.repo.remove_generation(gen_id)
         self.assertRaises(
@@ -1675,7 +1675,7 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
         self.repo.unlock_client('fooclient')
 
         self.repo.lock_client('fooclient')
-        gen_id_2 = self.repo.create_generation('fooclient')
+        self.repo.create_generation('fooclient')
         self.repo.remove_file(gen_id, '/foo/bar')
         self.repo.unlock_client('fooclient')
 
