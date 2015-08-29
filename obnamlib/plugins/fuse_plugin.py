@@ -98,9 +98,8 @@ class ObnamFuseFile(object):
         if flags & self.write_flags:
             raise IOError(errno.EROFS, 'Read only filesystem')
 
-        if path == '/.pid':
-            self.read = self.read_pid
-            self.release = self.release_pid
+        self.reading_pid = path == '/.pid'
+        if self.reading_pid:
             return
 
         try:
@@ -112,6 +111,18 @@ class ObnamFuseFile(object):
         # if not a regular file return EINVAL
         if not stat.S_ISREG(self.metadata.st_mode):
             raise IOError(errno.EINVAL, 'Invalid argument')
+
+    def read(self, length, offset):
+        if self.reading_pid:
+            return self.read_pid(length, offset)
+        else:
+            return self.read_data(length, offset)
+
+    def release(self, flags):
+        if self.reading_pid:
+            return self.release_pid(flags)
+        else:
+            return self.release_data(flags)
 
     def read_pid(self, length, offset):
         tracing.trace('length=%r', length)
@@ -130,7 +141,7 @@ class ObnamFuseFile(object):
         tracing.trace('called')
         return self.fuse_fs.getattr(self.path)
 
-    def read(self, length, offset):
+    def read_data(self, length, offset):
         tracing.trace('self.path=%r', self.path)
         tracing.trace('length=%r', length)
         tracing.trace('offset=%r', offset)
@@ -185,7 +196,7 @@ class ObnamFuseFile(object):
 
         return ''.join(output)
 
-    def release(self, flags):
+    def release_data(self, flags):
         tracing.trace('flags=%r', flags)
         return 0
 
