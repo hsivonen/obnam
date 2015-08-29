@@ -208,7 +208,7 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
     def _lookup_int(self, tree, key):
         try:
             return struct.unpack('!Q', tree.lookup(key))[0]
-        except:
+        except KeyError:
             return None
 
     def _insert_int(self, tree, key, value):
