@@ -18,7 +18,6 @@
 import errno
 import fcntl
 import grp
-import logging
 import os
 import pwd
 import tempfile
@@ -190,7 +189,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
         # Try link(2) for creating target file.
         try:
             os.link(tempname, path)
-        except OSError, e:
+        except OSError:
             pass
         else:
             os.remove(tempname)
@@ -204,7 +203,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
                 obnamlib.NEW_FILE_MODE)
             os.close(fd)
             os.rename(tempname, path)
-        except OSError, e:
+        except OSError:
             # Give up.
             os.remove(tempname)
             raise
