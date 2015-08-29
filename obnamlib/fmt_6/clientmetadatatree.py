@@ -358,9 +358,6 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
         except KeyError:
             old_metadata = None
 
-        metadata = obnamlib.fmt_6.metadata_codec.decode_metadata(
-            encoded_metadata)
-
         if encoded_metadata != old_metadata:
             tracing.trace('new or changed metadata')
             self.set_metadata(filename, encoded_metadata)
