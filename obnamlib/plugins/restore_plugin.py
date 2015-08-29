@@ -124,11 +124,11 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         self.app.settings.require('generation')
         self.app.settings.require('to')
 
-        logging.debug('restoring generation %s' %
-                      self.app.settings['generation'])
-        logging.debug('restoring to %s' % self.app.settings['to'])
+        logging.debug(
+            'restoring generation %s', self.app.settings['generation'])
+        logging.debug('restoring to %s', self.app.settings['to'])
 
-        logging.debug('restoring what: %s' % repr(args))
+        logging.debug('restoring what: %s', repr(args))
         if not args:
             logging.debug('no args given, so restoring everything')
             args = ['/']
@@ -239,7 +239,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             self.errors = True
 
     def restore_dir(self, gen, root, metadata):
-        logging.debug('restoring dir %s' % root)
+        logging.debug('restoring dir %s', root)
         if self.write_ok:
             if not self.fs.exists('./' + root):
                 self.fs.mkdir('./' + root)
@@ -247,13 +247,13 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             'after recursing through %s' % repr(root))
 
     def restore_hardlink(self, filename, link, metadata):
-        logging.debug('restoring hardlink %s to %s' % (filename, link))
+        logging.debug('restoring hardlink %s to %s', filename, link)
         if self.write_ok:
             self.fs.link('./' + link, './' + filename)
             self.hardlinks.forget(metadata)
 
     def restore_symlink(self, gen, filename, metadata):
-        logging.debug('restoring symlink %s' % filename)
+        logging.debug('restoring symlink %s', filename)
 
     def restore_first_link(self, gen, filename, metadata):
         if stat.S_ISREG(metadata.st_mode):
@@ -271,7 +271,7 @@ class RestorePlugin(obnamlib.ObnamPlugin):
             self.app.ts.notify(msg)
 
     def restore_regular_file(self, gen, filename, metadata):
-        logging.debug('restoring regular %s' % filename)
+        logging.debug('restoring regular %s', filename)
         if self.write_ok:
             f = self.fs.open('./' + filename, 'wb')
             summer = hashlib.md5()
@@ -329,17 +329,17 @@ class RestorePlugin(obnamlib.ObnamPlugin):
         pass
 
     def restore_fifo(self, gen, filename, metadata):
-        logging.debug('restoring fifo %s' % filename)
+        logging.debug('restoring fifo %s', filename)
         if self.write_ok:
             self.fs.mknod('./' + filename, metadata.st_mode)
 
     def restore_socket(self, gen, filename, metadata):
-        logging.debug('restoring socket %s' % filename)
+        logging.debug('restoring socket %s', filename)
         if self.write_ok:
             self.fs.mknod('./' + filename, metadata.st_mode)
 
     def restore_device(self, gen, filename, metadata):
-        logging.debug('restoring device %s' % filename)
+        logging.debug('restoring device %s', filename)
         if self.write_ok:
             self.fs.mknod('./' + filename, metadata.st_mode)
 
