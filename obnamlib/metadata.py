@@ -33,7 +33,7 @@ metadata_verify_fields = (
     'xattr',
 )
 metadata_fields = metadata_verify_fields + (
-    'st_blocks', 'st_dev', 'st_gid', 'st_ino',  'st_atime_sec',
+    'st_blocks', 'st_dev', 'st_gid', 'st_ino', 'st_atime_sec',
     'st_atime_nsec', 'md5',
 )
 
