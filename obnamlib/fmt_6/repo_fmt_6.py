@@ -709,7 +709,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
             self._fs, self._node_size, self._upload_queue_size,
             self._lru_size, self)
         self._chunksums = obnamlib.ChecksumTree(
-            self._fs, 'chunksums',  len(self._checksum('')), self._node_size,
+            self._fs, 'chunksums', len(self._checksum('')), self._node_size,
             self._upload_queue_size, self._lru_size, self)
 
     def _chunk_index_dirs_to_lock(self):
