@@ -18,6 +18,10 @@ Version 1.16, released UNRELEASED
   and other minor bugs and style issues found by pylint. Pylint now
   gets run automatically by the test suite.
 
+  This includes a fix in `exclude_pathnames_plugin.py` to add a missing
+  import and fix variable namaes, by Diane Trout.
+
+
 Version 1.15, released 2015-08-19
 ---------------------------------
 
