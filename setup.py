@@ -191,7 +191,8 @@ class Check(Command):
         print "run unit tests"
         runcmd(['python', '-m', 'CoverageTestRunner',
                 '--ignore-missing-from=without-tests'])
-        os.remove('.coverage')
+        if os.path.exists('.coverage'):
+            os.remove('.coverage')
 
     def run_yarn(self):
         for repo_format in self.get_wanted_formats():
