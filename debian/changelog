@@ -1,10 +1,10 @@
-obnam (1.16-1) UNRELEASED; urgency=medium
+obnam (1.16-1) unstable; urgency=medium
 
   * New upstream release.
     * Fix "NameError: global name 're' is not defined" (Closes: #796950)
     * Fix "NameError: global name 'netloc' is not defined" (Closes: #796139)
 
- -- Lars Wirzenius <liw@liw.fi>  Sat, 29 Aug 2015 14:36:02 +0300
+ -- Lars Wirzenius <liw@liw.fi>  Sun, 06 Sep 2015 16:25:28 +0300
 
 obnam (1.15-1) unstable; urgency=medium
 
