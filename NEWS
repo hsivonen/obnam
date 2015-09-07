@@ -8,6 +8,13 @@ development, called `green-albatross`. It is **NOT** meant for real
 use. It is likely to change in incompatible ways without warning. Do
 not use it unless you're willing to lose your backup.
 
+Version 1.17, released UNRELEASED
+---------------------------------
+
+* Lukáš Poláček added the `--fsck-skip-checksums` setting to
+  greatly speed up `obnam fsck`.
+
+
 Version 1.16, released 2015-09-06
 ---------------------------------
 
