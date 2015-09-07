@@ -34,7 +34,7 @@ class CheckChunk(WorkItem):
         logging.debug('Checking chunk %s', self.chunkid)
         if not self.repo.has_chunk(self.chunkid):
             self.error('chunk %s does not exist' % self.chunkid)
-        else:
+        elif not self.settings['fsck-skip-checksums']:
             data = self.repo.get_chunk_content(self.chunkid)
             self.checksummer.update(data)
 
@@ -79,10 +79,11 @@ class CheckFile(WorkItem):
             checksummer = hashlib.md5()
             for chunkid in chunkids:
                 yield CheckChunk(chunkid, checksummer)
-            md5 = self.repo.get_file_key(
-                self.genid, self.filename, obnamlib.REPO_FILE_MD5)
-            yield CheckFileChecksum(
-                self.name, md5, chunkids, checksummer)
+            if not self.settings['fsck-skip-checksums']:
+                md5 = self.repo.get_file_key(
+                    self.genid, self.filename, obnamlib.REPO_FILE_MD5)
+                yield CheckFileChecksum(
+                    self.name, md5, chunkids, checksummer)
 
 
 class CheckDirectory(WorkItem):
@@ -289,6 +290,11 @@ class FsckPlugin(obnamlib.ObnamPlugin):
         self.app.settings.boolean(
             ['fsck-skip-shared-b-trees'],
             'do not check shared B-trees',
+            group=group)
+
+        self.app.settings.boolean(
+            ['fsck-skip-checksums'],
+            'do not check checksums of files',
             group=group)
 
     def configure_ttystatus(self):
