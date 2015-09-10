@@ -460,16 +460,8 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.open_or_reopen_fs(self.fs.reinit, root_url)
 
     def open_or_reopen_fs(self, func, root_url):
-        scheme, netloc, path, params, query, fragment = \
-            urlparse.urlparse(root_url)
-
         try:
             func(root_url)
-            if not self.fs.isdir(path):
-                parent_path = os.path.dirname(path)
-                parent_url = urlparse.urlunparse(
-                    (scheme, netloc, parent_path, params, query, fragment))
-                self.fs.reinit(parent_url)
         except OSError as e:
             if e.errno == errno.ENOENT:
                 raise BackupRootDoesNotExist(root=root_url)
