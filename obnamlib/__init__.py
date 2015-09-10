@@ -175,6 +175,8 @@ from .repo_interface import (
 
 from .delegator import RepositoryDelegator, GenerationId
 
+from .backup_progress import BackupProgress
+
 
 #
 # Repository format green-albatross specific modules.
