@@ -44,7 +44,7 @@ class MallocError(obnamlib.ObnamError):
 
 class RootIsNotADirectory(obnamlib.ObnamError):
 
-    msg = '{baserurl} is not a directory, but a VFS root must be a directory'
+    msg = '{baseurl} is not a directory, but a VFS root must be a directory'
 
 
 class LocalFSFile(file):
