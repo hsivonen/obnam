@@ -623,7 +623,7 @@ fusermount -u my-fuse
 .SH "SEE ALSO"
 .B obnam
 comes with a manual in HTML and PDF forms.
-See 
+See
 .I /usr/share/doc/obnam
 if you have Obnam installed system-wide,
 or in the subdirectory
