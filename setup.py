@@ -115,7 +115,11 @@ class CleanMore(clean):
         self.remove_pyc('obnamlib')
         self.remove_pyc('test-plugins')
         if os.path.isdir('build'):
-            shutil.rmtree('build')
+            if os.path.islink('build'):
+                for path in os.listdir('build'):
+                    shutil.rmtree('build/' + path)
+            else:
+                shutil.rmtree('build')
 
     def remove_pyc(self, rootdir):
         for dirname, subdirs, basenames in os.walk(rootdir):
