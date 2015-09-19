@@ -334,38 +334,17 @@ class SftpFS(obnamlib.VirtualFileSystem):
 
     @ioerror_to_oserror
     def reinit(self, baseurl, create=False):
-        scheme, netloc, path, _, _ = urlparse.urlsplit(baseurl)
+        p = scheme, _, path, _, _ = urlparse.urlsplit(baseurl)
 
         if scheme != 'sftp':
             raise WrongURLSchemeError(url=baseurl)
 
-        if '@' in netloc:
-            user, netloc = netloc.split('@', 1)
-        else:
-            user = None
-
-        if ':' in netloc:
-            host, port = netloc.split(':', 1)
-            if port == '':
-                port = None
-            else:
-                try:
-                    port = int(port)
-                except ValueError, e:
-                    exc = InvalidPortError(
-                        port=port, url=baseurl, error=str(e))
-                    logging.error(str(exc))
-                    raise exc
-        else:
-            host = netloc
-            port = None
-
         if path.startswith('/~/'):
             path = path[3:]
 
-        self.host = host
-        self.port = port
-        self.user = user
+        self.host = p.hostname
+        self.port = p.port
+        self.user = p.username
         self.path = path
         self.create_path_if_missing = create
 
