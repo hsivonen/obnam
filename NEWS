@@ -8,6 +8,14 @@ development, called `green-albatross`. It is **NOT** meant for real
 use. It is likely to change in incompatible ways without warning. Do
 not use it unless you're willing to lose your backup.
 
+Version 1.18, released UNRELEASED
+---------------------------------
+
+* William Boughton fixed parsing for sftp URLs with IPv6 addresses.
+  Previously, `sftp://[::1]` would be interpreted by Obnam as an
+  address `[` followed by the port `:1]`, but now it is correctly
+  interpreted as the adddress `::1` and no explicit port.
+
 Version 1.17, released 2015-09-12
 ---------------------------------
 
