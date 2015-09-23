@@ -76,6 +76,23 @@ class SftpTests(unittest.TestCase, obnamlib.VfsTests):
         fs.connect()
         cwd = fs.getcwd()
         self.assertEqual(cwd, '/')
+
+    def test_connect_to_remote_root_dir_using_ipv6_address(self):
+        url = 'sftp://[::1]/'
+        settings = {
+            'pure-paramiko': False,
+            'create': True,
+            'sftp-delay': 0,
+            'ssh-key': '',
+            'strict-ssh-host-keys': False,
+            'ssh-known-hosts': os.path.expanduser('~/.ssh/known_hosts'),
+            'ssh-command': None,
+            'ssh-host-keys-check': 'no',
+        }
+        fs = obnamlib.plugins.sftp_plugin.SftpFS(url, settings=settings)
+        fs.connect()
+        cwd = fs.getcwd()
+        self.assertEqual(cwd, '/')
         
     def test_sets_path_to_absolute_path(self):
         self.assertTrue(self.fs.path.startswith('/'))
