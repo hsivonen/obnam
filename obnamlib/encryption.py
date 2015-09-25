@@ -67,7 +67,7 @@ class SymmetricKeyCache(object):
         self.repos = {}
 
 
-def _gpg_pipe(args, data, passphrase):
+def _gpg_pipe(args, data, passphrase, gpghome=None):
     '''Pipe things through gpg.
 
     With the right args, this can be either an encryption or a decryption
@@ -91,7 +91,8 @@ def _gpg_pipe(args, data, passphrase):
     os.close(keypipe[1])
 
     try:
-        out = _gpg(args + ['--passphrase-fd', str(keypipe[0])], stdin=data)
+        out = _gpg(args + ['--passphrase-fd', str(keypipe[0])], stdin=data,
+                   gpghome=gpghome)
     except: # pragma: no cover
         os.close(keypipe[0])
         raise
@@ -101,14 +102,14 @@ def _gpg_pipe(args, data, passphrase):
     return out
 
 
-def encrypt_symmetric(cleartext, key):
+def encrypt_symmetric(cleartext, key, gpghome=None):
     '''Encrypt data with symmetric encryption.'''
-    return _gpg_pipe(['-c'], cleartext, key)
+    return _gpg_pipe(['-c'], cleartext, key, gpghome=gpghome)
 
 
-def decrypt_symmetric(encrypted, key):
+def decrypt_symmetric(encrypted, key, gpghome=None):
     '''Decrypt encrypted data with symmetric encryption.'''
-    return _gpg_pipe(['-d'], encrypted, key)
+    return _gpg_pipe(['-d'], encrypted, key, gpghome=gpghome)
 
 
 def _gpg(args, stdin='', gpghome=None):
