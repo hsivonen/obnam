@@ -90,20 +90,13 @@ def _gpg_pipe(args, data, passphrase):
     os.write(keypipe[1], passphrase + '\n')
     os.close(keypipe[1])
 
-    # Actually run gpg.
-
-    argv = ['gpg', '--passphrase-fd', str(keypipe[0]), '-q', '--batch',
-            '--no-textmode'] + args
-    tracing.trace('argv=%s', repr(argv))
-    p = subprocess.Popen(argv, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE)
-    out, err = p.communicate(data)
+    try:
+        out = _gpg(args + ['--passphrase-fd', str(keypipe[0])], stdin=data)
+    except: # pragma: no cover
+        os.close(keypipe[0])
+        raise
 
     os.close(keypipe[0])
-
-    # Return output data, or deal with errors.
-    if p.returncode:  # pragma: no cover
-        raise GpgError(returncode=p.returncode, stderr=err)
 
     return out
 
