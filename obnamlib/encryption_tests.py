@@ -37,6 +37,12 @@ class SymmetricEncryptionTests(unittest.TestCase):
     # In these tests, we care about making sure we use the tools right,
     # not that the tools themselves work right.
 
+    def setUp(self):
+        self.gpghome = tempfile.mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self.gpghome)
+
     def test_generates_key_of_correct_length(self):
         numbits = 16
         key = obnamlib.generate_symmetric_key(numbits, filename='/dev/zero')
@@ -50,14 +56,17 @@ class SymmetricEncryptionTests(unittest.TestCase):
     def test_encrypts_into_different_string_than_cleartext(self):
         cleartext = 'hello world'
         key = 'sekr1t'
-        encrypted = obnamlib.encrypt_symmetric(cleartext, key)
+        encrypted = obnamlib.encrypt_symmetric(cleartext, key,
+                                               gpghome=self.gpghome)
         self.assertNotEqual(cleartext, encrypted)
 
     def test_encrypt_decrypt_round_trip(self):
         cleartext = 'hello, world'
         key = 'sekr1t'
-        encrypted = obnamlib.encrypt_symmetric(cleartext, key)
-        decrypted = obnamlib.decrypt_symmetric(encrypted, key)
+        encrypted = obnamlib.encrypt_symmetric(cleartext, key,
+                                               gpghome=self.gpghome)
+        decrypted = obnamlib.decrypt_symmetric(encrypted, key,
+                                               gpghome=self.gpghome)
         self.assertEqual(decrypted, cleartext)
 
 
