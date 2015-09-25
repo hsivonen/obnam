@@ -49,6 +49,12 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
             'size of symmetric key, in bits',
             metavar='BITS',
             group=encryption_group)
+        self.app.settings.string(
+            ['gnupghome'],
+            'home directory for GPG',
+            metavar='HOMEDIR',
+            group=encryption_group,
+            default=None)
 
         self.tag = "encrypt1"
 
@@ -87,7 +93,8 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
     @property
     def pubkey(self):
         if self._pubkey is None:
-            self._pubkey = obnamlib.get_public_key(self.keyid)
+            self._pubkey = obnamlib.get_public_key(self.keyid,
+                                                   gpghome=self.gnupghome)
         return self._pubkey
 
     @property
@@ -96,6 +103,10 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
             return '/dev/urandom'
         else:
             return '/dev/random'
+
+    @property
+    def gnupghome(self):
+        return self.app.settings['gnupghome']
 
     @property
     def symmetric_key_bits(self):
@@ -127,19 +138,22 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
 
     def filter_read(self, encrypted, repo, toplevel):
         symmetric_key = self.get_symmetric_key(repo, toplevel)
-        return obnamlib.decrypt_symmetric(encrypted, symmetric_key)
+        return obnamlib.decrypt_symmetric(encrypted, symmetric_key,
+                                          gpghome=self.gnupghome)
 
     def filter_write(self, cleartext, repo, toplevel):
         if not self.keyid:
             return cleartext
         symmetric_key = self.get_symmetric_key(repo, toplevel)
-        return obnamlib.encrypt_symmetric(cleartext, symmetric_key)
+        return obnamlib.encrypt_symmetric(cleartext, symmetric_key,
+                                          gpghome=self.gnupghome)
 
     def get_symmetric_key(self, repo, toplevel):
         key = self._symkeys.get(repo, toplevel)
         if key is None:
             encoded = repo.get_fs().cat(os.path.join(toplevel, 'key'))
-            key = obnamlib.decrypt_with_secret_keys(encoded)
+            key = obnamlib.decrypt_with_secret_keys(encoded,
+                                                    gpghome=self.gnupghome)
             self._symkeys.put(repo, toplevel, key)
         return key
 
@@ -222,7 +236,8 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
     def _get_key_string(self, keyid):
         verbose = self.app.settings['key-details']
         if verbose:
-            user_ids = obnamlib.get_public_key_user_ids(keyid)
+            user_ids = obnamlib.get_public_key_user_ids(keyid,
+                                                        gpghome=self.gnupghome)
             if user_ids:
                 return "%s (%s)" % (keyid, ", ".join(user_ids))
         return str(keyid)
@@ -260,7 +275,7 @@ class EncryptionPlugin(obnamlib.ObnamPlugin):
         self.app.settings.require('keyid')
         repo = self.app.get_repository_object()
         keyid = self.app.settings['keyid']
-        key = obnamlib.get_public_key(keyid)
+        key = obnamlib.get_public_key(keyid, gpghome=self.gnupghome)
         clients = self._find_clientdirs(repo, args)
         for toplevel in repo.get_shared_directories() + clients:
             self.add_to_userkeys(repo, toplevel, key)

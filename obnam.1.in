@@ -426,6 +426,11 @@ and then tell
 about it using the
 .B \-\-encrypt\-with
 option.
+You may optionally use a separate home directory using the
+.B \-\-gnupghome
+option. By default, the default directory for
+.BR gpg(1)
+will be used.
 .SS "Configuration files"
 .B obnam
 will look for configuration files in a number of locations.

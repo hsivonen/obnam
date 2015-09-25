@@ -231,6 +231,32 @@ use. We store that.
 
     add_to_config "$MATCH_1" encrypt-with "$MATCH_2"
 
+Scenarios involving encryption may also use a private keyring directory.
+
+    IMPLEMENTS GIVEN user (\S+) separately uses encryption key "(.*)" from (\S+)
+    if [ ! -e "$DATADIR/$MATCH_1.gnupg" ]
+    then
+        mkdir "$DATADIR/$MATCH_1.gnupg"
+        cp -a "$SRCDIR/$MATCH_3/." "$DATADIR/$MATCH_1.gnupg/."
+        add_to_config "$MATCH_1" gnupghome "$DATADIR/$MATCH_1.gnupg"
+    else
+        # Export public and secret keys from new keyring.
+        export GNUPGHOME="$SRCDIR/$MATCH_3"
+        gpg --export "$MATCH_2" > "$DATADIR/public.key"
+        gpg --export-secret-keys "$MATCH_2" > "$DATADIR/secret.key"
+
+        # Import into the keyring uses for tests.
+        export GNUPGHOME="$DATADIR/$MATCH_1.gnupg"
+        gpg --import "$DATADIR/public.key"
+        gpg --import "$DATADIR/secret.key"
+
+        # Use the configuration rather than the environment.
+        add_to_config "$MATCH_1" gnupghome "$GNUPGHOME"
+        unset GNUPGHOME
+    fi
+
+    add_to_config "$MATCH_1" encrypt-with "$MATCH_2"
+
 Encryption scenarions, at least, also need users that pretend to be
 someone else.
 

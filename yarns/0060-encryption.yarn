@@ -46,6 +46,22 @@ that encryption is done at the I/O abstraction level.
     AND user U restores their latest generation in repository R into X
     THEN L, restored to X, matches manifest M
 
+Keys provided by a custom directory
+-----------------------------------
+
+We'll make a simple backup and restore using encryption. If this
+works, we can probably assume that any other normal repository
+operations (those not part of encryption management) also work, given
+that encryption is done at the I/O abstraction level.
+
+    SCENARIO encrypted backup and restore with a separate keyring
+    GIVEN user U separately uses encryption key "Test Key One" from test-data/keyring-1
+    AND 128kB of new data in directory L
+    AND a manifest of L in M
+    WHEN user U backs up directory L to repository R
+    AND user U restores their latest generation in repository R into X
+    THEN L, restored to X, matches manifest M
+
 Adding and removing keys to clients
 -----------------------------------
 
