@@ -249,7 +249,14 @@ class Check(Command):
             print "no .git, no nitpick for you"
 
     def check_with_pep8(self):
-        cliapp.runcmd(['pep8', 'obnamlib'], stdout=None, stderr=None)
+        output = cliapp.runcmd(['pep8', '--version'])
+        parts = output.strip().split('.')
+        # pep8 version 1.5.7 is in Debian jessie. Previous versions
+        # give bad warnings about whitespace around some operators,
+        # and later versions don't. So we only run pep8 if it's new
+        # enough.
+        if parts >= (1,5,7):
+            cliapp.runcmd(['pep8', 'obnamlib'], stdout=None, stderr=None)
 
     def check_with_pylint(self):
         cliapp.runcmd(
