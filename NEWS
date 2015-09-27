@@ -16,6 +16,11 @@ Version 1.18, released UNRELEASED
   address `[` followed by the port `:1]`, but now it is correctly
   interpreted as the adddress `::1` and no explicit port.
 
+* Lars Wirzenius added support for a multiline progress message during
+  backup. Version 0.24 or newer of `ttystatus` is needed for this, but
+  Obnam will work with an older version by displaying the same
+  single-line progress message as before.
+
 Version 1.17, released 2015-09-12
 ---------------------------------
 

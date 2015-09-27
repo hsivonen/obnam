@@ -34,11 +34,22 @@ class BackupProgress(object):
         self._ts['current-file'] = ''
         self._ts['scanned-bytes'] = 0
         self._ts['uploaded-bytes'] = 0
-        self._ts.format('%ElapsedTime() '
-                        '%Counter(current-file) '
-                        'files '
-                        '%ByteSize(scanned-bytes) scanned: '
-                        '%String(what)')
+
+        if hasattr(self._ts, 'start_new_line'):
+            self._ts.format(
+                '%ElapsedTime() Backing up: '
+                'found %Counter(current-file) files, '
+                '%ByteSize(scanned-bytes); '
+                'uploaded: %ByteSize(uploaded-bytes)\n'
+                '%String(what)'
+            )
+        else:
+            self._ts.format(
+                '%ElapsedTime() '
+                '%Counter(current-file) '
+                'files '
+                '%ByteSize(scanned-bytes) scanned: '
+                '%String(what)')
 
     def clear(self):
         self._ts.clear()
