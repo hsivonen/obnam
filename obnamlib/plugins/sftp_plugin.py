@@ -711,4 +711,9 @@ class SftpPlugin(obnamlib.ObnamPlugin):
             'use paramiko only instead',
             group=ssh_group)
 
-        self.app.fsf.register('sftp', SftpFS, settings=self.app.settings)
+#       TODO: Make RetryVirtualFileSystem wrapping optional according to config
+#       self.app.fsf.register('sftp', SftpFS, settings=self.app.settings)
+        self.app.fsf.register('sftp',
+                              obnamlib.RetryVirtualFileSystem,
+                              delegate_class=SftpFS,
+                              settings=self.app.settings)

@@ -113,11 +113,11 @@ from .humanise import humanise_duration, humanise_size, humanise_speed
 from .chunkid_token_map import ChunkIdTokenMap
 from .pathname_excluder import PathnameExcluder
 from .splitpath import split_pathname
-
 from .obj_serialiser import serialise_object, deserialise_object
 from .bag import Bag, BagIdNotSetError, make_object_id, parse_object_id
 from .bag_store import BagStore, serialise_bag, deserialise_bag
 from .blob_store import BlobStore
+from .retry_vfs import RetryVirtualFileSystem
 
 from .repo_factory import (
     RepositoryFactory,

@@ -34,6 +34,7 @@ obnamlib/plugins/verify_plugin.py
 obnamlib/plugins/vfs_local_plugin.py
 obnamlib/repo_fs.py
 obnamlib/repo_interface.py
+obnamlib/retry_vfs.py
 obnamlib/vfs.py
 
 test-plugins/aaa_hello_plugin.py
