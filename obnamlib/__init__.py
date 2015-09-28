@@ -17,7 +17,26 @@
 import cliapp
 
 
-__version__ = '1.17'
+from .version import __version__
+from .structurederror import StructuredError
+from .obnamerror import ObnamError
+from .defaults import (
+    DEFAULT_NODE_SIZE,
+    DEFAULT_CHUNK_SIZE,
+    DEFAULT_UPLOAD_QUEUE_SIZE,
+    DEFAULT_LRU_SIZE,
+    DEFAULT_CHUNKIDS_PER_GROUP,
+    DEFAULT_NAGIOS_WARN_AGE,
+    DEFAULT_NAGIOS_CRIT_AGE,
+    DEFAULT_DIR_OBJECT_CACHE_BYTES,
+    DEFAULT_CHUNK_CACHE_BYTES,
+
+    IDPATH_DEPTH,
+    IDPATH_BITS,
+    IDPATH_SKIP,
+
+    MAX_ID,
+)
 
 
 # Import _obnam if it is there. We need to be able to do things without
@@ -26,55 +45,13 @@ __version__ = '1.17'
 # if used.
 
 
-class DummyExtension(object):
-    def __getattr__(self, name):
-        raise Exception('Trying to use _obnam, but that was not found.')
 try:
     import obnamlib._obnam
 except ImportError:
+    class DummyExtension(object):
+        def __getattr__(self, name):
+            raise Exception('Trying to use _obnam, but that was not found.')
     _obnam = DummyExtension()
-
-
-# Exceptions defined by Obnam itself. They should all be a subclass
-# of obnamlib.ObnamError.
-
-from .structurederror import StructuredError
-
-
-class ObnamError(StructuredError):
-
-    pass
-
-
-DEFAULT_NODE_SIZE = 256 * 1024  # benchmarked on 2011-09-01
-DEFAULT_CHUNK_SIZE = 1024 * 1024  # benchmarked on 2011-09-01
-DEFAULT_UPLOAD_QUEUE_SIZE = 1024  # benchmarked on 2015-05-02
-DEFAULT_LRU_SIZE = 256
-DEFAULT_CHUNKIDS_PER_GROUP = 1024
-DEFAULT_NAGIOS_WARN_AGE = '27h'
-DEFAULT_NAGIOS_CRIT_AGE = '8d'
-
-_MEBIBYTE = 1024**2
-DEFAULT_DIR_OBJECT_CACHE_BYTES = 256 * _MEBIBYTE
-DEFAULT_CHUNK_CACHE_BYTES = 1 * _MEBIBYTE
-
-# The following values have been determined empirically on a laptop
-# with an encrypted ext4 filesystem. Other values might be better for
-# other situations.
-IDPATH_DEPTH = 3
-IDPATH_BITS = 12
-IDPATH_SKIP = 13
-
-# Maximum identifier for clients, chunks, files, etc. This is the largest
-# unsigned 64-bit value. In various places we assume 64-bit field sizes
-# for on-disk data structures.
-MAX_ID = 2**64 - 1
-
-
-option_group = {
-    'perf': 'Performance tweaking',
-    'devel': 'Development of Obnam itself',
-}
 
 
 from .sizeparse import SizeSyntaxError, UnitNameError, ByteSizeParser
@@ -210,5 +187,12 @@ from .fmt_6.chunklist import ChunkList
 from .fmt_6.clientlist import ClientList
 from .fmt_6.checksumtree import ChecksumTree
 from .fmt_6.clientmetadatatree import ClientMetadataTree
+
+
+option_group = {
+    'perf': 'Performance tweaking',
+    'devel': 'Development of Obnam itself',
+}
+
 
 __all__ = locals()

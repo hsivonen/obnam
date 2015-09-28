@@ -2,6 +2,7 @@ setup.py
 
 obnamlib/app.py
 obnamlib/backup_progress.py
+obnamlib/defaults.py
 obnamlib/delegator.py
 obnamlib/fmt_6/__init__.py
 obnamlib/fmt_6/repo_tree.py
@@ -14,6 +15,7 @@ obnamlib/fmt_simple/__init__.py
 obnamlib/fsck_work_item.py
 obnamlib/humanise.py
 obnamlib/__init__.py
+obnamlib/obnamerror.py
 obnamlib/plugins/backup_plugin.py
 obnamlib/plugins/compression_plugin.py
 obnamlib/plugins/dump_repo_plugin.py
@@ -34,6 +36,8 @@ obnamlib/plugins/verify_plugin.py
 obnamlib/plugins/vfs_local_plugin.py
 obnamlib/repo_fs.py
 obnamlib/repo_interface.py
+obnamlib/structurederror.py
+obnamlib/version.py
 obnamlib/vfs.py
 
 test-plugins/aaa_hello_plugin.py
