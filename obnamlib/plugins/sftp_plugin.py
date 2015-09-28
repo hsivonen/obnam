@@ -171,7 +171,7 @@ class SftpFS(obnamlib.VirtualFileSystem):
             'VFS: baseurl=%s roundtrips=%s', self.baseurl, self._roundtrips)
 
     def _to_string(self, str_or_unicode):
-        if type(str_or_unicode) is unicode:
+        if isinstance(str_or_unicode, unicode):
             return str_or_unicode.encode('utf-8')
         else:
             return str_or_unicode

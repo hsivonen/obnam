@@ -1500,7 +1500,9 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
         gen_id = self.create_generation()
         for key in self.repo.get_allowed_generation_keys():
             value = self.repo.get_generation_key(gen_id, key)
-            self.assertTrue(type(value) in (str, int))
+            self.assertTrue(
+                isinstance(value, str) or
+                isinstance(value, int))
 
     def test_has_empty_string_for_generation_test_key(self):
         if self.generation_test_key_is_allowed():

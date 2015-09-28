@@ -606,7 +606,7 @@ class RepositoryFormat6(obnamlib.RepositoryInterface):
 
     def _is_in_tree_chunk_id(self, chunk_id):
         # Is this a chunk id for in-tree data?
-        return type(chunk_id) == tuple
+        return isinstance(chunk_id, tuple)
 
     def _chunk_filename(self, chunk_id):
         return self._chunk_idpath.convert(chunk_id)

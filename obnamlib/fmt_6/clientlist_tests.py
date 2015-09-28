@@ -54,7 +54,8 @@ class ClientListTests(unittest.TestCase):
 
     def test_added_client_has_integer_id(self):
         self.list.add_client('foo')
-        self.assert_(type(self.list.get_client_id('foo')) in [int, long])
+        value = self.list.get_client_id('foo')
+        self.assertTrue(isinstance(value, int) or isinstance(value, long))
 
     def test_added_client_is_listed(self):
         self.list.add_client('foo')

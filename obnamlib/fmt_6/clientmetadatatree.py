@@ -122,11 +122,11 @@ class ClientMetadataTree(obnamlib.RepositoryTree):
 
         '''
 
-        if type(subkey) == str:
+        if isinstance(subkey, str):
             subkey = (subkey + '\0' * 8)[:8]
             fmt = '!B8sB8s'
         else:
-            assert type(subkey) in [int, long]
+            assert isinstance(subkey, int) or isinstance(subkey, long)
             fmt = '!B8sBQ'
 
         return struct.pack(fmt, prefix, mainhash, subtype, subkey)

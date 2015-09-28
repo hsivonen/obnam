@@ -264,7 +264,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
         ret = obnamlib._obnam.llistxattr(self.join(filename))
         if ret is None:
             raise MallocError(function='llistxattr')
-        if type(ret) is int:
+        if isinstance(ret, int):
             raise OSError(ret, os.strerror(ret), filename)
         return [s for s in ret.split('\0') if s]
 
@@ -272,7 +272,7 @@ class LocalFS(obnamlib.VirtualFileSystem):
         ret = obnamlib._obnam.lgetxattr(self.join(filename), attrname)
         if ret is None:
             raise MallocError(function='llistxattr')
-        if type(ret) is int:
+        if isinstance(ret, int):
             raise OSError(ret, os.strerror(ret), filename)
         return ret
 

@@ -417,7 +417,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         self.backup_parents('.')
 
     def translate_enverror_to_obnamerror(self, pathname, exc):
-        if type(exc) is IOError:
+        if isinstance(exc, IOError):
             return obnamlib.ObnamIOError(
                 errno=exc.errno,
                 strerror=exc.strerror,
