@@ -255,13 +255,25 @@ class Check(Command):
         # give bad warnings about whitespace around some operators,
         # and later versions don't. So we only run pep8 if it's new
         # enough.
-        if parts >= (1,5,7):
+        if parts >= ['1', '5', '7']:
+            print 'running pep8'
             cliapp.runcmd(['pep8', 'obnamlib'], stdout=None, stderr=None)
+        else:
+            print 'not running pep8'
 
     def check_with_pylint(self):
-        cliapp.runcmd(
-            ['pylint', '--rcfile=pylint.conf', 'obnamlib'],
-            stdout=None, stderr=None)
+        output = cliapp.runcmd(['pylint', '--version'])
+        parts = output.splitlines()[0].split('.')
+        # pylint version 1.3.1 is in Debian jessie. Previous versions
+        # do not know all the things in the pylint.conf file we use,
+        # so we only run pylint if it's new enough.
+        if parts >= ['pylint 1', '3', '1,']:
+            print 'running pylint'
+            cliapp.runcmd(
+                ['pylint', '--rcfile=pylint.conf', 'obnamlib'],
+                stdout=None, stderr=None)
+        else:
+            print 'not running pylint', parts
 
     def check_sources_for_nitpicks(self, sources):
         cliapp.runcmd(['./nitpicker'] + sources, stdout=None, stderr=None)
