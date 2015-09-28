@@ -28,16 +28,7 @@ import time
 import urlparse
 import getpass
 
-
-# As of 2010-07-10, Debian's paramiko package triggers
-# RandomPool_DeprecationWarning. This will eventually be fixed. Until
-# then, there is no point in spewing the warning to the user, who can't
-# do nothing.
-# http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=586925
-import warnings
-with warnings.catch_warnings():
-    warnings.simplefilter('ignore')
-    import paramiko
+import paramiko
 
 import obnamlib
 
