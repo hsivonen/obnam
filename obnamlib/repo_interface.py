@@ -991,8 +991,7 @@ class RepositoryInterfaceTests(unittest.TestCase):  # pragma: no cover
     def test_closes_repository(self):
         # Can't think of a test to verify the closing happened,
         # so just calling the method will have to do for now.
-        self.repo.close()
-        self.assertTrue(True)
+        self.assertEqual(self.repo.close(), None)
 
     def test_returns_list_of_shared_directories(self):
         self.assertTrue(type(self.repo.get_shared_directories()), list)

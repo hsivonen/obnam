@@ -16,11 +16,11 @@
 # =*= License: GPL-3+ =*=
 
 
-import structurederror
+from .structurederror import StructuredError
 
 
 # Base exception for all Obnam specific exceptions.
 
-class ObnamError(structurederror.StructuredError):
+class ObnamError(StructuredError):
 
     pass

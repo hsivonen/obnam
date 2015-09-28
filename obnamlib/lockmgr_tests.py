@@ -75,7 +75,7 @@ class LockManagerTests(unittest.TestCase):
         self.lm._sleep = lambda: os.remove(
             self.lm.get_lock_name(self.dirnames[0]))
         self.lm.lock([self.dirnames[0]])
-        self.assertTrue(True)
+        self.assertTrue(self.lm.is_locked(self.dirnames[0]))
 
     def test_locks_all_directories(self):
         self.lm.lock(self.dirnames)
