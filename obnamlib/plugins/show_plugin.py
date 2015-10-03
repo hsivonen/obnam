@@ -287,8 +287,13 @@ class ShowPlugin(obnamlib.ObnamPlugin):
             mode_str = "BlockDev\t"
         elif stat.S_ISCHR(mode):
             mode_str = "CharDev\t"
+        elif stat.S_ISFIFO(mode):
+            mode_str = "FIFO"
         elif stat.S_ISSOCK(mode):
             mode_str = "Socket\t"
+        else:
+            # Unhandled, make it look like a comment
+            mode_str = "#UNHANDLED\t"
 
         enc_filename = filename.replace("%", "%25")
         enc_filename = enc_filename.replace(" ", "%20")
