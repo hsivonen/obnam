@@ -159,6 +159,7 @@ class BackupPlugin(obnamlib.ObnamPlugin):
 
         root_urls = self.app.settings['root'] + args
         self.check_for_required_settings(root_urls)
+        self.pretend = self.app.settings['pretend']
 
         self.start_backup()
         try:
@@ -315,10 +316,6 @@ class BackupPlugin(obnamlib.ObnamPlugin):
         p = obnamlib.ByteSizeParser()
         p.set_default_unit('MiB')
         return p.parse(value)
-
-    @property
-    def pretend(self):
-        return self.app.settings['pretend']
 
     @property
     def client_name(self):
