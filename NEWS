@@ -24,6 +24,9 @@ Version 1.18, released UNRELEASED
 * Ben Boeckel added the `--gnupghome` setting so that Obnam can be
   configured to use a separate GnuPG (gpg) configuration directory.
 
+* Ian Campbell fixed a bug in the kdirstat plugin, improving the
+  handling of unknown file types.
+
 Version 1.17, released 2015-09-12
 ---------------------------------
 
