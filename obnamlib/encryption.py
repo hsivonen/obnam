@@ -93,7 +93,7 @@ def _gpg_pipe(args, data, passphrase, gpghome=None):
     try:
         out = _gpg(args + ['--passphrase-fd', str(keypipe[0])], stdin=data,
                    gpghome=gpghome)
-    except: # pragma: no cover
+    except:  # pragma: no cover
         os.close(keypipe[0])
         raise
 
