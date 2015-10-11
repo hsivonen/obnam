@@ -21,6 +21,9 @@ Version 1.18, released UNRELEASED
   Obnam will work with an older version by displaying the same
   single-line progress message as before.
 
+* Ben Boeckel added the `--gnupghome` setting so that Obnam can be
+  configured to use a separate GnuPG (gpg) configuration directory.
+
 Version 1.17, released 2015-09-12
 ---------------------------------
 
