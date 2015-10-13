@@ -35,7 +35,7 @@ class BackupProgress(object):
         self._ts['scanned-bytes'] = 0
         self._ts['uploaded-bytes'] = 0
 
-        if hasattr(self._ts, 'start_new_line'):
+        if self.ttystatus_supports_multiline():
             self._ts.format(
                 '%ElapsedTime() Backing up: '
                 'found %Counter(current-file) files, '
@@ -51,8 +51,14 @@ class BackupProgress(object):
                 '%ByteSize(scanned-bytes) scanned: '
                 '%String(what)')
 
+    def ttystatus_supports_multiline(self):
+        return hasattr(self._ts, 'start_new_line')
+
     def clear(self):
         self._ts.clear()
+
+    def finish(self):
+        self._ts.finish()
 
     def error(self, msg, exc=None):
         self.errors = True
@@ -87,7 +93,7 @@ class BackupProgress(object):
     def update_progress_with_removed_checkpoint(self, gen):
         self._ts['checkpoint'] = gen
 
-    def report_stats(self, fs):
+    def report_stats(self, output, fs):
         duration = time.time() - self.started
         duration_string = obnamlib.humanise_duration(duration)
 
@@ -141,25 +147,25 @@ class BackupProgress(object):
         scanned_amount, scanned_unit = obnamlib.humanise_size(
             self.scanned_bytes)
 
-        self._ts.notify(
-            'Backed up %d files (of %d found), containing %.1f %s.' %
+        output.write(
+            'Backed up %d files (of %d found), containing %.1f %s.\n' %
             (self.backed_up_count,
              self.file_count,
              scanned_amount,
              scanned_unit))
-        self._ts.notify(
-            'Uploaded %.1f %s file data in %s at %.1f %s average speed.' %
+        output.write(
+            'Uploaded %.1f %s file data in %s at %.1f %s average speed.\n' %
             (chunk_amount,
              chunk_unit,
              duration_string,
              speed_amount,
              speed_unit))
-        self._ts.notify(
-            'Total download amount %.1f %s.' %
+        output.write(
+            'Total download amount %.1f %s.\n' %
             (dl_amount,
              dl_unit))
-        self._ts.notify(
-            'Total upload amount %.1f %s. Overhead was %.1f %s (%.1f %%).' %
+        output.write(
+            'Total upload amount %.1f %s. Overhead was %.1f %s (%.1f %%).\n' %
             (ul_amount,
              ul_unit,
              overhead_amount,
