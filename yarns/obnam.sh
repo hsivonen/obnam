@@ -196,8 +196,3 @@ get_keyid()
     get_fingerprint "$1" |
     awk '{ print substr($0, length-8) }'
 }
-
-
-# Create a dummy $HOME that actually exists.
-export HOME="$DATADIR/home"
-mkdir -p "$HOME"
