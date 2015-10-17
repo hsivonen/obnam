@@ -31,14 +31,21 @@ class DeflateCompressionFilter(object):
 
     def filter_write(self, data, repo, toplevel):
         how = self.app.settings['compress-with']
+        compressed = None
         if how == 'deflate':
-            data = zlib.compress(data)
+            compressed = zlib.compress(data)
         elif how == 'gzip':
             if not self.warned:
                 self.app.ts.notify("--compress-with=gzip is deprecated.  " +
                                    "Use --compress-with=deflate instead")
                 self.warned = True
-            data = zlib.compress(data)
+            compressed = zlib.compress(data)
+
+        # If the compression result, the tag and the separator byte taken
+        # together are longer than the uncompressed input, let's store the
+        # uncompressed data to avoid waste upon transfer, storage and read.
+        if compressed and len(compressed) + len(self.tag) + 1 < len(data):
+            return compressed
 
         return data
 
