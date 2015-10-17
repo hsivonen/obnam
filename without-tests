@@ -30,6 +30,7 @@ obnamlib/plugins/__init__.py
 obnamlib/plugins/list_formats_plugin.py
 obnamlib/plugins/one_file_system_plugin.py
 obnamlib/plugins/restore_plugin.py
+obnamlib/plugins/salsa_plugin.py
 obnamlib/plugins/sftp_plugin.py
 obnamlib/plugins/show_plugin.py
 obnamlib/plugins/verify_plugin.py
