@@ -27,6 +27,9 @@ Version 1.18, released UNRELEASED
 * Ian Campbell fixed a bug in the kdirstat plugin, improving the
   handling of unknown file types.
 
+* Henri Sivonen improved the compression code to not compress if the
+  result would be larger.
+
 Version 1.17, released 2015-09-12
 ---------------------------------
 
