@@ -216,6 +216,7 @@ use. We store that.
     then
         mkdir "$DATADIR/$MATCH_1.gnupg"
         cp -a "$SRCDIR/$MATCH_3/." "$DATADIR/$MATCH_1.gnupg/."
+        chmod -R 0700 "$DATADIR/$MATCH_1.gnupg"
         add_to_env "$MATCH_1" GNUPGHOME "$DATADIR/$MATCH_1.gnupg"
     else
         # Export public and secret keys from new keyring.
