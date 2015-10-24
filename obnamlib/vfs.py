@@ -296,8 +296,8 @@ class VirtualFileSystem(object):
 
         def is_directory(pair):
             _, metadata = pair
-            return (not isinstance(metadata, BaseException)
-                    and stat.S_ISDIR(metadata.st_mode))
+            return (not isinstance(metadata, BaseException) and
+                    stat.S_ISDIR(metadata.st_mode))
 
         def list_files(pathname):
             try:
