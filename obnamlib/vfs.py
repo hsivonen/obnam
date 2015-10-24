@@ -284,38 +284,58 @@ class VirtualFileSystem(object):
 
         '''
 
-        error_handler = error_handler or (lambda name, e: None)
-
-        try:
-            pairs = self.listdir2(dirname)
-        except OSError, e:
-            log('listdir failed: %s: %s' % (e.filename, e.strerror))
-            error_handler(dirname, e)
-            pairs = []
-
-        queue = []
-        for name, st in pairs:
-            pathname = os.path.join(dirname, name)
-            if isinstance(st, BaseException):
-                error_handler(pathname, st)
-            elif ok is None or ok(pathname, st):
-                if stat.S_ISDIR(st.st_mode):
-                    for t in self.scan_tree(pathname, ok=ok, dirst=st):
-                        yield t
+        def important_first(items, is_important):
+            important = []
+            unimportant = []
+            for item in items:
+                if is_important(item):
+                    important.append(item)
                 else:
-                    queue.append((pathname, st))
+                    unimportant.append(item)
+            return important + unimportant
 
-        for pathname, st in queue:
-            yield pathname, st
+        def is_directory(pair):
+            _, metadata = pair
+            return (not isinstance(metadata, BaseException)
+                    and stat.S_ISDIR(metadata.st_mode))
 
-        if dirst is None:
+        def list_files(pathname):
             try:
-                dirst = self.lstat(dirname)
+                pairs = self.listdir2(pathname)
+            except OSError, e:
+                log('listdir failed: %s: %s' % (e.filename, e.strerror))
+                error_handler(pathname, e)
+                return []
+            else:
+                pairs = [(os.path.join(pathname, basename), st)
+                         for basename, st in pairs]
+                return important_first(pairs, is_directory)
+
+        def lstat(pathname):
+            try:
+                return self.lstat(pathname)
             except OSError, e:
                 log('lstat for dir failed: %s: %s' % (e.filename, e.strerror))
-                return
+                return e
 
-        yield dirname, dirst
+        def process_dir(dirname, metadata, items):
+            new_items = [
+                (subname, submeta, False)
+                for subname, submeta in list_files(dirname)]
+            return new_items + [(dirname, metadata, True)] + items
+
+        error_handler = error_handler or (lambda name, e: None)
+        ok = ok or (lambda name, st: True)
+
+        items = [(dirname, lstat(dirname), False)]
+        while items:
+            filename, metadata, processed_dir = items.pop(0)
+            if isinstance(metadata, BaseException):
+                error_handler(filename, metadata)
+            elif stat.S_ISDIR(metadata.st_mode) and not processed_dir:
+                items = process_dir(filename, metadata, items)
+            elif ok(filename, metadata):
+                yield filename, metadata
 
 
 class VfsFactory(object):
@@ -744,7 +764,9 @@ class VfsTests(object):  # pragma: no cover
         self.set_up_scan_tree()
         result = list(self.fs.scan_tree(self.basepath))
         pathnames = [pathname for pathname, _ in result]
-        self.assertEqual(sorted(pathnames), sorted(self.pathnames))
+        self.assertEqual(sorted(pathnames), sorted(self.pathnames),
+                         'pathnames: %r   --- self.pathnames: %r' %
+                         (pathnames, self.pathnames))
 
     def test_scan_tree_filters_away_unwanted(self):
         def ok(pathname, st):

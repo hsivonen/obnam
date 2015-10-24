@@ -30,6 +30,10 @@ Version 1.18, released UNRELEASED
 * Henri Sivonen improved the compression code to not compress if the
   result would be larger.
 
+* Lars Wirzenius changed the `scan_tree` code to not be recursive, to
+  avoid problems with directory trees that are deeper than Python's
+  call stack limit allows.
+
 Version 1.17, released 2015-09-12
 ---------------------------------
 
