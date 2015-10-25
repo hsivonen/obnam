@@ -206,7 +206,8 @@ class Check(Command):
         if 'REPOSITORY_FORMAT' in os.environ:
             return [os.environ['REPOSITORY_FORMAT']]
         else:
-            return cliapp.runcmd(['./obnam', 'list-formats']).splitlines()
+            return cliapp.runcmd(['./obnam', '--no-default-configs',
+                                  'list-formats']).splitlines()
 
     def run_yarn_for_repo_format(self, repo_format):
         print 'run yarn for repository format %s' % repo_format
