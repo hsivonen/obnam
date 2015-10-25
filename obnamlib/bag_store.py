@@ -31,7 +31,13 @@ class BagStore(object):
         self._id_inventor.set_filename_maker(self._make_bag_filename)
 
     def _make_bag_filename(self, bag_id):
-        return os.path.join(self._dirname, '%016x.bag' % bag_id)
+        basename = '%016x' % bag_id
+        return os.path.join(
+            self._dirname,
+            basename[0:2],
+            basename[2:4],
+            basename[4:6],
+            '%s.bag' % basename)
 
     def set_location(self, fs, dirname):
         self._fs = fs
