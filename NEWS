@@ -34,6 +34,11 @@ Version 1.18, released UNRELEASED
   avoid problems with directory trees that are deeper than Python's
   call stack limit allows.
 
+* Lars Wirzenius made the `RepositoryFS` class be explicit in what
+  filesystem operations it supports for repositories, rather than
+  supporting everything. This makes future changes and adding
+  non-filesystem (e.g., object store) support later easier to do.
+
 Version 1.17, released 2015-09-12
 ---------------------------------
 

@@ -44,15 +44,48 @@ class RepositoryFS(object):
         self.fs = fs
         self.hooks = hooks
 
-    def __getattr__(self, name):
-        return getattr(self.fs, name)
-
     def _get_toplevel(self, filename):
         parts = filename.split(os.sep)
         if len(parts) >= 1:
             return parts[0]
         else:  # pragma: no cover
             raise ToplevelIsFileError(filename=filename)
+
+    def exists(self, filename):
+        return self.fs.exists(filename)
+
+    def lock(self, lockname):
+        return self.fs.lock(lockname)
+
+    def unlock(self, lockname):
+        return self.fs.unlock(lockname)
+
+    def lstat(self, lockname):
+        return self.fs.lstat(lockname)
+
+    def scan_tree(self, dirname):
+        return self.fs.scan_tree(dirname)
+
+    def remove(self, filename):
+        return self.fs.remove(filename)
+
+    def mkdir(self, dirname):
+        return self.fs.mkdir(dirname)
+
+    def makedirs(self, dirname):
+        return self.fs.makedirs(dirname)
+
+    def rmdir(self, dirname):
+        return self.fs.rmdir(dirname)
+
+    def listdir(self, dirname):
+        return self.fs.listdir(dirname)
+
+    def isdir(self, dirname):
+        return self.fs.isdir(dirname)
+
+    def rename(self, old_name, new_name):
+        return self.fs.rename(old_name, new_name)
 
     def cat(self, filename, runfilters=True):
         data = self.fs.cat(filename)
@@ -61,9 +94,6 @@ class RepositoryFS(object):
         toplevel = self._get_toplevel(filename)
         return self.hooks.filter_read('repository-data', data,
                                       repo=self.repo, toplevel=toplevel)
-
-    def lock(self, filename):
-        self.fs.lock(filename)
 
     def create_and_init_toplevel(self, filename):
         tracing.trace('filename=%s', filename)
