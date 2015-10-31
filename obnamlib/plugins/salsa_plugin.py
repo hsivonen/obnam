@@ -281,7 +281,7 @@ class SalsaPlugin(obnamlib.ObnamPlugin):
         try:
             return pysodium.crypto_secretbox_open(
             ciphertext[pysodium.crypto_secretbox_NONCEBYTES:],
-            ciphertext[0:pysodium.crypto_secretbox_NONCEBYTES],
+            ciphertext[:pysodium.crypto_secretbox_NONCEBYTES],
             key)
         except ValueError:
             if is_repo_key:
