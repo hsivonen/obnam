@@ -99,14 +99,14 @@ class NoClientKeyError(obnamlib.ObnamError):
            'has not been specified with --salsa-key')
 
 class SalsaPlugin(obnamlib.ObnamPlugin):
-    '''Plug-in for encryption using the NaCl/libsodium secret_box construction
+    '''Plug-in for encryption using the NaCl/libsodium secretbox construction
     (XSalsa20+Poly1305).
 
     The client key can be hard-coded into Obnam's configuration, read from
     stdin or derived from an interactively-entered pass phrase.
 
     All clients use the same 256-bit client key. This key is used to encrypt
-    further keys that are stored in the repo and are used to encrypt the
+    another 256-bit key that is stored in the repo and is used to encrypt the
     repository data. This allows the client key to be changed without
     re-encrypting the entire repository.
 
