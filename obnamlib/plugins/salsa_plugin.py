@@ -320,20 +320,19 @@ class SalsaPlugin(obnamlib.ObnamPlugin):
 
     def _rewrite_toplevel_key(self, repo, toplevel, new_key):
         toplevel_key = self._get_toplevel_key(repo, toplevel)
-        userkeys = self.read_keyring(repo, toplevel)
         encrypted = self._encrypt(toplevel_key, new_key)
-        self._overwrite_file(repo, os.path.join(toplevel, 'key'), encrypted)
+        repo.get_fs().overwrite_file(os.path.join(toplevel, 'key'), encrypted)
 
     def change_key(self, client_names):
         '''Change the XSalsa20 key for the repository.'''
         if self._quit_if_unencrypted():
             return
         self.app.settings.require('salsa-new-key')
-        repo = self.app.get_repository_object()
+        # Ensure the old key is read first
+        self.key
         new_key = self._get_key(True)
-        key = obnamlib.get_public_key(keyid)
+        repo = self.app.get_repository_object()
         clients = self._find_clientdirs(repo, client_names)
         for toplevel in repo.get_shared_directories() + clients:
-            self.add_to_userkeys(repo, toplevel, key)
-            self.rewrite_symmetric_key(repo, toplevel)
+            self._rewrite_toplevel_key(repo, toplevel, new_key)
 
