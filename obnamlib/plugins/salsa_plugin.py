@@ -72,7 +72,7 @@ class KeyNotValidBase64Error(obnamlib.ObnamError):
 
     msg = 'The key is not a valid base64 string'
 
-class TopLevelDecryptionFailedError(obnamlib.ObnamError):
+class RepoKeyDecryptionFailedError(obnamlib.ObnamError):
 
     msg = ('Decryption with the current client key failed '
            '(either wrong key or corrupt repository)')
@@ -89,9 +89,14 @@ class BadSalsaKeyLengthError(obnamlib.ObnamError):
 
     msg = 'Wrong length for XSalsa20 key (must be 32 bytes)'
 
-class BadToplevelSalsaKeyLengthError(obnamlib.ObnamError):
+class BadRepoSalsaKeyLengthError(obnamlib.ObnamError):
 
     msg = 'Wrong length for stored intermediate key; repository tampered with'
+
+class NoClientKeyError(obnamlib.ObnamError):
+
+    msg = ('Cannot access XSalsa20-encrypted data, because the client key '
+           'has not been specified with --salsa-key')
 
 class SalsaPlugin(obnamlib.ObnamPlugin):
     '''Plug-in for encryption using the NaCl/libsodium secret_box construction
@@ -150,14 +155,11 @@ class SalsaPlugin(obnamlib.ObnamPlugin):
         for name, callback, rev in hooks:
             self.app.hooks.add_callback(name, callback, rev)
 
-        self._key = None
+        self._repo_key = None
+
+        self._client_key = None
 
         self.app.add_subcommand('change-salsa-key', self.change_key)
-
-        self._symkeys = obnamlib.SymmetricKeyCache()
-
-    def disable(self):
-        self._symkeys.clear()
 
     def _parse_non_negative_integer(self, input, is_ops):
         if len(input) == 0:
@@ -173,10 +175,41 @@ class SalsaPlugin(obnamlib.ObnamPlugin):
                     raise NonIntEmptyScryptMemoryError()
         return int(input)
 
-    def _get_key(self, new_key=False):
+    def _get_repo_key(self, repo):
+        if self._repo_key:
+            return self._repo_key
+        fs = repo.get_fs()
+        if not fs.exists("salsa_key"):
+            return None
+        client_key = self._get_client_key()
+        if not client_key:
+            raise NoClientKeyError()
+        encrypted = fs.cat("salsa_key")
+        self._repo_key = self._decrypt(encrypted, client_key, True)
+        if len(self._repo_key) != pysodium.crypto_secretbox_KEYBYTES:
+            # This error situation should be possible only if whoever has
+            # tampered with the repo holds the correct client key, but
+            # let's have this check anyway.
+            self._repo_key = None
+            raise BadRepoSalsaKeyLengthError()
+        return self._repo_key
+
+    def _get_client_key(self):
+        if self._client_key:
+            return self._client_key
+        self._client_key = self._read_client_key()
+        return self._client_key
+
+    def _read_client_key(self, new_key=False):
         b64 = self.app.settings['salsa-new-key' if new_key else 'salsa-key']
         if not b64:
             return None
+
+        # Double encryption or migrating between encryption methods not
+        # supported.
+        if self.app.settings['encrypt-with']:
+            raise GpgKeySpecifiedError()
+
         if b64.startswith("tty-scrypt:"):
             parts = b64.split(":")
             if len(parts) != 4:
@@ -228,18 +261,6 @@ class SalsaPlugin(obnamlib.ObnamPlugin):
             raise BadSalsaKeyLengthError()
         return key
 
-    @property
-    def key(self):
-        if not self._key:
-            self._key = self._get_key()
-        return self._key
-
-    def _write_file(self, repo, pathname, contents):
-        repo.get_fs().write_file(pathname, contents)
-
-    def _generate_key(self):
-        return pysodium.randombytes(pysodium.crypto_secretbox_KEYBYTES)
-
     def _encrypt(self, cleartext, key):
         # XSalsa20 (in use here) is the extended-nonce variant of Salsa20. The
         # extended nonce is 192 bits long. To quote NaCl documentation for
@@ -256,56 +277,49 @@ class SalsaPlugin(obnamlib.ObnamPlugin):
         nonce = pysodium.randombytes(pysodium.crypto_secretbox_NONCEBYTES)
         return nonce + pysodium.crypto_secretbox(cleartext, nonce, key)
 
-    def _decrypt(self, ciphertext, key, is_toplevel=False):
+    def _decrypt(self, ciphertext, key, is_repo_key=False):
         try:
             return pysodium.crypto_secretbox_open(
             ciphertext[pysodium.crypto_secretbox_NONCEBYTES:],
             ciphertext[0:pysodium.crypto_secretbox_NONCEBYTES],
             key)
         except ValueError:
-            if is_toplevel:
-                raise TopLevelDecryptionFailedError()
+            if is_repo_key:
+                raise RepoKeyDecryptionFailedError()
             else:
                 raise LeafDecryptionFailedError()
  
     def toplevel_init(self, repo, toplevel):
-        '''Initialize a new toplevel for encryption.'''
+        '''Initialize the repo for encryption.
 
-        if not self.key:
+        This method is called for every toplevel instead of the repo itself.
+        We use the toplevel hook, because a repo-level hook does not exist.
+        '''
+
+        client_key = self._get_client_key()
+        if not client_key:
+            # XSalsa20 encryption not in use
             return
 
-        # Double encryption or migrating between encryption methods not
-        # supported.
-        if self.app.settings['encrypt-with']:
-            raise GpgKeySpecifiedError()
+        repo_key = self._get_repo_key(repo)
+        if repo_key:
+            # Already initialized
+            return
 
-        toplevel_key = self._generate_key()
-        encrypted = self._encrypt(toplevel_key, self.key)
-        self._write_file(repo, os.path.join(toplevel, 'key'), encrypted)
+        # This is the first time we are initializing a toplevel, so let's
+        # initialize the repo itself.
+        repo_key = pysodium.randombytes(pysodium.crypto_secretbox_KEYBYTES)
 
-        # Not writing a separate "userkeys" file, since the clients need to
-        # be mutually trusting anyway.
+        encrypted = self._encrypt(repo_key, client_key)
+        repo.get_fs().write_file("salsa_key", encrypted)
 
     def filter_read(self, encrypted, repo, toplevel):
-        return self._decrypt(encrypted, self._get_toplevel_key(repo, toplevel))
+        return self._decrypt(encrypted, self._get_repo_key(repo))
 
     def filter_write(self, cleartext, repo, toplevel):
-        if not self.key:
+        if not self._get_client_key():
             return cleartext
-        return self._encrypt(cleartext, self._get_toplevel_key(repo, toplevel))
-
-    def _get_toplevel_key(self, repo, toplevel):
-        key = self._symkeys.get(repo, toplevel)
-        if key is None:
-            encrypted = repo.get_fs().cat(os.path.join(toplevel, 'key'))
-            key = self._decrypt(encrypted, self.key, True)
-            if len(key) != pysodium.crypto_secretbox_KEYBYTES:
-                # This error situation should be possible only if whoever has
-                # tampered with the repo holds the correct client key, but
-                # let's have this check anyway.
-                raise BadToplevelSalsaKeyLengthError()
-            self._symkeys.put(repo, toplevel, key)
-        return key
+        return self._encrypt(cleartext, self._get_repo_key(repo))
 
     def _quit_if_unencrypted(self):
         if self.app.settings['salsa-key']:
@@ -314,25 +328,14 @@ class SalsaPlugin(obnamlib.ObnamPlugin):
         self.app.output.write('(Use --salsa-key to set the current key.)\n')
         return True
 
-    def _find_clientdirs(self, repo, client_names):
-        return [repo.get_client_extra_data_directory(client_name)
-                for client_name in client_names]
-
-    def _rewrite_toplevel_key(self, repo, toplevel, new_key):
-        toplevel_key = self._get_toplevel_key(repo, toplevel)
-        encrypted = self._encrypt(toplevel_key, new_key)
-        repo.get_fs().overwrite_file(os.path.join(toplevel, 'key'), encrypted)
-
     def change_key(self, client_names):
         '''Change the XSalsa20 key for the repository.'''
         if self._quit_if_unencrypted():
             return
         self.app.settings.require('salsa-new-key')
-        # Ensure the old key is read first
-        self.key
-        new_key = self._get_key(True)
         repo = self.app.get_repository_object()
-        clients = self._find_clientdirs(repo, client_names)
-        for toplevel in repo.get_shared_directories() + clients:
-            self._rewrite_toplevel_key(repo, toplevel, new_key)
+        repo_key = self._get_repo_key(repo)
+        new_key = self._read_client_key(True)
+        encrypted = self._encrypt(repo_key, new_key)
+        repo.get_fs().overwrite_file("salsa_key", encrypted)
 
