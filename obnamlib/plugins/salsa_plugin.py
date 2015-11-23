@@ -231,13 +231,16 @@ class SalsaPlugin(obnamlib.ObnamPlugin):
                 raise ScryptSaltNotValidBase64Error()
             if len(salt) != pysodium.crypto_pwhash_scryptsalsa208sha256_SALTBYTES:
                 raise BadScryptSaltLengthError()
+            stdscr = curses.initscr()
             if new_key:
-                print "Please enter the new pass phrase:"
+                stdscr.addstr("Please enter the new pass phrase:")
             else:
-                print "Please enter the current pass phrase:"              
+                stdscr.addstr("Please enter the current pass phrase:")
+            stdscr.refresh()
             curses.noecho()
-            passwd = sys.stdin.readline().rstrip('\n\r')
+            passwd = stdscr.getstr().rstrip('\n\r')
             curses.echo()
+            curses.endwin()
             # The length check is arbitrary
             if len(passwd) < 12:
                 raise PassPhraseTooShortError()
