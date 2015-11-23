@@ -34,7 +34,8 @@ Depends: ${shlibs:Depends}, ${python:Depends}, ${misc:Depends},
     python-tracing (>= 0.8~),
     python-cliapp (>= 1.20130808~),
     python-yaml,
-    python-fuse
+    python-fuse,
+    python-pysodium (>= 0.6.8)
 Description: online and disk-based backup application
  Obnam makes backups. Backups can be stored on local hard disks, or online
  via the SSH SFTP protocol. The backup server, if used, does not require any
@@ -47,7 +48,7 @@ Description: online and disk-based backup application
     repository already contains a particular chunk of data, it will be re-used,
     even if it was in another file in an older backup generation. This way, you
     don't need to worry about moving around large files, or modifying them.
-  * Encrypted backups, using GnuPG.
+  * Encrypted backups, using GnuPG or libsodium.
   * Push or pull operation, depending on what you need. You can run Obnam on
     the client, and push backups to the server, or on the server, and pull
     from the client over SFTP.
